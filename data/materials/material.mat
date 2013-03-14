@@ -1,0 +1,21 @@
+material Test
+{
+vertex_ref vsTest
+pixel_ref psTest
+
+default_params
+{
+	col 0 1 0 1
+}
+
+	texture
+	{
+		file glass.png
+	}
+	
+	texture
+	{
+		file 1.png
+	}
+
+}

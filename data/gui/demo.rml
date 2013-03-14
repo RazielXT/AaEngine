@@ -1,0 +1,72 @@
+<rml>
+	<head>
+		<title>Demo</title>
+		<link type="text/template" href="window.rml" />
+		<style>
+			body
+			{
+				width: 400px;
+				height: 225px;
+				
+				margin: auto;
+			}
+			
+			div#title_bar div#icon
+			{
+				display: none;
+			}
+			
+			div#content
+			{
+				text-align: right;
+			}
+			
+			scrollbarvertical sliderbar
+			{
+				width: 23px;
+
+				background-decorator: tiled-vertical;
+				background-top-image: tutorial.tga 56px 152px 79px 175px;
+				background-center-image: tutorial.tga stretch 56px 175px 79px 175px;
+				background-bottom-image: tutorial.tga 56px 176px 79px 198px;
+			}
+			
+			form div
+			{
+				width: 200px;
+				margin: auto;
+			}
+			
+		</style>
+	</head>
+	
+	<body template="window">
+	
+		<button id="button_input">Start Game</button><br />
+		
+		<div id="text_output">
+		This is a sample.
+		</div>
+		
+		<input id="player_input" type="text" value="poop"/><br />
+		
+		<form>
+		<div>
+		<p>
+			Graphics:<br />
+				
+			
+				<input id="good" type="radio" name="graphics"  value="good"/> Good<br />
+				<input id="ok" type="radio" name="graphics" value="ok" checked="true" /> OK<br />
+				<input id="bad" type="radio" name="graphics" value="bad"/> Bad<br />
+			
+				Audio:<br />
+				<input id="reverb" type="checkbox" name="reverb" value="true" checked="true" /> Reverb<br />
+				<input id="3d" type="checkbox" name="3d" value="true" /> 3D Spatialisation
+		</p>	
+		</div>
+		</form>
+		
+		This is a sample.This is a sample.This is a sample.This is a sample.This is a sample.This is a sample.This is a sample.v
+	</body>
+</rml>

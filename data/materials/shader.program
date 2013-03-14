@@ -1,0 +1,38 @@
+vertex_shader vsTest
+{
+file sampleShader.fx
+entry VS_Main
+profile vs_4_0
+
+cbuffer per_object
+
+}
+
+pixel_shader psTest
+{
+file sampleShader.fx
+entry PS_Main
+profile ps_4_0
+
+cbuffer per_object
+cbuffer per_material
+{
+	float4 col 1 0 0 1
+}
+
+}
+
+vertex_shader vsTest2
+{
+file sampleShader.fx
+entry VS_Main
+profile vs_4_0
+
+	cbuffer per_frame
+	cbuffer per_object
+	cbuffer per_material
+	{
+		float4 colour 1 0 0 1
+	}
+
+}

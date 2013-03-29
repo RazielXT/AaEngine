@@ -4,11 +4,19 @@ AaSceneManager::AaSceneManager(AaRenderSystem* rs, AaGuiSystem* guiMgr)
 {
 	mRenderSystem=rs;
 	mGuiMgr=guiMgr;
+
 	mMaterialLoader= new AaMaterialLoader(rs);
 	mModelLoader= new AaModelLoader(rs);
 	currentCamera= new AaCamera();
 	defaultMaterial= new AaMaterial("Default",rs);
 	mShadingMgr = new AaShadingManager(mRenderSystem);
+
+	voxelScene = new AaVoxelScene(mRenderSystem);
+	voxelScene->initScene(32);
+
+	mMaterialLoader->addTextureResource(voxelScene->voxelSRV,"voxelScene");
+	mMaterialLoader->addUAV(voxelScene->voxelUAV,"voxelScene");
+
 }
 
 
@@ -21,6 +29,12 @@ AaSceneManager::~AaSceneManager()
 
 	mEntityMap.clear();
 
+	std::map<std::string,AaModelInfo*>::iterator it0;
+
+	for(it0=mModelMap.begin();it0!=mModelMap.end();it0++)
+		delete it0->second;
+
+	mModelMap.clear();
 
 	std::map<std::string,AaMaterial*>::iterator it2;
 	
@@ -30,6 +44,7 @@ AaSceneManager::~AaSceneManager()
 	mMaterialMap.clear();
 
 	delete mMaterialLoader;
+	delete voxelScene;
 	delete currentCamera;
 }
 
@@ -160,6 +175,66 @@ AaMaterial* AaSceneManager::getMaterial(std::string name)
 		return it->second;		
 }
 
+void AaSceneManager::renderSceneWithMaterial(AaMaterial* usedMaterial)
+{
+	ID3D11DeviceContext* d3dContext=mRenderSystem->getContext();
+
+	RenderState* mRenderState = usedMaterial->mRenderState;
+
+	d3dContext->RSSetState(mRenderState->rasterizerState);
+	float blendFactor[4]={0,0,0,0};
+	d3dContext->OMSetBlendState(mRenderState->alphaBlendState_, blendFactor, 0xFFFFFFFF );
+	d3dContext->OMSetDepthStencilState(mRenderState->dsState,1);
+	usedMaterial->prepareForRendering();
+
+	std::map<char,std::map<RenderState*,std::map<AaMaterial*,std::vector<AaEntity*>>>>::iterator queueIterator = mRenderQueue.begin();
+
+	//for all queues
+	for(;queueIterator != mRenderQueue.end();queueIterator++)
+	{		
+		std::map<RenderState*,std::map<AaMaterial*,std::vector<AaEntity*>>>::iterator rsIterator = queueIterator->second.begin();
+		std::map<RenderState*,std::map<AaMaterial*,std::vector<AaEntity*>>>::iterator rsIteratorEnd = queueIterator->second.end();
+
+		//sorted by render states
+		for(;rsIterator != rsIteratorEnd; rsIterator++)
+		{
+			std::map<AaMaterial*,std::vector<AaEntity*>>::iterator materialsIterator = rsIterator->second.begin();
+			std::map<AaMaterial*,std::vector<AaEntity*>>::iterator materialsIteratorEnd = rsIterator->second.end();
+
+			//for all materials
+			for(;materialsIterator !=materialsIteratorEnd; materialsIterator++)
+			{
+				std::vector<AaEntity*>::iterator entityIterator = materialsIterator->second.begin();
+
+				//for all objects
+				for(;entityIterator != materialsIterator->second.end();entityIterator++)
+				{
+					if(!(*entityIterator)->visible) continue;
+
+					AaModelInfo* model=(*entityIterator)->model;
+					usedMaterial->updateObjectConstants(*entityIterator);
+
+					unsigned int strides[2] = {sizeof( VertexPos ),sizeof( VertexPos2 )};
+					unsigned int offsets[2] = { 0, 0 };
+
+					d3dContext->IASetVertexBuffers( 0, usedMaterial->usedVertexBuffersCount, model->vertexBuffers_, strides, offsets );
+
+					if(model->usesIndexBuffer)
+						d3dContext->IASetIndexBuffer( model->indexBuffer_ , DXGI_FORMAT_R16_UINT, 0 );
+
+					d3dContext->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
+
+					if(model->usesIndexBuffer)
+						d3dContext->DrawIndexed( model->vertexCount, 0, 0 );
+					else
+						d3dContext->Draw( model->vertexCount, 0 );
+				}
+			}
+		}
+	}
+
+	usedMaterial->clearAfterRendering();
+}
 
 void AaSceneManager::renderScene()
 {
@@ -193,75 +268,38 @@ void AaSceneManager::renderScene()
 				{
 					//update material
 					AaMaterial* mat=materialsIterator->first;
-					mat->updatePerMaterialConstants();
+					mat->prepareForRendering();
 
 					std::vector<AaEntity*>::iterator entityIterator = materialsIterator->second.begin();
-					
+
 					//for all objects
 					for(;entityIterator != materialsIterator->second.end();entityIterator++)
 					{
 						if(!(*entityIterator)->visible) continue;
 
 						AaModelInfo* model=(*entityIterator)->model;
-						mat->updatePerObjectConstants(*entityIterator);
+						mat->updateObjectConstants(*entityIterator);
 
-						unsigned int stride = sizeof( VertexPos );
-						unsigned int offset = 0;
-						d3dContext->IASetInputLayout( model->inputLayout );
-						d3dContext->IASetVertexBuffers( 0, 1, &model->vertexBuffer_, &stride, &offset );
+						unsigned int strides[2] = {sizeof( VertexPos ),sizeof( VertexPos2 )};
+						unsigned int offsets[2] = { 0, 0 };
+
+						d3dContext->IASetVertexBuffers( 0, mat->usedVertexBuffersCount, model->vertexBuffers_, strides, offsets );
 
 						if(model->usesIndexBuffer)
 						d3dContext->IASetIndexBuffer( model->indexBuffer_ , DXGI_FORMAT_R16_UINT, 0 );
 
 						d3dContext->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
 
-						mat->prepareForRendering();
-
 						if(model->usesIndexBuffer)
 						d3dContext->DrawIndexed( model->vertexCount, 0, 0 );
 						else
 						d3dContext->Draw( model->vertexCount, 0 );
 					}
+
+					mat->clearAfterRendering();
 				}
 			}
 	}
-
-	/*
-	while(it!=mEntityMap.end())
-	{
-		AaEntity* ent=it->second;
-
-		//poslanie batch
-		AaModelInfo* model=ent->model;
-		
-		mat->updateMaterialConstants(ent);
-
-		unsigned int stride = sizeof( VertexPos );
-		unsigned int offset = 0;
-		rs->getContext()->IASetInputLayout( model->inputLayout );
-		rs->getContext()->IASetVertexBuffers( 0, 1, &model->vertexBuffer_, &stride, &offset );
-
-		if(model->usesIndexBuffer)
-		rs->getContext()->IASetIndexBuffer( model->indexBuffer_ , DXGI_FORMAT_R16_UINT, 0 );
-
-		rs->getContext()->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
-		rs->getContext()->VSSetShader( mat->vertexShaderProgram, 0, 0 );
-		rs->getContext()->PSSetShader( mat->pixelShaderProgram, 0, 0 );
-	
-		shaderTextureInfo info=mat->getTexturesInfoPS();
-		if(info.numTextures>0)
-		{
-			rs->getContext()->PSSetShaderResources( 0, info.numTextures, info.shaderMaps );
-			rs->getContext()->PSSetSamplers( 0, info.numTextures, info.samplerStates );
-		}
-
-		if(model->usesIndexBuffer)
-		rs->getContext()->DrawIndexed( model->vertexCount, 0, 0 );
-		else
-		rs->getContext()->Draw( model->vertexCount, 0 );
-
-		rs->swapChain_->Present(0,0);
-	}*/
 }
 
 AaModelInfo* AaSceneManager::getModel(std::string name)
@@ -269,7 +307,13 @@ AaModelInfo* AaSceneManager::getModel(std::string name)
 	std::map<std::string,AaModelInfo*>::iterator it = mModelMap.find(name);
 
 	if(it==mModelMap.end())
-		return mModelLoader->loadModel(name);
+	{
+		AaModelInfo* mi = mModelLoader->loadModel(name);
+		if(!mi)
+			return NULL;
+		mModelMap[name] = mi;
+		return mi;
+	}
 	else
 		return it->second;
 }

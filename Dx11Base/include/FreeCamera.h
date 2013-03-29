@@ -26,7 +26,7 @@ public:
 	{
 		XMFLOAT3 dir(0,0,0);
 		float speed=2*time;
-		if(turbo) speed*=3;
+		if(turbo) speed*=5;
 
 		if (w || s || a || d)
 		{

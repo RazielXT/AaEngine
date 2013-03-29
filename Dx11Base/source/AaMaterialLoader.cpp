@@ -22,6 +22,23 @@ AaMaterialLoader::AaMaterialLoader(AaRenderSystem* mRenderSystem)
 	AaLogger::getLogger()->writeMessage("Loaded texture image Default.png");
 
 	//defaultFiltering
+	D3D11_SAMPLER_DESC textureMapDesc;
+	ZeroMemory( &textureMapDesc, sizeof( textureMapDesc ) );
+	textureMapDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	textureMapDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	textureMapDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	textureMapDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	textureMapDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+	textureMapDesc.MaxAnisotropy = 8;
+	textureMapDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	d3dResult = mRenderSystem->getDevice()->CreateSamplerState( &textureMapDesc, &defaultMapSampler );
+
+	if( FAILED( d3dResult ) )
+	{
+		DXTRACE_MSG( "Failed to create default sampler state!" );
+		AaLogger::getLogger()->writeMessage("ERROR Failed to create default sampler state" );
+	}
+
 }
 
 AaMaterialLoader::~AaMaterialLoader()
@@ -32,6 +49,14 @@ AaMaterialLoader::~AaMaterialLoader()
 	{
 		it->second->Release();
 		it++;
+	}
+
+	std::map<std::string,ID3D11UnorderedAccessView*>::iterator it3 = loadedUAVs.begin();
+
+	while(it3 != loadedUAVs.end())
+	{
+		it3->second->Release();
+		it3++;
 	}
 
 	loadedTextures.clear();
@@ -45,7 +70,7 @@ AaMaterialLoader::~AaMaterialLoader()
 		it2++;
 	}
 
-	loadedTextures.clear();
+	loadedVertexShaders.clear();
 
 	it2 = loadedPixelShaders.begin();
 	
@@ -55,9 +80,20 @@ AaMaterialLoader::~AaMaterialLoader()
 		it2++;
 	}
 
-	loadedTextures.clear();
+	loadedPixelShaders.clear();
 
 	defaultTexture->Release();
+	defaultMapSampler->Release();
+}
+
+void AaMaterialLoader::addUAV(ID3D11UnorderedAccessView* view, std::string name)
+{
+	loadedUAVs[name] = view;
+}
+
+void AaMaterialLoader::addSRV(ID3D11ShaderResourceView* view, std::string name)
+{
+	loadedSRVs[name] = view;
 }
 
 std::map<std::string,AaMaterial*> AaMaterialLoader::loadMaterials(std::string directory, bool subDirectories)
@@ -81,6 +117,7 @@ std::map<std::string,AaMaterial*> AaMaterialLoader::loadMaterials(std::string di
 
 		//create material
 		AaMaterial* mat=new AaMaterial(curMat.name,mRenderSystem);
+		mat->mRenderState = mRenderSystem->getRenderState(curMat.renderStateDesc);
 
 		std::map<std::string,shaderRef>::iterator it;
 
@@ -101,7 +138,7 @@ std::map<std::string,AaMaterial*> AaMaterialLoader::loadMaterials(std::string di
 			//v shader textures
 			for(int j=0;j<curMat.vstextures.size();j++)
 			{
-				mat->addTexture(getTextureResource(curMat.vstextures.at(j).file),Shader_type_vertex);
+				mat->addTexture(getTextureResource(curMat.vstextures.at(j).file),defaultMapSampler,Shader_type_vertex);
 			}
 		}
 
@@ -133,7 +170,13 @@ std::map<std::string,AaMaterial*> AaMaterialLoader::loadMaterials(std::string di
 			//pixel shader textures
 			for(int j=0;j<curMat.pstextures.size();j++)
 			{
-				mat->addTexture(getTextureResource(curMat.pstextures.at(j).file),Shader_type_pixel);
+				mat->addTexture(getTextureResource(curMat.pstextures.at(j).file),defaultMapSampler,Shader_type_pixel);
+			}
+
+			//pixel shader uav
+			for(int j=0;j<curMat.psuavs.size();j++)
+			{	
+				mat->addUAV(loadedUAVs.find(curMat.psuavs.at(j))->second);
 			}
 		}
 
@@ -311,6 +354,10 @@ void AaMaterialLoader::compileShaderReferences()
 	}
 }
 
+void AaMaterialLoader::addTextureResource(ID3D11ShaderResourceView* view, std::string name)
+{
+	loadedTextures[name] = view;
+}
 
 ID3D11ShaderResourceView* AaMaterialLoader::getTextureResource(std::string file)
 {
@@ -325,7 +372,9 @@ ID3D11ShaderResourceView* AaMaterialLoader::getTextureResource(std::string file)
 
 		//D3DX11_IMAGE_LOAD_INFO info;
 		
-		HRESULT d3dResult = D3DX11CreateShaderResourceViewFromFile( mRenderSystem->getDevice(), filePosition.c_str(), 0, 0, &textureMap, 0 );
+		ID3D11Texture2D* texture;
+		HRESULT d3dResult = D3DX11CreateTextureFromFile(mRenderSystem->getDevice(), filePosition.c_str(), 0, 0, (ID3D11Resource**)&texture, 0 );
+		//D3DX11CreateShaderResourceViewFromFile( mRenderSystem->getD3DDevice(), filePosition.c_str(), 0, 0, &textureMap, 0 );
 
 		if( FAILED( d3dResult ) )
 		{
@@ -334,8 +383,29 @@ ID3D11ShaderResourceView* AaMaterialLoader::getTextureResource(std::string file)
 		}
 		else
 		{
-			loadedTextures[file]=textureMap;
-			AaLogger::getLogger()->writeMessage("Loaded texture image "+file);
+
+			D3D11_SHADER_RESOURCE_VIEW_DESC SRVDesc;
+			memset( &SRVDesc, 0, sizeof( SRVDesc ) );
+			D3D11_TEXTURE2D_DESC desc;
+			texture->GetDesc(&desc);
+			SRVDesc.Format = desc.Format;
+			SRVDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+			SRVDesc.Texture2D.MipLevels = -1;
+
+			d3dResult = mRenderSystem->getDevice()->CreateShaderResourceView( texture, &SRVDesc, &textureMap );
+
+			texture->Release();
+
+			if( FAILED( d3dResult ) )
+			{
+				AaLogger::getLogger()->writeMessage("ERROR Failed to create SRV for texture image "+file+"!" );
+				textureMap = defaultTexture;
+			}
+			else
+			{
+				loadedTextures[file]=textureMap;
+				AaLogger::getLogger()->writeMessage("Loaded texture image "+file);
+			}
 		}
 
 		return textureMap;

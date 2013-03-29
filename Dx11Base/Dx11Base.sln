@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Dx11Base", "Dx11Base.vcproj", "{5E6F6625-9B14-4AD0-B1FF-1712DB33C22C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5E6F6625-9B14-4AD0-B1FF-1712DB33C22C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5E6F6625-9B14-4AD0-B1FF-1712DB33C22C}.Debug|Win32.Build.0 = Debug|Win32
+		{5E6F6625-9B14-4AD0-B1FF-1712DB33C22C}.Release|Win32.ActiveCfg = Release|Win32
+		{5E6F6625-9B14-4AD0-B1FF-1712DB33C22C}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

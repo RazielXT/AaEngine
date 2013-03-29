@@ -18,11 +18,13 @@ public:
 		//initial values
 		*view_m = XMMatrixIdentity( );
 		*projection_m = XMMatrixPerspectiveFovLH( XM_PIDIV4, 800.0f / 600.0f, 0.01f, 100.0f );
+
 		*view_projection_m = XMMatrixMultiply( *view_m, *projection_m );
 
 		position = XMFLOAT3(0,0,0);
 		direction = XMFLOAT3(0,0,1); 
 		upVector = XMFLOAT3(0,1,0); 
+
 		yaw_=pitch_=roll_=0;
 		dirty=false;
 	}
@@ -33,6 +35,18 @@ public:
 		_aligned_free( ( void* )view_m ); 
 		_aligned_free( ( void* )projection_m ); 
 		_aligned_free( ( void* )view_projection_m ); 
+	}
+
+	void setOrthograhicCamera(float width,float height,float nearZ,float farZ)
+	{
+		*projection_m = XMMatrixOrthographicLH(width,height,nearZ,farZ);
+		dirty = true;
+	}
+
+	void setPerspectiveCamera(float fov,float aspectRatio,float nearZ,float farZ)
+	{
+		*projection_m = XMMatrixPerspectiveFovLH( fov*(XM_PI/180.0f), aspectRatio ,nearZ,farZ );
+		dirty = true;
 	}
 
 	XMMATRIX* getViewProjectionMatrix() 

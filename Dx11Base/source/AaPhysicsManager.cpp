@@ -223,9 +223,8 @@ PxRigidDynamic* AaPhysicsManager::createConvexBodyDynamic(AaEntity* owner, PxMat
 
 	XMFLOAT3 pos = owner->getPosition();
 	XMFLOAT3 scale = owner->getScale();
-	XMFLOAT3 rotation = owner->getYawPitchRoll();
+	XMMATRIX rot = XMMatrixRotationQuaternion(*owner->getQuaternion());
 
-	XMMATRIX rot = XMMatrixRotationRollPitchYaw(rotation.z,rotation.y,rotation.x);
 	XMFLOAT3X3 rotMatrix;
 	XMStoreFloat3x3(&rotMatrix,rot);
 	physx::PxMat33* rotPhysx = (physx::PxMat33*)&rotMatrix;
@@ -260,9 +259,8 @@ PxRigidStatic* AaPhysicsManager::createConvexBodyStatic(AaEntity* owner, PxMater
 
 	XMFLOAT3 pos = owner->getPosition();
 	XMFLOAT3 scale = owner->getScale();
-	XMFLOAT3 rotation = owner->getYawPitchRoll();
+	XMMATRIX rot = XMMatrixRotationQuaternion(*owner->getQuaternion());
 
-	XMMATRIX rot = XMMatrixRotationRollPitchYaw(rotation.z,rotation.y,rotation.x);
 	XMFLOAT3X3 rotMatrix;
 	XMStoreFloat3x3(&rotMatrix,rot);
 	physx::PxMat33* rotPhysx = (physx::PxMat33*)&rotMatrix;
@@ -297,9 +295,8 @@ PxRigidStatic* AaPhysicsManager::createTreeBodyStatic(AaEntity* owner, PxMateria
 
 	XMFLOAT3 pos = owner->getPosition();
 	XMFLOAT3 scale = owner->getScale();
-	XMFLOAT3 rotation = owner->getYawPitchRoll();
+	XMMATRIX rot = XMMatrixRotationQuaternion(*owner->getQuaternion());
 
-	XMMATRIX rot = XMMatrixRotationRollPitchYaw(rotation.z,rotation.y,rotation.x);
 	XMFLOAT3X3 rotMatrix;
 	XMStoreFloat3x3(&rotMatrix,rot);
 	physx::PxMat33* rotPhysx = (physx::PxMat33*)&rotMatrix;

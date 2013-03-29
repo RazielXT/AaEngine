@@ -5,7 +5,12 @@ struct VertexPos
 {
 	XMFLOAT3 pos;
 	XMFLOAT2 tex0;
+};
+
+struct VertexPos2
+{
 	XMFLOAT3 norm;
+	XMFLOAT3 tang;
 };
 
 struct RawModelInfo
@@ -20,12 +25,31 @@ struct AaModelInfo
 {
 	D3D11_INPUT_ELEMENT_DESC* vertexLayout;
 	unsigned int totalLayoutElements;
-	ID3D11Buffer* vertexBuffer_;
+	ID3D11Buffer* vertexBuffers_[3];
+	UCHAR vBuffersCount;
 	ID3D11Buffer* indexBuffer_;
 	bool usesIndexBuffer;
-	ID3D11InputLayout* inputLayout; 
+	
 	UINT vertexCount;
 	RawModelInfo* rawInfo;
+
+	AaModelInfo()
+	{
+		vBuffersCount = 0;
+		usesIndexBuffer = false;
+	}
+
+	~AaModelInfo()
+	{
+		if(usesIndexBuffer)
+			indexBuffer_->Release();
+
+		for (int i = 0;i<vBuffersCount;i++)
+			vertexBuffers_[i]->Release();
+
+		delete rawInfo;
+		delete [] vertexLayout;
+	}
 };
 
 #endif

@@ -8,9 +8,18 @@ AaGuiSystem::AaGuiSystem()
 AaGuiSystem::~AaGuiSystem()
 {
 	context->RemoveReference();
+
 	system_interface->Release();
+
 	directx_renderer->Release();
+
 	Rocket::Core::Shutdown();
+
+	delete directx_renderer;
+
+	guiRenderState->Release();
+	alphaBlendState_->Release();
+	dsState->Release();
 }
 
 void AaGuiSystem::init(ID3D11Device* d3dDevice,ID3D11DeviceContext* d3dContext, int width, int heigth)

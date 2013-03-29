@@ -185,6 +185,31 @@ std::vector<materialInfo> AaMaterialFileParser::parseMaterialFile(std::string fi
 					 continue;
 				 }
 
+				 //rs
+				 if(strFunctions.getToken(&line,"depth_write_off"))
+				 {
+					 mat.renderStateDesc.depth_write=0;
+					 continue;
+				 }
+				 else
+				 if(strFunctions.getToken(&line,"depth_check_off"))
+				 {
+					 mat.renderStateDesc.depth_check=0;
+					 continue;
+				 }
+				 else
+				 if(strFunctions.getToken(&line,"culling_none"))
+				 {
+					 mat.renderStateDesc.culling=0;
+					 continue;
+				 }
+				 else
+				 if(strFunctions.getToken(&line,"alpha_blend"))
+				 {
+					 mat.renderStateDesc.alpha_blend=1;
+					 continue;
+				 }
+
 
 				 //params to mat cbuffer
 				 if(strFunctions.getToken(&line,"default_params"))
@@ -240,6 +265,12 @@ std::vector<materialInfo> AaMaterialFileParser::parseMaterialFile(std::string fi
 					 valid=false;
 				 }
 
+				 //UAVs
+				 if(strFunctions.getToken(&line,"UAV"))
+				 {
+					 mat.psuavs.push_back(strFunctions.onlyNextWord(line));
+				 }
+
 				 //textures
 				 if(strFunctions.getToken(&line,"texture"))
 				 {
@@ -271,7 +302,7 @@ std::vector<materialInfo> AaMaterialFileParser::parseMaterialFile(std::string fi
 					 {
 						 
 						 //file
-						 if(strFunctions.getToken(&line,"file"))
+						 if(strFunctions.getToken(&line,"name"))
 						 {
 							 line=strFunctions.onlyNextWord(line);
 							 tex.file=line;

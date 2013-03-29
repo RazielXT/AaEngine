@@ -1,6 +1,14 @@
 #include "AaRenderSystem.h"
 #include "ShaderConstsPtr.h"
 
+bool operator<(const RS_DESC& lhs, const RS_DESC& rhs)
+{
+	USHORT c1 = lhs.alpha_blend + lhs.depth_check*2 + lhs.depth_write*4 + lhs.culling*8;
+	USHORT c2 = rhs.alpha_blend + rhs.depth_check*2 + rhs.depth_write*4 + rhs.culling*8;
+
+	return c1<c2;
+}
+
 AaRenderSystem::AaRenderSystem(AaWindow* mWindow)
 {
 	this->mWindow = mWindow;
@@ -117,13 +125,12 @@ AaRenderSystem::AaRenderSystem(AaWindow* mWindow)
 	descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 	descDSV.Texture2D.MipSlice = 0;
 	result = d3dDevice_->CreateDepthStencilView( depthTexture_, &descDSV,&depthStencilView_ );
+	depthTexture_->Release();
 
 	if( FAILED( result ) )
 	{
 		DXTRACE_MSG( "Failed to create the depth stencil target view!" );
 	}
-
-	d3dContext_->OMSetRenderTargets( 1, &backBufferTarget_, depthStencilView_ );
 			
 	D3D11_VIEWPORT viewport;
 	viewport.Width = static_cast<float>(width);
@@ -133,8 +140,6 @@ AaRenderSystem::AaRenderSystem(AaWindow* mWindow)
 	viewport.TopLeftX = 0.0f;
 	viewport.TopLeftY = 0.0f;
 	d3dContext_->RSSetViewports( 1, &viewport );
-
-	defaultRS = new RenderState();
 	
 	D3D11_RASTERIZER_DESC rasterDesc;
 	rasterDesc.AntialiasedLineEnable = false;
@@ -147,11 +152,12 @@ AaRenderSystem::AaRenderSystem(AaWindow* mWindow)
 	rasterDesc.MultisampleEnable = false;
 	rasterDesc.SlopeScaledDepthBias = 0.0f;
 	rasterDesc.ScissorEnable=false;
-	d3dDevice_->CreateRasterizerState(&rasterDesc,&defaultRS->rasterizerState);
+	d3dDevice_->CreateRasterizerState(&rasterDesc,&rasterizerStates[1]);
+	rasterDesc.CullMode = D3D11_CULL_NONE;
+	d3dDevice_->CreateRasterizerState(&rasterDesc,&rasterizerStates[0]);
 
 	D3D11_BLEND_DESC blendStateDescription;
 	ZeroMemory( &blendStateDescription, sizeof( blendStateDescription ) );
-	blendStateDescription.RenderTarget[0].BlendEnable = FALSE;
 	blendStateDescription.AlphaToCoverageEnable = FALSE;
 	blendStateDescription.IndependentBlendEnable = FALSE;
 	blendStateDescription.RenderTarget[0].BlendEnable = FALSE;
@@ -162,14 +168,41 @@ AaRenderSystem::AaRenderSystem(AaWindow* mWindow)
 	blendStateDescription.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
 	blendStateDescription.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
 	blendStateDescription.RenderTarget[0].RenderTargetWriteMask	= D3D11_COLOR_WRITE_ENABLE_ALL;
-	d3dDevice_->CreateBlendState( &blendStateDescription, &defaultRS->alphaBlendState_ );
+	d3dDevice_->CreateBlendState( &blendStateDescription, &alphaBlendStates[0] );
+
+	ZeroMemory( &blendStateDescription, sizeof( blendStateDescription ) );
+	blendStateDescription.RenderTarget[0].BlendEnable = TRUE;
+	blendStateDescription.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blendStateDescription.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	blendStateDescription.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	blendStateDescription.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blendStateDescription.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	blendStateDescription.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blendStateDescription.RenderTarget[0].RenderTargetWriteMask = 0x0f;
+	d3dDevice_->CreateBlendState( &blendStateDescription, &alphaBlendStates[1] );
 
 	D3D11_DEPTH_STENCIL_DESC depthDisabledStencilDesc;
-	depthDisabledStencilDesc.DepthEnable = true;
-	depthDisabledStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	depthDisabledStencilDesc.DepthEnable = false;
+	depthDisabledStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 	depthDisabledStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
 	depthDisabledStencilDesc.StencilEnable = false;
-	d3dDevice_->CreateDepthStencilState(&depthDisabledStencilDesc, &defaultRS->dsState );
+	d3dDevice_->CreateDepthStencilState(&depthDisabledStencilDesc, &dsStates[0] );
+	depthDisabledStencilDesc.DepthEnable = true;
+	depthDisabledStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+	d3dDevice_->CreateDepthStencilState(&depthDisabledStencilDesc, &dsStates[1] );
+	depthDisabledStencilDesc.DepthEnable = false;
+	depthDisabledStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	d3dDevice_->CreateDepthStencilState(&depthDisabledStencilDesc, &dsStates[2] );
+	depthDisabledStencilDesc.DepthEnable = true;
+	depthDisabledStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	d3dDevice_->CreateDepthStencilState(&depthDisabledStencilDesc, &dsStates[3] );
+
+	RS_DESC desc;
+	desc.alpha_blend = 0;
+	desc.culling = 1;
+	desc.depth_check = 1;
+	desc.depth_write = 1;
+	defaultRS = getRenderState(desc);
 
 	D3D11_BUFFER_DESC constDesc;
 	ZeroMemory( &constDesc, sizeof( constDesc ) );
@@ -184,6 +217,9 @@ AaRenderSystem::AaRenderSystem(AaWindow* mWindow)
 	constDesc.Usage = D3D11_USAGE_DEFAULT;
 	d3dResult = d3dDevice_->CreateBuffer( &constDesc, 0, &perObjectBuffer);
 
+//	perFrameConstantsBuffer.time = 0;
+
+	setBackbufferAsRenderTarget();
 	clearViews();
 	swapChain_->Present(0,0);
 }
@@ -193,6 +229,22 @@ AaRenderSystem::~AaRenderSystem()
 	perObjectBuffer->Release();
 	perFrameBuffer->Release();
 
+	std::map<RS_DESC,RenderState*>::iterator it = mRenderStates.begin();
+	while(it!=mRenderStates.end())
+	{
+		delete it->second;
+		it++;
+	}
+
+	alphaBlendStates[0]->Release();
+	alphaBlendStates[1]->Release();
+	dsStates[0]->Release();
+	dsStates[1]->Release();
+	dsStates[2]->Release();
+	dsStates[3]->Release();
+	rasterizerStates[0]->Release();
+	rasterizerStates[1]->Release();
+
 	if( d3dContext_ ) d3dContext_->ClearState( );
 
 	if( backBufferTarget_ ) backBufferTarget_->Release( );
@@ -200,6 +252,7 @@ AaRenderSystem::~AaRenderSystem()
 	if( swapChain_ ) swapChain_->Release( );
 	if( d3dContext_ ) d3dContext_->Release( );
 	if( d3dDevice_ ) d3dDevice_->Release( );
+	d3dDevice_->Release( );
 }
 
 void AaRenderSystem::clearViews()
@@ -211,4 +264,48 @@ void AaRenderSystem::clearViews()
 RenderState* AaRenderSystem::getDefaultRenderState()
 {
 	return defaultRS;
+}
+
+RenderState* AaRenderSystem::getRenderState(RS_DESC desc)
+{
+	std::map<RS_DESC,RenderState*>::iterator it = mRenderStates.find(desc);
+
+	if(it!=mRenderStates.end())
+		return it->second;
+	else
+	{
+		RenderState* newRS = new RenderState();
+		newRS->alphaBlendState_ = alphaBlendStates[desc.alpha_blend];
+		newRS->rasterizerState = rasterizerStates[desc.culling];
+		newRS->dsState = dsStates[desc.depth_check + desc.depth_write*2];
+
+		mRenderStates[desc] = newRS;
+
+		return newRS;
+	}
+}
+
+void AaRenderSystem::setBackbufferAsRenderTarget()
+{
+	currentRTcount = 1;
+	currentRTs = &backBufferTarget_;
+	d3dContext_->OMSetRenderTargets( currentRTcount, currentRTs, depthStencilView_ );
+}
+
+void AaRenderSystem::setRenderTargets(UINT numCount, ID3D11RenderTargetView** views)
+{
+	currentRTcount = numCount;
+	currentRTs = views;
+	d3dContext_->OMSetRenderTargets( currentRTcount, currentRTs, depthStencilView_ );
+}
+
+void AaRenderSystem::setUAVs(UINT startSlot, UINT num, ID3D11UnorderedAccessView** views)
+{
+	UINT counter[5] = {0,0,0,0,0};
+	d3dContext_->OMSetRenderTargetsAndUnorderedAccessViews( 1, &backBufferTarget_, depthStencilView_,startSlot, num, views, counter);
+}
+
+void AaRenderSystem::removeUAVs()
+{
+	d3dContext_->OMSetRenderTargets( currentRTcount, currentRTs, depthStencilView_ );
 }

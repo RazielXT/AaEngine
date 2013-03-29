@@ -157,8 +157,8 @@ bool ObjFileParser::loadContent(AaModelInfo* model)
 		vertsPtr += 3;
 		vertices[i].tex0 = XMFLOAT2( *(texCPtr + 0), *(texCPtr + 1) );
 		texCPtr += 2;
-		vertices[i].norm = XMFLOAT3( *(normPtr + 0), *(normPtr + 1), *(normPtr + 2) );
-		normPtr += 3;
+		//vertices[i].norm = XMFLOAT3( *(normPtr + 0), *(normPtr + 1), *(normPtr + 2) );
+		//normPtr += 3;
 	}
 
 	D3D11_BUFFER_DESC vertexDesc;
@@ -170,7 +170,7 @@ bool ObjFileParser::loadContent(AaModelInfo* model)
 	ZeroMemory( &resourceData, sizeof( resourceData ) );
 	resourceData.pSysMem = vertices;
 
-	HRESULT d3dResult = d3dDevice->CreateBuffer( &vertexDesc, &resourceData,	&model->vertexBuffer_ );
+	HRESULT d3dResult;// = d3dDevice->CreateBuffer( &vertexDesc, &resourceData,	&model->vertexBuffer_ );
 
 	if( FAILED( d3dResult ) )
 	{

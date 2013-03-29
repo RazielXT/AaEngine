@@ -4,6 +4,7 @@
 #include "GlobalDefinitions.h"
 #include "AaSceneNode.h"
 #include "TestGuiWindow.h"
+#include "AaSceneParser.h"
 
 AaEntity* ent;
 TestGuiWindow* debugWindow;
@@ -20,7 +21,7 @@ MyListener::MyListener(AaSceneManager* mSceneMgr, AaPhysicsManager* mPhysicsMgr)
 	AaRenderSystem* rs=mSceneMgr->getRenderSystem();
 	mSceneMgr->loadMaterialFiles(MATERIAL_DIRECTORY);
 
-	AaMaterial* mat=mSceneMgr->getMaterial("Test");
+	AaMaterial* mat=mSceneMgr->getMaterial("Test2");
 	ent= mSceneMgr->createEntity("testEnt",mat);
 	ent->setModel("angel");
 	ent->setScale(XMFLOAT3(10,10,10));
@@ -50,25 +51,25 @@ MyListener::MyListener(AaSceneManager* mSceneMgr, AaPhysicsManager* mPhysicsMgr)
 	node->yawPitchRoll(0.4,0.2,0);
 	node->localPitch(1);
 
-	ent= mSceneMgr->createEntity("testEnt2",mat);
+	/*ent= mSceneMgr->createEntity("testEnt2",mat);
 	ent->setModel("teapot.obj");
 	ent->yaw(0.7f);
 	ent->pitch(-1.7f);
 	ent->yaw(-2.7f);
-	ent->setPosition(3,-1,10);
-
+	ent->setPosition(3,-1,10);*/
+	
 	PxMaterial* mMaterial;
 	mMaterial = mPhysicsMgr->getPhysics()->createMaterial(0.7f, 1.7f, 0.2f);    //static friction, dynamic friction, restitution
 	PxShape* aSphereShape;
 
 	ent= mSceneMgr->createEntity("testEnt3",mat);
-	ent->setModel("ball");
+	ent->setModel("ball32.mesh");
 	ent->setPosition(0,10,20);
 	ent->setScale(XMFLOAT3(0.4,0.4,0.4));
 	mPhysicsMgr->createSphereBodyDynamic(ent,0.4)->setLinearVelocity(physx::PxVec3(1,15,0));
 
 	ent= mSceneMgr->createEntity("testEnt4",mat);
-	ent->setModel("ball");
+	ent->setModel("ball32.mesh");
 	ent->setPosition(0,11,20);
 	ent->setScale(XMFLOAT3(0.4,0.4,0.4));
 	mPhysicsMgr->createSphereBodyDynamic(ent,0.4)->setLinearVelocity(physx::PxVec3(1,15,0));
@@ -99,9 +100,17 @@ MyListener::MyListener(AaSceneManager* mSceneMgr, AaPhysicsManager* mPhysicsMgr)
 	ent->setScale(XMFLOAT3(2,1,2));
 	ent->roll(0.5);
 	mPhysicsMgr->createConvexBodyDynamic(ent)->setLinearVelocity(physx::PxVec3(1,15,0));
+	
+	Light* l = new Light();
+	l->color = XMFLOAT3(1,1,1);
+	l->direction = XMFLOAT3(-0.5f,-10,-0.5f);
+	XMStoreFloat3(&l->direction,XMVector2Normalize(XMLoadFloat3(&l->direction)));
+
+	mSceneMgr->mShadingMgr->directionalLight = l;
 
 	mPhysicsMgr->createPlane(0,0,0,0);
 
+	loadScene("test.scene",mSceneMgr,mPhysicsMgr);
 
 	mRS=rs;
 
@@ -132,6 +141,7 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 
 	mSceneMgr->mShadingMgr->updatePerFrameConstants(timeSinceLastFrame,mSceneMgr->getCamera());
 	mSceneMgr->renderScene();
+
 	mSceneMgr->getGuiManager()->render();
 
 	mRS->swapChain_->Present(0,0);

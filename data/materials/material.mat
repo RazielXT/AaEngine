@@ -1,4 +1,4 @@
-material Test
+material Test2
 {
 vertex_ref vsTest
 pixel_ref psTest
@@ -8,14 +8,21 @@ default_params
 	col 0 1 0 1
 }
 
+culling_none
+
 	texture
 	{
-		file glass.png
+		name glass.png
 	}
 	
 	texture
 	{
-		file 1.png
+		name 1.png
+	}
+	
+	texture
+	{
+		name voxelScene
 	}
 
 }

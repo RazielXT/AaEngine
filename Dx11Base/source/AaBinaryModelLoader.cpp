@@ -25,12 +25,15 @@ AaModelInfo* AaBinaryModelLoader::load(std::string filename)
 	rawModel->vertex_count = m->vertex_count;
 
 	VertexPos* vertices = new VertexPos[m->vertex_count];
+	VertexPos2* vertices2 = new VertexPos2[m->vertex_count];
 
 	for( int i = 0; i < m->vertex_count; i++ )
 	{
 		vertices[i].pos = XMFLOAT3( m->positions_[i*3], m->positions_[i*3 + 1], m->positions_[i*3 + 2] );
 		vertices[i].tex0 = XMFLOAT2( m->texCoords_[i*2] ,  m->texCoords_[i*2 + 1] );
-		vertices[i].norm = XMFLOAT3( m->normals_[i*3], m->normals_[i*3 + 1], m->normals_[i*3 + 2] );
+
+		vertices2[i].norm = XMFLOAT3( m->normals_[i*3], m->normals_[i*3 + 1], m->normals_[i*3 + 2] );
+		vertices2[i].tang = XMFLOAT3( m->tangents_[i*3], m->tangents_[i*3 + 1], m->tangents_[i*3 + 2] );
 
 		rawModel->vertices[i*3] = m->positions_[i*3];
 		rawModel->vertices[i*3+1] = m->positions_[i*3+1];
@@ -82,7 +85,7 @@ AaModelInfo* AaBinaryModelLoader::load(std::string filename)
 	ZeroMemory( &resourceData, sizeof( resourceData ) );
 	resourceData.pSysMem = vertices;
 
-	d3dResult = d3dDevice->CreateBuffer( &vertexDesc, &resourceData,	&model->vertexBuffer_ );
+	d3dResult = d3dDevice->CreateBuffer( &vertexDesc, &resourceData,	&model->vertexBuffers_[0] );
 
 	if( FAILED( d3dResult ) )
 	{
@@ -90,21 +93,43 @@ AaModelInfo* AaBinaryModelLoader::load(std::string filename)
 		return false;
 	}
 
+	ZeroMemory( &vertexDesc, sizeof( vertexDesc ) );
+	vertexDesc.Usage = D3D11_USAGE_DEFAULT;
+	vertexDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vertexDesc.ByteWidth = sizeof( VertexPos2 ) * m->vertex_count;
+	ZeroMemory( &resourceData, sizeof( resourceData ) );
+	resourceData.pSysMem = vertices2;
+
+	d3dResult = d3dDevice->CreateBuffer( &vertexDesc, &resourceData,	&model->vertexBuffers_[1] );
+
+	if( FAILED( d3dResult ) )
+	{
+		DXTRACE_MSG( "Failed to create vertex buffer!" );
+		return false;
+	}
+
+
 	//input do vertex shadera
 	D3D11_INPUT_ELEMENT_DESC vLp= { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 };
 	D3D11_INPUT_ELEMENT_DESC vLtc = { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 };
-	D3D11_INPUT_ELEMENT_DESC vLn = { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0 };
 
-	model->vertexLayout = new D3D11_INPUT_ELEMENT_DESC[3];
+	D3D11_INPUT_ELEMENT_DESC vLn = { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 };
+	D3D11_INPUT_ELEMENT_DESC vLt = { "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 };
+
+	model->vertexLayout = new D3D11_INPUT_ELEMENT_DESC[4];
 	model->vertexLayout[0] = vLp;
 	model->vertexLayout[1] = vLtc;
 	model->vertexLayout[2] = vLn;
+	model->vertexLayout[3] = vLt;
 
-	model->totalLayoutElements = 3;
+	model->totalLayoutElements = 4;
+	model->vBuffersCount = 2;
 	model->usesIndexBuffer=true;
 	model->vertexCount=m->index_count;
 
 	delete m;
+	delete [] vertices;
+	delete [] vertices2;
 
 	return model;
 }

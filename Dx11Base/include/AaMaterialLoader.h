@@ -32,6 +32,11 @@ public:
 	ID3D11ShaderResourceView* getTextureResource(std::string file);
 	void setDefaultFiltering(Filtering type, int max_anisotropy=1) { defaultFiltering=type; }
 
+	void addTextureResource(ID3D11ShaderResourceView* view, std::string name);
+
+	void addUAV(ID3D11UnorderedAccessView* view, std::string name);
+	void addSRV(ID3D11ShaderResourceView* view, std::string name);
+
 	bool compileVertexShaderRef(shaderRef* reference);
 	bool compilePixelShaderRef(shaderRef* reference);
 
@@ -40,8 +45,12 @@ private:
 	AaRenderSystem* mRenderSystem;
 	AaMaterialFileParser fileParser;
 	std::map<std::string,ID3D11ShaderResourceView*> loadedTextures;
+	std::map<std::string,ID3D11UnorderedAccessView*> loadedUAVs;
+	std::map<std::string,ID3D11ShaderResourceView*> loadedSRVs;
 	std::map<std::string,shaderRef> loadedVertexShaders;
 	std::map<std::string,shaderRef> loadedPixelShaders;
+
+	ID3D11SamplerState* defaultMapSampler;
 	ID3D11ShaderResourceView* defaultTexture;
 	Filtering defaultFiltering;
 	

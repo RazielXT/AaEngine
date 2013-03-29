@@ -29,7 +29,9 @@ float4 PS_Main( PS_Input frag,
 			Texture2D colorMap : register(t0),
 			SamplerState colorSampler : register(s0),
 			Texture2D colorMap2 : register(t1),
-			SamplerState colorSampler2 : register(s1)
+			SamplerState colorSampler2 : register(s1),
+			SamplerState colorSampler3 : register(s2),
+			Texture3D scene : register(t2)
 		     ) : SV_TARGET
 {
 float4 color1=colorMap.Sample( colorSampler, frag.uv );
@@ -37,15 +39,7 @@ float4 color2=colorMap2.Sample( colorSampler2, frag.uv*2 );
 
 if(color2.g>0.6) discard;
 
-color1 *= col;
+color1.rgb += scene.Sample( colorSampler3, float3(0.5,0.5,0.5) );;
 
 return color1;
-}
-
-float4 PS_Main2( PS_Input frag,
-			Texture2D colorMap : register(t0),
-			SamplerState colorSampler : register(s0)
-		     ) : SV_TARGET
-{
-return colorMap.Sample( colorSampler, frag.uv ).r;
 }

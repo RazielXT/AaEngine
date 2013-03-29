@@ -7,7 +7,7 @@
 
 enum LightType
 {
-	LightType_Point, LightType_Directional
+	LightType_Point, LightType_Directional, LightType_Spotlight
 };
 
 struct Light
@@ -16,6 +16,8 @@ struct Light
 	XMFLOAT3 direction;
 	XMFLOAT3 color;
 	XMFLOAT3 position;
+	float attenuation;
+	float range;
 };
 
 class AaShadingManager

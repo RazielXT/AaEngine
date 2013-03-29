@@ -4,7 +4,9 @@
 AaShadingManager::AaShadingManager(AaRenderSystem* mRS)
 {
 	mRenderSystem = mRS;
+
 	directionalLight = NULL;
+	ambientColor = XMFLOAT3(0,0,0);
 }
 
 AaShadingManager::~AaShadingManager()
@@ -24,10 +26,12 @@ void AaShadingManager::updatePerFrameConstants(float timeSinceLastFrame, AaCamer
 	}
 	else
 	{
+		mRenderSystem->perFrameConstantsBuffer.directional_light_direction = XMFLOAT3(0,0,0);
 		mRenderSystem->perFrameConstantsBuffer.directional_light_color = XMFLOAT3(0,0,0);
 	}
 	
 	mRenderSystem->perFrameConstantsBuffer.cameraPos = cam->getPosition();
+
 	XMStoreFloat4x4(&mRenderSystem->perFrameConstantsBuffer.viewProjectionMatrix,*cam->getViewProjectionMatrix());
 
 	mRenderSystem->getContext()->UpdateSubresource( mRenderSystem->perFrameBuffer, 0, 0, &mRenderSystem->perFrameConstantsBuffer, 0, 0 );

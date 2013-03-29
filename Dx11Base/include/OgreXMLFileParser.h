@@ -27,7 +27,7 @@ private:
 	bool parseOgreXMLFile(std::string filename, bool optimize);
 	void parseFaces(const TiXmlElement* facesElement);
 	void parseGeometry(const TiXmlElement* geometryElement, bool optimize);
-	void saveBinaryFile(std::string filename);
+	void saveBinaryFile(std::string filename, RawModelInfo* saveInfo = NULL);
 
 	AaModelInfo* createBuffers(bool optimize);
 	void clearBuffers();
@@ -37,6 +37,7 @@ private:
 	std::map<int,int> optimizedindices;
 	ID3D11Device* d3dDevice;
 	VertexPos* vertices;
+	VertexPos2* verticesNT;
 	//char usage_flags;
 	float *vertices_;
 	float *normals_;

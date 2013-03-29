@@ -8,6 +8,7 @@
 #include "AaMaterialLoader.h"
 #include "AaModelLoader.h"
 #include "AaShadingManager.h"
+#include "AaVoxelScene.h"
 #include "AaCamera.h"
 #include "AaGuiSystem.h"
 #include <unordered_map>
@@ -49,6 +50,7 @@ public:
 	AaCamera* getCamera();
 	
 	void renderScene();
+	void renderSceneWithMaterial(AaMaterial* usedMaterial);
 
 	AaMaterialLoader* getMaterialLoader() {return mMaterialLoader;}
 	AaRenderSystem* getRenderSystem() {return mRenderSystem;}
@@ -68,6 +70,7 @@ private:
 	AaRenderSystem* mRenderSystem;
 	AaGuiSystem* mGuiMgr;
 	AaCamera* currentCamera;
+	AaVoxelScene* voxelScene;
 };
 
 #endif

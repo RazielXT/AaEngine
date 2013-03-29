@@ -3,7 +3,6 @@
 #include "AaLogger.h"
 
 
-
 AaMaterial::AaMaterial(std::string name,AaRenderSystem* mRenderSystem)
 {
 	for(int i = 0;i<5;i++)
@@ -11,229 +10,174 @@ AaMaterial::AaMaterial(std::string name,AaRenderSystem* mRenderSystem)
 	
 	this->name=name;
 	this->mRS=mRenderSystem;
+	usedVertexBuffersCount = 0;
+	mInputLayout = 0;
 
 	this->mRenderState = mRenderSystem->getDefaultRenderState();
 }
 
 AaMaterial::~AaMaterial()
 {
-}
-
-void AaMaterial::updatePerMaterialConstants()
-{
-	//for all possible shaders
-	for(int id=0;id<5;id++)
+	for(int i = 0;i<5;i++)
 	{
-		if(shaders[id] && shaders[id]->needMatConstBufferUpdate)
+		LoadedShader* sh = shaders[i];
+		if( sh!=NULL)
 		{
-
-			float* mem = shaders[id]->perMaterialConstantsMemory;
-			std::map<std::string,ConstantInfo>::iterator varsIterator = shaders[id]->perMatVars.begin();
-			std::map<std::string,ConstantInfo>::iterator varsIteratorEnd = shaders[id]->perMatVars.end();	
-
-			//for all materials
-			for(;varsIterator !=varsIteratorEnd; varsIterator++)
-			{
-				ConstantInfo info = varsIterator->second;
-				memcpy(&mem[info.position],info.defaultValue,info.size);
-			}
-
-			mRS->getContext()->UpdateSubresource( shaders[id]->perMaterialConstantsBuffer, 0, 0, mem, 0, 0 );
+			delete sh;
 		}
 	}
 
-	/*
-	if(perMatBufferFlagsVS)
+	if (mInputLayout)
 	{
-		if(perMatBufferFlagsVS & SHADER_CONSTANT_DIFFUSE_COLOUR)
-			*perMatConstantsVSPointers.diffuseTerm = diffuseColour;
-		if(perMatBufferFlagsVS & SHADER_CONSTANT_SPECULAR_COLOUR)
-			*perMatConstantsVSPointers.specularTerm = specularColour;
-		if(perMatBufferFlagsVS & SHADER_CONSTANT_GLOW_POWER)
-			*perMatConstantsVSPointers.glowTerm = glowPower;
-
-		mRS->getContext()->UpdateSubresource( constantBufferPerMatVS, 0, 0, perMatAllocatedBufferVS, 0, 0 );
-		mRS->getContext()->VSSetConstantBuffers( perMatBufferPositionVS, 1, &constantBufferPerMatVS );
+		mInputLayout->Release();
 	}
-
-	if(perMatBufferFlagsPS)
-	{
-		if(perMatBufferFlagsPS & SHADER_CONSTANT_DIFFUSE_COLOUR)
-			*perMatConstantsPSPointers.diffuseTerm = diffuseColour;
-		if(perMatBufferFlagsPS & SHADER_CONSTANT_SPECULAR_COLOUR)
-			*perMatConstantsPSPointers.specularTerm = specularColour;
-		if(perMatBufferFlagsPS & SHADER_CONSTANT_GLOW_POWER)
-			*perMatConstantsPSPointers.glowTerm = glowPower;
-
-		mRS->getContext()->UpdateSubresource( constantBufferPerMatPS, 0, 0, perMatAllocatedBufferPS, 0, 0 );
-		mRS->getContext()->VSSetConstantBuffers( perMatBufferPositionPS, 1, &constantBufferPerMatPS );
-	}
-	*/
 }
 
-void AaMaterial::updatePerObjectConstants(AaEntity* ent)
+void AaMaterial::setMaterialConstant(std::string name, Shader_type targetShaderType, float* value)
 {
-	
-	if(usedBuffersFlag & PER_OBJECT)
+	int id;
+	switch (targetShaderType)
 	{
-		mRS->perObjectConstantsBuffer.worldPosition = XMFLOAT3(1,0,0);//ent->getPosition();
-		XMStoreFloat4x4(&mRS->perObjectConstantsBuffer.worldViewProjectionMatrix,ent->getWorldViewProjectionMatrix());
-
-		mRS->getContext()->UpdateSubresource( mRS->perObjectBuffer, 0, 0, &mRS->perObjectConstantsBuffer, 0, 0 );
+		case Shader_type_vertex: id = 0; break;
+		case Shader_type_hull: id = 1; break;
+		case Shader_type_domain: id = 2; break;
+		case Shader_type_geometry: id = 3; break;
+		case Shader_type_pixel: id = 4; break;
+		default: return;
 	}
 
-	/*if(perObjBufferFlagsVS)
+	LoadedShader* sh = shaders[id];
+	if( sh!=NULL)
 	{
-		if(perObjBufferFlagsVS & SHADER_CONSTANT_WORLD_VIEW_PROJECTION)
-			*perObjConstantsVSPointers.worldViewProjectionMatrix = ent->getWorldViewProjectionMatrix();
-		if(perObjBufferFlagsVS & SHADER_CONSTANT_WORLD_POSITION)
-			*perObjConstantsVSPointers.worldPosition = ent->getPosition();
-
-		mRS->getContext()->UpdateSubresource( constantBufferPerObjVS, 0, 0, perObjAllocatedBufferVS, 0, 0 );
-		mRS->getContext()->VSSetConstantBuffers( perObjBufferPositionVS, 1, &constantBufferPerObjVS );
+		std::map<std::string,ConstantInfo>::iterator it = sh->perMatVars.find(name);
+		if(it!=sh->perMatVars.end())
+		{
+			memcpy((*it).second.defaultValue,value,(*it).second.size*4);
+			sh->needMatConstBufferUpdate = true;
+		}
 	}
-
-	if(perObjBufferFlagsPS)
-	{
-		if(perObjBufferFlagsPS & SHADER_CONSTANT_WORLD_VIEW_PROJECTION)
-			*perObjConstantsPSPointers.worldViewProjectionMatrix = ent->getWorldViewProjectionMatrix();
-		if(perObjBufferFlagsPS & SHADER_CONSTANT_WORLD_POSITION)
-			*perObjConstantsPSPointers.worldPosition = ent->getPosition();
-
-		mRS->getContext()->UpdateSubresource( constantBufferPerObjPS, 0, 0, perObjAllocatedBufferPS, 0, 0 );
-		mRS->getContext()->VSSetConstantBuffers( perObjBufferPositionPS, 1, &constantBufferPerObjPS );
-	}*/
 }
-/*
-void AaMaterial::setConstantsPointers(std::vector<std::string>* constants, BUFFER_TYPE bType, SHADER_TYPE sType)
-{
-	short pos=0;
-	
-	PerMaterialConstants* pmc;
-	PerObjectConstants* poc;
-	float* pmb;
-	float* pob;
-	UCHAR* mflag;
-	UCHAR* oflag;
-
-	if(sType==SHADER_TYPE_VERTEX)
-	{
-		pmc=&perMatConstantsVSPointers;
-		poc=&perObjConstantsVSPointers;
-		pmb=perMatAllocatedBufferVS;
-		pob=perObjAllocatedBufferVS;
-		mflag=&perMatBufferFlagsVS;
-		oflag=&perObjBufferFlagsVS;
-	}
-	if(sType==SHADER_TYPE_PIXEL)
-	{
-		pmc=&perMatConstantsPSPointers;
-		poc=&perObjConstantsPSPointers;
-		pmb=perMatAllocatedBufferPS;
-		pob=perObjAllocatedBufferPS;
-		mflag=&perMatBufferFlagsPS;
-		oflag=&perObjBufferFlagsPS;
-	}
-
-	if(bType==BUFFER_TYPE_PER_MAT)
-		for(int i=0;i<constants->size();i++)
-		{
-			std::string constant=constants->at(i);
-			
-			if(constant=="diffuse_colour")
-			{
-				pmc->diffuseTerm=(XMFLOAT3*) &pmb[pos];
-				*mflag|=SHADER_CONSTANT_DIFFUSE_COLOUR;
-				pos+=3;
-				continue;
-			}
-
-			if(constant=="specular_colour")
-			{
-				pmc->specularTerm=(XMFLOAT4*) &pmb[pos];
-				*mflag|=SHADER_CONSTANT_SPECULAR_COLOUR;
-				pos+=3;
-				continue;
-			}
-
-			if(constant=="glow_power")
-			{
-				pmc->glowTerm=(float*) &pmb[pos];
-				*mflag|=SHADER_CONSTANT_GLOW_POWER;
-				pos++;
-				continue;
-			}
-
-			AaLogger::getLogger()->writeMessage("ERROR, unknown per_mat constant "+constant);
-			return;
-		}
-
-	if(bType==BUFFER_TYPE_PER_OBJ)
-		for(int i=0;i<constants->size();i++)
-		{
-			std::string constant=constants->at(i);
-			
-			if(constant=="world_view_projection_matrix")
-			{
-				poc->worldViewProjectionMatrix=(XMMATRIX*) &pob[pos];
-				*oflag|=SHADER_CONSTANT_WORLD_VIEW_PROJECTION;
-				pos+=16;
-				continue;
-			}
-
-			if(constant=="world_position")
-			{
-				poc->worldPosition=(XMFLOAT3*) &pob[pos];
-				*oflag|=SHADER_CONSTANT_WORLD_POSITION;
-				pos+=3;
-				continue;
-			}
-
-
-			AaLogger::getLogger()->writeMessage("ERROR, unknown per_obj constant "+constant);
-			return;
-		}
-
-}*/
 
 void AaMaterial::prepareForRendering()
 {
+	ID3D11DeviceContext* context = mRS->getContext();
+
+	//for all possible shaders
+	for(int id=0;id<5;id++)
+	{
+		if(shaders[id])
+		{
+			LoadedShader* sh = shaders[id];
+
+			//update constant buffer if needed
+			if(sh->needMatConstBufferUpdate)
+			{
+				float* mem = shaders[id]->perMaterialConstantsMemory;
+				std::map<std::string,ConstantInfo>::iterator varsIterator = sh->perMatVars.begin();
+				std::map<std::string,ConstantInfo>::iterator varsIteratorEnd = sh->perMatVars.end();	
+
+				//for all materials
+				for(;varsIterator !=varsIteratorEnd; varsIterator++)
+				{
+					ConstantInfo info = varsIterator->second;
+					memcpy(&mem[info.position],info.defaultValue,info.size);
+				}
+
+				context->UpdateSubresource( sh->perMaterialConstantsBuffer, 0, 0, mem, 0, 0 );
+			}
+
+			ID3D11Buffer* buffersArray[3] = { mRS->perFrameBuffer,mRS->perObjectBuffer,sh->perMaterialConstantsBuffer};
+			int buffStart = (sh->usedBuffersFlag & PER_FRAME) ? 0 : ((sh->usedBuffersFlag & PER_OBJECT) ? 1 : ((sh->usedBuffersFlag & PER_MATERIAL) ? 2 : -1 ));
+			int buffCount = (sh->usedBuffersFlag & PER_MATERIAL) ? (3-buffStart) : ((sh->usedBuffersFlag & PER_OBJECT) ? (2-buffStart) : 1);
+
+			if(id==0)
+			{
+				context->VSSetShader( (ID3D11VertexShader*) sh->shader, 0, 0 );
+
+				if(buffStart>=0)
+					context->VSSetConstantBuffers(buffStart, buffCount, &buffersArray[buffStart] );
+
+				if(sh->numTextures>0)
+				{
+					context->VSSetShaderResources( 0, sh->numTextures, sh->shaderMaps );
+					context->VSSetSamplers( 0, sh->numTextures, sh->samplerStates );
+				}
+			}
+			else
+			if(id==4)
+			{
+				context->PSSetShader( (ID3D11PixelShader*) sh->shader, 0, 0 );
+
+				if(buffStart>=0)
+					context->PSSetConstantBuffers(buffStart, buffCount, &buffersArray[buffStart] );
+
+				if(sh->numTextures>0)
+				{
+					mRS->getContext()->PSSetShaderResources( 0, sh->numTextures, sh->shaderMaps );
+					mRS->getContext()->PSSetSamplers( 0, sh->numTextures, sh->samplerStates );
+				}
+
+				if(sh->numUAVs)
+				{
+					mRS->setUAVs(1,sh->numUAVs,sh->UAVs);
+				}
+			}
+		}	
+	}
+
+	context->IASetInputLayout( mInputLayout );
+}
+
+void AaMaterial::updateObjectConstants(AaEntity* ent)
+{
+	if(usedBuffersFlag & PER_OBJECT)
+	{
+		mRS->perObjectConstantsBuffer.worldPosition = ent->getPosition();
+		XMStoreFloat4x4(&mRS->perObjectConstantsBuffer.worldViewProjectionMatrix,ent->getWorldViewProjectionMatrix());
+		XMStoreFloat4x4(&mRS->perObjectConstantsBuffer.worldMatrix,XMMatrixTranspose(ent->getWorldMatrix()));
+
+		mRS->getContext()->UpdateSubresource( mRS->perObjectBuffer, 0, 0, &mRS->perObjectConstantsBuffer, 0, 0 );
+	}
+}
+
+void AaMaterial::clearAfterRendering()
+{
+	ID3D11DeviceContext* context = mRS->getContext();
+	ID3D11ShaderResourceView* srNulls[10] = {0};
+	ID3D11SamplerState* ssNulls[10] = {0};
+
 	for(int i = 0; i<5;i++)
 	{	
-		if(shaders[i]==NULL) continue;
-
-		ID3D11DeviceContext* context = mRS->getContext();
 		LoadedShader* sh = shaders[i];
-
-		ID3D11Buffer* buffersArray[3] = { mRS->perFrameBuffer,mRS->perObjectBuffer,sh->perMaterialConstantsBuffer};
-		int buffStart = (sh->usedBuffersFlag & PER_FRAME) ? 0 : ((sh->usedBuffersFlag & PER_OBJECT) ? 1 : ((sh->usedBuffersFlag & PER_MATERIAL) ? 2 : -1 ));
-		int buffCount = (sh->usedBuffersFlag & PER_MATERIAL) ? (3-buffStart) : ((sh->usedBuffersFlag & PER_OBJECT) ? (2-buffStart) : 1);
+		if(sh==NULL) continue;
 
 		if(i==0)
 		{
-			context->VSSetShader( (ID3D11VertexShader*) sh->shader, 0, 0 );
+			context->VSSetShader(0, 0, 0 );
+			context->VSSetConstantBuffers(0,0,0);
 
-			if(buffStart>0)
-				context->VSSetConstantBuffers(buffStart, buffCount, &buffersArray[buffStart] );
-
-			if(sh->numTextures>0)
+			if(sh->numTextures)
 			{
-				context->VSSetShaderResources( 0, sh->numTextures, sh->shaderMaps );
-				context->VSSetSamplers( 0, sh->numTextures, sh->samplerStates );
+				context->VSSetShaderResources( 0, sh->numTextures, srNulls );
+				context->VSSetSamplers( 0, sh->numTextures, ssNulls );
 			}
+
 		}
 		else
 		if(i==4)
 		{
-			context->PSSetShader( (ID3D11PixelShader*) sh->shader, 0, 0 );
+			context->PSSetShader(0, 0, 0 );
+			context->PSSetConstantBuffers(0,0,0);
 
-			if(buffStart>0)
-				context->PSSetConstantBuffers(buffStart, buffCount, &buffersArray[buffStart] );
-
-			if(sh->numTextures>0)
+			if(sh->numTextures)
 			{
-				mRS->getContext()->PSSetShaderResources( 0, sh->numTextures, sh->shaderMaps );
-				mRS->getContext()->PSSetSamplers( 0, sh->numTextures, sh->samplerStates );
+				context->PSSetShaderResources( 0, sh->numTextures, srNulls );
+				context->PSSetSamplers( 0, sh->numTextures, ssNulls );
+			}
+
+			if(sh->numUAVs)
+			{
+				mRS->removeUAVs();
 			}
 		}
 	}
@@ -257,9 +201,69 @@ void AaMaterial::setShaderFromReference(shaderRef* shaderRef, Shader_type target
 	if(shaders[id]!=NULL)
 		delete shaders[id];
 
-	//set vs shader
+	//set shader
 	shaders[id] = new LoadedShader(shaderRef);
 	usedBuffersFlag |= shaderRef->usedBuffersFlag;
+
+	//create input layout for vs
+	if (id==0)
+	{
+		if (mInputLayout)
+		{
+			mInputLayout->Release();
+		}
+
+		bool basic = true;
+
+		// Reflect shader info
+		ID3D11ShaderReflection* pVertexShaderReflection = NULL; 
+		D3DReflect( shaderRef->vsBuffer->GetBufferPointer(), shaderRef->vsBuffer->GetBufferSize(), IID_ID3D11ShaderReflection, (void**) &pVertexShaderReflection);
+		// Get shader info
+		D3D11_SHADER_DESC shaderDesc;
+		pVertexShaderReflection->GetDesc( &shaderDesc );
+
+		// Read input layout description from shader info
+		for ( UINT i=0; i< shaderDesc.InputParameters; i++ )
+		{
+			D3D11_SIGNATURE_PARAMETER_DESC paramDesc;       
+			pVertexShaderReflection->GetInputParameterDesc(i, &paramDesc );
+
+			if (!strcmp(paramDesc.SemanticName,"NORMAL") || !strcmp(paramDesc.SemanticName,"TANGENT"))
+			{
+				basic = false;
+			}
+		}
+
+		//Free allocation shader reflection memory
+		pVertexShaderReflection->Release();
+
+		//input do vertex shadera
+		D3D11_INPUT_ELEMENT_DESC vLp= { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 };
+		D3D11_INPUT_ELEMENT_DESC vLtc = { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 };
+
+		D3D11_INPUT_ELEMENT_DESC vLn = { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 };
+		D3D11_INPUT_ELEMENT_DESC vLt = { "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 };
+
+		D3D11_INPUT_ELEMENT_DESC vertexLayout[4];
+		vertexLayout[0] = vLp;
+		vertexLayout[1] = vLtc;
+		vertexLayout[2] = vLn;
+		vertexLayout[3] = vLt;
+
+		if (basic)
+		{
+			HRESULT result = mRS->getDevice()->CreateInputLayout( vertexLayout,
+				2, shaderRef->vsBuffer->GetBufferPointer( ), shaderRef->vsBuffer->GetBufferSize( ), &mInputLayout );
+			usedVertexBuffersCount = 1;
+		} 
+		else
+		{
+			HRESULT result = mRS->getDevice()->CreateInputLayout( vertexLayout,
+				4, shaderRef->vsBuffer->GetBufferPointer( ), shaderRef->vsBuffer->GetBufferSize( ), &mInputLayout );
+			usedVertexBuffersCount = 2;
+		}
+	
+	}
 
 	//allocate buffers for cpu/gpu variables and set pointers
 	if(shaderRef->perMatConstBufferSize>0)
@@ -277,34 +281,18 @@ void AaMaterial::setShaderFromReference(shaderRef* shaderRef, Shader_type target
 
 }
 
-int AaMaterial::addTexture(ID3D11ShaderResourceView* textureMap, Shader_type targetShader)
+int AaMaterial::addUAV(ID3D11UnorderedAccessView* uav)
 {
-	ID3D11SamplerState* textureMapSampler;
-	D3D11_SAMPLER_DESC textureMapDesc;
-	ZeroMemory( &textureMapDesc, sizeof( textureMapDesc ) );
-	textureMapDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-	textureMapDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	textureMapDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-	textureMapDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-	textureMapDesc.Filter = D3D11_FILTER_ANISOTROPIC;
-	textureMapDesc.MaxAnisotropy = 8;
-	textureMapDesc.MaxLOD = D3D11_FLOAT32_MAX;
-	HRESULT d3dResult = mRS->getDevice()->CreateSamplerState( &textureMapDesc, &textureMapSampler );
+	LoadedShader* pShader = shaders[4];
 
-	if( FAILED( d3dResult ) )
-	{
-		DXTRACE_MSG( "Failed to create color map sampler state!" );
-		AaLogger::getLogger()->writeMessage("ERROR Failed to create color map sampler state" );
+	if(pShader == NULL || pShader->numUAVs==5)
 		return -1;
-	}
+	
+	pShader->UAVs[pShader->numUAVs] = uav;
+	pShader->numUAVs++;
 
-	int r = addTexture(textureMap, textureMapSampler,targetShader);
-
-	if(r==-1) textureMapSampler->Release();
-
-	return r;
+	return pShader->numTextures-1;
 }
-
 
 int AaMaterial::addTexture(ID3D11ShaderResourceView* textureMap, ID3D11SamplerState* textureMapSampler, Shader_type targetShaderType)
 {

@@ -99,6 +99,9 @@
     <ClCompile Include="source\AaShadingManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="source\AaVoxelScene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\AaApplication.h">
@@ -189,6 +192,12 @@
       <Filter>Header Files\Gui</Filter>
     </ClInclude>
     <ClInclude Include="include\AaShadingManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\AaSceneParser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\AaVoxelScene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

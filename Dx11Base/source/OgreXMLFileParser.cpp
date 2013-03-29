@@ -4,20 +4,6 @@
 #include <iostream>
 
 
-const TiXmlElement* IterateChildElements(const TiXmlElement* xmlElement, const TiXmlElement* childElement)
-{
-    if (xmlElement != 0)
-    {
-        if (childElement == 0)
-            childElement = xmlElement->FirstChildElement();
-        else
-            childElement = childElement->NextSiblingElement();
-        
-        return childElement;
-    }
-
-    return 0;
-}
 
 AaModelInfo* OgreXMLFileParser::loadOgreXML(std::string filename, bool optimize, bool saveBinary )
 {	
@@ -28,10 +14,12 @@ AaModelInfo* OgreXMLFileParser::loadOgreXML(std::string filename, bool optimize,
 		return NULL;
 	}
 
-	if(saveBinary)
-		saveBinaryFile(filename);
-
 	AaModelInfo* model=createBuffers(optimize);
+	model->rawInfo = new RawModelInfo();
+
+	if(saveBinary)
+		saveBinaryFile(filename,model->rawInfo);
+
 	clearBuffers();
 
 	return model;
@@ -82,7 +70,7 @@ void OgreXMLFileParser::parseFaces(const TiXmlElement* facesElement)
 }
 
 
-void OgreXMLFileParser::saveBinaryFile(std::string filename)
+void OgreXMLFileParser::saveBinaryFile(std::string filename, RawModelInfo* saveInfo)
 {
 	AaModelSerialized* model= new AaModelSerialized();
 	model->useindices=true;
@@ -98,6 +86,7 @@ void OgreXMLFileParser::saveBinaryFile(std::string filename)
 	model->texCoords_= new float[vertex_count*2];
 	model->positions_= new float[vertex_count*3];
 	model->normals_= new float[vertex_count*3];
+	model->tangents_= new float[vertex_count*3];
 
 	for( int i = 0; i < vertex_count; i++ )
 	{
@@ -105,6 +94,7 @@ void OgreXMLFileParser::saveBinaryFile(std::string filename)
 
 		model->positions_[i*3] = vertices_[offset*3]; model->positions_[i*3+1] = vertices_[offset*3+1]; model->positions_[i*3+2] = vertices_[offset*3+2];
 		model->normals_[i*3] = normals_[offset*3]; model->normals_[i*3+1] = normals_[offset*3+1]; model->normals_[i*3+2] = normals_[offset*3+2];
+		model->tangents_[i*3] = tangents_[offset*3]; model->tangents_[i*3+1] = tangents_[offset*3+1]; model->tangents_[i*3+2] = tangents_[offset*3+2];
 		model->texCoords_[i*2] = texCoords_[offset*2]; model->texCoords_[i*2+1] = texCoords_[offset*2+1];
 	}
 
@@ -114,15 +104,30 @@ void OgreXMLFileParser::saveBinaryFile(std::string filename)
 		oa << model;
 	}
 
-	delete model->texCoords_;
-	delete model->positions_;
-	delete model->normals_;
+	if(saveInfo!=NULL)
+	{
+		saveInfo->index_count = index_count;
+		saveInfo->vertices = model->positions_;
+		saveInfo->vertex_count = vertex_count;
+		saveInfo->indices = indices_;
+		indices_ = NULL;
+	}
+	else
+	{
+		delete [] model->positions_;
+	}
+
+	delete [] model->texCoords_;	
+	delete [] model->normals_;
+	delete [] model->tangents_;
 	delete model;
 }
 
 
 void OgreXMLFileParser::parseGeometry(const TiXmlElement* geometryElement, bool optimize)
 {
+	optimize = false;
+
 	vertex_count=boost::lexical_cast<int>(geometryElement->Attribute("vertexcount"));
 	vertices_ = new float[vertex_count * 3];
 
@@ -250,6 +255,7 @@ void OgreXMLFileParser::parseGeometry(const TiXmlElement* geometryElement, bool 
 	}
 
 	vertices = new VertexPos[vertex_count];
+	verticesNT = new VertexPos2[vertex_count];
 
 	for( int i = 0; i < vertex_count; i++ )
 	{
@@ -257,7 +263,9 @@ void OgreXMLFileParser::parseGeometry(const TiXmlElement* geometryElement, bool 
 
 		vertices[i].pos = XMFLOAT3( vertices_[offset*3], vertices_[offset*3 + 1], vertices_[offset*3 + 2] );
 		vertices[i].tex0 = XMFLOAT2( texCoords_[offset*2] ,  texCoords_[offset*2 + 1] );
-		vertices[i].norm = XMFLOAT3( normals_[offset*3], normals_[offset*3 + 1], normals_[offset*3 + 2] );
+
+		verticesNT[i].norm = XMFLOAT3( normals_[offset*3], normals_[offset*3 + 1], normals_[offset*3 + 2] );
+		verticesNT[i].tang = XMFLOAT3( tangents_[offset*3], tangents_[offset*3 + 1], tangents_[offset*3 + 2] );
 	}
 
 }
@@ -292,7 +300,23 @@ AaModelInfo* OgreXMLFileParser::createBuffers(bool optimize)
 	ZeroMemory( &resourceData, sizeof( resourceData ) );
 	resourceData.pSysMem = vertices;
 
-	d3dResult = d3dDevice->CreateBuffer( &vertexDesc, &resourceData,	&model->vertexBuffer_ );
+	d3dResult = d3dDevice->CreateBuffer( &vertexDesc, &resourceData,	&model->vertexBuffers_[0]);
+
+	if( FAILED( d3dResult ) )
+	{
+		DXTRACE_MSG( "Failed to create vertex buffer!" );
+		return false;
+	}
+
+
+	ZeroMemory( &vertexDesc, sizeof( vertexDesc ) );
+	vertexDesc.Usage = D3D11_USAGE_DEFAULT;
+	vertexDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vertexDesc.ByteWidth = sizeof( VertexPos2 ) * vertex_count;
+	ZeroMemory( &resourceData, sizeof( resourceData ) );
+	resourceData.pSysMem = verticesNT;
+
+	d3dResult = d3dDevice->CreateBuffer( &vertexDesc, &resourceData,	&model->vertexBuffers_[1] );
 
 	if( FAILED( d3dResult ) )
 	{
@@ -301,18 +325,23 @@ AaModelInfo* OgreXMLFileParser::createBuffers(bool optimize)
 	}
 
 	delete[] vertices;
+	delete[] verticesNT;
 
 	//input do vertex shadera
 	D3D11_INPUT_ELEMENT_DESC vLp= { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 };
 	D3D11_INPUT_ELEMENT_DESC vLtc = { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 };
-	D3D11_INPUT_ELEMENT_DESC vLn = { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0 };
 
-	model->vertexLayout = new D3D11_INPUT_ELEMENT_DESC[3];
+	D3D11_INPUT_ELEMENT_DESC vLn = { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 20, D3D11_INPUT_PER_VERTEX_DATA, 0 };
+	D3D11_INPUT_ELEMENT_DESC vLt = { "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 32, D3D11_INPUT_PER_VERTEX_DATA, 0 };
+
+	model->vertexLayout = new D3D11_INPUT_ELEMENT_DESC[4];
 	model->vertexLayout[0] = vLp;
 	model->vertexLayout[1] = vLtc;
 	model->vertexLayout[2] = vLn;
+	model->vertexLayout[3] = vLt;
 
-	model->totalLayoutElements = 3;
+	model->vBuffersCount = 2;
+	model->totalLayoutElements = 4;
 	model->usesIndexBuffer=true;
 	model->vertexCount=index_count;
 

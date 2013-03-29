@@ -55,7 +55,6 @@ private:
 	ID3D11Buffer* wtransf_;
 	XMFLOAT4 scissors;
 	ID3DBlob* vsBuffer;
-	ID3D11RasterizerState* scissoringOff;
 };
 
 #endif

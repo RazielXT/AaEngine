@@ -97,6 +97,7 @@
     <ClCompile Include="source\AaSceneManager.cpp" />
     <ClCompile Include="source\AaSceneNode.cpp" />
     <ClCompile Include="source\AaShadingManager.cpp" />
+    <ClCompile Include="source\AaVoxelScene.cpp" />
     <ClCompile Include="source\AaWindow.cpp" />
     <ClCompile Include="source\GuiRenderInterfaceDirectX.cpp" />
     <ClCompile Include="source\main.cpp" />
@@ -125,7 +126,9 @@
     <ClInclude Include="include\AaRenderSystem.h" />
     <ClInclude Include="include\AaSceneManager.h" />
     <ClInclude Include="include\AaSceneNode.h" />
+    <ClInclude Include="include\AaSceneParser.h" />
     <ClInclude Include="include\AaShadingManager.h" />
+    <ClInclude Include="include\AaVoxelScene.h" />
     <ClInclude Include="include\AaWindow.h" />
     <ClInclude Include="include\GlobalDefinitions.h" />
     <ClInclude Include="include\GuiRenderInterfaceDirectX.h" />

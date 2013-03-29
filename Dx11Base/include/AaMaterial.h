@@ -55,6 +55,7 @@ struct LoadedShader
 		vsBuffer = ref->vsBuffer;
 
 		numTextures = 0;
+		numUAVs = 0;
 		perMaterialConstantsMemory = NULL;
 		needMatConstBufferUpdate = false;
 		usedBuffersFlag = ref->usedBuffersFlag;
@@ -75,6 +76,9 @@ struct LoadedShader
 	int numTextures;
 	ID3D11ShaderResourceView* shaderMaps[10];
 	ID3D11SamplerState* samplerStates[10];
+
+	int numUAVs;
+	ID3D11UnorderedAccessView* UAVs[5];
 
 	UCHAR usedBuffersFlag;
 
@@ -97,21 +101,27 @@ public:
 	AaRenderSystem* getRenderSystem() { return mRS; }
 	int addTexture(ID3D11ShaderResourceView* textureMap, ID3D11SamplerState* textureMapSampler, Shader_type targetShader);
 	int addTexture(ID3D11ShaderResourceView* textureMap, Shader_type targetShader);
+	int addUAV(ID3D11UnorderedAccessView* uav);
 
 	void setShaderFromReference(shaderRef* shaderRef, Shader_type targetShader);
 
-	void updatePerMaterialConstants();
-	void updatePerObjectConstants(AaEntity* ent);
+	void setMaterialConstant(std::string name, Shader_type shader_target, float* value);
+	void updateObjectConstants(AaEntity* ent);
 	void prepareForRendering();
+	void clearAfterRendering();
 
+	ID3D11InputLayout* mInputLayout; 
+	USHORT usedVertexBuffersCount;
 	RenderState* mRenderState;
 	LoadedShader* shaders[5];
+
 
 private:
 
 	std::string name;
 	AaRenderSystem* mRS;
 	UCHAR usedBuffersFlag;
+	USHORT clear_flag;
 
 };
 

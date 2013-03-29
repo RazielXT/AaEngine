@@ -1,0 +1,19 @@
+vertex_shader vsGeneralBasic
+{
+file generalBasic.fx
+entry VS_Main
+profile vs_5_0
+
+cbuffer per_object
+
+}
+
+pixel_shader psGeneralBasic
+{
+file generalBasic.fx
+entry PS_Main
+profile ps_5_0
+
+cbuffer per_frame
+cbuffer per_object
+}

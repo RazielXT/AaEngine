@@ -46,6 +46,11 @@ RenderInterfaceDirectX::RenderInterfaceDirectX(ID3D11Device* d3dDevice,ID3D11Dev
 
 RenderInterfaceDirectX::~RenderInterfaceDirectX()
 {
+	wtransf_->Release();
+	input_layout->Release();
+	vs_program->Release();
+	ps_program->Release();
+	ps_program_notexture->Release();
 }
 
 void RenderInterfaceDirectX::LoadGuiShaders()
@@ -396,8 +401,10 @@ bool RenderInterfaceDirectX::GenerateTexture(Rocket::Core::TextureHandle& textur
 	ID3D11ShaderResourceView *tex2Dview;
 	d3dDevice_->CreateShaderResourceView(texture2Dp, &desc, &tex2Dview);
 
+	texture2Dp->Release();
+
 	// Set the handle on the Rocket texture structure.
-	texture_handle = (Rocket::Core::TextureHandle)tex2Dview;
+	texture_handle = (Rocket::Core::TextureHandle) tex2Dview;
 	return true;
 }
 

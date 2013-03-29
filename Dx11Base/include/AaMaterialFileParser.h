@@ -26,7 +26,9 @@ struct materialInfo
 	std::string gs_ref;
 	std::vector<textureInfo> vstextures;
 	std::vector<textureInfo> pstextures;
+	std::vector<std::string> psuavs;
 	std::map<std::string,std::vector<float>> defaultParams;
+	RS_DESC renderStateDesc;
 };
 
 struct shaderRefMaps

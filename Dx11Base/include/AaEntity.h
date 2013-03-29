@@ -41,17 +41,20 @@ public:
 	void setModel(std::string filename);
 	XMFLOAT3 getPosition();
 	XMFLOAT3 getScale();
-	XMFLOAT3 getYawPitchRoll();
+	XMVECTOR* getQuaternion();
+	void setQuaternion(XMFLOAT4 orientation);
 	void yaw(float yaw);
 	void pitch(float pitch);
 	void roll(float roll);
 	void resetRotation();
+
 	ID3D11InputLayout* inputLayout;
 	ID3D11Buffer* vertexBuffer;
 	ID3D11Buffer* indexBuffer;
 	AaModelInfo* model;
-	char renderQueueOrder;
+	UCHAR renderQueueOrder;
 	bool visible;
+	bool castShadows;
 	
 	void removePhysicsBody();
 	void setPhysicsBody(physx::PxRigidActor* actor, bool dynamic = true);
@@ -59,8 +62,6 @@ public:
 	void setPhysicsTranform(XMFLOAT3 position, XMFLOAT4 orientation);
 
 private:
-
-	void createInputLayout();
 
 	physx::PxRigidActor* body;
 	bool dirtyWM, hasPhysics, hasDynamicPhysics;
@@ -70,7 +71,6 @@ private:
 	std::string name;
 	XMFLOAT3 position;
 	XMFLOAT3 scale;
-	float mYaw,mPitch,mRoll;
 	AaCamera** cameraPtr;
 	AaSceneManager* mSceneMgr;
 

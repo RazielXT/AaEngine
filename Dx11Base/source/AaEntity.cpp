@@ -14,6 +14,7 @@ AaEntity::AaEntity(std::string name, AaSceneManager* sceneMgr, AaCamera** camera
 {
 	hasPhysics=false;
 	hasDynamicPhysics=false;
+	castShadows=true;
 	dirtyWM=true;
 	visible=true;
 	mSceneMgr=sceneMgr;
@@ -23,8 +24,7 @@ AaEntity::AaEntity(std::string name, AaSceneManager* sceneMgr, AaCamera** camera
 	this->name=name;
 	scale=XMFLOAT3(1,1,1);
 	position=XMFLOAT3(0.0f, 0.0f, 0.0f );
-	mYaw=mPitch=mRoll=0;
-	renderQueueOrder=0;
+	renderQueueOrder=5;
 	model=NULL;
 	this->cameraPtr=cameraPtr;
 	this->material=NULL;
@@ -38,9 +38,6 @@ AaEntity::~AaEntity()
 void AaEntity::setMaterial(AaMaterial* material)
 {
 	this->material=material;
-
-	if(model)
-		createInputLayout();
 }
 
 XMMATRIX AaEntity::getWorldMatrix()
@@ -49,10 +46,9 @@ XMMATRIX AaEntity::getWorldMatrix()
 	{
 		XMMATRIX translationM = XMMatrixTranslation( position.x,position.y,position.z );
 		XMMATRIX rotationM;
-		if(hasPhysics && hasDynamicPhysics)
-			rotationM = XMMatrixRotationQuaternion( *quaternion );
-		else
-			rotationM = XMMatrixRotationRollPitchYaw( mRoll,mPitch,mYaw );
+
+		rotationM = XMMatrixRotationQuaternion( *quaternion );
+
 		XMMATRIX scaleM = XMMatrixScaling(scale.x,scale.y,scale.z);
 		*wMatrix=XMMatrixMultiply(XMMatrixMultiply(scaleM,rotationM),translationM);
 		dirtyWM=false;
@@ -103,31 +99,14 @@ XMFLOAT3 AaEntity::getScale()
 	return scale;
 }
 
-XMFLOAT3 AaEntity::getYawPitchRoll()
+XMVECTOR* AaEntity::getQuaternion()
 {
-	return XMFLOAT3(mYaw,mPitch,mRoll);
+	return quaternion;
 }
 
 void AaEntity::setModel(std::string filename)
 {
 	model=mSceneMgr->getModel(filename);
-
-	if(model && this->material)
-		createInputLayout();
-
-}
-
-void AaEntity::createInputLayout()
-{
-
-	HRESULT result = mSceneMgr->getRenderSystem()->getDevice()->CreateInputLayout( model->vertexLayout,
-		model->totalLayoutElements, material->shaders[0]->vsBuffer->GetBufferPointer( ), material->shaders[0]->vsBuffer->GetBufferSize( ), &model->inputLayout );
-
-	if( FAILED( result ) )
-	{
-		AaLogger::getLogger()->writeMessage("ERROR Error creating input layout for entity "+name);
-	}
-	
 }
 
 void AaEntity::setPhysicsTranform(XMFLOAT3 position, XMFLOAT4 orientation)
@@ -144,48 +123,42 @@ void AaEntity::removePhysicsBody()
 {
 	if(hasPhysics)
 	{
-	physx::PxTransform trans = body->getGlobalPose();
-	trans.rotate(physx::PxVec3(0,180,0));
-	physx::PxQuat quat = trans.q;
-
-	float x = quat.x;
-	float y = quat.y;
-	float z = quat.z;
-	float w = quat.w;
-
-	mYaw = atan2(2*(y*w - z*x), 1 - 2*y*y - 2*z*z);
-	mPitch = asin(2*(x*y + w*z));
-	mRoll = atan2(2*(x*w - y*z), 1 - 2*x*x - 2*z*z);
-
-	body->release();
-	body = NULL;
-	hasPhysics = false;
-	dirtyWM = true;
+		body->release();
+		body = NULL;
+		hasPhysics = false;
+		dirtyWM = true;
 	}
+}
+
+void AaEntity::setQuaternion(XMFLOAT4 orientation)
+{
+	dirtyWM=true; 
+	*quaternion = XMLoadFloat4(&orientation);
 }
 
 void AaEntity::yaw(float yaw) 
 { 
 	dirtyWM=true; 
-	mYaw+=yaw; 
+	*quaternion = XMQuaternionMultiply(*quaternion,XMQuaternionRotationRollPitchYaw(0,yaw,0));
 }
 
 void AaEntity::pitch(float pitch) 
 { 
 	dirtyWM=true; 
-	mPitch+=pitch; 
+	*quaternion = XMQuaternionMultiply(*quaternion,XMQuaternionRotationRollPitchYaw(pitch,0,0));
 }
 
 void AaEntity::roll(float roll) 
 { 
 	dirtyWM=true; 
-	mRoll+=roll; 
+	*quaternion = XMQuaternionMultiply(*quaternion,XMQuaternionRotationRollPitchYaw(0,0,roll));
 }
 
 void AaEntity::resetRotation() 
 { 
 	dirtyWM=true; 
-	mYaw=mPitch=mRoll=0; 
+
+	*quaternion = XMQuaternionIdentity();
 
 	if(hasPhysics)
 		body->setGlobalPose(physx::PxTransform(body->getGlobalPose().p,physx::PxQuat::createIdentity()));

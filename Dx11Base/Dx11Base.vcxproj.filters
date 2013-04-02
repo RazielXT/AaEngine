@@ -102,6 +102,12 @@
     <ClCompile Include="source\AaVoxelScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="source\AaShadowMapping.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\AaBloomPostprocess.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\AaApplication.h">
@@ -198,6 +204,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\AaVoxelScene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\AaShadowMapping.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\AaBloomPostProcess.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

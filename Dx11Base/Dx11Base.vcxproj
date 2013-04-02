@@ -61,6 +61,7 @@
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
       <ImportLibrary>$(OutDir)$(TargetName).lib</ImportLibrary>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -85,6 +86,7 @@
   <ItemGroup>
     <ClCompile Include="source\AaApplication.cpp" />
     <ClCompile Include="source\AaBinaryModelLoader.cpp" />
+    <ClCompile Include="source\AaBloomPostprocess.cpp" />
     <ClCompile Include="source\AaEntity.cpp" />
     <ClCompile Include="source\AaGuiSystem.cpp" />
     <ClCompile Include="source\AaMaterialFileParser.cpp" />
@@ -97,6 +99,7 @@
     <ClCompile Include="source\AaSceneManager.cpp" />
     <ClCompile Include="source\AaSceneNode.cpp" />
     <ClCompile Include="source\AaShadingManager.cpp" />
+    <ClCompile Include="source\AaShadowMapping.cpp" />
     <ClCompile Include="source\AaVoxelScene.cpp" />
     <ClCompile Include="source\AaWindow.cpp" />
     <ClCompile Include="source\GuiRenderInterfaceDirectX.cpp" />
@@ -111,6 +114,7 @@
   <ItemGroup>
     <ClInclude Include="include\AaApplication.h" />
     <ClInclude Include="include\AaBinaryModelLoader.h" />
+    <ClInclude Include="include\AaBloomPostProcess.h" />
     <ClInclude Include="include\AaCamera.h" />
     <ClInclude Include="include\AaEntity.h" />
     <ClInclude Include="include\AaGuiSystem.h" />
@@ -128,6 +132,7 @@
     <ClInclude Include="include\AaSceneNode.h" />
     <ClInclude Include="include\AaSceneParser.h" />
     <ClInclude Include="include\AaShadingManager.h" />
+    <ClInclude Include="include\AaShadowMapping.h" />
     <ClInclude Include="include\AaVoxelScene.h" />
     <ClInclude Include="include\AaWindow.h" />
     <ClInclude Include="include\GlobalDefinitions.h" />

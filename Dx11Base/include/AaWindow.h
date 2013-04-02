@@ -11,7 +11,7 @@ public:
 	AaWindow(HINSTANCE hInstance, int cmdShow, int width = 640, int heigth = 480);
 	~AaWindow();
 
-	const int getHeigth();
+	const int getHeight();
 	const int getWidth();
 	const HWND getHwnd();
 

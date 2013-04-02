@@ -1,6 +1,6 @@
 #include "AaRenderSystem.h"
 #include "ShaderConstsPtr.h"
-
+#include <assert.h>
 bool operator<(const RS_DESC& lhs, const RS_DESC& rhs)
 {
 	USHORT c1 = lhs.alpha_blend + lhs.depth_check*2 + lhs.depth_write*4 + lhs.culling*8;
@@ -77,7 +77,7 @@ AaRenderSystem::AaRenderSystem(AaWindow* mWindow)
 			}
 		}
 
-		//assert(FAILED( result ));
+		//assert(SUCCEEDED( result ));
 		//DXTRACE_MSG( "Failed to create the Direct3D device!" );
 
 	ID3D11Texture2D* backBufferTexture;
@@ -257,7 +257,7 @@ AaRenderSystem::~AaRenderSystem()
 
 void AaRenderSystem::clearViews()
 {
-	d3dContext_->ClearRenderTargetView( backBufferTarget_, clearColor );
+	d3dContext_->ClearRenderTargetView( *currentRTs, clearColor );
 	d3dContext_->ClearDepthStencilView( depthStencilView_, D3D11_CLEAR_DEPTH, 1.0f, 0 );
 }
 
@@ -285,24 +285,41 @@ RenderState* AaRenderSystem::getRenderState(RS_DESC desc)
 	}
 }
 
-void AaRenderSystem::setBackbufferAsRenderTarget()
+void AaRenderSystem::setBackbufferAsRenderTarget(bool useDepthBuffer)
 {
+	D3D11_VIEWPORT viewport;
+	viewport.Width = static_cast<float>(mWindow->getWidth());
+	viewport.Height = static_cast<float>(mWindow->getHeight());
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+	viewport.TopLeftX = 0.0f;
+	viewport.TopLeftY = 0.0f;
+	d3dContext_->RSSetViewports( 1, &viewport );
+
 	currentRTcount = 1;
 	currentRTs = &backBufferTarget_;
-	d3dContext_->OMSetRenderTargets( currentRTcount, currentRTs, depthStencilView_ );
+
+	if(useDepthBuffer)
+		d3dContext_->OMSetRenderTargets( currentRTcount, currentRTs, depthStencilView_ );
+	else
+		d3dContext_->OMSetRenderTargets( currentRTcount, currentRTs, 0 );
 }
 
-void AaRenderSystem::setRenderTargets(UINT numCount, ID3D11RenderTargetView** views)
+void AaRenderSystem::setRenderTargets(UINT numCount, ID3D11RenderTargetView** views, bool useDepthBuffer)
 {
 	currentRTcount = numCount;
 	currentRTs = views;
-	d3dContext_->OMSetRenderTargets( currentRTcount, currentRTs, depthStencilView_ );
+
+	if(useDepthBuffer)
+		d3dContext_->OMSetRenderTargets( currentRTcount, currentRTs, depthStencilView_ );
+	else
+		d3dContext_->OMSetRenderTargets( currentRTcount, currentRTs, 0 );
 }
 
 void AaRenderSystem::setUAVs(UINT startSlot, UINT num, ID3D11UnorderedAccessView** views)
 {
 	UINT counter[5] = {0,0,0,0,0};
-	d3dContext_->OMSetRenderTargetsAndUnorderedAccessViews( 1, &backBufferTarget_, depthStencilView_,startSlot, num, views, counter);
+	d3dContext_->OMSetRenderTargetsAndUnorderedAccessViews( 1, currentRTs, depthStencilView_,startSlot, num, views, counter);
 }
 
 void AaRenderSystem::removeUAVs()

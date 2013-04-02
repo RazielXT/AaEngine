@@ -6,23 +6,29 @@
 #include "TestGuiWindow.h"
 #include "AaSceneParser.h"
 
-AaEntity* ent;
+
 TestGuiWindow* debugWindow;
 
 MyListener::MyListener(AaSceneManager* mSceneMgr, AaPhysicsManager* mPhysicsMgr)
 {
 	cameraMan = new FreeCamera(mSceneMgr->getCamera());
-	mSceneMgr->getCamera()->setPosition(XMFLOAT3(-1.8f,10,6));
+	mSceneMgr->getCamera()->setPosition(XMFLOAT3(-1.8f,10,-6));
 
 	this->mPhysicsMgr = mPhysicsMgr;
 	this->mSceneMgr = mSceneMgr;
 	continue_rendering = true;
 
 	AaRenderSystem* rs=mSceneMgr->getRenderSystem();
+	voxelScene = new AaVoxelScene(mSceneMgr);
+	voxelScene->initScene(32);
+	mShadowMapping = new AaShadowMapping(mSceneMgr);
+
 	mSceneMgr->loadMaterialFiles(MATERIAL_DIRECTORY);
 
+	pp = new AaBloomPostProcess(mSceneMgr);
+
 	AaMaterial* mat=mSceneMgr->getMaterial("Test2");
-	ent= mSceneMgr->createEntity("testEnt",mat);
+	/*ent= mSceneMgr->createEntity("testEnt",mat);
 	ent->setModel("angel");
 	ent->setScale(XMFLOAT3(10,10,10));
 	ent->setPosition(0,-15,30);
@@ -49,7 +55,7 @@ MyListener::MyListener(AaSceneManager* mSceneMgr, AaPhysicsManager* mPhysicsMgr)
 
 	node->move(XMFLOAT3(0,10,0));
 	node->yawPitchRoll(0.4,0.2,0);
-	node->localPitch(1);
+	node->localPitch(1);*/
 
 	/*ent= mSceneMgr->createEntity("testEnt2",mat);
 	ent->setModel("teapot.obj");
@@ -62,7 +68,7 @@ MyListener::MyListener(AaSceneManager* mSceneMgr, AaPhysicsManager* mPhysicsMgr)
 	mMaterial = mPhysicsMgr->getPhysics()->createMaterial(0.7f, 1.7f, 0.2f);    //static friction, dynamic friction, restitution
 	PxShape* aSphereShape;
 
-	ent= mSceneMgr->createEntity("testEnt3",mat);
+	AaEntity* ent= mSceneMgr->createEntity("testEnt3",mat);
 	ent->setModel("ball32.mesh");
 	ent->setPosition(0,10,20);
 	ent->setScale(XMFLOAT3(0.4,0.4,0.4));
@@ -103,8 +109,9 @@ MyListener::MyListener(AaSceneManager* mSceneMgr, AaPhysicsManager* mPhysicsMgr)
 	
 	Light* l = new Light();
 	l->color = XMFLOAT3(1,1,1);
-	l->direction = XMFLOAT3(-0.5f,-10,-0.5f);
+	l->direction = XMFLOAT3(0.5f,-1,0.5f);
 	XMStoreFloat3(&l->direction,XMVector2Normalize(XMLoadFloat3(&l->direction)));
+	
 
 	mSceneMgr->mShadingMgr->directionalLight = l;
 
@@ -121,26 +128,42 @@ MyListener::MyListener(AaSceneManager* mSceneMgr, AaPhysicsManager* mPhysicsMgr)
 
 MyListener::~MyListener()
 {
+	delete voxelScene;
+	delete pp;
+	delete mShadowMapping;
 }
 
 
+float elapsedTime = 0;
 bool MyListener::frameStarted(float timeSinceLastFrame)
 {
 	mKeyboard->capture();
 	mMouse->capture();
 	cameraMan->update(timeSinceLastFrame);
+	debugWindow->updateFPS(timeSinceLastFrame);
+
+	elapsedTime+=timeSinceLastFrame;
+	Light* l = mSceneMgr->mShadingMgr->directionalLight;
+	l->direction = XMFLOAT3(0.5*cos(elapsedTime)-0.5*sin(elapsedTime),-0.65,0.5*cos(elapsedTime)+0.5*sin(elapsedTime));
+	XMStoreFloat3(&l->direction,XMVector2Normalize(XMLoadFloat3(&l->direction)));
 
 	mSceneMgr->getGuiManager()->update(timeSinceLastFrame/1000.0f);
+
 
 	mPhysicsMgr->fetchResults(true);
 	mPhysicsMgr->synchronizeEntities();
 
 	mPhysicsMgr->startSimulating(timeSinceLastFrame);
 
-	mRS->clearViews();
+	mShadowMapping->renderShadowMaps();
 
-	mSceneMgr->mShadingMgr->updatePerFrameConstants(timeSinceLastFrame,mSceneMgr->getCamera());
-	mSceneMgr->renderScene();
+	mSceneMgr->mShadingMgr->updatePerFrameConstants(timeSinceLastFrame,mSceneMgr->getCamera(),mSceneMgr->getCamera("sun"));
+	
+	//mRS->setBackbufferAsRenderTarget();
+	//mRS->clearViews();
+	//mSceneMgr->renderScene();
+
+	pp->render();
 
 	mSceneMgr->getGuiManager()->render();
 
@@ -188,7 +211,6 @@ bool MyListener::mouseMoved( const OIS::MouseEvent &arg )
 
 bool MyListener::mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id ) 
 { 
-	ent->removePhysicsBody();
 	mSceneMgr->getGuiManager()->mousePressed(arg,id);
 
 	if(id == OIS::MB_Right)

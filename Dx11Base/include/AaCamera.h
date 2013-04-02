@@ -17,7 +17,7 @@ public:
 
 		//initial values
 		*view_m = XMMatrixIdentity( );
-		*projection_m = XMMatrixPerspectiveFovLH( XM_PIDIV4, 800.0f / 600.0f, 0.01f, 100.0f );
+		*projection_m = XMMatrixPerspectiveFovLH( XM_PIDIV4, 1280.0f / 800.0f, 0.01f, 1000.0f );
 
 		*view_projection_m = XMMatrixMultiply( *view_m, *projection_m );
 
@@ -43,10 +43,37 @@ public:
 		dirty = true;
 	}
 
+	void setOrthograhicCamera(float l,float r,float b,float t,float nearZ,float farZ)
+	{
+		*projection_m = XMMatrixOrthographicOffCenterLH(l,r,b,t,nearZ,farZ);
+		dirty = true;
+	}
+	
+
 	void setPerspectiveCamera(float fov,float aspectRatio,float nearZ,float farZ)
 	{
 		*projection_m = XMMatrixPerspectiveFovLH( fov*(XM_PI/180.0f), aspectRatio ,nearZ,farZ );
 		dirty = true;
+	}
+
+	XMMATRIX* getProjectionMatrix() 
+	{ 
+		return projection_m; 
+	}
+
+	XMMATRIX* getViewMatrix() 
+	{ 
+		//if meanwhile moved
+		if(dirty)
+		{
+			*view_m = XMMatrixMultiply(XMMatrixLookToLH(XMLoadFloat3(&position), XMLoadFloat3(&direction), XMLoadFloat3(&upVector) ),XMMatrixRotationY(yaw_));
+			*view_m = XMMatrixMultiply(*view_m,XMMatrixRotationX(pitch_));
+			*view_m = XMMatrixMultiply(*view_m,XMMatrixRotationZ(roll_));
+			*view_projection_m = XMMatrixMultiply( *view_m, *projection_m );
+			dirty=false;
+		}
+
+		return view_m; 
 	}
 
 	XMMATRIX* getViewProjectionMatrix() 

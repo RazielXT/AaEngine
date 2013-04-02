@@ -1,0 +1,18 @@
+vertex_shader depth_vs
+{
+file depthWrite.fx
+entry VSMain
+profile vs_5_0
+
+cbuffer per_frame
+cbuffer per_object
+
+}
+
+pixel_shader depth_ps
+{
+file depthWrite.fx
+entry PSMain
+profile ps_5_0
+
+}

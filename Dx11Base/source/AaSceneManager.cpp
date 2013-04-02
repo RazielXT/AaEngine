@@ -7,16 +7,9 @@ AaSceneManager::AaSceneManager(AaRenderSystem* rs, AaGuiSystem* guiMgr)
 
 	mMaterialLoader= new AaMaterialLoader(rs);
 	mModelLoader= new AaModelLoader(rs);
-	currentCamera= new AaCamera();
+	currentCamera= createCamera("main");
 	defaultMaterial= new AaMaterial("Default",rs);
 	mShadingMgr = new AaShadingManager(mRenderSystem);
-
-	voxelScene = new AaVoxelScene(mRenderSystem);
-	voxelScene->initScene(32);
-
-	mMaterialLoader->addTextureResource(voxelScene->voxelSRV,"voxelScene");
-	mMaterialLoader->addUAV(voxelScene->voxelUAV,"voxelScene");
-
 }
 
 
@@ -44,7 +37,6 @@ AaSceneManager::~AaSceneManager()
 	mMaterialMap.clear();
 
 	delete mMaterialLoader;
-	delete voxelScene;
 	delete currentCamera;
 }
 
@@ -163,6 +155,11 @@ AaMaterial* AaSceneManager::createMaterial(std::string name)
 		return it->second;
 	}
 
+}
+
+void AaSceneManager::setCurrentCamera(AaCamera* cam)
+{
+	currentCamera = cam;
 }
 
 AaMaterial* AaSceneManager::getMaterial(std::string name)

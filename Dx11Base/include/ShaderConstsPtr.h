@@ -9,17 +9,19 @@ struct PerFrameConstants
 {
 	XMFLOAT4X4 viewProjectionMatrix;			//0-3
 
-	__declspec(align(16)) XMFLOAT3 cameraPos;						//4
+	XMFLOAT4X4 directional_light_VPMatrix;			//4-7
 
-	__declspec(align(16)) XMFLOAT3 ambientColour;					//5
+	__declspec(align(16)) XMFLOAT3 cameraPos;						//8
 
-	__declspec(align(16)) XMFLOAT3 directional_light_direction;	//6
+	__declspec(align(16)) XMFLOAT3 ambientColour;					//9
 
-	__declspec(align(16)) XMFLOAT3 directional_light_color;		//7
+	__declspec(align(16)) XMFLOAT3 directional_light_direction;	//10
 
+	__declspec(align(16)) XMFLOAT3 directional_light_color;		//11
 
-	float time;								//8.x
-	float time_delta;						//8.y
+	
+	float time;								//12.x
+	float time_delta;						//12.y
 	float padding4[2];						
 };
 

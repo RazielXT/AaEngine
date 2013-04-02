@@ -1,0 +1,6 @@
+material depthWrite
+{
+vertex_ref depth_vs
+pixel_ref depth_ps
+
+}

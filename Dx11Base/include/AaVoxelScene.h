@@ -1,14 +1,14 @@
 #ifndef _AA_VOXELSCENE_
 #define _AA_VOXELSCENE_
 
-#include "AaRenderSystem.h"
+#include "AaSceneManager.h"
 
 class AaVoxelScene
 {
 
 public:
 
-	AaVoxelScene(AaRenderSystem* mRS);
+	AaVoxelScene(AaSceneManager* mSceneMgr);
 	~AaVoxelScene();
 
 	void initScene(int size);
@@ -18,6 +18,7 @@ public:
 	ID3D11ShaderResourceView* voxelSRV;
 
 	AaRenderSystem* mRenderSystem;
+	AaMaterialLoader* mMaterialLoader;
 
 };
 

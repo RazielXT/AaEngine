@@ -26,7 +26,7 @@ public:
 	AaShadingManager(AaRenderSystem* mRS);
 	~AaShadingManager();
 
-	void updatePerFrameConstants(float timeSinceLastFrame, AaCamera* cam);
+	void updatePerFrameConstants(float timeSinceLastFrame, AaCamera* cam, AaCamera* sun);
 	void updatePerFrameConstants(AaCamera* cam);
 
 	XMFLOAT3 ambientColor;

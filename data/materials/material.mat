@@ -1,4 +1,4 @@
-material Test2
+material Test
 {
 vertex_ref vsTest
 pixel_ref psTest
@@ -22,7 +22,7 @@ culling_none
 	
 	texture
 	{
-		name voxelScene
+		name shadowmap1
 	}
 
 }

@@ -10,6 +10,9 @@
 #include "AaFrameListener.h"
 #include "AaSceneManager.h"
 #include "AaPhysicsManager.h"
+#include "AaVoxelScene.h"
+#include "AaBloomPostProcess.h"
+#include "AaShadowMapping.h"
 #include "AaGuiSystem.h"
 #include <windows.h>
 

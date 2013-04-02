@@ -59,8 +59,8 @@ public:
 	PerFrameConstants perFrameConstantsBuffer;
 	PerObjectConstants perObjectConstantsBuffer;
 
-	void setBackbufferAsRenderTarget();
-	void setRenderTargets(UINT numCount, ID3D11RenderTargetView** views);
+	void setBackbufferAsRenderTarget(bool useDepthBuffer = true);
+	void setRenderTargets(UINT numCount, ID3D11RenderTargetView** views, bool useDepthBuffer = true);
 	void setUAVs(UINT startSlot, UINT num, ID3D11UnorderedAccessView** views);
 	void removeUAVs();
 

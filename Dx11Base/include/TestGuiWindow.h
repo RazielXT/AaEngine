@@ -12,6 +12,8 @@ public:
 	TestGuiWindow(Rocket::Core::Context* context);
 	virtual ~TestGuiWindow();
 
+	void updateFPS(float tslf);
+
 	// Process the incoming event.
 	virtual void ProcessEvent(Rocket::Core::Event& event);
 	void toogleVisibility(); 
@@ -25,8 +27,10 @@ private:
 	Rocket::Core::Element* text;
 	Rocket::Core::Element* checkB;
 	Rocket::Controls::ElementFormControlInput* inputText;
-
 	Rocket::Core::String innRml;
+
+	Rocket::Core::String fps;
+	float fpsUpdateDelay;
 };
 
 void TestGuiWindow::toogleVisibility()
@@ -70,6 +74,7 @@ TestGuiWindow::TestGuiWindow(Rocket::Core::Context* context)
 	checkB = document->GetElementById("window")->GetElementById("reverb");
 
 	checkB->AddEventListener("click",this);
+	fpsUpdateDelay = 0;
 
 	inputText = dynamic_cast< Rocket::Controls::ElementFormControlInput* >(document->GetElementById("window")->GetElementById("player_input"));
 }
@@ -77,6 +82,20 @@ TestGuiWindow::TestGuiWindow(Rocket::Core::Context* context)
 TestGuiWindow::~TestGuiWindow()
 {
 	context->UnloadDocument(document);
+}
+
+void TestGuiWindow::updateFPS(float tslf)
+{
+	int fpsInt = 1/tslf;
+	fpsUpdateDelay+=tslf;
+
+	if (fpsUpdateDelay>0.25f)
+	{
+		fps.FormatString(12,"FPS: %d",fpsInt);
+		fpsUpdateDelay=0;
+	}
+	
+	document->GetElementById("title")->SetInnerRML(fps);
 }
 
 void TestGuiWindow::ProcessEvent(Rocket::Core::Event& event)

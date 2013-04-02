@@ -309,6 +309,53 @@ std::vector<materialInfo> AaMaterialFileParser::parseMaterialFile(std::string fi
 							 continue;
 						 }
 
+						 //filtering
+						 if(strFunctions.getToken(&line,"filtering"))
+						 {
+							 line=strFunctions.toNextWord(line);
+							 tex.defaultSampler = false;
+
+							 if(boost::starts_with(line, "bil"))
+								 tex.filter=Bilinear;
+							 else
+							 if(boost::starts_with(line, "aniso"))
+								 tex.filter=Anisotropic;
+							 else
+							 if(boost::starts_with(line, "none"))
+								tex.filter=None;
+							 else
+								tex.filter=Anisotropic;
+
+							 continue;
+						 }
+
+						 //filtering
+						 if(strFunctions.getToken(&line,"border"))
+						 {
+							 tex.defaultSampler = false;
+							 line=strFunctions.toNextWord(line);
+
+							 if(boost::starts_with(line, "clamp"))
+								 tex.bordering=TextureBorder_Clamp;
+							 else
+							 if(boost::starts_with(line, "warp"))
+								tex.bordering=TextureBorder_Clamp;
+							 else
+							if(strFunctions.getToken(&line,"color"))
+							{
+							    tex.bordering=TextureBorder_BorderColor;
+								for (int i = 0; i<4;i++)
+								{
+									std::string c = strFunctions.onlyNextWordAndContinue(&line);
+									tex.border_color[i] = boost::lexical_cast<int>(c);
+								}
+							}
+							else
+								tex.bordering=TextureBorder_Clamp;
+
+							 continue;
+						 }
+
 						 //ending
 						 if(strFunctions.getToken(&line,"}"))
 						 {
@@ -397,6 +444,7 @@ shaderRefMaps AaMaterialFileParser::parseShaderFile(std::string file)
 			 shaderRef shader;
 			 shader.shader=NULL;
 			 shader.usedBuffersFlag=0;
+			 shader.perMatConstBufferSize = 0;
 
 			 line=strFunctions.onlyNextWord(line);
 

@@ -50,10 +50,10 @@ bool AaApplication::initialize()
 
 	started=true;
 
-	mWindow=new AaWindow(hInstance,cmdShow,800,600);
+	mWindow=new AaWindow(hInstance,cmdShow,1280,800);
 	mRenderSystem=new AaRenderSystem(mWindow);
 	mGuiMgr=new AaGuiSystem();
-	mGuiMgr->init(mRenderSystem->getDevice(),mRenderSystem->getContext(),mWindow->getWidth(),mWindow->getHeigth());
+	mGuiMgr->init(mRenderSystem->getDevice(),mRenderSystem->getContext(),mWindow->getWidth(),mWindow->getHeight());
 	mPhysicsMgr=new AaPhysicsManager();
 	mSceneMgr=new AaSceneManager(mRenderSystem,mGuiMgr);
 	

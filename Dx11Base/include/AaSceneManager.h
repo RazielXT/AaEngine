@@ -8,7 +8,6 @@
 #include "AaMaterialLoader.h"
 #include "AaModelLoader.h"
 #include "AaShadingManager.h"
-#include "AaVoxelScene.h"
 #include "AaCamera.h"
 #include "AaGuiSystem.h"
 #include <unordered_map>
@@ -45,6 +44,7 @@ public:
 
 	AaModelInfo* getModel(std::string name);
 
+	void setCurrentCamera(AaCamera* cam);
 	AaCamera* createCamera(std::string name);
 	AaCamera* getCamera(std::string name);
 	AaCamera* getCamera();
@@ -70,7 +70,7 @@ private:
 	AaRenderSystem* mRenderSystem;
 	AaGuiSystem* mGuiMgr;
 	AaCamera* currentCamera;
-	AaVoxelScene* voxelScene;
+
 };
 
 #endif

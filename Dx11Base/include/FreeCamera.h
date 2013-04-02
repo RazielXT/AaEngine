@@ -25,8 +25,8 @@ public:
 	void update(float time)
 	{
 		XMFLOAT3 dir(0,0,0);
-		float speed=2*time;
-		if(turbo) speed*=5;
+		float speed=4*time;
+		if(turbo) speed*=6;
 
 		if (w || s || a || d)
 		{

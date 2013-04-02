@@ -43,6 +43,11 @@ AaMaterialLoader::AaMaterialLoader(AaRenderSystem* mRenderSystem)
 
 AaMaterialLoader::~AaMaterialLoader()
 {
+	for (int i = 0; i< createdSamplers.size(); i++)
+	{
+		createdSamplers.at(i)->Release();
+	}
+
 	std::map<std::string,ID3D11ShaderResourceView*>::iterator it = loadedTextures.begin();
 
 	while(it != loadedTextures.end())
@@ -96,6 +101,62 @@ void AaMaterialLoader::addSRV(ID3D11ShaderResourceView* view, std::string name)
 	loadedSRVs[name] = view;
 }
 
+ID3D11SamplerState* AaMaterialLoader::createSampler(textureInfo info)
+{
+	ID3D11SamplerState* targetSampler;
+	//defaultFiltering
+	D3D11_SAMPLER_DESC textureMapDesc;
+	ZeroMemory( &textureMapDesc, sizeof( textureMapDesc ) );
+
+	if (info.bordering==TextureBorder_Clamp)
+	{
+		textureMapDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+		textureMapDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+		textureMapDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	}
+	else
+	if (info.bordering==TextureBorder_BorderColor)
+	{
+		textureMapDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
+		textureMapDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
+		textureMapDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
+		textureMapDesc.BorderColor[0] = info.border_color[0];
+		textureMapDesc.BorderColor[1] = info.border_color[1];
+		textureMapDesc.BorderColor[2] = info.border_color[2];
+		textureMapDesc.BorderColor[3] = info.border_color[3];
+	}
+	else
+	{
+		textureMapDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+		textureMapDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+		textureMapDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	}
+
+	textureMapDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+
+	if (info.filter==None)
+	{
+		textureMapDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+	}
+	else
+	if (info.filter==Bilinear)
+	{
+		textureMapDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
+	}
+	else
+	{
+		textureMapDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+		textureMapDesc.MaxAnisotropy = info.maxAnisotropy;
+	}
+
+	textureMapDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	mRenderSystem->getDevice()->CreateSamplerState( &textureMapDesc, &targetSampler );
+
+	createdSamplers.push_back(targetSampler);
+
+	return targetSampler;
+}
+
 std::map<std::string,AaMaterial*> AaMaterialLoader::loadMaterials(std::string directory, bool subDirectories)
 {
 	std::vector<materialInfo> matInfos=fileParser.parseAllMaterialFiles(directory,subDirectories);  
@@ -138,6 +199,12 @@ std::map<std::string,AaMaterial*> AaMaterialLoader::loadMaterials(std::string di
 			//v shader textures
 			for(int j=0;j<curMat.vstextures.size();j++)
 			{
+				ID3D11SamplerState* cSampler = defaultMapSampler;
+				if(!curMat.pstextures.at(j).defaultSampler)
+				{
+					cSampler = createSampler(curMat.pstextures.at(j));
+				}
+
 				mat->addTexture(getTextureResource(curMat.vstextures.at(j).file),defaultMapSampler,Shader_type_vertex);
 			}
 		}
@@ -170,7 +237,13 @@ std::map<std::string,AaMaterial*> AaMaterialLoader::loadMaterials(std::string di
 			//pixel shader textures
 			for(int j=0;j<curMat.pstextures.size();j++)
 			{
-				mat->addTexture(getTextureResource(curMat.pstextures.at(j).file),defaultMapSampler,Shader_type_pixel);
+				ID3D11SamplerState* cSampler = defaultMapSampler;
+				if(!curMat.pstextures.at(j).defaultSampler)
+				{
+					cSampler = createSampler(curMat.pstextures.at(j));
+				}
+
+				mat->addTexture(getTextureResource(curMat.pstextures.at(j).file),cSampler ,Shader_type_pixel);
 			}
 
 			//pixel shader uav

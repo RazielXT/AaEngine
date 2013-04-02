@@ -1,4 +1,4 @@
-material Test
+material Test2
 {
 vertex_ref vsGeneralBasic
 pixel_ref psGeneralBasic
@@ -10,14 +10,17 @@ pixel_ref psGeneralBasic
 
 	texture
 	{
-		name glass.png
+		name nicered.png
 	}
 	
 	texture
 	{
-		name 1.png
+		name ConcreteNORM.png
 	}
-
-	UAV voxelScene
-
+	
+	texture
+	{
+		name shadowmap1
+		border color 1 1 1 1
+	}
 }

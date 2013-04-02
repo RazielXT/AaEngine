@@ -13,7 +13,7 @@ AaShadingManager::~AaShadingManager()
 {
 }
 
-void AaShadingManager::updatePerFrameConstants(float timeSinceLastFrame, AaCamera* cam)
+void AaShadingManager::updatePerFrameConstants(float timeSinceLastFrame, AaCamera* cam, AaCamera* sun)
 {
 	mRenderSystem->perFrameConstantsBuffer.time_delta = timeSinceLastFrame;
 	mRenderSystem->perFrameConstantsBuffer.time += timeSinceLastFrame;
@@ -33,6 +33,7 @@ void AaShadingManager::updatePerFrameConstants(float timeSinceLastFrame, AaCamer
 	mRenderSystem->perFrameConstantsBuffer.cameraPos = cam->getPosition();
 
 	XMStoreFloat4x4(&mRenderSystem->perFrameConstantsBuffer.viewProjectionMatrix,*cam->getViewProjectionMatrix());
+	XMStoreFloat4x4(&mRenderSystem->perFrameConstantsBuffer.directional_light_VPMatrix,*sun->getViewProjectionMatrix());
 
 	mRenderSystem->getContext()->UpdateSubresource( mRenderSystem->perFrameBuffer, 0, 0, &mRenderSystem->perFrameConstantsBuffer, 0, 0 );
 }

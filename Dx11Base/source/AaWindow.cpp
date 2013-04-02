@@ -67,7 +67,7 @@ const int AaWindow::getWidth()
 	return width;
 }
 
-const int AaWindow::getHeigth()
+const int AaWindow::getHeight()
 {
 	return heigth;
 }

@@ -202,12 +202,12 @@ void RenderInterfaceDirectX::RenderCompiledGeometry(Rocket::Core::CompiledGeomet
 	// Build and set the transform matrix.
 	VertexShaderConstants con;
 	con.world_transform = XMMatrixTranslation(translation.x, translation.y, 0);
-	con.world_transform = XMMatrixMultiply(con.world_transform,XMMatrixRotationRollPitchYaw(0,0,0.1));
+	//con.world_transform = XMMatrixMultiply(con.world_transform,XMMatrixRotationRollPitchYaw(0,0,0.1));
 	con.world_transform = XMMatrixMultiply(con.world_transform,XMMatrixOrthographicOffCenterLH(0, width, 0, heigth, -1, 1));	
 		
 	con.world_transform = XMMatrixTranspose( con.world_transform );
 
-	con.rot_transform = XMMatrixRotationRollPitchYaw(0,0,0.1);
+	//con.rot_transform = XMMatrixRotationRollPitchYaw(0,0,0.1);
 
 	if(sc)
 	con.scissors = scissors;

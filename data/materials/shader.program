@@ -14,6 +14,7 @@ file sampleShader.fx
 entry PS_Main
 profile ps_5_0
 
+cbuffer per_frame
 cbuffer per_object
 cbuffer per_material
 {

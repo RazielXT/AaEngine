@@ -12,10 +12,33 @@
 #include <boost/filesystem.hpp>
 #include "StringFunctions.h"
 
+enum TextureBorder
+{
+	TextureBorder_Warp, TextureBorder_Clamp, TextureBorder_BorderColor
+};
+
+enum Filtering
+{
+	None, Bilinear, Trilinear, Anisotropic
+};
+
 struct textureInfo
 {
+	textureInfo()
+	{
+		defaultSampler = true;
+		maxAnisotropy = 8;
+		filter = Anisotropic;
+		bordering = TextureBorder_Warp;
+		file = "Default.png";
+	}
+
 	std::string file;
-	std::string filtering;
+	bool defaultSampler;
+	int maxAnisotropy;
+	Filtering filter;
+	TextureBorder bordering;
+	float border_color[4];
 };
 
 struct materialInfo
@@ -27,6 +50,7 @@ struct materialInfo
 	std::vector<textureInfo> vstextures;
 	std::vector<textureInfo> pstextures;
 	std::vector<std::string> psuavs;
+
 	std::map<std::string,std::vector<float>> defaultParams;
 	RS_DESC renderStateDesc;
 };

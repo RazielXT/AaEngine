@@ -10,13 +10,6 @@
 #include "AaMaterial.h"
 #include "AaMaterialFileParser.h"
 
-enum Filtering
-{
-	None=0,
-	Bilinear=1,
-	Trilinear=2,
-	Anisotropic=3
-};
 
 
 class AaMaterialLoader
@@ -30,6 +23,8 @@ public:
 	void loadShaderReferences(std::string directory, bool subDirectories=false);
 	void compileShaderReferences();
 	ID3D11ShaderResourceView* getTextureResource(std::string file);
+	ID3D11SamplerState* createSampler(textureInfo info);
+
 	void setDefaultFiltering(Filtering type, int max_anisotropy=1) { defaultFiltering=type; }
 
 	void addTextureResource(ID3D11ShaderResourceView* view, std::string name);
@@ -50,6 +45,7 @@ private:
 	std::map<std::string,shaderRef> loadedVertexShaders;
 	std::map<std::string,shaderRef> loadedPixelShaders;
 
+	std::vector<ID3D11SamplerState*> createdSamplers;
 	ID3D11SamplerState* defaultMapSampler;
 	ID3D11ShaderResourceView* defaultTexture;
 	Filtering defaultFiltering;

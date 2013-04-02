@@ -31,6 +31,10 @@ private:
 	AaRenderSystem* mRS;
 	AaSceneManager* mSceneMgr;
 	AaPhysicsManager* mPhysicsMgr;
+	AaVoxelScene* voxelScene;
+	AaShadowMapping* mShadowMapping;
+	AaBloomPostProcess* pp;
+
 	OIS::InputManager *mInputManager;	//Our Input System
 	OIS::Keyboard *mKeyboard;				//Keyboard Device
 	OIS::Mouse	 *mMouse;				//Mouse Device

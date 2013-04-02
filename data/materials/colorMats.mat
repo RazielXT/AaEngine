@@ -1,0 +1,87 @@
+material Red
+{
+vertex_ref vsGeneralBasic
+pixel_ref psGeneralBasic
+
+	texture
+	{
+		name nicered.png
+	}
+	
+	texture
+	{
+		name ConcreteNORM.png
+	}
+	
+	texture
+	{
+		name shadowmap1
+		border color 1 1 1 1
+	}
+}
+
+material Green
+{
+vertex_ref vsGeneralBasic
+pixel_ref psGeneralBasic
+
+	texture
+	{
+		name nicegreen.png
+	}
+	
+	texture
+	{
+		name ConcreteNORM.png
+	}
+	
+	texture
+	{
+		name shadowmap1
+		border color 1 1 1 1
+	}
+}
+
+material Blue
+{
+vertex_ref vsGeneralBasic
+pixel_ref psGeneralBasic
+
+	texture
+	{
+		name niceblue.png
+	}
+	
+	texture
+	{
+		name ConcreteNORM.png
+	}
+	
+	texture
+	{
+		name shadowmap1
+		border color 1 1 1 1
+	}
+}
+
+material White
+{
+vertex_ref vsGeneralBasic
+pixel_ref psGeneralBasic
+
+	texture
+	{
+		name white.png
+	}
+	
+	texture
+	{
+		name ConcreteNORM.png
+	}
+	
+	texture
+	{
+		name shadowmap1
+		border color 1 1 1 1
+	}
+}

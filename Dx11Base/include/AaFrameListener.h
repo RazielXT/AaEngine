@@ -7,7 +7,7 @@ class AaFrameListener
 public:
 
 	AaFrameListener(){};
-	~AaFrameListener(){};
+	virtual ~AaFrameListener(){};
 
 	virtual bool frameStarted(float timeSinceLastFrame) = 0;
 

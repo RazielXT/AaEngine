@@ -1,8 +1,9 @@
 #include "AaVoxelScene.h"
 
-AaVoxelScene::AaVoxelScene(AaRenderSystem* mRS)
+AaVoxelScene::AaVoxelScene(AaSceneManager* mSceneMgr)
 {
-	mRenderSystem = mRS;
+	mRenderSystem = mSceneMgr->getRenderSystem();
+	mMaterialLoader = mSceneMgr->getMaterialLoader();
 
 	voxelTexture = NULL;
 	voxelSRV = NULL;
@@ -65,4 +66,7 @@ void AaVoxelScene::initScene(int size)
 	uav_desc.Texture3D.WSize = size;
 
 	result = mRenderSystem->getDevice()->CreateUnorderedAccessView(voxelTexture,&uav_desc,&voxelUAV);
+
+	mMaterialLoader->addTextureResource(voxelSRV,"voxelScene");
+	mMaterialLoader->addUAV(voxelUAV,"voxelScene");
 }

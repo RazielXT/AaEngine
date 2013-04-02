@@ -70,6 +70,7 @@ struct LoadedShader
  		}
 	}
 
+
 	void* shader;
 	ID3DBlob* vsBuffer;
 
@@ -108,6 +109,7 @@ public:
 	void setMaterialConstant(std::string name, Shader_type shader_target, float* value);
 	void updateObjectConstants(AaEntity* ent);
 	void prepareForRendering();
+	void prepareForRenderingWithCustomPSTextures(ID3D11ShaderResourceView** textures, int count , int start = 0);
 	void clearAfterRendering();
 
 	ID3D11InputLayout* mInputLayout; 

@@ -61,7 +61,8 @@ public:
 
 	void setBackbufferAsRenderTarget(bool useDepthBuffer = true);
 	void setRenderTargets(UINT numCount, ID3D11RenderTargetView** views, bool useDepthBuffer = true);
-	void setUAVs(UINT startSlot, UINT num, ID3D11UnorderedAccessView** views);
+	void setRenderTargets(UINT numCount, ID3D11RenderTargetView** views, ID3D11DepthStencilView* dsView);
+	void setUAVs(UINT num, ID3D11UnorderedAccessView** views);
 	void removeUAVs();
 
 private:
@@ -70,6 +71,7 @@ private:
 	ID3D11BlendState* alphaBlendStates[2];
 	ID3D11DepthStencilState* dsStates[4];
 
+	ID3D11DepthStencilView* currentDSView_;
 	ID3D11RenderTargetView** currentRTs;
 	UINT currentRTcount;
 

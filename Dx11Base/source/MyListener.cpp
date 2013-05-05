@@ -20,7 +20,7 @@ MyListener::MyListener(AaSceneManager* mSceneMgr, AaPhysicsManager* mPhysicsMgr)
 
 	AaRenderSystem* rs=mSceneMgr->getRenderSystem();
 	voxelScene = new AaVoxelScene(mSceneMgr);
-	voxelScene->initScene(32);
+	voxelScene->initScene(128);
 	mShadowMapping = new AaShadowMapping(mSceneMgr);
 
 	mSceneMgr->loadMaterialFiles(MATERIAL_DIRECTORY);
@@ -64,7 +64,7 @@ MyListener::MyListener(AaSceneManager* mSceneMgr, AaPhysicsManager* mPhysicsMgr)
 	ent->yaw(-2.7f);
 	ent->setPosition(3,-1,10);*/
 	
-	PxMaterial* mMaterial;
+	/*PxMaterial* mMaterial;
 	mMaterial = mPhysicsMgr->getPhysics()->createMaterial(0.7f, 1.7f, 0.2f);    //static friction, dynamic friction, restitution
 	PxShape* aSphereShape;
 
@@ -106,10 +106,10 @@ MyListener::MyListener(AaSceneManager* mSceneMgr, AaPhysicsManager* mPhysicsMgr)
 	ent->setScale(XMFLOAT3(2,1,2));
 	ent->roll(0.5);
 	mPhysicsMgr->createConvexBodyDynamic(ent)->setLinearVelocity(physx::PxVec3(1,15,0));
-	
+	*/
 	Light* l = new Light();
 	l->color = XMFLOAT3(1,1,1);
-	l->direction = XMFLOAT3(0.5f,-1,0.5f);
+	l->direction = XMFLOAT3(0.0f,-2,1.6);
 	XMStoreFloat3(&l->direction,XMVector2Normalize(XMLoadFloat3(&l->direction)));
 	
 
@@ -124,6 +124,8 @@ MyListener::MyListener(AaSceneManager* mSceneMgr, AaPhysicsManager* mPhysicsMgr)
 	setupInputSystem();
 
 	debugWindow = new TestGuiWindow(mSceneMgr->getGuiManager()->getContext());
+ 
+	
 }
 
 MyListener::~MyListener()
@@ -135,20 +137,29 @@ MyListener::~MyListener()
 
 
 float elapsedTime = 0;
+int count = 0;
+XMFLOAT3 baseDir(0,-1,0);
+XMFLOAT4 lightQuat(0,0,0,1);
+float xr = 0, zr = 0;
 bool MyListener::frameStarted(float timeSinceLastFrame)
 {
+	
 	mKeyboard->capture();
 	mMouse->capture();
 	cameraMan->update(timeSinceLastFrame);
 	debugWindow->updateFPS(timeSinceLastFrame);
 
-	elapsedTime+=timeSinceLastFrame;
+	elapsedTime+=timeSinceLastFrame*0.3f;
 	Light* l = mSceneMgr->mShadingMgr->directionalLight;
-	l->direction = XMFLOAT3(0.5*cos(elapsedTime)-0.5*sin(elapsedTime),-0.65,0.5*cos(elapsedTime)+0.5*sin(elapsedTime));
-	XMStoreFloat3(&l->direction,XMVector2Normalize(XMLoadFloat3(&l->direction)));
+
+	
+	//XMStoreFloat3(&baseDir,XMVector2Normalize(XMLoadFloat3(&baseDir)));
+
+	//l->direction = baseDir;//XMFLOAT3(baseDir.x*cos(elapsedTime)-baseDir.z*sin(elapsedTime),baseDir.y,baseDir.x*cos(elapsedTime)+baseDir.z*sin(elapsedTime));
+	//XMStoreFloat3(&l->direction,XMVector2Normalize(XMLoadFloat3(&l->direction)));
+	XMStoreFloat3(&l->direction,XMVector3Rotate(XMLoadFloat3(&baseDir),XMLoadFloat4(&lightQuat)));
 
 	mSceneMgr->getGuiManager()->update(timeSinceLastFrame/1000.0f);
-
 
 	mPhysicsMgr->fetchResults(true);
 	mPhysicsMgr->synchronizeEntities();
@@ -157,13 +168,22 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 
 	mShadowMapping->renderShadowMaps();
 
+	//if(count%2==0)
+	voxelScene->voxelizeScene(XMFLOAT3(30,30,30),XMFLOAT3(0,0,0));
+
+	count++;
+
+	//voxelScene->unifyVoxels();
+	mSceneMgr->setCurrentCamera(mSceneMgr->getCamera("main"));
 	mSceneMgr->mShadingMgr->updatePerFrameConstants(timeSinceLastFrame,mSceneMgr->getCamera(),mSceneMgr->getCamera("sun"));
 	
-	//mRS->setBackbufferAsRenderTarget();
-	//mRS->clearViews();
+	mRS->setBackbufferAsRenderTarget();
+	mRS->clearViews();
+	//mSceneMgr->renderSceneWithMaterial(mSceneMgr->getMaterial("depthWrite"));
 	//mSceneMgr->renderScene();
 
 	pp->render();
+
 
 	mSceneMgr->getGuiManager()->render();
 
@@ -183,6 +203,26 @@ bool MyListener::keyPressed( const OIS::KeyEvent &arg )
 
 		case OIS::KC_ESCAPE:
 			continue_rendering=false;
+			break;
+
+		case OIS::KC_I:
+			xr+=0.1;
+			XMStoreFloat4(&lightQuat,XMQuaternionRotationRollPitchYaw(xr,0,zr));
+			break;
+
+		case OIS::KC_K:
+			xr -= 0.1;
+			XMStoreFloat4(&lightQuat,XMQuaternionRotationRollPitchYaw(xr,0,zr));
+			break;
+
+		case OIS::KC_J:
+			zr += 0.1;
+			XMStoreFloat4(&lightQuat,XMQuaternionRotationRollPitchYaw(xr,0,zr));
+			break;
+
+		case OIS::KC_L:
+			zr -= 0.1;
+			XMStoreFloat4(&lightQuat,XMQuaternionRotationRollPitchYaw(xr,0,zr));
 			break;
 
          default:

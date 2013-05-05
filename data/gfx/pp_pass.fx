@@ -24,5 +24,5 @@ float4 PS_MainLum( PS_Input frag,
 {
 float4 color=colorMap.Sample( colorSampler, frag.uv);
 
-return pow(color-0.3,2);
+return pow(color-0.3,3);
 }

@@ -22,7 +22,7 @@ depth_check_off
 
 	texture
 	{
-
+		border clamp
 	}
 }
 
@@ -36,7 +36,7 @@ depth_check_off
 
 	texture
 	{
-
+		border clamp
 	}
 }
 

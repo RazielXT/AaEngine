@@ -347,7 +347,7 @@ std::vector<materialInfo> AaMaterialFileParser::parseMaterialFile(std::string fi
 								for (int i = 0; i<4;i++)
 								{
 									std::string c = strFunctions.onlyNextWordAndContinue(&line);
-									tex.border_color[i] = boost::lexical_cast<int>(c);
+									tex.border_color[i] = boost::lexical_cast<float>(c);
 								}
 							}
 							else

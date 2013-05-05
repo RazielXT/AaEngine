@@ -14,9 +14,9 @@ AaRenderSystem::AaRenderSystem(AaWindow* mWindow)
 	this->mWindow = mWindow;
 	HWND hwnd = mWindow->getHwnd();
 
-	clearColor[0]=0.3f;
-	clearColor[1]=0.8f;
-	clearColor[2]=0.3f;
+	clearColor[0]=0.55f;
+	clearColor[1]=0.75f;
+	clearColor[2]=0.92f;
 	clearColor[3]=1.0f;
 
 	RECT dimensions;
@@ -126,6 +126,7 @@ AaRenderSystem::AaRenderSystem(AaWindow* mWindow)
 	descDSV.Texture2D.MipSlice = 0;
 	result = d3dDevice_->CreateDepthStencilView( depthTexture_, &descDSV,&depthStencilView_ );
 	depthTexture_->Release();
+	currentDSView_ = depthStencilView_;
 
 	if( FAILED( result ) )
 	{
@@ -258,7 +259,7 @@ AaRenderSystem::~AaRenderSystem()
 void AaRenderSystem::clearViews()
 {
 	d3dContext_->ClearRenderTargetView( *currentRTs, clearColor );
-	d3dContext_->ClearDepthStencilView( depthStencilView_, D3D11_CLEAR_DEPTH, 1.0f, 0 );
+	d3dContext_->ClearDepthStencilView( currentDSView_, D3D11_CLEAR_DEPTH, 1.0f, 0 );
 }
 
 RenderState* AaRenderSystem::getDefaultRenderState()
@@ -298,6 +299,7 @@ void AaRenderSystem::setBackbufferAsRenderTarget(bool useDepthBuffer)
 
 	currentRTcount = 1;
 	currentRTs = &backBufferTarget_;
+	currentDSView_ = depthStencilView_;
 
 	if(useDepthBuffer)
 		d3dContext_->OMSetRenderTargets( currentRTcount, currentRTs, depthStencilView_ );
@@ -311,18 +313,29 @@ void AaRenderSystem::setRenderTargets(UINT numCount, ID3D11RenderTargetView** vi
 	currentRTs = views;
 
 	if(useDepthBuffer)
-		d3dContext_->OMSetRenderTargets( currentRTcount, currentRTs, depthStencilView_ );
+		currentDSView_ =depthStencilView_;
 	else
-		d3dContext_->OMSetRenderTargets( currentRTcount, currentRTs, 0 );
+		currentDSView_ = 0;
+
+	d3dContext_->OMSetRenderTargets( currentRTcount, currentRTs, currentDSView_ );
 }
 
-void AaRenderSystem::setUAVs(UINT startSlot, UINT num, ID3D11UnorderedAccessView** views)
+void AaRenderSystem::setRenderTargets(UINT numCount, ID3D11RenderTargetView** views, ID3D11DepthStencilView* dsView)
+{
+	currentRTcount = numCount;
+	currentRTs = views;
+	currentDSView_ = dsView;
+
+	d3dContext_->OMSetRenderTargets( currentRTcount, currentRTs, currentDSView_ );
+}
+
+void AaRenderSystem::setUAVs(UINT num, ID3D11UnorderedAccessView** views)
 {
 	UINT counter[5] = {0,0,0,0,0};
-	d3dContext_->OMSetRenderTargetsAndUnorderedAccessViews( 1, currentRTs, depthStencilView_,startSlot, num, views, counter);
+	d3dContext_->OMSetRenderTargetsAndUnorderedAccessViews( currentRTcount, currentRTs, currentDSView_, currentRTcount, num, views, counter);
 }
 
 void AaRenderSystem::removeUAVs()
 {
-	d3dContext_->OMSetRenderTargets( currentRTcount, currentRTs, depthStencilView_ );
+	d3dContext_->OMSetRenderTargets( currentRTcount, currentRTs, currentDSView_ );
 }

@@ -111,6 +111,8 @@ public:
 	void prepareForRendering();
 	void prepareForRenderingWithCustomPSTextures(ID3D11ShaderResourceView** textures, int count , int start = 0);
 	void clearAfterRendering();
+	void setPSTextures(ID3D11ShaderResourceView** textures,ID3D11SamplerState** samplers, int count , int start = 0);
+	void clearPSTextures(int count = 10, int start = 0);
 
 	ID3D11InputLayout* mInputLayout; 
 	USHORT usedVertexBuffersCount;

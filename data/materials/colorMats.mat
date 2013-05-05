@@ -18,6 +18,25 @@ pixel_ref psGeneralBasic
 		name shadowmap1
 		border color 1 1 1 1
 	}
+	
+	texture
+	{
+		name fVoxelScene
+		border color 0 0 0 0
+		filtering bilinear
+	}
+	
+	texture
+	{
+		name voxelShadowScene
+		border clamp
+	}
+	
+	texture
+	{
+		name voxelNormalScene
+		border color 0 0 0 0
+	}
 }
 
 material Green
@@ -39,6 +58,25 @@ pixel_ref psGeneralBasic
 	{
 		name shadowmap1
 		border color 1 1 1 1
+	}
+	
+	texture
+	{
+		name fVoxelScene
+		border color 0 0 0 0
+		filtering bilinear
+	}
+	
+	texture
+	{
+		name voxelShadowScene
+		border clamp
+	}
+	
+	texture
+	{
+		name voxelNormalScene
+		border color 0 0 0 0
 	}
 }
 
@@ -62,6 +100,25 @@ pixel_ref psGeneralBasic
 		name shadowmap1
 		border color 1 1 1 1
 	}
+	
+	texture
+	{
+		name fVoxelScene
+		border color 0 0 0 0
+		filtering bilinear
+	}
+	
+	texture
+	{
+		name voxelShadowScene
+		border clamp
+	}
+	
+	texture
+	{
+		name voxelNormalScene
+		border color 0 0 0 0
+	}
 }
 
 material White
@@ -82,6 +139,25 @@ pixel_ref psGeneralBasic
 	texture
 	{
 		name shadowmap1
-		border color 1 1 1 1
+		border color 1 1 1 0
+	}
+	
+	texture
+	{
+		name fVoxelScene
+		border color 0 0 0 0
+		filtering bilinear
+	}
+	
+	texture
+	{
+		name voxelShadowScene
+		border clamp
+	}
+	
+	texture
+	{
+		name voxelNormalScene
+		border color 0 0 0 0
 	}
 }

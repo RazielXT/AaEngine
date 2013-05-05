@@ -16,3 +16,28 @@ entry PSMain
 profile ps_5_0
 
 }
+
+vertex_shader depthvox_vs
+{
+file depthWriteAndVoxel.fx
+entry VSMain
+profile vs_5_0
+
+cbuffer per_object
+
+}
+
+pixel_shader depthvox_ps
+{
+file depthWriteAndVoxel.fx
+entry PSMain
+profile ps_5_0
+
+cbuffer per_frame
+cbuffer per_material
+{
+	float3 sceneCorner 0 0 0
+	float1 voxelSize 0
+}
+
+}

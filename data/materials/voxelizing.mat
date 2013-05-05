@@ -1,0 +1,22 @@
+material VoxelizationMat
+{
+vertex_ref voxelizeVS
+pixel_ref voxelizePS
+
+culling_none
+depth_write_off
+depth_check_off
+
+	texture
+	{
+	}
+	
+	texture
+	{
+		name voxelShadowScene
+		border clamp
+	}
+	
+	UAV fVoxelScene
+	UAV voxelNormalScene
+}

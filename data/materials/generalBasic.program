@@ -16,4 +16,5 @@ profile ps_5_0
 
 cbuffer per_frame
 cbuffer per_object
+
 }

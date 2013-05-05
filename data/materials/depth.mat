@@ -4,3 +4,11 @@ vertex_ref depth_vs
 pixel_ref depth_ps
 
 }
+
+material depthWriteAndVoxel
+{
+vertex_ref depthvox_vs
+pixel_ref depthvox_ps
+
+	UAV voxelShadowScene
+}

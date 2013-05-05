@@ -23,4 +23,5 @@ pixel_ref psGeneralBasic
 		name shadowmap1
 		border color 1 1 1 1
 	}
+	
 }

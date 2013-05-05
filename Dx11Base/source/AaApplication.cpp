@@ -50,7 +50,7 @@ bool AaApplication::initialize()
 
 	started=true;
 
-	mWindow=new AaWindow(hInstance,cmdShow,1280,800);
+	mWindow=new AaWindow(hInstance,cmdShow,512,384);
 	mRenderSystem=new AaRenderSystem(mWindow);
 	mGuiMgr=new AaGuiSystem();
 	mGuiMgr->init(mRenderSystem->getDevice(),mRenderSystem->getContext(),mWindow->getWidth(),mWindow->getHeight());

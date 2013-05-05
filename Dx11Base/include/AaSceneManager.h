@@ -50,7 +50,7 @@ public:
 	AaCamera* getCamera();
 	
 	void renderScene();
-	void renderSceneWithMaterial(AaMaterial* usedMaterial);
+	void renderSceneWithMaterial(AaMaterial* usedMaterial, bool preserveTextures = true);
 
 	AaMaterialLoader* getMaterialLoader() {return mMaterialLoader;}
 	AaRenderSystem* getRenderSystem() {return mRenderSystem;}

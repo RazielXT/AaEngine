@@ -172,7 +172,7 @@ AaMaterial* AaSceneManager::getMaterial(std::string name)
 		return it->second;		
 }
 
-void AaSceneManager::renderSceneWithMaterial(AaMaterial* usedMaterial)
+void AaSceneManager::renderSceneWithMaterial(AaMaterial* usedMaterial, bool preserveTextures)
 {
 	ID3D11DeviceContext* d3dContext=mRenderSystem->getContext();
 
@@ -201,7 +201,14 @@ void AaSceneManager::renderSceneWithMaterial(AaMaterial* usedMaterial)
 			//for all materials
 			for(;materialsIterator !=materialsIteratorEnd; materialsIterator++)
 			{
+				
 				std::vector<AaEntity*>::iterator entityIterator = materialsIterator->second.begin();
+
+				LoadedShader* sh = materialsIterator->first->shaders[4];
+				if(preserveTextures && sh)
+				{
+					usedMaterial->setPSTextures(sh->shaderMaps,sh->samplerStates,1);//min(sh->numTextures,usedMaterial->shaders[4]->numTextures));
+				}
 
 				//for all objects
 				for(;entityIterator != materialsIterator->second.end();entityIterator++)
@@ -226,9 +233,15 @@ void AaSceneManager::renderSceneWithMaterial(AaMaterial* usedMaterial)
 					else
 						d3dContext->Draw( model->vertexCount, 0 );
 				}
+
+				/*if(preserveTextures && sh)
+				{
+					usedMaterial->clearPSTextures(sh->numTextures);
+				}*/
 			}
 		}
 	}
+
 
 	usedMaterial->clearAfterRendering();
 }

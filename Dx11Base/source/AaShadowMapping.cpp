@@ -122,7 +122,7 @@ void AaShadowMapping::renderShadowMaps()
 		d3dDeviceContext->ClearRenderTargetView( rtShadowMapRTViews[iCurrentCascade], clColor );
 		d3dDeviceContext->ClearDepthStencilView( dsView, D3D11_CLEAR_DEPTH, 1.0f, 0 );
 
-		d3dDeviceContext->OMSetRenderTargets( 1, &rtShadowMapRTViews[iCurrentCascade], dsView );
+		mSceneMgr->getRenderSystem()->setRenderTargets(1, &rtShadowMapRTViews[iCurrentCascade], dsView);
 			
 		D3D11_VIEWPORT viewport;
 		viewport.Width = static_cast<float>(width[iCurrentCascade]);
@@ -133,7 +133,9 @@ void AaShadowMapping::renderShadowMaps()
 		viewport.TopLeftY = 0.0f;
 		d3dDeviceContext->RSSetViewports( 1, &viewport );
 
+		//early z
 		mSceneMgr->renderSceneWithMaterial(mSceneMgr->getMaterial("depthWrite"));
+		mSceneMgr->renderSceneWithMaterial(mSceneMgr->getMaterial("depthWriteAndVoxel"));
 	}
 
 	mSceneMgr->setCurrentCamera(viewer);

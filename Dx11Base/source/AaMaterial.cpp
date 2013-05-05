@@ -52,13 +52,111 @@ void AaMaterial::setMaterialConstant(std::string name, Shader_type targetShaderT
 		std::map<std::string,ConstantInfo>::iterator it = sh->perMatVars.find(name);
 		if(it!=sh->perMatVars.end())
 		{
-			memcpy((*it).second.defaultValue,value,(*it).second.size*4);
+			memcpy((*it).second.defaultValue,value,(*it).second.size);
 			sh->needMatConstBufferUpdate = true;
 		}
 	}
 }
 
 void AaMaterial::prepareForRendering()
+{
+	ID3D11DeviceContext* context = mRS->getContext();
+
+	//for all possible shaders
+	for(int id=0;id<5;id++)
+	{
+		if(shaders[id])
+		{
+			LoadedShader* sh = shaders[id];
+
+			//update constant buffer if needed
+			if(sh->needMatConstBufferUpdate)
+			{
+				float* mem = shaders[id]->perMaterialConstantsMemory;
+				std::map<std::string,ConstantInfo>::iterator varsIterator = sh->perMatVars.begin();
+				std::map<std::string,ConstantInfo>::iterator varsIteratorEnd = sh->perMatVars.end();	
+
+				//for all materials
+				for(;varsIterator !=varsIteratorEnd; varsIterator++)
+				{
+					ConstantInfo info = varsIterator->second;
+					memcpy(&mem[(int)(info.position/4.0f)],info.defaultValue,info.size);
+				}
+
+				context->UpdateSubresource( sh->perMaterialConstantsBuffer, 0, 0, mem, 0, 0 );
+			}
+
+			ID3D11Buffer* buffersArray[3] = { mRS->perFrameBuffer,mRS->perObjectBuffer,sh->perMaterialConstantsBuffer};
+			int buffStart = (sh->usedBuffersFlag & PER_FRAME) ? 0 : ((sh->usedBuffersFlag & PER_OBJECT) ? 1 : ((sh->usedBuffersFlag & PER_MATERIAL) ? 2 : -1 ));
+			int buffCount = (sh->usedBuffersFlag & PER_MATERIAL) ? (3-buffStart) : ((sh->usedBuffersFlag & PER_OBJECT) ? (2-buffStart) : 1);
+
+			if(id==0)
+			{
+				context->VSSetShader( (ID3D11VertexShader*) sh->shader, 0, 0 );
+
+				if(buffStart>=0)
+					context->VSSetConstantBuffers(buffStart, buffCount, &buffersArray[buffStart] );
+
+				if(sh->numTextures>0)
+				{
+					context->VSSetShaderResources( 0, sh->numTextures, sh->shaderMaps );
+					context->VSSetSamplers( 0, sh->numTextures, sh->samplerStates );
+				}
+			}
+			else
+			if(id==4)
+			{
+				context->PSSetShader( (ID3D11PixelShader*) sh->shader, 0, 0 );
+
+				if(buffStart>=0)
+					context->PSSetConstantBuffers(buffStart, buffCount, &buffersArray[buffStart] );
+
+				if(sh->numTextures>0)
+				{
+					context->PSSetShaderResources( 0, sh->numTextures, sh->shaderMaps );
+					context->PSSetSamplers( 0, sh->numTextures, sh->samplerStates );
+				}
+
+				if(sh->numUAVs)
+				{
+					mRS->setUAVs(sh->numUAVs,sh->UAVs);
+				}
+			}
+		}	
+	}
+
+	context->IASetInputLayout( mInputLayout );
+}
+
+void AaMaterial::setPSTextures(ID3D11ShaderResourceView** textures, ID3D11SamplerState** samplers, int count , int start)
+{
+	LoadedShader* ps = shaders[4];
+
+	if(ps)
+	{
+		ID3D11DeviceContext* context = mRS->getContext();
+
+		context->PSSetShaderResources( start, count, textures );
+		context->PSSetSamplers( start, count, samplers );
+	}
+}
+
+void AaMaterial::clearPSTextures(int count , int start )
+{
+	ID3D11ShaderResourceView* srNulls[10] = {0};
+	ID3D11SamplerState* ssNulls[10] = {0};
+
+	LoadedShader* sh = shaders[5];
+
+	if(sh)
+	{
+		ID3D11DeviceContext* context = mRS->getContext();
+		context->VSSetShaderResources( start, count, srNulls );
+		context->VSSetSamplers( start, count, ssNulls );
+	}
+}
+
+void AaMaterial::prepareForRenderingWithCustomPSTextures(ID3D11ShaderResourceView** textures, int count , int start)
 {
 	ID3D11DeviceContext* context = mRS->getContext();
 
@@ -113,98 +211,27 @@ void AaMaterial::prepareForRendering()
 
 				if(sh->numTextures>0)
 				{
-					context->PSSetShaderResources( 0, sh->numTextures, sh->shaderMaps );
+					if (count<sh->numTextures)
+					{
+						if(start>0)
+							context->PSSetShaderResources( 0, sh->numTextures-count, sh->shaderMaps );
+						else
+							context->PSSetShaderResources( count, sh->numTextures-count, sh->shaderMaps );
+					}
+					else
+					{
+						context->PSSetShaderResources( start, count, textures );	
+					}
+
 					context->PSSetSamplers( 0, sh->numTextures, sh->samplerStates );
+
 				}
 
 				if(sh->numUAVs)
 				{
-					mRS->setUAVs(1,sh->numUAVs,sh->UAVs);
+					mRS->setUAVs(sh->numUAVs,sh->UAVs);
 				}
 			}
-		}	
-	}
-
-	context->IASetInputLayout( mInputLayout );
-}
-
-
-void AaMaterial::prepareForRenderingWithCustomPSTextures(ID3D11ShaderResourceView** textures, int count , int start)
-{
-	ID3D11DeviceContext* context = mRS->getContext();
-
-	//for all possible shaders
-	for(int id=0;id<5;id++)
-	{
-		if(shaders[id])
-		{
-			LoadedShader* sh = shaders[id];
-
-			//update constant buffer if needed
-			if(sh->needMatConstBufferUpdate)
-			{
-				float* mem = shaders[id]->perMaterialConstantsMemory;
-				std::map<std::string,ConstantInfo>::iterator varsIterator = sh->perMatVars.begin();
-				std::map<std::string,ConstantInfo>::iterator varsIteratorEnd = sh->perMatVars.end();	
-
-				//for all materials
-				for(;varsIterator !=varsIteratorEnd; varsIterator++)
-				{
-					ConstantInfo info = varsIterator->second;
-					memcpy(&mem[info.position],info.defaultValue,info.size);
-				}
-
-				context->UpdateSubresource( sh->perMaterialConstantsBuffer, 0, 0, mem, 0, 0 );
-			}
-
-			ID3D11Buffer* buffersArray[3] = { mRS->perFrameBuffer,mRS->perObjectBuffer,sh->perMaterialConstantsBuffer};
-			int buffStart = (sh->usedBuffersFlag & PER_FRAME) ? 0 : ((sh->usedBuffersFlag & PER_OBJECT) ? 1 : ((sh->usedBuffersFlag & PER_MATERIAL) ? 2 : -1 ));
-			int buffCount = (sh->usedBuffersFlag & PER_MATERIAL) ? (3-buffStart) : ((sh->usedBuffersFlag & PER_OBJECT) ? (2-buffStart) : 1);
-
-			if(id==0)
-			{
-				context->VSSetShader( (ID3D11VertexShader*) sh->shader, 0, 0 );
-
-				if(buffStart>=0)
-					context->VSSetConstantBuffers(buffStart, buffCount, &buffersArray[buffStart] );
-
-				if(sh->numTextures>0)
-				{
-					context->VSSetShaderResources( 0, sh->numTextures, sh->shaderMaps );
-					context->VSSetSamplers( 0, sh->numTextures, sh->samplerStates );
-				}
-			}
-			else
-				if(id==4)
-				{
-					context->PSSetShader( (ID3D11PixelShader*) sh->shader, 0, 0 );
-
-					if(buffStart>=0)
-						context->PSSetConstantBuffers(buffStart, buffCount, &buffersArray[buffStart] );
-
-					if(sh->numTextures>0)
-					{
-						if (count<sh->numTextures)
-						{
-							if(start>0)
-								context->PSSetShaderResources( 0, sh->numTextures-count, sh->shaderMaps );
-							else
-								context->PSSetShaderResources( count, sh->numTextures-count, sh->shaderMaps );
-						}
-						else
-						{
-							context->PSSetShaderResources( start, count, textures );	
-						}
-
-						context->PSSetSamplers( 0, sh->numTextures, sh->samplerStates );
-
-					}
-
-					if(sh->numUAVs)
-					{
-						mRS->setUAVs(1,sh->numUAVs,sh->UAVs);
-					}
-				}
 		}	
 	}
 
@@ -351,6 +378,9 @@ void AaMaterial::setShaderFromReference(shaderRef* shaderRef, Shader_type target
 	//allocate buffers for cpu/gpu variables and set pointers
 	if(shaderRef->perMatConstBufferSize>0)
 	{
+		//must be multiple of 16 bytes
+		shaderRef->perMatConstBufferSize = 4*ceil(shaderRef->perMatConstBufferSize/4.0f);
+
 		shaders[id]->perMaterialConstantsMemory = new float[shaderRef->perMatConstBufferSize]; 
 		shaders[id]->needMatConstBufferUpdate = true;
 

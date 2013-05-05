@@ -32,7 +32,8 @@ VS_OUTPUT VSMain( VS_INPUT Input )
 	VS_OUTPUT Output;
 		
 	Output.vPosition = mul( Input.vPosition, wvpMat);
-
+	Output.vPosition.z +=0.001;
+	
 	return Output;
 }
 

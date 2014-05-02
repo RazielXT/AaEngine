@@ -20,3 +20,38 @@ depth_check_off
 	UAV fVoxelScene
 	UAV voxelNormalScene
 }
+
+material LightVoxelizationMat
+{
+vertex_ref voxelizeVS
+pixel_ref voxelizePSl
+
+culling_none
+depth_write_off
+depth_check_off
+
+	UAV fVoxelScene
+}
+
+material PartVoxelizationMat
+{
+vertex_ref voxelizeVS
+pixel_ref voxelizePS2
+
+culling_none
+depth_write_off
+depth_check_off
+
+	texture
+	{
+	}
+	
+	texture
+	{
+		name voxelShadowScene
+		border clamp
+	}
+	
+	UAV fVoxelScene
+	UAV voxelNormalScene
+}

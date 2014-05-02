@@ -4,9 +4,9 @@ AaVoxelScene::AaVoxelScene(AaSceneManager* mSceneMgr)
 {
 	this->mSceneMgr = mSceneMgr;
 
-	voxelTexture = NULL;
-	voxelSRV = NULL;
-	voxelUAV = NULL;
+	colorVoxelTexture = NULL;
+	cVoxelSRV = NULL;
+	cVoxelUAV = NULL;
 
 	voxelizingLookCamera = mSceneMgr->createCamera("voxelCamera");
 }
@@ -15,74 +15,28 @@ AaVoxelScene::~AaVoxelScene()
 {
 	//views should be released by manager
 
-	if (voxelTexture)
-		voxelTexture->Release();
+	if (colorVoxelTexture)
+		colorVoxelTexture->Release();
 	if (voxelShadowTexture)
 		voxelShadowTexture->Release();
 	if (voxelNormalTexture)
 		voxelNormalTexture->Release();
 }
 
-void AaVoxelScene::initScene(int size)
+HRESULT createUAVTexture(UINT size,D3D11_TEXTURE3D_DESC& desc, int mips, AaSceneManager* mSceneMgr, ID3D11Device* mDevice, ID3D11Texture3D** vTexture, ID3D11UnorderedAccessView** vUAV, ID3D11ShaderResourceView** vSRV)
 {
-	ID3D11Device* mDevice = mSceneMgr->getRenderSystem()->getDevice();
-
-	float* initial = new float[size*size*size*4*2];
-	memset(initial,0,size*size*size*4*4*2);
-	this->size = size;
-
-	/*for (int i=0;i<size;i++)
-	for (int i2=0;i2<size*size;i2++)
-	{
-		initial[i2*3 + i*size*size*3] = 1;
-		initial[i2*3 + i*size*size*3 + 1] = 1;
-		initial[i2*3 + i*size*size*3 + 2] = 1;
-	}*/
-	
 	HRESULT result;
-	D3D11_SUBRESOURCE_DATA data;
-	data.pSysMem = initial;
+	result = mDevice->CreateTexture3D(&desc,0,vTexture);
 
-	D3D11_TEXTURE3D_DESC desc;
-	ZeroMemory( &desc, sizeof( desc ) );
-	desc.Usage = D3D11_USAGE_DEFAULT;
-	desc.Depth = desc.Height = desc.Width = size;
-	desc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
-	desc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-	desc.CPUAccessFlags = 0;
-	desc.MipLevels = 4;
-
-	
-	//FINAL
-	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	int formatSize = 1;
-
-	data.SysMemPitch = size*formatSize;
-	data.SysMemSlicePitch = size*size*formatSize;
-
-	D3D11_SUBRESOURCE_DATA data2;
-	data2.pSysMem = initial;
-	data2.SysMemPitch = size*formatSize/2.0f;
-	data2.SysMemSlicePitch = size*size*formatSize/4.0f;
-	D3D11_SUBRESOURCE_DATA data3;
-	data3.pSysMem = initial;
-	data3.SysMemPitch = size*formatSize/4.0f;
-	data3.SysMemSlicePitch = size*size*formatSize/16.0f;
-	D3D11_SUBRESOURCE_DATA data4;
-	data4.pSysMem = initial;
-	data4.SysMemPitch = size*formatSize/16.0f;
-	data4.SysMemSlicePitch = size*size*formatSize/64.0f;
-	D3D11_SUBRESOURCE_DATA datas[4] = {data,data2,data3,data4};
-	result = mDevice->CreateTexture3D(&desc,datas,&fVoxelTexture);
 
 	D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc;
 	srv_desc.Format = desc.Format;
 	srv_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
-	srv_desc.Texture3D.MipLevels = 4;
+	srv_desc.Texture3D.MipLevels = mips;
 	srv_desc.Texture3D.MostDetailedMip = 0;
-	
-	result = mDevice->CreateShaderResourceView(fVoxelTexture,&srv_desc,&fVoxelSRV);
-	mSceneMgr->getRenderSystem()->getContext()->GenerateMips(fVoxelSRV);
+
+	result = mDevice->CreateShaderResourceView(*vTexture,&srv_desc,vSRV);
+	mSceneMgr->getRenderSystem()->getContext()->GenerateMips(*vSRV);
 
 	D3D11_UNORDERED_ACCESS_VIEW_DESC uav_desc;
 	uav_desc.Format = desc.Format;
@@ -91,74 +45,60 @@ void AaVoxelScene::initScene(int size)
 	uav_desc.Texture3D.FirstWSlice = 0;
 	uav_desc.Texture3D.WSize = size;
 
-	result = mDevice->CreateUnorderedAccessView(fVoxelTexture,&uav_desc,&fVoxelUAV);
+	result = mDevice->CreateUnorderedAccessView(*vTexture,&uav_desc,vUAV);
+	AaLogger::getLogger()->writeMessage(boost::lexical_cast<std::string>(result));
+	return result;
+}
+
+void AaVoxelScene::initScene(int size)
+{
+	ID3D11Device* mDevice = mSceneMgr->getRenderSystem()->getDevice();
+
+
+	this->size = size;
+
+	D3D11_TEXTURE3D_DESC desc;
+	ZeroMemory( &desc, sizeof( desc ) );
+	desc.Usage = D3D11_USAGE_DEFAULT;
+	desc.Depth = desc.Height = desc.Width = size;
+	desc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
+	desc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	desc.CPUAccessFlags = 0;
+	desc.MipLevels = 0;
+
+
+	//FINAL
+	desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;//DXGI_FORMAT_R8G8B8A8_UNORM;
+	createUAVTexture(size, desc, -1, mSceneMgr, mDevice, &finalVoxelTexture, &fVoxelUAV, &fVoxelSRV);
 
 	//NORMAL
-	/*desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	data.SysMemPitch = size*4;
-	data.SysMemSlicePitch = size*size*4;*/
-	result = mDevice->CreateTexture3D(&desc,datas,&voxelNormalTexture);
-	desc.MipLevels = 1;
-
-	srv_desc.Format = desc.Format;
-	srv_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
-	srv_desc.Texture3D.MipLevels = 4;
-	srv_desc.Texture3D.MostDetailedMip = 0;
-
-	result = mDevice->CreateShaderResourceView(voxelNormalTexture,&srv_desc,&voxelNormalSRV);
-
-	uav_desc.Format = desc.Format;
-	uav_desc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE3D;
-	uav_desc.Texture3D.MipSlice = 0;
-	uav_desc.Texture3D.FirstWSlice = 0;
-	uav_desc.Texture3D.WSize = size;
-
-	result = mDevice->CreateUnorderedAccessView(voxelNormalTexture,&uav_desc,&voxelNormalUAV);
-
+	desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+	createUAVTexture(size, desc, -1, mSceneMgr, mDevice, &voxelNormalTexture, &voxelNormalUAV, &voxelNormalSRV);
 
 	//COLOR
-	desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	data.SysMemPitch = size;
-	data.SysMemSlicePitch = size*size;
-	result = mDevice->CreateTexture3D(&desc,&data,&voxelTexture);
-
-	srv_desc.Format = desc.Format;
-	srv_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
-	srv_desc.Texture3D.MipLevels = 1;
-	srv_desc.Texture3D.MostDetailedMip = 0;
-
-	result = mDevice->CreateShaderResourceView(voxelTexture,&srv_desc,&voxelSRV);
-
-	uav_desc.Format = desc.Format;
-	uav_desc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE3D;
-	uav_desc.Texture3D.MipSlice = 0;
-	uav_desc.Texture3D.FirstWSlice = 0;
-	uav_desc.Texture3D.WSize = size;
-
-	result = mDevice->CreateUnorderedAccessView(voxelTexture,&uav_desc,&voxelUAV);
+	desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+	createUAVTexture(size, desc, -1, mSceneMgr, mDevice, &colorVoxelTexture, &cVoxelUAV, &cVoxelSRV);
+	createUAVTexture(size, desc, -1, mSceneMgr, mDevice, &color2VoxelTexture, &cVoxel2UAV, &cVoxel2SRV);
 
 	//SHADOW
 	desc.Format = DXGI_FORMAT_R32_FLOAT;
-	data.SysMemPitch = size;
-	data.SysMemSlicePitch = size*size;
-	result = mDevice->CreateTexture3D(&desc,&data,&voxelShadowTexture);
+	createUAVTexture(size, desc, -1, mSceneMgr, mDevice, &voxelShadowTexture, &voxelShadowUAV, &voxelShadowSRV);
 
-	srv_desc.Format = desc.Format;
-	srv_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
-	srv_desc.Texture3D.MipLevels = 1;
-	srv_desc.Texture3D.MostDetailedMip = 0;
+	//CAUSTICS	
+	ZeroMemory( &desc, sizeof( desc ) );
+	desc.Usage = D3D11_USAGE_DEFAULT;
+	desc.Depth = desc.Height = desc.Width = size;
+	desc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
+	desc.CPUAccessFlags = 0;
+	desc.MipLevels = 1;
+	desc.MiscFlags = 0;
+	desc.Format = DXGI_FORMAT_R32_FLOAT;
+	createUAVTexture(size, desc, 1, mSceneMgr, mDevice, &causticsVoxelTexture, &voxelCausticUAV, &voxelCausticSRV);
 
-	result = mDevice->CreateShaderResourceView(voxelShadowTexture,&srv_desc,&voxelShadowSRV);
 
-	uav_desc.Format = desc.Format;
-	uav_desc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE3D;
-	uav_desc.Texture3D.MipSlice = 0;
-	uav_desc.Texture3D.FirstWSlice = 0;
-	uav_desc.Texture3D.WSize = size;
 
-	result = mDevice->CreateUnorderedAccessView(voxelShadowTexture,&uav_desc,&voxelShadowUAV);
+	//CS test
 
-	// We load and compile the shader. If we fail, we bail out here.
 	ID3DBlob* csBuffer = 0;
 	ID3DBlob* errorBuffer = 0;
 
@@ -169,7 +109,7 @@ void AaVoxelScene::initScene(int size)
 
 	std::string str,strTotal;
 	std::ifstream in;
-	in.open("../data/gfx/unifyVoxels.cs");
+	in.open("../data/gfx/mipVoxels.cs");
 	getline(in,str);
 
 	while ( in ) 
@@ -178,7 +118,7 @@ void AaVoxelScene::initScene(int size)
 		getline(in,str);
 	}
 
-	result = D3DCompile(strTotal.c_str(),strTotal.length(),"unifyVoxels.cs",0,0,"CSMain" , "cs_5_0" ,	shaderFlags, 0, &csBuffer, &errorBuffer );
+	HRESULT result = D3DCompile(strTotal.c_str(),strTotal.length(),"mipVoxels.cs",0,0,"CSMain" , "cs_5_0" ,	shaderFlags, 0, &csBuffer, &errorBuffer );
 
 	if( FAILED( result ) )
 	{
@@ -195,21 +135,24 @@ void AaVoxelScene::initScene(int size)
 		errorBuffer->Release();
 
 	result = mDevice->CreateComputeShader( csBuffer->GetBufferPointer( ),
-		csBuffer->GetBufferSize( ), 0, &csMixVoxels);
+		csBuffer->GetBufferSize( ), 0, &csMipVoxels);
 	csBuffer->Release();
 
-	mSceneMgr->getMaterialLoader()->addTextureResource(voxelSRV,"voxelScene");
-	mSceneMgr->getMaterialLoader()->addUAV(voxelUAV,"voxelScene");
+	//mSceneMgr->getMaterialLoader()->addTextureResource(cVoxelSRV,"voxelScene");
+	//mSceneMgr->getMaterialLoader()->addUAV(cVoxelUAV,"voxelScene");
 	mSceneMgr->getMaterialLoader()->addTextureResource(fVoxelSRV,"fVoxelScene");
 	mSceneMgr->getMaterialLoader()->addUAV(fVoxelUAV,"fVoxelScene");
 	mSceneMgr->getMaterialLoader()->addTextureResource(voxelShadowSRV,"voxelShadowScene");
 	mSceneMgr->getMaterialLoader()->addUAV(voxelShadowUAV,"voxelShadowScene");
+	mSceneMgr->getMaterialLoader()->addTextureResource(voxelCausticSRV,"voxelCausticScene");
+	mSceneMgr->getMaterialLoader()->addUAV(voxelCausticUAV,"voxelCausticScene");
 	mSceneMgr->getMaterialLoader()->addTextureResource(voxelNormalSRV,"voxelNormalScene");
 	mSceneMgr->getMaterialLoader()->addUAV(voxelNormalUAV,"voxelNormalScene");
 }
 
 void AaVoxelScene::unifyVoxels()
 {
+		UINT row_count = size/(float)mipmaps_count; 
 		ID3D11DeviceContext* mContext = mSceneMgr->getRenderSystem()->getContext();
 
 		// Some service variables
@@ -217,29 +160,42 @@ void AaVoxelScene::unifyVoxels()
 		ID3D11ShaderResourceView* ppSRVNULL[2] = { NULL, NULL };
 
 		// We now set up the shader and run it
-		mContext->CSSetShader( csMixVoxels, NULL, 0 );
-		ID3D11ShaderResourceView* views[2] = {voxelSRV,voxelShadowSRV};
+		mContext->CSSetShader( csMipVoxels, NULL, 0 );
+		ID3D11ShaderResourceView* views[2] = {cVoxelSRV,voxelShadowSRV};
 		mContext->CSSetShaderResources( 0, 2, views );
 		mContext->CSSetUnorderedAccessViews( 0, 1, &fVoxelUAV, NULL );
 
-		mContext->Dispatch( size, size, size);
+		mContext->Dispatch( row_count,row_count,row_count);
 
 		mContext->CSSetShader( NULL, NULL, 0 );
 		mContext->CSSetUnorderedAccessViews( 0, 1, ppUAViewNULL, NULL );
 		mContext->CSSetShaderResources( 0, 2, ppSRVNULL );
+}
 
-		mSceneMgr->getRenderSystem()->getContext()->GenerateMips(fVoxelSRV);
-		mSceneMgr->getRenderSystem()->getContext()->GenerateMips(voxelNormalSRV);
+void AaVoxelScene::customMipmapping()
+{
+	UINT row_count = size/8.0f; 
+	ID3D11DeviceContext* mContext = mSceneMgr->getRenderSystem()->getContext();
+
+	// Some service variables
+	ID3D11UnorderedAccessView* ppUAViewNULL[3] = { NULL, NULL, NULL };
+	ID3D11ShaderResourceView* ppSRVNULL[1] = { NULL };
+
+	// We now set up the shader and run it
+	mContext->CSSetShader( csMipVoxels, NULL, 0 );
+
+	mContext->CSSetShaderResources( 0, 1, &voxelNormalSRV );
+	mContext->CSSetUnorderedAccessViews( 0, 3, fVoxelUAVmip, NULL );
+	mContext->Dispatch( row_count,row_count,row_count);
+
+	mContext->CSSetShader( NULL, NULL, 0 );
+	mContext->CSSetUnorderedAccessViews( 0, 3, ppUAViewNULL, NULL );
+	mContext->CSSetShaderResources( 0, 1, ppSRVNULL );
 }
 
 void AaVoxelScene::voxelizeScene(XMFLOAT3 orthoHalfSize, XMFLOAT3 offset)
 {
-	voxelizingLookCamera->setPosition(XMFLOAT3(offset.x,offset.y,offset.z-orthoHalfSize.z-1));
-	voxelizingLookCamera->lookAt(offset);
-	voxelizingLookCamera->setOrthograhicCamera(orthoHalfSize.x*2,orthoHalfSize.y*2,1,1+orthoHalfSize.z*2+200);
 
-	mSceneMgr->setCurrentCamera(voxelizingLookCamera);
-	
 	D3D11_VIEWPORT viewport;
 	viewport.Width = static_cast<float>(size);
 	viewport.Height = static_cast<float>(size);
@@ -248,33 +204,84 @@ void AaVoxelScene::voxelizeScene(XMFLOAT3 orthoHalfSize, XMFLOAT3 offset)
 	viewport.TopLeftX = 0.0f;
 	viewport.TopLeftY = 0.0f;
 	mSceneMgr->getRenderSystem()->getContext()->RSSetViewports( 1, &viewport );
-	
 	mSceneMgr->getRenderSystem()->setRenderTargets(0,0,false);
 
-
 	AaMaterial* voxMat = mSceneMgr->getMaterial("VoxelizationMat");
+	AaMaterial* lvoxMat = mSceneMgr->getMaterial("LightVoxelizationMat");
+	AaMaterial* voxMat2 = mSceneMgr->getMaterial("PartVoxelizationMat");
 	AaMaterial* shMat = mSceneMgr->getMaterial("depthWriteAndVoxel");
+	AaMaterial* caMat = mSceneMgr->getMaterial("depthWriteAndCaustic");
 
 	XMFLOAT3 corner(offset.x-orthoHalfSize.x,offset.y-orthoHalfSize.y,offset.z-orthoHalfSize.z);
 	voxMat->setMaterialConstant("sceneCorner",Shader_type_pixel,&corner.x);
+	lvoxMat->setMaterialConstant("sceneCorner",Shader_type_pixel,&corner.x);
+	voxMat2->setMaterialConstant("sceneCorner",Shader_type_pixel,&corner.x);
 	shMat->setMaterialConstant("sceneCorner",Shader_type_pixel,&corner.x);
-
+	caMat->setMaterialConstant("sceneCorner",Shader_type_pixel,&corner.x);
 	float sceneToVoxel = size/(2*orthoHalfSize.x);
 	voxMat->setMaterialConstant("voxelSize",Shader_type_pixel,&sceneToVoxel);
+	lvoxMat->setMaterialConstant("voxelSize",Shader_type_pixel,&sceneToVoxel);
+	voxMat2->setMaterialConstant("voxelSize",Shader_type_pixel,&sceneToVoxel);
 	shMat->setMaterialConstant("voxelSize",Shader_type_pixel,&sceneToVoxel);
+	caMat->setMaterialConstant("voxelSize",Shader_type_pixel,&sceneToVoxel);
 
-	mSceneMgr->renderSceneWithMaterial(voxMat);
+	voxelizingLookCamera->setOrthograhicCamera(orthoHalfSize.x*2,orthoHalfSize.y*2,1,1+orthoHalfSize.z*2+200);
+	mSceneMgr->setCurrentCamera(voxelizingLookCamera);	
+
+	voxelizingLookCamera->setPosition(XMFLOAT3(offset.x,offset.y,offset.z-orthoHalfSize.z-1));
+	voxelizingLookCamera->lookAt(offset);	
+	mSceneMgr->renderSceneWithMaterial(voxMat,true,1,5);
+	mSceneMgr->renderSceneWithMaterial(lvoxMat,true,0,0);
 
 	voxelizingLookCamera->setPosition(XMFLOAT3(offset.x-orthoHalfSize.x-1,offset.y,offset.z));
 	voxelizingLookCamera->lookAt(offset);
-	mSceneMgr->renderSceneWithMaterial(voxMat);
+	mSceneMgr->renderSceneWithMaterial(voxMat,true,1,5);
+	mSceneMgr->renderSceneWithMaterial(lvoxMat,true,0,0);
 
 	voxelizingLookCamera->setPosition(XMFLOAT3(offset.x,offset.y-orthoHalfSize.y*2-1,offset.z));
 	voxelizingLookCamera->pitch(3.14/2.0f);
-	mSceneMgr->renderSceneWithMaterial(voxMat);
+	mSceneMgr->renderSceneWithMaterial(voxMat,true,1,5);
+	mSceneMgr->renderSceneWithMaterial(lvoxMat,true,0,0);
 
+	//customMipmapping();
+	//mSceneMgr->getRenderSystem()->getContext()->GenerateMips(fVoxelSRV);
+	//mSceneMgr->getRenderSystem()->getContext()->GenerateMips(voxelShadowSRV);
+
+}
+
+void AaVoxelScene::endFrame(XMFLOAT3 orthoHalfSize, XMFLOAT3 offset)
+{
+	//voxelize queue end (caustics)
+
+	D3D11_VIEWPORT viewport;
+	viewport.Width = static_cast<float>(size);
+	viewport.Height = static_cast<float>(size);
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+	viewport.TopLeftX = 0.0f;
+	viewport.TopLeftY = 0.0f;
+	mSceneMgr->getRenderSystem()->getContext()->RSSetViewports( 1, &viewport );
+	mSceneMgr->getRenderSystem()->setRenderTargets(0,0,false);
+
+	AaMaterial* voxMat = mSceneMgr->getMaterial("PartVoxelizationMat");
+
+	mSceneMgr->setCurrentCamera(voxelizingLookCamera);	
+
+	voxelizingLookCamera->setPosition(XMFLOAT3(offset.x,offset.y,offset.z-orthoHalfSize.z-1));
+	voxelizingLookCamera->lookAt(offset);	
+	mSceneMgr->renderSceneWithMaterial(voxMat,true,6,7);
+
+	voxelizingLookCamera->setPosition(XMFLOAT3(offset.x-orthoHalfSize.x-1,offset.y,offset.z));
+	voxelizingLookCamera->lookAt(offset);
+	mSceneMgr->renderSceneWithMaterial(voxMat,true,6,7);
+
+	voxelizingLookCamera->setPosition(XMFLOAT3(offset.x,offset.y-orthoHalfSize.y*2-1,offset.z));
+	voxelizingLookCamera->pitch(3.14/2.0f);
+	mSceneMgr->renderSceneWithMaterial(voxMat,true,6,7);
+
+	//customMipmapping();
 	mSceneMgr->getRenderSystem()->getContext()->GenerateMips(fVoxelSRV);
-	mSceneMgr->getRenderSystem()->getContext()->GenerateMips(voxelShadowSRV);
+	//mSceneMgr->getRenderSystem()->getContext()->GenerateMips(voxelShadowSRV);
 
 	float values[4] = {0,0,0,0};
 	mSceneMgr->getRenderSystem()->getContext()->ClearUnorderedAccessViewFloat(voxelShadowUAV,values);

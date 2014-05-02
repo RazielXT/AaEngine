@@ -26,7 +26,7 @@ public:
 	PxRigidDynamic* createSphereBodyDynamic(AaEntity* owner, float radius, PxMaterial* material = defaultMaterial);
 	PxRigidDynamic* createCapsuleBodyDynamic(AaEntity* owner, float radius, float halfHeight, PxMaterial* material = defaultMaterial);
 	PxRigidDynamic* createBoxBodyDynamic(AaEntity* owner, float x, float y, float z, PxMaterial* material = defaultMaterial);
-	PxRigidStatic* createPlane(float x, float y, float z, float distance, PxMaterial* material = defaultMaterial);
+	PxRigidStatic* createPlane(float height, PxMaterial* material = defaultMaterial);
 
 	PxRigidDynamic* createConvexBodyDynamic(AaEntity* owner, PxMaterial* material = defaultMaterial);
 	PxRigidStatic* createConvexBodyStatic(AaEntity* owner, PxMaterial* material = defaultMaterial);

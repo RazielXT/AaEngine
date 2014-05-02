@@ -40,18 +40,18 @@ AaSceneManager::~AaSceneManager()
 	delete currentCamera;
 }
 
-AaEntity* AaSceneManager::createEntity(std::string name, std::string materialName)
+AaEntity* AaSceneManager::createEntity(std::string name, std::string materialName, UCHAR renderqueue)
 {
 	std::map<std::string,AaMaterial*>::iterator itM = mMaterialMap.find(materialName);
 	
 	if(itM!=mMaterialMap.end())
 	{
-		return createEntity(name,itM->second);
+		return createEntity(name,itM->second,renderqueue);
 	}
 	else
 	{
 		AaLogger::getLogger()->writeMessage("WARNING material name "+materialName+" not found!");
-		return createEntity(name,defaultMaterial);
+		return createEntity(name,defaultMaterial, renderqueue);
 	}
 }
 
@@ -60,7 +60,7 @@ AaEntity* AaSceneManager::createEntity(std::string name)
 	return createEntity(name,defaultMaterial);
 }
 
-AaEntity* AaSceneManager::createEntity(std::string name, AaMaterial* material)
+AaEntity* AaSceneManager::createEntity(std::string name, AaMaterial* material, UCHAR renderqueue)
 {
 	std::unordered_map<std::string,AaEntity*>::iterator it = mEntityMap.find(name);
 
@@ -68,6 +68,7 @@ AaEntity* AaSceneManager::createEntity(std::string name, AaMaterial* material)
 	{
 		AaEntity* ent=new AaEntity(name, this, &currentCamera);
 		ent->setMaterial(material);
+		ent->renderQueueOrder = renderqueue;
 
 		mEntityMap[name]=ent;
 		
@@ -139,6 +140,35 @@ AaEntity* AaSceneManager::getEntity(std::string name)
 		return it->second;
 }
 
+float gScale = 1;
+
+void AaSceneManager::generalScale(float scale)
+{
+	std::unordered_map<std::string,AaEntity*>::iterator it = mEntityMap.begin();
+
+	while(it!=mEntityMap.end())
+	{
+		AaEntity* e = it->second;
+		XMFLOAT3 pos = e->getPosition();
+		XMFLOAT3 sc = e->getScale();
+
+		pos.x = scale*pos.x/gScale;
+		pos.y = scale*pos.y/gScale;
+		pos.z = scale*pos.z/gScale;
+
+		sc.x = scale*sc.x/gScale;
+		sc.y = scale*sc.y/gScale;
+		sc.z = scale*sc.z/gScale;
+
+		e->setPosition(pos);
+		e->setScale(sc);
+		
+		it++;
+	}
+
+	gScale = scale;
+}
+
 AaMaterial* AaSceneManager::createMaterial(std::string name)
 {
 	std::map<std::string,AaMaterial*>::iterator it = mMaterialMap.find(name);
@@ -172,7 +202,7 @@ AaMaterial* AaSceneManager::getMaterial(std::string name)
 		return it->second;		
 }
 
-void AaSceneManager::renderSceneWithMaterial(AaMaterial* usedMaterial, bool preserveTextures)
+void AaSceneManager::renderSceneWithMaterial(AaMaterial* usedMaterial, bool preserveTextures, UCHAR minQueue, UCHAR maxQueue)
 {
 	ID3D11DeviceContext* d3dContext=mRenderSystem->getContext();
 
@@ -189,6 +219,8 @@ void AaSceneManager::renderSceneWithMaterial(AaMaterial* usedMaterial, bool pres
 	//for all queues
 	for(;queueIterator != mRenderQueue.end();queueIterator++)
 	{		
+		if(queueIterator->first>maxQueue || queueIterator->first<minQueue) continue;
+
 		std::map<RenderState*,std::map<AaMaterial*,std::vector<AaEntity*>>>::iterator rsIterator = queueIterator->second.begin();
 		std::map<RenderState*,std::map<AaMaterial*,std::vector<AaEntity*>>>::iterator rsIteratorEnd = queueIterator->second.end();
 
@@ -246,7 +278,7 @@ void AaSceneManager::renderSceneWithMaterial(AaMaterial* usedMaterial, bool pres
 	usedMaterial->clearAfterRendering();
 }
 
-void AaSceneManager::renderScene()
+void AaSceneManager::renderScene(UCHAR minQueue, UCHAR maxQueue)
 {
 	ID3D11DeviceContext* d3dContext=mRenderSystem->getContext();
 
@@ -255,6 +287,8 @@ void AaSceneManager::renderScene()
 	//for all queues
 	for(;queueIterator != mRenderQueue.end();queueIterator++)
 	{
+			if(queueIterator->first>maxQueue || queueIterator->first<minQueue) continue;
+
 			//sorted by render states
 			std::map<RenderState*,std::map<AaMaterial*,std::vector<AaEntity*>>>::iterator rsIterator = queueIterator->second.begin();
 			std::map<RenderState*,std::map<AaMaterial*,std::vector<AaEntity*>>>::iterator rsIteratorEnd = queueIterator->second.end();
@@ -310,6 +344,11 @@ void AaSceneManager::renderScene()
 				}
 			}
 	}
+
+	d3dContext->RSSetState(mRenderSystem->getDefaultRenderState()->rasterizerState);
+	float blendFactor[4]={0,0,0,0};
+	d3dContext->OMSetBlendState( mRenderSystem->getDefaultRenderState()->alphaBlendState_, blendFactor, 0xFFFFFFFF );
+	d3dContext->OMSetDepthStencilState(mRenderSystem->getDefaultRenderState()->dsState,1);
 }
 
 AaModelInfo* AaSceneManager::getModel(std::string name)
@@ -318,6 +357,8 @@ AaModelInfo* AaSceneManager::getModel(std::string name)
 
 	if(it==mModelMap.end())
 	{
+		AaLogger::getLogger()->writeMessage("Loading mesh file " +name);
+
 		AaModelInfo* mi = mModelLoader->loadModel(name);
 		if(!mi)
 			return NULL;

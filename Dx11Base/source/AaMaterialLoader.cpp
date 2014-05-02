@@ -432,6 +432,18 @@ void AaMaterialLoader::addTextureResource(ID3D11ShaderResourceView* view, std::s
 	loadedTextures[name] = view;
 }
 
+ID3D11UnorderedAccessView* AaMaterialLoader::getUAVResource(std::string file)
+{
+	auto it = loadedUAVs.find(file);
+
+	if(it!=loadedUAVs.end())
+	{
+		return it->second;
+	}
+
+	return NULL;
+}
+
 ID3D11ShaderResourceView* AaMaterialLoader::getTextureResource(std::string file)
 {
 	std::map<std::string,ID3D11ShaderResourceView*>::iterator it = loadedTextures.find(file);

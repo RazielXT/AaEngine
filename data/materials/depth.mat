@@ -12,3 +12,19 @@ pixel_ref depthvox_ps
 
 	UAV voxelShadowScene
 }
+
+
+material depthWriteAndCaustic
+{
+vertex_ref depthcau_vs
+pixel_ref depthcau_ps
+
+
+	texture
+	{
+		name fVoxelScene
+		border clamp
+	}
+	
+	UAV voxelCausticScene
+}

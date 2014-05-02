@@ -10,8 +10,8 @@ AaShadowMapping::AaShadowMapping(AaSceneManager* mSM)
 	width = new float[shadowMapsCount];
 	height = new float[shadowMapsCount];
 
-	width[0] = 512;
-	height[0] = 512;
+	width[0] = 1024;
+	height[0] = 1024;
 
 	shadowmapRanges = new float[shadowMapsCount];
 	
@@ -115,29 +115,65 @@ void AaShadowMapping::renderShadowMaps()
 
 	HRESULT hr = S_OK;
 	ID3D11DeviceContext* d3dDeviceContext = mSceneMgr->getRenderSystem()->getContext();
+	int iCurrentCascade=0;
+	
+	float clColor[4] = {1,1,1,1};
+	d3dDeviceContext->ClearRenderTargetView( rtShadowMapRTViews[iCurrentCascade], clColor );
+	d3dDeviceContext->ClearDepthStencilView( dsView, D3D11_CLEAR_DEPTH, 1.0f, 0 );
 
-	for ( int iCurrentCascade=0; iCurrentCascade < shadowMapsCount; ++iCurrentCascade ) 
-	{
-		float clColor[4] = {1,1,1,1};
-		d3dDeviceContext->ClearRenderTargetView( rtShadowMapRTViews[iCurrentCascade], clColor );
-		d3dDeviceContext->ClearDepthStencilView( dsView, D3D11_CLEAR_DEPTH, 1.0f, 0 );
-
-		mSceneMgr->getRenderSystem()->setRenderTargets(1, &rtShadowMapRTViews[iCurrentCascade], dsView);
+	mSceneMgr->getRenderSystem()->setRenderTargets(1, &rtShadowMapRTViews[iCurrentCascade], dsView);
 			
-		D3D11_VIEWPORT viewport;
-		viewport.Width = static_cast<float>(width[iCurrentCascade]);
-		viewport.Height = static_cast<float>(height[iCurrentCascade]);
-		viewport.MinDepth = 0.0f;
-		viewport.MaxDepth = 1.0f;
-		viewport.TopLeftX = 0.0f;
-		viewport.TopLeftY = 0.0f;
-		d3dDeviceContext->RSSetViewports( 1, &viewport );
+	D3D11_VIEWPORT viewport;
+	viewport.Width = static_cast<float>(width[iCurrentCascade]);
+	viewport.Height = static_cast<float>(height[iCurrentCascade]);
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+	viewport.TopLeftX = 0.0f;
+	viewport.TopLeftY = 0.0f;
+	d3dDeviceContext->RSSetViewports( 1, &viewport );
 
-		//early z
-		mSceneMgr->renderSceneWithMaterial(mSceneMgr->getMaterial("depthWrite"));
-		mSceneMgr->renderSceneWithMaterial(mSceneMgr->getMaterial("depthWriteAndVoxel"));
-	}
+	//early z
+	mSceneMgr->renderSceneWithMaterial(mSceneMgr->getMaterial("depthWrite"),true,0,5);
+	mSceneMgr->renderSceneWithMaterial(mSceneMgr->getMaterial("depthWriteAndVoxel"),true,0,5);
+	
 
 	mSceneMgr->setCurrentCamera(viewer);
 
+}
+
+void AaShadowMapping::renderCaustics()
+{
+	voxelCausticUAV = mSceneMgr->getMaterialLoader()->getUAVResource("voxelCausticScene");
+
+	UINT values[4] = {101,101,101,101};
+	mSceneMgr->getRenderSystem()->getContext()->ClearUnorderedAccessViewUint(voxelCausticUAV,values);
+
+	updateShadowCamera();
+
+	HRESULT hr = S_OK;
+	ID3D11DeviceContext* d3dDeviceContext = mSceneMgr->getRenderSystem()->getContext();
+	int iCurrentCascade=0;
+
+	float clColor[4] = {1,1,1,1};
+	d3dDeviceContext->ClearRenderTargetView( rtShadowMapRTViews[iCurrentCascade], clColor );
+	d3dDeviceContext->ClearDepthStencilView( dsView, D3D11_CLEAR_DEPTH, 1.0f, 0 );
+
+	mSceneMgr->getRenderSystem()->setRenderTargets(1, &rtShadowMapRTViews[iCurrentCascade], dsView);
+
+	D3D11_VIEWPORT viewport;
+	viewport.Width = static_cast<float>(width[iCurrentCascade]);
+	viewport.Height = static_cast<float>(height[iCurrentCascade]);
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+	viewport.TopLeftX = 0.0f;
+	viewport.TopLeftY = 0.0f;
+	d3dDeviceContext->RSSetViewports( 1, &viewport );
+
+	//early z
+	mSceneMgr->renderSceneWithMaterial(mSceneMgr->getMaterial("depthWrite"),true,0,5);
+	//main part
+	mSceneMgr->renderSceneWithMaterial(mSceneMgr->getMaterial("depthWriteAndCaustic"),false,6,7);
+
+	mSceneMgr->setCurrentCamera(viewer);
+	
 }

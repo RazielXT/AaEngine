@@ -12,6 +12,12 @@ cbuffer PerObject : register(b1) {
 	float3 worldPos : packoffset(c8);
 };
 
+cbuffer PerMaterial : register(b2) {
+    float2 middleCone : packoffset(c0);
+    float2 sideCone : packoffset(c0.z);
+	float radius : packoffset(c1);
+};
+
 struct VS_Input
 {
 	float4 p    : POSITION;
@@ -64,7 +70,7 @@ float vsmShadow(Texture2D shadowmap, SamplerState colorSampler ,float4 wp, float
 	float2 moments = float2(0, 0);
 
 	int steps = 3;
-	float stepSize = 0.002f;
+	float stepSize = 0.001f;
 
 	for (int x = 0; x < steps; ++x)
 	for (int y = 0; y < steps; ++y)
@@ -96,9 +102,9 @@ float4 sampleVox(Texture3D cmap,SamplerState sampl, float3 pos, float3 dir, floa
 	float4 sampleY = dir.y < 0.0 ? cmap.SampleLevel( sampl, pos-float3(0,sampOff,0)/voxDim, lod) : cmap.SampleLevel( sampl, pos+float3(0,sampOff,0)/voxDim, lod);
 	float4 sampleZ = dir.z < 0.0 ? cmap.SampleLevel( sampl, pos-float3(0,0,sampOff)/voxDim, lod) : cmap.SampleLevel( sampl, pos+float3(0,0,sampOff)/voxDim, lod);
 	
-	sampleX = saturate(sampleX);
+	/*sampleX = saturate(sampleX);
 	sampleY = saturate(sampleY);
-	sampleZ = saturate(sampleZ);
+	sampleZ = saturate(sampleZ);*/
 	
 	float3 wts = abs(dir);
  
@@ -112,7 +118,7 @@ float4 sampleVox(Texture3D cmap,SamplerState sampl, float3 pos, float3 dir, floa
 	return filtered;
 }
  
-float4 coneTrace(float3 o, float3 d, float coneRatio, float maxDist, Texture3D cmap, Texture3D nmap, SamplerState sampl,float closeZero)
+float4 coneTrace(float3 o, float3 d, float coneRatio, float maxDist, Texture3D cmap, Texture3D nmap, SamplerState sampl,float closeZero,float radius)
 {
 	float voxDim = 128.0f;
 	float3 samplePos = o;
@@ -127,15 +133,15 @@ float4 coneTrace(float3 o, float3 d, float coneRatio, float maxDist, Texture3D c
 	while(dist <= maxDist && accum.w < 1.0)
 	{		
 		float sampleDiam = max(minDiam, coneRatio*dist);
-		float sampleLOD = min(3,log2(sampleDiam*voxDim));
+		float sampleLOD = max(0,log2(sampleDiam*voxDim));
 		float3 samplePos = o + d*dist;
 		float4 sampleVal1 = sampleVox(cmap,sampl, samplePos, -d, sampleLOD);
-		float4 sampleVal2 = sampleVox(nmap,sampl, samplePos, -d, sampleLOD);
+		//float4 sampleVal2 = sampleVox(nmap,sampl, samplePos, -d, sampleLOD);
 		//sampleVal.rgb *= sampleVal.w;
 		
 		float4 sampleVal = sampleVal1;//lerp(sampleVal1,sampleVal2,(d.x+1)/2);	
 		
-		float lodChange = max(0,2*sampleLOD*sampleLOD/closeZero);
+		float lodChange = max(0,sampleLOD*sampleLOD/closeZero);
 		float insideVal = sampleVal.w;
 		sampleVal.rgb *= lodChange;
 
@@ -180,10 +186,8 @@ float4 PS_Main( PS_Input pin,
 			SamplerState colorSampler2 : register(s2),
 			Texture3D voxelmap : register(t3),
 			SamplerState colorSampler3 : register(s3),
-			Texture3D voxelSmap : register(t4),
-			SamplerState colorSampler4 : register(s4),
-			Texture3D voxelNmap : register(t5),
-			SamplerState colorSampler5 : register(s5)
+			Texture3D voxelCmap : register(t4),
+			SamplerState colorSampler4 : register(s4)
 		     ) : SV_TARGET
 {
 
@@ -197,7 +201,6 @@ float3 normal = mul(transpose(tbn), normalTex.xyz * 2 - 1); // to object space
 normal = normalize(mul(normal,(float3x3)wMat).xyz);
 
 float diffuse = max(0,dot(-nSunDir, normal)).x;
-
 float shadow = vsmShadow(shadowmap,colorSampler,pin.wp,sun_vpm);
 
 float3 voxelUV = (pin.wp.xyz+30)/60;
@@ -205,30 +208,126 @@ float3 geometryNormal = normal;//normalize(mul(pin.normal,(float3x3)wMat).xyz);
 float3 geometryB = normalize(mul(bin,(float3x3)wMat).xyz);
 float3 geometryT = normalize(mul(pin.tangent,(float3x3)wMat).xyz);
 
-float4 fullSample = coneTrace(voxelUV,geometryNormal,0.7,0.7,voxelmap,voxelNmap,colorSampler3,0)*1.4;
-fullSample += coneTrace(voxelUV,normalize(geometryNormal+geometryT),0.8,0.58,voxelmap,voxelNmap,colorSampler3,0)*1.0;
-fullSample += coneTrace(voxelUV,normalize(geometryNormal-geometryT),0.8,0.58,voxelmap,voxelNmap,colorSampler3,0)*1.0;
-fullSample += coneTrace(voxelUV,normalize(geometryNormal+geometryB),0.8,0.58,voxelmap,voxelNmap,colorSampler3,0)*1.0;
-fullSample += coneTrace(voxelUV,normalize(geometryNormal-geometryB),0.8,0.58,voxelmap,voxelNmap,colorSampler3,0)*1.0;
-float3 col = fullSample.rgb/2;
+float4 fullSample = coneTrace(voxelUV,geometryNormal,middleCone.x,middleCone.y,voxelmap,voxelmap,colorSampler3,0,radius)*1.4;
+fullSample += coneTrace(voxelUV,normalize(geometryNormal+geometryT),sideCone.x,sideCone.y,voxelmap,voxelmap,colorSampler3,0,radius)*1.0;
+fullSample += coneTrace(voxelUV,normalize(geometryNormal-geometryT),sideCone.x,sideCone.y,voxelmap,voxelmap,colorSampler3,0,radius)*1.0;
+fullSample += coneTrace(voxelUV,normalize(geometryNormal+geometryB),sideCone.x,sideCone.y,voxelmap,voxelmap,colorSampler3,0,radius)*1.0;
+fullSample += coneTrace(voxelUV,normalize(geometryNormal-geometryB),sideCone.x,sideCone.y,voxelmap,voxelmap,colorSampler3,0,radius)*1.0;
+float3 col = fullSample.rgb/5;
+float sky = saturate(1-fullSample.w/5);
+
 //col=saturate(col);
 
-float dirCol = sampleVox(voxelNmap,colorSampler3, voxelUV+geometryNormal/128, geometryNormal, 0).w;
-dirCol += sampleVox(voxelNmap,colorSampler3, voxelUV+normalize(geometryNormal+geometryT)/128, normalize(geometryNormal+geometryT), 0).w;
-dirCol += sampleVox(voxelNmap,colorSampler3, voxelUV+normalize(geometryNormal-geometryT)/128, normalize(geometryNormal-geometryT), 0).w;
-dirCol += sampleVox(voxelNmap,colorSampler3, voxelUV+(geometryNormal+geometryB)/128, (geometryNormal+geometryB), 0).w;
-dirCol += sampleVox(voxelNmap,colorSampler3, voxelUV+(geometryNormal-geometryB)/128, (geometryNormal-geometryB), 0).w;
+float dirCol = sampleVox(voxelmap,colorSampler3, voxelUV+geometryNormal/128, geometryNormal, 0).w;
+dirCol += sampleVox(voxelmap,colorSampler3, voxelUV+normalize(geometryNormal+geometryT)/128, normalize(geometryNormal+geometryT), 0).w;
+dirCol += sampleVox(voxelmap,colorSampler3, voxelUV+normalize(geometryNormal-geometryT)/128, normalize(geometryNormal-geometryT), 0).w;
+dirCol += sampleVox(voxelmap,colorSampler3, voxelUV+(geometryNormal+geometryB)/128, (geometryNormal+geometryB), 0).w;
+dirCol += sampleVox(voxelmap,colorSampler3, voxelUV+(geometryNormal-geometryB)/128, (geometryNormal-geometryB), 0).w;
 dirCol=saturate(dirCol/5);
 
 float3 specVector = reflect(normalize(pin.wp.xyz-camPos),geometryNormal);
-//col += coneTrace(voxelUV,specVector,0.15,1,voxelmap,voxelNmap,colorSampler3,1).rgb;
+col += coneTrace(voxelUV,specVector,radius,1,voxelmap,voxelmap,colorSampler3,1,radius).rgb;
 
 //float dirCol = voxelNmap.SampleLevel( colorSampler3, voxelUV+geometryNormal/128,0 ).w+voxelNmap.SampleLevel( colorSampler3, voxelUV+geometryNormal/64,1 ).w;
 
-float occlusion = (1-pow(dirCol,1))*0.5+0.5;
+float occlusion = 1;//(1-pow(dirCol,1))*0.9+0.1;
 float shadowing = min(shadow,diffuse);
+float4 albedo = colorMap.Sample( colorSampler, pin.uv );
+//albedo.rgb = col;
 
-float4 color1= saturate(colorMap.Sample( colorSampler, pin.uv )*(float4(occlusion*col,0) + shadowing*occlusion));
+float4 color1= saturate(albedo*(float4(occlusion*col,0) + shadowing*occlusion));
+
+float shad=(float)voxelCmap.Sample( colorSampler4, voxelUV).r;
+float cl = 0.0075;
+shad+=voxelCmap.Sample( colorSampler3, voxelUV+float3(cl,0,0) );
+shad+=voxelCmap.Sample( colorSampler3, voxelUV+float3(0,0,cl) );
+shad+=voxelCmap.Sample( colorSampler3, voxelUV-float3(cl,0,0) );
+shad+=voxelCmap.Sample( colorSampler3, voxelUV-float3(0,0,cl) );
+//float shad=voxelCmap.Load(float4(voxelUV*128,0)).r;
+color1*=0.9;
+color1+=pow(shad,1.3)/3;
+
+float3 skyColor = sky*float3(0.5,0.6,0.9);
+skyColor*=(1-shadowing);
+color1.rgb+=skyColor;
+
+//float4 color1=voxelmap.Sample( colorSampler3, voxelUV );//colorMap.Sample( colorSampler, pin.uv );//
+//color1.rgb *= color1.w;
+//float shad=voxelSmap.Sample( colorSampler4, voxelUV ).r;
+//color1.rgb *= occlusion;
+//color1.rgb *= shadow;
+
+return color1;
+}
+
+
+float4 PS_Main2( PS_Input pin,
+			Texture2D colorMap : register(t0),
+			SamplerState colorSampler : register(s0),
+			Texture2D normalmap : register(t1),
+			SamplerState colorSampler1 : register(s1),
+			Texture2D shadowmap : register(t2),
+			SamplerState colorSampler2 : register(s2),
+			Texture3D voxelmap : register(t3),
+			SamplerState colorSampler3 : register(s3),
+			Texture3D voxelCmap : register(t4),
+			SamplerState colorSampler4 : register(s4)
+		     ) : SV_TARGET
+{
+
+float3 nSunDir = normalize(sunDir);
+
+float3 normalTex=normalmap.Sample( colorSampler1, pin.uv ).rgb;
+normalTex=(normalTex+float3(0.5f,0.5f,1.0f)*3)/4;
+float3 bin = cross(pin.normal,pin.tangent);
+float3x3 tbn = float3x3(pin.tangent, bin , pin.normal);
+float3 normal = mul(transpose(tbn), normalTex.xyz * 2 - 1); // to object space
+normal = normalize(mul(normal,(float3x3)wMat).xyz);
+
+float diffuse = max(0,dot(-nSunDir, normal)).x;
+float shadow = vsmShadow(shadowmap,colorSampler,pin.wp,sun_vpm);
+
+float3 voxelUV = (pin.wp.xyz+30)/60;
+float3 geometryNormal = normal;//normalize(mul(pin.normal,(float3x3)wMat).xyz);
+float3 geometryB = normalize(mul(bin,(float3x3)wMat).xyz);
+float3 geometryT = normalize(mul(pin.tangent,(float3x3)wMat).xyz);
+
+float4 fullSample = coneTrace(voxelUV,geometryNormal,middleCone.x,middleCone.y,voxelmap,voxelmap,colorSampler3,0,radius)*1.4;
+fullSample += coneTrace(voxelUV,normalize(geometryNormal+geometryT),sideCone.x,sideCone.y,voxelmap,voxelmap,colorSampler3,0,radius)*1.0;
+fullSample += coneTrace(voxelUV,normalize(geometryNormal-geometryT),sideCone.x,sideCone.y,voxelmap,voxelmap,colorSampler3,0,radius)*1.0;
+fullSample += coneTrace(voxelUV,normalize(geometryNormal+geometryB),sideCone.x,sideCone.y,voxelmap,voxelmap,colorSampler3,0,radius)*1.0;
+fullSample += coneTrace(voxelUV,normalize(geometryNormal-geometryB),sideCone.x,sideCone.y,voxelmap,voxelmap,colorSampler3,0,radius)*1.0;
+float3 col = fullSample.rgb/8;
+//col=saturate(col);
+
+float dirCol = 0;/*sampleVox(voxelmap,colorSampler3, voxelUV+geometryNormal/128, geometryNormal, 0).w;
+dirCol += sampleVox(voxelmap,colorSampler3, voxelUV+normalize(geometryNormal+geometryT)/128, normalize(geometryNormal+geometryT), 0).w;
+dirCol += sampleVox(voxelmap,colorSampler3, voxelUV+normalize(geometryNormal-geometryT)/128, normalize(geometryNormal-geometryT), 0).w;
+dirCol += sampleVox(voxelmap,colorSampler3, voxelUV+(geometryNormal+geometryB)/128, (geometryNormal+geometryB), 0).w;
+dirCol += sampleVox(voxelmap,colorSampler3, voxelUV+(geometryNormal-geometryB)/128, (geometryNormal-geometryB), 0).w;
+dirCol=saturate(dirCol/5);*/
+
+float3 specVector = reflect(normalize(pin.wp.xyz-camPos),geometryNormal);
+col = coneTrace(voxelUV,specVector,radius,1,voxelmap,voxelmap,colorSampler3,1,radius).rgb;
+
+//float dirCol = voxelNmap.SampleLevel( colorSampler3, voxelUV+geometryNormal/128,0 ).w+voxelNmap.SampleLevel( colorSampler3, voxelUV+geometryNormal/64,1 ).w;
+
+float occlusion = (1-pow(dirCol,1))*0.9+0.1;
+float shadowing = min(shadow,diffuse);
+float4 albedo = colorMap.Sample( colorSampler, pin.uv );
+//albedo.rgb = col;
+
+float4 color1= saturate(albedo*(float4(col,0) + shadowing*occlusion));
+
+float shad=(float)voxelCmap.Sample( colorSampler4, voxelUV).r;
+float cl = 0.0075;
+shad+=voxelCmap.Sample( colorSampler3, voxelUV+float3(cl,0,0) );
+shad+=voxelCmap.Sample( colorSampler3, voxelUV+float3(0,0,cl) );
+shad+=voxelCmap.Sample( colorSampler3, voxelUV-float3(cl,0,0) );
+shad+=voxelCmap.Sample( colorSampler3, voxelUV-float3(0,0,cl) );
+//float shad=voxelCmap.Load(float4(voxelUV*128,0)).r;
+color1+=shad/6;
+color1.a = 0.5;
 //float4 color1=voxelmap.Sample( colorSampler3, voxelUV );//colorMap.Sample( colorSampler, pin.uv );//
 //color1.rgb *= color1.w;
 //float shad=voxelSmap.Sample( colorSampler4, voxelUV ).r;

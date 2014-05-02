@@ -50,7 +50,21 @@ bool AaApplication::initialize()
 
 	started=true;
 
-	mWindow=new AaWindow(hInstance,cmdShow,512,384);
+
+	int x = 800;
+	int y = 480;
+	FILE* pFile = fopen ("res.ini" , "r");
+	if (pFile != NULL) 
+	{
+		char buffer[10];
+		fgets (buffer , 10 , pFile);
+		x = boost::lexical_cast<int>(buffer);
+		y = x*10/16.0f;
+		fclose (pFile);
+	}
+
+
+	mWindow=new AaWindow(hInstance,cmdShow,x,y);
 	mRenderSystem=new AaRenderSystem(mWindow);
 	mGuiMgr=new AaGuiSystem();
 	mGuiMgr->init(mRenderSystem->getDevice(),mRenderSystem->getContext(),mWindow->getWidth(),mWindow->getHeight());

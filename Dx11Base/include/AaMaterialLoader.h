@@ -23,6 +23,7 @@ public:
 	void loadShaderReferences(std::string directory, bool subDirectories=false);
 	void compileShaderReferences();
 	ID3D11ShaderResourceView* getTextureResource(std::string file);
+	ID3D11UnorderedAccessView* getUAVResource(std::string file);
 	ID3D11SamplerState* createSampler(textureInfo info);
 
 	void setDefaultFiltering(Filtering type, int max_anisotropy=1) { defaultFiltering=type; }

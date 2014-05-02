@@ -24,7 +24,7 @@ AaEntity::AaEntity(std::string name, AaSceneManager* sceneMgr, AaCamera** camera
 	this->name=name;
 	scale=XMFLOAT3(1,1,1);
 	position=XMFLOAT3(0.0f, 0.0f, 0.0f );
-	renderQueueOrder=5;
+	renderQueueOrder=4;
 	model=NULL;
 	this->cameraPtr=cameraPtr;
 	this->material=NULL;

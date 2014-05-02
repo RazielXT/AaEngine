@@ -53,20 +53,50 @@ void PS_Main( PS_Input pin,
 		     )
 {
 
-float4 color=colorMap.Sample( colorSampler, pin.uv );
-
 float3 posUV = (pin.wp.xyz-sceneCorner)*voxelSize;
-float leng = 15;
-float3 off = float3(0,10,-10);
-float dist = saturate(leng + length(pin.wp.xyz-off)*-1)/leng;
 
-float l = length(color.rgb);
+float4 color=colorMap.Sample( colorSampler, pin.uv );
 float3 outCol = pow(color.rgb,1);
 
-float ysep = (normalize(pin.n).x+1)/2;
 float3 voxCol = shadowVoxel.Load(float4(posUV,0)).r*outCol;
 
-voxelMap[posUV] = float4(voxCol*ysep,1);
-voxelNMap[posUV] = float4(voxCol*(1-ysep),1);
+
+voxelMap[posUV] = float4(voxCol,1);
+//voxelNMap[posUV] = float4(pin.n,1);
+
+}
+
+
+void PS_Main2( PS_Input pin,
+			Texture2D colorMap : register(t0),
+			Texture3D shadowVoxel : register(t1),
+			SamplerState colorSampler : register(s0),
+			RWTexture3D<float4> voxelMap : register(u0),
+			RWTexture3D<float4> voxelNMap : register(u1)
+		     )
+{
+
+float3 posUV = (pin.wp.xyz-sceneCorner)*voxelSize;
+
+float4 color=colorMap.Sample( colorSampler, pin.uv );
+float3 outCol = pow(color.rgb,1);
+
+float3 voxCol = shadowVoxel.Load(float4(posUV,0)).r*outCol;
+
+
+voxelMap[posUV] = float4(outCol,0.5);
+//voxelNMap[posUV] = float4(pin.n,1);
+
+}
+
+void PS_MainL( PS_Input pin,
+			RWTexture3D<float4> voxelMap : register(u0)
+		     )
+{
+
+float3 posUV = (pin.wp.xyz-sceneCorner)*voxelSize;
+
+voxelMap[posUV] = float4(1,1,0.85,0)*15;
+//voxelNMap[posUV] = float4(pin.n,1);
 
 }

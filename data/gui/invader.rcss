@@ -516,3 +516,78 @@ scrollbarhorizontal
 	width: 0px;
 	height: 0px;
 }
+
+
+
+
+input.range
+{
+	margin-top: -6px;
+	margin-bottom: -6px;
+	margin-right: 11px;
+	width: 270px;
+}
+
+input.range slidertrack
+{
+	background-decorator: tiled-vertical;
+	background-top-image: invader.tga 70px 199px 97px 201px;
+	background-center-image: invader.tga stretch 70px 201px 97px 202px;
+	background-bottom-image: invader.tga 70px 203px 97px 204px;
+}
+
+input.range sliderbar
+{
+	margin-left: -4px;
+	width: 26px;
+	min-height: 23px;
+
+	background-decorator: tiled-vertical;
+	background-top-image: invader.tga 56px 152px 79px 175px;
+	background-center-image: invader.tga stretch 56px 175px 79px 175px;
+	background-bottom-image: invader.tga 56px 176px 79px 198px;
+}
+
+input.range sliderbar:hover
+{
+	background-top-image-s: 80px 103px;
+	background-center-image-s: 80px 103px;
+	background-bottom-image-s: 80px 103px;
+}
+
+input.range sliderbar:active
+{
+	background-top-image-s: 104px 127px;
+	background-center-image-s: 104px 127px;
+	background-bottom-image-s: 104px 127px;
+}
+
+input.range sliderarrowdec
+{
+	width: 27px;
+	height: 24px;
+	
+	icon-decorator: image;
+	icon-image: invader.tga 0px 152px 27px 176px;
+}
+
+input.range sliderarrowdec:hover,
+input.range sliderarrowinc:hover
+{
+	icon-image-t: 177px 201px;
+}
+
+input.range sliderarrowdec:active,
+input.range sliderarrowinc:active
+{
+	icon-image-t: 202px 226px;
+}
+
+input.range sliderarrowinc
+{
+	width: 27px;
+	height: 24px;
+	
+	icon-decorator: image;
+	icon-image: invader.tga 28px 152px 55px 176px;
+}

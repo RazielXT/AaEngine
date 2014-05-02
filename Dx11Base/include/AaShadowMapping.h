@@ -12,6 +12,7 @@ public:
 	~AaShadowMapping();
 
 	void renderShadowMaps();
+	void renderCaustics();
 
 private:
 	
@@ -26,6 +27,9 @@ private:
 	AaSceneManager* mSceneMgr;
 	float* width, *height;
 	float* shadowmapRanges;
+
+
+	ID3D11UnorderedAccessView* voxelCausticUAV;
 };
 
 #endif

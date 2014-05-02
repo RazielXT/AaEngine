@@ -41,3 +41,30 @@ cbuffer per_material
 }
 
 }
+
+
+
+vertex_shader depthcau_vs
+{
+file depthWriteAndCaustic.fx
+entry VSMain
+profile vs_5_0
+
+cbuffer per_object
+
+}
+
+pixel_shader depthcau_ps
+{
+file depthWriteAndCaustic.fx
+entry PSMain
+profile ps_5_0
+
+cbuffer per_frame
+cbuffer per_material
+{
+	float3 sceneCorner 0 0 0
+	float1 voxelSize 0
+}
+
+}

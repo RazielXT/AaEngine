@@ -156,10 +156,13 @@ void AaPhysicsManager::synchronizeEntities()
 	}
 }
 
-PxRigidStatic* AaPhysicsManager::createPlane(float x, float y, float z, float distance, PxMaterial* material)
+PxRigidStatic* AaPhysicsManager::createPlane(float height, PxMaterial* material)
 {
 	PxRigidStatic* plane = PxCreatePlane(*mPhysics, PxPlane(PxVec3(0,1,0), 0), *material);
+	//PxTransform tr = PxTransform(PxVec3(0,height,0));
 	mScene->addActor(*plane);
+	//plane->setGlobalPose(tr);
+	
 	return plane;
 }
 

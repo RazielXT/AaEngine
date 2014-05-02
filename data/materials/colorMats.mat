@@ -22,19 +22,13 @@ pixel_ref psGeneralBasic
 	texture
 	{
 		name fVoxelScene
-		border color 0 0 0 0
-		filtering bilinear
+		//border color 0 0 0 0
+		//filtering bilinear
 	}
 	
 	texture
 	{
-		name voxelShadowScene
-		border clamp
-	}
-	
-	texture
-	{
-		name voxelNormalScene
+		name voxelCausticScene
 		border color 0 0 0 0
 	}
 }
@@ -69,13 +63,7 @@ pixel_ref psGeneralBasic
 	
 	texture
 	{
-		name voxelShadowScene
-		border clamp
-	}
-	
-	texture
-	{
-		name voxelNormalScene
+		name voxelCausticScene
 		border color 0 0 0 0
 	}
 }
@@ -84,6 +72,10 @@ material Blue
 {
 vertex_ref vsGeneralBasic
 pixel_ref psGeneralBasic
+
+//culling_none
+//alpha_blend
+//depth_write_off
 
 	texture
 	{
@@ -110,13 +102,7 @@ pixel_ref psGeneralBasic
 	
 	texture
 	{
-		name voxelShadowScene
-		border clamp
-	}
-	
-	texture
-	{
-		name voxelNormalScene
+		name voxelCausticScene
 		border color 0 0 0 0
 	}
 }
@@ -128,12 +114,12 @@ pixel_ref psGeneralBasic
 
 	texture
 	{
-		name white.png
+		name nicebrown.png
 	}
 	
 	texture
 	{
-		name ConcreteNORM.png
+		name flat.png
 	}
 	
 	texture
@@ -151,13 +137,7 @@ pixel_ref psGeneralBasic
 	
 	texture
 	{
-		name voxelShadowScene
-		border clamp
-	}
-	
-	texture
-	{
-		name voxelNormalScene
+		name voxelCausticScene
 		border color 0 0 0 0
 	}
 }

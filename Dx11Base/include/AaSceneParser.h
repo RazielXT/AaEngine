@@ -161,6 +161,15 @@ bool AllDigits(std::string text)
 
 UCHAR ParseRenderQueue(std::string renderQueue)
 {
+	if(renderQueue.compare("skiesEarly")==0)
+		return 0;
+
+	if(renderQueue.compare("main")==0)
+		return 5;
+
+	if(renderQueue.compare("queue6")==0)
+		return 6;
+
    /* static std::map<String, uint8> nameToNumber;
     if (nameToNumber.empty())
     {
@@ -231,7 +240,7 @@ UCHAR ParseRenderQueue(std::string renderQueue)
         }
     }*/
 
-	return 1;
+	return 5;
 }
 
 void GetChildText(const TiXmlElement* xmlElement, std::string text)
@@ -341,6 +350,8 @@ void loadEntity(const TiXmlElement* entityElement,SceneNode* node, bool visible,
 	
 	std::string file = entityElement->Attribute("meshFile");
 
+	AaLogger::getLogger()->writeMessage("Loading entity "+name+" with mesh file " +file);
+
 	//Ogre::LogManager::getSingleton().getLog("Loading.log")->logMessage("Entity "+ent->getName(),LML_NORMAL);
 
 	
@@ -366,7 +377,7 @@ void loadEntity(const TiXmlElement* entityElement,SceneNode* node, bool visible,
     const TiXmlElement* childElement = 0;
     while (childElement = IterateChildElements(subentityElement, childElement))
     {
-		ent = mSceneMgr->createEntity(name , GetStringAttribute(childElement, "materialName") );
+		ent = mSceneMgr->createEntity(name , GetStringAttribute(childElement, "materialName"), renderQueue );
 		ent->setModel(file);
 		ent->setPosition(node->position);
 		ent->setScale(node->scale);

@@ -8,9 +8,12 @@
 
 
 TestGuiWindow* debugWindow;
+bool zp,zm,xp,xm;
 
 MyListener::MyListener(AaSceneManager* mSceneMgr, AaPhysicsManager* mPhysicsMgr)
 {
+	zp=zm=xp=xm = false;
+
 	cameraMan = new FreeCamera(mSceneMgr->getCamera());
 	mSceneMgr->getCamera()->setPosition(XMFLOAT3(-1.8f,10,-6));
 
@@ -27,7 +30,7 @@ MyListener::MyListener(AaSceneManager* mSceneMgr, AaPhysicsManager* mPhysicsMgr)
 
 	pp = new AaBloomPostProcess(mSceneMgr);
 
-	AaMaterial* mat=mSceneMgr->getMaterial("Test2");
+	AaMaterial* mat=mSceneMgr->getMaterial("Green");
 	/*ent= mSceneMgr->createEntity("testEnt",mat);
 	ent->setModel("angel");
 	ent->setScale(XMFLOAT3(10,10,10));
@@ -69,32 +72,19 @@ MyListener::MyListener(AaSceneManager* mSceneMgr, AaPhysicsManager* mPhysicsMgr)
 	PxShape* aSphereShape;
 
 	AaEntity* ent= mSceneMgr->createEntity("testEnt3",mat);
-	ent->setModel("ball32.mesh");
-	ent->setPosition(0,10,20);
-	ent->setScale(XMFLOAT3(0.4,0.4,0.4));
-	mPhysicsMgr->createSphereBodyDynamic(ent,0.4)->setLinearVelocity(physx::PxVec3(1,15,0));
-
-	ent= mSceneMgr->createEntity("testEnt4",mat);
-	ent->setModel("ball32.mesh");
-	ent->setPosition(0,11,20);
-	ent->setScale(XMFLOAT3(0.4,0.4,0.4));
-	mPhysicsMgr->createSphereBodyDynamic(ent,0.4)->setLinearVelocity(physx::PxVec3(1,15,0));
-
+	ent->setModel("ball24.mesh");
+	ent->setPosition(0,20,0);
+	ent->setScale(XMFLOAT3(0.4,1.4,1.4));
+	mPhysicsMgr->createSphereBodyDynamic(ent,0.4);//->setLinearVelocity(physx::PxVec3(1,15,0));
 
 	ent= mSceneMgr->createEntity("testEnt6",mat);
-	ent->setModel("ball32.mesh");
-	ent->setPosition(5,20,20);
-	mPhysicsMgr->createConvexBodyDynamic(ent)->setLinearVelocity(physx::PxVec3(1,15,0));
-
-
-	ent= mSceneMgr->createEntity("testEnt62",mat);
-	ent->setModel("ball16.mesh");
-	ent->setPosition(5,10,20);
-	mPhysicsMgr->createConvexBodyDynamic(ent)->setLinearVelocity(physx::PxVec3(1,15,0));
-
+	ent->setModel("ball24.mesh");
+	ent->setPosition(0,20,0);
+	mPhysicsMgr->createConvexBodyDynamic(ent);//->setLinearVelocity(physx::PxVec3(1,15,0));
+	
 	ent= mSceneMgr->createEntity("testEnt63",mat);
 	ent->setModel("ball32.mesh");
-	ent->setPosition(5,5,20);
+	ent->setPosition(5,35,20);
 	ent->setScale(XMFLOAT3(4,1,4));
 	ent->yaw(0.5);
 	ent->roll(0.5);
@@ -102,7 +92,7 @@ MyListener::MyListener(AaSceneManager* mSceneMgr, AaPhysicsManager* mPhysicsMgr)
 
 	ent= mSceneMgr->createEntity("testEnt61",mat);
 	ent->setModel("ball24.mesh");
-	ent->setPosition(5,15,20);
+	ent->setPosition(5,25,20);
 	ent->setScale(XMFLOAT3(2,1,2));
 	ent->roll(0.5);
 	mPhysicsMgr->createConvexBodyDynamic(ent)->setLinearVelocity(physx::PxVec3(1,15,0));
@@ -115,7 +105,7 @@ MyListener::MyListener(AaSceneManager* mSceneMgr, AaPhysicsManager* mPhysicsMgr)
 
 	mSceneMgr->mShadingMgr->directionalLight = l;
 
-	mPhysicsMgr->createPlane(0,0,0,0);
+	mPhysicsMgr->createPlane(0);
 
 	loadScene("test.scene",mSceneMgr,mPhysicsMgr);
 
@@ -123,7 +113,7 @@ MyListener::MyListener(AaSceneManager* mSceneMgr, AaPhysicsManager* mPhysicsMgr)
 
 	setupInputSystem();
 
-	debugWindow = new TestGuiWindow(mSceneMgr->getGuiManager()->getContext());
+	debugWindow = new TestGuiWindow(mSceneMgr->getGuiManager()->getContext(),mSceneMgr);
  
 	
 }
@@ -163,13 +153,16 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 
 	mPhysicsMgr->fetchResults(true);
 	mPhysicsMgr->synchronizeEntities();
-
 	mPhysicsMgr->startSimulating(timeSinceLastFrame);
 
 	mShadowMapping->renderShadowMaps();
 
 	//if(count%2==0)
 	voxelScene->voxelizeScene(XMFLOAT3(30,30,30),XMFLOAT3(0,0,0));
+
+	mShadowMapping->renderCaustics();
+
+	voxelScene->endFrame(XMFLOAT3(30,30,30),XMFLOAT3(0,0,0));
 
 	count++;
 
@@ -189,9 +182,13 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 
 	mRS->swapChain_->Present(0,0);
 
+	if(xp) xr+=timeSinceLastFrame; else if(xm) xr-=timeSinceLastFrame;
+	if(zp) zr+=timeSinceLastFrame; else if(zm) zr-=timeSinceLastFrame;
+
+	XMStoreFloat4(&lightQuat,XMQuaternionRotationRollPitchYaw(xr,0,zr));
+
 	return continue_rendering;
 }
-
 
 bool MyListener::keyPressed( const OIS::KeyEvent &arg ) 
 {
@@ -206,23 +203,19 @@ bool MyListener::keyPressed( const OIS::KeyEvent &arg )
 			break;
 
 		case OIS::KC_I:
-			xr+=0.1;
-			XMStoreFloat4(&lightQuat,XMQuaternionRotationRollPitchYaw(xr,0,zr));
+			xp=true;
 			break;
 
 		case OIS::KC_K:
-			xr -= 0.1;
-			XMStoreFloat4(&lightQuat,XMQuaternionRotationRollPitchYaw(xr,0,zr));
+			xm=true;
 			break;
 
 		case OIS::KC_J:
-			zr += 0.1;
-			XMStoreFloat4(&lightQuat,XMQuaternionRotationRollPitchYaw(xr,0,zr));
+			zp=true;
 			break;
 
 		case OIS::KC_L:
-			zr -= 0.1;
-			XMStoreFloat4(&lightQuat,XMQuaternionRotationRollPitchYaw(xr,0,zr));
+			zm=true;
 			break;
 
          default:
@@ -237,12 +230,35 @@ bool MyListener::keyReleased( const OIS::KeyEvent &arg )
 	cameraMan->keyReleased(arg);
 	mSceneMgr->getGuiManager()->keyReleased(arg);
 
-	std::cout << "KeyReleased {" << ((OIS::Keyboard*)(arg.device))->getAsString(arg.key) << "}\n";
+	switch (arg.key)
+	{
+	case OIS::KC_I:
+		xp=false;
+		break;
+
+	case OIS::KC_K:
+		xm=false;
+		break;
+
+	case OIS::KC_J:
+		zp=false;
+		break;
+
+	case OIS::KC_L:
+		zm=false;
+		break;
+
+	default:
+		break;
+	}
+
+	//std::cout << "KeyReleased {" << ((OIS::Keyboard*)(arg.device))->getAsString(arg.key) << "}\n";
 	return true;
 }
 
 bool MyListener::mouseMoved( const OIS::MouseEvent &arg ) 
 { 
+	if(!debugWindow->visible)
 	cameraMan->mouseMoved(arg);
 	mSceneMgr->getGuiManager()->mouseMoved(arg);
 

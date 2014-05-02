@@ -30,12 +30,14 @@ public:
 
 	void loadMaterialFiles(std::string directory,bool subDirectories=false);
 
-	AaEntity* createEntity(std::string name,std::string materialName);
-	AaEntity* createEntity(std::string name,AaMaterial* material);
+	AaEntity* createEntity(std::string name,std::string materialName, UCHAR renderqueue = 5);
+	AaEntity* createEntity(std::string name,AaMaterial* material, UCHAR renderqueue = 5);
 	AaEntity* createEntity(std::string name);
 	AaEntity* getEntity(std::string name);
 	void removeEntity(AaEntity* ent);
 	void entityChangedMaterial(AaEntity* ent,AaMaterial* mat);
+
+	void generalScale(float scale);
 
 	AaMaterial* createMaterial(std::string name);
 	AaMaterial* getMaterial(std::string name);
@@ -49,8 +51,8 @@ public:
 	AaCamera* getCamera(std::string name);
 	AaCamera* getCamera();
 	
-	void renderScene();
-	void renderSceneWithMaterial(AaMaterial* usedMaterial, bool preserveTextures = true);
+	void renderScene(UCHAR minQueue = 1, UCHAR maxQueue = 5);
+	void renderSceneWithMaterial(AaMaterial* usedMaterial, bool preserveTextures = true, UCHAR minQueue = 1, UCHAR maxQueue = 5);
 
 	AaMaterialLoader* getMaterialLoader() {return mMaterialLoader;}
 	AaRenderSystem* getRenderSystem() {return mRenderSystem;}

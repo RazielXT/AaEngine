@@ -1,0 +1,40 @@
+material Water
+{
+vertex_ref vsGeneralBasic
+pixel_ref psGeneralBasic
+
+	texture
+	{
+		name niceblue.png
+	}
+	
+	texture
+	{
+		name ConcreteNORM.png
+	}
+	
+	texture
+	{
+		name shadowmap1
+		border color 1 1 1 1
+	}
+	
+	texture
+	{
+		name fVoxelScene
+		//border color 0 0 0 0
+		//filtering bilinear
+	}
+	
+	texture
+	{
+		name voxelShadowScene
+		border clamp
+	}
+	
+	texture
+	{
+		name voxelNormalScene
+		border color 0 0 0 0
+	}
+}

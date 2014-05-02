@@ -97,8 +97,8 @@ void AaBloomPostProcess::render()
 
 		if(ppPasses.at(i).renderScene)
 		{
-			mSceneMgr->renderSceneWithMaterial(mSceneMgr->getMaterial("depthWrite"));
-			mSceneMgr->renderScene();
+			mSceneMgr->renderSceneWithMaterial(mSceneMgr->getMaterial("depthWrite"),1,10);
+			mSceneMgr->renderScene(1,10);
 		}
 		else
 		{

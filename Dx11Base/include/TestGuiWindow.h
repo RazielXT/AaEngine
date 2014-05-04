@@ -169,7 +169,9 @@ void TestGuiWindow::ProcessEvent(Rocket::Core::Event& event)
 		{
 			float f = boost::lexical_cast<float>(inputSC->GetValue().CString());
 
-			mSceneMgr->getMaterial("White")->setMaterialConstant("radius",Shader_type_pixel,&f);
+			mSceneMgr->getMaterial("VoxelizationMat")->setMaterialConstant("stepping",Shader_type_pixel,&f);
+
+			//mSceneMgr->getMaterial("White")->setMaterialConstant("radius",Shader_type_pixel,&f);
 
 			document->GetElementById("window")->GetElementById("sct")->SetInnerRML(inputSC->GetValue());
 		}
@@ -198,9 +200,12 @@ void TestGuiWindow::ProcessEvent(Rocket::Core::Event& event)
 			document->GetElementById("window")->GetElementById("sdt")->SetInnerRML(inputSD->GetValue());
 		}
 
-		mSceneMgr->getMaterial("White")->setMaterialConstant("middleCone",Shader_type_pixel,mc);
-		mSceneMgr->getMaterial("White")->setMaterialConstant("sideCone",Shader_type_pixel,sc);
 
+
+		//mSceneMgr->getMaterial("VoxelizationMat")->setMaterialConstant("middleCone",Shader_type_pixel,mc);
+		//mSceneMgr->getMaterial("VoxelizationMat")->setMaterialConstant("sideCone",Shader_type_pixel,sc);
+
+		/*
 		mSceneMgr->getMaterial("Red")->setMaterialConstant("middleCone",Shader_type_pixel,mc);
 		mSceneMgr->getMaterial("Red")->setMaterialConstant("sideCone",Shader_type_pixel,sc);
 
@@ -208,7 +213,7 @@ void TestGuiWindow::ProcessEvent(Rocket::Core::Event& event)
 		mSceneMgr->getMaterial("Blue")->setMaterialConstant("sideCone",Shader_type_pixel,sc);
 
 		mSceneMgr->getMaterial("Green")->setMaterialConstant("middleCone",Shader_type_pixel,mc);
-		mSceneMgr->getMaterial("Green")->setMaterialConstant("sideCone",Shader_type_pixel,sc);
+		mSceneMgr->getMaterial("Green")->setMaterialConstant("sideCone",Shader_type_pixel,sc);*/
 
 	}
 }

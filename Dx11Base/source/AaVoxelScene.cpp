@@ -4,9 +4,9 @@ AaVoxelScene::AaVoxelScene(AaSceneManager* mSceneMgr)
 {
 	this->mSceneMgr = mSceneMgr;
 
-	colorVoxelTexture = NULL;
-	cVoxelSRV = NULL;
-	cVoxelUAV = NULL;
+	bounceVoxelTexture = NULL;
+	bVoxelSRV = NULL;
+	bVoxelUAV = NULL;
 
 	voxelizingLookCamera = mSceneMgr->createCamera("voxelCamera");
 }
@@ -15,8 +15,8 @@ AaVoxelScene::~AaVoxelScene()
 {
 	//views should be released by manager
 
-	if (colorVoxelTexture)
-		colorVoxelTexture->Release();
+	if (bounceVoxelTexture)
+		bounceVoxelTexture->Release();
 	if (voxelShadowTexture)
 		voxelShadowTexture->Release();
 	if (voxelNormalTexture)
@@ -54,7 +54,6 @@ void AaVoxelScene::initScene(int size)
 {
 	ID3D11Device* mDevice = mSceneMgr->getRenderSystem()->getDevice();
 
-
 	this->size = size;
 
 	D3D11_TEXTURE3D_DESC desc;
@@ -75,10 +74,9 @@ void AaVoxelScene::initScene(int size)
 	desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
 	createUAVTexture(size, desc, -1, mSceneMgr, mDevice, &voxelNormalTexture, &voxelNormalUAV, &voxelNormalSRV);
 
-	//COLOR
+	//PAST BOUNCES
 	desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
-	createUAVTexture(size, desc, -1, mSceneMgr, mDevice, &colorVoxelTexture, &cVoxelUAV, &cVoxelSRV);
-	createUAVTexture(size, desc, -1, mSceneMgr, mDevice, &color2VoxelTexture, &cVoxel2UAV, &cVoxel2SRV);
+	createUAVTexture(size, desc, -1, mSceneMgr, mDevice, &bounceVoxelTexture, &bVoxelUAV, &bVoxelSRV);
 
 	//SHADOW
 	desc.Format = DXGI_FORMAT_R32_FLOAT;
@@ -140,6 +138,10 @@ void AaVoxelScene::initScene(int size)
 
 	//mSceneMgr->getMaterialLoader()->addTextureResource(cVoxelSRV,"voxelScene");
 	//mSceneMgr->getMaterialLoader()->addUAV(cVoxelUAV,"voxelScene");
+
+	mSceneMgr->getMaterialLoader()->addTextureResource(bVoxelSRV,"previousBounces");
+	mSceneMgr->getMaterialLoader()->addUAV(bVoxelUAV,"previousBounces");
+
 	mSceneMgr->getMaterialLoader()->addTextureResource(fVoxelSRV,"fVoxelScene");
 	mSceneMgr->getMaterialLoader()->addUAV(fVoxelUAV,"fVoxelScene");
 	mSceneMgr->getMaterialLoader()->addTextureResource(voxelShadowSRV,"voxelShadowScene");
@@ -161,7 +163,7 @@ void AaVoxelScene::unifyVoxels()
 
 		// We now set up the shader and run it
 		mContext->CSSetShader( csMipVoxels, NULL, 0 );
-		ID3D11ShaderResourceView* views[2] = {cVoxelSRV,voxelShadowSRV};
+		ID3D11ShaderResourceView* views[2] = {bVoxelSRV,voxelShadowSRV};
 		mContext->CSSetShaderResources( 0, 2, views );
 		mContext->CSSetUnorderedAccessViews( 0, 1, &fVoxelUAV, NULL );
 
@@ -193,6 +195,8 @@ void AaVoxelScene::customMipmapping()
 	mContext->CSSetShaderResources( 0, 1, ppSRVNULL );
 }
 
+float AaVoxelScene::stepnow = 0;
+
 void AaVoxelScene::voxelizeScene(XMFLOAT3 orthoHalfSize, XMFLOAT3 offset)
 {
 
@@ -218,12 +222,14 @@ void AaVoxelScene::voxelizeScene(XMFLOAT3 orthoHalfSize, XMFLOAT3 offset)
 	voxMat2->setMaterialConstant("sceneCorner",Shader_type_pixel,&corner.x);
 	shMat->setMaterialConstant("sceneCorner",Shader_type_pixel,&corner.x);
 	caMat->setMaterialConstant("sceneCorner",Shader_type_pixel,&corner.x);
+
 	float sceneToVoxel = size/(2*orthoHalfSize.x);
 	voxMat->setMaterialConstant("voxelSize",Shader_type_pixel,&sceneToVoxel);
 	lvoxMat->setMaterialConstant("voxelSize",Shader_type_pixel,&sceneToVoxel);
 	voxMat2->setMaterialConstant("voxelSize",Shader_type_pixel,&sceneToVoxel);
 	shMat->setMaterialConstant("voxelSize",Shader_type_pixel,&sceneToVoxel);
 	caMat->setMaterialConstant("voxelSize",Shader_type_pixel,&sceneToVoxel);
+	
 
 	voxelizingLookCamera->setOrthograhicCamera(orthoHalfSize.x*2,orthoHalfSize.y*2,1,1+orthoHalfSize.z*2+200);
 	mSceneMgr->setCurrentCamera(voxelizingLookCamera);	
@@ -251,6 +257,16 @@ void AaVoxelScene::voxelizeScene(XMFLOAT3 orthoHalfSize, XMFLOAT3 offset)
 
 void AaVoxelScene::endFrame(XMFLOAT3 orthoHalfSize, XMFLOAT3 offset)
 {
+	//multibounce
+
+	if(stepnow>0)
+	{
+		mSceneMgr->getRenderSystem()->getContext()->CopyResource(bounceVoxelTexture,finalVoxelTexture);
+		mSceneMgr->getRenderSystem()->getContext()->GenerateMips(bVoxelSRV);
+		//stepnow = 0;
+	}
+	
+
 	//voxelize queue end (caustics)
 
 	D3D11_VIEWPORT viewport;

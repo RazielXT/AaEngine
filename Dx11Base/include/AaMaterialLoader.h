@@ -36,6 +36,8 @@ public:
 	bool compileVertexShaderRef(shaderRef* reference);
 	bool compilePixelShaderRef(shaderRef* reference);
 
+	void swapTextures(std::string name1, std::string name2);
+
 private:
 
 	AaRenderSystem* mRenderSystem;

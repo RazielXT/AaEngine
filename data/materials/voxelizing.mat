@@ -17,6 +17,12 @@ depth_check_off
 		border clamp
 	}
 	
+	texture
+	{
+		name previousBounces
+		border clamp
+	}
+	
 	UAV fVoxelScene
 	UAV voxelNormalScene
 }

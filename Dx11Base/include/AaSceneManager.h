@@ -54,6 +54,7 @@ public:
 	void renderScene(UCHAR minQueue = 1, UCHAR maxQueue = 5);
 	void renderSceneWithMaterial(AaMaterial* usedMaterial, bool preserveTextures = true, UCHAR minQueue = 1, UCHAR maxQueue = 5);
 
+
 	AaMaterialLoader* getMaterialLoader() {return mMaterialLoader;}
 	AaRenderSystem* getRenderSystem() {return mRenderSystem;}
 	AaGuiSystem* getGuiManager() {return mGuiMgr;}

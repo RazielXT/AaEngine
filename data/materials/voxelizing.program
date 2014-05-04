@@ -14,10 +14,15 @@ file voxelizingShader.fx
 entry PS_Main
 profile ps_5_0
 
+cbuffer per_object
 cbuffer per_material
 {
 	float3 sceneCorner 0 0 0
 	float1 voxelSize 0
+	float2 middleCone 1 0.9
+	float2 sideCone 2 0.8
+	float1 radius 2
+	float1 stepping 0.1
 }
 
 }

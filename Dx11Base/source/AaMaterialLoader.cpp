@@ -444,6 +444,35 @@ ID3D11UnorderedAccessView* AaMaterialLoader::getUAVResource(std::string file)
 	return NULL;
 }
 
+
+void AaMaterialLoader::swapTextures(std::string name1, std::string name2)
+{
+	std::map<std::string,ID3D11ShaderResourceView*>::iterator it = loadedTextures.find(name1);
+	std::map<std::string,ID3D11ShaderResourceView*>::iterator it2 = loadedTextures.find(name2);
+
+	if(it!=loadedTextures.end() && it2!=loadedTextures.end())
+	{
+		ID3D11ShaderResourceView* t1 = it->second;
+		ID3D11ShaderResourceView* t2 = it2->second;
+
+		loadedTextures[name1] = t2;
+		loadedTextures[name2] = t1;
+	}
+
+
+	std::map<std::string,ID3D11UnorderedAccessView*>::iterator it3 = loadedUAVs.find(name1);
+	std::map<std::string,ID3D11UnorderedAccessView*>::iterator it4 = loadedUAVs.find(name2);
+
+	if(it3!=loadedUAVs.end() && it4!=loadedUAVs.end())
+	{
+		ID3D11UnorderedAccessView* t1 = it3->second;
+		ID3D11UnorderedAccessView* t2 = it4->second;
+
+		loadedUAVs[name1] = t2;
+		loadedUAVs[name2] = t1;
+	}
+}
+
 ID3D11ShaderResourceView* AaMaterialLoader::getTextureResource(std::string file)
 {
 	std::map<std::string,ID3D11ShaderResourceView*>::iterator it = loadedTextures.find(file);

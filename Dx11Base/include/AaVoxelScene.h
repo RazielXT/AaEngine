@@ -8,6 +8,8 @@ class AaVoxelScene
 
 public:
 
+	static float stepnow;
+
 	AaVoxelScene(AaSceneManager* mSceneMgr);
 	~AaVoxelScene();
 
@@ -21,13 +23,9 @@ public:
 	ID3D11UnorderedAccessView* fVoxelUAV;
 	ID3D11ShaderResourceView* fVoxelSRV;
 
-	ID3D11Texture3D* colorVoxelTexture;
-	ID3D11UnorderedAccessView* cVoxelUAV;
-	ID3D11ShaderResourceView* cVoxelSRV;
-
-	ID3D11Texture3D* color2VoxelTexture;
-	ID3D11UnorderedAccessView* cVoxel2UAV;
-	ID3D11ShaderResourceView* cVoxel2SRV;
+	ID3D11Texture3D* bounceVoxelTexture;
+	ID3D11UnorderedAccessView* bVoxelUAV;
+	ID3D11ShaderResourceView* bVoxelSRV;
 
 	ID3D11Texture3D* voxelShadowTexture;
 	ID3D11UnorderedAccessView* voxelShadowUAV;

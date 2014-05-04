@@ -249,9 +249,9 @@ color1+=pow(shad,1.3)/3;
 
 float3 skyColor = sky*float3(0.5,0.6,0.9);
 skyColor*=(1-shadowing);
-color1.rgb+=skyColor;
+//color1.rgb+=skyColor;
 
-//float4 color1=voxelmap.Sample( colorSampler3, voxelUV );//colorMap.Sample( colorSampler, pin.uv );//
+//color1=voxelmap.Sample( colorSampler3, voxelUV );//colorMap.Sample( colorSampler, pin.uv );//
 //color1.rgb *= color1.w;
 //float shad=voxelSmap.Sample( colorSampler4, voxelUV ).r;
 //color1.rgb *= occlusion;

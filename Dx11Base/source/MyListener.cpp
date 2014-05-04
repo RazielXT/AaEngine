@@ -202,6 +202,10 @@ bool MyListener::keyPressed( const OIS::KeyEvent &arg )
 			continue_rendering=false;
 			break;
 
+		case OIS::KC_B:
+			AaVoxelScene::stepnow = 1;
+			break;
+
 		case OIS::KC_I:
 			xp=true;
 			break;

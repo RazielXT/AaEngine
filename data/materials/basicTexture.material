@@ -1,0 +1,17 @@
+material BasicTexture
+{
+	vertex_shader vsBasicTexture
+	pixel_shader psBasicTexture
+
+	texture Diffuse
+	{
+	}
+}
+
+material DefaultMaterial : BasicTexture
+{
+	texture Diffuse
+	{
+		file Default.png
+	}
+}

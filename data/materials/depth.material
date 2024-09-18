@@ -1,0 +1,14 @@
+material depthWrite
+{
+	vertex_shader depth_vs
+	pixel_shader depth_ps
+
+}
+
+material depthWriteAndVoxel
+{
+	vertex_shader depthvox_vs
+	pixel_shader depthvox_ps
+
+	UAV voxelShadowScene
+}

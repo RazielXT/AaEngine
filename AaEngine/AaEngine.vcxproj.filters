@@ -1,0 +1,265 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="imgui">
+      <UniqueIdentifier>{f5f00766-1136-42ea-bb48-794af1c89a4b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="imgui\backend">
+      <UniqueIdentifier>{ac28832e-b39d-4521-90eb-46b4ffd447f1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Scene">
+      <UniqueIdentifier>{abc8ef9f-8dd9-4a74-84d5-870573221187}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Rendering">
+      <UniqueIdentifier>{3ddb6224-d8a0-40d8-91a3-ab08f4c23e07}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\App">
+      <UniqueIdentifier>{0178574f-a02f-4382-acdf-c92fcd6c78cc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Utils">
+      <UniqueIdentifier>{9200b0a8-f105-41c7-9a19-3beb8c05fb58}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Resources">
+      <UniqueIdentifier>{f6d7a9ac-1d6b-46d9-9739-1bf119e44368}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Resources\Model">
+      <UniqueIdentifier>{48919c9d-1f7a-4067-ba58-221c76036547}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Resources\Material">
+      <UniqueIdentifier>{7fda939a-4abf-472a-a712-d1acb58128ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Resources\Shader">
+      <UniqueIdentifier>{b5a32cc4-7fb8-468c-88e8-f12be448fba9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\imgui\imgui.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\imgui\backends\imgui_impl_dx11.cpp">
+      <Filter>imgui\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\imgui\backends\imgui_impl_win32.cpp">
+      <Filter>imgui\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\imgui\imgui_widgets.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\imgui\imgui_draw.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\imgui\imgui_tables.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="source\AaBloomPostprocess.cpp">
+      <Filter>Source Files\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="source\AaEntity.cpp">
+      <Filter>Source Files\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="source\AaBinaryModelLoader.cpp">
+      <Filter>Source Files\Resources\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="source\AaDebugWindow.cpp">
+      <Filter>Source Files\App</Filter>
+    </ClCompile>
+    <ClCompile Include="source\AaApplication.cpp">
+      <Filter>Source Files\App</Filter>
+    </ClCompile>
+    <ClCompile Include="source\AaMaterial.cpp">
+      <Filter>Source Files\Resources\Material</Filter>
+    </ClCompile>
+    <ClCompile Include="source\AaMaterialFileParser.cpp">
+      <Filter>Source Files\Resources\Material</Filter>
+    </ClCompile>
+    <ClCompile Include="source\AaMaterialResources.cpp">
+      <Filter>Source Files\Resources\Material</Filter>
+    </ClCompile>
+    <ClCompile Include="source\AaModelResources.cpp">
+      <Filter>Source Files\Resources\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="source\AaModelSerialization.cpp">
+      <Filter>Source Files\Resources\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="source\OgreXMLFileParser.cpp">
+      <Filter>Source Files\Resources\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="source\AaVoxelScene.cpp">
+      <Filter>Source Files\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="source\AaShadowMapping.cpp">
+      <Filter>Source Files\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="source\AaRenderSystem.cpp">
+      <Filter>Source Files\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="source\AaSceneNode.cpp">
+      <Filter>Source Files\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="source\AaSceneManager.cpp">
+      <Filter>Source Files\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="source\InputHandler.cpp">
+      <Filter>Source Files\App</Filter>
+    </ClCompile>
+    <ClCompile Include="source\AaWindow.cpp">
+      <Filter>Source Files\App</Filter>
+    </ClCompile>
+    <ClCompile Include="source\MyListener.cpp">
+      <Filter>Source Files\App</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Xml.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ConfigParser.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="source\AaSceneParser.cpp">
+      <Filter>Source Files\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="source\OgreMeshFileParser.cpp">
+      <Filter>Source Files\Resources\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="source\AaModel.cpp">
+      <Filter>Source Files\Resources\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="source\FreeCamera.cpp">
+      <Filter>Source Files\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="source\AaCamera.cpp">
+      <Filter>Source Files\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="source\AaSceneLights.cpp">
+      <Filter>Source Files\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="source\AaShaderManager.cpp">
+      <Filter>Source Files\Resources\Shader</Filter>
+    </ClCompile>
+    <ClCompile Include="source\AaShaderBuffersManager.cpp">
+      <Filter>Source Files\Resources\Shader</Filter>
+    </ClCompile>
+    <ClCompile Include="source\AaShaderFileParser.cpp">
+      <Filter>Source Files\Resources\Shader</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\imgui\imgui.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\imgui\backends\imgui_impl_dx11.h">
+      <Filter>imgui\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\imgui\backends\imgui_impl_win32.h">
+      <Filter>imgui\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AaBloomPostProcess.h">
+      <Filter>Source Files\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AaEntity.h">
+      <Filter>Source Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AaBinaryModelLoader.h">
+      <Filter>Source Files\Resources\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AaDebugWindow.h">
+      <Filter>Source Files\App</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AaApplication.h">
+      <Filter>Source Files\App</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AaMaterial.h">
+      <Filter>Source Files\Resources\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AaMaterialFileParser.h">
+      <Filter>Source Files\Resources\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AaMaterialResources.h">
+      <Filter>Source Files\Resources\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AaModelResources.h">
+      <Filter>Source Files\Resources\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AaModelSerialization.h">
+      <Filter>Source Files\Resources\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="source\OgreXMLFileParser.h">
+      <Filter>Source Files\Resources\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AaVoxelScene.h">
+      <Filter>Source Files\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AaShadowMapping.h">
+      <Filter>Source Files\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AaRenderSystem.h">
+      <Filter>Source Files\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AaCamera.h">
+      <Filter>Source Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AaSceneNode.h">
+      <Filter>Source Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AaSceneManager.h">
+      <Filter>Source Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="source\FreeCamera.h">
+      <Filter>Source Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="source\InputHandler.h">
+      <Filter>Source Files\App</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AaWindow.h">
+      <Filter>Source Files\App</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AaSceneParser.h">
+      <Filter>Source Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Directories.h">
+      <Filter>Source Files\App</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AaFrameListener.h">
+      <Filter>Source Files\App</Filter>
+    </ClInclude>
+    <ClInclude Include="source\MyListener.h">
+      <Filter>Source Files\App</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Xml.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ConfigParser.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AaLogger.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="source\OgreMeshFileParser.h">
+      <Filter>Source Files\Resources\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AaModel.h">
+      <Filter>Source Files\Resources\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Math.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AaSceneLights.h">
+      <Filter>Source Files\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AaShaderManager.h">
+      <Filter>Source Files\Resources\Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AaShaderBuffersManager.h">
+      <Filter>Source Files\Resources\Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AaShaderFileParser.h">
+      <Filter>Source Files\Resources\Shader</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

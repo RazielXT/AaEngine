@@ -1,0 +1,29 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35122.118
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AaEngine", "AaEngine\AaEngine.vcxproj", "{5E6F6625-9B14-4AD0-B1FF-1712DB33C22C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
+		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5E6F6625-9B14-4AD0-B1FF-1712DB33C22C}.Debug|Win32.ActiveCfg = Debug|x64
+		{5E6F6625-9B14-4AD0-B1FF-1712DB33C22C}.Debug|x64.ActiveCfg = Debug|x64
+		{5E6F6625-9B14-4AD0-B1FF-1712DB33C22C}.Debug|x64.Build.0 = Debug|x64
+		{5E6F6625-9B14-4AD0-B1FF-1712DB33C22C}.Release|Win32.ActiveCfg = Release|x64
+		{5E6F6625-9B14-4AD0-B1FF-1712DB33C22C}.Release|x64.ActiveCfg = Release|x64
+		{5E6F6625-9B14-4AD0-B1FF-1712DB33C22C}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3186CF4F-E5DA-4C21-AFC3-120412B72B58}
+	EndGlobalSection
+EndGlobal

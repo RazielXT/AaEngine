@@ -1,0 +1,39 @@
+material VoxelizationMat
+{
+	vertex_shader voxelizeVS
+	pixel_shader voxelizePS
+
+	culling_none
+	depth_write_off
+	depth_check_off
+
+	texture Diffuse
+	{
+	}
+	
+	texture
+	{
+		name previousBounces
+		border clamp
+	}
+	
+	texture
+	{
+		name voxelShadowScene
+		border clamp
+	}
+
+	UAV finalVoxelScene
+}
+
+material LightVoxelizationMat
+{
+	vertex_shader voxelizeVS
+	pixel_shader voxelizeLightPS
+
+	culling_none
+	depth_write_off
+	depth_check_off
+
+	UAV finalVoxelScene
+}

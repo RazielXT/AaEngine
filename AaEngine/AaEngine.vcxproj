@@ -1,0 +1,172 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{5E6F6625-9B14-4AD0-B1FF-1712DB33C22C}</ProjectGuid>
+    <RootNamespace>Dx11Base</RootNamespace>
+    <ProjectName>AaEngine</ProjectName>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</GenerateManifest>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>..\..\imgui;..\..\DirectXTK\Inc;..\..\DirectXTex\DirectXTex;..\..\boost_1_85_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MinimalRebuild>false</MinimalRebuild>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;PHYSX_PROFILE_SDK;_SECURE_SCL=0;_ITERATOR_DEBUG_LEVEL=0;NDEBUG</PreprocessorDefinitions>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <StringPooling>true</StringPooling>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>..\..\DirectXTex\DirectXTex\Bin\Desktop_2022\x64\Release;..\..\boost_1_85_0\lib64-msvc-14.3;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>d3d11.lib;dxguid.lib;d3dcompiler.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>
+      </IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>$(OutDir)$(TargetName).lib</ImportLibrary>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>..\..\imgui;..\..\DirectXTK\Inc;..\..\DirectXTex\DirectXTex;..\..\boost_1_85_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <StringPooling>true</StringPooling>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>d3d11.lib;dxguid.lib;d3dcompiler.lib;DirectXTex.lib;DXGI.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\DirectXTex\DirectXTex\Bin\Desktop_2022\x64\Debug;..\..\boost_1_85_0\lib64-msvc-14.3;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <IgnoreSpecificDefaultLibraries>
+      </IgnoreSpecificDefaultLibraries>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\imgui\backends\imgui_impl_dx11.cpp" />
+    <ClCompile Include="..\..\imgui\backends\imgui_impl_win32.cpp" />
+    <ClCompile Include="..\..\imgui\imgui.cpp" />
+    <ClCompile Include="..\..\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\..\imgui\imgui_tables.cpp" />
+    <ClCompile Include="..\..\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="source\AaApplication.cpp" />
+    <ClCompile Include="source\AaBinaryModelLoader.cpp" />
+    <ClCompile Include="source\AaBloomPostprocess.cpp" />
+    <ClCompile Include="source\AaCamera.cpp" />
+    <ClCompile Include="source\AaDebugWindow.cpp" />
+    <ClCompile Include="source\AaEntity.cpp" />
+    <ClCompile Include="source\AaMaterialFileParser.cpp" />
+    <ClCompile Include="source\AaMaterial.cpp" />
+    <ClCompile Include="source\AaMaterialResources.cpp" />
+    <ClCompile Include="source\AaModel.cpp" />
+    <ClCompile Include="source\AaModelResources.cpp" />
+    <ClCompile Include="source\AaModelSerialization.cpp" />
+    <ClCompile Include="source\AaRenderSystem.cpp" />
+    <ClCompile Include="source\AaSceneLights.cpp" />
+    <ClCompile Include="source\AaSceneManager.cpp" />
+    <ClCompile Include="source\AaSceneNode.cpp" />
+    <ClCompile Include="source\AaSceneParser.cpp" />
+    <ClCompile Include="source\AaShaderBuffersManager.cpp" />
+    <ClCompile Include="source\AaShaderFileParser.cpp" />
+    <ClCompile Include="source\AaShaderManager.cpp" />
+    <ClCompile Include="source\AaShadowMapping.cpp" />
+    <ClCompile Include="source\AaVoxelScene.cpp" />
+    <ClCompile Include="source\AaWindow.cpp" />
+    <ClCompile Include="source\FreeCamera.cpp" />
+    <ClCompile Include="source\InputHandler.cpp" />
+    <ClCompile Include="source\main.cpp" />
+    <ClCompile Include="source\MyListener.cpp" />
+    <ClCompile Include="source\OgreMeshFileParser.cpp" />
+    <ClCompile Include="source\OgreXMLFileParser.cpp" />
+    <ClCompile Include="source\ConfigParser.cpp" />
+    <ClCompile Include="source\Xml.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\imgui\backends\imgui_impl_dx11.h" />
+    <ClInclude Include="..\..\imgui\backends\imgui_impl_win32.h" />
+    <ClInclude Include="..\..\imgui\imgui.h" />
+    <ClInclude Include="source\AaApplication.h" />
+    <ClInclude Include="source\AaBinaryModelLoader.h" />
+    <ClInclude Include="source\AaBloomPostProcess.h" />
+    <ClInclude Include="source\AaCamera.h" />
+    <ClInclude Include="source\AaDebugWindow.h" />
+    <ClInclude Include="source\AaEntity.h" />
+    <ClInclude Include="source\AaFrameListener.h" />
+    <ClInclude Include="source\AaLogger.h" />
+    <ClInclude Include="source\AaMaterial.h" />
+    <ClInclude Include="source\AaMaterialFileParser.h" />
+    <ClInclude Include="source\AaMaterialResources.h" />
+    <ClInclude Include="source\AaModel.h" />
+    <ClInclude Include="source\AaModelResources.h" />
+    <ClInclude Include="source\AaModelSerialization.h" />
+    <ClInclude Include="source\AaRenderSystem.h" />
+    <ClInclude Include="source\AaSceneLights.h" />
+    <ClInclude Include="source\AaSceneManager.h" />
+    <ClInclude Include="source\AaSceneNode.h" />
+    <ClInclude Include="source\AaSceneParser.h" />
+    <ClInclude Include="source\AaShaderBuffersManager.h" />
+    <ClInclude Include="source\AaShaderFileParser.h" />
+    <ClInclude Include="source\AaShaderManager.h" />
+    <ClInclude Include="source\AaShadowMapping.h" />
+    <ClInclude Include="source\AaVoxelScene.h" />
+    <ClInclude Include="source\AaWindow.h" />
+    <ClInclude Include="source\FreeCamera.h" />
+    <ClInclude Include="source\Directories.h" />
+    <ClInclude Include="source\InputHandler.h" />
+    <ClInclude Include="source\Math.h" />
+    <ClInclude Include="source\MyListener.h" />
+    <ClInclude Include="source\OgreMeshFileParser.h" />
+    <ClInclude Include="source\OgreXMLFileParser.h" />
+    <ClInclude Include="source\ConfigParser.h" />
+    <ClInclude Include="source\Xml.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

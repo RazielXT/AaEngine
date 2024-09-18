@@ -1,0 +1,58 @@
+material PassLuminance
+{
+	vertex_shader vsQuad
+	pixel_shader psPassLum
+
+	depth_write_off
+	depth_check_off
+
+	texture Scene
+	{
+
+	}
+}
+
+material BlurX
+{
+	vertex_shader vsQuad
+	pixel_shader  psBlurX
+
+	depth_write_off
+	depth_check_off
+
+	texture
+	{
+		border clamp
+	}
+}
+
+material BlurY
+{
+	vertex_shader vsQuad
+	pixel_shader  psBlurY
+
+	depth_write_off
+	depth_check_off
+
+	texture
+	{
+		border clamp
+	}
+}
+
+material AddThrough
+{
+	vertex_shader vsQuad
+	pixel_shader  psAddThrough
+
+	depth_write_off
+	depth_check_off
+
+	texture
+	{
+	}
+	
+	texture
+	{
+	}
+}

@@ -1,0 +1,102 @@
+material Color
+{
+	vertex_shader vsGeneralMaterialWithVoxel
+	pixel_shader psGeneralMaterialWithVoxel
+
+	texture Diffuse
+	{
+		file nicered.png
+	}
+	
+	texture
+	{
+		file ConcreteNORM.png
+	}
+	
+	texture
+	{
+		name shadowmap1
+		border color 1 1 1 1
+	}
+	
+	texture
+	{
+		name finalVoxelScene
+		border color 0 0 0 0
+	}
+}
+
+material Red : Color
+{
+	texture Diffuse
+	{
+		file nicered.png
+	}
+}
+
+material Green : Color
+{
+	texture Diffuse
+	{
+		file nicegreen.png
+	}
+}
+
+material Blue : Color
+{
+	texture Diffuse
+	{
+		file niceblue.png
+	}
+}
+
+material Yellow : Color
+{
+	texture Diffuse
+	{
+		file yellow.png
+	}
+}
+
+material White : Color
+{
+	texture Diffuse
+	{
+		file white.png
+	}
+}
+
+material whiteVc : White
+{
+	vertex_shader vsGeneralMaterialVC
+	pixel_shader psGeneralMaterialVC
+}
+
+material yellowVc : Yellow
+{
+	vertex_shader vsGeneralMaterialVC
+	pixel_shader psGeneralMaterialVC
+}
+
+material blueVc : Blue
+{
+	vertex_shader vsGeneralMaterialVC
+	pixel_shader psGeneralMaterialVC
+}
+
+material niceRedVc : Red
+{
+	vertex_shader vsGeneralMaterialVC
+	pixel_shader psGeneralMaterialVC
+}
+
+material terrainGrass : Color
+{
+	vertex_shader vsGeneralMaterialVC
+	pixel_shader psGeneralMaterialVC
+	
+	texture Diffuse
+	{
+		file grass.png
+	}
+}

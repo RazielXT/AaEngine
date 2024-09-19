@@ -36,10 +36,10 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\imgui;..\..\DirectXTK\Inc;..\..\DirectXTex\DirectXTex;..\..\boost_1_85_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\dependencies\imgui;..\dependencies\DirectXTK\Inc;..\dependencies\DirectXTex\DirectXTex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
-      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;PHYSX_PROFILE_SDK;_SECURE_SCL=0;_ITERATOR_DEBUG_LEVEL=0;NDEBUG</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_SECURE_SCL=0;_ITERATOR_DEBUG_LEVEL=0;NDEBUG</PreprocessorDefinitions>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -50,7 +50,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>..\..\DirectXTex\DirectXTex\Bin\Desktop_2022\x64\Release;..\..\boost_1_85_0\lib64-msvc-14.3;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\dependencies\DirectXTex\DirectXTex\Bin\Desktop_2022\x64\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>d3d11.lib;dxguid.lib;d3dcompiler.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
@@ -60,7 +60,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\imgui;..\..\DirectXTK\Inc;..\..\DirectXTex\DirectXTex;..\..\boost_1_85_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\dependencies\imgui;..\dependencies\DirectXTK\Inc;..\dependencies\DirectXTex\DirectXTex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -74,7 +74,7 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>d3d11.lib;dxguid.lib;d3dcompiler.lib;DirectXTex.lib;DXGI.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\DirectXTex\DirectXTex\Bin\Desktop_2022\x64\Debug;..\..\boost_1_85_0\lib64-msvc-14.3;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\dependencies\DirectXTex\DirectXTex\Bin\Desktop_2022\x64\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
@@ -82,12 +82,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\imgui\backends\imgui_impl_dx11.cpp" />
-    <ClCompile Include="..\..\imgui\backends\imgui_impl_win32.cpp" />
-    <ClCompile Include="..\..\imgui\imgui.cpp" />
-    <ClCompile Include="..\..\imgui\imgui_draw.cpp" />
-    <ClCompile Include="..\..\imgui\imgui_tables.cpp" />
-    <ClCompile Include="..\..\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="..\dependencies\imgui\backends\imgui_impl_dx11.cpp" />
+    <ClCompile Include="..\dependencies\imgui\backends\imgui_impl_win32.cpp" />
+    <ClCompile Include="..\dependencies\imgui\imgui.cpp" />
+    <ClCompile Include="..\dependencies\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\dependencies\imgui\imgui_tables.cpp" />
+    <ClCompile Include="..\dependencies\imgui\imgui_widgets.cpp" />
     <ClCompile Include="source\AaApplication.cpp" />
     <ClCompile Include="source\AaBinaryModelLoader.cpp" />
     <ClCompile Include="source\AaBloomPostprocess.cpp" />
@@ -121,9 +121,9 @@
     <ClCompile Include="source\Xml.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\imgui\backends\imgui_impl_dx11.h" />
-    <ClInclude Include="..\..\imgui\backends\imgui_impl_win32.h" />
-    <ClInclude Include="..\..\imgui\imgui.h" />
+    <ClInclude Include="..\dependencies\imgui\backends\imgui_impl_dx11.h" />
+    <ClInclude Include="..\dependencies\imgui\backends\imgui_impl_win32.h" />
+    <ClInclude Include="..\dependencies\imgui\imgui.h" />
     <ClInclude Include="source\AaApplication.h" />
     <ClInclude Include="source\AaBinaryModelLoader.h" />
     <ClInclude Include="source\AaBloomPostProcess.h" />

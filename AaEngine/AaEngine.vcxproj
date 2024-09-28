@@ -101,7 +101,6 @@
     <ClCompile Include="source\AaModelResources.cpp" />
     <ClCompile Include="source\AaModelSerialization.cpp" />
     <ClCompile Include="source\AaRenderSystem.cpp" />
-    <ClCompile Include="source\AaSceneLights.cpp" />
     <ClCompile Include="source\AaSceneManager.cpp" />
     <ClCompile Include="source\AaSceneNode.cpp" />
     <ClCompile Include="source\AaSceneParser.cpp" />
@@ -139,7 +138,7 @@
     <ClInclude Include="source\AaModelResources.h" />
     <ClInclude Include="source\AaModelSerialization.h" />
     <ClInclude Include="source\AaRenderSystem.h" />
-    <ClInclude Include="source\AaSceneLights.h" />
+    <ClInclude Include="source\AaSceneLight.h" />
     <ClInclude Include="source\AaSceneManager.h" />
     <ClInclude Include="source\AaSceneNode.h" />
     <ClInclude Include="source\AaSceneParser.h" />

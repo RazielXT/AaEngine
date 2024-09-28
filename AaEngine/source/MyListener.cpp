@@ -29,9 +29,8 @@ MyListener::MyListener(AaSceneManager* mSceneMgr)
 
 	pp = new AaBloomPostProcess(mSceneMgr);
 
-	mLights.directionalLight.type = LightType_Directional;
-	mLights.directionalLight.color = XMFLOAT3(1, 1, 1);
-	Vector3(0.5f, -1, 1.6).Normalize(mLights.directionalLight.direction);
+	mLight.directionalLight.color = XMFLOAT3(1, 1, 1);
+	Vector3(0.5f, -1, 1.6).Normalize(mLight.directionalLight.direction);
 
 	SceneParser::load("test.scene", mSceneMgr);
 
@@ -67,7 +66,7 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 
 	//Vector3(cos(elapsedTime) / 2.f, -1, sin(elapsedTime) / 2.f).Normalize(mLights.directionalLight.direction);
 
-	mShadowMapping->updateShadowCamera(mLights.directionalLight.direction);
+	mShadowMapping->updateShadowCamera(mLight.directionalLight.direction);
 	mShadowMapping->renderShadowMaps();
 
 	//if (count % 2 == 0)
@@ -75,7 +74,7 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 	voxelScene->endFrame(XMFLOAT3(30, 30, 30), XMFLOAT3(0, 0, 0));
 	count++;
 
-	AaShaderManager::get().buffers.updatePerFrameConstants(timeSinceLastFrame, cameraMan->camera, mShadowMapping->shadowCamera, mLights);
+	AaShaderManager::get().buffers.updatePerFrameConstants(timeSinceLastFrame, cameraMan->camera, mShadowMapping->shadowCamera, mLight);
 
 	mRS->setBackbufferAsRenderTarget();
 	mRS->clearViews();

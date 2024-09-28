@@ -3,7 +3,7 @@
 #include <vector>
 #include "AaRenderSystem.h"
 #include "AaCamera.h"
-#include "AaSceneLights.h"
+#include "AaSceneLight.h"
 #include <string>
 
 class AaEntity;
@@ -17,7 +17,7 @@ public:
 
 	static AaShaderBuffersManager& get();
 
-	void updatePerFrameConstants(float timeSinceLastFrame, AaCamera& cam, AaCamera& sun, AaSceneLights& lights);
+	void updatePerFrameConstants(float timeSinceLastFrame, AaCamera& cam, AaCamera& sun, AaSceneLight& light);
 	void updatePerFrameConstants(AaCamera& cam);
 
 	void updateObjectConstants(AaEntity* ent, AaCamera& camera);

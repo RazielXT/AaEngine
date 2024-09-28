@@ -44,22 +44,14 @@ AaShaderBuffersManager& AaShaderBuffersManager::get()
 	return *instance;
 }
 
-void AaShaderBuffersManager::updatePerFrameConstants(float timeSinceLastFrame, AaCamera& cam, AaCamera& sun, AaSceneLights& lights)
+void AaShaderBuffersManager::updatePerFrameConstants(float timeSinceLastFrame, AaCamera& cam, AaCamera& sun, AaSceneLight& light)
 {
 	perFrameConstantsBuffer.time_delta = timeSinceLastFrame;
 	perFrameConstantsBuffer.time += timeSinceLastFrame;
-	perFrameConstantsBuffer.ambientColour = lights.ambientColor;
+	perFrameConstantsBuffer.ambientColour = light.ambientColor;
 
-	if (lights.directionalLight.type != LightType_Unspecified)
-	{
-		perFrameConstantsBuffer.directional_light_direction = lights.directionalLight.direction;
-		perFrameConstantsBuffer.directional_light_color = lights.directionalLight.color;
-	}
-	else
-	{
-		perFrameConstantsBuffer.directional_light_direction = XMFLOAT3(0, 0, 0);
-		perFrameConstantsBuffer.directional_light_color = XMFLOAT3(0, 0, 0);
-	}
+	perFrameConstantsBuffer.directional_light_direction = light.directionalLight.direction;
+	perFrameConstantsBuffer.directional_light_color = light.directionalLight.color;
 
 	perFrameConstantsBuffer.cameraPos = cam.getPosition();
 

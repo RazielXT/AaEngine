@@ -118,9 +118,6 @@
     <ClCompile Include="source\AaCamera.cpp">
       <Filter>Source Files\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="source\AaSceneLights.cpp">
-      <Filter>Source Files\Rendering</Filter>
-    </ClCompile>
     <ClCompile Include="source\AaShaderManager.cpp">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClCompile>
@@ -240,9 +237,6 @@
     <ClInclude Include="source\Math.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="source\AaSceneLights.h">
-      <Filter>Source Files\Rendering</Filter>
-    </ClInclude>
     <ClInclude Include="source\AaShaderManager.h">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClInclude>
@@ -260,6 +254,9 @@
     </ClInclude>
     <ClInclude Include="..\dependencies\imgui\imgui.h">
       <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AaSceneLight.h">
+      <Filter>Source Files\Scene</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

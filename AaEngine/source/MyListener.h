@@ -26,7 +26,7 @@ private:
 
 	FreeCamera* cameraMan;
 	AaRenderSystem* mRS;
-	AaSceneLights mLights;
+	AaSceneLight mLight;
 	AaSceneManager* mSceneMgr;
 	AaVoxelScene* voxelScene;
 	AaShadowMapping* mShadowMapping;

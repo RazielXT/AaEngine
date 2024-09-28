@@ -56,21 +56,6 @@ XMFLOAT3 LoadXYZ(const XmlParser::Element* objectElement)
 	return xyz;
 }
 
-LightType ParseLightType(std::string_view type)
-{
-	std::string typeLower(type.begin(), type.end());
-	std::transform(typeLower.begin(), typeLower.end(), typeLower.begin(), ::tolower);
-
-	if (typeLower == "point")
-		return LightType_Point;
-	if (typeLower == "directional")
-		return LightType_Directional;
-	if (typeLower == "spot")
-		return LightType_Spotlight;
-
-	return LightType_Point;
-}
-
 XMFLOAT4 LoadRotation(const XmlParser::Element* objectElement)
 {
 	XMFLOAT4 rotation(0, 0, 0, 1);
@@ -125,9 +110,11 @@ uint8_t ParseRenderQueue(std::string_view renderQueue)
 
 void loadLight(const XmlParser::Element* lightElement, SceneNode* node, AaSceneManager* mSceneMgr)
 {
-	Light light{};
-	light.type = ParseLightType(lightElement->attribute("type"));
-	light.position = node->position;
+	if (lightElement->attribute("type") != "directional")
+		return;
+
+	AaSceneLight::Light light;
+
 	XMFLOAT3 unitV(0, 0, 1);
 	XMVECTOR v = XMVector3Rotate(XMLoadFloat3(&unitV), XMLoadFloat4(&node->orientation));
 	XMStoreFloat3(&light.direction, v);

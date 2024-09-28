@@ -423,6 +423,8 @@ void readGeometryVertexElement(std::ifstream& stream, AaModel& info)
 		format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 		break;
 	case _DETAIL_SWAP_RB:
+		format = DXGI_FORMAT_B8G8R8A8_UNORM;
+		break;
 	case VET_UBYTE4_NORM:
 		format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		break;
@@ -457,23 +459,11 @@ void readGeometryVertexBuffer(std::ifstream& stream, AaModel& info)
 // 				"MeshSerializerImpl::readGeometryVertexBuffer");
 		}
 
-		// Create / populate vertex buffer
-// 		HardwareVertexBufferSharedPtr vbuf;
-// 		vbuf = pMesh->getHardwareBufferManager()->createVertexBuffer(
-// 			vertexSize,
-// 			dest->vertexCount,
-// 			pMesh->mVertexBufferUsage,
-// 			pMesh->mVertexBufferShadowBuffer);
-// 		HardwareBufferLockGuard vbufLock(vbuf, HardwareBuffer::HBL_DISCARD);
-
 		std::vector<char> data;
 		data.resize(vertexSize * info.vertexCount);
 		readData(stream, data.data(), data.size());
 
 		info.buildVertexBuffer(data.data(), data.size());
-
-		// Set binding
-		//dest->vertexBufferBinding->setBinding(bindIndex, vbuf);
 	}
 }
 

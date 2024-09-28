@@ -2,8 +2,9 @@
 
 #include <string>
 
-const std::string MODEL_DIRECTORY = "../data/models/";
-const std::string TEXTURE_DIRECTORY = "../data/textures/";
-const std::string MATERIAL_DIRECTORY = "../data/materials/";
-const std::string SHADER_DIRECTORY = "../data/shaders/";
+const std::string DATA_DIRECTORY = "../data/";
+const std::string SCENE_DIRECTORY = DATA_DIRECTORY + "scene/";
+const std::string TEXTURE_DIRECTORY = DATA_DIRECTORY + "textures/";
+const std::string MATERIAL_DIRECTORY = DATA_DIRECTORY + "materials/";
+const std::string SHADER_DIRECTORY = DATA_DIRECTORY + "shaders/";
 const std::string SHADER_HLSL_DIRECTORY = SHADER_DIRECTORY + "hlsl/";

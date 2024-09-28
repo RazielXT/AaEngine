@@ -1,79 +1,136 @@
 #pragma once
 
-#include <string>
-#include <vector>
+#include <d3d12.h>
+#include <DirectXMath.h>
+#include <wrl.h>
+#include "RenderTargetTexture.h"
+#include "ResourcesManager.h"
+#include "AaModel.h"
+#include <dxcapi.h>
+#include <memory>
+#include "AaMaterialFileParser.h"
+#include "AaShaderResources.h"
+#include "MaterialInfo.h"
 #include <map>
-#include "AaRenderSystem.h"
-#include <functional>
-#include "AaShaderManager.h"
+#include "AaMaterialConstants.h"
 
-class AaEntity;
+using namespace Microsoft::WRL;
+using namespace DirectX;
+
 class AaCamera;
+class AaModel;
+class AaEntity;
+class MaterialInstance;
+class AaMaterial;
 
-struct MaterialShader
-{
-	MaterialShader(LoadedShader* ref, const std::map<std::string, std::vector<float>>& defaultValues, ID3D11Device*);
-	~MaterialShader();
-
-	int numTextures = 0;
-	ID3D11ShaderResourceView* shaderMaps[10]{};
-	ID3D11SamplerState* samplerStates[10]{};
-	std::vector<std::string> shaderMapNames;
-
-	int numUAVs = 0;
-	ID3D11UnorderedAccessView* UAVs[5]{};
-	std::vector<std::string> UAVsNames;
-
-	struct MaterialCbuffer
-	{
-		CbufferInfo* info{};
-		ID3D11Buffer* buffer{};
-		std::vector<float> data;
-		bool needsUpdate = false;
-	};
-	std::vector<MaterialCbuffer> privateCbuffers;
-
-	LoadedShader* shader;
-};
-
-struct materialInfo;
-class AaMaterialResources;
-
-class AaMaterial
+class MaterialBase
 {
 public:
 
-	AaMaterial(std::string name,AaRenderSystem* mRenderSystem);
-	~AaMaterial();
+	MaterialBase(AaRenderSystem* renderSystem, ResourcesManager& mgr, const MaterialRef& ref);
+	~MaterialBase();
 
-	AaRenderSystem* getRenderSystem() { return mRS; }
-	int addTexture(ID3D11ShaderResourceView* textureMap, ID3D11SamplerState* textureMapSampler, const std::string& name, ShaderType targetShader);
-	int addUAV(ID3D11UnorderedAccessView* uav, const std::string& name, ShaderType targetShader = ShaderType::ShaderTypePixel);
+	void Load();
 
-	void updateTexture(const std::string& name, ID3D11ShaderResourceView* textureMap, ID3D11SamplerState* textureMapSampler = nullptr);
-	void updateUAV(const std::string& name, ID3D11UnorderedAccessView* uav);
+	void BindSignature(ID3D12GraphicsCommandList* commandList, int frameIndex) const;
 
-	void setShader(LoadedShader* shader, ShaderType targetShader, const std::map<std::string, std::vector<float>>& defaultValues);
-	LoadedShader* getShader(ShaderType targetShader);
+	AaMaterial* GetAssignedMaterial(MaterialInstance* instance, const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target);
+	void ReloadPipeline();
+	bool ContainsShader(const LoadedShader*) const;
 
-	void setMaterialConstant(std::string buffer, std::string name, ShaderType shader_target, float* value);
-	void updateObjectConstants(AaEntity* ent, AaCamera& camera);
-	void prepareForRendering();
-	void prepareForRenderingWithCustomPSTextures(ID3D11ShaderResourceView** textures, int count , int start = 0);
-	void clearAfterRendering();
-	void setPSTextures(ID3D11ShaderResourceView** textures,ID3D11SamplerState** samplers, int count , int start = 0);
-	void clearPSTextures(int count = 10, int start = 0);
+	std::unique_ptr<MaterialInstance> CreateMaterialInstance(const MaterialRef& childRef, ResourceUploadBatch& batch);
 
-	RenderState* mRenderState{};
-	MaterialShader* shaders[5]{};
+	ResourcesManager& mgr;
 
-	const std::string& getName() const;
+	SignatureInfo info;
 
 private:
 
-	std::pair<int, int> prepareCBufferForRendering(ID3D11Buffer** buffers, MaterialShader* shader);
+	std::shared_ptr<ResourcesInfo> CreateResourcesData(const MaterialRef& childRef) const;
 
-	std::string name;
-	AaRenderSystem* mRS;
-	USHORT clear_flag{};
+	void CreateRootSignature();
+
+	LoadedShader* shaders[ShaderType_COUNT]{};
+
+	ID3D12RootSignature* rootSignature{};
+	AaRenderSystem* renderSystem;
+
+	ID3D12PipelineState* GetPipelineState(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target);
+	ID3D12PipelineState* CreatePipelineState(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target);
+	struct PipelineStateData
+	{
+		size_t hashId;
+		std::vector<D3D12_INPUT_ELEMENT_DESC> layout;
+		std::vector<DXGI_FORMAT> target;
+		ID3D12PipelineState* pipeline;
+	};
+	std::vector<PipelineStateData> pipelineStates;
+
+	std::map<MaterialInstance*, std::vector<std::unique_ptr<AaMaterial>>> assignedMaterials;
+
+	const MaterialRef& ref;
+};
+
+class MaterialInstance
+{
+	friend MaterialBase;
+public:
+
+	MaterialInstance(MaterialBase&, const MaterialRef& ref);
+
+	MaterialInstance(const MaterialInstance& other) : base(other.base), ref(other.ref)
+	{
+		resources = other.resources;
+	}
+	~MaterialInstance();
+
+	void SetTexture(ShaderTextureView& texture, UINT slot);
+	ShaderTextureView* GetTexture(UINT slot) const;
+
+	void SetParameter(const std::string& name, float* value, size_t size);
+
+	void LoadMaterialConstants(MaterialConstantBuffers& buffers) const;
+	void UpdatePerFrame(MaterialConstantBuffers& buffers, const FrameGpuParameters& info);
+	void UpdatePerObject(MaterialConstantBuffers& buffers, const XMFLOAT4X4& wvpMatrix, const XMMATRIX& worldMatrix, const FrameGpuParameters& info);
+
+	AaMaterial* Assign(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target);
+
+	const MaterialBase* GetBase() const;
+
+protected:
+
+	MaterialBase& base;
+	const MaterialRef& ref;
+
+	std::shared_ptr<ResourcesInfo> resources;
+
+	void UpdateBindlessTexture(const ShaderTextureView& texture, UINT slot);
+};
+
+class AaMaterial : public MaterialInstance
+{
+	friend MaterialBase;
+public:
+
+	AaMaterial(const MaterialInstance& other, ID3D12PipelineState* pipeline) : MaterialInstance(other), pipelineState(pipeline)
+	{
+	}
+
+	AaMaterial(const AaMaterial& other) : MaterialInstance(other)
+	{
+		pipelineState = other.pipelineState;
+	}
+
+	bool operator==(ID3D12PipelineState* pipeline)
+	{
+		return pipelineState = pipeline;
+	}
+
+	void BindTextures(ID3D12GraphicsCommandList* commandList, int frameIndex);
+	void BindConstants(ID3D12GraphicsCommandList* commandList, int frameIndex, const MaterialConstantBuffers& buffers);
+	void BindPipeline(ID3D12GraphicsCommandList* commandList);
+
+private:
+
+	ID3D12PipelineState* pipelineState = nullptr;
 };

@@ -25,11 +25,11 @@ AaWindow* instance = nullptr;
 
 LRESULT CALLBACK AaWindow::WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	if (ImGui_ImplWin32_WndProcHandler(hwnd, message, wParam, lParam))
-		return true;
+ 	if (ImGui_ImplWin32_WndProcHandler(hwnd, message, wParam, lParam))
+ 		return true;
 
 	static UINT_PTR resizeTimerId = 1;
-	static const UINT timerDelay = 100; // Delay in 
+	static const UINT timerDelay = 100;
 
 	PAINTSTRUCT paintStruct;
 	HDC hDC;
@@ -46,15 +46,20 @@ LRESULT CALLBACK AaWindow::WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
 	case WM_SIZE: {
 		if (instance)
 		{
+			if (!LOWORD(lParam))
+				break;
+
+			if (LOWORD(lParam) == instance->width && HIWORD(lParam) == instance->height)
+				break;
+
 			instance->width = LOWORD(lParam);
 			instance->height = HIWORD(lParam);
 
 			bool isFullscreen = (GetWindowLong(hwnd, GWL_STYLE) & WS_OVERLAPPEDWINDOW) == 0;
-			static bool wasFullscreen = isFullscreen;
 
-			if (isFullscreen != wasFullscreen)
+			if (instance->fullscreen != isFullscreen || isFullscreen)
 			{
-				wasFullscreen = isFullscreen;
+				instance->fullscreen = isFullscreen;
 
 				for (auto l : instance->listeners)
 					l->onScreenResize();
@@ -85,6 +90,7 @@ AaWindow::AaWindow(HINSTANCE hInstance, uint32_t width, uint32_t height)
 {
 	this->width = width;
 	this->height = height;
+	fullscreen = false;
 
 	WNDCLASSEX wndClass = { 0 };
 	wndClass.cbSize = sizeof(WNDCLASSEX);

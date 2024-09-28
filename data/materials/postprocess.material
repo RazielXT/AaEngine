@@ -1,0 +1,37 @@
+material PostProcess abstract
+{
+	vertex_shader vsQuad
+	
+	depth off
+	sampler clamp bilinear
+}
+
+material PassThrough : PostProcess
+{
+	pixel_shader psPassThrough
+}
+
+material PutBlurThrough : PostProcess
+{
+	pixel_shader psPutBlurThrough
+}
+
+material AddThrough : PostProcess
+{
+	pixel_shader psAddThrough
+}
+
+material BlurX : PostProcess
+{
+	pixel_shader psBlurX
+}
+
+material BlurY : PostProcess
+{
+	pixel_shader psBlurY
+}
+
+material FXAA : PostProcess
+{
+	pixel_shader psFXAA
+}

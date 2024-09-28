@@ -2,11 +2,10 @@
 #include "AaLogger.h"
 #include "Directories.h"
 #include <sys/stat.h>
-#include "AaBinaryModelLoader.h"
-#include "OgreXMLFileParser.h"
 #include "OgreMeshFileParser.h"
+#include <memory>
 
-AaModelResources* instance = nullptr;
+static AaModelResources* instance = nullptr;
 
 AaModelResources::AaModelResources(AaRenderSystem* mRS)
 {
@@ -20,7 +19,7 @@ AaModelResources::AaModelResources(AaRenderSystem* mRS)
 
 AaModelResources::~AaModelResources()
 {
-	for (auto& it : mModelMap)
+	for (auto& it : loadedModels)
 		delete it.second;
 
 	instance = nullptr;
@@ -31,15 +30,15 @@ AaModelResources& AaModelResources::get()
 	return *instance;
 }
 
-AaModel* AaModelResources::getModel(const std::string& filename)
+AaModel* AaModelResources::getModel(const std::string& filename, ModelLoadContext& ctx)
 {
-	auto it = mModelMap.find(filename);
+	auto it = loadedModels.find(filename);
 
-	if (it == mModelMap.end())
+	if (it == loadedModels.end())
 	{
-		AaModel* m = loadModel(filename);
+		AaModel* m = loadModel(filename, ctx);
 		if (m)
-			mModelMap[filename] = m;
+			loadedModels[filename] = m;
 
 		return m;
 	}
@@ -47,20 +46,32 @@ AaModel* AaModelResources::getModel(const std::string& filename)
 	return it->second;
 }
 
-AaModel* AaModelResources::loadModel(const std::string& filename)
+void AaModelResources::clear()
+{
+	for (auto& it : loadedModels)
+		delete it.second;
+
+	loadedModels.clear();
+}
+
+AaModel* AaModelResources::loadModel(const std::string& filename, ModelLoadContext& ctx)
 {
 	AaModel* model{};
 
 	AaLogger::log("Loading mesh file " + filename);
 
-	std::string filepath = MODEL_DIRECTORY + filename;
+	std::string filepath = ctx.folder + filename;
 
-	if (filepath.ends_with("mesh"))
+	if (filename.ends_with("mesh"))
 	{
 		struct stat attrib;
 		if (stat(filepath.c_str(), &attrib) == 0)
 		{
-			auto mesh = OgreMeshFileParser::load(filepath, { mRenderSystem });
+			OgreMeshFileParser::ParseOptions o;
+			o.batch = &ctx.batch;
+			o.device = mRenderSystem->device;
+
+			auto mesh = OgreMeshFileParser::load(filepath, o);
 
 			if (!mesh.submeshes.empty())
 			{
@@ -70,27 +81,12 @@ AaModel* AaModelResources::loadModel(const std::string& filename)
 		}
 	}
 
-	if (!model && filepath.ends_with("mesh"))
-	{
-		std::string tempModelName = filepath + ".model";
-		std::string tempXmlName = filepath + ".xml";
-		struct stat attrib, attrib2;
-		int r1 = stat(tempModelName.c_str(), &attrib);
-		int r2 = stat(tempXmlName.c_str(), &attrib2);
-
-		if (r1 != r2)
-			filepath = (r1 == 0) ? tempModelName : tempXmlName;
-		else if (r1 == 0 && r2 == 0)
-			filepath = (attrib.st_mtime > attrib2.st_mtime) ? tempModelName : tempXmlName;
-	}
-
-	if (filepath.ends_with("model"))
-		model = AaBinaryModelLoader::load(filepath, mRenderSystem);
-	if (filepath.ends_with("xml"))
-		model = OgreXMLFileParser::load(filepath, mRenderSystem, true, true);
-
- 	if (!model)
- 		AaLogger::logError("Model " + filename + " failed to load");
+	if (!model)
+		AaLogger::logError("Model " + filename + " failed to load");
 
 	return model;
+}
+
+ModelLoadContext::ModelLoadContext(AaRenderSystem* rs) : batch(rs->device)
+{
 }

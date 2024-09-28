@@ -36,7 +36,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\dependencies\imgui;..\dependencies\DirectXTK\Inc;..\dependencies\DirectXTex\DirectXTex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\dependencies\imgui;..\dependencies\DirectXTK12\Inc;..\dependencies\DirectX-Headers\include;..\dependencies\pugixml\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_SECURE_SCL=0;_ITERATOR_DEBUG_LEVEL=0;NDEBUG</PreprocessorDefinitions>
@@ -50,8 +50,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>..\dependencies\DirectXTex\DirectXTex\Bin\Desktop_2022\x64\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>d3d11.lib;dxguid.lib;d3dcompiler.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\dependencies\DirectXTK12\Bin\Desktop_2022_Win10\x64\Release\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>d3d12.lib;dxgi.lib;dxcompiler.lib;dxguid.lib;DirectXTK12.lib;Shcore.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
       <ImportLibrary>$(OutDir)$(TargetName).lib</ImportLibrary>
@@ -60,7 +60,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\dependencies\imgui;..\dependencies\DirectXTK\Inc;..\dependencies\DirectXTex\DirectXTex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\dependencies\imgui;..\dependencies\DirectXTK12\Inc;..\dependencies\DirectX-Headers\include;..\dependencies\tinyxml2;..\dependencies\pugixml\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -73,8 +73,8 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>d3d11.lib;dxguid.lib;d3dcompiler.lib;DirectXTex.lib;DXGI.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\dependencies\DirectXTex\DirectXTex\Bin\Desktop_2022\x64\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>d3d12.lib;dxgi.lib;dxcompiler.lib;dxguid.lib;DirectXTK12.lib;Shcore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\dependencies\DirectXTK12\Bin\Desktop_2022_Win10\x64\Debug\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
@@ -82,89 +82,100 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\dependencies\imgui\backends\imgui_impl_dx11.cpp" />
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\dependencies\imgui\backends\imgui_impl_dx12.cpp" />
     <ClCompile Include="..\dependencies\imgui\backends\imgui_impl_win32.cpp" />
     <ClCompile Include="..\dependencies\imgui\imgui.cpp" />
     <ClCompile Include="..\dependencies\imgui\imgui_draw.cpp" />
     <ClCompile Include="..\dependencies\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\dependencies\imgui\imgui_widgets.cpp" />
     <ClCompile Include="source\AaApplication.cpp" />
-    <ClCompile Include="source\AaBinaryModelLoader.cpp" />
-    <ClCompile Include="source\AaBloomPostprocess.cpp" />
     <ClCompile Include="source\AaCamera.cpp" />
-    <ClCompile Include="source\AaDebugWindow.cpp" />
     <ClCompile Include="source\AaEntity.cpp" />
-    <ClCompile Include="source\AaMaterialFileParser.cpp" />
     <ClCompile Include="source\AaMaterial.cpp" />
+    <ClCompile Include="source\AaMaterialConstants.cpp" />
+    <ClCompile Include="source\AaMaterialFileParser.cpp" />
     <ClCompile Include="source\AaMaterialResources.cpp" />
     <ClCompile Include="source\AaModel.cpp" />
     <ClCompile Include="source\AaModelResources.cpp" />
-    <ClCompile Include="source\AaModelSerialization.cpp" />
+    <ClCompile Include="source\AaRenderables.cpp" />
     <ClCompile Include="source\AaRenderSystem.cpp" />
-    <ClCompile Include="source\AaSceneLights.cpp" />
     <ClCompile Include="source\AaSceneManager.cpp" />
-    <ClCompile Include="source\AaSceneNode.cpp" />
-    <ClCompile Include="source\AaSceneParser.cpp" />
-    <ClCompile Include="source\AaShaderBuffersManager.cpp" />
+    <ClCompile Include="source\AaShaderCompiler.cpp" />
     <ClCompile Include="source\AaShaderFileParser.cpp" />
-    <ClCompile Include="source\AaShaderManager.cpp" />
-    <ClCompile Include="source\AaShadowMapping.cpp" />
-    <ClCompile Include="source\AaVoxelScene.cpp" />
+    <ClCompile Include="source\AaShaderResources.cpp" />
+    <ClCompile Include="source\AaTextureResources.cpp" />
     <ClCompile Include="source\AaWindow.cpp" />
+    <ClCompile Include="source\FrameCompositor.cpp" />
+    <ClCompile Include="source\CompositorFileParser.cpp" />
+    <ClCompile Include="source\ConfigParser.cpp" />
+    <ClCompile Include="source\DebugWindow.cpp" />
     <ClCompile Include="source\FreeCamera.cpp" />
     <ClCompile Include="source\InputHandler.cpp" />
     <ClCompile Include="source\main.cpp" />
+    <ClCompile Include="source\MaterialInfo.cpp" />
     <ClCompile Include="source\MyListener.cpp" />
     <ClCompile Include="source\OgreMeshFileParser.cpp" />
-    <ClCompile Include="source\OgreXMLFileParser.cpp" />
-    <ClCompile Include="source\ConfigParser.cpp" />
-    <ClCompile Include="source\Xml.cpp" />
+    <ClCompile Include="source\RenderQueue.cpp" />
+    <ClCompile Include="source\RenderTargetTexture.cpp" />
+    <ClCompile Include="source\ResourcesManager.cpp" />
+    <ClCompile Include="source\SceneParser.cpp" />
+    <ClCompile Include="source\SceneRenderTask.cpp" />
+    <ClCompile Include="source\ShaderConstantBuffers.cpp" />
+    <ClCompile Include="source\ShadowMap.cpp" />
+    <ClCompile Include="source\ShadowsRenderTask.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\dependencies\imgui\backends\imgui_impl_dx11.h" />
+    <ClInclude Include="..\dependencies\imgui\backends\imgui_impl_dx12.h" />
     <ClInclude Include="..\dependencies\imgui\backends\imgui_impl_win32.h" />
     <ClInclude Include="..\dependencies\imgui\imgui.h" />
     <ClInclude Include="source\AaApplication.h" />
-    <ClInclude Include="source\AaBinaryModelLoader.h" />
-    <ClInclude Include="source\AaBloomPostProcess.h" />
     <ClInclude Include="source\AaCamera.h" />
-    <ClInclude Include="source\AaDebugWindow.h" />
     <ClInclude Include="source\AaEntity.h" />
     <ClInclude Include="source\AaFrameListener.h" />
     <ClInclude Include="source\AaLogger.h" />
     <ClInclude Include="source\AaMaterial.h" />
+    <ClInclude Include="source\AaMaterialConstants.h" />
     <ClInclude Include="source\AaMaterialFileParser.h" />
     <ClInclude Include="source\AaMaterialResources.h" />
     <ClInclude Include="source\AaModel.h" />
     <ClInclude Include="source\AaModelResources.h" />
-    <ClInclude Include="source\AaModelSerialization.h" />
+    <ClInclude Include="source\AaRenderables.h" />
     <ClInclude Include="source\AaRenderSystem.h" />
-    <ClInclude Include="source\AaSceneLights.h" />
     <ClInclude Include="source\AaSceneManager.h" />
-    <ClInclude Include="source\AaSceneNode.h" />
-    <ClInclude Include="source\AaSceneParser.h" />
-    <ClInclude Include="source\AaShaderBuffersManager.h" />
+    <ClInclude Include="source\AaShaderCompiler.h" />
     <ClInclude Include="source\AaShaderFileParser.h" />
-    <ClInclude Include="source\AaShaderManager.h" />
-    <ClInclude Include="source\AaShadowMapping.h" />
-    <ClInclude Include="source\AaVoxelScene.h" />
+    <ClInclude Include="source\AaShaderResources.h" />
+    <ClInclude Include="source\AaTextureResources.h" />
     <ClInclude Include="source\AaWindow.h" />
-    <ClInclude Include="source\FreeCamera.h" />
+    <ClInclude Include="source\RenderContext.h" />
+    <ClInclude Include="source\FrameCompositor.h" />
+    <ClInclude Include="source\CompositorFileParser.h" />
+    <ClInclude Include="source\ConfigParser.h" />
+    <ClInclude Include="source\DebugWindow.h" />
     <ClInclude Include="source\Directories.h" />
+    <ClInclude Include="source\Directx.h" />
+    <ClInclude Include="source\FreeCamera.h" />
     <ClInclude Include="source\InputHandler.h" />
-    <ClInclude Include="source\Math.h" />
+    <ClInclude Include="source\MaterialInfo.h" />
+    <ClInclude Include="source\AaMath.h" />
     <ClInclude Include="source\MyListener.h" />
     <ClInclude Include="source\OgreMeshFileParser.h" />
-    <ClInclude Include="source\OgreXMLFileParser.h" />
-    <ClInclude Include="source\ConfigParser.h" />
-    <ClInclude Include="source\Xml.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
+    <ClInclude Include="source\RenderQueue.h" />
+    <ClInclude Include="source\RenderTargetTexture.h" />
+    <ClInclude Include="source\ResourcesManager.h" />
+    <ClInclude Include="source\SceneLights.h" />
+    <ClInclude Include="source\SceneParser.h" />
+    <ClInclude Include="source\SceneRenderTask.h" />
+    <ClInclude Include="source\ShaderConstantBuffers.h" />
+    <ClInclude Include="source\ShadowMap.h" />
+    <ClInclude Include="source\ShadowsRenderTask.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

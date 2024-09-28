@@ -1,51 +1,55 @@
 #include "MyListener.h"
 #include "AaLogger.h"
 #include "Directories.h"
-#include "AaSceneNode.h"
-#include "AaSceneParser.h"
-#include "imgui.h"
-#include "OgreMeshFileParser.h"
-#include "Math.h"
+#include "../../DirectX-Headers/include/directx/d3dx12.h"
+#include "FreeCamera.h"
+#include "SceneParser.h"
+#include "AaModelResources.h"
+#include "AaShaderResources.h"
+#include "AaMaterialResources.h"
+#include "FrameCompositor.h"
 
-bool zp = false, zm = false, xp = false, xm = false;
-
-MyListener::MyListener(AaSceneManager* mSceneMgr)
+MyListener::MyListener(AaRenderSystem* render)
 {
-	this->mSceneMgr = mSceneMgr;
+	sceneMgr = new AaSceneManager(render);
+
+ 	renderSystem = render;
+ 	renderSystem->getWindow()->listeners.push_back(this);
 
 	cameraMan = new FreeCamera();
 	cameraMan->camera.setPosition(XMFLOAT3(0, 0, -14.f));
+	auto window = renderSystem->getWindow();
+	cameraMan->reload(window->getWidth() / (float)window->getHeight());
 
-	mRS = mSceneMgr->getRenderSystem();
-	mRS->getWindow()->listeners.push_back(this);
+	shadowMap = new AaShadowMap(sceneMgr->lights.directionalLight);
+	shadowMap->init(renderSystem);
 
-	voxelScene = new AaVoxelScene(mSceneMgr);
-	voxelScene->initScene(128);
+// 	voxelScene = new AaVoxelScene(mSceneMgr);
+// 	voxelScene->initScene(128);
 
-	mShadowMapping = new AaShadowMapping(mSceneMgr);
+	AaShaderResources::get().loadShaderReferences(SHADER_DIRECTORY, false);
+ 	AaMaterialResources::get().loadMaterials(MATERIAL_DIRECTORY, false);
 
-	AaShaderManager::get().loadShaderReferences(SHADER_DIRECTORY, false);
-	AaMaterialResources::get().loadMaterials(MATERIAL_DIRECTORY, false);
+	compositor = new FrameCompositor(render, sceneMgr, shadowMap);
+	compositor->load(DATA_DIRECTORY + "frame.compositor");
 
-	pp = new AaBloomPostProcess(mSceneMgr);
+	Vector3(-1, -1, -1).Normalize(sceneMgr->lights.directionalLight.direction);
 
-	mLights.directionalLight.type = LightType_Directional;
-	mLights.directionalLight.color = XMFLOAT3(1, 1, 1);
-	Vector3(0.5f, -1, 1.6).Normalize(mLights.directionalLight.direction);
+ 	SceneParser::load("test", sceneMgr, renderSystem);
 
-	SceneParser::load("test.scene", mSceneMgr);
-
-	debugWindow.init(mSceneMgr, mRS);
+	debugWindow.init(renderSystem);
 }
 
 MyListener::~MyListener()
 {
 	debugWindow.deinit();
 
-	delete voxelScene;
-	delete pp;
-	delete mShadowMapping;
-	delete cameraMan;
+	renderSystem->WaitForAllFrames();
+
+	delete compositor;
+ 	delete shadowMap;
+ 	delete cameraMan;
+	delete sceneMgr;
 }
 
 float elapsedTime = 0;
@@ -55,36 +59,50 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 {
 	InputHandler::consumeInput(*this);
 
-	if (auto ent = mSceneMgr->getEntity("Suzanne"))
+ 	cameraMan->update(timeSinceLastFrame);
+
+	if (debugWindow.state.changeScene)
 	{
-		ent->yaw(timeSinceLastFrame);
-		ent->setPosition(cos(elapsedTime) * 5, ent->getPosition().y, ent->getPosition().z);
+		renderSystem->WaitForAllFrames();
+		sceneMgr->clear();
+		AaModelResources::get().clear();
+		SceneParser::load("testCubes", sceneMgr, renderSystem);
+		debugWindow.state.changeScene = false;
 	}
 
-	cameraMan->update(timeSinceLastFrame);
+ 	if (auto ent = sceneMgr->getEntity("Torus001"))
+ 	{
+ 		ent->roll(timeSinceLastFrame);
+		ent->yaw(timeSinceLastFrame / 2.f);
+		ent->pitch(timeSinceLastFrame / 3.f);
+ 	}
 
-	elapsedTime += timeSinceLastFrame * 0.3f;
+ 	elapsedTime += timeSinceLastFrame;
 
-	//Vector3(cos(elapsedTime) / 2.f, -1, sin(elapsedTime) / 2.f).Normalize(mLights.directionalLight.direction);
+	Vector3(cos(elapsedTime), -1, sin(elapsedTime)).Normalize(sceneMgr->lights.directionalLight.direction);
 
-	mShadowMapping->updateShadowCamera(mLights.directionalLight.direction);
-	mShadowMapping->renderShadowMaps();
+	if (debugWindow.state.reloadShaders)
+	{
+		renderSystem->WaitForAllFrames();
+		AaMaterialResources::get().ReloadShaders();
+		debugWindow.state.reloadShaders = false;
+	}
 
-	//if (count % 2 == 0)
-	voxelScene->voxelizeScene(XMFLOAT3(30, 30, 30), XMFLOAT3(0, 0, 0));
-	voxelScene->endFrame(XMFLOAT3(30, 30, 30), XMFLOAT3(0, 0, 0));
-	count++;
+	sceneMgr->updateQueues();
+	shadowMap->update(renderSystem->frameIndex);
 
-	AaShaderManager::get().buffers.updatePerFrameConstants(timeSinceLastFrame, cameraMan->camera, mShadowMapping->shadowCamera, mLights);
+	RenderContext ctx = { &cameraMan->camera, renderSystem };
 
-	mRS->setBackbufferAsRenderTarget();
-	mRS->clearViews();
+	ctx.params.time = elapsedTime;
+	ctx.params.sunDirection = sceneMgr->lights.directionalLight.direction;
+	XMStoreFloat4x4(&ctx.params.shadowMapViewProjectionTransposed, XMMatrixTranspose(shadowMap->camera[0].getViewProjectionMatrix()));
 
-	pp->render(cameraMan->camera);
+	compositor->render(ctx, debugWindow);
 
-	debugWindow.draw();
-
-	mRS->swapChain_->Present(1, 0);
+// 	//if (count % 2 == 0)
+// 	voxelScene->voxelizeScene(XMFLOAT3(30, 30, 30), XMFLOAT3(0, 0, 0));
+// 	voxelScene->endFrame(XMFLOAT3(30, 30, 30), XMFLOAT3(0, 0, 0));
+// 	count++;
 
 	return continue_rendering;
 }
@@ -97,28 +115,6 @@ bool MyListener::keyPressed(int key)
 		continue_rendering = false;
 		break;
 
-	case 'I':
-		xp = true;
-		break;
-
-	case 'K':
-		xm = true;
-		break;
-
-	case 'J':
-		zp = true;
-		break;
-
-	case 'L':
-		zm = true;
-		break;
-
-	case 'M':
-	{
-		auto ent = mSceneMgr->getEntity("Box03");
-		ent->visible = !ent->visible;
-		break;
-	}
 	default:
 		break;
 	}
@@ -128,25 +124,6 @@ bool MyListener::keyPressed(int key)
 
 bool MyListener::keyReleased(int key)
 {
-	switch (key)
-	{
-	case 'I':
-		xp = false;
-		break;
-
-	case 'K':
-		xm = false;
-		break;
-
-	case 'J':
-		zp = false;
-		break;
-
-	case 'L':
-		zm = false;
-		break;
-	}
-
 	return cameraMan->keyReleased(key);
 }
 
@@ -157,11 +134,10 @@ bool MyListener::mouseMoved(int x, int y)
 
 void MyListener::onScreenResize()
 {
-	delete pp;
-	pp = new AaBloomPostProcess(mSceneMgr);
+	auto window = renderSystem->getWindow();
+	cameraMan->reload(window->getWidth() / (float)window->getHeight());
 
-	auto window = mRS->getWindow();
-	cameraMan->camera.setPerspectiveCamera(70, window->getWidth() / (float)window->getHeight(), 0.01, 1000);
+	compositor->reloadTextures();
 }
 
 bool MyListener::mousePressed(MouseButton button)

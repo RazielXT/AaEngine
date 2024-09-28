@@ -3,13 +3,19 @@
 #include "AaApplication.h"
 #include "FreeCamera.h"
 #include "InputHandler.h"
-#include "AaDebugWindow.h"
+#include "AaRenderSystem.h"
+#include "AaSceneManager.h"
+#include "AaModelResources.h"
+#include "FrameCompositor.h"
+#include "ShadowMap.h"
+#include "DebugWindow.h"
+
 
 class MyListener : public AaFrameListener, public InputListener, public ScreenListener
 {
 public:
 
-	MyListener(AaSceneManager* mSceneMgr);
+	MyListener(AaRenderSystem* render);
 	~MyListener();
 
 	bool frameStarted(float timeSinceLastFrame) override;
@@ -24,14 +30,14 @@ public:
 
 private:
 
-	FreeCamera* cameraMan;
-	AaRenderSystem* mRS;
-	AaSceneLights mLights;
-	AaSceneManager* mSceneMgr;
-	AaVoxelScene* voxelScene;
-	AaShadowMapping* mShadowMapping;
-	AaBloomPostProcess* pp;
-	DebugWindow debugWindow;
+ 	FreeCamera* cameraMan;
+ 	AaRenderSystem* renderSystem;
+ 	AaSceneManager* sceneMgr;
+	AaShadowMap* shadowMap;
+// 	AaVoxelScene* voxelScene;
+	imgui::DebugWindow debugWindow;
 
 	bool continue_rendering = true;
+
+	FrameCompositor* compositor;
 };

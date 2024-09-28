@@ -1,18 +1,20 @@
 vertex_shader vsTest
 {
-	file sampleShader.hlsl
-	entry VS_Main
-	profile vs_5_0
+	file shaderTest.hlsl
+	entry VSMain
+	profile vs_6_6
 }
 
 pixel_shader psTest
 {
-	file sampleShader.hlsl
-	entry PS_Main
-	profile ps_5_0
+	file shaderTest.hlsl
+	entry PSMain
+	profile ps_6_6
+}
 
-	cbuffer PerMaterial
-	{
-		float4 col 1 0 0 1
-	}
+vertex_shader vsDepthWrite
+{
+	file depthWrite.hlsl
+	entry VSMain
+	profile vs_6_6
 }

@@ -4,26 +4,30 @@
 #include <string>
 #include <vector>
 
+enum ShaderType
+{
+	ShaderTypeVertex,
+	ShaderTypePixel,
+	ShaderType_COUNT
+};
+
 struct ConstantDefault
 {
 	std::string name;
 	std::vector<float> data;
 };
 
-struct shaderRef
+struct ShaderRef
 {
 	std::string file;
 	std::string entry;
 	std::string profile;
 	std::vector<std::pair<std::string, std::string>> defines;
-
-	std::map<std::string, std::vector<ConstantDefault>> privateCbuffers;
 };
 
 struct shaderRefMaps
 {
-	std::map<std::string, shaderRef> vertexShaderRefs;
-	std::map<std::string, shaderRef> pixelShaderRefs;
+	std::map<std::string, ShaderRef> shaderRefs[ShaderType_COUNT];
 };
 
 namespace AaShaderFileParser

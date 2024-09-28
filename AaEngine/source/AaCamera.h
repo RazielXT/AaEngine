@@ -16,9 +16,12 @@ public:
 	void setPerspectiveCamera(float fov, float aspectRatio, float nearZ, float farZ);
 
 	const XMMATRIX& getProjectionMatrix() const;
-	const XMMATRIX& getViewMatrix();
-	const XMMATRIX& getViewProjectionMatrix();
+	const XMMATRIX& getViewMatrix() const;
+	const XMMATRIX& getViewProjectionMatrix() const;
 
+	void updateMatrix();
+
+	void move(XMFLOAT3 position);
 	void setPosition(XMFLOAT3 position);
 	void setInCameraRotation(XMFLOAT3* direction);
 
@@ -33,11 +36,14 @@ public:
 	XMFLOAT3 getPosition() const;
 
 	DirectX::BoundingFrustum prepareFrustum();
+	DirectX::BoundingOrientedBox prepareOrientedBox();
 
 private:
 
-	bool dirty;
-	float yaw_, pitch_, roll_;
+	float width, height, nearZ, farZ;
+
+	bool dirty = true;
+	float yaw_ = 0, pitch_ = 0, roll_ = 0;
 	XMMATRIX view_m;
 	XMMATRIX projection_m;
 	XMMATRIX view_projection_m;

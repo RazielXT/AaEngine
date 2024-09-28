@@ -11,18 +11,17 @@ void parseShaderFile(shaderRefMaps& shds, const std::string& file)
 	{
 		if (obj.type == "vertex_shader" || obj.type == "pixel_shader")
 		{
-			bool pixel = obj.type == "pixel_shader";
+			ShaderType type = ShaderTypePixel;
+			if (obj.type == "vertex_shader") type = ShaderTypeVertex;
 
-			shaderRef shader;
+			ShaderRef shader;
 
 			if (obj.params.size() > 1 && obj.params[0] == ":")
 			{
 				auto parentName = obj.params[1];
 				if (!parentName.empty())
 				{
-					auto parents = pixel ? shds.pixelShaderRefs : shds.vertexShaderRefs;
-
-					for (auto& s : parents)
+					for (auto& s : shds.shaderRefs[type])
 					{
 						if (s.first == parentName)
 							shader = s.second;
@@ -63,33 +62,9 @@ void parseShaderFile(shaderRefMaps& shds, const std::string& file)
 					for (auto& p : param.params)
 						addDefine(p);
 				}
-				else if (param.type == "cbuffer" && !param.value.empty())
-				{
-					auto& paramDefault = shader.privateCbuffers[param.value];
-					paramDefault.reserve(param.children.size());
-
-					for (auto& var : param.children)
-					{
-						if (var.type.starts_with("float"))
-						{
-							std::vector<float> defaultData;
-							defaultData.reserve(var.params.size());
-
-							for (auto& v : var.params)
-							{
-								defaultData.push_back(std::stof(v));
-							}
-
-							paramDefault.push_back({ var.value, defaultData });
-						}
-					}
-				}
 			}
 
-			if (pixel)
-				shds.pixelShaderRefs[obj.value] = shader;
-			else
-				shds.vertexShaderRefs[obj.value] = shader;
+			shds.shaderRefs[type][obj.value] = shader;
 		}
 	}
 }
@@ -104,7 +79,7 @@ void parseAllShaderFiles(shaderRefMaps& shaders, std::string directory, bool sub
 		}
 		else if (entry.is_regular_file() && entry.path().generic_string().ends_with(".shader"))
 		{
-			AaLogger::log(entry.path().generic_string());
+			AaLogger::log("Parsing " + entry.path().generic_string());
 			parseShaderFile(shaders, entry.path().generic_string());
 		}
 	}
@@ -118,6 +93,12 @@ shaderRefMaps AaShaderFileParser::parseAllShaderFiles(std::string directory, boo
 		return shaders;
 
 	parseAllShaderFiles(shaders, directory, subFolders);
+
+	size_t c = 0;
+	for (auto s : shaders.shaderRefs)
+		c += s.size();
+
+	AaLogger::log("Total shaders found: " + std::to_string(c));
 
 	return shaders;
 }

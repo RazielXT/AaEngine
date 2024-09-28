@@ -1,25 +1,24 @@
 #include "AaModel.h"
 #include "AaRenderSystem.h"
 #include <functional>
-#include "Math.h"
+#include <BufferHelpers.h>
 
-AaModel::AaModel(AaRenderSystem* rs) : renderSystem(rs)
+AaModel::AaModel()
 {
 
 }
 
 AaModel::~AaModel()
 {
-	if (indexBuffer_)
-		indexBuffer_->Release();
-
-	if (vertexBuffer_)
-		vertexBuffer_->Release();
+	if (vertexBuffer)
+		vertexBuffer->Release();
+	if (indexBuffer)
+		indexBuffer->Release();
 }
 
-void AaModel::addLayoutElement(unsigned short source, size_t offset, DXGI_FORMAT format, const char* semantic, unsigned short index)
+void AaModel::addLayoutElement(unsigned short source, UINT offset, DXGI_FORMAT format, const char* semantic, unsigned short index)
 {
-	D3D11_INPUT_ELEMENT_DESC desc{};
+	D3D12_INPUT_ELEMENT_DESC desc{};
 	desc.Format = format;
 	desc.SemanticName = semantic;
 	desc.AlignedByteOffset = offset;
@@ -129,7 +128,7 @@ static uint32_t getTypeSize(DXGI_FORMAT t)
 	case DXGI_FORMAT_BC4_SNORM:
 		return 8; // Compressed format    
 	case DXGI_FORMAT_R9G9B9E5_SHAREDEXP:
-		return 4;               
+		return 4;
 		// These are compressed, but bit-size information is unclear.        
 	case DXGI_FORMAT_R8G8_B8G8_UNORM:
 	case DXGI_FORMAT_G8R8_G8B8_UNORM:
@@ -152,80 +151,52 @@ uint32_t AaModel::getLayoutVertexSize(uint16_t source) const
 	return sz;
 }
 
-void AaModel::buildVertexBuffer(const void* data, size_t size)
+void AaModel::CreateVertexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, void* vertices, UINT vertexCount, UINT vertexSize)
 {
-	D3D11_BUFFER_DESC vertexDesc;
-	ZeroMemory(&vertexDesc, sizeof(vertexDesc));
-	vertexDesc.Usage = D3D11_USAGE_DEFAULT;
-	vertexDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vertexDesc.ByteWidth = size;
-	D3D11_SUBRESOURCE_DATA resourceData;
-	ZeroMemory(&resourceData, sizeof(resourceData));
-	resourceData.pSysMem = data;
+	auto hr = CreateStaticBuffer(device, *memory,
+		vertices,
+		vertexCount,
+		vertexSize,
+		D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &vertexBuffer);
 
-	HRESULT d3dResult = renderSystem->getDevice()->CreateBuffer(&vertexDesc, &resourceData, &vertexBuffer_);
-
-	if (FAILED(d3dResult))
-	{
-		//AaLogger::logErrorD3D("Failed to create vertex buffer", d3dResult);
-		return;
-	}
+	// Create the vertex buffer view
+	vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
+	vertexBufferView.SizeInBytes = vertexCount * vertexSize;
+	vertexBufferView.StrideInBytes = vertexSize;
 }
 
-void AaModel::buildIndexBuffer(const uint16_t* data)
+void AaModel::CreateIndexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, const std::vector<uint16_t>& data)
 {
-	D3D11_BUFFER_DESC indexDesc;
-	ZeroMemory(&indexDesc, sizeof(indexDesc));
-	indexDesc.Usage = D3D11_USAGE_DEFAULT;
-	indexDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	indexDesc.ByteWidth = sizeof(uint16_t) * indexCount;
-	indexDesc.CPUAccessFlags = 0;
-	D3D11_SUBRESOURCE_DATA resourceData;
-	ZeroMemory(&resourceData, sizeof(resourceData));
-	resourceData.pSysMem = data;
-	HRESULT d3dResult = renderSystem->getDevice()->CreateBuffer(&indexDesc, &resourceData, &indexBuffer_);
+	auto hr = CreateStaticBuffer(device, *memory,
+		data,
+		D3D12_RESOURCE_STATE_INDEX_BUFFER, &indexBuffer);
 
-	if (FAILED(d3dResult))
-	{
-		//AaLogger::logErrorD3D("Failed to create index buffer", d3dResult);
-	}
+	// Create the index buffer view
+	indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
+	indexBufferView.SizeInBytes = static_cast<UINT>(data.size()) * sizeof(uint16_t);
+	indexBufferView.Format = DXGI_FORMAT_R16_UINT;
 }
 
-uint64_t AaModel::getLayoutId()
+const char* VertexElementSemantic::GetConstName(const std::string& semantic)
 {
-	if (!layoutHash)
-	{
-		for (auto& l : vertexLayout)
-		{
-			layoutHash ^= std::hash<int>{}(l.Format);
-			layoutHash ^= std::hash<const void*>{}(l.SemanticName);
-			layoutHash ^= std::hash<int>{}(l.Format);
-		}
-	}
+	if (semantic == VertexElementSemantic::POSITION)
+		return VertexElementSemantic::POSITION;
+	if (semantic == VertexElementSemantic::SV_POSITION)
+		return VertexElementSemantic::SV_POSITION;
+	if (semantic == VertexElementSemantic::TEXCOORD)
+		return VertexElementSemantic::TEXCOORD;
+	if (semantic == VertexElementSemantic::COLOR)
+		return VertexElementSemantic::COLOR;
+	if (semantic == VertexElementSemantic::NORMAL)
+		return VertexElementSemantic::NORMAL;
+	if (semantic == VertexElementSemantic::TANGENT)
+		return VertexElementSemantic::TANGENT;
+	if (semantic == VertexElementSemantic::BINORMAL)
+		return VertexElementSemantic::BINORMAL;
+	if (semantic == VertexElementSemantic::BLEND_WEIGHTS)
+		return VertexElementSemantic::BLEND_WEIGHTS;
+	if (semantic == VertexElementSemantic::BLEND_INDICES)
+		return VertexElementSemantic::BLEND_INDICES;
 
-	return layoutHash;
-}
-
-void AaModel::calculateBounds(const std::vector<float>& positions)
-{
-	if (!positions.empty())
-	{
-		Vector3 minBounds(positions[0], positions[1], positions[2]);
-		Vector3 maxBounds = minBounds;
-
-		for (size_t i = 0; i < positions.size(); i += 3)
-		{
-			minBounds.x = min(minBounds.x, positions[i]);
-			minBounds.y = min(minBounds.y, positions[i + 1]);
-			minBounds.z = min(minBounds.z, positions[i + 2]);
-
-			maxBounds.x = max(maxBounds.x, positions[i]);
-			maxBounds.y = max(maxBounds.y, positions[i + 1]);
-			maxBounds.z = max(maxBounds.z, positions[i + 2]);
-		}
-
-		bbox.Center = (maxBounds + minBounds) / 2;
-		bbox.Extents = (maxBounds - minBounds) / 2;
-	}
-
+	return nullptr;
 }

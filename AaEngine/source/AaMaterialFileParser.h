@@ -1,45 +1,58 @@
 #pragma once
 
-#include "AaMaterial.h"
 #include <vector>
 #include <map>
+#include <string>
+#include <d3d12.h>
 
-enum class TextureBorder
+struct MaterialDepthState
 {
-	Warp, Clamp, BorderColor
+	bool check;
+	bool write;
 };
 
-enum class Filtering
-{
-	None, Bilinear, Trilinear, Anisotropic
-};
-
-struct textureInfo
+struct TextureRef
 {
 	std::string id;
 	std::string file;
-	std::string name;
-	bool defaultSampler = true;
-	int maxAnisotropy = 8;
-	Filtering filter = Filtering::Anisotropic;
-	TextureBorder bordering = TextureBorder::Warp;
-	float border_color[4]{};
 };
 
-struct materialInfo
+struct SamplerRef
 {
-	std::string name;
+	UINT maxAnisotropy = 8;
+	D3D12_FILTER filter = D3D12_FILTER_ANISOTROPIC;
+	D3D12_TEXTURE_ADDRESS_MODE bordering = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	D3D12_STATIC_BORDER_COLOR borderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
+};
+
+struct MaterialPipelineInfo
+{
 	std::string ps_ref;
 	std::string vs_ref;
-	std::vector<textureInfo> vstextures;
-	std::vector<textureInfo> pstextures;
-	std::vector<std::string> psuavs;
+
+	MaterialDepthState depth;
+};
+
+struct MaterialResourcesInfo
+{
+	std::vector<TextureRef> textures;
+	std::vector<SamplerRef> samplers;
+	std::vector<std::string> uavs;
 
 	std::map<std::string, std::vector<float>> defaultParams;
-	RS_DESC renderStateDesc;
+};
+
+struct MaterialRef
+{
+	std::string base;
+	bool abstract = false;
+	std::string name;
+
+	MaterialPipelineInfo pipeline;
+	MaterialResourcesInfo resources;
 };
 
 namespace AaMaterialFileParser
 {
-	std::vector<materialInfo> parseAllMaterialFiles(std::string directory, bool subFolders = false);
+	void parseAllMaterialFiles(std::vector<MaterialRef>& mats, std::string directory, bool subFolders = false);
 };

@@ -18,8 +18,8 @@ void FreeCamera::update(float time)
 		return;
 
 	XMFLOAT3 dir(0, 0, 0);
-	float speed = 4 * time;
-	if (turbo) speed *= 6;
+	float speed = 30 * time;
+	if (turbo) speed *= 5;
 
 	if (w || s || a || d)
 	{
@@ -38,12 +38,12 @@ void FreeCamera::update(float time)
 				}
 				else if (w)
 				{
-					dir.x = 0.7 * speed;
-					dir.z = 0.7 * speed;
+					dir.x = 0.7f * speed;
+					dir.z = 0.7f * speed;
 				}
 				else if (s)
 				{
-					dir.x = 0.7 * speed; dir.z = -0.7 * speed;
+					dir.x = 0.7f * speed; dir.z = -0.7f * speed;
 				}
 			}
 
@@ -55,13 +55,13 @@ void FreeCamera::update(float time)
 				}
 				else if (w)
 				{
-					dir.x = -0.7 * speed;
-					dir.z = 0.7 * speed;
+					dir.x = -0.7f * speed;
+					dir.z = 0.7f * speed;
 				}
 				else if (s)
 				{
-					dir.x = -0.7 * speed;
-					dir.z = -0.7 * speed;
+					dir.x = -0.7f * speed;
+					dir.z = -0.7f * speed;
 				}
 			}
 		}
@@ -74,6 +74,11 @@ void FreeCamera::update(float time)
 
 		camera.setPosition(dir);
 	}
+}
+
+void FreeCamera::reload(float aspectRatio)
+{
+	camera.setPerspectiveCamera(70, aspectRatio, 0.3, 10000);
 }
 
 bool FreeCamera::keyPressed(int key)
@@ -135,8 +140,8 @@ bool FreeCamera::mouseMoved(int x, int y)
 	if (!move)
 		return false;
 
-	camera.yaw(-0.01 * x);
-	camera.pitch(-0.01 * y);
+	camera.yaw(-0.01f * x);
+	camera.pitch(-0.01f * y);
 
 	return true;
 }

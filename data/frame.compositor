@@ -1,0 +1,101 @@
+compositor SceneCompositor
+{
+	texture sceneTexture target_width target_height DXGI_FORMAT_R8G8B8A8_UNORM DXGI_FORMAT_R10G10B10A2_UNORM depth_buffer
+	texture sceneTexture2 target_width target_height DXGI_FORMAT_R8G8B8A8_UNORM
+
+	texture bloomTexture target_width_scaled 0.5 target_height_scaled 0.5 DXGI_FORMAT_R8G8B8A8_UNORM
+	texture bloomTexture2 target_width_scaled 0.25 target_height_scaled 0.25 DXGI_FORMAT_R8G8B8A8_UNORM
+	texture bloomTexture3 target_width_scaled 0.125 target_height_scaled 0.125 DXGI_FORMAT_R8G8B8A8_UNORM
+	texture bloomTexture4 target_width_scaled 0.0625 target_height_scaled 0.0625 DXGI_FORMAT_R8G8B8A8_UNORM
+	texture bloomTexture5 target_width_scaled 0.0625 target_height_scaled 0.0625 DXGI_FORMAT_R8G8B8A8_UNORM
+
+	render Shadows
+	{
+	}
+
+	render SceneEarlyZ
+	{
+		target sceneTexture
+	}
+
+	render Scene
+	{
+		after Shadows
+		target sceneTexture
+	}
+
+	pass BloomDownscale
+	{
+		material PassThrough
+		input sceneTexture 1
+		target bloomTexture
+	}
+	pass BloomDownscale
+	{
+		material PassThrough
+		input bloomTexture
+		target bloomTexture2
+	}
+	pass BloomDownscale
+	{
+		material PassThrough
+		input bloomTexture2
+		target bloomTexture3
+	}
+	pass BloomDownscale
+	{
+		material PassThrough
+		input bloomTexture3
+		target bloomTexture4
+	}
+	pass BloomBlurX
+	{
+		material BlurX
+		input bloomTexture4
+		target bloomTexture5
+	}
+	pass BloomBlurY
+	{
+		material BlurY
+		input bloomTexture5
+		target bloomTexture4
+	}
+	pass BloomUpscale
+	{
+		material PutBlurThrough
+		input bloomTexture4
+		target bloomTexture3
+	}
+	pass BloomUpscale
+	{
+		material PutBlurThrough
+		input bloomTexture3
+		target bloomTexture2
+	}
+	pass BloomUpscale
+	{
+		material PutBlurThrough
+		input bloomTexture2
+		target bloomTexture
+	}
+
+	pass Combine
+	{
+		material AddThrough
+		input sceneTexture 0
+		input bloomTexture
+		target sceneTexture2
+	}
+
+	pass Fxaa
+	{
+		material FXAA
+		input sceneTexture2
+		target Backbuffer
+	}
+
+	render Imgui
+	{
+		target Backbuffer
+	}
+}

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <windows.h>
-#include <functional>
+#include <vector>
 
 class ScreenListener
 {
@@ -18,6 +18,7 @@ public:
 
 	uint32_t getHeight() const;
 	uint32_t getWidth() const;
+
 	HWND getHwnd() const;
 
 	std::vector<ScreenListener*> listeners;
@@ -26,6 +27,8 @@ private:
 
 	uint32_t height;
 	uint32_t width;
+	bool fullscreen;
+
 	HWND hwnd;
 
 	static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);

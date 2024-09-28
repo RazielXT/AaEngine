@@ -10,14 +10,14 @@ class AaLogger
 public:
 
 	AaLogger()
-    {
+	{
 		myfile.open("Logger.log");
-    }
+	}
 
 	~AaLogger()
-    {
+	{
 		log("======================Closing======================");
-    }
+	}
 
 	enum class Severity { Info, Warning, Error };
 
@@ -39,10 +39,11 @@ public:
 	static void log(std::string text, Severity severity = Severity::Info)
 	{
 		auto timer = time(nullptr);
-		auto tm_info = localtime(&timer);
+		struct tm tm_info;
+		localtime_s(&tm_info, &timer);
 
 		char timeString[26]{};
-		strftime(timeString, std::size(timeString), "%H:%M:%S", tm_info);
+		strftime(timeString, std::size(timeString), "%H:%M:%S", &tm_info);
 
 		std::string severityInfo;
 		if (severity == Severity::Error)

@@ -1,6 +1,6 @@
 #include "InputHandler.h"
 #include <windows.h>
-#include <iostream>
+#include <vector>
 
 struct InputInfo { uint32_t message; int wParam; int lParam; };
 std::vector<InputInfo> inputs;
@@ -54,8 +54,7 @@ bool InputHandler::handleMessage(uint32_t message, WPARAM wParam, LPARAM lParam)
 	{
 		RAWINPUT raw{};
 		UINT rawSize = sizeof(raw);
-		if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, &raw, &rawSize, sizeof(RAWINPUTHEADER)) == rawSize &&
-			raw.header.dwType == RIM_TYPEMOUSE)
+		if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, &raw, &rawSize, sizeof(RAWINPUTHEADER)) == rawSize && raw.header.dwType == RIM_TYPEMOUSE)
 		{
 			inputs.push_back({ WM_INPUT, raw.data.mouse.lLastY, raw.data.mouse.lLastX });
 		}
@@ -64,6 +63,9 @@ bool InputHandler::handleMessage(uint32_t message, WPARAM wParam, LPARAM lParam)
 	default:
 		return false;
 	}
+
+	if (inputs.size() > 10)
+		inputs.erase(inputs.begin());
 
 	return true;
 }

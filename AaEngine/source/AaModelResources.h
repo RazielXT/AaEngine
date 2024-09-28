@@ -3,6 +3,15 @@
 #include <string>
 #include "AaRenderSystem.h"
 #include "AaModel.h"
+#include "ResourceUploadBatch.h"
+
+struct ModelLoadContext
+{
+	ModelLoadContext(AaRenderSystem*);
+
+	ResourceUploadBatch batch;
+	std::string folder;
+};
 
 class AaModelResources
 {
@@ -13,12 +22,14 @@ public:
 
 	static AaModelResources& get();
 
-	AaModel* getModel(const std::string& filename);
+	AaModel* getModel(const std::string& name, ModelLoadContext& ctx);
+
+	void clear();
 
 private:
 
 	AaRenderSystem* mRenderSystem;
 
-	AaModel* loadModel(const std::string& filename);
-	std::map<std::string, AaModel*> mModelMap;
+	AaModel* loadModel(const std::string& name, ModelLoadContext& ctx);
+	std::map<std::string, AaModel*> loadedModels;
 };

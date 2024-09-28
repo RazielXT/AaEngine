@@ -1,102 +1,83 @@
-material Color
+material ColorVc abstract
 {
-	vertex_shader vsGeneralMaterialWithVoxel
-	pixel_shader psGeneralMaterialWithVoxel
-
-	texture Diffuse
-	{
-		file nicered.png
-	}
+	vertex_shader vsTest
+	pixel_shader psTest
 	
-	texture
-	{
-		file ConcreteNORM.png
-	}
-	
-	texture
-	{
-		name shadowmap1
-		border color 1 1 1 1
-	}
-	
-	texture
-	{
-		name finalVoxelScene
-		border color 0 0 0 0
-	}
-}
-
-material Red : Color
-{
 	texture Diffuse
 	{
-		file nicered.png
+		file white.png
 	}
-}
-
-material Green : Color
-{
-	texture Diffuse
+	texture ShadowMap
 	{
-		file nicegreen.png
 	}
-}
 
-material Blue : Color
-{
-	texture Diffuse
+	sampler
 	{
-		file niceblue.png
+		filtering bilinear
 	}
 }
 
-material Yellow : Color
-{
-	texture Diffuse
-	{
-		file yellow.png
-	}
-}
-
-material White : Color
+material whiteVc : ColorVc
 {
 	texture Diffuse
 	{
 		file white.png
 	}
-}
-
-material whiteVc : White
-{
-	vertex_shader vsGeneralMaterialVC
-	pixel_shader psGeneralMaterialVC
-}
-
-material yellowVc : Yellow
-{
-	vertex_shader vsGeneralMaterialVC
-	pixel_shader psGeneralMaterialVC
-}
-
-material blueVc : Blue
-{
-	vertex_shader vsGeneralMaterialVC
-	pixel_shader psGeneralMaterialVC
-}
-
-material niceRedVc : Red
-{
-	vertex_shader vsGeneralMaterialVC
-	pixel_shader psGeneralMaterialVC
-}
-
-material terrainGrass : Color
-{
-	vertex_shader vsGeneralMaterialVC
-	pixel_shader psGeneralMaterialVC
 	
+	default_params
+	{
+		float4 MaterialColor 1 1 1 1
+	}
+}
+
+material yellowVc : ColorVc
+{
+	texture Diffuse
+	{
+		file white.png
+	}
+	
+	default_params
+	{
+		float4 MaterialColor 1 1 0 1
+	}
+}
+
+material blueVc : ColorVc
+{
+	texture Diffuse
+	{
+		file white.png
+	}
+	
+	default_params
+	{
+		float4 MaterialColor 0.2 0.2 1 1
+	}
+}
+
+material niceRedVc : ColorVc
+{
+	texture Diffuse
+	{
+		file white.png
+	}
+	
+	default_params
+	{
+		float4 MaterialColor 1 0.2 0.2 1
+	}
+}
+
+material terrainGrass : ColorVc
+{
 	texture Diffuse
 	{
 		file grass.png
+	}
+	
+	default_params
+	{
+		float4 MaterialColor 1 1 1 1
 	}
 }

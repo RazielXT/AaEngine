@@ -1,15 +1,21 @@
 #pragma once
 
-#include "AaModel.h"
 #include <string>
 #include <memory>
 #include <DirectXCollision.h>
+#include <format>
+#include <SimpleMath.h>
+#include "AaModel.h"
+#include "d3d12.h"
+
+using namespace DirectX::SimpleMath;
 
 namespace OgreMeshFileParser
 {
 	struct ParseOptions
 	{
-		AaRenderSystem* rs;
+		ResourceUploadBatch* batch;
+		ID3D12Device* device;
 	};
 
 	struct SubmeshInfo

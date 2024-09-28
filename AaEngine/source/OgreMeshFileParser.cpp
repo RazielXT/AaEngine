@@ -1,9 +1,6 @@
 #include "OgreMeshFileParser.h"
-#include "AaModelSerialization.h"
-#include "Xml.h"
 #include "AaLogger.h"
 #include <map>
-#include "Math.h"
 
 using namespace OgreMeshFileParser;
 
@@ -133,56 +130,56 @@ enum MeshChunkID
 			// unsigned long sharedVertIndex[3] 
 			// float normal[4] 
 
-		M_EDGE_GROUP = 0xB110,
-		// unsigned long vertexSet
-		// unsigned long triStart
-		// unsigned long triCount
-		// unsigned long numEdges
-		// Edge* edgeList
-			// unsigned long  triIndex[2]
-			// unsigned long  vertIndex[2]
-			// unsigned long  sharedVertIndex[2]
-			// bool degenerate
+	M_EDGE_GROUP = 0xB110,
+	// unsigned long vertexSet
+	// unsigned long triStart
+	// unsigned long triCount
+	// unsigned long numEdges
+	// Edge* edgeList
+		// unsigned long  triIndex[2]
+		// unsigned long  vertIndex[2]
+		// unsigned long  sharedVertIndex[2]
+		// bool degenerate
 
-	// Optional poses section, referred to by pose keyframes
-	M_POSES = 0xC000,
-	M_POSE = 0xC100,
-	// char* name (may be blank)
-	// unsigned short target    // 0 for shared geometry, 
+// Optional poses section, referred to by pose keyframes
+M_POSES = 0xC000,
+M_POSE = 0xC100,
+// char* name (may be blank)
+// unsigned short target    // 0 for shared geometry, 
+							// 1+ for submesh index + 1
+// bool includesNormals [1.8+]
+M_POSE_VERTEX = 0xC111,
+// unsigned long vertexIndex
+// float xoffset, yoffset, zoffset
+// float xnormal, ynormal, znormal (optional, 1.8+)
+// Optional vertex animation chunk
+M_ANIMATIONS = 0xD000,
+M_ANIMATION = 0xD100,
+// char* name
+// float length
+M_ANIMATION_BASEINFO = 0xD105,
+// [Optional] base keyframe information (pose animation only)
+// char* baseAnimationName (blank for self)
+// float baseKeyFrameTime
+
+M_ANIMATION_TRACK = 0xD110,
+// unsigned short type          // 1 == morph, 2 == pose
+// unsigned short target        // 0 for shared geometry, 
 								// 1+ for submesh index + 1
+	M_ANIMATION_MORPH_KEYFRAME = 0xD111,
+	// float time
 	// bool includesNormals [1.8+]
-	M_POSE_VERTEX = 0xC111,
-	// unsigned long vertexIndex
-	// float xoffset, yoffset, zoffset
-	// float xnormal, ynormal, znormal (optional, 1.8+)
-	// Optional vertex animation chunk
-	M_ANIMATIONS = 0xD000,
-	M_ANIMATION = 0xD100,
-	// char* name
-	// float length
-	M_ANIMATION_BASEINFO = 0xD105,
-	// [Optional] base keyframe information (pose animation only)
-	// char* baseAnimationName (blank for self)
-	// float baseKeyFrameTime
+	// float x,y,z          // repeat by number of vertices in original geometry
+	M_ANIMATION_POSE_KEYFRAME = 0xD112,
+	// float time
+	M_ANIMATION_POSE_REF = 0xD113, // repeat for number of referenced poses
+	// unsigned short poseIndex 
+	// float influence
 
-	M_ANIMATION_TRACK = 0xD110,
-	// unsigned short type          // 1 == morph, 2 == pose
-	// unsigned short target        // 0 for shared geometry, 
-									// 1+ for submesh index + 1
-		M_ANIMATION_MORPH_KEYFRAME = 0xD111,
-		// float time
-		// bool includesNormals [1.8+]
-		// float x,y,z          // repeat by number of vertices in original geometry
-		M_ANIMATION_POSE_KEYFRAME = 0xD112,
-		// float time
-		M_ANIMATION_POSE_REF = 0xD113, // repeat for number of referenced poses
-		// unsigned short poseIndex 
-		// float influence
-
-	// Optional submesh extreme vertex list chink
-	M_TABLE_EXTREMES = 0xE000,
-	// unsigned short submesh_index;
-	// float extremes [n_extremes][3];
+// Optional submesh extreme vertex list chink
+M_TABLE_EXTREMES = 0xE000,
+// unsigned short submesh_index;
+// float extremes [n_extremes][3];
 };
 
 uint16_t readChunk(std::ifstream& stream)
@@ -423,6 +420,8 @@ void readGeometryVertexElement(std::ifstream& stream, AaModel& info)
 		format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 		break;
 	case _DETAIL_SWAP_RB:
+		format = DXGI_FORMAT_B8G8R8A8_UNORM;
+		break;
 	case VET_UBYTE4_NORM:
 		format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		break;
@@ -434,7 +433,7 @@ void readGeometryVertexElement(std::ifstream& stream, AaModel& info)
 		info.addLayoutElement(source, offset, format, semantic, index);
 }
 
-void readGeometryVertexBuffer(std::ifstream& stream, AaModel& info)
+void readGeometryVertexBuffer(std::ifstream& stream, AaModel& info, ParseOptions o)
 {
 	unsigned short bindIndex, vertexSize;
 	// unsigned short bindIndex;    // Index to bind this buffer to
@@ -447,33 +446,21 @@ void readGeometryVertexBuffer(std::ifstream& stream, AaModel& info)
 		headerID = readChunk(stream);
 		if (headerID != M_GEOMETRY_VERTEX_BUFFER_DATA)
 		{
-// 			OGRE_EXCEPT(Exception::ERR_ITEM_NOT_FOUND, "Can't find vertex buffer data area",
-// 				"MeshSerializerImpl::readGeometryVertexBuffer");
+			// 			OGRE_EXCEPT(Exception::ERR_ITEM_NOT_FOUND, "Can't find vertex buffer data area",
+			// 				"MeshSerializerImpl::readGeometryVertexBuffer");
 		}
 		// Check that vertex size agrees
 		if (info.getLayoutVertexSize(bindIndex) != vertexSize)
 		{
-// 			OGRE_EXCEPT(Exception::ERR_INTERNAL_ERROR, "Buffer vertex size does not agree with vertex declaration",
-// 				"MeshSerializerImpl::readGeometryVertexBuffer");
+			// 			OGRE_EXCEPT(Exception::ERR_INTERNAL_ERROR, "Buffer vertex size does not agree with vertex declaration",
+			// 				"MeshSerializerImpl::readGeometryVertexBuffer");
 		}
-
-		// Create / populate vertex buffer
-// 		HardwareVertexBufferSharedPtr vbuf;
-// 		vbuf = pMesh->getHardwareBufferManager()->createVertexBuffer(
-// 			vertexSize,
-// 			dest->vertexCount,
-// 			pMesh->mVertexBufferUsage,
-// 			pMesh->mVertexBufferShadowBuffer);
-// 		HardwareBufferLockGuard vbufLock(vbuf, HardwareBuffer::HBL_DISCARD);
 
 		std::vector<char> data;
 		data.resize(vertexSize * info.vertexCount);
 		readData(stream, data.data(), data.size());
 
-		info.buildVertexBuffer(data.data(), data.size());
-
-		// Set binding
-		//dest->vertexBufferBinding->setBinding(bindIndex, vbuf);
+		info.CreateVertexBuffer(o.device, o.batch, data.data(), info.vertexCount, vertexSize);
 	}
 }
 
@@ -506,7 +493,7 @@ void readGeometryVertexDeclaration(std::ifstream& stream, AaModel& info)
 	}
 }
 
-void readGeometry(std::ifstream& stream, AaModel& info)
+void readGeometry(std::ifstream& stream, AaModel& info, ParseOptions o)
 {
 	readData(stream, &info.vertexCount, 1);
 
@@ -523,7 +510,7 @@ void readGeometry(std::ifstream& stream, AaModel& info)
 				readGeometryVertexDeclaration(stream, info);
 				break;
 			case M_GEOMETRY_VERTEX_BUFFER:
-				readGeometryVertexBuffer(stream, info);
+				readGeometryVertexBuffer(stream, info, o);
 				break;
 			}
 			// Get next stream
@@ -543,7 +530,7 @@ void readGeometry(std::ifstream& stream, AaModel& info)
 void readSubMesh(std::ifstream& stream, MeshInfo& info, ParseOptions o)
 {
 	SubmeshInfo submesh{};
-	submesh.model = new AaModel(o.rs);
+	submesh.model = new AaModel();
 
 	submesh.materialName = readString(stream);
 
@@ -566,7 +553,7 @@ void readSubMesh(std::ifstream& stream, MeshInfo& info, ParseOptions o)
 			std::vector<uint16_t> data;
 			data.resize(submesh.model->indexCount);
 			readData(stream, data.data(), submesh.model->indexCount);
-			submesh.model->buildIndexBuffer(data.data());
+			submesh.model->CreateIndexBuffer(o.device, o.batch, data);
 		}
 	}
 
@@ -577,7 +564,7 @@ void readSubMesh(std::ifstream& stream, MeshInfo& info, ParseOptions o)
 		{
 			return;
 		}
-		readGeometry(stream, *submesh.model);
+		readGeometry(stream, *submesh.model, o);
 	}
 
 	// Find all bone assignments, submesh operation, and texture aliases (if present)
@@ -595,9 +582,9 @@ void readSubMesh(std::ifstream& stream, MeshInfo& info, ParseOptions o)
 			case M_SUBMESH_OPERATION:
 				readSubMeshOperation(stream, *submesh.model);
 				break;
-// 			case M_SUBMESH_BONE_ASSIGNMENT:
-// 				readSubMeshBoneAssignment(stream, info);
-// 				break;
+				// 			case M_SUBMESH_BONE_ASSIGNMENT:
+				// 				readSubMeshBoneAssignment(stream, info);
+				// 				break;
 			case M_SUBMESH_TEXTURE_ALIAS:
 				seenTexAlias = true;
 				auto aliasName = readString(stream);
@@ -650,33 +637,33 @@ void readMesh(std::ifstream& stream, MeshInfo& info, ParseOptions o)
 			case M_SUBMESH:
 				readSubMesh(stream, info, o);
 				break;
-// 			case M_MESH_SKELETON_LINK:
-// 				readSkeletonLink(stream, pMesh, listener);
-// 				break;
-// 			case M_MESH_BONE_ASSIGNMENT:
-// 				readMeshBoneAssignment(stream, pMesh);
-// 				break;
-// 			case M_MESH_LOD_LEVEL:
-// 				readMeshLodLevel(stream, pMesh);
-// 				break;
+				// 			case M_MESH_SKELETON_LINK:
+				// 				readSkeletonLink(stream, pMesh, listener);
+				// 				break;
+				// 			case M_MESH_BONE_ASSIGNMENT:
+				// 				readMeshBoneAssignment(stream, pMesh);
+				// 				break;
+				// 			case M_MESH_LOD_LEVEL:
+				// 				readMeshLodLevel(stream, pMesh);
+				// 				break;
 			case M_MESH_BOUNDS:
 				readBoundsInfo(stream, info);
 				break;
 			case M_SUBMESH_NAME_TABLE:
 				readSubMeshNameTable(stream, info);
 				break;
-// 			case M_EDGE_LISTS:
-// 				readEdgeList(stream, pMesh);
-// 				break;
-// 			case M_POSES:
-// 				readPoses(stream, pMesh);
-// 				break;
-// 			case M_ANIMATIONS:
-// 				readAnimations(stream, pMesh);
-// 				break;
-// 			case M_TABLE_EXTREMES:
-// 				readExtremes(stream, pMesh);
-// 				break;
+				// 			case M_EDGE_LISTS:
+				// 				readEdgeList(stream, pMesh);
+				// 				break;
+				// 			case M_POSES:
+				// 				readPoses(stream, pMesh);
+				// 				break;
+				// 			case M_ANIMATIONS:
+				// 				readAnimations(stream, pMesh);
+				// 				break;
+				// 			case M_TABLE_EXTREMES:
+				// 				readExtremes(stream, pMesh);
+				// 				break;
 			}
 
 			if (stream)

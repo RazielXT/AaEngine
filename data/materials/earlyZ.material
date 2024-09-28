@@ -1,0 +1,4 @@
+material earlyZ
+{
+	vertex_shader vsDepthWrite
+}

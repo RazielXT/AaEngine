@@ -1,40 +1,20 @@
-//--------------------------------------------------------------------------------------
-// Globals
-//--------------------------------------------------------------------------------------
-cbuffer PerObject : register(b1)
-{
-    float4x4 wvpMat : packoffset(c0);
-};
+float4x4 WorldViewProjectionMatrix;
 
-//--------------------------------------------------------------------------------------
-// Input / Output structures
-//--------------------------------------------------------------------------------------
 struct VS_INPUT
 {
-    float4 vPosition : POSITION;
+    float4 position : POSITION;
 };
 
 struct VS_OUTPUT
 {
-    float4 vPosition : SV_POSITION;
+    float4 position : SV_POSITION;
 };
 
-//--------------------------------------------------------------------------------------
-// Vertex Shader
-//--------------------------------------------------------------------------------------
 VS_OUTPUT VSMain(VS_INPUT Input)
 {
     VS_OUTPUT Output;
 		
-    Output.vPosition = mul(Input.vPosition, wvpMat);
-    Output.vPosition.z += 0.001;
-	
+    Output.position = mul(Input.position, WorldViewProjectionMatrix);
+
     return Output;
-}
-
-
-float2 PSMain(VS_OUTPUT Input) : SV_TARGET
-{
-    float2 rt = float2(Input.vPosition.z, Input.vPosition.z * Input.vPosition.z);
-    return rt;
 }

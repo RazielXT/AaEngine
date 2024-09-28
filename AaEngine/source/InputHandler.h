@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <vector>
 #include <windows.h>
 
 enum class MouseButton { Left, Right };

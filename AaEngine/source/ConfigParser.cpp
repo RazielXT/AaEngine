@@ -35,7 +35,7 @@ static bool readNextObject(Config::Object& obj, std::ifstream& file)
 		if (!obj.type.empty())
 			return true;
 	}
-	
+
 	return false;
 }
 

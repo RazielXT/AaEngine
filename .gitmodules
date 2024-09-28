@@ -1,12 +1,12 @@
+[submodule "dependencies/DirectXTK12"]
+	path = dependencies/DirectXTK12
+	url = https://github.com/microsoft/DirectXTK12.git
+[submodule "dependencies/DirectX-Headers"]
+	path = dependencies/DirectX-Headers
+	url = https://github.com/microsoft/DirectX-Headers.git
 [submodule "dependencies/imgui"]
 	path = dependencies/imgui
 	url = https://github.com/ocornut/imgui.git
-[submodule "dependencies/tinyxml2"]
-	path = dependencies/tinyxml2
-	url = https://github.com/leethomason/tinyxml2.git
-[submodule "dependencies/DirectXTK"]
-	path = dependencies/DirectXTK
-	url = https://github.com/microsoft/DirectXTK.git
-[submodule "dependencies/DirectXTex"]
-	path = dependencies/DirectXTex
-	url = https://github.com/microsoft/DirectXTex.git
+[submodule "dependencies/pugixml"]
+	path = dependencies/pugixml
+	url = https://github.com/zeux/pugixml.git

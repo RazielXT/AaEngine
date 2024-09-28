@@ -1,0 +1,23 @@
+material PassThrough
+{
+	vertex_shader vsQuad
+	pixel_shader psPassThrough
+}
+
+material PutBlurThrough
+{
+	vertex_shader vsQuad
+	pixel_shader psPutBlurThrough
+}
+
+material AddThrough
+{
+	vertex_shader vsQuad
+	pixel_shader psAddThrough
+}
+
+material FXAA
+{
+	vertex_shader vsQuad
+	pixel_shader psFXAA
+}

@@ -317,6 +317,8 @@ std::shared_ptr<ResourcesInfo> MaterialBase::CreateResourcesData(const MaterialR
 			ResourcesInfo::AutoParam type = ResourcesInfo::AutoParam::None;
 			if (p.Name == "WorldViewProjectionMatrix")
 				type = ResourcesInfo::AutoParam::WVP_MATRIX;
+			else if (p.Name == "ViewProjectionMatrix")
+				type = ResourcesInfo::AutoParam::VP_MATRIX;
 			else if (p.Name == "WorldMatrix")
 				type = ResourcesInfo::AutoParam::WORLD_MATRIX;
 			else if (p.Name == "ShadowMatrix")
@@ -423,7 +425,7 @@ void MaterialInstance::LoadMaterialConstants(MaterialConstantBuffers& buffers) c
 	}
 }
 
-void MaterialInstance::UpdatePerFrame(MaterialConstantBuffers& buffers, const FrameGpuParameters& info)
+void MaterialInstance::UpdatePerFrame(MaterialConstantBuffers& buffers, const FrameGpuParameters& info, const XMMATRIX& vpMatrix)
 {
 	for (auto p : resources->autoParams)
 	{
@@ -436,6 +438,8 @@ void MaterialInstance::UpdatePerFrame(MaterialConstantBuffers& buffers, const Fr
 		}
 		else if (p.type == ResourcesInfo::AutoParam::SUN_DIRECTION)
 			*(DirectX::XMFLOAT3*)&buffers.data[p.bufferIdx][p.bufferOffset] = info.sunDirection;
+		else if (p.type == ResourcesInfo::AutoParam::VP_MATRIX)
+			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&buffers.data[p.bufferIdx][p.bufferOffset], XMMatrixTranspose(vpMatrix));
 	}
 }
 
@@ -466,14 +470,14 @@ void MaterialInstance::UpdateBindlessTexture(const ShaderTextureView& texture, U
 	}
 }
 
-void AaMaterial::BindTextures(ID3D12GraphicsCommandList* commandList, int frameIndex)
+void MaterialInstance::BindTextures(ID3D12GraphicsCommandList* commandList, int frameIndex)
 {
 	for (auto& t : resources->textures)
 		if (t.texture && t.rootIndex != BindlessTextureIndex)
 			commandList->SetGraphicsRootDescriptorTable(t.rootIndex, t.texture->srvHandles[frameIndex]);
 }
 
-void AaMaterial::BindConstants(ID3D12GraphicsCommandList* commandList, int frameIndex, const MaterialConstantBuffers& buffers)
+void MaterialInstance::BindConstants(ID3D12GraphicsCommandList* commandList, int frameIndex, const MaterialConstantBuffers& buffers)
 {
 	for (auto& cb : resources->cbuffers)
 	{

@@ -43,10 +43,11 @@ public:
 
 private:
 
+	void reset();
+
 	std::vector<UINT> ids;
 	std::vector<UINT> freeIds;
 
-	std::vector<RenderObject*> objects;
 };
 
 class RenderObject

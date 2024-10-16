@@ -145,9 +145,24 @@ void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible, Aa
 
 	for (const auto& element : entityElement.child("subentities").children())
 	{
+		auto materialName = GetStringAttribute(element, "materialName");
+		auto material = AaMaterialResources::get().getMaterial(materialName, ctx->batch);
+		auto model = AaModelResources::get().getModel(mesh, *ctx);
+
+		if (name.starts_with("Instanced"))
+		{
+			auto instancingGroup = sceneMgr->instancing.getGroup(sceneMgr, material, model);
+			auto& ent = instancingGroup->createEntity(name);
+			ent.setPosition(node->position);
+			ent.setScale(node->scale);
+			ent.setOrientation(node->orientation);
+
+			break;
+		}
+
 		auto ent = sceneMgr->createEntity(name);
-		ent->material = AaMaterialResources::get().getMaterial(GetStringAttribute(element, "materialName"), ctx->batch);
-		ent->setModel(AaModelResources::get().getModel(mesh, *ctx));
+		ent->material = material;
+		ent->setModel(model);
 		ent->setPosition(node->position);
 		ent->setScale(node->scale);
 		ent->setOrientation(node->orientation);
@@ -219,4 +234,7 @@ void SceneParser::load(std::string name, AaSceneManager* sceneMgr, AaRenderSyste
 		auto uploadResourcesFinished = loadCtx.batch.End(renderSystem->commandQueue);
 		uploadResourcesFinished.wait();
 	}
+
+	Renderables::Get().updateWorldMatrix();
+	sceneMgr->instancing.create();
 }

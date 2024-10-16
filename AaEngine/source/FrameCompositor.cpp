@@ -102,7 +102,7 @@ static void RenderQuad(AaMaterial* material, const FrameGpuParameters& params, I
 	material->GetBase()->BindSignature(commandList, frameIndex);
 
 	material->LoadMaterialConstants(constants);
-	material->UpdatePerFrame(constants, params);
+	material->UpdatePerFrame(constants, params, {});
 	material->BindPipeline(commandList);
 	material->BindTextures(commandList, frameIndex);
 	material->BindConstants(commandList, frameIndex, constants);
@@ -238,7 +238,7 @@ void FrameCompositor::initializeCommands()
 
 		if (pass.info.render == "Shadows")
 		{
-			pushAsyncTasks(pass.info, shadowRender.initialize(renderSystem, sceneMgr->createQueue({}, "Depth")));
+			pushAsyncTasks(pass.info, shadowRender.initialize(renderSystem, sceneMgr->createQueue({}, true)));
 		}
 		else if (pass.info.render == "Scene")
 		{
@@ -246,7 +246,7 @@ void FrameCompositor::initializeCommands()
 		}
 		else if (pass.info.render == "SceneEarlyZ")
 		{
-			pushAsyncTasks(pass.info, sceneRender.initializeEarlyZ(renderSystem, sceneMgr->createQueue({}, "Depth")));
+			pushAsyncTasks(pass.info, sceneRender.initializeEarlyZ(renderSystem, sceneMgr->createQueue({}, true)));
 		}
 		else
 		{

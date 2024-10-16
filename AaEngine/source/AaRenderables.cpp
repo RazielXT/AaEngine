@@ -32,7 +32,6 @@ UINT Renderables::createId(RenderObject* obj)
 		renderData.worldBbox[id] = {};
 		renderData.worldMatrix[id] = {};
 
-		objects[id] = obj;
 		auto pos = std::lower_bound(ids.begin(), ids.end(), id);
 		ids.insert(pos, id);
 
@@ -46,7 +45,6 @@ UINT Renderables::createId(RenderObject* obj)
 	renderData.worldBbox.emplace_back();
 	renderData.worldMatrix.emplace_back();
 
-	objects.push_back(obj);
 	ids.push_back(id);
 
 	return id;
@@ -54,10 +52,13 @@ UINT Renderables::createId(RenderObject* obj)
 
 void Renderables::deleteId(UINT id)
 {
-	freeIds.push_back(id);
-
 	auto pos = std::lower_bound(ids.begin(), ids.end(), id);
 	ids.erase(pos);
+
+	freeIds.push_back(id);
+
+	if (ids.empty())
+		reset();
 }
 
 void Renderables::updateWorldMatrix()
@@ -110,6 +111,13 @@ void Renderables::updateVisibility(const BoundingOrientedBox& box, RenderableVis
 	{
 		visible[id] = box.Intersects(renderData.worldBbox[id]);
 	}
+}
+
+void Renderables::reset()
+{
+	freeIds.clear();
+	coordinates.clear();
+	renderData = {};
 }
 
 RenderObject::RenderObject()

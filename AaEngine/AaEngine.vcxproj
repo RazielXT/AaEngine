@@ -112,6 +112,7 @@
     <ClCompile Include="source\AaShaderResources.cpp" />
     <ClCompile Include="source\AaTextureResources.cpp" />
     <ClCompile Include="source\AaWindow.cpp" />
+    <ClCompile Include="source\EntityInstancing.cpp" />
     <ClCompile Include="source\FrameCompositor.cpp" />
     <ClCompile Include="source\CompositorFileParser.cpp" />
     <ClCompile Include="source\ConfigParser.cpp" />
@@ -154,6 +155,7 @@
     <ClInclude Include="source\AaShaderResources.h" />
     <ClInclude Include="source\AaTextureResources.h" />
     <ClInclude Include="source\AaWindow.h" />
+    <ClInclude Include="source\EntityInstancing.h" />
     <ClInclude Include="source\RenderContext.h" />
     <ClInclude Include="source\FrameCompositor.h" />
     <ClInclude Include="source\CompositorFileParser.h" />

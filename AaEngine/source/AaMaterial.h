@@ -90,8 +90,11 @@ public:
 	void SetParameter(const std::string& name, float* value, size_t size);
 
 	void LoadMaterialConstants(MaterialConstantBuffers& buffers) const;
-	void UpdatePerFrame(MaterialConstantBuffers& buffers, const FrameGpuParameters& info);
+	void UpdatePerFrame(MaterialConstantBuffers& buffers, const FrameGpuParameters& info, const XMMATRIX& vpMatrix);
 	void UpdatePerObject(MaterialConstantBuffers& buffers, const XMFLOAT4X4& wvpMatrix, const XMMATRIX& worldMatrix, const FrameGpuParameters& info);
+
+	void BindTextures(ID3D12GraphicsCommandList* commandList, int frameIndex);
+	void BindConstants(ID3D12GraphicsCommandList* commandList, int frameIndex, const MaterialConstantBuffers& buffers);
 
 	AaMaterial* Assign(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target);
 
@@ -126,8 +129,6 @@ public:
 		return pipelineState = pipeline;
 	}
 
-	void BindTextures(ID3D12GraphicsCommandList* commandList, int frameIndex);
-	void BindConstants(ID3D12GraphicsCommandList* commandList, int frameIndex, const MaterialConstantBuffers& buffers);
 	void BindPipeline(ID3D12GraphicsCommandList* commandList);
 
 private:

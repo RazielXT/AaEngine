@@ -1,8 +1,9 @@
 #pragma once
 
 #include "SceneLights.h"
-#include <unordered_map>
 #include "RenderQueue.h"
+#include "EntityInstancing.h"
+#include <unordered_map>
 
 class AaSceneManager
 {
@@ -18,8 +19,11 @@ public:
 
 	aa::SceneLights lights;
 
-	RenderQueue* createQueue(const std::vector<DXGI_FORMAT>& targets, const char* material = nullptr, bool unique = false);
+	RenderQueue* createQueue(const std::vector<DXGI_FORMAT>& targets, bool depth = false, bool unique = false);
+
 	void updateQueues();
+
+	InstancingManager instancing;
 
 private:
 

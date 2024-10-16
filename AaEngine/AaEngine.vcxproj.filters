@@ -163,6 +163,9 @@
     <ClCompile Include="source\ShaderConstantBuffers.cpp">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClCompile>
+    <ClCompile Include="source\EntityInstancing.cpp">
+      <Filter>Source Files\Scene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\AaApplication.h">
@@ -296,6 +299,9 @@
     </ClInclude>
     <ClInclude Include="source\ShaderConstantBuffers.h">
       <Filter>Source Files\Resources\Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="source\EntityInstancing.h">
+      <Filter>Source Files\Scene</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

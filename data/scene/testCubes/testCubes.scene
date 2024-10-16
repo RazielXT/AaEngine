@@ -41,1543 +41,1543 @@
                 </subentities>
             </entity>
         </node>
-        <node name="Box061">
+        <node name="InstancedBox061">
             <position x="-162.349" y="17.318" z="95.3264" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box061" castShadows="true" receiveShadows="true" meshFile="test3Box061.mesh">
+            <entity name="InstancedBox061" castShadows="true" receiveShadows="true" meshFile="test3Box061.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box062">
+        <node name="InstancedBox062">
             <position x="-162.349" y="17.318" z="70.3999" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box062" castShadows="true" receiveShadows="true" meshFile="test3Box062.mesh">
+            <entity name="InstancedBox062" castShadows="true" receiveShadows="true" meshFile="test3Box062.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box063">
+        <node name="InstancedBox063">
             <position x="-162.349" y="17.318" z="45.1233" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box063" castShadows="true" receiveShadows="true" meshFile="test3Box063.mesh">
+            <entity name="InstancedBox063" castShadows="true" receiveShadows="true" meshFile="test3Box063.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box064">
+        <node name="InstancedBox064">
             <position x="-162.349" y="17.318" z="21.897" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box064" castShadows="true" receiveShadows="true" meshFile="test3Box064.mesh">
+            <entity name="InstancedBox064" castShadows="true" receiveShadows="true" meshFile="test3Box064.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box065">
+        <node name="InstancedBox065">
             <position x="-162.349" y="17.318" z="-2.8837" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box065" castShadows="true" receiveShadows="true" meshFile="test3Box065.mesh">
+            <entity name="InstancedBox065" castShadows="true" receiveShadows="true" meshFile="test3Box065.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box066">
+        <node name="InstancedBox066">
             <position x="-162.349" y="17.318" z="-26.8153" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box066" castShadows="true" receiveShadows="true" meshFile="test3Box066.mesh">
+            <entity name="InstancedBox066" castShadows="true" receiveShadows="true" meshFile="test3Box066.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box067">
+        <node name="InstancedBox067">
             <position x="-162.349" y="17.318" z="-50.0133" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box067" castShadows="true" receiveShadows="true" meshFile="test3Box067.mesh">
+            <entity name="InstancedBox067" castShadows="true" receiveShadows="true" meshFile="test3Box067.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box068">
+        <node name="InstancedBox068">
             <position x="-162.349" y="17.318" z="-73.7312" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box068" castShadows="true" receiveShadows="true" meshFile="test3Box068.mesh">
+            <entity name="InstancedBox068" castShadows="true" receiveShadows="true" meshFile="test3Box068.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box069">
+        <node name="InstancedBox069">
             <position x="-162.349" y="17.318" z="-99.0996" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box069" castShadows="true" receiveShadows="true" meshFile="test3Box069.mesh">
+            <entity name="InstancedBox069" castShadows="true" receiveShadows="true" meshFile="test3Box069.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box070">
+        <node name="InstancedBox070">
             <position x="-134.504" y="17.318" z="95.3264" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box070" castShadows="true" receiveShadows="true" meshFile="test3Box070.mesh">
+            <entity name="InstancedBox070" castShadows="true" receiveShadows="true" meshFile="test3Box070.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box071">
+        <node name="InstancedBox071">
             <position x="-134.504" y="17.318" z="70.3999" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box071" castShadows="true" receiveShadows="true" meshFile="test3Box071.mesh">
+            <entity name="InstancedBox071" castShadows="true" receiveShadows="true" meshFile="test3Box071.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box072">
+        <node name="InstancedBox072">
             <position x="-134.504" y="17.318" z="45.1233" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box072" castShadows="true" receiveShadows="true" meshFile="test3Box072.mesh">
+            <entity name="InstancedBox072" castShadows="true" receiveShadows="true" meshFile="test3Box072.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box073">
+        <node name="InstancedBox073">
             <position x="-134.504" y="17.318" z="21.897" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box073" castShadows="true" receiveShadows="true" meshFile="test3Box073.mesh">
+            <entity name="InstancedBox073" castShadows="true" receiveShadows="true" meshFile="test3Box073.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box074">
+        <node name="InstancedBox074">
             <position x="-134.504" y="17.318" z="-2.8837" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box074" castShadows="true" receiveShadows="true" meshFile="test3Box074.mesh">
+            <entity name="InstancedBox074" castShadows="true" receiveShadows="true" meshFile="test3Box074.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box075">
+        <node name="InstancedBox075">
             <position x="-134.504" y="17.318" z="-26.8153" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box075" castShadows="true" receiveShadows="true" meshFile="test3Box075.mesh">
+            <entity name="InstancedBox075" castShadows="true" receiveShadows="true" meshFile="test3Box075.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box076">
+        <node name="InstancedBox076">
             <position x="-134.504" y="17.318" z="-50.0133" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box076" castShadows="true" receiveShadows="true" meshFile="test3Box076.mesh">
+            <entity name="InstancedBox076" castShadows="true" receiveShadows="true" meshFile="test3Box076.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box077">
+        <node name="InstancedBox077">
             <position x="-134.504" y="17.318" z="-73.7312" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box077" castShadows="true" receiveShadows="true" meshFile="test3Box077.mesh">
+            <entity name="InstancedBox077" castShadows="true" receiveShadows="true" meshFile="test3Box077.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box078">
+        <node name="InstancedBox078">
             <position x="-134.504" y="17.318" z="-99.0996" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box078" castShadows="true" receiveShadows="true" meshFile="test3Box078.mesh">
+            <entity name="InstancedBox078" castShadows="true" receiveShadows="true" meshFile="test3Box078.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box079">
+        <node name="InstancedBox079">
             <position x="-106.173" y="17.318" z="95.3264" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box079" castShadows="true" receiveShadows="true" meshFile="test3Box079.mesh">
+            <entity name="InstancedBox079" castShadows="true" receiveShadows="true" meshFile="test3Box079.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box080">
+        <node name="InstancedBox080">
             <position x="-106.173" y="17.318" z="70.3999" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box080" castShadows="true" receiveShadows="true" meshFile="test3Box080.mesh">
+            <entity name="InstancedBox080" castShadows="true" receiveShadows="true" meshFile="test3Box080.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box081">
+        <node name="InstancedBox081">
             <position x="-106.173" y="17.318" z="45.1233" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box081" castShadows="true" receiveShadows="true" meshFile="test3Box081.mesh">
+            <entity name="InstancedBox081" castShadows="true" receiveShadows="true" meshFile="test3Box081.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box082">
+        <node name="InstancedBox082">
             <position x="-106.173" y="17.318" z="21.897" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box082" castShadows="true" receiveShadows="true" meshFile="test3Box082.mesh">
+            <entity name="InstancedBox082" castShadows="true" receiveShadows="true" meshFile="test3Box082.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box083">
+        <node name="InstancedBox083">
             <position x="-106.173" y="17.318" z="-2.8837" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box083" castShadows="true" receiveShadows="true" meshFile="test3Box083.mesh">
+            <entity name="InstancedBox083" castShadows="true" receiveShadows="true" meshFile="test3Box083.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box084">
+        <node name="InstancedBox084">
             <position x="-106.173" y="17.318" z="-26.8153" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box084" castShadows="true" receiveShadows="true" meshFile="test3Box084.mesh">
+            <entity name="InstancedBox084" castShadows="true" receiveShadows="true" meshFile="test3Box084.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box085">
+        <node name="InstancedBox085">
             <position x="-106.173" y="17.318" z="-50.0133" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box085" castShadows="true" receiveShadows="true" meshFile="test3Box085.mesh">
+            <entity name="InstancedBox085" castShadows="true" receiveShadows="true" meshFile="test3Box085.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box086">
+        <node name="InstancedBox086">
             <position x="-106.173" y="17.318" z="-73.7312" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box086" castShadows="true" receiveShadows="true" meshFile="test3Box086.mesh">
+            <entity name="InstancedBox086" castShadows="true" receiveShadows="true" meshFile="test3Box086.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box087">
+        <node name="InstancedBox087">
             <position x="-106.173" y="17.318" z="-99.0996" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box087" castShadows="true" receiveShadows="true" meshFile="test3Box087.mesh">
+            <entity name="InstancedBox087" castShadows="true" receiveShadows="true" meshFile="test3Box087.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box088">
+        <node name="InstancedBox088">
             <position x="-78.9138" y="17.318" z="95.3264" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box088" castShadows="true" receiveShadows="true" meshFile="test3Box088.mesh">
+            <entity name="InstancedBox088" castShadows="true" receiveShadows="true" meshFile="test3Box088.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box089">
+        <node name="InstancedBox089">
             <position x="-78.9138" y="17.318" z="70.3999" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box089" castShadows="true" receiveShadows="true" meshFile="test3Box089.mesh">
+            <entity name="InstancedBox089" castShadows="true" receiveShadows="true" meshFile="test3Box089.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box090">
+        <node name="InstancedBox090">
             <position x="-78.9138" y="17.318" z="45.1233" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box090" castShadows="true" receiveShadows="true" meshFile="test3Box090.mesh">
+            <entity name="InstancedBox090" castShadows="true" receiveShadows="true" meshFile="test3Box090.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box091">
+        <node name="InstancedBox091">
             <position x="-78.9138" y="17.318" z="21.897" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box091" castShadows="true" receiveShadows="true" meshFile="test3Box091.mesh">
+            <entity name="InstancedBox091" castShadows="true" receiveShadows="true" meshFile="test3Box091.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box092">
+        <node name="InstancedBox092">
             <position x="-78.9138" y="17.318" z="-2.8837" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box092" castShadows="true" receiveShadows="true" meshFile="test3Box092.mesh">
+            <entity name="InstancedBox092" castShadows="true" receiveShadows="true" meshFile="test3Box092.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box093">
+        <node name="InstancedBox093">
             <position x="-78.9138" y="17.318" z="-26.8153" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box093" castShadows="true" receiveShadows="true" meshFile="test3Box093.mesh">
+            <entity name="InstancedBox093" castShadows="true" receiveShadows="true" meshFile="test3Box093.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box094">
+        <node name="InstancedBox094">
             <position x="-78.9138" y="17.318" z="-50.0133" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box094" castShadows="true" receiveShadows="true" meshFile="test3Box094.mesh">
+            <entity name="InstancedBox094" castShadows="true" receiveShadows="true" meshFile="test3Box094.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box095">
+        <node name="InstancedBox095">
             <position x="-78.9138" y="17.318" z="-73.7312" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box095" castShadows="true" receiveShadows="true" meshFile="test3Box095.mesh">
+            <entity name="InstancedBox095" castShadows="true" receiveShadows="true" meshFile="test3Box095.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box096">
+        <node name="InstancedBox096">
             <position x="-78.9138" y="17.318" z="-99.0996" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box096" castShadows="true" receiveShadows="true" meshFile="test3Box096.mesh">
+            <entity name="InstancedBox096" castShadows="true" receiveShadows="true" meshFile="test3Box096.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box097">
+        <node name="InstancedBox097">
             <position x="-49.6039" y="17.318" z="95.3264" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box097" castShadows="true" receiveShadows="true" meshFile="test3Box097.mesh">
+            <entity name="InstancedBox097" castShadows="true" receiveShadows="true" meshFile="test3Box097.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box098">
+        <node name="InstancedBox098">
             <position x="-49.6039" y="17.318" z="70.3999" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box098" castShadows="true" receiveShadows="true" meshFile="test3Box098.mesh">
+            <entity name="InstancedBox098" castShadows="true" receiveShadows="true" meshFile="test3Box098.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box099">
+        <node name="InstancedBox099">
             <position x="-49.6039" y="17.318" z="45.1233" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box099" castShadows="true" receiveShadows="true" meshFile="test3Box099.mesh">
+            <entity name="InstancedBox099" castShadows="true" receiveShadows="true" meshFile="test3Box099.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box100">
+        <node name="InstancedBox100">
             <position x="-49.6039" y="17.318" z="21.897" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box100" castShadows="true" receiveShadows="true" meshFile="test3Box100.mesh">
+            <entity name="InstancedBox100" castShadows="true" receiveShadows="true" meshFile="test3Box100.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box101">
+        <node name="InstancedBox101">
             <position x="-49.6039" y="17.318" z="-2.8837" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box101" castShadows="true" receiveShadows="true" meshFile="test3Box101.mesh">
+            <entity name="InstancedBox101" castShadows="true" receiveShadows="true" meshFile="test3Box101.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box102">
+        <node name="InstancedBox102">
             <position x="-49.6039" y="17.318" z="-26.8153" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box102" castShadows="true" receiveShadows="true" meshFile="test3Box102.mesh">
+            <entity name="InstancedBox102" castShadows="true" receiveShadows="true" meshFile="test3Box102.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box103">
+        <node name="InstancedBox103">
             <position x="-49.6039" y="17.318" z="-50.0133" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box103" castShadows="true" receiveShadows="true" meshFile="test3Box103.mesh">
+            <entity name="InstancedBox103" castShadows="true" receiveShadows="true" meshFile="test3Box103.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box104">
+        <node name="InstancedBox104">
             <position x="-49.6039" y="17.318" z="-73.7312" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box104" castShadows="true" receiveShadows="true" meshFile="test3Box104.mesh">
+            <entity name="InstancedBox104" castShadows="true" receiveShadows="true" meshFile="test3Box104.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box105">
+        <node name="InstancedBox105">
             <position x="-49.6039" y="17.318" z="-99.0996" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box105" castShadows="true" receiveShadows="true" meshFile="test3Box105.mesh">
+            <entity name="InstancedBox105" castShadows="true" receiveShadows="true" meshFile="test3Box105.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box106">
+        <node name="InstancedBox106">
             <position x="-18.7676" y="17.318" z="95.3264" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box106" castShadows="true" receiveShadows="true" meshFile="test3Box106.mesh">
+            <entity name="InstancedBox106" castShadows="true" receiveShadows="true" meshFile="test3Box106.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box107">
+        <node name="InstancedBox107">
             <position x="-18.7676" y="17.318" z="70.3999" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box107" castShadows="true" receiveShadows="true" meshFile="test3Box107.mesh">
+            <entity name="InstancedBox107" castShadows="true" receiveShadows="true" meshFile="test3Box107.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box108">
+        <node name="InstancedBox108">
             <position x="-18.7676" y="17.318" z="45.1233" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box108" castShadows="true" receiveShadows="true" meshFile="test3Box108.mesh">
+            <entity name="InstancedBox108" castShadows="true" receiveShadows="true" meshFile="test3Box108.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box109">
+        <node name="InstancedBox109">
             <position x="-18.7676" y="17.318" z="21.897" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box109" castShadows="true" receiveShadows="true" meshFile="test3Box109.mesh">
+            <entity name="InstancedBox109" castShadows="true" receiveShadows="true" meshFile="test3Box109.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box110">
+        <node name="InstancedBox110">
             <position x="-18.7676" y="17.318" z="-2.8837" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box110" castShadows="true" receiveShadows="true" meshFile="test3Box110.mesh">
+            <entity name="InstancedBox110" castShadows="true" receiveShadows="true" meshFile="test3Box110.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box111">
+        <node name="InstancedBox111">
             <position x="-18.7676" y="17.318" z="-26.8153" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box111" castShadows="true" receiveShadows="true" meshFile="test3Box111.mesh">
+            <entity name="InstancedBox111" castShadows="true" receiveShadows="true" meshFile="test3Box111.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box112">
+        <node name="InstancedBox112">
             <position x="-18.7676" y="17.318" z="-50.0133" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box112" castShadows="true" receiveShadows="true" meshFile="test3Box112.mesh">
+            <entity name="InstancedBox112" castShadows="true" receiveShadows="true" meshFile="test3Box112.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box113">
+        <node name="InstancedBox113">
             <position x="-18.7676" y="17.318" z="-73.7312" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box113" castShadows="true" receiveShadows="true" meshFile="test3Box113.mesh">
+            <entity name="InstancedBox113" castShadows="true" receiveShadows="true" meshFile="test3Box113.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box114">
+        <node name="InstancedBox114">
             <position x="-18.7676" y="17.318" z="-99.0996" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box114" castShadows="true" receiveShadows="true" meshFile="test3Box114.mesh">
+            <entity name="InstancedBox114" castShadows="true" receiveShadows="true" meshFile="test3Box114.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box115">
+        <node name="InstancedBox115">
             <position x="11.9579" y="17.318" z="95.3264" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box115" castShadows="true" receiveShadows="true" meshFile="test3Box115.mesh">
+            <entity name="InstancedBox115" castShadows="true" receiveShadows="true" meshFile="test3Box115.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box116">
+        <node name="InstancedBox116">
             <position x="11.9579" y="17.318" z="70.3999" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box116" castShadows="true" receiveShadows="true" meshFile="test3Box116.mesh">
+            <entity name="InstancedBox116" castShadows="true" receiveShadows="true" meshFile="test3Box116.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box117">
+        <node name="InstancedBox117">
             <position x="11.9579" y="17.318" z="45.1233" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box117" castShadows="true" receiveShadows="true" meshFile="test3Box117.mesh">
+            <entity name="InstancedBox117" castShadows="true" receiveShadows="true" meshFile="test3Box117.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box118">
+        <node name="InstancedBox118">
             <position x="11.9579" y="17.318" z="21.897" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box118" castShadows="true" receiveShadows="true" meshFile="test3Box118.mesh">
+            <entity name="InstancedBox118" castShadows="true" receiveShadows="true" meshFile="test3Box118.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box119">
+        <node name="InstancedBox119">
             <position x="11.9579" y="17.318" z="-2.8837" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box119" castShadows="true" receiveShadows="true" meshFile="test3Box119.mesh">
+            <entity name="InstancedBox119" castShadows="true" receiveShadows="true" meshFile="test3Box119.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box120">
+        <node name="InstancedBox120">
             <position x="11.9579" y="17.318" z="-26.8153" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box120" castShadows="true" receiveShadows="true" meshFile="test3Box120.mesh">
+            <entity name="InstancedBox120" castShadows="true" receiveShadows="true" meshFile="test3Box120.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box121">
+        <node name="InstancedBox121">
             <position x="11.9579" y="17.318" z="-50.0133" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box121" castShadows="true" receiveShadows="true" meshFile="test3Box121.mesh">
+            <entity name="InstancedBox121" castShadows="true" receiveShadows="true" meshFile="test3Box121.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box122">
+        <node name="InstancedBox122">
             <position x="11.9579" y="17.318" z="-73.7312" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box122" castShadows="true" receiveShadows="true" meshFile="test3Box122.mesh">
+            <entity name="InstancedBox122" castShadows="true" receiveShadows="true" meshFile="test3Box122.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box123">
+        <node name="InstancedBox123">
             <position x="11.9579" y="17.318" z="-99.0996" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box123" castShadows="true" receiveShadows="true" meshFile="test3Box123.mesh">
+            <entity name="InstancedBox123" castShadows="true" receiveShadows="true" meshFile="test3Box123.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box124">
+        <node name="InstancedBox124">
             <position x="39.8032" y="17.318" z="95.3264" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box124" castShadows="true" receiveShadows="true" meshFile="test3Box124.mesh">
+            <entity name="InstancedBox124" castShadows="true" receiveShadows="true" meshFile="test3Box124.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box125">
+        <node name="InstancedBox125">
             <position x="39.8032" y="17.318" z="70.3999" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box125" castShadows="true" receiveShadows="true" meshFile="test3Box125.mesh">
+            <entity name="InstancedBox125" castShadows="true" receiveShadows="true" meshFile="test3Box125.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box126">
+        <node name="InstancedBox126">
             <position x="39.8032" y="17.318" z="45.1233" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box126" castShadows="true" receiveShadows="true" meshFile="test3Box126.mesh">
+            <entity name="InstancedBox126" castShadows="true" receiveShadows="true" meshFile="test3Box126.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box127">
+        <node name="InstancedBox127">
             <position x="39.8032" y="17.318" z="21.897" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box127" castShadows="true" receiveShadows="true" meshFile="test3Box127.mesh">
+            <entity name="InstancedBox127" castShadows="true" receiveShadows="true" meshFile="test3Box127.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box128">
+        <node name="InstancedBox128">
             <position x="39.8032" y="17.318" z="-2.8837" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box128" castShadows="true" receiveShadows="true" meshFile="test3Box128.mesh">
+            <entity name="InstancedBox128" castShadows="true" receiveShadows="true" meshFile="test3Box128.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box129">
+        <node name="InstancedBox129">
             <position x="39.8032" y="17.318" z="-26.8153" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box129" castShadows="true" receiveShadows="true" meshFile="test3Box129.mesh">
+            <entity name="InstancedBox129" castShadows="true" receiveShadows="true" meshFile="test3Box129.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box130">
+        <node name="InstancedBox130">
             <position x="39.8032" y="17.318" z="-50.0133" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box130" castShadows="true" receiveShadows="true" meshFile="test3Box130.mesh">
+            <entity name="InstancedBox130" castShadows="true" receiveShadows="true" meshFile="test3Box130.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box131">
+        <node name="InstancedBox131">
             <position x="39.8032" y="17.318" z="-73.7312" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box131" castShadows="true" receiveShadows="true" meshFile="test3Box131.mesh">
+            <entity name="InstancedBox131" castShadows="true" receiveShadows="true" meshFile="test3Box131.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box132">
+        <node name="InstancedBox132">
             <position x="39.8032" y="17.318" z="-99.0996" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box132" castShadows="true" receiveShadows="true" meshFile="test3Box132.mesh">
+            <entity name="InstancedBox132" castShadows="true" receiveShadows="true" meshFile="test3Box132.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box133">
+        <node name="InstancedBox133">
             <position x="68.1338" y="17.318" z="95.3264" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box133" castShadows="true" receiveShadows="true" meshFile="test3Box133.mesh">
+            <entity name="InstancedBox133" castShadows="true" receiveShadows="true" meshFile="test3Box133.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box134">
+        <node name="InstancedBox134">
             <position x="68.1338" y="17.318" z="70.3999" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box134" castShadows="true" receiveShadows="true" meshFile="test3Box134.mesh">
+            <entity name="InstancedBox134" castShadows="true" receiveShadows="true" meshFile="test3Box134.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box135">
+        <node name="InstancedBox135">
             <position x="68.1338" y="17.318" z="45.1233" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box135" castShadows="true" receiveShadows="true" meshFile="test3Box135.mesh">
+            <entity name="InstancedBox135" castShadows="true" receiveShadows="true" meshFile="test3Box135.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box136">
+        <node name="InstancedBox136">
             <position x="68.1338" y="17.318" z="21.897" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box136" castShadows="true" receiveShadows="true" meshFile="test3Box136.mesh">
+            <entity name="InstancedBox136" castShadows="true" receiveShadows="true" meshFile="test3Box136.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box137">
+        <node name="InstancedBox137">
             <position x="68.1338" y="17.318" z="-2.8837" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box137" castShadows="true" receiveShadows="true" meshFile="test3Box137.mesh">
+            <entity name="InstancedBox137" castShadows="true" receiveShadows="true" meshFile="test3Box137.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box138">
+        <node name="InstancedBox138">
             <position x="68.1338" y="17.318" z="-26.8153" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box138" castShadows="true" receiveShadows="true" meshFile="test3Box138.mesh">
+            <entity name="InstancedBox138" castShadows="true" receiveShadows="true" meshFile="test3Box138.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box139">
+        <node name="InstancedBox139">
             <position x="68.1338" y="17.318" z="-50.0133" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box139" castShadows="true" receiveShadows="true" meshFile="test3Box139.mesh">
+            <entity name="InstancedBox139" castShadows="true" receiveShadows="true" meshFile="test3Box139.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box140">
+        <node name="InstancedBox140">
             <position x="68.1338" y="17.318" z="-73.7312" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box140" castShadows="true" receiveShadows="true" meshFile="test3Box140.mesh">
+            <entity name="InstancedBox140" castShadows="true" receiveShadows="true" meshFile="test3Box140.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box141">
+        <node name="InstancedBox141">
             <position x="68.1338" y="17.318" z="-99.0996" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box141" castShadows="true" receiveShadows="true" meshFile="test3Box141.mesh">
+            <entity name="InstancedBox141" castShadows="true" receiveShadows="true" meshFile="test3Box141.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box142">
+        <node name="InstancedBox142">
             <position x="95.3932" y="17.318" z="95.3264" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box142" castShadows="true" receiveShadows="true" meshFile="test3Box142.mesh">
+            <entity name="InstancedBox142" castShadows="true" receiveShadows="true" meshFile="test3Box142.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box143">
+        <node name="InstancedBox143">
             <position x="95.3932" y="17.318" z="70.3999" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box143" castShadows="true" receiveShadows="true" meshFile="test3Box143.mesh">
+            <entity name="InstancedBox143" castShadows="true" receiveShadows="true" meshFile="test3Box143.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box144">
+        <node name="InstancedBox144">
             <position x="95.3932" y="17.318" z="45.1233" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box144" castShadows="true" receiveShadows="true" meshFile="test3Box144.mesh">
+            <entity name="InstancedBox144" castShadows="true" receiveShadows="true" meshFile="test3Box144.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box145">
+        <node name="InstancedBox145">
             <position x="95.3932" y="17.318" z="21.897" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box145" castShadows="true" receiveShadows="true" meshFile="test3Box145.mesh">
+            <entity name="InstancedBox145" castShadows="true" receiveShadows="true" meshFile="test3Box145.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box146">
+        <node name="InstancedBox146">
             <position x="95.3932" y="17.318" z="-2.8837" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box146" castShadows="true" receiveShadows="true" meshFile="test3Box146.mesh">
+            <entity name="InstancedBox146" castShadows="true" receiveShadows="true" meshFile="test3Box146.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box147">
+        <node name="InstancedBox147">
             <position x="95.3932" y="17.318" z="-26.8153" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box147" castShadows="true" receiveShadows="true" meshFile="test3Box147.mesh">
+            <entity name="InstancedBox147" castShadows="true" receiveShadows="true" meshFile="test3Box147.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box148">
+        <node name="InstancedBox148">
             <position x="95.3932" y="17.318" z="-50.0133" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box148" castShadows="true" receiveShadows="true" meshFile="test3Box148.mesh">
+            <entity name="InstancedBox148" castShadows="true" receiveShadows="true" meshFile="test3Box148.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box149">
+        <node name="InstancedBox149">
             <position x="95.3932" y="17.318" z="-73.7312" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box149" castShadows="true" receiveShadows="true" meshFile="test3Box149.mesh">
+            <entity name="InstancedBox149" castShadows="true" receiveShadows="true" meshFile="test3Box149.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box150">
+        <node name="InstancedBox150">
             <position x="95.3932" y="17.318" z="-99.0996" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box150" castShadows="true" receiveShadows="true" meshFile="test3Box150.mesh">
+            <entity name="InstancedBox150" castShadows="true" receiveShadows="true" meshFile="test3Box150.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box151">
+        <node name="InstancedBox151">
             <position x="124.703" y="17.318" z="95.3264" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box151" castShadows="true" receiveShadows="true" meshFile="test3Box151.mesh">
+            <entity name="InstancedBox151" castShadows="true" receiveShadows="true" meshFile="test3Box151.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box152">
+        <node name="InstancedBox152">
             <position x="124.703" y="17.318" z="70.3999" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box152" castShadows="true" receiveShadows="true" meshFile="test3Box152.mesh">
+            <entity name="InstancedBox152" castShadows="true" receiveShadows="true" meshFile="test3Box152.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box153">
+        <node name="InstancedBox153">
             <position x="124.703" y="17.318" z="45.1233" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box153" castShadows="true" receiveShadows="true" meshFile="test3Box153.mesh">
+            <entity name="InstancedBox153" castShadows="true" receiveShadows="true" meshFile="test3Box153.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box154">
+        <node name="InstancedBox154">
             <position x="124.703" y="17.318" z="21.897" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box154" castShadows="true" receiveShadows="true" meshFile="test3Box154.mesh">
+            <entity name="InstancedBox154" castShadows="true" receiveShadows="true" meshFile="test3Box154.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box155">
+        <node name="InstancedBox155">
             <position x="124.703" y="17.318" z="-2.8837" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box155" castShadows="true" receiveShadows="true" meshFile="test3Box155.mesh">
+            <entity name="InstancedBox155" castShadows="true" receiveShadows="true" meshFile="test3Box155.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box156">
+        <node name="InstancedBox156">
             <position x="124.703" y="17.318" z="-26.8153" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box156" castShadows="true" receiveShadows="true" meshFile="test3Box156.mesh">
+            <entity name="InstancedBox156" castShadows="true" receiveShadows="true" meshFile="test3Box156.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box157">
+        <node name="InstancedBox157">
             <position x="124.703" y="17.318" z="-50.0133" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box157" castShadows="true" receiveShadows="true" meshFile="test3Box157.mesh">
+            <entity name="InstancedBox157" castShadows="true" receiveShadows="true" meshFile="test3Box157.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box158">
+        <node name="InstancedBox158">
             <position x="124.703" y="17.318" z="-73.7312" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box158" castShadows="true" receiveShadows="true" meshFile="test3Box158.mesh">
+            <entity name="InstancedBox158" castShadows="true" receiveShadows="true" meshFile="test3Box158.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box159">
+        <node name="InstancedBox159">
             <position x="124.703" y="17.318" z="-99.0996" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box159" castShadows="true" receiveShadows="true" meshFile="test3Box159.mesh">
+            <entity name="InstancedBox159" castShadows="true" receiveShadows="true" meshFile="test3Box159.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box160">
+        <node name="InstancedBox160">
             <position x="155.539" y="17.318" z="95.3264" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box160" castShadows="true" receiveShadows="true" meshFile="test3Box160.mesh">
+            <entity name="InstancedBox160" castShadows="true" receiveShadows="true" meshFile="test3Box160.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box161">
+        <node name="InstancedBox161">
             <position x="155.539" y="17.318" z="70.3999" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box161" castShadows="true" receiveShadows="true" meshFile="test3Box161.mesh">
+            <entity name="InstancedBox161" castShadows="true" receiveShadows="true" meshFile="test3Box161.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box162">
+        <node name="InstancedBox162">
             <position x="155.539" y="17.318" z="45.1233" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box162" castShadows="true" receiveShadows="true" meshFile="test3Box162.mesh">
+            <entity name="InstancedBox162" castShadows="true" receiveShadows="true" meshFile="test3Box162.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box163">
+        <node name="InstancedBox163">
             <position x="155.539" y="17.318" z="21.897" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box163" castShadows="true" receiveShadows="true" meshFile="test3Box163.mesh">
+            <entity name="InstancedBox163" castShadows="true" receiveShadows="true" meshFile="test3Box163.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box164">
+        <node name="InstancedBox164">
             <position x="155.539" y="17.318" z="-2.8837" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box164" castShadows="true" receiveShadows="true" meshFile="test3Box164.mesh">
+            <entity name="InstancedBox164" castShadows="true" receiveShadows="true" meshFile="test3Box164.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box165">
+        <node name="InstancedBox165">
             <position x="155.539" y="17.318" z="-26.8153" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box165" castShadows="true" receiveShadows="true" meshFile="test3Box165.mesh">
+            <entity name="InstancedBox165" castShadows="true" receiveShadows="true" meshFile="test3Box165.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box166">
+        <node name="InstancedBox166">
             <position x="155.539" y="17.318" z="-50.0133" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box166" castShadows="true" receiveShadows="true" meshFile="test3Box166.mesh">
+            <entity name="InstancedBox166" castShadows="true" receiveShadows="true" meshFile="test3Box166.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box167">
+        <node name="InstancedBox167">
             <position x="155.539" y="17.318" z="-73.7312" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box167" castShadows="true" receiveShadows="true" meshFile="test3Box167.mesh">
+            <entity name="InstancedBox167" castShadows="true" receiveShadows="true" meshFile="test3Box167.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box168">
+        <node name="InstancedBox168">
             <position x="155.539" y="17.318" z="-99.0996" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box168" castShadows="true" receiveShadows="true" meshFile="test3Box168.mesh">
+            <entity name="InstancedBox168" castShadows="true" receiveShadows="true" meshFile="test3Box168.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box169">
+        <node name="InstancedBox169">
             <position x="-187.168" y="17.318" z="95.3264" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box169" castShadows="true" receiveShadows="true" meshFile="test3Box169.mesh">
+            <entity name="InstancedBox169" castShadows="true" receiveShadows="true" meshFile="test3Box169.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box170">
+        <node name="InstancedBox170">
             <position x="-187.168" y="17.318" z="70.3999" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box170" castShadows="true" receiveShadows="true" meshFile="test3Box170.mesh">
+            <entity name="InstancedBox170" castShadows="true" receiveShadows="true" meshFile="test3Box170.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box171">
+        <node name="InstancedBox171">
             <position x="-187.168" y="17.318" z="45.1233" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box171" castShadows="true" receiveShadows="true" meshFile="test3Box171.mesh">
+            <entity name="InstancedBox171" castShadows="true" receiveShadows="true" meshFile="test3Box171.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box172">
+        <node name="InstancedBox172">
             <position x="-187.168" y="17.318" z="21.897" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box172" castShadows="true" receiveShadows="true" meshFile="test3Box172.mesh">
+            <entity name="InstancedBox172" castShadows="true" receiveShadows="true" meshFile="test3Box172.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box173">
+        <node name="InstancedBox173">
             <position x="-187.168" y="17.318" z="-2.8837" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box173" castShadows="true" receiveShadows="true" meshFile="test3Box173.mesh">
+            <entity name="InstancedBox173" castShadows="true" receiveShadows="true" meshFile="test3Box173.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box174">
+        <node name="InstancedBox174">
             <position x="-187.168" y="17.318" z="-26.8153" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box174" castShadows="true" receiveShadows="true" meshFile="test3Box174.mesh">
+            <entity name="InstancedBox174" castShadows="true" receiveShadows="true" meshFile="test3Box174.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box175">
+        <node name="InstancedBox175">
             <position x="-187.168" y="17.318" z="-50.0133" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box175" castShadows="true" receiveShadows="true" meshFile="test3Box175.mesh">
+            <entity name="InstancedBox175" castShadows="true" receiveShadows="true" meshFile="test3Box175.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box176">
+        <node name="InstancedBox176">
             <position x="-187.168" y="17.318" z="-73.7312" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box176" castShadows="true" receiveShadows="true" meshFile="test3Box176.mesh">
+            <entity name="InstancedBox176" castShadows="true" receiveShadows="true" meshFile="test3Box176.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box177">
+        <node name="InstancedBox177">
             <position x="-187.168" y="17.318" z="-99.0996" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box177" castShadows="true" receiveShadows="true" meshFile="test3Box177.mesh">
+            <entity name="InstancedBox177" castShadows="true" receiveShadows="true" meshFile="test3Box177.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box178">
+        <node name="InstancedBox178">
             <position x="187.256" y="17.318" z="95.3264" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box178" castShadows="true" receiveShadows="true" meshFile="test3Box178.mesh">
+            <entity name="InstancedBox178" castShadows="true" receiveShadows="true" meshFile="test3Box178.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box179">
+        <node name="InstancedBox179">
             <position x="187.256" y="17.318" z="70.3999" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box179" castShadows="true" receiveShadows="true" meshFile="test3Box179.mesh">
+            <entity name="InstancedBox179" castShadows="true" receiveShadows="true" meshFile="test3Box179.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box180">
+        <node name="InstancedBox180">
             <position x="187.256" y="17.318" z="45.1233" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box180" castShadows="true" receiveShadows="true" meshFile="test3Box180.mesh">
+            <entity name="InstancedBox180" castShadows="true" receiveShadows="true" meshFile="test3Box180.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box181">
+        <node name="InstancedBox181">
             <position x="187.256" y="17.318" z="21.897" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box181" castShadows="true" receiveShadows="true" meshFile="test3Box181.mesh">
+            <entity name="InstancedBox181" castShadows="true" receiveShadows="true" meshFile="test3Box181.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box182">
+        <node name="InstancedBox182">
             <position x="187.256" y="17.318" z="-2.8837" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box182" castShadows="true" receiveShadows="true" meshFile="test3Box182.mesh">
+            <entity name="InstancedBox182" castShadows="true" receiveShadows="true" meshFile="test3Box182.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box183">
+        <node name="InstancedBox183">
             <position x="187.256" y="17.318" z="-26.8153" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box183" castShadows="true" receiveShadows="true" meshFile="test3Box183.mesh">
+            <entity name="InstancedBox183" castShadows="true" receiveShadows="true" meshFile="test3Box183.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box184">
+        <node name="InstancedBox184">
             <position x="187.256" y="17.318" z="-50.0133" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box184" castShadows="true" receiveShadows="true" meshFile="test3Box184.mesh">
+            <entity name="InstancedBox184" castShadows="true" receiveShadows="true" meshFile="test3Box184.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box185">
+        <node name="InstancedBox185">
             <position x="187.256" y="17.318" z="-73.7312" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box185" castShadows="true" receiveShadows="true" meshFile="test3Box185.mesh">
+            <entity name="InstancedBox185" castShadows="true" receiveShadows="true" meshFile="test3Box185.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box186">
+        <node name="InstancedBox186">
             <position x="187.256" y="17.318" z="-99.0996" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box186" castShadows="true" receiveShadows="true" meshFile="test3Box186.mesh">
+            <entity name="InstancedBox186" castShadows="true" receiveShadows="true" meshFile="test3Box186.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box187">
+        <node name="InstancedBox187">
             <position x="-162.349" y="17.318" z="-123.802" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box187" castShadows="true" receiveShadows="true" meshFile="test3Box187.mesh">
+            <entity name="InstancedBox187" castShadows="true" receiveShadows="true" meshFile="test3Box187.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box188">
+        <node name="InstancedBox188">
             <position x="-134.504" y="17.318" z="-123.802" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box188" castShadows="true" receiveShadows="true" meshFile="test3Box188.mesh">
+            <entity name="InstancedBox188" castShadows="true" receiveShadows="true" meshFile="test3Box188.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box189">
+        <node name="InstancedBox189">
             <position x="-106.173" y="17.318" z="-123.802" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box189" castShadows="true" receiveShadows="true" meshFile="test3Box189.mesh">
+            <entity name="InstancedBox189" castShadows="true" receiveShadows="true" meshFile="test3Box189.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box190">
+        <node name="InstancedBox190">
             <position x="-78.9138" y="17.318" z="-123.802" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box190" castShadows="true" receiveShadows="true" meshFile="test3Box190.mesh">
+            <entity name="InstancedBox190" castShadows="true" receiveShadows="true" meshFile="test3Box190.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box191">
+        <node name="InstancedBox191">
             <position x="-49.6039" y="17.318" z="-123.802" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box191" castShadows="true" receiveShadows="true" meshFile="test3Box191.mesh">
+            <entity name="InstancedBox191" castShadows="true" receiveShadows="true" meshFile="test3Box191.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box192">
+        <node name="InstancedBox192">
             <position x="-18.7676" y="17.318" z="-123.802" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box192" castShadows="true" receiveShadows="true" meshFile="test3Box192.mesh">
+            <entity name="InstancedBox192" castShadows="true" receiveShadows="true" meshFile="test3Box192.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box193">
+        <node name="InstancedBox193">
             <position x="11.9579" y="17.318" z="-123.802" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box193" castShadows="true" receiveShadows="true" meshFile="test3Box193.mesh">
+            <entity name="InstancedBox193" castShadows="true" receiveShadows="true" meshFile="test3Box193.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box194">
+        <node name="InstancedBox194">
             <position x="39.8032" y="17.318" z="-123.802" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box194" castShadows="true" receiveShadows="true" meshFile="test3Box194.mesh">
+            <entity name="InstancedBox194" castShadows="true" receiveShadows="true" meshFile="test3Box194.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box195">
+        <node name="InstancedBox195">
             <position x="68.1338" y="17.318" z="-123.802" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box195" castShadows="true" receiveShadows="true" meshFile="test3Box195.mesh">
+            <entity name="InstancedBox195" castShadows="true" receiveShadows="true" meshFile="test3Box195.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box196">
+        <node name="InstancedBox196">
             <position x="95.3932" y="17.318" z="-123.802" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box196" castShadows="true" receiveShadows="true" meshFile="test3Box196.mesh">
+            <entity name="InstancedBox196" castShadows="true" receiveShadows="true" meshFile="test3Box196.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box197">
+        <node name="InstancedBox197">
             <position x="124.703" y="17.318" z="-123.802" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box197" castShadows="true" receiveShadows="true" meshFile="test3Box197.mesh">
+            <entity name="InstancedBox197" castShadows="true" receiveShadows="true" meshFile="test3Box197.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box198">
+        <node name="InstancedBox198">
             <position x="155.539" y="17.318" z="-123.802" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box198" castShadows="true" receiveShadows="true" meshFile="test3Box198.mesh">
+            <entity name="InstancedBox198" castShadows="true" receiveShadows="true" meshFile="test3Box198.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box199">
+        <node name="InstancedBox199">
             <position x="-187.168" y="17.318" z="-123.802" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box199" castShadows="true" receiveShadows="true" meshFile="test3Box199.mesh">
+            <entity name="InstancedBox199" castShadows="true" receiveShadows="true" meshFile="test3Box199.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box200">
+        <node name="InstancedBox200">
             <position x="187.256" y="17.318" z="-123.802" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box200" castShadows="true" receiveShadows="true" meshFile="test3Box200.mesh">
+            <entity name="InstancedBox200" castShadows="true" receiveShadows="true" meshFile="test3Box200.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box201">
+        <node name="InstancedBox201">
             <position x="-162.349" y="17.318" z="120.632" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box201" castShadows="true" receiveShadows="true" meshFile="test3Box201.mesh">
+            <entity name="InstancedBox201" castShadows="true" receiveShadows="true" meshFile="test3Box201.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box202">
+        <node name="InstancedBox202">
             <position x="-134.504" y="17.318" z="120.632" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box202" castShadows="true" receiveShadows="true" meshFile="test3Box202.mesh">
+            <entity name="InstancedBox202" castShadows="true" receiveShadows="true" meshFile="test3Box202.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box203">
+        <node name="InstancedBox203">
             <position x="-106.173" y="17.318" z="120.632" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box203" castShadows="true" receiveShadows="true" meshFile="test3Box203.mesh">
+            <entity name="InstancedBox203" castShadows="true" receiveShadows="true" meshFile="test3Box203.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box204">
+        <node name="InstancedBox204">
             <position x="-78.9138" y="17.318" z="120.632" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box204" castShadows="true" receiveShadows="true" meshFile="test3Box204.mesh">
+            <entity name="InstancedBox204" castShadows="true" receiveShadows="true" meshFile="test3Box204.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box205">
+        <node name="InstancedBox205">
             <position x="-49.6039" y="17.318" z="120.632" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box205" castShadows="true" receiveShadows="true" meshFile="test3Box205.mesh">
+            <entity name="InstancedBox205" castShadows="true" receiveShadows="true" meshFile="test3Box205.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box206">
+        <node name="InstancedBox206">
             <position x="-18.7676" y="17.318" z="120.632" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box206" castShadows="true" receiveShadows="true" meshFile="test3Box206.mesh">
+            <entity name="InstancedBox206" castShadows="true" receiveShadows="true" meshFile="test3Box206.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box207">
+        <node name="InstancedBox207">
             <position x="11.9579" y="17.318" z="120.632" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box207" castShadows="true" receiveShadows="true" meshFile="test3Box207.mesh">
+            <entity name="InstancedBox207" castShadows="true" receiveShadows="true" meshFile="test3Box207.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box208">
+        <node name="InstancedBox208">
             <position x="39.8032" y="17.318" z="120.632" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box208" castShadows="true" receiveShadows="true" meshFile="test3Box208.mesh">
+            <entity name="InstancedBox208" castShadows="true" receiveShadows="true" meshFile="test3Box208.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box209">
+        <node name="InstancedBox209">
             <position x="68.1338" y="17.318" z="120.632" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box209" castShadows="true" receiveShadows="true" meshFile="test3Box209.mesh">
+            <entity name="InstancedBox209" castShadows="true" receiveShadows="true" meshFile="test3Box209.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box210">
+        <node name="InstancedBox210">
             <position x="95.3932" y="17.318" z="120.632" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box210" castShadows="true" receiveShadows="true" meshFile="test3Box210.mesh">
+            <entity name="InstancedBox210" castShadows="true" receiveShadows="true" meshFile="test3Box210.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box211">
+        <node name="InstancedBox211">
             <position x="124.703" y="17.318" z="120.632" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box211" castShadows="true" receiveShadows="true" meshFile="test3Box211.mesh">
+            <entity name="InstancedBox211" castShadows="true" receiveShadows="true" meshFile="test3Box211.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box212">
+        <node name="InstancedBox212">
             <position x="155.539" y="17.318" z="120.632" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box212" castShadows="true" receiveShadows="true" meshFile="test3Box212.mesh">
+            <entity name="InstancedBox212" castShadows="true" receiveShadows="true" meshFile="test3Box212.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box213">
+        <node name="InstancedBox213">
             <position x="-187.168" y="17.318" z="120.632" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box213" castShadows="true" receiveShadows="true" meshFile="test3Box213.mesh">
+            <entity name="InstancedBox213" castShadows="true" receiveShadows="true" meshFile="test3Box213.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>
-        <node name="Box214">
+        <node name="InstancedBox214">
             <position x="187.256" y="17.318" z="120.632" />
             <scale x="1" y="1" z="1" />
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
-            <entity name="Box214" castShadows="true" receiveShadows="true" meshFile="test3Box214.mesh">
+            <entity name="InstancedBox214" castShadows="true" receiveShadows="true" meshFile="test3Box214.mesh">
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="terrainGrassInstanced" />
                 </subentities>
             </entity>
         </node>

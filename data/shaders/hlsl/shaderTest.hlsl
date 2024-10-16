@@ -1,4 +1,5 @@
 float4x4 WorldViewProjectionMatrix;
+float4x4 ViewProjectionMatrix;
 float4x4 WorldMatrix;
 float4 MaterialColor;
 float Time;
@@ -12,12 +13,22 @@ cbuffer PSSMShadows : register(b1)
 	uint TexIdShadowOffset;
 }
 
+#ifdef INSTANCED
+cbuffer Instancing : register(b2)
+{
+	float4x4 instanceTransform[1000];
+}
+#endif
+
 struct VSInput
 {
     float4 position : POSITION;
 	float3 normal : NORMAL;
     float2 uv : TEXCOORD;
 	float4 color : COLOR;
+#ifdef INSTANCED
+	uint instanceID : SV_InstanceID;
+#endif
 };
 
 struct PSInput
@@ -33,11 +44,18 @@ PSInput VSMain(VSInput input)
 {
     PSInput result;
 
+#ifdef INSTANCED
+	result.worldPosition = mul(input.position, instanceTransform[input.instanceID]);
+    result.position = mul(result.worldPosition, ViewProjectionMatrix);
+	result.normal = mul(input.normal, (float3x3)instanceTransform[input.instanceID]);
+#else
+	result.worldPosition = mul(input.position, WorldMatrix);
     result.position = mul(input.position, WorldViewProjectionMatrix);
+	result.normal = mul(input.normal, (float3x3)WorldMatrix);
+#endif
+
     result.color = input.color;
 	result.uv = input.uv;
-	result.normal = input.normal;
-	result.worldPosition = mul(input.position, WorldMatrix);
 
     return result;
 }
@@ -153,8 +171,9 @@ struct PSOutput
 
 PSOutput PSMain(PSInput input)
 {
-	float3 normal = normalize(mul(input.normal, (float3x3)WorldMatrix).xyz);
-	float diffuse = saturate(dot(-LightDirection, normal));
+	//float3 normal = normalize(mul(input.normal, (float3x3)WorldMatrix).xyz);
+
+	float diffuse = saturate(dot(-LightDirection, input.normal));
 
 	float2 screenCoords = input.position.xy;
     float2 normalizedCoords = screenCoords * ViewportSizeInverse;

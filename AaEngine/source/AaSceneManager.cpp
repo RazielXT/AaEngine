@@ -34,24 +34,20 @@ AaEntity* AaSceneManager::getEntity(std::string name) const
 	return nullptr;
 }
 
-RenderQueue* AaSceneManager::createQueue(const std::vector<DXGI_FORMAT>& targets, const char* material, bool unique)
+RenderQueue* AaSceneManager::createQueue(const std::vector<DXGI_FORMAT>& targets, bool depth, bool unique)
 {
-	MaterialInstance* materialInstance = nullptr;
-	if (material)
-		materialInstance = AaMaterialResources::get().getMaterial(material);
-
 	if (!unique)
 	{
 		for (auto& q : queues)
 		{
-			if (q->targets == targets && q->materialOverride == materialInstance)
+			if (q->targets == targets && q->depth == depth)
 				return q.get();
 		}
 	}
 
 	auto queue = std::make_unique<RenderQueue>();
 	queue->targets = targets;
-	queue->materialOverride = materialInstance;
+	queue->depth = depth;
 
 	return queues.emplace_back(std::move(queue)).get();
 }
@@ -76,4 +72,5 @@ void AaSceneManager::clear()
 	}
 
 	entityMap.clear();
+	instancing.clear();
 }

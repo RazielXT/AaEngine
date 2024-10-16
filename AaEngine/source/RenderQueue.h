@@ -36,8 +36,8 @@ struct RenderQueue
 	};
 
 	std::map<Order, std::vector<EntityEntry>> entityOrder;
-	MaterialInstance* materialOverride{};
 	std::vector<DXGI_FORMAT> targets;
+	bool depth = false;
 
 	void update(const EntityChanges&);
 	void renderObjects(AaCamera& cam, const RenderInformation& info, const FrameGpuParameters& params, ID3D12GraphicsCommandList* commandList, UINT frameIndex);

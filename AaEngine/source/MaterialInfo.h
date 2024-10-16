@@ -68,6 +68,7 @@ struct ResourcesInfo
 	{
 		None,
 		WVP_MATRIX,
+		VP_MATRIX,
 		WORLD_MATRIX,
 		SHADOW_MATRIX,
 		TEXID,

@@ -2,3 +2,8 @@ material Depth
 {
 	vertex_shader vsDepthWrite
 }
+
+material DepthInstanced
+{
+	vertex_shader vsDepthWriteInstancing
+}

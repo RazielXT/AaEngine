@@ -1,4 +1,6 @@
 #include "RenderQueue.h"
+#include "EntityInstancing.h"
+#include "AaMaterialResources.h"
 
 void RenderQueue::update(const EntityChanges& changes)
 {
@@ -6,7 +8,11 @@ void RenderQueue::update(const EntityChanges& changes)
 	{
 		if (change == EntityChange::Add)
 		{
-			auto entry = EntityEntry{ entity, (materialOverride ? materialOverride : entity->material)->Assign(entity->model->vertexLayout, targets) };
+			auto matInstance = entity->material;
+			if (depth)
+				matInstance = AaMaterialResources::get().getMaterial(entity->instancingGroup ? "DepthInstanced" : "Depth");
+
+			auto entry = EntityEntry{ entity, matInstance->Assign(entity->model->vertexLayout, targets) };
 			auto& entities = entityOrder[entity->order];
 
 			auto it = std::lower_bound(entities.begin(), entities.end(), entry);
@@ -26,7 +32,10 @@ static void RenderObject(ID3D12GraphicsCommandList* commandList, AaEntity* e, Aa
 
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	commandList->DrawIndexedInstanced(e->model->indexCount, 1, 0, 0, 0);
+	if (e->instancingGroup)
+		commandList->DrawIndexedInstanced(e->model->indexCount, e->instancingGroup->objects.size(), 0, 0, 0);
+	else
+		commandList->DrawIndexedInstanced(e->model->indexCount, 1, 0, 0, 0);
 }
 
 void RenderQueue::renderObjects(AaCamera& camera, const RenderInformation& info, const FrameGpuParameters& params, ID3D12GraphicsCommandList* commandList, UINT frameIndex)
@@ -50,7 +59,7 @@ void RenderQueue::renderObjects(AaCamera& camera, const RenderInformation& info,
 			if (entry.material != lastEntry.material)
 			{
 				entry.material->LoadMaterialConstants(constants);
-				entry.material->UpdatePerFrame(constants, params);
+				entry.material->UpdatePerFrame(constants, params, camera.getViewProjectionMatrix());
 				entry.material->BindPipeline(commandList);
 				entry.material->BindTextures(commandList, frameIndex);
 			}
@@ -64,37 +73,6 @@ void RenderQueue::renderObjects(AaCamera& camera, const RenderInformation& info,
 		}
 	}
 }
-
-// void AaSceneManager::renderObjectsDepth(AaCamera& camera, const RenderInformation& info, const FrameGpuParameters& params, ID3D12GraphicsCommandList* commandList, UINT frameIndex)
-// {
-// 	AaMaterial* lastEntry{};
-// 	MaterialConstantBuffers constants;
-// 
-// 	for (auto& [order, entities] : entityOrder)
-// 	{
-// 		for (auto& entry : entities)
-// 		{
-// 			if (!entry.entity->isVisible(info.visibility))
-// 				continue;
-// 
-// 			if (entry.entity->depthMaterial != lastEntry)
-// 			{
-// 				entry.entity->depthMaterial->GetBase()->BindSignature(commandList, frameIndex);
-// 				entry.entity->depthMaterial->LoadMaterialConstants(constants);
-// 				entry.entity->depthMaterial->UpdatePerFrame(constants, params);
-// 				entry.entity->depthMaterial->BindPipeline(commandList);
-// 				entry.entity->depthMaterial->BindTextures(commandList, frameIndex);
-// 			}
-// 
-// 			entry.entity->depthMaterial->UpdatePerObject(constants, entry.entity->getWvpMatrix(info.wvpMatrix), entry.entity->getWorldMatrix(), params);
-// 			entry.entity->depthMaterial->BindConstants(commandList, frameIndex, constants);
-// 
-// 			RenderObject(commandList, entry.entity, camera);
-// 
-// 			lastEntry = entry.entity->depthMaterial;
-// 		}
-// 	}
-// }
 
 RenderQueue::EntityEntry::EntityEntry(AaEntity* e, AaMaterial* m)
 {

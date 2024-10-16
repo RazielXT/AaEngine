@@ -3,11 +3,14 @@
 #include "AaModel.h"
 #include "AaMaterial.h"
 #include "AaRenderables.h"
+#include <vector>
 
 enum class Order
 {
 	Normal = 50,
 };
+
+struct InstanceGroup;
 
 class AaEntity : public RenderObject
 {
@@ -25,4 +28,6 @@ public:
 	std::string name;
 
 	Order order = Order::Normal;
+
+	InstanceGroup* instancingGroup{};
 };

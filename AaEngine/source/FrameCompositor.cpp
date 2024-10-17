@@ -113,7 +113,7 @@ static void RenderQuad(AaMaterial* material, const FrameGpuParameters& params, I
 
 void FrameCompositor::render(RenderContext& ctx, imgui::DebugWindow& gui)
 {
-	Renderables::Get().updateWorldMatrix();
+	ctx.renderables->updateWorldMatrix();
 
 	for (auto& pass : passes)
 	{

@@ -16,8 +16,7 @@ class AaEntity : public RenderObject
 {
 public:
 
-	AaEntity();
-	AaEntity(std::string name);
+	AaEntity(Renderables&, std::string name);
 	~AaEntity();
 
 	void setModel(AaModel* model);

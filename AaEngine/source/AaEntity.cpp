@@ -2,13 +2,7 @@
 #include "AaModelResources.h"
 #include "AaMaterialResources.h"
 
-static int entityCounter = 0;
-
-AaEntity::AaEntity() : AaEntity("entity" + std::to_string(entityCounter++))
-{
-}
-
-AaEntity::AaEntity(std::string name)
+AaEntity::AaEntity(Renderables& r, std::string name) : RenderObject(r)
 {
 	this->name = name;
 }

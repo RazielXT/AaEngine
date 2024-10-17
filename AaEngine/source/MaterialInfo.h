@@ -3,6 +3,7 @@
 #include "AaShaderCompiler.h"
 #include "ResourcesManager.h"
 #include "ShaderConstantBuffers.h"
+#include "AaMaterialConstants.h"
 
 struct LoadedShader;
 struct ShaderTextureView;
@@ -51,7 +52,7 @@ struct ResourcesInfo
 	struct CBuffer
 	{
 		std::vector<float> defaultData;
-		bool rootConstants = false;
+		CBufferType type{};
 		UINT rootIndex{};
 		CbufferView globalBuffer;
 	};

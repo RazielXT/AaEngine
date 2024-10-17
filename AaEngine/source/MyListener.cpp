@@ -66,7 +66,8 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 		renderSystem->WaitForAllFrames();
 		sceneMgr->clear();
 		AaModelResources::get().clear();
-		SceneParser::load("testCubes", sceneMgr, renderSystem);
+		static int sceneCounter = 0;
+		SceneParser::load(++sceneCounter % 2 ? "testCubes" : "test", sceneMgr, renderSystem);
 		debugWindow.state.changeScene = false;
 	}
 
@@ -91,7 +92,7 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 	sceneMgr->updateQueues();
 	shadowMap->update(renderSystem->frameIndex);
 
-	RenderContext ctx = { &cameraMan->camera, renderSystem };
+	RenderContext ctx = { &cameraMan->camera, renderSystem, &sceneMgr->renderables };
 
 	ctx.params.time = elapsedTime;
 	ctx.params.sunDirection = sceneMgr->lights.directionalLight.direction;

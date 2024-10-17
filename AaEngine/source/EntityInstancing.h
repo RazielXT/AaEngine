@@ -4,19 +4,23 @@
 #include "AaRenderables.h"
 #include <vector>
 
-struct InstanceGroup
-{
-	void create(std::string materialName);
-	void update();
-
-	std::vector<RenderObject> objects;
-	CbufferView buffer;
-	RenderObject& createEntity(std::string name);
-};
-
 class AaSceneManager;
 class MaterialInstance;
 class AaModel;
+
+struct InstanceGroupDescription
+{
+	MaterialInstance* material;
+	AaModel* model;
+	std::vector<WorldCoordinates> objects;
+};
+
+struct InstanceGroup
+{
+	void create(const InstanceGroupDescription&);
+	CbufferData buffer;
+	UINT count{};
+};
 
 class InstancingManager
 {
@@ -24,10 +28,8 @@ public:
 
 	InstancingManager() = default;
 
-	void create();
+	InstanceGroup* build(AaSceneManager* sceneMgr, const InstanceGroupDescription&);
 	void clear();
-
-	InstanceGroup* getGroup(AaSceneManager* mgr, MaterialInstance* material, AaModel* model);
 
 private:
 

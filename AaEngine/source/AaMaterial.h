@@ -100,6 +100,8 @@ public:
 
 	const MaterialBase* GetBase() const;
 
+	bool HasInstancing() const;
+
 protected:
 
 	MaterialBase& base;

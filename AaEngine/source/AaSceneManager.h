@@ -4,6 +4,7 @@
 #include "RenderQueue.h"
 #include "EntityInstancing.h"
 #include <unordered_map>
+#include "AaRenderables.h"
 
 class AaSceneManager
 {
@@ -24,6 +25,8 @@ public:
 	void updateQueues();
 
 	InstancingManager instancing;
+
+	Renderables renderables;
 
 private:
 

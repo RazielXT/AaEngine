@@ -345,7 +345,9 @@ std::shared_ptr<ResourcesInfo> MaterialBase::CreateResourcesData(const MaterialR
 		}
 
 		if (&cb == info.rootBuffer)
-			r.rootConstants = true;
+			r.type = CBufferType::Root;
+		else if (cb.info.Name == "Instancing")
+			r.type = CBufferType::Instancing;
 		else
 			r.globalBuffer = ShaderConstantBuffers::get().GetCbufferResource(cb.info.Name);
 
@@ -380,6 +382,16 @@ AaMaterial* MaterialInstance::Assign(const std::vector<D3D12_INPUT_ELEMENT_DESC>
 const MaterialBase* MaterialInstance::GetBase() const
 {
 	return &base;
+}
+
+bool MaterialInstance::HasInstancing() const
+{
+	for (auto& r : resources->cbuffers)
+	{
+		if (r.type == CBufferType::Instancing)
+			return true;
+	}
+	return false;
 }
 
 void MaterialInstance::SetTexture(ShaderTextureView& texture, UINT slot)
@@ -420,7 +432,7 @@ void MaterialInstance::LoadMaterialConstants(MaterialConstantBuffers& buffers) c
 
 	for (const auto& p : resources->cbuffers)
 	{
-		if (p.rootConstants)
+		if (p.type == CBufferType::Root)
 			buffers.data[p.rootIndex] = p.defaultData;
 	}
 }
@@ -481,9 +493,11 @@ void MaterialInstance::BindConstants(ID3D12GraphicsCommandList* commandList, int
 {
 	for (auto& cb : resources->cbuffers)
 	{
-		if (cb.rootConstants)
+		if (cb.type == CBufferType::Root)
 			commandList->SetGraphicsRoot32BitConstants(cb.rootIndex, buffers.data[cb.rootIndex].size(), buffers.data[cb.rootIndex].data(), 0);
- 		else
+		else if (cb.type == CBufferType::Instancing)
+			commandList->SetGraphicsRootConstantBufferView(cb.rootIndex, buffers.cbuffers.instancing.data[frameIndex]->GpuAddress());
+		else
  			commandList->SetGraphicsRootConstantBufferView(cb.rootIndex, cb.globalBuffer.data[frameIndex]->GpuAddress());
 	}
 }

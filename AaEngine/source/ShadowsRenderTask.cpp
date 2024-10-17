@@ -45,8 +45,8 @@ AsyncTasksInfo ShadowsRenderTask::initialize(AaRenderSystem* renderSystem, Rende
 					ctx.renderSystem->StartCommandList(shadow.commands);
 
 					thread_local RenderInformation info;
-					Renderables::Get().updateVisibility(shadowMaps.camera[idx].prepareOrientedBox(), info.visibility);
-					Renderables::Get().updateWVPMatrix(shadowMaps.camera[idx].getViewProjectionMatrix(), info.visibility, info.wvpMatrix);
+					ctx.renderables->updateVisibility(shadowMaps.camera[idx].prepareOrientedBox(), info.visibility);
+					ctx.renderables->updateWVPMatrix(shadowMaps.camera[idx].getViewProjectionMatrix(), info.visibility, info.wvpMatrix);
 
 					shadowMaps.texture[idx].PrepareAsDepthTarget(shadow.commands.commandList, ctx.renderSystem->frameIndex);
 

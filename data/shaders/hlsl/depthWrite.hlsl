@@ -4,7 +4,7 @@ float4x4 ViewProjectionMatrix;
 #ifdef INSTANCED
 cbuffer Instancing : register(b2)
 {
-	float4x4 instanceTransform[1000];
+	float4x4 instanceTransform[1024];
 }
 #endif
 

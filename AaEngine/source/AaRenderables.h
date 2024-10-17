@@ -4,14 +4,17 @@
 
 struct WorldCoordinates
 {
-	XMVECTOR orientation;
+	Quaternion orientation;
 	Vector3 position;
 	Vector3	scale;
-	bool dirty;
+	bool dirty = true;
+
+	XMMATRIX createWorldMatrix() const;
 };
 
 struct RenderObjectData
 {
+	std::vector<WorldCoordinates> coordinates;
 	std::vector<XMMATRIX> worldMatrix;
 	std::vector<BoundingBox> worldBbox;
 	std::vector<BoundingBox> bbox;
@@ -28,18 +31,15 @@ public:
 	Renderables();
 	~Renderables();
 
-	static Renderables& Get();
-
 	UINT createId(RenderObject*);
 	void deleteId(UINT);
 
-	std::vector<WorldCoordinates> coordinates;
-	RenderObjectData renderData;
+	RenderObjectData objectData;
 
 	void updateWorldMatrix();
-	void updateWVPMatrix(XMMATRIX viewProjection, const RenderableVisibility&, std::vector<XMFLOAT4X4>&);
-	void updateVisibility(const BoundingFrustum&, RenderableVisibility&);
-	void updateVisibility(const BoundingOrientedBox&, RenderableVisibility&);
+	void updateWVPMatrix(XMMATRIX viewProjection, const RenderableVisibility&, std::vector<XMFLOAT4X4>&) const;
+	void updateVisibility(const BoundingFrustum&, RenderableVisibility&) const;
+	void updateVisibility(const BoundingOrientedBox&, RenderableVisibility&) const;
 
 private:
 
@@ -54,7 +54,7 @@ class RenderObject
 {
 public:
 
-	RenderObject();
+	RenderObject(Renderables&);
 	~RenderObject();
 
 	void setPosition(Vector3 position);
@@ -75,11 +75,10 @@ public:
 	XMMATRIX getWorldMatrix() const;
 	XMFLOAT4X4 getWvpMatrix(const std::vector<XMFLOAT4X4>&) const;
 
-protected:
-
 	void setBoundingBox(BoundingBox bbox);
 
 private:
 
 	UINT id;
+	Renderables& source;
 };

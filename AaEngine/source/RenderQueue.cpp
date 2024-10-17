@@ -33,9 +33,15 @@ static void RenderObject(ID3D12GraphicsCommandList* commandList, AaEntity* e, Aa
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	if (e->instancingGroup)
-		commandList->DrawIndexedInstanced(e->model->indexCount, e->instancingGroup->objects.size(), 0, 0, 0);
+		commandList->DrawIndexedInstanced(e->model->indexCount, e->instancingGroup->count, 0, 0, 0);
 	else
 		commandList->DrawIndexedInstanced(e->model->indexCount, 1, 0, 0, 0);
+}
+
+void updateEntityCbuffers(MaterialConstantBuffers& constants, AaEntity* entity)
+{
+	if (entity->instancingGroup)
+		constants.cbuffers.instancing = entity->instancingGroup->buffer;
 }
 
 void RenderQueue::renderObjects(AaCamera& camera, const RenderInformation& info, const FrameGpuParameters& params, ID3D12GraphicsCommandList* commandList, UINT frameIndex)
@@ -64,6 +70,7 @@ void RenderQueue::renderObjects(AaCamera& camera, const RenderInformation& info,
 				entry.material->BindTextures(commandList, frameIndex);
 			}
 
+			updateEntityCbuffers(constants, entry.entity);
 			entry.material->UpdatePerObject(constants, entry.entity->getWvpMatrix(info.wvpMatrix), entry.entity->getWorldMatrix(), params);
 			entry.material->BindConstants(commandList, frameIndex, constants);
 

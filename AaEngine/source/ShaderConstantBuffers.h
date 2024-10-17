@@ -7,8 +7,16 @@
 
 class AaRenderSystem;
 
+struct CbufferData
+{
+	DirectX::DX12::GraphicsResource data[2];
+};
+
 struct CbufferView
 {
+	CbufferView() = default;
+	CbufferView(CbufferData&);
+
 	DirectX::DX12::GraphicsResource* data[2];
 };
 
@@ -21,6 +29,7 @@ public:
 
 	static ShaderConstantBuffers& get();
 
+	CbufferData CreateCbufferResource(UINT size);
 	CbufferView CreateCbufferResource(UINT size, std::string name);
 	CbufferView GetCbufferResource(std::string name);
 
@@ -29,9 +38,5 @@ private:
 	std::unique_ptr<DirectX::DX12::GraphicsMemory> graphicsMemory;
 	AaRenderSystem* renderSystem;
 
-	struct CbufferData
-	{
-		DirectX::DX12::GraphicsResource data[2];
-	};
 	std::map<std::string, CbufferData> cbuffers;
 };

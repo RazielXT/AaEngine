@@ -9,7 +9,6 @@
 #include "AaModelResources.h"
 #include "AaMaterialResources.h"
 #include "AaShaderResources.h"
-#include "AaRenderables.h"
 
 class AaApplication
 {
@@ -30,7 +29,6 @@ private:
  	AaModelResources* mModels;
  	AaShaderResources* mShaders;
 	ShaderConstantBuffers* mShaderConstants;
-	Renderables renderables;
 
 	LARGE_INTEGER lastTime{};
 	float frequency{};

@@ -4,11 +4,13 @@
 #include "MaterialInfo.h"
 
 class AaCamera;
+class Renderables;
 
 struct RenderContext
 {
 	AaCamera* camera;
 	AaRenderSystem* renderSystem;
+	Renderables* renderables;
 	RenderTargetTexture* target;
 
 	FrameGpuParameters params;

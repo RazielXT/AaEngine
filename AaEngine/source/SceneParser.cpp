@@ -135,6 +135,8 @@ int ParseRenderQueue(std::string_view renderQueue)
 // 	}
 // }
 
+std::map<MaterialInstance*, InstanceGroupDescription> instanceDescriptions;
+
 void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible, AaSceneManager* sceneMgr)
 {
 	auto name = GetStringAttribute(entityElement, "name");
@@ -149,13 +151,12 @@ void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible, Aa
 		auto material = AaMaterialResources::get().getMaterial(materialName, ctx->batch);
 		auto model = AaModelResources::get().getModel(mesh, *ctx);
 
-		if (name.starts_with("Instanced"))
+		if (material->HasInstancing())
 		{
-			auto instancingGroup = sceneMgr->instancing.getGroup(sceneMgr, material, model);
-			auto& ent = instancingGroup->createEntity(name);
-			ent.setPosition(node->position);
-			ent.setScale(node->scale);
-			ent.setOrientation(node->orientation);
+			auto& instanceDescription = instanceDescriptions[material];
+			instanceDescription.material = material;
+			instanceDescription.model = model;
+			instanceDescription.objects.emplace_back(node->orientation, node->position, node->scale);
 
 			break;
 		}
@@ -235,6 +236,9 @@ void SceneParser::load(std::string name, AaSceneManager* sceneMgr, AaRenderSyste
 		uploadResourcesFinished.wait();
 	}
 
-	Renderables::Get().updateWorldMatrix();
-	sceneMgr->instancing.create();
+	for (auto& desc : instanceDescriptions)
+	{
+		sceneMgr->instancing.build(sceneMgr, desc.second);
+	}
+	instanceDescriptions.clear();
 }

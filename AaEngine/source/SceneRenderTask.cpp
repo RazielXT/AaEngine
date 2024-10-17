@@ -80,8 +80,8 @@ void SceneRenderTask::prepare(RenderContext& renderCtx, CommandsData&)
 void SceneRenderTask::renderScene()
 {
 	ctx.camera->updateMatrix();
-	Renderables::Get().updateVisibility(ctx.camera->prepareFrustum(), sceneInfo.visibility);
-	Renderables::Get().updateWVPMatrix(ctx.camera->getViewProjectionMatrix(), sceneInfo.visibility, sceneInfo.wvpMatrix);
+	ctx.renderables->updateVisibility(ctx.camera->prepareFrustum(), sceneInfo.visibility);
+	ctx.renderables->updateWVPMatrix(ctx.camera->getViewProjectionMatrix(), sceneInfo.visibility, sceneInfo.wvpMatrix);
 
 	if (earlyZ.eventBegin)
 		SetEvent(earlyZ.eventBegin);

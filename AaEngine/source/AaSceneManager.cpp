@@ -17,7 +17,7 @@ AaSceneManager::~AaSceneManager()
 
 AaEntity* AaSceneManager::createEntity(std::string name)
 {
-	auto ent = new AaEntity(name);
+	auto ent = new AaEntity(renderables, name);
 	entityMap[name] = ent;
 
 	changes.emplace_back(EntityChange::Add, ent);

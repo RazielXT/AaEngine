@@ -193,21 +193,21 @@ void AaVoxelScene::voxelizeScene(XMFLOAT3 orthoHalfSize, XMFLOAT3 offset)
 
 	AaMaterial* voxMat = AaMaterialResources::get().getMaterial("VoxelizationMat");
 	AaMaterial* lvoxMat = AaMaterialResources::get().getMaterial("LightVoxelizationMat");
-	AaMaterial* shMat = AaMaterialResources::get().getMaterial("depthWriteAndVoxel");
+	//AaMaterial* shMat = AaMaterialResources::get().getMaterial("depthWriteAndVoxel");
 
 	//from all 3 axes
 	voxelizingLookCamera.setPosition(XMFLOAT3(offset.x, offset.y, offset.z - orthoHalfSize.z - 1));
-	voxelizingLookCamera.lookAt(offset);
+	voxelizingLookCamera.lookTo(XMFLOAT3(0, 0, 1));
 	mSceneMgr->renderSceneWithMaterial(voxelizingLookCamera, voxMat, true, 1, 5);
 	mSceneMgr->renderSceneWithMaterial(voxelizingLookCamera, lvoxMat, true, 0, 0);
 
 	voxelizingLookCamera.setPosition(XMFLOAT3(offset.x - orthoHalfSize.x - 1, offset.y, offset.z));
-	voxelizingLookCamera.lookAt(offset);
+	voxelizingLookCamera.lookTo(XMFLOAT3(1, 0, 0));
 	mSceneMgr->renderSceneWithMaterial(voxelizingLookCamera, voxMat, true, 1, 5);
 	mSceneMgr->renderSceneWithMaterial(voxelizingLookCamera, lvoxMat, true, 0, 0);
 
-	voxelizingLookCamera.setPosition(XMFLOAT3(offset.x, offset.y - orthoHalfSize.y * 2 - 1, offset.z));
-	voxelizingLookCamera.lookAt(offset);
+	voxelizingLookCamera.setPosition(XMFLOAT3(offset.x, offset.y - orthoHalfSize.y - 1, offset.z));
+	voxelizingLookCamera.pitch(3.14 / 2.0f);
 	mSceneMgr->renderSceneWithMaterial(voxelizingLookCamera, voxMat, true, 1, 5);
 	mSceneMgr->renderSceneWithMaterial(voxelizingLookCamera, lvoxMat, true, 0, 0);
 }

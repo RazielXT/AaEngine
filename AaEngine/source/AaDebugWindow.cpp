@@ -25,7 +25,7 @@ void DebugWindow::deinit()
 }
 
 float stepping = 0.1f;
-float stepping2 = 1.f;
+float stepping2 = 0.0f;
 float middleCone = 0;
 float sideCone = 0;
 float radius = 1;
@@ -58,19 +58,19 @@ void DebugWindow::draw()
 	}
 
 	float stepInput = stepping;
-	ImGui::SliderFloat("GI weight", &stepInput, 0.0f, 0.2f);
+	ImGui::SliderFloat("GI weight", &stepInput, 0.0f, 0.15f);
 	if (stepInput != stepping)
 	{
 		stepping = stepInput;
-		AaMaterialResources::get().getMaterial("VoxelizationMat")->setMaterialConstant("per_material", "stepping", ShaderTypePixel, &stepping);
+		AaMaterialResources::get().getMaterial("VoxelizationMat")->setMaterialConstant("PerMaterial", "stepping", ShaderTypePixel, &stepping);
 	}
 
 	float stepping2Input = stepping2;
-	ImGui::SliderFloat("Diffuse weight", &stepping2Input, 0.0f, 2.f);
+	ImGui::SliderFloat("Diffuse weight", &stepping2Input, 0.0f, 0.5f);
 	if (stepping2Input != stepping2)
 	{
 		stepping2 = stepping2Input;
-		AaMaterialResources::get().getMaterial("VoxelizationMat")->setMaterialConstant("per_material", "stepping2", ShaderTypePixel, &stepping2);
+		AaMaterialResources::get().getMaterial("VoxelizationMat")->setMaterialConstant("PerMaterial", "stepping2", ShaderTypePixel, &stepping2);
 	}
 
 	float radiusInput = radius;
@@ -78,7 +78,7 @@ void DebugWindow::draw()
 	if (radiusInput != radius)
 	{
 		radius = radiusInput;
-		AaMaterialResources::get().getMaterial("VoxelizationMat")->setMaterialConstant("per_material", "radius", ShaderTypePixel, &radius);
+		AaMaterialResources::get().getMaterial("VoxelizationMat")->setMaterialConstant("PerMaterial", "radius", ShaderTypePixel, &radius);
 	}
 
 // 	float sideConeInput = sideCone;

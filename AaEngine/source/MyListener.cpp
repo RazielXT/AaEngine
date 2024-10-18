@@ -57,12 +57,12 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 	if (auto ent = mSceneMgr->getEntity("Suzanne"))
 	{
 		ent->yaw(timeSinceLastFrame);
-		ent->setPosition(cos(elapsedTime) * 5, ent->getPosition().y, ent->getPosition().z);
+		ent->setPosition(cos(elapsedTime * 0.3f) * 5, ent->getPosition().y, ent->getPosition().z);
 	}
 
 	cameraMan->update(timeSinceLastFrame);
 
-	elapsedTime += timeSinceLastFrame * 0.3f;
+	elapsedTime += timeSinceLastFrame;
 
 	//Vector3(cos(elapsedTime) / 2.f, -1, sin(elapsedTime) / 2.f).Normalize(mLights.directionalLight.direction);
 

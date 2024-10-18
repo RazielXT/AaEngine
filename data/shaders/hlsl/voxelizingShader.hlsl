@@ -168,7 +168,7 @@ void PS_Main(PS_Input pin,
     float3 outCol = pow(color.rgb, 1);
     float shadow = shadowVoxel.Load(float4(posUV, 0)).r;
 
-    float3 voxCol = shadow * outCol;
+    float3 voxCol = outCol;
     //color.rgb = ContrastSaturationBrightness(color.rgb,1.2,1.1,1);
 
     //voxCol.rgb = color * fullSample.rgb * stepping * radius + voxCol * stepping2; //shadow*bouncesVoxel.Load(float4(posUV,0)).g;
@@ -187,5 +187,5 @@ void PS_Main_Light(PS_Input pin,
 {
     float3 posUV = (pin.wp.xyz - sceneCorner) * voxelSize;
 
-    voxelMap[posUV] = float4(1, 1, 1, 0);
+    voxelMap[posUV] = float4(1, 1, 1, 0) * 5;
 }

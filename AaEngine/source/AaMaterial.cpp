@@ -36,11 +36,10 @@ void AaMaterial::setMaterialConstant(std::string buffer, std::string name, Shade
 				{
 					if (p.name == name)
 					{
-						memcpy(b.data.data() + p.position, value, sizeof(p.size));
+						memcpy(b.data.data() + (p.position / sizeof(float)), value, sizeof(p.size));
 						b.needsUpdate = true;
+						break;
 					}
-
-					break;
 				}
 				break;
 			}

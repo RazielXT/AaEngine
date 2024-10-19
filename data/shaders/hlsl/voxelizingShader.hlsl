@@ -8,6 +8,7 @@ cbuffer PerMaterial : register(b2)
 {
     float stepping : packoffset(c0);
     float stepping2 : packoffset(c0.y);
+	float lightPower : packoffset(c0.z);
 };
 
 cbuffer SceneVoxelInfo : register(b3)
@@ -187,5 +188,5 @@ void PS_Main_Light(PS_Input pin,
 {
     float3 posUV = (pin.wp.xyz - sceneCorner) * voxelSize;
 
-    voxelMap[posUV] = float4(1, 1, 1, 0) * 5;
+    voxelMap[posUV] = float4(1, 1, 1, 0) * lightPower;
 }

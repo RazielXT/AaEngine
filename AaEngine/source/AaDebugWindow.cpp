@@ -26,6 +26,7 @@ void DebugWindow::deinit()
 
 float stepping = 0.1f;
 float stepping2 = 0.0f;
+float lightPower = 5.0f;
 float middleCone = 0;
 float sideCone = 0;
 float radius = 1;
@@ -57,44 +58,24 @@ void DebugWindow::draw()
 			giOneStep = true;
 	}
 
-	float stepInput = stepping;
-	ImGui::SliderFloat("GI weight", &stepInput, 0.0f, 0.15f);
-	if (stepInput != stepping)
+	if (ImGui::SliderFloat("GI weight", &stepping, 0.0f, 0.15f))
 	{
-		stepping = stepInput;
 		AaMaterialResources::get().getMaterial("VoxelizationMat")->setMaterialConstant("PerMaterial", "stepping", ShaderTypePixel, &stepping);
 	}
 
-	float stepping2Input = stepping2;
-	ImGui::SliderFloat("Diffuse weight", &stepping2Input, 0.0f, 0.5f);
-	if (stepping2Input != stepping2)
+	if (ImGui::SliderFloat("Diffuse weight", &stepping2, 0.0f, 0.5f))
 	{
-		stepping2 = stepping2Input;
 		AaMaterialResources::get().getMaterial("VoxelizationMat")->setMaterialConstant("PerMaterial", "stepping2", ShaderTypePixel, &stepping2);
 	}
 
-	float radiusInput = radius;
-	ImGui::SliderFloat("Cone radius", &radiusInput, 0.0f, 5.f);
-	if (radiusInput != radius)
+	if (ImGui::SliderFloat("Light power", &lightPower, 0.0f, 10.f))
 	{
-		radius = radiusInput;
-		AaMaterialResources::get().getMaterial("VoxelizationMat")->setMaterialConstant("PerMaterial", "radius", ShaderTypePixel, &radius);
+		AaMaterialResources::get().getMaterial("LightVoxelizationMat")->setMaterialConstant("PerMaterial", "lightPower", ShaderTypePixel, &lightPower);
 	}
 
-// 	float sideConeInput = sideCone;
-// 	ImGui::SliderFloat("sideCone", &sideConeInput, 0.0f, 0.15f);
-// 	if (sideConeInput != sideCone)
+// 	if (ImGui::SliderFloat("Cone radius", &radius, 0.0f, 5.f))
 // 	{
-// 		sideCone = sideConeInput;
-// 		scene->getMaterial("VoxelizationMat")->setMaterialConstant("sideCone", Shader_type_pixel, &sideCone);
-// 	}
-// 
-// 	float middleConeInput = middleCone;
-// 	ImGui::SliderFloat("middleCone", &middleConeInput, 0.0f, 0.15f);
-// 	if (middleConeInput != middleCone)
-// 	{
-// 		middleCone = middleConeInput;
-// 		scene->getMaterial("VoxelizationMat")->setMaterialConstant("middleCone", Shader_type_pixel, &middleCone);
+// 		AaMaterialResources::get().getMaterial("VoxelizationMat")->setMaterialConstant("PerMaterial", "radius", ShaderTypePixel, &radius);
 // 	}
 
 	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);

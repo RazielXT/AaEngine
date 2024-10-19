@@ -23,4 +23,9 @@ pixel_shader voxelizeLightPS
 	file voxelizingShader.hlsl
 	entry PS_Main_Light
 	profile ps_5_0
+	
+	cbuffer PerMaterial
+	{
+		float lightPower 5
+	}
 }

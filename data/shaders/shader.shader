@@ -5,11 +5,13 @@ vertex_shader vsTest
 	profile vs_6_6
 }
 
-vertex_shader vsTestInstancing
+vertex_shader vsTestVc : vsTest
 {
-	file shaderTest.hlsl
-	entry VSMain
-	profile vs_6_6
+	defines USE_VC
+}
+
+vertex_shader vsTestInstancing : vsTest
+{
 	defines INSTANCED
 }
 
@@ -20,6 +22,11 @@ pixel_shader psTest
 	profile ps_6_6
 }
 
+pixel_shader psTestVc : psTest
+{
+	defines USE_VC
+}
+
 vertex_shader vsDepthWrite
 {
 	file depthWrite.hlsl
@@ -27,10 +34,7 @@ vertex_shader vsDepthWrite
 	profile vs_6_6
 }
 
-vertex_shader vsDepthWriteInstancing
+vertex_shader vsDepthWriteInstancing : vsDepthWrite
 {
-	file depthWrite.hlsl
-	entry VSMain
-	profile vs_6_6
 	defines INSTANCED
 }

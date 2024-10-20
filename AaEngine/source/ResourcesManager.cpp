@@ -157,6 +157,31 @@ void ResourcesManager::createShaderResourceView(ID3D12Device* device, RenderTarg
 	}
 }
 
+void ResourcesManager::createShaderResourceView(ID3D12Device* device, TextureResource& texture)
+{
+	for (int i = 0; i < 2; ++i)
+	{
+		if (texture.textureView.srvHandles[i].ptr)
+			return;
+
+		auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mainDescriptorHeap[i]->GetCPUDescriptorHandleForHeapStart(), currentDescriptorCount
+			, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+
+		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		srvDesc.ViewDimension = texture.dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D ? D3D12_SRV_DIMENSION_TEXTURE2D : D3D12_SRV_DIMENSION_TEXTURE3D;
+		srvDesc.Texture2D.MipLevels = -1;
+		srvDesc.Format = texture.textures[i]->GetDesc().Format;
+		device->CreateShaderResourceView(texture.textures[i].Get(), &srvDesc, handle);
+
+		texture.textureView.srvHandles[i] = CD3DX12_GPU_DESCRIPTOR_HANDLE(mainDescriptorHeap[i]->GetGPUDescriptorHandleForHeapStart(), currentDescriptorCount
+			, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+		texture.textureView.srvHeapIndex = currentDescriptorCount;
+	}
+
+	currentDescriptorCount++;
+}
+
 void ResourcesManager::createDepthShaderResourceView(ID3D12Device* device, RenderDepthTargetTexture& texture)
 {
 	for (int i = 0; i < 2; ++i)
@@ -177,6 +202,29 @@ void ResourcesManager::createDepthShaderResourceView(ID3D12Device* device, Rende
 		texture.depthView.srvHandles[i] = CD3DX12_GPU_DESCRIPTOR_HANDLE(mainDescriptorHeap[i]->GetGPUDescriptorHandleForHeapStart(), currentDescriptorCount
 			, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 		texture.depthView.srvHeapIndex = currentDescriptorCount;
+	}
+
+	currentDescriptorCount++;
+}
+
+void ResourcesManager::createUAVView(ID3D12Device* device, TextureResource& texture)
+{
+	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+	uavDesc.Format = texture.format;
+	uavDesc.ViewDimension = texture.dimension == D3D12_RESOURCE_DIMENSION_TEXTURE3D ? D3D12_UAV_DIMENSION_TEXTURE3D : D3D12_UAV_DIMENSION_TEXTURE2D;
+	uavDesc.Texture3D.MipSlice = 0;
+	uavDesc.Texture3D.FirstWSlice = 0;
+	uavDesc.Texture3D.WSize = texture.depth;
+
+	for (int i = 0; i < 2; ++i)
+	{
+		texture.uav.uavCpuHandles[i] = CD3DX12_CPU_DESCRIPTOR_HANDLE(mainDescriptorHeap[i]->GetCPUDescriptorHandleForHeapStart(), currentDescriptorCount
+			, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+
+		device->CreateUnorderedAccessView(texture.textures[i].Get(), nullptr, &uavDesc, texture.uav.uavCpuHandles[i]);
+
+		texture.uav.uavHandles[i] = CD3DX12_GPU_DESCRIPTOR_HANDLE(mainDescriptorHeap[i]->GetGPUDescriptorHandleForHeapStart(), currentDescriptorCount
+			, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 	}
 
 	currentDescriptorCount++;

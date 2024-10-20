@@ -5,7 +5,7 @@
 #include <ranges>
 #include "AaCamera.h"
 #include "AaEntity.h"
-#include "AaShaderResources.h"
+#include "AaShaderLibrary.h"
 #include "AaTextureResources.h"
 #include "AaLogger.h"
 #include <sstream>
@@ -32,9 +32,9 @@ void MaterialBase::Load()
 		return;
 
 	if (!ref.pipeline.vs_ref.empty())
-		shaders[ShaderTypeVertex] = AaShaderResources::get().getShader(ref.pipeline.vs_ref, ShaderTypeVertex);
+		shaders[ShaderTypeVertex] = AaShaderLibrary::get().getShader(ref.pipeline.vs_ref, ShaderTypeVertex);
 	if (!ref.pipeline.ps_ref.empty())
-		shaders[ShaderTypePixel] = AaShaderResources::get().getShader(ref.pipeline.ps_ref, ShaderTypePixel);
+		shaders[ShaderTypePixel] = AaShaderLibrary::get().getShader(ref.pipeline.ps_ref, ShaderTypePixel);
 
 	for (int i = 0; i < ShaderType_COUNT; i++)
 		if (shaders[i])
@@ -42,86 +42,7 @@ void MaterialBase::Load()
 
 	info.finish();
 
-	CreateRootSignature();
-}
-
-void MaterialBase::CreateRootSignature()
-{
-	std::vector<CD3DX12_ROOT_PARAMETER1> params;
-	params.resize(info.cbuffers.size() + info.textures.size());
-	auto param = params.data();
-
-	for (auto& buffer : info.cbuffers)
-	{
-		if (&buffer == info.rootBuffer)
-			param->InitAsConstants(buffer.info.Size / sizeof(DWORD), buffer.info.Slot, buffer.info.Space, buffer.visibility);
-		else
-			param->InitAsConstantBufferView(buffer.info.Slot, buffer.info.Space, D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE, buffer.visibility);
-
-		param++;
-	}
-
-	std::vector<CD3DX12_DESCRIPTOR_RANGE1> srvRanges;
-	srvRanges.resize(info.textures.size());
-	for (size_t i = 0; i < info.textures.size(); i++)
-	{
-		auto& tex = info.textures[i];
-		auto& range = srvRanges[i];
-
-		range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, tex.info.Slot, tex.info.Space, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE);
-		param->InitAsDescriptorTable(1, &range, tex.visibility);
-
-		param++;
-	}
-
-	std::vector<D3D12_STATIC_SAMPLER_DESC> samplers;
-	samplers.resize(info.samplers.size());
-	for (size_t i = 0; i < info.samplers.size(); i++)
-	{
-		auto& sampler = samplers[i];
-		sampler.Filter = D3D12_FILTER_ANISOTROPIC;
-		sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-		sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-		sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-		sampler.MipLODBias = 0.0f;
-		sampler.MaxAnisotropy = 8;
-		sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-		sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
-		sampler.MinLOD = 0.0f;
-		sampler.MaxLOD = D3D12_FLOAT32_MAX;
-		sampler.ShaderRegister = 0;
-		sampler.RegisterSpace = 0;
-		sampler.ShaderVisibility = info.samplers[i].visibility;
-
-		if (i < ref.resources.samplers.size())
-		{
-			auto& refSampler = ref.resources.samplers[i];
-			sampler.Filter = refSampler.filter;
-			sampler.AddressU = sampler.AddressV = sampler.AddressW = refSampler.bordering;
-			sampler.MaxAnisotropy = refSampler.maxAnisotropy;
-			sampler.BorderColor = refSampler.borderColor;
-		}
-	}
-
-	D3D12_ROOT_SIGNATURE_FLAGS flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
-	
-	if (info.bindlessTextures)
-		flags |= D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED;
-
-	if (!shaders[ShaderTypePixel])
-		flags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
-
-	// create the root signature
-	CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
-	rootSignatureDesc.Init_1_1(params.size(), params.data(), samplers.size(), samplers.empty() ? nullptr : samplers.data(), flags);
-
-	ComPtr<ID3DBlob> signature;
-	ComPtr<ID3DBlob> error;
-	D3D12SerializeVersionedRootSignature(&rootSignatureDesc, &signature, &error);
-	renderSystem->device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
+	rootSignature = info.createRootSignature(renderSystem->device);
 }
 
 void MaterialBase::BindSignature(ID3D12GraphicsCommandList* commandList, int frameIndex) const
@@ -175,6 +96,7 @@ ID3D12PipelineState* MaterialBase::CreatePipelineState(const std::vector<D3D12_I
 	if (shaders[ShaderTypePixel])
 		psoDesc.PS = { shaders[ShaderTypePixel]->blob->GetBufferPointer(), shaders[ShaderTypePixel]->blob->GetBufferSize() };
 	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	psoDesc.RasterizerState.CullMode = ref.pipeline.culling;
 	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
@@ -362,6 +284,15 @@ std::shared_ptr<ResourcesInfo> MaterialBase::CreateResourcesData(const MaterialR
 		resources->textures[i].rootIndex = rootIndex++;
 	}
 
+	resources->uavs.resize(info.uavs.size());
+
+	for (size_t i = 0; i < info.uavs.size(); i++)
+	{
+		auto& uav = resources->uavs[i];
+		uav.rootIndex = rootIndex++;
+		uav.uav = AaTextureResources::get().getNamedUAV(info.uavs[i].info.Name);
+	}
+
 	return resources;
 }
 
@@ -425,7 +356,7 @@ void MaterialInstance::SetParameter(const std::string& name, float* value, size_
 	}
 }
 
-void MaterialInstance::LoadMaterialConstants(MaterialConstantBuffers& buffers) const
+void MaterialInstance::LoadMaterialConstants(ShaderBuffersInfo& buffers) const
 {
 	if (buffers.data.size() < resources->cbuffers.size())
 		buffers.data.resize(resources->cbuffers.size());
@@ -437,7 +368,7 @@ void MaterialInstance::LoadMaterialConstants(MaterialConstantBuffers& buffers) c
 	}
 }
 
-void MaterialInstance::UpdatePerFrame(MaterialConstantBuffers& buffers, const FrameGpuParameters& info, const XMMATRIX& vpMatrix)
+void MaterialInstance::UpdatePerFrame(ShaderBuffersInfo& buffers, const FrameGpuParameters& info, const XMMATRIX& vpMatrix)
 {
 	for (auto p : resources->autoParams)
 	{
@@ -455,7 +386,7 @@ void MaterialInstance::UpdatePerFrame(MaterialConstantBuffers& buffers, const Fr
 	}
 }
 
-void MaterialInstance::UpdatePerObject(MaterialConstantBuffers& buffers, const XMFLOAT4X4& wvpMatrix, const XMMATRIX& worldMatrix, const FrameGpuParameters& info)
+void MaterialInstance::UpdatePerObject(ShaderBuffersInfo& buffers, const XMFLOAT4X4& wvpMatrix, const XMMATRIX& worldMatrix, const FrameGpuParameters& info)
 {
 	for (auto p : resources->autoParams)
 	{
@@ -487,9 +418,12 @@ void MaterialInstance::BindTextures(ID3D12GraphicsCommandList* commandList, int 
 	for (auto& t : resources->textures)
 		if (t.texture && t.rootIndex != BindlessTextureIndex)
 			commandList->SetGraphicsRootDescriptorTable(t.rootIndex, t.texture->srvHandles[frameIndex]);
+
+	for (auto& uav : resources->uavs)
+		commandList->SetGraphicsRootDescriptorTable(uav.rootIndex, uav.uav->uavHandles[frameIndex]);
 }
 
-void MaterialInstance::BindConstants(ID3D12GraphicsCommandList* commandList, int frameIndex, const MaterialConstantBuffers& buffers)
+void MaterialInstance::BindConstants(ID3D12GraphicsCommandList* commandList, int frameIndex, const ShaderBuffersInfo& buffers)
 {
 	for (auto& cb : resources->cbuffers)
 	{

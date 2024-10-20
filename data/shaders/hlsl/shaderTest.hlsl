@@ -25,7 +25,9 @@ struct VSInput
     float4 position : POSITION;
 	float3 normal : NORMAL;
     float2 uv : TEXCOORD;
+#ifdef USE_VC
 	float4 color : COLOR;
+#endif
 #ifdef INSTANCED
 	uint instanceID : SV_InstanceID;
 #endif
@@ -35,7 +37,9 @@ struct PSInput
 {
     float4 position : SV_POSITION;
 	float3 normal : NORMAL;
+#ifdef USE_VC
     float4 color : COLOR;
+#endif
 	float2 uv : TEXCOORD1;
 	float4 worldPosition : TEXCOORD2;
 };
@@ -54,7 +58,10 @@ PSInput VSMain(VSInput input)
 	result.normal = mul(input.normal, (float3x3)WorldMatrix);
 #endif
 
+#ifdef USE_VC
     result.color = input.color;
+#endif
+
 	result.uv = input.uv;
 
     return result;
@@ -180,9 +187,15 @@ PSOutput PSMain(PSInput input)
 
 	//input.color * lerp(GetTexture(TexIdGrass).Sample(g_sampler, normalizedCoords * 2), GetTexture(TexIdColor).Sample(g_sampler, input.uv), abs(sin(Time)))
 	
+#ifdef USE_VC
+	float4 ambientColor = input.color;
+#else
+	float4 ambientColor = float4(0.2,0.2,0.2,1);
+#endif
+
 	PSOutput output;
-    output.target0 = (input.color + getShadow(input.worldPosition) * diffuse) * GetTexture(TexIdColor).Sample(g_sampler, input.uv) * MaterialColor;
-	output.target1 = input.color;
+    output.target0 = (ambientColor + getShadow(input.worldPosition) * diffuse) * GetTexture(TexIdColor).Sample(g_sampler, input.uv) * MaterialColor;
+	output.target1 = ambientColor;
 
 	return output;
 }

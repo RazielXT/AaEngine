@@ -9,7 +9,7 @@ namespace imgui
 	struct DebugState
 	{
 		bool reloadShaders = false;
-		bool changeScene = false;
+		const char* changeScene{};
 	};
 
 	class DebugWindow

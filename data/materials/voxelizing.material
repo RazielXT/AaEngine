@@ -1,0 +1,8 @@
+material Voxelize
+{
+	vertex_shader voxelizeVS
+	pixel_shader voxelizePS
+
+	culling none
+	depth off
+}

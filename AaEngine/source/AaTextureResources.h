@@ -21,6 +21,17 @@ public:
 	UINT srvHeapIndex{};
 };
 
+class ShaderUAV
+{
+public:
+
+	ShaderUAV() = default;
+	ShaderUAV(D3D12_GPU_DESCRIPTOR_HANDLE*);
+
+	D3D12_GPU_DESCRIPTOR_HANDLE uavHandles[2]{};
+	D3D12_CPU_DESCRIPTOR_HANDLE uavCpuHandles[2]{};
+};
+
 class FileTexture : public ShaderTextureView
 {
 public:
@@ -42,9 +53,13 @@ public:
 	void setNamedTexture(std::string name, ShaderTextureView* texture);
 	ShaderTextureView* getNamedTexture(std::string name);
 
+	void setNamedUAV(std::string name, ShaderUAV* texture);
+	ShaderUAV* getNamedUAV(std::string name);
+
 private:
 
 	std::map<std::string, std::unique_ptr<FileTexture>> loadedTextures;
 
 	std::map<std::string, ShaderTextureView*> namedTextures;
+	std::map<std::string, ShaderUAV*> namedUAV;
 };

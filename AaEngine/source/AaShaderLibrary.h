@@ -14,14 +14,14 @@ struct LoadedShader
 	time_t filetime;
 };
 
-class AaShaderResources
+class AaShaderLibrary
 {
 public:
 
-	AaShaderResources(AaRenderSystem* mRS);
-	~AaShaderResources();
+	AaShaderLibrary(AaRenderSystem* mRS);
+	~AaShaderLibrary();
 
-	static AaShaderResources& get();
+	static AaShaderLibrary& get();
 
 	void loadShaderReferences(std::string directory, bool subDirectories = false);
 

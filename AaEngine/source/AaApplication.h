@@ -8,7 +8,7 @@
 #include "AaFrameListener.h"
 #include "AaModelResources.h"
 #include "AaMaterialResources.h"
-#include "AaShaderResources.h"
+#include "AaShaderLibrary.h"
 
 class AaApplication
 {
@@ -27,7 +27,7 @@ private:
  	AaRenderSystem* mRenderSystem{};
  	AaMaterialResources* mMaterials;
  	AaModelResources* mModels;
- 	AaShaderResources* mShaders;
+ 	AaShaderLibrary* mShaders;
 	ShaderConstantBuffers* mShaderConstants;
 
 	LARGE_INTEGER lastTime{};

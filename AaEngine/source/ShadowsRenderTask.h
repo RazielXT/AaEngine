@@ -1,11 +1,11 @@
 #pragma once
 
-#include "MaterialInfo.h"
 #include "RenderContext.h"
 #include <thread>
 
-struct RenderQueue;
 class AaShadowMap;
+class AaSceneManager;
+struct RenderQueue;
 
 class ShadowsRenderTask
 {
@@ -14,7 +14,7 @@ public:
 	ShadowsRenderTask(AaShadowMap& shadows);
 	~ShadowsRenderTask();
 
-	AsyncTasksInfo initialize(AaRenderSystem* renderSystem, RenderQueue* queue);
+	AsyncTasksInfo initialize(AaRenderSystem* renderSystem, AaSceneManager* sceneMgr);
 	void prepare(RenderContext& ctx, CommandsData& syncCommands);
 
 	struct 

@@ -88,7 +88,7 @@
     <ClCompile Include="source\AaShaderFileParser.cpp">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClCompile>
-    <ClCompile Include="source\AaShaderResources.cpp">
+    <ClCompile Include="source\AaShaderLibrary.cpp">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClCompile>
     <ClCompile Include="source\ResourcesManager.cpp">
@@ -108,9 +108,6 @@
     </ClCompile>
     <ClCompile Include="source\ConfigParser.cpp">
       <Filter>Source Files\Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="source\MaterialInfo.cpp">
-      <Filter>Source Files\Resources\Material</Filter>
     </ClCompile>
     <ClCompile Include="source\AaSceneManager.cpp">
       <Filter>Source Files\Scene</Filter>
@@ -142,9 +139,6 @@
     <ClCompile Include="source\DebugWindow.cpp">
       <Filter>Source Files\App</Filter>
     </ClCompile>
-    <ClCompile Include="source\AaMaterialConstants.cpp">
-      <Filter>Source Files\Resources\Material</Filter>
-    </ClCompile>
     <ClCompile Include="source\FrameCompositor.cpp">
       <Filter>Source Files\Frame</Filter>
     </ClCompile>
@@ -165,6 +159,27 @@
     </ClCompile>
     <ClCompile Include="source\EntityInstancing.cpp">
       <Filter>Source Files\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="source\VoxelizeSceneTask.cpp">
+      <Filter>Source Files\Frame</Filter>
+    </ClCompile>
+    <ClCompile Include="source\FrameCompositorTaskBuild.cpp">
+      <Filter>Source Files\Frame</Filter>
+    </ClCompile>
+    <ClCompile Include="source\BinaryModelLoader.cpp">
+      <Filter>Source Files\Resources\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="source\BinaryModelSerialization.cpp">
+      <Filter>Source Files\Resources\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="source\TextureResource.cpp">
+      <Filter>Source Files\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ComputeShader.cpp">
+      <Filter>Source Files\Resources\Shader</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ShaderSignature.cpp">
+      <Filter>Source Files\Resources\Shader</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -219,7 +234,7 @@
     <ClInclude Include="source\AaShaderFileParser.h">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClInclude>
-    <ClInclude Include="source\AaShaderResources.h">
+    <ClInclude Include="source\AaShaderLibrary.h">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClInclude>
     <ClInclude Include="source\ResourcesManager.h">
@@ -252,9 +267,6 @@
     <ClInclude Include="source\AaMath.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="source\MaterialInfo.h">
-      <Filter>Source Files\Resources\Material</Filter>
-    </ClInclude>
     <ClInclude Include="source\AaRenderables.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
@@ -275,9 +287,6 @@
     </ClInclude>
     <ClInclude Include="source\DebugWindow.h">
       <Filter>Source Files\App</Filter>
-    </ClInclude>
-    <ClInclude Include="source\AaMaterialConstants.h">
-      <Filter>Source Files\Resources\Material</Filter>
     </ClInclude>
     <ClInclude Include="source\FrameCompositor.h">
       <Filter>Source Files\Frame</Filter>
@@ -302,6 +311,33 @@
     </ClInclude>
     <ClInclude Include="source\EntityInstancing.h">
       <Filter>Source Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="source\VoxelizeSceneTask.h">
+      <Filter>Source Files\Frame</Filter>
+    </ClInclude>
+    <ClInclude Include="source\BinaryModelLoader.h">
+      <Filter>Source Files\Resources\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="source\BinaryModelSerialization.h">
+      <Filter>Source Files\Resources\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ModelParseOptions.h">
+      <Filter>Source Files\Resources\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="source\TextureResource.h">
+      <Filter>Source Files\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ComputeShader.h">
+      <Filter>Source Files\Resources\Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ShaderResources.h">
+      <Filter>Source Files\Resources\Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ShaderSignature.h">
+      <Filter>Source Files\Resources\Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ShaderConstants.h">
+      <Filter>Source Files\Resources\Shader</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

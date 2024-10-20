@@ -55,8 +55,14 @@ namespace imgui
 		if (ImGui::Button("Reload shaders"))
 			state.reloadShaders = true;
 
-		if (ImGui::Button("Change scene"))
-			state.changeScene = true;
+		const char* scenes[] = {
+			"test",
+			"testCubes",
+			"voxelRoom"
+		};
+		static int currentScene = 0;
+		if (ImGui::Combo("Scene", &currentScene, scenes, std::size(scenes)))
+			state.changeScene = scenes[currentScene];
 
 		ImGui::End();
 

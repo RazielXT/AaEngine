@@ -6,18 +6,12 @@
 #include <format>
 #include <SimpleMath.h>
 #include "AaModel.h"
-#include "d3d12.h"
+#include "ModelParseOptions.h"
 
 using namespace DirectX::SimpleMath;
 
 namespace OgreMeshFileParser
 {
-	struct ParseOptions
-	{
-		ResourceUploadBatch* batch;
-		ID3D12Device* device;
-	};
-
 	struct SubmeshInfo
 	{
 		AaModel* model;
@@ -33,5 +27,5 @@ namespace OgreMeshFileParser
 		DirectX::BoundingSphere boundingSphere;
 	};
 
-	MeshInfo load(std::string filename, ParseOptions);
+	MeshInfo load(std::string filename, ModelParseOptions);
 };

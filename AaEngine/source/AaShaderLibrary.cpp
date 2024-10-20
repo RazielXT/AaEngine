@@ -1,10 +1,10 @@
-#include "AaShaderResources.h"
+#include "AaShaderLibrary.h"
 #include "AaLogger.h"
 #include "Directories.h"
 
-static AaShaderResources* instance = nullptr;
+static AaShaderLibrary* instance = nullptr;
 
-AaShaderResources::AaShaderResources(AaRenderSystem* mRS)
+AaShaderLibrary::AaShaderLibrary(AaRenderSystem* mRS)
 {
 	if (instance)
 		throw std::exception("duplicate AaShaderResources");
@@ -13,17 +13,17 @@ AaShaderResources::AaShaderResources(AaRenderSystem* mRS)
 	instance = this;
 }
 
-AaShaderResources::~AaShaderResources()
+AaShaderLibrary::~AaShaderLibrary()
 {
 	instance = nullptr;
 }
 
-AaShaderResources& AaShaderResources::get()
+AaShaderLibrary& AaShaderLibrary::get()
 {
 	return *instance;
 }
 
-void AaShaderResources::loadShaderReferences(std::string directory, bool subDirectories /*= false*/)
+void AaShaderLibrary::loadShaderReferences(std::string directory, bool subDirectories /*= false*/)
 {
 	shaderRefMaps maps = AaShaderFileParser::parseAllShaderFiles(directory, subDirectories);
 	
@@ -45,7 +45,7 @@ void AaShaderResources::loadShaderReferences(std::string directory, bool subDire
 	}
 }
 
-LoadedShader* AaShaderResources::getShader(const std::string& name, ShaderType type)
+LoadedShader* AaShaderLibrary::getShader(const std::string& name, ShaderType type)
 {
 	auto it = loadedShaders[type].find(name);
 
@@ -61,7 +61,7 @@ LoadedShader* AaShaderResources::getShader(const std::string& name, ShaderType t
 	return it->second.get();
 }
 
-std::vector<LoadedShader*> AaShaderResources::reloadShaders()
+std::vector<LoadedShader*> AaShaderLibrary::reloadShaders()
 {
 	std::vector<LoadedShader*> changed;
 

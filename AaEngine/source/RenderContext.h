@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AaRenderSystem.h"
-#include "MaterialInfo.h"
+#include "ShaderResources.h"
 
 class AaCamera;
 class Renderables;

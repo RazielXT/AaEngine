@@ -99,7 +99,6 @@
     <ClCompile Include="source\AaCamera.cpp" />
     <ClCompile Include="source\AaEntity.cpp" />
     <ClCompile Include="source\AaMaterial.cpp" />
-    <ClCompile Include="source\AaMaterialConstants.cpp" />
     <ClCompile Include="source\AaMaterialFileParser.cpp" />
     <ClCompile Include="source\AaMaterialResources.cpp" />
     <ClCompile Include="source\AaModel.cpp" />
@@ -109,18 +108,21 @@
     <ClCompile Include="source\AaSceneManager.cpp" />
     <ClCompile Include="source\AaShaderCompiler.cpp" />
     <ClCompile Include="source\AaShaderFileParser.cpp" />
-    <ClCompile Include="source\AaShaderResources.cpp" />
+    <ClCompile Include="source\AaShaderLibrary.cpp" />
     <ClCompile Include="source\AaTextureResources.cpp" />
     <ClCompile Include="source\AaWindow.cpp" />
+    <ClCompile Include="source\BinaryModelLoader.cpp" />
+    <ClCompile Include="source\BinaryModelSerialization.cpp" />
+    <ClCompile Include="source\ComputeShader.cpp" />
     <ClCompile Include="source\EntityInstancing.cpp" />
     <ClCompile Include="source\FrameCompositor.cpp" />
     <ClCompile Include="source\CompositorFileParser.cpp" />
     <ClCompile Include="source\ConfigParser.cpp" />
     <ClCompile Include="source\DebugWindow.cpp" />
+    <ClCompile Include="source\FrameCompositorTaskBuild.cpp" />
     <ClCompile Include="source\FreeCamera.cpp" />
     <ClCompile Include="source\InputHandler.cpp" />
     <ClCompile Include="source\main.cpp" />
-    <ClCompile Include="source\MaterialInfo.cpp" />
     <ClCompile Include="source\MyListener.cpp" />
     <ClCompile Include="source\OgreMeshFileParser.cpp" />
     <ClCompile Include="source\RenderQueue.cpp" />
@@ -129,8 +131,11 @@
     <ClCompile Include="source\SceneParser.cpp" />
     <ClCompile Include="source\SceneRenderTask.cpp" />
     <ClCompile Include="source\ShaderConstantBuffers.cpp" />
+    <ClCompile Include="source\ShaderSignature.cpp" />
     <ClCompile Include="source\ShadowMap.cpp" />
     <ClCompile Include="source\ShadowsRenderTask.cpp" />
+    <ClCompile Include="source\TextureResource.cpp" />
+    <ClCompile Include="source\VoxelizeSceneTask.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dependencies\imgui\backends\imgui_impl_dx12.h" />
@@ -142,7 +147,7 @@
     <ClInclude Include="source\AaFrameListener.h" />
     <ClInclude Include="source\AaLogger.h" />
     <ClInclude Include="source\AaMaterial.h" />
-    <ClInclude Include="source\AaMaterialConstants.h" />
+    <ClInclude Include="source\ShaderConstants.h" />
     <ClInclude Include="source\AaMaterialFileParser.h" />
     <ClInclude Include="source\AaMaterialResources.h" />
     <ClInclude Include="source\AaModel.h" />
@@ -152,10 +157,14 @@
     <ClInclude Include="source\AaSceneManager.h" />
     <ClInclude Include="source\AaShaderCompiler.h" />
     <ClInclude Include="source\AaShaderFileParser.h" />
-    <ClInclude Include="source\AaShaderResources.h" />
+    <ClInclude Include="source\AaShaderLibrary.h" />
     <ClInclude Include="source\AaTextureResources.h" />
     <ClInclude Include="source\AaWindow.h" />
+    <ClInclude Include="source\BinaryModelLoader.h" />
+    <ClInclude Include="source\BinaryModelSerialization.h" />
+    <ClInclude Include="source\ComputeShader.h" />
     <ClInclude Include="source\EntityInstancing.h" />
+    <ClInclude Include="source\ModelParseOptions.h" />
     <ClInclude Include="source\RenderContext.h" />
     <ClInclude Include="source\FrameCompositor.h" />
     <ClInclude Include="source\CompositorFileParser.h" />
@@ -165,7 +174,7 @@
     <ClInclude Include="source\Directx.h" />
     <ClInclude Include="source\FreeCamera.h" />
     <ClInclude Include="source\InputHandler.h" />
-    <ClInclude Include="source\MaterialInfo.h" />
+    <ClInclude Include="source\ShaderResources.h" />
     <ClInclude Include="source\AaMath.h" />
     <ClInclude Include="source\MyListener.h" />
     <ClInclude Include="source\OgreMeshFileParser.h" />
@@ -176,8 +185,11 @@
     <ClInclude Include="source\SceneParser.h" />
     <ClInclude Include="source\SceneRenderTask.h" />
     <ClInclude Include="source\ShaderConstantBuffers.h" />
+    <ClInclude Include="source\ShaderSignature.h" />
     <ClInclude Include="source\ShadowMap.h" />
     <ClInclude Include="source\ShadowsRenderTask.h" />
+    <ClInclude Include="source\TextureResource.h" />
+    <ClInclude Include="source\VoxelizeSceneTask.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

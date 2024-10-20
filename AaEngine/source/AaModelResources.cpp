@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 #include "OgreMeshFileParser.h"
 #include <memory>
+#include "BinaryModelLoader.h"
 
 static AaModelResources* instance = nullptr;
 
@@ -64,13 +65,13 @@ AaModel* AaModelResources::loadModel(const std::string& filename, ModelLoadConte
 
 	if (filename.ends_with("mesh"))
 	{
+		ModelParseOptions o;
+		o.batch = &ctx.batch;
+		o.device = mRenderSystem->device;
+
 		struct stat attrib;
 		if (stat(filepath.c_str(), &attrib) == 0)
 		{
-			OgreMeshFileParser::ParseOptions o;
-			o.batch = &ctx.batch;
-			o.device = mRenderSystem->device;
-
 			auto mesh = OgreMeshFileParser::load(filepath, o);
 
 			if (!mesh.submeshes.empty())
@@ -78,6 +79,10 @@ AaModel* AaModelResources::loadModel(const std::string& filename, ModelLoadConte
 				model = mesh.submeshes[0].model;
 				model->bbox = mesh.boundingBox;
 			}
+		}
+		else if (stat((filepath + ".model").c_str(), &attrib) == 0)
+		{
+			model = BinaryModelLoader::load(filepath + ".model", o);
 		}
 	}
 

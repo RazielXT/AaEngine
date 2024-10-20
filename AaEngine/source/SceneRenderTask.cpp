@@ -29,9 +29,9 @@ SceneRenderTask::~SceneRenderTask()
 	}
 }
 
-AsyncTasksInfo SceneRenderTask::initialize(AaRenderSystem* renderSystem, RenderQueue* queue)
+AsyncTasksInfo SceneRenderTask::initialize(AaRenderSystem* renderSystem, AaSceneManager* sceneMgr, RenderTargetTexture* target)
 {
-	sceneQueue = queue;
+	sceneQueue = sceneMgr->createQueue(target->formats);
 	
 	scene.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
 	scene.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -50,9 +50,9 @@ AsyncTasksInfo SceneRenderTask::initialize(AaRenderSystem* renderSystem, RenderQ
 	return { { scene.eventFinish, scene.commands } };
 }
 
-AsyncTasksInfo SceneRenderTask::initializeEarlyZ(AaRenderSystem* renderSystem, RenderQueue* queue)
+AsyncTasksInfo SceneRenderTask::initializeEarlyZ(AaRenderSystem* renderSystem, AaSceneManager* sceneMgr)
 {
-	depthQueue = queue;
+	depthQueue = sceneMgr->createQueue({}, MaterialVariant::Depth);
 
 	earlyZ.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
 	earlyZ.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);

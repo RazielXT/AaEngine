@@ -3,6 +3,7 @@
 #include "CompositorFileParser.h"
 #include "ShadowsRenderTask.h"
 #include "SceneRenderTask.h"
+#include "VoxelizeSceneTask.h"
 #include <set>
 
 class AaMaterial;
@@ -33,6 +34,7 @@ protected:
 
 	ShadowsRenderTask shadowRender;
 	SceneRenderTask sceneRender;
+	VoxelizeSceneTask sceneVoxelize;
 
 	struct PassData
 	{

@@ -6,6 +6,7 @@
 #include <thread>
 
 struct RenderQueue;
+class AaSceneManager;
 
 class SceneRenderTask
 {
@@ -14,8 +15,8 @@ public:
 	SceneRenderTask();
 	~SceneRenderTask();
 
-	AsyncTasksInfo initialize(AaRenderSystem* renderSystem, RenderQueue* queue);
-	AsyncTasksInfo initializeEarlyZ(AaRenderSystem* renderSystem, RenderQueue* queue);
+	AsyncTasksInfo initialize(AaRenderSystem* renderSystem, AaSceneManager* sceneMgr, RenderTargetTexture* target);
+	AsyncTasksInfo initializeEarlyZ(AaRenderSystem* renderSystem, AaSceneManager* sceneMgr);
 	void prepare(RenderContext& ctx, CommandsData& syncCommands);
 
 	struct Work

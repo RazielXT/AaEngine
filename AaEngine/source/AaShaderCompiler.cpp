@@ -160,6 +160,16 @@ bool AaShaderCompiler::reflectShaderInfo(IDxcResult* compiledShaderBuffer, Shade
 
 			description.samplers.push_back(sInfo);
 		}
+		else if (shaderInputBindDesc.Type == D3D_SIT_UAV_RWTYPED)
+		{
+			UAVInfo uavInfo;
+			uavInfo.Name = shaderInputBindDesc.Name;
+			uavInfo.Slot = shaderInputBindDesc.BindPoint;
+			uavInfo.Space = shaderInputBindDesc.Space;
+
+			description.uavs.push_back(uavInfo);
+		}
+		
 	}
 
 	if (description.textures.empty() && shaderDesc.TextureNormalInstructions)
@@ -226,6 +236,12 @@ ComPtr<IDxcBlob> AaShaderCompiler::compileShader(const ShaderRef& ref, ShaderDes
 	// Load shader source code from file
 	ComPtr<IDxcBlobEncoding> pSourceBlob;
 	pUtils->LoadFile(wfile.c_str(), nullptr, &pSourceBlob);
+
+	if (!pSourceBlob)
+	{
+		AaLogger::logError("failed to load file " + path);
+		return nullptr;
+	}
 
 	auto wentry = std::wstring(ref.entry.begin(), ref.entry.end());
  	auto wprofile = std::wstring(ref.profile.begin(), ref.profile.end());

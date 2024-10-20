@@ -20,7 +20,7 @@ public:
 
 	aa::SceneLights lights;
 
-	RenderQueue* createQueue(const std::vector<DXGI_FORMAT>& targets, bool depth = false, bool unique = false);
+	RenderQueue* createQueue(const std::vector<DXGI_FORMAT>& targets, MaterialVariant variant = MaterialVariant::Default);
 
 	void updateQueues();
 

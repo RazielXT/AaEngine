@@ -1,4 +1,4 @@
-material ColorVc abstract
+material Color abstract
 {
 	vertex_shader vsTest
 	pixel_shader psTest
@@ -9,7 +9,13 @@ material ColorVc abstract
 	}
 }
 
-material whiteVc : ColorVc
+material ColorVc abstract abstract
+{
+	vertex_shader vsTestVc
+	pixel_shader psTestVc
+}
+
+material White : Color
 {
 	texture Diffuse
 	{
@@ -22,20 +28,19 @@ material whiteVc : ColorVc
 	}
 }
 
-material yellowVc : ColorVc
+material whiteVc : White ColorVc
+
+material Yellow : Color
 {
-	texture Diffuse
-	{
-		file white.png
-	}
-	
 	default_params
 	{
 		float4 MaterialColor 1 1 0 1
 	}
 }
 
-material blueVc : ColorVc
+material yellowVc : Yellow ColorVc
+
+material Blue : Color
 {
 	texture Diffuse
 	{
@@ -48,7 +53,9 @@ material blueVc : ColorVc
 	}
 }
 
-material niceRedVc : ColorVc
+material blueVc : Blue ColorVc
+
+material Red : Color
 {
 	texture Diffuse
 	{
@@ -61,7 +68,22 @@ material niceRedVc : ColorVc
 	}
 }
 
-material terrainGrass : ColorVc
+material niceRedVc : Red ColorVc
+
+material Green : Color
+{
+	texture Diffuse
+	{
+		file white.png
+	}
+	
+	default_params
+	{
+		float4 MaterialColor 0.2 0.8 0.2 1
+	}
+}
+
+material terrainGrass : Color
 {
 	texture Diffuse
 	{

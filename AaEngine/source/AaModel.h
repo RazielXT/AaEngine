@@ -32,8 +32,8 @@ public:
 	AaModel();
 	~AaModel();
 
-	void addLayoutElement(unsigned short source, UINT offset, DXGI_FORMAT format, const char* semantic, unsigned short index);
-	uint32_t getLayoutVertexSize(uint16_t) const;
+	void addLayoutElement(unsigned short slot, UINT offset, DXGI_FORMAT format, const char* semantic, unsigned short index);
+	uint32_t getLayoutVertexSize(uint16_t slot) const;
 	std::vector<D3D12_INPUT_ELEMENT_DESC> vertexLayout;
 
 	void CreateVertexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, void* vertices, UINT vertexBufferSize, UINT vertexSize);
@@ -47,6 +47,6 @@ public:
 	uint32_t indexCount = 0;
 
 	DirectX::BoundingBox bbox;
-	void calculateBounds(const std::vector<float>& positions) {};
+	void calculateBounds(const std::vector<float>& positions);
 
 };

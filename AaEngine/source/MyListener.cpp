@@ -5,7 +5,7 @@
 #include "FreeCamera.h"
 #include "SceneParser.h"
 #include "AaModelResources.h"
-#include "AaShaderResources.h"
+#include "AaShaderLibrary.h"
 #include "AaMaterialResources.h"
 #include "FrameCompositor.h"
 
@@ -27,7 +27,7 @@ MyListener::MyListener(AaRenderSystem* render)
 // 	voxelScene = new AaVoxelScene(mSceneMgr);
 // 	voxelScene->initScene(128);
 
-	AaShaderResources::get().loadShaderReferences(SHADER_DIRECTORY, false);
+	AaShaderLibrary::get().loadShaderReferences(SHADER_DIRECTORY, false);
  	AaMaterialResources::get().loadMaterials(MATERIAL_DIRECTORY, false);
 
 	compositor = new FrameCompositor(render, sceneMgr, shadowMap);
@@ -66,9 +66,8 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 		renderSystem->WaitForAllFrames();
 		sceneMgr->clear();
 		AaModelResources::get().clear();
-		static int sceneCounter = 0;
-		SceneParser::load(++sceneCounter % 2 ? "testCubes" : "test", sceneMgr, renderSystem);
-		debugWindow.state.changeScene = false;
+		SceneParser::load(debugWindow.state.changeScene, sceneMgr, renderSystem);
+		debugWindow.state.changeScene = {};
 	}
 
  	if (auto ent = sceneMgr->getEntity("Torus001"))
@@ -77,6 +76,11 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 		ent->yaw(timeSinceLastFrame / 2.f);
 		ent->pitch(timeSinceLastFrame / 3.f);
  	}
+	if (auto ent = sceneMgr->getEntity("Suzanne"))
+	{
+		ent->yaw(timeSinceLastFrame);
+		ent->setPosition({ cos(elapsedTime / 2.f) * 5, ent->getPosition().y, ent->getPosition().z });
+	}
 
  	elapsedTime += timeSinceLastFrame;
 

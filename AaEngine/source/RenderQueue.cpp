@@ -9,8 +9,10 @@ void RenderQueue::update(const EntityChanges& changes)
 		if (change == EntityChange::Add)
 		{
 			auto matInstance = entity->material;
-			if (depth)
+			if (variant == MaterialVariant::Depth)
 				matInstance = AaMaterialResources::get().getMaterial(entity->instancingGroup ? "DepthInstanced" : "Depth");
+			else if (variant == MaterialVariant::Voxel)
+				matInstance = AaMaterialResources::get().getMaterial(entity->instancingGroup ? "VoxelizeInstanced" : "Voxelize");
 
 			auto entry = EntityEntry{ entity, matInstance->Assign(entity->model->vertexLayout, targets) };
 			auto& entities = entityOrder[entity->order];
@@ -38,7 +40,7 @@ static void RenderObject(ID3D12GraphicsCommandList* commandList, AaEntity* e, Aa
 		commandList->DrawIndexedInstanced(e->model->indexCount, 1, 0, 0, 0);
 }
 
-void updateEntityCbuffers(MaterialConstantBuffers& constants, AaEntity* entity)
+void updateEntityCbuffers(ShaderBuffersInfo& constants, AaEntity* entity)
 {
 	if (entity->instancingGroup)
 		constants.cbuffers.instancing = entity->instancingGroup->buffer;
@@ -50,7 +52,7 @@ void RenderQueue::renderObjects(AaCamera& camera, const RenderInformation& info,
 		return;
 
 	EntityEntry lastEntry{};
-	MaterialConstantBuffers constants;
+	ShaderBuffersInfo constants;
 
 	for (auto& [order, entities] : entityOrder)
 	{

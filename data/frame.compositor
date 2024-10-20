@@ -9,6 +9,13 @@ compositor SceneCompositor
 	texture bloomTexture4 target_width_scaled 0.0625 target_height_scaled 0.0625 DXGI_FORMAT_R8G8B8A8_UNORM
 	texture bloomTexture5 target_width_scaled 0.0625 target_height_scaled 0.0625 DXGI_FORMAT_R8G8B8A8_UNORM
 
+	texture voxelDummy 128 128 DXGI_FORMAT_R8G8B8A8_UNORM
+
+	render VoxelScene
+	{
+		target voxelDummy
+	}
+
 	render Shadows
 	{
 	}

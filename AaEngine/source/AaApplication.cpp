@@ -17,7 +17,7 @@ AaApplication::AaApplication(HINSTANCE hInstance)
 	mWindow = new AaWindow(hInstance, x, y);
  	mRenderSystem = new AaRenderSystem(mWindow);
 	mShaderConstants = new ShaderConstantBuffers(mRenderSystem);
-	mShaders = new AaShaderResources(mRenderSystem);
+	mShaders = new AaShaderLibrary(mRenderSystem);
 	mMaterials = new AaMaterialResources(mRenderSystem);
 	mModels = new AaModelResources(mRenderSystem);
 

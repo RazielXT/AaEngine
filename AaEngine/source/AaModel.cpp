@@ -2,6 +2,7 @@
 #include "AaRenderSystem.h"
 #include <functional>
 #include <BufferHelpers.h>
+#include "AaMath.h"
 
 AaModel::AaModel()
 {
@@ -16,14 +17,14 @@ AaModel::~AaModel()
 		indexBuffer->Release();
 }
 
-void AaModel::addLayoutElement(unsigned short source, UINT offset, DXGI_FORMAT format, const char* semantic, unsigned short index)
+void AaModel::addLayoutElement(unsigned short slot, UINT offset, DXGI_FORMAT format, const char* semantic, unsigned short index)
 {
 	D3D12_INPUT_ELEMENT_DESC desc{};
 	desc.Format = format;
 	desc.SemanticName = semantic;
 	desc.AlignedByteOffset = offset;
 	desc.SemanticIndex = index;
-	desc.InputSlot = source;
+	desc.InputSlot = slot;
 
 	vertexLayout.push_back(desc);
 }
@@ -140,12 +141,12 @@ static uint32_t getTypeSize(DXGI_FORMAT t)
 	}
 }
 
-uint32_t AaModel::getLayoutVertexSize(uint16_t source) const
+uint32_t AaModel::getLayoutVertexSize(uint16_t slot) const
 {
 	uint32_t sz = 0;
 	for (const auto& e : vertexLayout)
 	{
-		if (e.InputSlot == source)
+		if (e.InputSlot == slot)
 			sz += getTypeSize(e.Format);
 	}
 	return sz;
@@ -175,6 +176,18 @@ void AaModel::CreateIndexBuffer(ID3D12Device* device, ResourceUploadBatch* memor
 	indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
 	indexBufferView.SizeInBytes = static_cast<UINT>(data.size()) * sizeof(uint16_t);
 	indexBufferView.Format = DXGI_FORMAT_R16_UINT;
+}
+
+void AaModel::calculateBounds(const std::vector<float>& positions)
+{
+	BoundingBoxVolume volume;
+
+	for (size_t i = 0; i < positions.size(); i += 3)
+	{
+		volume.add({ positions[i], positions[i + 1], positions[i + 2] });
+	}
+
+	bbox = volume.createBbox();
 }
 
 const char* VertexElementSemantic::GetConstName(const std::string& semantic)

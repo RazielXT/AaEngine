@@ -1,0 +1,45 @@
+material ColorVCT abstract
+{
+	vertex_shader vsVoxelTracing
+	pixel_shader psVoxelTracing
+	
+	texture Diffuse
+	{
+		file white.png
+	}
+	
+	texture SceneVoxel
+}
+
+material WhiteVCT : ColorVCT
+{
+	default_params
+	{
+		float4 MaterialColor 1 1 1 1
+	}
+}
+
+material BlueVCT : ColorVCT
+{
+	default_params
+	{
+		float4 MaterialColor 0.2 0.2 1 1
+	}
+}
+
+material RedVCT : ColorVCT
+{
+	default_params
+	{
+		float4 MaterialColor 1 0.2 0.2 1
+	}
+}
+
+material GreenVCT : ColorVCT
+{
+	default_params
+	{
+		float4 MaterialColor 0.2 0.8 0.2 1
+	}
+}
+

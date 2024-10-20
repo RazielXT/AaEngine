@@ -7,8 +7,8 @@
 
 struct MaterialDepthState
 {
-	bool check;
-	bool write;
+	bool check = true;
+	bool write = true;
 };
 
 struct TextureRef
@@ -31,6 +31,7 @@ struct MaterialPipelineInfo
 	std::string vs_ref;
 
 	MaterialDepthState depth;
+	D3D12_CULL_MODE culling = D3D12_CULL_MODE_BACK;
 };
 
 struct MaterialResourcesInfo

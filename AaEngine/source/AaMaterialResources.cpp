@@ -77,15 +77,10 @@ void AaMaterialResources::loadMaterials(std::string directory, bool subDirectori
 
 	for (const MaterialRef& info : knownMaterials)
 	{
-		if (info.base.empty())
+		auto& base = materialBaseMap[info.base];
+		if (!base)
 		{
-			if (materialBaseMap.contains(info.name))
-			{
-				AaLogger::logWarning("Skip loading duplicate base material " + info.name);
-				continue;
-			}
-
-			materialBaseMap[info.name] = std::make_unique<MaterialBase>(renderSystem, resourcesMgr, info);
+			base = std::make_unique<MaterialBase>(renderSystem, resourcesMgr, info);
 		}
 	}
 }
@@ -95,14 +90,24 @@ void AaMaterialResources::PrepareShaderResourceView(RenderTargetTexture& rtt)
 	resourcesMgr.createShaderResourceView(renderSystem->device, rtt);
 }
 
+void AaMaterialResources::PrepareShaderResourceView(TextureResource& tex)
+{
+	resourcesMgr.createShaderResourceView(renderSystem->device, tex);
+}
+
 void AaMaterialResources::PrepareDepthShaderResourceView(RenderDepthTargetTexture& rtt)
 {
 	resourcesMgr.createDepthShaderResourceView(renderSystem->device, rtt);
 }
 
+void AaMaterialResources::PrepareUAVView(TextureResource& t)
+{
+	resourcesMgr.createUAVView(renderSystem->device, t);
+}
+
 void AaMaterialResources::ReloadShaders()
 {
-	auto shadersChanged = AaShaderResources::get().reloadShaders();
+	auto shadersChanged = AaShaderLibrary::get().reloadShaders();
 
 	for (auto& [name, base] : materialBaseMap)
 	{

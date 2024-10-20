@@ -34,6 +34,13 @@ struct SamplerInfo
 	UINT Slot;
 };
 
+struct UAVInfo
+{
+	std::string Name;
+	UINT Slot;
+	UINT Space;
+};
+
 struct ShaderDescription
 {
 	std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout;
@@ -41,6 +48,7 @@ struct ShaderDescription
 	std::vector<CBufferInfo> cbuffers;
 	std::vector<TextureInfo> textures;
 	std::vector<SamplerInfo> samplers;
+	std::vector<UAVInfo> uavs;
 
 	bool bindlessTextures = false;
 };

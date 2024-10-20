@@ -24,9 +24,9 @@ ShadowsRenderTask::~ShadowsRenderTask()
 	}
 }
 
-AsyncTasksInfo ShadowsRenderTask::initialize(AaRenderSystem* renderSystem, RenderQueue* queue)
+AsyncTasksInfo ShadowsRenderTask::initialize(AaRenderSystem* renderSystem, AaSceneManager* sceneMgr)
 {
-	depthQueue = queue;
+	depthQueue = sceneMgr->createQueue({}, MaterialVariant::Depth);
 
 	AsyncTasksInfo tasks;
 

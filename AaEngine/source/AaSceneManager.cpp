@@ -34,20 +34,17 @@ AaEntity* AaSceneManager::getEntity(std::string name) const
 	return nullptr;
 }
 
-RenderQueue* AaSceneManager::createQueue(const std::vector<DXGI_FORMAT>& targets, bool depth, bool unique)
+RenderQueue* AaSceneManager::createQueue(const std::vector<DXGI_FORMAT>& targets, MaterialVariant variant)
 {
-	if (!unique)
+	for (auto& q : queues)
 	{
-		for (auto& q : queues)
-		{
-			if (q->targets == targets && q->depth == depth)
-				return q.get();
-		}
+		if (q->targets == targets && q->variant == variant)
+			return q.get();
 	}
 
 	auto queue = std::make_unique<RenderQueue>();
 	queue->targets = targets;
-	queue->depth = depth;
+	queue->variant = variant;
 
 	return queues.emplace_back(std::move(queue)).get();
 }

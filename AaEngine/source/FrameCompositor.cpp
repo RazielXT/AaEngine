@@ -97,7 +97,7 @@ void FrameCompositor::reloadTextures()
 
 static void RenderQuad(AaMaterial* material, const FrameGpuParameters& params, ID3D12GraphicsCommandList* commandList, UINT frameIndex)
 {
-	MaterialConstantBuffers constants;
+	ShaderBuffersInfo constants;
 
 	material->GetBase()->BindSignature(commandList, frameIndex);
 
@@ -150,6 +150,10 @@ void FrameCompositor::render(RenderContext& ctx, imgui::DebugWindow& gui)
 		{
 			sceneRender.prepare(ctx, generalCommands);
 		}
+		else if (pass.info.render == "VoxelScene")
+		{
+			sceneVoxelize.prepare(ctx, generalCommands);
+		}
 		else if (pass.info.render == "Imgui")
 		{
 			pass.target->PrepareAsTarget(generalCommands.commandList, renderSystem->frameIndex, false);
@@ -167,97 +171,6 @@ void FrameCompositor::render(RenderContext& ctx, imgui::DebugWindow& gui)
 
 	renderSystem->Present();
 	renderSystem->EndFrame();
-}
-
-void FrameCompositor::initializeCommands()
-{
-	auto containsPassResources = [](const std::set<std::string>& pushedResources, const CompositorPass& pass)
-		{
-			return pushedResources.contains(pass.after)
-				|| pushedResources.contains(pass.target)
-				|| std::any_of(pass.inputs.begin(), pass.inputs.end(), [&pushedResources](const std::pair<std::string, UINT>& s) { return pushedResources.find(s.first) != pushedResources.end(); });
-		};
-
-	AsyncTasksInfo pushedAsyncTasks;
-	std::set<std::string> pushedAsyncResources;
-
-	auto commitAsyncTasks = [&]()
-		{
-			if (pushedAsyncTasks.empty())
-				return;
-
-			TasksGroup& group = tasks.emplace_back();
-			for (auto& t : pushedAsyncTasks)
-			{
-				group.data.push_back(t.commands);
-				group.finishEvents.push_back(t.finishEvent);
-			}
-
-			pushedAsyncTasks.clear();
-			pushedAsyncResources.clear();
-		};
-
-	auto pushAsyncTasks = [&](const CompositorPass& pass, const AsyncTasksInfo& info)
-		{
-			if (containsPassResources(pushedAsyncResources, pass))
-				commitAsyncTasks();
-
-			pushedAsyncTasks.insert(pushedAsyncTasks.end(), info.begin(), info.end());
-
-			if (!pass.name.empty())
-				pushedAsyncResources.insert(pass.name);
-
-			if (!pass.target.empty())
-				pushedAsyncResources.insert(pass.target);
-		};
-
-	CommandsData generalCommands{};
-	std::set<std::string> pushedCommandsResources;
-	uint32_t syncCount = 0;
-	auto commitSyncCommands = [&]()
-		{
-			if (generalCommands.commandList)
-				tasks.push_back({ {}, { generalCommands } });
-		};
-	auto refreshSyncCommands = [&](FrameCompositor::PassData& passData, bool syncPass)
-		{
-			if (!generalCommands.commandList || (!syncPass && syncCount && containsPassResources(pushedAsyncResources, passData.info)))
-			{
-				commitSyncCommands();
-				generalCommands = generalCommandsArray.emplace_back(renderSystem->CreateCommandList(L"Compositor"));
-				passData.startCommands = true;
-				syncCount = 0;
-			}
-			syncCount += syncPass;
-			return generalCommands;
-		};
-
-	for (auto& pass : passes)
-	{
-		bool syncPass = false;
-
-		if (pass.info.render == "Shadows")
-		{
-			pushAsyncTasks(pass.info, shadowRender.initialize(renderSystem, sceneMgr->createQueue({}, true)));
-		}
-		else if (pass.info.render == "Scene")
-		{
-			pushAsyncTasks(pass.info, sceneRender.initialize(renderSystem, sceneMgr->createQueue(pass.target->formats)));
-		}
-		else if (pass.info.render == "SceneEarlyZ")
-		{
-			pushAsyncTasks(pass.info, sceneRender.initializeEarlyZ(renderSystem, sceneMgr->createQueue({}, true)));
-		}
-		else
-		{
-			syncPass = true;
-		}
-
-		pass.generalCommands = refreshSyncCommands(pass, syncPass);
-	}
-
-	commitAsyncTasks();
-	commitSyncCommands();
 }
 
 void FrameCompositor::executeCommands()

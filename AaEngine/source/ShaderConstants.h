@@ -1,6 +1,7 @@
 #pragma once
 
-#include "MaterialInfo.h"
+#include "ShaderConstantBuffers.h"
+#include <vector>
 
 enum class CBufferType
 {
@@ -10,7 +11,7 @@ enum class CBufferType
 	COUNT
 };
 
-class MaterialConstantBuffers
+class ShaderBuffersInfo
 {
 public:
 

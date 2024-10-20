@@ -7,27 +7,6 @@ void InstancingManager::clear()
 	groups.clear();
 }
 
-struct BoundingBoxExtends
-{
-	Vector3 min{};
-	Vector3 max{};
-
-	void add(Vector3 point)
-	{
-		min = Vector3::Min(min, point);
-		max = Vector3::Max(max, point);
-	}
-
-	BoundingBox createBbox() const
-	{
-		BoundingBox bbox;
-		bbox.Center = (max + min) / 2;
-		bbox.Extents = (max - min) / 2;
-
-		return bbox;
-	}
-};
-
 InstanceGroup* InstancingManager::build(AaSceneManager* sceneMgr, const InstanceGroupDescription& description)
 {
 	if (description.objects.empty())
@@ -46,7 +25,7 @@ InstanceGroup* InstancingManager::build(AaSceneManager* sceneMgr, const Instance
 		entity->instancingGroup = it.get();
 
 		auto init = description.objects.front().position;
-		BoundingBoxExtends volume{ init, init };
+		BoundingBoxVolume volume{ init, init };
 		for (auto& obj : description.objects)
 			volume.add(obj.position);
 

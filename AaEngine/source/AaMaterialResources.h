@@ -20,8 +20,10 @@ public:
 
 	void loadMaterials(std::string directory, bool subDirectories = false);
 
-	void PrepareShaderResourceView(RenderTargetTexture&);
 	void PrepareDepthShaderResourceView(RenderDepthTargetTexture&);
+	void PrepareShaderResourceView(RenderTargetTexture&);
+	void PrepareShaderResourceView(TextureResource&);
+	void PrepareUAVView(TextureResource&);
 
 	void ReloadShaders();
 

@@ -9,10 +9,11 @@
 #include <dxcapi.h>
 #include <memory>
 #include "AaMaterialFileParser.h"
-#include "AaShaderResources.h"
-#include "MaterialInfo.h"
+#include "AaShaderLibrary.h"
+#include "ShaderResources.h"
+#include "ShaderSignature.h"
 #include <map>
-#include "AaMaterialConstants.h"
+#include "ShaderConstantBuffers.h"
 
 using namespace Microsoft::WRL;
 using namespace DirectX;
@@ -47,8 +48,6 @@ public:
 private:
 
 	std::shared_ptr<ResourcesInfo> CreateResourcesData(const MaterialRef& childRef) const;
-
-	void CreateRootSignature();
 
 	LoadedShader* shaders[ShaderType_COUNT]{};
 
@@ -89,12 +88,12 @@ public:
 
 	void SetParameter(const std::string& name, float* value, size_t size);
 
-	void LoadMaterialConstants(MaterialConstantBuffers& buffers) const;
-	void UpdatePerFrame(MaterialConstantBuffers& buffers, const FrameGpuParameters& info, const XMMATRIX& vpMatrix);
-	void UpdatePerObject(MaterialConstantBuffers& buffers, const XMFLOAT4X4& wvpMatrix, const XMMATRIX& worldMatrix, const FrameGpuParameters& info);
+	void LoadMaterialConstants(ShaderBuffersInfo& buffers) const;
+	void UpdatePerFrame(ShaderBuffersInfo& buffers, const FrameGpuParameters& info, const XMMATRIX& vpMatrix);
+	void UpdatePerObject(ShaderBuffersInfo& buffers, const XMFLOAT4X4& wvpMatrix, const XMMATRIX& worldMatrix, const FrameGpuParameters& info);
 
 	void BindTextures(ID3D12GraphicsCommandList* commandList, int frameIndex);
-	void BindConstants(ID3D12GraphicsCommandList* commandList, int frameIndex, const MaterialConstantBuffers& buffers);
+	void BindConstants(ID3D12GraphicsCommandList* commandList, int frameIndex, const ShaderBuffersInfo& buffers);
 
 	AaMaterial* Assign(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target);
 

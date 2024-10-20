@@ -3,10 +3,8 @@
 #include "AaShaderCompiler.h"
 #include "ResourcesManager.h"
 #include "ShaderConstantBuffers.h"
-#include "AaMaterialConstants.h"
 
 struct LoadedShader;
-struct ShaderTextureView;
 
 struct SignatureInfo
 {
@@ -31,66 +29,34 @@ struct SignatureInfo
 	};
 	std::vector<Sampler> samplers;
 
+	struct UAV
+	{
+		UAVInfo& info;
+		D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY(-1);
+	};
+	std::vector<UAV> uavs;
+
 	CBuffer* rootBuffer = nullptr;
 	UINT textureTargets{};
 	bool hasVertexInput = false;
 	bool bindlessTextures = false;
 
+	D3D12_ROOT_SIGNATURE_FLAGS flags =
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS;
+
 	void add(LoadedShader* shader, ShaderType type);
 	void finish();
+
+	ID3D12RootSignature* createRootSignature(ID3D12Device* device);
 
 private:
 
 	D3D12_SHADER_VISIBILITY getVisibility(ShaderType t);
 	void addVisibility(D3D12_SHADER_VISIBILITY& v, ShaderType t);
-};
-
-constexpr const UINT BindlessTextureIndex = -1;
-
-struct ResourcesInfo
-{
-	struct CBuffer
-	{
-		std::vector<float> defaultData;
-		CBufferType type{};
-		UINT rootIndex{};
-		CbufferView globalBuffer;
-	};
-	std::vector<CBuffer> cbuffers;
-
-	struct Texture
-	{
-		ShaderTextureView* texture{};
-		UINT rootIndex = BindlessTextureIndex;
-	};
-	std::vector<Texture> textures;
-
-	enum class AutoParam
-	{
-		None,
-		WVP_MATRIX,
-		VP_MATRIX,
-		WORLD_MATRIX,
-		SHADOW_MATRIX,
-		TEXID,
-
-		SUN_DIRECTION,
-		TIME,
-		VIEWPORT_SIZE_INV,
-	};
-	struct AutoParamInfo
-	{
-		AutoParam type;
-		UINT bufferIdx;
-		UINT bufferOffset;
-	};
-	std::vector<AutoParamInfo> autoParams;
-};
-
-struct FrameGpuParameters
-{
-	XMFLOAT3 sunDirection;
-	XMFLOAT2 inverseViewportSize;
-	float time;
-	XMFLOAT4X4 shadowMapViewProjectionTransposed;
 };

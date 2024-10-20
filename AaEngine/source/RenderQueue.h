@@ -15,6 +15,13 @@ enum class EntityChange
 	DeleteAll,
 };
 
+enum class MaterialVariant
+{
+	Default,
+	Depth,
+	Voxel,
+};
+
 using EntityChanges = std::vector<std::pair<EntityChange, AaEntity*>>;
 
 struct RenderQueue
@@ -37,7 +44,7 @@ struct RenderQueue
 
 	std::map<Order, std::vector<EntityEntry>> entityOrder;
 	std::vector<DXGI_FORMAT> targets;
-	bool depth = false;
+	MaterialVariant variant = MaterialVariant::Default;
 
 	void update(const EntityChanges&);
 	void renderObjects(AaCamera& cam, const RenderInformation& info, const FrameGpuParameters& params, ID3D12GraphicsCommandList* commandList, UINT frameIndex);

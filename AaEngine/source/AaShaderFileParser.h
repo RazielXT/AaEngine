@@ -8,7 +8,9 @@ enum ShaderType
 {
 	ShaderTypeVertex,
 	ShaderTypePixel,
-	ShaderType_COUNT
+	ShaderTypeCompute,
+	ShaderType_COUNT,
+	ShaderTypeNone
 };
 
 struct ConstantDefault

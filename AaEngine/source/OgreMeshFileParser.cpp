@@ -433,7 +433,7 @@ void readGeometryVertexElement(std::ifstream& stream, AaModel& info)
 		info.addLayoutElement(source, offset, format, semantic, index);
 }
 
-void readGeometryVertexBuffer(std::ifstream& stream, AaModel& info, ParseOptions o)
+void readGeometryVertexBuffer(std::ifstream& stream, AaModel& info, ModelParseOptions o)
 {
 	unsigned short bindIndex, vertexSize;
 	// unsigned short bindIndex;    // Index to bind this buffer to
@@ -493,7 +493,7 @@ void readGeometryVertexDeclaration(std::ifstream& stream, AaModel& info)
 	}
 }
 
-void readGeometry(std::ifstream& stream, AaModel& info, ParseOptions o)
+void readGeometry(std::ifstream& stream, AaModel& info, ModelParseOptions o)
 {
 	readData(stream, &info.vertexCount, 1);
 
@@ -527,7 +527,7 @@ void readGeometry(std::ifstream& stream, AaModel& info, ParseOptions o)
 	}
 }
 
-void readSubMesh(std::ifstream& stream, MeshInfo& info, ParseOptions o)
+void readSubMesh(std::ifstream& stream, MeshInfo& info, ModelParseOptions o)
 {
 	SubmeshInfo submesh{};
 	submesh.model = new AaModel();
@@ -608,7 +608,7 @@ void readSubMesh(std::ifstream& stream, MeshInfo& info, ParseOptions o)
 	info.submeshes.emplace_back(std::move(submesh));
 }
 
-void readMesh(std::ifstream& stream, MeshInfo& info, ParseOptions o)
+void readMesh(std::ifstream& stream, MeshInfo& info, ModelParseOptions o)
 {
 	bool skeletallyAnimated;
 	readData(stream, &skeletallyAnimated, 1);
@@ -680,7 +680,7 @@ void readMesh(std::ifstream& stream, MeshInfo& info, ParseOptions o)
 	}
 }
 
-bool parseOgreMeshFile(std::string filename, MeshInfo& info, ParseOptions o)
+bool parseOgreMeshFile(std::string filename, MeshInfo& info, ModelParseOptions o)
 {
 	std::ifstream stream(filename, std::ios::binary);
 
@@ -712,7 +712,7 @@ bool parseOgreMeshFile(std::string filename, MeshInfo& info, ParseOptions o)
 	return true;
 }
 
-MeshInfo OgreMeshFileParser::load(std::string filename, ParseOptions o)
+MeshInfo OgreMeshFileParser::load(std::string filename, ModelParseOptions o)
 {
 	MeshInfo out;
 

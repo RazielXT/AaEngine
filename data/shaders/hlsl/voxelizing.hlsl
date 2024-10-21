@@ -1,7 +1,8 @@
 float4x4 WorldViewProjectionMatrix;
 float4x4 WorldMatrix;
+float LightColor;
 
-cbuffer SceneVoxelInfo : register(b0)
+cbuffer SceneVoxelInfo : register(b1)
 {
 	float3 sceneCorner : packoffset(c0);
 	float voxelSize : packoffset(c0.w);
@@ -53,7 +54,7 @@ float4 PS_Main(PS_Input pin) : SV_TARGET
 {
     float3 posUV = (pin.wp.xyz - sceneCorner) * voxelSize;
 
-    SceneVoxel[posUV] = float4(1, 0, 0, 1);
+    SceneVoxel[posUV] = float4(LightColor, LightColor, LightColor, 1);
 	
 	return float4(1, 0, 0, 1);
 }

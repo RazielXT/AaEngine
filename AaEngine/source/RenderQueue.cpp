@@ -72,6 +72,11 @@ void RenderQueue::renderObjects(AaCamera& camera, const RenderInformation& info,
 				entry.material->BindTextures(commandList, frameIndex);
 			}
 
+			if (variant == MaterialVariant::Voxel)
+			{
+				constants.data.front()[32] = entry.entity->name == "Box01" ? 2.f : 0.0f;
+			}
+
 			updateEntityCbuffers(constants, entry.entity);
 			entry.material->UpdatePerObject(constants, entry.entity->getWvpMatrix(info.wvpMatrix), entry.entity->getWorldMatrix(), params);
 			entry.material->BindConstants(commandList, frameIndex, constants);

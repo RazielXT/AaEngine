@@ -194,7 +194,7 @@ std::unique_ptr<MaterialInstance> MaterialBase::CreateMaterialInstance(const Mat
 		if (!t.file.empty())
 		{
 			auto texture = AaTextureResources::get().loadFile(renderSystem->device, batch, t.file);
-			mgr.createShaderResourceView(renderSystem->device, *texture);
+			mgr.createShaderResourceView(*texture);
 
 			instance->SetTexture(*texture, texSlot);
 		}

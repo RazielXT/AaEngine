@@ -6,6 +6,8 @@
 #include "AaSceneManager.h"
 #include "AaMaterialResources.h"
 
+bool stopUpdatingVoxel = false;
+
 namespace imgui
 {
 	static ID3D12DescriptorHeap* g_pd3dSrvDescHeap = nullptr;
@@ -55,6 +57,9 @@ namespace imgui
 		if (ImGui::Button("Reload shaders"))
 			state.reloadShaders = true;
 
+		if (ImGui::Button("stopUpdatingVoxel"))
+			stopUpdatingVoxel = true;
+		
 		const char* scenes[] = {
 			"test",
 			"testCubes",

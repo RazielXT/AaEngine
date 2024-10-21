@@ -30,6 +30,7 @@ public:
 
 	D3D12_GPU_DESCRIPTOR_HANDLE uavHandles[2]{};
 	D3D12_CPU_DESCRIPTOR_HANDLE uavCpuHandles[2]{};
+	UINT mipLevel{};
 };
 
 class FileTexture : public ShaderTextureView

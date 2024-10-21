@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "directx/d3d12.h"
+#include "Directx.h"
 
 class ComputeShader
 {
@@ -11,6 +11,8 @@ public:
 
 	void init(ID3D12Device* device, const std::string& name);
 
-private:
+protected:
 
+	ComPtr<ID3D12PipelineState> computeState;
+	ComPtr<ID3D12RootSignature> signature;
 };

@@ -74,7 +74,7 @@ void FrameCompositor::reloadTextures()
 		tex.Init(renderSystem->device, w, h, renderSystem->FrameCount, rtvHeap, t.formats, t.depthBuffer);
 		tex.SetName(std::wstring(t.name.begin(), t.name.end()).c_str());
 
-		AaMaterialResources::get().PrepareShaderResourceView(tex);
+		ResourcesManager::get().createShaderResourceView(tex);
 	}
 
 	for (auto& p : passes)

@@ -135,11 +135,11 @@ PSOutput PS_Main(PS_Input pin)
     fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal - geometryT), sideCone.x, sideCone.y, voxelmap, g_sampler, 0, radius) * 1.0;
     fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal + geometryB), sideCone.x, sideCone.y, voxelmap, g_sampler, 0, radius) * 1.0;
     fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal - geometryB), sideCone.x, sideCone.y, voxelmap, g_sampler, 0, radius) * 1.0;
-    float3 traceColor = fullTraceSample.rgb / 5;
+    float3 traceColor = fullTraceSample.rgb;
 	//traceColor = voxelmap.Sample(g_sampler, voxelUV).rgb;
 
     float4 albedo = GetTexture(TexIdColor).Sample(g_sampler, pin.uv) * MaterialColor;
-    float4 color1 = saturate(albedo * float4(traceColor, 0));
+    float4 color1 = saturate(albedo * float4(traceColor, 1));
 
 	PSOutput output;
     output.target0 = color1;

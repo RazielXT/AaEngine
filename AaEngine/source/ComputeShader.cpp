@@ -13,5 +13,11 @@ void ComputeShader::init(ID3D12Device* device, const std::string& name)
 	info.add(shader, ShaderTypeCompute);
 	info.finish();
 
-	auto signature = info.createRootSignature(device);
+	signature = info.createRootSignature(device);
+
+	D3D12_COMPUTE_PIPELINE_STATE_DESC computePsoDesc = {};
+	computePsoDesc.pRootSignature = signature.Get();
+	computePsoDesc.CS = { shader->blob->GetBufferPointer(), shader->blob->GetBufferSize() };
+
+	device->CreateComputePipelineState(&computePsoDesc, IID_PPV_ARGS(&computeState));
 }

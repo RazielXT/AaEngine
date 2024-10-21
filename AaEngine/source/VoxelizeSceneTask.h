@@ -4,6 +4,7 @@
 #include "TextureResource.h"
 #include "AaCamera.h"
 #include "AaMath.h"
+#include "GenerateMipsComputeShader.h"
 #include <thread>
 
 struct RenderQueue;
@@ -37,4 +38,6 @@ public:
 
 	CbufferView cbuffer;
 	void updateCBuffer(Vector3 offset, UINT frameIndex);
+
+	GenerateMipsComputeShader computeMips;
 };

@@ -1,5 +1,5 @@
 #include "ShadowMap.h"
-#include "AaMaterialResources.h"
+#include "ResourcesManager.h"
 
 AaShadowMap::AaShadowMap(aa::SceneLights::Light& l) : light(l)
 {
@@ -20,7 +20,7 @@ void AaShadowMap::init(AaRenderSystem* renderSystem)
 		texture[i].Init(renderSystem->device, 512, 512, renderSystem->FrameCount);
 		texture[i].SetName(L"ShadowMap");
 
-		AaMaterialResources::get().PrepareDepthShaderResourceView(texture[i]);
+		ResourcesManager::get().createDepthShaderResourceView(texture[i]);
 		AaTextureResources::get().setNamedTexture("ShadowMap" + std::to_string(i), &texture[i].depthView);
 
 		camera[i].setOrthograhicCamera(400 + i * 400, 400 + i * 400, 1, 1000);

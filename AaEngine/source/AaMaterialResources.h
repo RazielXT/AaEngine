@@ -20,11 +20,6 @@ public:
 
 	void loadMaterials(std::string directory, bool subDirectories = false);
 
-	void PrepareDepthShaderResourceView(RenderDepthTargetTexture&);
-	void PrepareShaderResourceView(RenderTargetTexture&);
-	void PrepareShaderResourceView(TextureResource&);
-	void PrepareUAVView(TextureResource&);
-
 	void ReloadShaders();
 
 private:
@@ -38,6 +33,4 @@ private:
 	std::map<std::string, std::unique_ptr<MaterialBase>> materialBaseMap;
 
 	AaTextureResources textures;
-
-	ResourcesManager resourcesMgr;
 };

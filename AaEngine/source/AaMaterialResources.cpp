@@ -18,7 +18,6 @@ AaMaterialResources::AaMaterialResources(AaRenderSystem* rs)
 	instance = this;
 
 	renderSystem = rs;
-	resourcesMgr.init(rs->device, 1000);
 }
 
 AaMaterialResources::~AaMaterialResources()
@@ -80,29 +79,9 @@ void AaMaterialResources::loadMaterials(std::string directory, bool subDirectori
 		auto& base = materialBaseMap[info.base];
 		if (!base)
 		{
-			base = std::make_unique<MaterialBase>(renderSystem, resourcesMgr, info);
+			base = std::make_unique<MaterialBase>(renderSystem, ResourcesManager::get(), info);
 		}
 	}
-}
-
-void AaMaterialResources::PrepareShaderResourceView(RenderTargetTexture& rtt)
-{
-	resourcesMgr.createShaderResourceView(renderSystem->device, rtt);
-}
-
-void AaMaterialResources::PrepareShaderResourceView(TextureResource& tex)
-{
-	resourcesMgr.createShaderResourceView(renderSystem->device, tex);
-}
-
-void AaMaterialResources::PrepareDepthShaderResourceView(RenderDepthTargetTexture& rtt)
-{
-	resourcesMgr.createDepthShaderResourceView(renderSystem->device, rtt);
-}
-
-void AaMaterialResources::PrepareUAVView(TextureResource& t)
-{
-	resourcesMgr.createUAVView(renderSystem->device, t);
 }
 
 void AaMaterialResources::ReloadShaders()

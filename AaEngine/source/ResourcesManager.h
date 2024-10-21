@@ -10,12 +10,14 @@ class ResourcesManager
 {
 public:
 
-	ResourcesManager() = default;
+	ResourcesManager(ID3D12Device* device);
 	~ResourcesManager();
 
-	ID3D12DescriptorHeap* mainDescriptorHeap[2]; // this heap will store the descripor to our constant buffer
+	static ResourcesManager& get();
 
-	void init(ID3D12Device* device, UINT maxDescriptors);
+	ID3D12DescriptorHeap* mainDescriptorHeap[2];
+
+	void init(UINT maxDescriptors);
 
 	struct Cbuffer
 	{
@@ -25,17 +27,17 @@ public:
 		UINT size = 0;
 	};
 
-	void createCbuffer(ID3D12Device* device, Cbuffer* bufferGPUAddress, UINT count, UINT size, void* defaultValue);
+	void createCbuffer(Cbuffer* bufferGPUAddress, UINT count, UINT size, void* defaultValue);
 
-	void createCbufferView(ID3D12Device* device, Cbuffer* buffer, UINT count);
-	void createShaderResourceView(ID3D12Device* device, TextureResource& texture);
-	void createShaderResourceView(ID3D12Device* device, FileTexture& texture);
-	void createShaderResourceView(ID3D12Device* device, RenderTargetTexture& texture);
-	void createDepthShaderResourceView(ID3D12Device* device, RenderDepthTargetTexture& texture);
-	void createUAVView(ID3D12Device* device, TextureResource& texture);
+	void createCbufferView(Cbuffer* buffer, UINT count);
+	void createShaderResourceView(TextureResource& texture, UINT mipLevel = -1);
+	void createShaderResourceView(FileTexture& texture);
+	void createShaderResourceView(RenderTargetTexture& texture);
+	void createDepthShaderResourceView(RenderDepthTargetTexture& texture);
+	void createUAVView(TextureResource& texture);
 
 private:
 
 	UINT currentDescriptorCount = 0;
-
+	ID3D12Device* device{};
 };

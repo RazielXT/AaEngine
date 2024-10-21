@@ -2,15 +2,32 @@
 #include "directx\d3dx12.h"
 #include "AaTextureResources.h"
 
+static ResourcesManager* instance = nullptr;
+
+ResourcesManager::ResourcesManager(ID3D12Device* d) : device(d)
+{
+	if (instance)
+		throw std::exception("Duplicate ResourcesManager");
+
+	instance = this;
+}
+
 ResourcesManager::~ResourcesManager()
 {
 	for (auto h : mainDescriptorHeap)
 	{
 		h->Release();
 	}
+
+	instance = nullptr;
 }
 
-void ResourcesManager::init(ID3D12Device* device, UINT maxDescriptors)
+ResourcesManager& ResourcesManager::get()
+{
+	return *instance;
+}
+
+void ResourcesManager::init(UINT maxDescriptors)
 {
 	for (int i = 0; i < 2; ++i)
 	{
@@ -29,7 +46,7 @@ void ResourcesManager::init(ID3D12Device* device, UINT maxDescriptors)
 	}
 }
 
-void ResourcesManager::createCbuffer(ID3D12Device* device, Cbuffer* buffer, UINT count, UINT bufferSize, void* defaultValue)
+void ResourcesManager::createCbuffer(Cbuffer* buffer, UINT count, UINT bufferSize, void* defaultValue)
 {
 	// create the constant buffer resource heap
 	// We will update the constant buffer one or more times per frame, so we will use only an upload heap
@@ -85,7 +102,7 @@ void ResourcesManager::createCbuffer(ID3D12Device* device, Cbuffer* buffer, UINT
 // 	}
 }
 
-void ResourcesManager::createCbufferView(ID3D12Device* device, Cbuffer* buffer, UINT count)
+void ResourcesManager::createCbufferView(Cbuffer* buffer, UINT count)
 {
 	for (int i = 0; i < count; ++i)
 	{
@@ -104,7 +121,7 @@ void ResourcesManager::createCbufferView(ID3D12Device* device, Cbuffer* buffer, 
 	currentDescriptorCount++;
 }
 
-void ResourcesManager::createShaderResourceView(ID3D12Device* device, FileTexture& texture)
+void ResourcesManager::createShaderResourceView(FileTexture& texture)
 {
 	for (int i = 0; i < 2; ++i)
 	{
@@ -129,7 +146,7 @@ void ResourcesManager::createShaderResourceView(ID3D12Device* device, FileTextur
 	currentDescriptorCount++;
 }
 
-void ResourcesManager::createShaderResourceView(ID3D12Device* device, RenderTargetTexture& rtt)
+void ResourcesManager::createShaderResourceView(RenderTargetTexture& rtt)
 {
 	for (auto& texture : rtt.textures)
 	{
@@ -157,7 +174,7 @@ void ResourcesManager::createShaderResourceView(ID3D12Device* device, RenderTarg
 	}
 }
 
-void ResourcesManager::createShaderResourceView(ID3D12Device* device, TextureResource& texture)
+void ResourcesManager::createShaderResourceView(TextureResource& texture, UINT mipLevel)
 {
 	for (int i = 0; i < 2; ++i)
 	{
@@ -170,7 +187,13 @@ void ResourcesManager::createShaderResourceView(ID3D12Device* device, TextureRes
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 		srvDesc.ViewDimension = texture.dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D ? D3D12_SRV_DIMENSION_TEXTURE2D : D3D12_SRV_DIMENSION_TEXTURE3D;
-		srvDesc.Texture2D.MipLevels = -1;
+		if (mipLevel != -1)
+		{
+			srvDesc.Texture2D.MipLevels = 1;
+			srvDesc.Texture2D.MostDetailedMip = mipLevel;
+		}
+		else
+			srvDesc.Texture2D.MipLevels = -1;
 		srvDesc.Format = texture.textures[i]->GetDesc().Format;
 		device->CreateShaderResourceView(texture.textures[i].Get(), &srvDesc, handle);
 
@@ -182,7 +205,7 @@ void ResourcesManager::createShaderResourceView(ID3D12Device* device, TextureRes
 	currentDescriptorCount++;
 }
 
-void ResourcesManager::createDepthShaderResourceView(ID3D12Device* device, RenderDepthTargetTexture& texture)
+void ResourcesManager::createDepthShaderResourceView(RenderDepthTargetTexture& texture)
 {
 	for (int i = 0; i < 2; ++i)
 	{
@@ -207,25 +230,31 @@ void ResourcesManager::createDepthShaderResourceView(ID3D12Device* device, Rende
 	currentDescriptorCount++;
 }
 
-void ResourcesManager::createUAVView(ID3D12Device* device, TextureResource& texture)
+void ResourcesManager::createUAVView(TextureResource& texture)
 {
-	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-	uavDesc.Format = texture.format;
-	uavDesc.ViewDimension = texture.dimension == D3D12_RESOURCE_DIMENSION_TEXTURE3D ? D3D12_UAV_DIMENSION_TEXTURE3D : D3D12_UAV_DIMENSION_TEXTURE2D;
-	uavDesc.Texture3D.MipSlice = 0;
-	uavDesc.Texture3D.FirstWSlice = 0;
-	uavDesc.Texture3D.WSize = texture.depth;
+	auto mipLevels = texture.textures[0]->GetDesc().MipLevels;
+	texture.uav.resize(mipLevels);
 
-	for (int i = 0; i < 2; ++i)
+	for (UINT mipLevel = 0; mipLevel < mipLevels; mipLevel++)
 	{
-		texture.uav.uavCpuHandles[i] = CD3DX12_CPU_DESCRIPTOR_HANDLE(mainDescriptorHeap[i]->GetCPUDescriptorHandleForHeapStart(), currentDescriptorCount
-			, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+		uavDesc.Format = texture.format;
+		uavDesc.ViewDimension = texture.dimension == D3D12_RESOURCE_DIMENSION_TEXTURE3D ? D3D12_UAV_DIMENSION_TEXTURE3D : D3D12_UAV_DIMENSION_TEXTURE2D;
+		uavDesc.Texture3D.MipSlice = mipLevel;
+		uavDesc.Texture3D.FirstWSlice = 0;
+		uavDesc.Texture3D.WSize = -1;
 
-		device->CreateUnorderedAccessView(texture.textures[i].Get(), nullptr, &uavDesc, texture.uav.uavCpuHandles[i]);
+		for (int i = 0; i < 2; ++i)
+		{
+			texture.uav[mipLevel].uavCpuHandles[i] = CD3DX12_CPU_DESCRIPTOR_HANDLE(mainDescriptorHeap[i]->GetCPUDescriptorHandleForHeapStart(), currentDescriptorCount
+				, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 
-		texture.uav.uavHandles[i] = CD3DX12_GPU_DESCRIPTOR_HANDLE(mainDescriptorHeap[i]->GetGPUDescriptorHandleForHeapStart(), currentDescriptorCount
-			, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+			device->CreateUnorderedAccessView(texture.textures[i].Get(), nullptr, &uavDesc, texture.uav[mipLevel].uavCpuHandles[i]);
+
+			texture.uav[mipLevel].uavHandles[i] = CD3DX12_GPU_DESCRIPTOR_HANDLE(mainDescriptorHeap[i]->GetGPUDescriptorHandleForHeapStart(), currentDescriptorCount
+				, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+		}
+
+		currentDescriptorCount++;
 	}
-
-	currentDescriptorCount++;
 }

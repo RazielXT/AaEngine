@@ -38,6 +38,9 @@
     <Filter Include="Source Files\Frame">
       <UniqueIdentifier>{6af66a8c-48b8-4fd6-9718-1d4722af9c53}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Resources\Compute">
+      <UniqueIdentifier>{ecc0eef3-6e42-45d2-8b9e-39514e6612c4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\main.cpp">
@@ -175,11 +178,14 @@
     <ClCompile Include="source\TextureResource.cpp">
       <Filter>Source Files\Render</Filter>
     </ClCompile>
-    <ClCompile Include="source\ComputeShader.cpp">
-      <Filter>Source Files\Resources\Shader</Filter>
-    </ClCompile>
     <ClCompile Include="source\ShaderSignature.cpp">
       <Filter>Source Files\Resources\Shader</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ComputeShader.cpp">
+      <Filter>Source Files\Resources\Compute</Filter>
+    </ClCompile>
+    <ClCompile Include="source\GenerateMipsComputeShader.cpp">
+      <Filter>Source Files\Resources\Compute</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -327,9 +333,6 @@
     <ClInclude Include="source\TextureResource.h">
       <Filter>Source Files\Render</Filter>
     </ClInclude>
-    <ClInclude Include="source\ComputeShader.h">
-      <Filter>Source Files\Resources\Shader</Filter>
-    </ClInclude>
     <ClInclude Include="source\ShaderResources.h">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClInclude>
@@ -338,6 +341,12 @@
     </ClInclude>
     <ClInclude Include="source\ShaderConstants.h">
       <Filter>Source Files\Resources\Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="source\GenerateMipsComputeShader.h">
+      <Filter>Source Files\Resources\Compute</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ComputeShader.h">
+      <Filter>Source Files\Resources\Compute</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

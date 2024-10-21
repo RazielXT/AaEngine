@@ -1,6 +1,5 @@
 #include "AaSceneManager.h"
 #include "AaMaterialResources.h"
-#include "AaMaterialConstants.h"
 
 AaSceneManager::AaSceneManager(AaRenderSystem* rs)
 {

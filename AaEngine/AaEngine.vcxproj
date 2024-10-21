@@ -121,6 +121,7 @@
     <ClCompile Include="source\DebugWindow.cpp" />
     <ClCompile Include="source\FrameCompositorTaskBuild.cpp" />
     <ClCompile Include="source\FreeCamera.cpp" />
+    <ClCompile Include="source\GenerateMipsComputeShader.cpp" />
     <ClCompile Include="source\InputHandler.cpp" />
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\MyListener.cpp" />
@@ -147,6 +148,7 @@
     <ClInclude Include="source\AaFrameListener.h" />
     <ClInclude Include="source\AaLogger.h" />
     <ClInclude Include="source\AaMaterial.h" />
+    <ClInclude Include="source\GenerateMipsComputeShader.h" />
     <ClInclude Include="source\ShaderConstants.h" />
     <ClInclude Include="source\AaMaterialFileParser.h" />
     <ClInclude Include="source\AaMaterialResources.h" />

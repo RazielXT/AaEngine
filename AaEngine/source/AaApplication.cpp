@@ -16,6 +16,8 @@ AaApplication::AaApplication(HINSTANCE hInstance)
 
 	mWindow = new AaWindow(hInstance, x, y);
  	mRenderSystem = new AaRenderSystem(mWindow);
+	mResources = new ResourcesManager(mRenderSystem->device);
+	mResources->init(1000);
 	mShaderConstants = new ShaderConstantBuffers(mRenderSystem);
 	mShaders = new AaShaderLibrary(mRenderSystem);
 	mMaterials = new AaMaterialResources(mRenderSystem);
@@ -35,6 +37,7 @@ AaApplication::~AaApplication()
  	delete mMaterials;
  	delete mShaders;
 	delete mShaderConstants;
+	delete mResources;
  	delete mRenderSystem;
 	delete mWindow;
 

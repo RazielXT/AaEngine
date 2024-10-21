@@ -2,7 +2,7 @@
 #include "AaSceneManager.h"
 #include "AaMaterialResources.h"
 #include "AaTextureResources.h"
-#include "ComputeShader.h"
+#include "GenerateMipsComputeShader.h"
 
 VoxelizeSceneTask::VoxelizeSceneTask()
 {
@@ -31,18 +31,19 @@ XM_ALIGNED_STRUCT(16) SceneVoxelInfo
 	float radius = 2;
 };
 
+extern bool stopUpdatingVoxel;
+
 AsyncTasksInfo VoxelizeSceneTask::initialize(AaRenderSystem* renderSystem, AaSceneManager* sceneMgr, RenderTargetTexture* target)
 {
 	voxelSceneTexture.create3D(renderSystem->device, 128, 128, 128, DXGI_FORMAT_R16G16B16A16_FLOAT, renderSystem->FrameCount);
 	clearSceneTexture.create3D(renderSystem->device, 128, 128, 128, DXGI_FORMAT_R16G16B16A16_FLOAT, renderSystem->FrameCount);
-	AaMaterialResources::get().PrepareUAVView(voxelSceneTexture);
-	AaTextureResources::get().setNamedUAV("SceneVoxel", &voxelSceneTexture.uav);
-	AaMaterialResources::get().PrepareShaderResourceView(voxelSceneTexture);
+	ResourcesManager::get().createUAVView(voxelSceneTexture);
+	AaTextureResources::get().setNamedUAV("SceneVoxel", &voxelSceneTexture.uav.front());
+	ResourcesManager::get().createShaderResourceView(voxelSceneTexture);
 	AaTextureResources::get().setNamedTexture("SceneVoxel", &voxelSceneTexture.textureView);
 
 	cbuffer = ShaderConstantBuffers::get().CreateCbufferResource(sizeof(SceneVoxelInfo), "SceneVoxelInfo");
 
-	ComputeShader computeMips;
 	computeMips.init(renderSystem->device, "generateMipmaps");
 
 	sceneQueue = sceneMgr->createQueue(target->formats, MaterialVariant::Voxel);
@@ -65,6 +66,12 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(AaRenderSystem* renderSystem, AaSce
 				auto offset = XMFLOAT3(0, 0, 0);
 
 				ctx.renderSystem->StartCommandList(commands);
+				if (stopUpdatingVoxel)
+				{
+					SetEvent(eventFinish);
+					continue;
+				}
+
 				//fast clear
 				commands.commandList->CopyResource(voxelSceneTexture.textures[FrameIndex].Get(), clearSceneTexture.textures[FrameIndex].Get());
 				commands.commandList->OMSetRenderTargets(0, nullptr, FALSE, nullptr);
@@ -98,6 +105,8 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(AaRenderSystem* renderSystem, AaSce
 				ctx.renderables->updateVisibility(camera.prepareOrientedBox(), info.visibility);
 				ctx.renderables->updateWVPMatrix(camera.getViewProjectionMatrix(), info.visibility, info.wvpMatrix);
 				sceneQueue->renderObjects(camera, info, ctx.params, commands.commandList, FrameIndex);
+
+				computeMips.dispatch(commands.commandList, voxelSceneTexture, ResourcesManager::get(), FrameIndex);
 
 				SetEvent(eventFinish);
 			}

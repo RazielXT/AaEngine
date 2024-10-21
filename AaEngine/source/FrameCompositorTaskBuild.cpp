@@ -63,6 +63,7 @@ void FrameCompositor::initializeCommands()
 			return generalCommands;
 		};
 
+	auto sz = passes.size();
 	for (auto& pass : passes)
 	{
 		bool syncPass = false;

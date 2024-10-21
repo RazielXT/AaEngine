@@ -157,7 +157,7 @@ void AaVoxelScene::fadeVoxels()
 bool giOneStep = false;
 bool giKeepStepping = false;
 
-void AaVoxelScene::voxelizeScene(XMFLOAT3 orthoHalfSize, XMFLOAT3 offset)
+void AaVoxelScene::voxelizeScene(XMFLOAT3 orthoHalfSize, XMFLOAT3 offset, float tslf)
 {
 	//clearing
 	float black[4] = { 0 };
@@ -193,7 +193,12 @@ void AaVoxelScene::voxelizeScene(XMFLOAT3 orthoHalfSize, XMFLOAT3 offset)
 
 	AaMaterial* voxMat = AaMaterialResources::get().getMaterial("VoxelizationMat");
 	AaMaterial* lvoxMat = AaMaterialResources::get().getMaterial("LightVoxelizationMat");
-	//AaMaterial* shMat = AaMaterialResources::get().getMaterial("depthWriteAndVoxel");
+
+	float deltaTime = tslf;
+	deltaTime += deltaTime - deltaTime * deltaTime;
+	deltaTime = max(deltaTime, 1.0f);
+
+	voxMat->setMaterialConstant("PerMaterial", "lerpFactor", ShaderTypePixel, &deltaTime);
 
 	//from all 3 axes
 	voxelizingLookCamera.setPosition(XMFLOAT3(offset.x, offset.y, offset.z - orthoHalfSize.z - 1));

@@ -70,7 +70,7 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 	mShadowMapping->renderShadowMaps();
 
 	//if (count % 2 == 0)
-	voxelScene->voxelizeScene(XMFLOAT3(30, 30, 30), XMFLOAT3(0, 0, 0));
+	voxelScene->voxelizeScene(XMFLOAT3(30, 30, 30), XMFLOAT3(0, 0, 0), timeSinceLastFrame);
 	voxelScene->endFrame(XMFLOAT3(30, 30, 30), XMFLOAT3(0, 0, 0));
 	count++;
 

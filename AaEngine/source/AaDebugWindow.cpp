@@ -24,8 +24,8 @@ void DebugWindow::deinit()
 	ImGui::DestroyContext();
 }
 
-float stepping = 0.1f;
-float stepping2 = 0.0f;
+float stepping = 0.07f;
+float stepping2 = 0.03f;
 float lightPower = 5.0f;
 float middleCone = 0;
 float sideCone = 0;

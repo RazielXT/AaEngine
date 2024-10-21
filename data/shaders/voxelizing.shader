@@ -13,8 +13,8 @@ pixel_shader voxelizePS
 
 	cbuffer PerMaterial
 	{
-		float stepping 0.1
-		float stepping2 1
+		float stepping 0.07
+		float stepping2 0.03
 	}
 }
 

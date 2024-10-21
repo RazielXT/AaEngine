@@ -9,6 +9,7 @@ cbuffer PerMaterial : register(b2)
     float stepping : packoffset(c0);
     float stepping2 : packoffset(c0.y);
 	float lightPower : packoffset(c0.z);
+    float lerpFactor : packoffset(c0.w);
 };
 
 cbuffer SceneVoxelInfo : register(b3)
@@ -177,7 +178,7 @@ void PS_Main(PS_Input pin,
     voxCol.rgb = color.rgb * fullSample.rgb * stepping + voxCol * stepping2;
 
     float3 prev = bouncesVoxel.Load(float4(posUV, 0)).rgb;
-    voxCol.rgb = lerp(voxCol.rgb, prev, 0.99);
+    voxCol.rgb = lerp(prev, voxCol.rgb, lerpFactor);
 
     voxelMap[posUV] = float4(voxCol, 1);
 }

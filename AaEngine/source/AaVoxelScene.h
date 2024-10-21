@@ -10,7 +10,7 @@ public:
 	~AaVoxelScene();
 
 	void initScene(int size);
-	void voxelizeScene(XMFLOAT3 orthoSize, XMFLOAT3 offset);
+	void voxelizeScene(XMFLOAT3 orthoSize, XMFLOAT3 offset, float tslf);
 	void endFrame(XMFLOAT3 orthoHalfSize, XMFLOAT3 offset);
 
 private:

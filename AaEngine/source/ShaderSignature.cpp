@@ -124,7 +124,7 @@ void SignatureInfo::finish()
 	if (!cbuffers.empty())
 	{
 		// +1 for potential move to root constants
-		const auto rootParamsSizeMax = (64 - hasVertexInput - textures.size() - cbuffers.size() + 1) * sizeof(DWORD);
+		const auto rootParamsSizeMax = (64 - hasVertexInput - (!bindlessTextures && !textures.empty()) - cbuffers.size() + 1) * sizeof(DWORD);
 
 		for (auto& b : cbuffers)
 		{
@@ -146,7 +146,7 @@ void SignatureInfo::finish()
 		flags |= D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED;
 }
 
-ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device* device)
+ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device* device, const std::vector<SamplerInfo>& staticSamplers)
 {
 	std::vector<CD3DX12_ROOT_PARAMETER1> params;
 	params.resize(cbuffers.size() + textures.size() + uavs.size());
@@ -207,14 +207,14 @@ ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device* device)
 		sampler.RegisterSpace = 0;
 		sampler.ShaderVisibility = samplers[i].visibility;
 
-		// 		if (i < ref.resources.samplers.size())
-		// 		{
-		// 			auto& refSampler = ref.resources.samplers[i];
-		// 			sampler.Filter = refSampler.filter;
-		// 			sampler.AddressU = sampler.AddressV = sampler.AddressW = refSampler.bordering;
-		// 			sampler.MaxAnisotropy = refSampler.maxAnisotropy;
-		// 			sampler.BorderColor = refSampler.borderColor;
-		// 		}
+		if (i < staticSamplers.size())
+		{
+			auto& refSampler = staticSamplers[i];
+			sampler.Filter = refSampler.filter;
+			sampler.AddressU = sampler.AddressV = sampler.AddressW = refSampler.bordering;
+			sampler.MaxAnisotropy = refSampler.maxAnisotropy;
+			sampler.BorderColor = refSampler.borderColor;
+		}
 	}
 
 	// create the root signature
@@ -235,4 +235,73 @@ ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device* device)
 	device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
 
 	return rootSignature;
+}
+
+std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData() const
+{
+	auto resources = std::make_shared<ResourcesInfo>();
+	UINT rootIndex = 0;
+	UINT bindlessTextures = 0;
+
+	for (auto& cb : cbuffers)
+	{
+		ResourcesInfo::CBuffer r;
+		r.defaultData.resize(cb.info.Size / sizeof(float));
+
+		for (const auto& p : cb.info.Params)
+		{
+			if (&cb != rootBuffer)
+				break;
+
+			ResourcesInfo::AutoParam type = ResourcesInfo::AutoParam::None;
+			if (p.Name == "WorldViewProjectionMatrix")
+				type = ResourcesInfo::AutoParam::WVP_MATRIX;
+			else if (p.Name == "ViewProjectionMatrix")
+				type = ResourcesInfo::AutoParam::VP_MATRIX;
+			else if (p.Name == "WorldMatrix")
+				type = ResourcesInfo::AutoParam::WORLD_MATRIX;
+			else if (p.Name == "ShadowMatrix")
+				type = ResourcesInfo::AutoParam::SHADOW_MATRIX;
+			else if (p.Name.starts_with("TexId"))
+			{
+				type = ResourcesInfo::AutoParam::TEXID;
+				bindlessTextures++;
+			}
+			else if (p.Name == "Time")
+				type = ResourcesInfo::AutoParam::TIME;
+			else if (p.Name == "ViewportSizeInverse")
+				type = ResourcesInfo::AutoParam::VIEWPORT_SIZE_INV;
+			else if (p.Name == "SunDirection")
+				type = ResourcesInfo::AutoParam::SUN_DIRECTION;
+
+			if (type != ResourcesInfo::AutoParam::None)
+				resources->autoParams.emplace_back(type, rootIndex, (UINT)(p.StartOffset / sizeof(float)));
+		}
+
+		if (&cb == rootBuffer)
+			r.type = CBufferType::Root;
+		else if (cb.info.Name == "Instancing")
+			r.type = CBufferType::Instancing;
+		else
+			r.globalBuffer = ShaderConstantBuffers::get().GetCbufferResource(cb.info.Name);
+
+		r.rootIndex = rootIndex++;
+		resources->cbuffers.emplace_back(std::move(r));
+	}
+
+	resources->textures.resize(textures.size() + bindlessTextures);
+	for (size_t i = 0; i < textures.size(); i++)
+	{
+		resources->textures[i].rootIndex = rootIndex++;
+	}
+
+	resources->uavs.resize(uavs.size());
+	for (size_t i = 0; i < uavs.size(); i++)
+	{
+		auto& uav = resources->uavs[i];
+		uav.rootIndex = rootIndex++;
+		uav.uav = AaTextureResources::get().getNamedUAV(uavs[i].info.Name);
+	}
+
+	return resources;
 }

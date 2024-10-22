@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <d3d12.h>
+#include "ShaderResources.h"
 
 struct MaterialDepthState
 {
@@ -17,13 +18,7 @@ struct TextureRef
 	std::string file;
 };
 
-struct SamplerRef
-{
-	UINT maxAnisotropy = 8;
-	D3D12_FILTER filter = D3D12_FILTER_ANISOTROPIC;
-	D3D12_TEXTURE_ADDRESS_MODE bordering = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	D3D12_STATIC_BORDER_COLOR borderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
-};
+using SamplerRef = SamplerInfo;
 
 struct MaterialPipelineInfo
 {

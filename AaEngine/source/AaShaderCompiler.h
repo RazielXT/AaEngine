@@ -5,50 +5,53 @@
 #include <dxcapi.h>
 #include "directx\d3dx12.h"
 
-struct CBufferInfo
+namespace ShaderReflection
 {
-	std::string Name;
-	UINT Size;
-	UINT Slot;
-	UINT Space;
-
-	struct Parameter
+	struct CBuffer
 	{
 		std::string Name;
-		UINT StartOffset;
 		UINT Size;
+		UINT Slot;
+		UINT Space;
+
+		struct Parameter
+		{
+			std::string Name;
+			UINT StartOffset;
+			UINT Size;
+		};
+		std::vector<Parameter> Params;
 	};
-	std::vector<Parameter> Params;
-};
 
-struct TextureInfo
-{
-	std::string Name;
-	UINT Slot;
-	UINT Space;
-};
+	struct Texture
+	{
+		std::string Name;
+		UINT Slot;
+		UINT Space;
+	};
 
-struct SamplerInfo
-{
-	std::string Name;
-	UINT Slot;
-};
+	struct Sampler
+	{
+		std::string Name;
+		UINT Slot;
+	};
 
-struct UAVInfo
-{
-	std::string Name;
-	UINT Slot;
-	UINT Space;
+	struct UAV
+	{
+		std::string Name;
+		UINT Slot;
+		UINT Space;
+	};
 };
 
 struct ShaderDescription
 {
 	std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout;
 	size_t outputTargets = 0;
-	std::vector<CBufferInfo> cbuffers;
-	std::vector<TextureInfo> textures;
-	std::vector<SamplerInfo> samplers;
-	std::vector<UAVInfo> uavs;
+	std::vector<ShaderReflection::CBuffer> cbuffers;
+	std::vector<ShaderReflection::Texture> textures;
+	std::vector<ShaderReflection::Sampler> samplers;
+	std::vector<ShaderReflection::UAV> uavs;
 
 	bool bindlessTextures = false;
 };

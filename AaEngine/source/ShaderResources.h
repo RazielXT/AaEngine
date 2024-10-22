@@ -1,10 +1,20 @@
 #pragma once
 
 #include "ShaderConstants.h"
+#include <DirectXMath.h>
 
 struct ShaderTextureView;
+class ShaderUAV;
 
 constexpr const UINT BindlessTextureIndex = -1;
+
+struct SamplerInfo
+{
+	UINT maxAnisotropy = 8;
+	D3D12_FILTER filter = D3D12_FILTER_ANISOTROPIC;
+	D3D12_TEXTURE_ADDRESS_MODE bordering = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	D3D12_STATIC_BORDER_COLOR borderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
+};
 
 struct ResourcesInfo
 {
@@ -55,8 +65,8 @@ struct ResourcesInfo
 
 struct FrameGpuParameters
 {
-	XMFLOAT3 sunDirection;
-	XMFLOAT2 inverseViewportSize;
+	DirectX::XMFLOAT3 sunDirection;
+	DirectX::XMFLOAT2 inverseViewportSize;
 	float time;
-	XMFLOAT4X4 shadowMapViewProjectionTransposed;
+	DirectX::XMFLOAT4X4 shadowMapViewProjectionTransposed;
 };

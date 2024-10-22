@@ -123,7 +123,7 @@ bool AaShaderCompiler::reflectShaderInfo(IDxcResult* compiledShaderBuffer, Shade
 			D3D12_SHADER_BUFFER_DESC constantBufferDesc{};
 			shaderReflectionConstantBuffer->GetDesc(&constantBufferDesc);
 
-			CBufferInfo cbufferInfo;
+			ShaderReflection::CBuffer cbufferInfo;
 			cbufferInfo.Name = constantBufferDesc.Name;
 			cbufferInfo.Size = constantBufferDesc.Size;
 			cbufferInfo.Slot = shaderInputBindDesc.BindPoint;
@@ -134,7 +134,7 @@ bool AaShaderCompiler::reflectShaderInfo(IDxcResult* compiledShaderBuffer, Shade
 				auto v = shaderReflectionConstantBuffer->GetVariableByIndex(i);
 				D3D12_SHADER_VARIABLE_DESC desc;
 				v->GetDesc(&desc);
-				cbufferInfo.Params.emplace_back(CBufferInfo::Parameter{
+				cbufferInfo.Params.emplace_back(ShaderReflection::CBuffer::Parameter{
 					.Name = desc.Name,
 					.StartOffset = desc.StartOffset,
 					.Size = desc.Size,
@@ -145,7 +145,7 @@ bool AaShaderCompiler::reflectShaderInfo(IDxcResult* compiledShaderBuffer, Shade
 		}
 		else if (shaderInputBindDesc.Type == D3D_SIT_TEXTURE)
 		{
-			TextureInfo texInfo;
+			ShaderReflection::Texture texInfo;
 			texInfo.Name = shaderInputBindDesc.Name;
 			texInfo.Slot = shaderInputBindDesc.BindPoint;
 			texInfo.Space = shaderInputBindDesc.Space;
@@ -154,7 +154,7 @@ bool AaShaderCompiler::reflectShaderInfo(IDxcResult* compiledShaderBuffer, Shade
 		}
 		else if (shaderInputBindDesc.Type == D3D_SIT_SAMPLER)
 		{
-			SamplerInfo sInfo;
+			ShaderReflection::Sampler sInfo;
 			sInfo.Name = shaderInputBindDesc.Name;
 			sInfo.Slot = shaderInputBindDesc.BindPoint;
 
@@ -162,7 +162,7 @@ bool AaShaderCompiler::reflectShaderInfo(IDxcResult* compiledShaderBuffer, Shade
 		}
 		else if (shaderInputBindDesc.Type == D3D_SIT_UAV_RWTYPED)
 		{
-			UAVInfo uavInfo;
+			ShaderReflection::UAV uavInfo;
 			uavInfo.Name = shaderInputBindDesc.Name;
 			uavInfo.Slot = shaderInputBindDesc.BindPoint;
 			uavInfo.Space = shaderInputBindDesc.Space;

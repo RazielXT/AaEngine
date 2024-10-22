@@ -13,6 +13,6 @@ public:
 
 protected:
 
-	ComPtr<ID3D12PipelineState> computeState;
+	ComPtr<ID3D12PipelineState> pipelineState;
 	ComPtr<ID3D12RootSignature> signature;
 };

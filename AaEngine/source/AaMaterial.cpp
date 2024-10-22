@@ -42,7 +42,7 @@ void MaterialBase::Load()
 
 	info.finish();
 
-	rootSignature = info.createRootSignature(renderSystem->device);
+	rootSignature = info.createRootSignature(renderSystem->device, ref.resources.samplers);
 }
 
 void MaterialBase::BindSignature(ID3D12GraphicsCommandList* commandList, int frameIndex) const
@@ -211,7 +211,7 @@ std::unique_ptr<MaterialInstance> MaterialBase::CreateMaterialInstance(const Mat
 	return std::move(instance);
 }
 
-static void SetDefaultParameter(const CBufferInfo::Parameter& param, const MaterialRef& ref, std::vector<float>& data)
+static void SetDefaultParameter(const ShaderReflection::CBuffer::Parameter& param, const MaterialRef& ref, std::vector<float>& data)
 {
 	auto it = ref.resources.defaultParams.find(param.Name);
 	if (it != ref.resources.defaultParams.end())
@@ -222,75 +222,19 @@ static void SetDefaultParameter(const CBufferInfo::Parameter& param, const Mater
 
 std::shared_ptr<ResourcesInfo> MaterialBase::CreateResourcesData(const MaterialRef& childRef) const
 {
-	auto resources = std::make_shared<ResourcesInfo>();
-	UINT rootIndex = 0;
-	UINT bindlessTextures = 0;
+	auto resources = info.createResourcesData();
 
+	size_t idx = 0;
 	for (auto& cb : info.cbuffers)
 	{
-		ResourcesInfo::CBuffer r;
-		r.defaultData.resize(cb.info.Size / sizeof(float));
+		auto& buffer = resources->cbuffers[idx++];
 
-		for (const auto& p : cb.info.Params)
-		{
-			if (&cb != info.rootBuffer)
-				break;
-
-			ResourcesInfo::AutoParam type = ResourcesInfo::AutoParam::None;
-			if (p.Name == "WorldViewProjectionMatrix")
-				type = ResourcesInfo::AutoParam::WVP_MATRIX;
-			else if (p.Name == "ViewProjectionMatrix")
-				type = ResourcesInfo::AutoParam::VP_MATRIX;
-			else if (p.Name == "WorldMatrix")
-				type = ResourcesInfo::AutoParam::WORLD_MATRIX;
-			else if (p.Name == "ShadowMatrix")
-				type = ResourcesInfo::AutoParam::SHADOW_MATRIX;
-			else if (p.Name.starts_with("TexId"))
+		if (buffer.type == CBufferType::Root)
+			for (const auto& p : cb.info.Params)
 			{
-				type = ResourcesInfo::AutoParam::TEXID;
-				bindlessTextures++;
+				SetDefaultParameter(p, ref, buffer.defaultData);
+				SetDefaultParameter(p, childRef, buffer.defaultData);
 			}
-			else if (p.Name == "Time")
-				type = ResourcesInfo::AutoParam::TIME;
-			else if (p.Name == "ViewportSizeInverse")
-				type = ResourcesInfo::AutoParam::VIEWPORT_SIZE_INV;
-			else if (p.Name == "SunDirection")
-				type = ResourcesInfo::AutoParam::SUN_DIRECTION;
-
-			if (type != ResourcesInfo::AutoParam::None)
-				resources->autoParams.emplace_back(type, rootIndex, (UINT)(p.StartOffset / sizeof(float)));
-			else
-			{
-				SetDefaultParameter(p, ref, r.defaultData);
-				SetDefaultParameter(p, childRef, r.defaultData);
-			}
-		}
-
-		if (&cb == info.rootBuffer)
-			r.type = CBufferType::Root;
-		else if (cb.info.Name == "Instancing")
-			r.type = CBufferType::Instancing;
-		else
-			r.globalBuffer = ShaderConstantBuffers::get().GetCbufferResource(cb.info.Name);
-
-		r.rootIndex = rootIndex++;
-		resources->cbuffers.emplace_back(std::move(r));
-	}
-
-	resources->textures.resize(info.textures.size() + bindlessTextures);
-
-	for (size_t i = 0; i < info.textures.size(); i++)
-	{
-		resources->textures[i].rootIndex = rootIndex++;
-	}
-
-	resources->uavs.resize(info.uavs.size());
-
-	for (size_t i = 0; i < info.uavs.size(); i++)
-	{
-		auto& uav = resources->uavs[i];
-		uav.rootIndex = rootIndex++;
-		uav.uav = AaTextureResources::get().getNamedUAV(info.uavs[i].info.Name);
 	}
 
 	return resources;

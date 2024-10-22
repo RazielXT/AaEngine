@@ -19,5 +19,5 @@ void ComputeShader::init(ID3D12Device* device, const std::string& name)
 	computePsoDesc.pRootSignature = signature.Get();
 	computePsoDesc.CS = { shader->blob->GetBufferPointer(), shader->blob->GetBufferSize() };
 
-	device->CreateComputePipelineState(&computePsoDesc, IID_PPV_ARGS(&computeState));
+	device->CreateComputePipelineState(&computePsoDesc, IID_PPV_ARGS(&pipelineState));
 }

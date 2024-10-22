@@ -3,6 +3,7 @@
 #include "AaShaderCompiler.h"
 #include "ResourcesManager.h"
 #include "ShaderConstantBuffers.h"
+#include "ShaderResources.h"
 
 struct LoadedShader;
 
@@ -10,28 +11,28 @@ struct SignatureInfo
 {
 	struct CBuffer
 	{
-		CBufferInfo& info;
+		ShaderReflection::CBuffer& info;
 		D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY(-1);
 	};
 	std::vector<CBuffer> cbuffers;
 
 	struct Texture
 	{
-		TextureInfo& info;
+		ShaderReflection::Texture& info;
 		D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY(-1);
 	};
 	std::vector<Texture> textures;
 
 	struct Sampler
 	{
-		SamplerInfo& info;
+		ShaderReflection::Sampler& info;
 		D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY(-1);
 	};
 	std::vector<Sampler> samplers;
 
 	struct UAV
 	{
-		UAVInfo& info;
+		ShaderReflection::UAV& info;
 		D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY(-1);
 	};
 	std::vector<UAV> uavs;
@@ -53,7 +54,8 @@ struct SignatureInfo
 	void add(LoadedShader* shader, ShaderType type);
 	void finish();
 
-	ID3D12RootSignature* createRootSignature(ID3D12Device* device);
+	ID3D12RootSignature* createRootSignature(ID3D12Device* device, const std::vector<SamplerInfo>& staticSamplers = {});
+	std::shared_ptr<ResourcesInfo> createResourcesData() const;
 
 private:
 

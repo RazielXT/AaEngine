@@ -58,7 +58,7 @@ namespace imgui
 			state.reloadShaders = true;
 
 		if (ImGui::Button("stopUpdatingVoxel"))
-			stopUpdatingVoxel = true;
+			stopUpdatingVoxel = !stopUpdatingVoxel;
 		
 		const char* scenes[] = {
 			"test",

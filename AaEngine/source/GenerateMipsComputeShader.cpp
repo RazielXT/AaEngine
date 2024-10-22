@@ -32,7 +32,7 @@ void GenerateMipsComputeShader::dispatch(ID3D12GraphicsCommandList* commandList,
 	{
 		size /= 2;
 
-		auto uavTransition = CD3DX12_RESOURCE_BARRIER::Transition(resource, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+		auto uavTransition = CD3DX12_RESOURCE_BARRIER::Transition(resource, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, mip);
 		commandList->ResourceBarrier(1, &uavTransition);
 
 		//target UAV
@@ -48,7 +48,7 @@ void GenerateMipsComputeShader::dispatch(ID3D12GraphicsCommandList* commandList,
 		auto uavb = CD3DX12_RESOURCE_BARRIER::UAV(resource);
 		commandList->ResourceBarrier(1, &uavb);
 
-		auto srvTransition = CD3DX12_RESOURCE_BARRIER::Transition(resource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+		auto srvTransition = CD3DX12_RESOURCE_BARRIER::Transition(resource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, mip);
 		commandList->ResourceBarrier(1, &srvTransition);
 	}
 

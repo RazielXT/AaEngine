@@ -83,6 +83,12 @@ void RenderQueue::renderObjects(AaCamera& camera, const RenderInformation& info,
 
 			RenderObject(commandList, entry.entity, camera);
 
+			if (variant == MaterialVariant::Voxel)
+			{
+				auto uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(nullptr);
+				commandList->ResourceBarrier(1, &uavBarrier);
+			}
+
 			lastEntry = entry;
 		}
 	}

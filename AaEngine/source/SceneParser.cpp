@@ -109,7 +109,7 @@ int ParseRenderQueue(std::string_view renderQueue)
 
 	if (auto q = strtoul(renderQueue.data(), 0, 10))
 	{
-		if (q < 10)
+		if (q <= 100)
 			return q;
 	}
 
@@ -162,6 +162,7 @@ void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible, Aa
 		}
 
 		auto ent = sceneMgr->createEntity(name);
+		ent->order = (Order)renderQueue;
 		ent->material = material;
 		ent->setModel(model);
 		ent->setPosition(node->position);

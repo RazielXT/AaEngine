@@ -109,8 +109,6 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 // 	voxelScene->endFrame(XMFLOAT3(30, 30, 30), XMFLOAT3(0, 0, 0));
 // 	count++;
 
-//	Sleep(100);
-
 	return continue_rendering;
 }
 

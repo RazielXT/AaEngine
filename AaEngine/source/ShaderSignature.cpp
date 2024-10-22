@@ -157,7 +157,7 @@ ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device* device, co
 		if (&buffer == rootBuffer)
 			param->InitAsConstants(buffer.info.Size / sizeof(DWORD), buffer.info.Slot, buffer.info.Space, buffer.visibility);
 		else
-			param->InitAsConstantBufferView(buffer.info.Slot, buffer.info.Space, D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE, buffer.visibility);
+			param->InitAsConstantBufferView(buffer.info.Slot, buffer.info.Space, D3D12_ROOT_DESCRIPTOR_FLAG_DATA_VOLATILE, buffer.visibility);
 
 		param++;
 	}
@@ -169,7 +169,7 @@ ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device* device, co
 		auto& tex = textures[i];
 		auto& range = srvRanges[i];
 
-		range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, tex.info.Slot, tex.info.Space, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE);
+		range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, tex.info.Slot, tex.info.Space, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
 		param->InitAsDescriptorTable(1, &range, tex.visibility);
 
 		param++;

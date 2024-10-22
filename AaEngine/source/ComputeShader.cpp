@@ -13,7 +13,7 @@ void ComputeShader::init(ID3D12Device* device, const std::string& name)
 	info.add(shader, ShaderTypeCompute);
 	info.finish();
 
-	signature = info.createRootSignature(device);
+	signature = info.createRootSignature(device, { { .bordering = D3D12_TEXTURE_ADDRESS_MODE_BORDER } });
 
 	D3D12_COMPUTE_PIPELINE_STATE_DESC computePsoDesc = {};
 	computePsoDesc.pRootSignature = signature.Get();

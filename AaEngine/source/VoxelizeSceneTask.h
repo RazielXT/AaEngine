@@ -34,6 +34,7 @@ public:
 	AaCamera camera;
 
 	TextureResource voxelSceneTexture;
+	TextureResource voxelPreviousSceneTexture;
 	TextureResource clearSceneTexture;
 
 	CbufferView cbuffer;

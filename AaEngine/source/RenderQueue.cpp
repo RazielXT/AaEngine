@@ -75,6 +75,7 @@ void RenderQueue::renderObjects(AaCamera& camera, const RenderInformation& info,
 			if (variant == MaterialVariant::Voxel)
 			{
 				constants.data.front()[32] = entry.entity->name == "Box01" ? 2.f : 0.0f;
+				entry.entity->material->GetParameter("MaterialColor", constants.data.front().data() + 32 + 1);
 			}
 
 			updateEntityCbuffers(constants, entry.entity);

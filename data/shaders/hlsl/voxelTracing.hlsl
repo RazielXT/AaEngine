@@ -1,8 +1,8 @@
 float4x4 WorldViewProjectionMatrix;
 float4x4 WorldMatrix;
+float3 MaterialColor;
 uint TexIdColor;
 uint TexIdSceneVoxel;
-float4 MaterialColor;
 
 cbuffer SceneVoxelInfo : register(b1)
 {
@@ -138,7 +138,9 @@ PSOutput PS_Main(PS_Input pin)
     float3 traceColor = fullTraceSample.rgb;
 	//traceColor = voxelmap.Sample(g_sampler, voxelUV).rgb;
 
-    float4 albedo = GetTexture(TexIdColor).Sample(g_sampler, pin.uv) * MaterialColor;
+    float4 albedo = GetTexture(TexIdColor).Sample(g_sampler, pin.uv);
+	albedo.rgb *= MaterialColor;
+
     float4 color1 = saturate(albedo * float4(traceColor, 1));
 
 	PSOutput output;

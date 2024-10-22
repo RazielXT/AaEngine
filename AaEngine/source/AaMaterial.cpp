@@ -300,6 +300,23 @@ void MaterialInstance::SetParameter(const std::string& name, float* value, size_
 	}
 }
 
+void MaterialInstance::GetParameter(const std::string& name, float* output) const
+{
+	int idx = 0;
+	for (auto& b : base.info.cbuffers)
+	{
+		for (auto& p : b.info.Params)
+		{
+			if (p.Name == name)
+			{
+				memcpy(output, resources->cbuffers[idx].defaultData.data() + p.StartOffset / sizeof(float), p.Size);
+				return;
+			}
+		}
+		idx++;
+	}
+}
+
 void MaterialInstance::LoadMaterialConstants(ShaderBuffersInfo& buffers) const
 {
 	if (buffers.data.size() < resources->cbuffers.size())

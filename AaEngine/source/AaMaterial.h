@@ -87,6 +87,7 @@ public:
 	ShaderTextureView* GetTexture(UINT slot) const;
 
 	void SetParameter(const std::string& name, float* value, size_t size);
+	void GetParameter(const std::string& name, float* output) const;
 
 	void LoadMaterialConstants(ShaderBuffersInfo& buffers) const;
 	void UpdatePerFrame(ShaderBuffersInfo& buffers, const FrameGpuParameters& info, const XMMATRIX& vpMatrix);

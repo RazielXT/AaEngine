@@ -1,7 +1,7 @@
 float4x4 WorldViewProjectionMatrix;
 float4x4 ViewProjectionMatrix;
 float4x4 WorldMatrix;
-float4 MaterialColor;
+float3 MaterialColor;
 float Time;
 float2 ViewportSizeInverse;
 uint TexIdColor;
@@ -193,8 +193,11 @@ PSOutput PSMain(PSInput input)
 	float4 ambientColor = float4(0.2,0.2,0.2,1);
 #endif
 
+	float4 albedo = GetTexture(TexIdColor).Sample(g_sampler, input.uv);
+	albedo.rgb *= MaterialColor;
+
 	PSOutput output;
-    output.target0 = (ambientColor + getShadow(input.worldPosition) * diffuse) * GetTexture(TexIdColor).Sample(g_sampler, input.uv) * MaterialColor;
+    output.target0 = (ambientColor + getShadow(input.worldPosition) * diffuse) * albedo;
 	output.target1 = ambientColor;
 
 	return output;

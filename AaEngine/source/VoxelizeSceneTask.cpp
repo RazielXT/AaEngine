@@ -36,11 +36,16 @@ extern bool stopUpdatingVoxel;
 AsyncTasksInfo VoxelizeSceneTask::initialize(AaRenderSystem* renderSystem, AaSceneManager* sceneMgr, RenderTargetTexture* target)
 {
 	voxelSceneTexture.create3D(renderSystem->device, 128, 128, 128, DXGI_FORMAT_R16G16B16A16_FLOAT, renderSystem->FrameCount);
-	clearSceneTexture.create3D(renderSystem->device, 128, 128, 128, DXGI_FORMAT_R16G16B16A16_FLOAT, renderSystem->FrameCount);
 	ResourcesManager::get().createUAVView(voxelSceneTexture);
 	AaTextureResources::get().setNamedUAV("SceneVoxel", &voxelSceneTexture.uav.front());
 	ResourcesManager::get().createShaderResourceView(voxelSceneTexture);
 	AaTextureResources::get().setNamedTexture("SceneVoxel", &voxelSceneTexture.textureView);
+
+// 	voxelPreviousSceneTexture.create3D(renderSystem->device, 128, 128, 128, DXGI_FORMAT_R16G16B16A16_FLOAT, renderSystem->FrameCount);
+// 	ResourcesManager::get().createShaderResourceView(voxelPreviousSceneTexture);
+// 	AaTextureResources::get().setNamedTexture("SceneVoxelBounces", &voxelPreviousSceneTexture.textureView);
+
+	clearSceneTexture.create3D(renderSystem->device, 128, 128, 128, DXGI_FORMAT_R16G16B16A16_FLOAT, renderSystem->FrameCount);
 
 	cbuffer = ShaderConstantBuffers::get().CreateCbufferResource(sizeof(SceneVoxelInfo), "SceneVoxelInfo");
 

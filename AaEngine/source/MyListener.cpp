@@ -99,6 +99,7 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 	RenderContext ctx = { &cameraMan->camera, renderSystem, &sceneMgr->renderables };
 
 	ctx.params.time = elapsedTime;
+	ctx.params.timeDelta = timeSinceLastFrame;
 	ctx.params.sunDirection = sceneMgr->lights.directionalLight.direction;
 	XMStoreFloat4x4(&ctx.params.shadowMapViewProjectionTransposed, XMMatrixTranspose(shadowMap->camera[0].getViewProjectionMatrix()));
 

@@ -63,10 +63,18 @@ struct ResourcesInfo
 	std::vector<AutoParamInfo> autoParams;
 };
 
+enum class FastParam
+{
+	MaterialColor,
+	TexIdDiffuse,
+	COUNT
+};
+
 struct FrameGpuParameters
 {
+	DirectX::XMFLOAT4X4 shadowMapViewProjectionTransposed;
 	DirectX::XMFLOAT3 sunDirection;
 	DirectX::XMFLOAT2 inverseViewportSize;
 	float time;
-	DirectX::XMFLOAT4X4 shadowMapViewProjectionTransposed;
+	float timeDelta;
 };

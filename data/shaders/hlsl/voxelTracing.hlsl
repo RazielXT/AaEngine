@@ -124,11 +124,11 @@ PSOutput PS_Main(PS_Input pin)
 	float3 binormal = cross(pin.normal, pin.tangent);
 	float3 normal = normalize(mul(pin.normal, (float3x3) WorldMatrix).xyz);
 
-    float3 voxelUV = (pin.wp.xyz+30)/60;
     float3 geometryNormal = normal;
     float3 geometryB = normalize(mul(binormal, (float3x3) WorldMatrix).xyz);
     float3 geometryT = normalize(mul(pin.tangent, (float3x3) WorldMatrix).xyz);
 
+    float3 voxelUV = (pin.wp.xyz+30)/60;
 	Texture3D voxelmap = GetTexture3D(TexIdSceneVoxel);
     float4 fullTraceSample = coneTrace(voxelUV, geometryNormal, middleCone.x, middleCone.y, voxelmap, g_sampler, 0, radius) * 1.4;
     fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal + geometryT), sideCone.x, sideCone.y, voxelmap, g_sampler, 0, radius) * 1.0;

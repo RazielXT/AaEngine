@@ -186,27 +186,7 @@ std::unique_ptr<MaterialInstance> MaterialBase::CreateMaterialInstance(const Mat
 	Load();
 
 	auto instance = std::make_unique<MaterialInstance>(*this, childRef);
-	instance->resources = CreateResourcesData(childRef);
-
-	UINT texSlot = 0;
-	for (const auto& t : childRef.resources.textures)
-	{
-		if (!t.file.empty())
-		{
-			auto texture = AaTextureResources::get().loadFile(renderSystem->device, batch, t.file);
-			mgr.createShaderResourceView(*texture);
-
-			instance->SetTexture(*texture, texSlot);
-		}
-		else if (!t.id.empty())
-		{
-			if (auto texture = AaTextureResources::get().getNamedTexture(t.id))
-			{
-				instance->SetTexture(*texture, texSlot);
-			}
-		}
-		texSlot++;
-	}
+	CreateResourcesData(*instance, batch);
 
 	return std::move(instance);
 }
@@ -220,24 +200,47 @@ static void SetDefaultParameter(const ShaderReflection::CBuffer::Parameter& para
 	}
 }
 
-std::shared_ptr<ResourcesInfo> MaterialBase::CreateResourcesData(const MaterialRef& childRef) const
+void MaterialBase::CreateResourcesData(MaterialInstance& instance, ResourceUploadBatch& batch) const
 {
-	auto resources = info.createResourcesData();
+	instance.resources = info.createResourcesData();
 
 	size_t idx = 0;
 	for (auto& cb : info.cbuffers)
 	{
-		auto& buffer = resources->cbuffers[idx++];
+		auto& buffer = instance.resources->cbuffers[idx++];
 
 		if (buffer.type == CBufferType::Root)
 			for (const auto& p : cb.info.Params)
 			{
 				SetDefaultParameter(p, ref, buffer.defaultData);
-				SetDefaultParameter(p, childRef, buffer.defaultData);
+				SetDefaultParameter(p, instance.ref, buffer.defaultData);
+
+				if (p.Name == "TexIdDiffuse")
+					instance.paramsTable[(int)FastParam::TexIdDiffuse] = { buffer.defaultData.data() + p.StartOffset / sizeof(float), p.Size };
+				else if (p.Name == "MaterialColor")
+					instance.paramsTable[(int)FastParam::MaterialColor] = { buffer.defaultData.data() + p.StartOffset / sizeof(float), p.Size };
 			}
 	}
 
-	return resources;
+	UINT texSlot = 0;
+	for (const auto& t : instance.ref.resources.textures)
+	{
+		if (!t.file.empty())
+		{
+			auto texture = AaTextureResources::get().loadFile(renderSystem->device, batch, t.file);
+			mgr.createShaderResourceView(*texture);
+
+			instance.SetTexture(*texture, texSlot);
+		}
+		else if (!t.id.empty())
+		{
+			if (auto texture = AaTextureResources::get().getNamedTexture(t.id))
+			{
+				instance.SetTexture(*texture, texSlot);
+			}
+		}
+		texSlot++;
+	}
 }
 
 MaterialInstance::MaterialInstance(MaterialBase& matBase, const MaterialRef& matRef) : base(matBase), ref(matRef)
@@ -314,6 +317,15 @@ void MaterialInstance::GetParameter(const std::string& name, float* output) cons
 			}
 		}
 		idx++;
+	}
+}
+
+void MaterialInstance::GetParameter(FastParam id, float* output) const
+{
+	auto& param = paramsTable[(int)id];
+	if (param.data)
+	{
+		memcpy(output, param.data, param.Size);
 	}
 }
 

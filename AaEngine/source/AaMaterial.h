@@ -14,6 +14,7 @@
 #include "ShaderSignature.h"
 #include <map>
 #include "ShaderConstantBuffers.h"
+#include <array>
 
 using namespace Microsoft::WRL;
 using namespace DirectX;
@@ -47,7 +48,7 @@ public:
 
 private:
 
-	std::shared_ptr<ResourcesInfo> CreateResourcesData(const MaterialRef& childRef) const;
+	void CreateResourcesData(MaterialInstance& instance, ResourceUploadBatch& batch) const;
 
 	LoadedShader* shaders[ShaderType_COUNT]{};
 
@@ -88,6 +89,7 @@ public:
 
 	void SetParameter(const std::string& name, float* value, size_t size);
 	void GetParameter(const std::string& name, float* output) const;
+	void GetParameter(FastParam param, float* output) const;
 
 	void LoadMaterialConstants(ShaderBuffersInfo& buffers) const;
 	void UpdatePerFrame(ShaderBuffersInfo& buffers, const FrameGpuParameters& info, const XMMATRIX& vpMatrix);
@@ -108,6 +110,13 @@ protected:
 	const MaterialRef& ref;
 
 	std::shared_ptr<ResourcesInfo> resources;
+
+	struct FastParamInfo
+	{
+		float* data{};
+		UINT Size{};
+	};
+	std::array<FastParamInfo, (int)FastParam::COUNT> paramsTable{};
 
 	void UpdateBindlessTexture(const ShaderTextureView& texture, UINT slot);
 };

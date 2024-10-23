@@ -7,6 +7,9 @@
 #include "AaMaterialResources.h"
 
 bool stopUpdatingVoxel = false;
+float voxelSteppingBounces = 0.07f;
+float voxelSteppingDiffuse = 0.03f;
+float voxelLightPower = 5.f;
 
 namespace imgui
 {
@@ -57,9 +60,13 @@ namespace imgui
 		if (ImGui::Button("Reload shaders"))
 			state.reloadShaders = true;
 
-		if (ImGui::Button("stopUpdatingVoxel"))
+		if (ImGui::Button(stopUpdatingVoxel ? "startUpdatingVoxel" : "stopUpdatingVoxel"))
 			stopUpdatingVoxel = !stopUpdatingVoxel;
 		
+		ImGui::SliderFloat("GI weight", &voxelSteppingBounces, 0.0f, 0.15f);
+		ImGui::SliderFloat("Diffuse weight", &voxelSteppingDiffuse, 0.0f, 0.5f);
+		ImGui::SliderFloat("Light power", &voxelLightPower, 0.0f, 10.f);
+
 		const char* scenes[] = {
 			"test",
 			"testCubes",

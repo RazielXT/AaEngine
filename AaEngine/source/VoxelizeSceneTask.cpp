@@ -22,15 +22,6 @@ VoxelizeSceneTask::~VoxelizeSceneTask()
 	}
 }
 
-XM_ALIGNED_STRUCT(16) SceneVoxelInfo
-{
-	Vector3 voxelOffset;
-	float voxelSize;
-	Vector2 middleCone = { 1, 0.9 };
-	Vector2 sideCone = { 2, 0.8 };
-	float radius = 2;
-};
-
 extern bool stopUpdatingVoxel;
 
 AsyncTasksInfo VoxelizeSceneTask::initialize(AaRenderSystem* renderSystem, AaSceneManager* sceneMgr, RenderTargetTexture* target)
@@ -41,13 +32,13 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(AaRenderSystem* renderSystem, AaSce
 	ResourcesManager::get().createShaderResourceView(voxelSceneTexture);
 	AaTextureResources::get().setNamedTexture("SceneVoxel", &voxelSceneTexture.textureView);
 
-// 	voxelPreviousSceneTexture.create3D(renderSystem->device, 128, 128, 128, DXGI_FORMAT_R16G16B16A16_FLOAT, renderSystem->FrameCount);
-// 	ResourcesManager::get().createShaderResourceView(voxelPreviousSceneTexture);
-// 	AaTextureResources::get().setNamedTexture("SceneVoxelBounces", &voxelPreviousSceneTexture.textureView);
+	voxelPreviousSceneTexture.create3D(renderSystem->device, 128, 128, 128, DXGI_FORMAT_R16G16B16A16_FLOAT, renderSystem->FrameCount);
+	ResourcesManager::get().createShaderResourceView(voxelPreviousSceneTexture);
+	AaTextureResources::get().setNamedTexture("SceneVoxelBounces", &voxelPreviousSceneTexture.textureView);
 
 	clearSceneTexture.create3D(renderSystem->device, 128, 128, 128, DXGI_FORMAT_R16G16B16A16_FLOAT, renderSystem->FrameCount);
 
-	cbuffer = ShaderConstantBuffers::get().CreateCbufferResource(sizeof(SceneVoxelInfo), "SceneVoxelInfo");
+	cbuffer = ShaderConstantBuffers::get().CreateCbufferResource(sizeof(cbufferData), "SceneVoxelInfo");
 
 	computeMips.init(renderSystem->device, "generateMipmaps");
 
@@ -77,8 +68,17 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(AaRenderSystem* renderSystem, AaSce
 					continue;
 				}
 
+				auto sceneTexture = voxelSceneTexture.textures[FrameIndex].Get();
+
+				auto b = CD3DX12_RESOURCE_BARRIER::Transition(sceneTexture, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COPY_SOURCE);
+				commands.commandList->ResourceBarrier(1, &b);
+				commands.commandList->CopyResource(voxelPreviousSceneTexture.textures[FrameIndex].Get(), sceneTexture);
+
 				//fast clear
+				b = CD3DX12_RESOURCE_BARRIER::Transition(sceneTexture, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
+				commands.commandList->ResourceBarrier(1, &b);
 				commands.commandList->CopyResource(voxelSceneTexture.textures[FrameIndex].Get(), clearSceneTexture.textures[FrameIndex].Get());
+
 				commands.commandList->OMSetRenderTargets(0, nullptr, FALSE, nullptr);
 
 				XMFLOAT3 corner(offset.x - orthoHalfSize.x, offset.y - orthoHalfSize.y, offset.z - orthoHalfSize.z);
@@ -128,10 +128,11 @@ void VoxelizeSceneTask::prepare(RenderContext& renderCtx, CommandsData& syncComm
 	SetEvent(eventBegin);
 }
 
+extern float voxelSteppingBounces;
+extern float voxelSteppingDiffuse;
+
 void VoxelizeSceneTask::updateCBuffer(Vector3 offset, UINT frameIndex)
 {
-	SceneVoxelInfo cbufferData;
-
 	float size = 128;
 	auto orthoHalfSize = XMFLOAT3(30, 30, 30);
 	float sceneToVoxel = size / (2 * orthoHalfSize.x);
@@ -139,6 +140,9 @@ void VoxelizeSceneTask::updateCBuffer(Vector3 offset, UINT frameIndex)
 
 	cbufferData.voxelOffset = offset;
 
+	cbufferData.steppingBounces = voxelSteppingBounces;
+	cbufferData.steppingDiffuse = voxelSteppingDiffuse;
+	cbufferData.lerpFactor = ctx.params.timeDelta * 2;
 	auto& cbufferResource = *cbuffer.data[frameIndex];
 	memcpy(cbufferResource.Memory(), &cbufferData, sizeof(cbufferData));
 }

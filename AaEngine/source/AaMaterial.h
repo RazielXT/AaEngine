@@ -81,6 +81,7 @@ public:
 	MaterialInstance(const MaterialInstance& other) : base(other.base), ref(other.ref)
 	{
 		resources = other.resources;
+		paramsTable = other.paramsTable;
 	}
 	~MaterialInstance();
 
@@ -89,7 +90,10 @@ public:
 
 	void SetParameter(const std::string& name, float* value, size_t size);
 	void GetParameter(const std::string& name, float* output) const;
+
+	void SetParameter(FastParam param, float* value);
 	void GetParameter(FastParam param, float* output) const;
+	UINT GetParameterOffset(FastParam param) const;
 
 	void LoadMaterialConstants(ShaderBuffersInfo& buffers) const;
 	void UpdatePerFrame(ShaderBuffersInfo& buffers, const FrameGpuParameters& info, const XMMATRIX& vpMatrix);
@@ -115,8 +119,13 @@ protected:
 	{
 		float* data{};
 		UINT Size{};
+		UINT Offset{};
 	};
 	std::array<FastParamInfo, (int)FastParam::COUNT> paramsTable{};
+	std::vector<std::vector<float>> customParamsStorage;
+
+	void SetTableParameter(const std::string& name, float* data, UINT size, UINT offset);
+	void SetTableParametersFromRef(const MaterialRef& ref);
 
 	void UpdateBindlessTexture(const ShaderTextureView& texture, UINT slot);
 };

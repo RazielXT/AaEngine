@@ -1,6 +1,7 @@
 float4x4 WorldViewProjectionMatrix;
 float4x4 WorldMatrix;
 float3 MaterialColor;
+float Emission;
 uint TexIdColor;
 uint TexIdSceneVoxel;
 
@@ -135,17 +136,18 @@ PSOutput PS_Main(PS_Input pin)
     fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal - geometryT), sideCone.x, sideCone.y, voxelmap, g_sampler, 0, radius) * 1.0;
     fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal + geometryB), sideCone.x, sideCone.y, voxelmap, g_sampler, 0, radius) * 1.0;
     fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal - geometryB), sideCone.x, sideCone.y, voxelmap, g_sampler, 0, radius) * 1.0;
-    float3 traceColor = fullTraceSample.rgb;
-	//traceColor = voxelmap.Sample(g_sampler, voxelUV).rgb;
+    float3 traceColor = fullTraceSample.rgb / 5;
 
     float4 albedo = GetTexture(TexIdColor).Sample(g_sampler, pin.uv);
-	albedo.rgb *= MaterialColor;
+	albedo.rgb *= MaterialColor + MaterialColor * Emission;
 
     float4 color1 = saturate(albedo * float4(traceColor, 1));
 
+	//color1.rgb = voxelmap.Sample(g_sampler, voxelUV).rgb;
+
 	PSOutput output;
     output.target0 = color1;
-	output.target1 = albedo;
+	output.target1 = color1 * color1;
 
 	return output;
 }

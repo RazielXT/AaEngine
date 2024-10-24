@@ -2,6 +2,7 @@
 
 #include "ShaderConstants.h"
 #include <DirectXMath.h>
+#include <array>
 
 struct ShaderTextureView;
 class ShaderUAV;
@@ -67,7 +68,15 @@ enum class FastParam
 {
 	MaterialColor,
 	TexIdDiffuse,
+	Emission,
 	COUNT
+};
+
+constexpr std::array<std::string_view, (int)FastParam::COUNT> FastParamNames =
+{
+	"MaterialColor",
+	"TexIdDiffuse",
+	"Emission",
 };
 
 struct FrameGpuParameters

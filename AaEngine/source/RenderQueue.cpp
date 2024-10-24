@@ -46,8 +46,6 @@ void updateEntityCbuffers(ShaderBuffersInfo& constants, AaEntity* entity)
 		constants.cbuffers.instancing = entity->instancingGroup->buffer;
 }
 
-extern float voxelLightPower;
-
 void RenderQueue::renderObjects(AaCamera& camera, const RenderInformation& info, const FrameGpuParameters& params, ID3D12GraphicsCommandList* commandList, UINT frameIndex)
 {
 	if (entityOrder.empty())
@@ -76,8 +74,8 @@ void RenderQueue::renderObjects(AaCamera& camera, const RenderInformation& info,
 
 			if (variant == MaterialVariant::Voxel)
 			{
-				constants.data.front()[32] = entry.entity->name == "Box01" ? voxelLightPower : 0.0f;
-				entry.entity->material->GetParameter(FastParam::MaterialColor, constants.data.front().data() + 32 + 1);
+				entry.entity->material->GetParameter(FastParam::Emission, constants.data.front().data() + entry.material->GetParameterOffset(FastParam::Emission));
+				entry.entity->material->GetParameter(FastParam::MaterialColor, constants.data.front().data() + entry.material->GetParameterOffset(FastParam::MaterialColor));
 			}
 
 			updateEntityCbuffers(constants, entry.entity);

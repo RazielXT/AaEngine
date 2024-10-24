@@ -9,7 +9,6 @@
 bool stopUpdatingVoxel = false;
 float voxelSteppingBounces = 0.07f;
 float voxelSteppingDiffuse = 0.03f;
-float voxelLightPower = 5.f;
 
 namespace imgui
 {
@@ -65,7 +64,12 @@ namespace imgui
 		
 		ImGui::SliderFloat("GI weight", &voxelSteppingBounces, 0.0f, 0.15f);
 		ImGui::SliderFloat("Diffuse weight", &voxelSteppingDiffuse, 0.0f, 0.5f);
-		ImGui::SliderFloat("Light power", &voxelLightPower, 0.0f, 10.f);
+
+		static float voxelLightPower = 5.f;
+		if (ImGui::SliderFloat("Light power", &voxelLightPower, 0.0f, 10.f))
+		{
+			AaMaterialResources::get().getMaterial("WhiteVCTLight")->SetParameter(FastParam::Emission, &voxelLightPower);
+		}
 
 		const char* scenes[] = {
 			"test",

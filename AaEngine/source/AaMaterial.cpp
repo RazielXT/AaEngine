@@ -191,6 +191,34 @@ std::unique_ptr<MaterialInstance> MaterialBase::CreateMaterialInstance(const Mat
 	return std::move(instance);
 }
 
+void MaterialInstance::SetTableParameter(const std::string& name, float* data, UINT size, UINT offset)
+{
+	for (size_t i = 0; i < FastParamNames.size(); i++)
+	{
+		if (name == FastParamNames[i])
+			paramsTable[i] = { data, size, offset / UINT(sizeof(float))};
+	}
+}
+
+void MaterialInstance::SetTableParametersFromRef(const MaterialRef& ref)
+{
+	auto& defaults = ref.resources.defaultParams;
+
+	for (size_t i = 0; i < FastParamNames.size(); i++)
+	{
+		if (!paramsTable[i].data)
+		{
+			const auto& it = defaults.find(FastParamNames[i].data());
+			if (it != defaults.end())
+			{
+				paramsTable[i].data = customParamsStorage.emplace_back(it->second).data();
+				paramsTable[i].Size = it->second.size() * sizeof(float);
+				paramsTable[i].Offset = -1; //not used by material
+			}
+		}
+	}
+}
+
 static void SetDefaultParameter(const ShaderReflection::CBuffer::Parameter& param, const MaterialRef& ref, std::vector<float>& data)
 {
 	auto it = ref.resources.defaultParams.find(param.Name);
@@ -214,13 +242,11 @@ void MaterialBase::CreateResourcesData(MaterialInstance& instance, ResourceUploa
 			{
 				SetDefaultParameter(p, ref, buffer.defaultData);
 				SetDefaultParameter(p, instance.ref, buffer.defaultData);
-
-				if (p.Name == "TexIdDiffuse")
-					instance.paramsTable[(int)FastParam::TexIdDiffuse] = { buffer.defaultData.data() + p.StartOffset / sizeof(float), p.Size };
-				else if (p.Name == "MaterialColor")
-					instance.paramsTable[(int)FastParam::MaterialColor] = { buffer.defaultData.data() + p.StartOffset / sizeof(float), p.Size };
+				instance.SetTableParameter(p.Name, buffer.defaultData.data() + p.StartOffset / sizeof(float), p.Size, p.StartOffset);
 			}
 	}
+
+	instance.SetTableParametersFromRef(instance.ref);
 
 	UINT texSlot = 0;
 	for (const auto& t : instance.ref.resources.textures)
@@ -303,6 +329,15 @@ void MaterialInstance::SetParameter(const std::string& name, float* value, size_
 	}
 }
 
+void MaterialInstance::SetParameter(FastParam id, float* value)
+{
+	auto& param = paramsTable[(int)id];
+	if (param.data)
+	{
+		memcpy(param.data, value, param.Size);
+	}
+}
+
 void MaterialInstance::GetParameter(const std::string& name, float* output) const
 {
 	int idx = 0;
@@ -327,6 +362,11 @@ void MaterialInstance::GetParameter(FastParam id, float* output) const
 	{
 		memcpy(output, param.data, param.Size);
 	}
+}
+
+UINT MaterialInstance::GetParameterOffset(FastParam id) const
+{
+	return paramsTable[(int)id].Offset;
 }
 
 void MaterialInstance::LoadMaterialConstants(ShaderBuffersInfo& buffers) const

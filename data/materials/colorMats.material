@@ -24,7 +24,7 @@ material White : Color
 	
 	default_params
 	{
-		float4 MaterialColor 1 1 1
+		float MaterialColor 1 1 1
 	}
 }
 
@@ -34,7 +34,7 @@ material Yellow : Color
 {
 	default_params
 	{
-		float4 MaterialColor 1 1 0
+		float MaterialColor 1 1 0
 	}
 }
 
@@ -49,7 +49,7 @@ material Blue : Color
 	
 	default_params
 	{
-		float4 MaterialColor 0.2 0.2 1
+		float MaterialColor 0.2 0.2 1
 	}
 }
 
@@ -64,7 +64,7 @@ material Red : Color
 	
 	default_params
 	{
-		float4 MaterialColor 1 0.2 0.2
+		float MaterialColor 1 0.2 0.2
 	}
 }
 
@@ -79,7 +79,7 @@ material Green : Color
 	
 	default_params
 	{
-		float4 MaterialColor 0.2 0.8 0.2
+		float MaterialColor 0.2 0.8 0.2
 	}
 }
 
@@ -92,7 +92,7 @@ material terrainGrass : Color
 	
 	default_params
 	{
-		float4 MaterialColor 1 1 1
+		float MaterialColor 1 1 1
 	}
 }
 

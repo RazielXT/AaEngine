@@ -1,6 +1,6 @@
 float4x4 WorldViewProjectionMatrix;
 float4x4 WorldMatrix;
-float LightColor;
+float Emission;
 float3 MaterialColor;
 
 cbuffer SceneVoxelInfo : register(b1)
@@ -118,7 +118,7 @@ float4 PS_Main(PS_Input pin) : SV_TARGET
     float3 geometryT = normalize(mul(pin.tangent, (float3x3) WorldMatrix).xyz);
 
     float3 voxelUV = (pin.wp.xyz + 30) / 60;
-	float4 fullTraceSample = coneTrace(voxelUV, geometryNormal, middleCone.x, middleCone.y, SceneVoxelBounces, g_sampler, 0, radius) * 1.4;
+	float4 fullTraceSample = coneTrace(voxelUV, geometryNormal, middleCone.x, middleCone.y, SceneVoxelBounces, g_sampler, 0, radius) * 1.5;
     fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal + geometryT), sideCone.x, sideCone.y, SceneVoxelBounces, g_sampler, 0, radius) * 1.0;
     fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal - geometryT), sideCone.x, sideCone.y, SceneVoxelBounces, g_sampler, 0, radius) * 1.0;
     fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal + geometryB), sideCone.x, sideCone.y, SceneVoxelBounces, g_sampler, 0, radius) * 1.0;
@@ -126,12 +126,13 @@ float4 PS_Main(PS_Input pin) : SV_TARGET
     float3 traceColor = fullTraceSample.rgb;
 
 	float3 baseColor = MaterialColor * traceColor * steppingBounces + MaterialColor * steppingDiffuse;
-	baseColor += LightColor.xxx;
 
     float3 posUV = (pin.wp.xyz - sceneCorner) * voxelSize;
 	
 	float3 prev = SceneVoxelBounces.Load(float4(posUV, 0)).rgb;
     baseColor.rgb = lerp(prev, baseColor.rgb, lerpFactor);
+
+	baseColor = lerp(baseColor, MaterialColor * Emission, saturate(Emission));
 
     SceneVoxel[posUV] = float4(baseColor, 1);
 	

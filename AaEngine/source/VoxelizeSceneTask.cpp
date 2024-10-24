@@ -142,7 +142,12 @@ void VoxelizeSceneTask::updateCBuffer(Vector3 offset, UINT frameIndex)
 
 	cbufferData.steppingBounces = voxelSteppingBounces;
 	cbufferData.steppingDiffuse = voxelSteppingDiffuse;
-	cbufferData.lerpFactor = ctx.params.timeDelta * 2;
+
+	float deltaTime = ctx.params.timeDelta * 2;
+	deltaTime += deltaTime - deltaTime * deltaTime;
+	deltaTime = max(deltaTime, 1.0f);
+
+	cbufferData.lerpFactor = deltaTime;
 	auto& cbufferResource = *cbuffer.data[frameIndex];
 	memcpy(cbufferResource.Memory(), &cbufferData, sizeof(cbufferData));
 }

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "SceneLights.h"
 #include "RenderQueue.h"
 #include "EntityInstancing.h"
 #include <unordered_map>
@@ -17,8 +16,6 @@ public:
 
 	AaEntity* createEntity(std::string name);
 	AaEntity* getEntity(std::string name) const;
-
-	aa::SceneLights lights;
 
 	RenderQueue* createQueue(const std::vector<DXGI_FORMAT>& targets, MaterialVariant variant = MaterialVariant::Default);
 

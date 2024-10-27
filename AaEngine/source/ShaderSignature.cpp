@@ -203,7 +203,7 @@ ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device* device, co
 		sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
 		sampler.MinLOD = 0.0f;
 		sampler.MaxLOD = D3D12_FLOAT32_MAX;
-		sampler.ShaderRegister = 0;
+		sampler.ShaderRegister = samplers[i].info.Slot;
 		sampler.RegisterSpace = 0;
 		sampler.ShaderVisibility = samplers[i].visibility;
 

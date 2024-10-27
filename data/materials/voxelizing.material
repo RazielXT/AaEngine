@@ -7,4 +7,5 @@ material Voxelize
 	depth off
 
 	texture SceneVoxelBounces
+	texture ShadowMap0
 }

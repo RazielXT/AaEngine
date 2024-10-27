@@ -2,16 +2,20 @@ float4x4 WorldViewProjectionMatrix;
 float4x4 WorldMatrix;
 float3 MaterialColor;
 float Emission;
+
 uint TexIdColor;
 uint TexIdSceneVoxel;
+
+float4x4 ShadowMatrix;
+float3 SunDirection;
+uint TexIdShadowOffset;
 
 cbuffer SceneVoxelInfo : register(b1)
 {
 	float3 sceneCorner : packoffset(c0);
-	float voxelSize : packoffset(c0.w);
+	float voxelDensity : packoffset(c0.w);
     float2 middleCone : packoffset(c1);
     float2 sideCone : packoffset(c1.z);
-    float radius : packoffset(c2);
 };
 
 struct VS_Input
@@ -66,13 +70,13 @@ float4 sampleVox(Texture3D cmap, SamplerState sampl, float3 pos, float3 dir, flo
     return filtered;
 }
 
-float4 coneTrace(float3 o, float3 d, float coneRatio, float maxDist, Texture3D voxelTexture, SamplerState sampl, float closeZero, float radius)
+float4 coneTrace(float3 o, float3 d, float coneRatio, float maxDist, Texture3D voxelTexture, SamplerState sampl, float closeZero)
 {
 	float voxDim = 128.0f;
     float3 samplePos = o;
     float4 accum = float4(0, 0, 0, 0);
     float minDiam = 1.0 / voxDim;
-    float startDist = minDiam;
+    float startDist = minDiam * 3;
     float dist = startDist;
 
     closeZero *= 2;
@@ -112,6 +116,64 @@ Texture3D<float4> GetTexture3D(uint index)
     return ResourceDescriptorHeap[index];
 }
 
+float readShadowmap(Texture2D shadowmap, float2 shadowCoord)
+{
+    int2 texCoord = int2(shadowCoord * 512);
+	return shadowmap.Load(int3(texCoord, 0)).r;
+}
+
+float CalcShadowTermSoftPCF(Texture2D shadowmap, float fLightDepth, float2 vShadowTexCoord, int iSqrtSamples)
+{
+	float fShadowTerm = 0.0f;
+
+	float fRadius = (iSqrtSamples - 1.0f) / 2;
+	float fWeightAccum = 0.0f;
+
+	for (float y = -fRadius; y <= fRadius; y++)
+	{
+		for (float x = -fRadius; x <= fRadius; x++)
+		{
+			float2 vOffset = 0;
+			vOffset = float2(x, y);
+			vOffset /= 512;
+			float2 vSamplePoint = vShadowTexCoord + vOffset;
+			float fDepth = readShadowmap(shadowmap, vSamplePoint).x;
+			float fSample = (fLightDepth <= fDepth);
+
+			// Edge tap smoothing
+			float xWeight = 1;
+			float yWeight = 1;
+			if (x == -fRadius)
+				xWeight = 1 - frac(vShadowTexCoord.x * 512);
+			else if (x == fRadius)
+				xWeight = frac(vShadowTexCoord.x * 512);
+			if (y == -fRadius)
+				yWeight = 1 - frac(vShadowTexCoord.y * 512);
+			else if (y == fRadius)
+				yWeight = frac(vShadowTexCoord.y * 512);
+			fShadowTerm += fSample * xWeight * yWeight;
+			fWeightAccum = xWeight * yWeight;
+		}
+	}
+	fShadowTerm /= (iSqrtSamples * iSqrtSamples);
+	fShadowTerm *= 1.55f;
+
+	return fShadowTerm;
+}
+
+float getShadow(float4 wp)
+{
+	Texture2D shadowmap = GetTexture(TexIdShadowOffset);
+    float4 sunLookPos = mul(wp, ShadowMatrix);
+    sunLookPos.xy = sunLookPos.xy / sunLookPos.w;
+	sunLookPos.xy /= float2(2, -2);
+    sunLookPos.xy += 0.5;
+	sunLookPos.z -= 0.01;
+
+	//return readShadowmap(shadowmap, sunLookPos.xy) < sunLookPos.z ? 0.0 : 1.0;
+	return CalcShadowTermSoftPCF(shadowmap, sunLookPos.z, sunLookPos.xy, 5);
+}
+
 struct PSOutput
 {
     float4 target0 : SV_Target0;
@@ -119,6 +181,7 @@ struct PSOutput
 };
 
 SamplerState g_sampler : register(s0);
+SamplerState diffuse_sampler : register(s1);
 
 PSOutput PS_Main(PS_Input pin)
 {
@@ -129,25 +192,36 @@ PSOutput PS_Main(PS_Input pin)
     float3 geometryB = normalize(mul(binormal, (float3x3) WorldMatrix).xyz);
     float3 geometryT = normalize(mul(pin.tangent, (float3x3) WorldMatrix).xyz);
 
-    float3 voxelUV = (pin.wp.xyz+30)/60;
+    float3 voxelUV = (pin.wp.xyz-sceneCorner)/300;
 	Texture3D voxelmap = GetTexture3D(TexIdSceneVoxel);
-    float4 fullTraceSample = coneTrace(voxelUV, geometryNormal, middleCone.x, middleCone.y, voxelmap, g_sampler, 0, radius) * 1.4;
-    fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal + geometryT), sideCone.x, sideCone.y, voxelmap, g_sampler, 0, radius) * 1.0;
-    fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal - geometryT), sideCone.x, sideCone.y, voxelmap, g_sampler, 0, radius) * 1.0;
-    fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal + geometryB), sideCone.x, sideCone.y, voxelmap, g_sampler, 0, radius) * 1.0;
-    fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal - geometryB), sideCone.x, sideCone.y, voxelmap, g_sampler, 0, radius) * 1.0;
+    float4 fullTraceSample = coneTrace(voxelUV, geometryNormal, middleCone.x, middleCone.y, voxelmap, g_sampler, 0) * 1;
+    fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal + geometryT), sideCone.x, sideCone.y, voxelmap, g_sampler, 0) * 1.0;
+    fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal - geometryT), sideCone.x, sideCone.y, voxelmap, g_sampler, 0) * 1.0;
+    fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal + geometryB), sideCone.x, sideCone.y, voxelmap, g_sampler, 0) * 1.0;
+    fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal - geometryB), sideCone.x, sideCone.y, voxelmap, g_sampler, 0) * 1.0;
     float3 traceColor = fullTraceSample.rgb / 5;
 
-    float4 albedo = GetTexture(TexIdColor).Sample(g_sampler, pin.uv);
-	albedo.rgb *= MaterialColor + MaterialColor * Emission;
+    float occlusionSample = sampleVox(voxelmap, g_sampler, voxelUV + geometryNormal / 128, geometryNormal, 2).w;
+    occlusionSample += sampleVox(voxelmap, g_sampler, voxelUV + normalize(geometryNormal + geometryT) / 128, normalize(geometryNormal + geometryT), 2).w;
+    occlusionSample += sampleVox(voxelmap, g_sampler, voxelUV + normalize(geometryNormal - geometryT) / 128, normalize(geometryNormal - geometryT), 2).w;
+    occlusionSample += sampleVox(voxelmap, g_sampler, voxelUV + (geometryNormal + geometryB) / 128, (geometryNormal + geometryB), 2).w;
+    occlusionSample += sampleVox(voxelmap, g_sampler, voxelUV + (geometryNormal - geometryB) / 128, (geometryNormal - geometryB), 2).w;
+    occlusionSample = 1 - saturate(occlusionSample / 5);
 
-    float4 color1 = saturate(albedo * float4(traceColor, 1));
+    float4 albedo = GetTexture(TexIdColor).Sample(diffuse_sampler, pin.uv);
+	albedo.rgb *= MaterialColor;
 
-	//color1.rgb = voxelmap.Sample(g_sampler, voxelUV).rgb;
+	float3 lighting = saturate(dot(-SunDirection,normal)).rrr * getShadow(pin.wp);
+	lighting = max(lighting, traceColor * occlusionSample);
+
+    float4 color1 = saturate(albedo * float4(lighting, 1));
+	color1.rgb += MaterialColor * Emission;
+
+	//color1.rgb = voxelmap.SampleLevel(g_sampler, voxelUV, 0).rgb;
 
 	PSOutput output;
     output.target0 = color1;
-	output.target1 = color1 * color1;
+	output.target1 = color1 * 5;
 
 	return output;
 }

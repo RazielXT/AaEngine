@@ -9,21 +9,33 @@ material ColorVCT abstract
 	}
 	
 	texture SceneVoxel
-}
+	texture ShadowMap0
 
-material WhiteVCT : ColorVCT
-{
 	default_params
 	{
 		float MaterialColor 1 1 1
 	}
+
+	sampler border_black
+}
+
+material WhiteVCT : ColorVCT
+{
 }
 
 material WhiteVCTLight : WhiteVCT
 {
 	default_params
 	{
-		float Emission 5
+		float Emission 3
+	}
+}
+
+material WhiteVCTLightEx : WhiteVCT
+{
+	default_params
+	{
+		float Emission 20
 	}
 }
 
@@ -45,9 +57,16 @@ material RedVCT : ColorVCT
 
 material GreenVCT : ColorVCT
 {
-	default_params
+	texture Diffuse
 	{
-		float MaterialColor 0.14 0.83 0.26
+		file grass.png
 	}
 }
 
+material YellowVCT : ColorVCT
+{
+	default_params
+	{
+		float MaterialColor 1 1 0.1
+	}
+}

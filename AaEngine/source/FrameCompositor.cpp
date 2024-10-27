@@ -5,7 +5,7 @@
 #include "ShadowMap.h"
 #include "DebugWindow.h"
 
-FrameCompositor::FrameCompositor(AaRenderSystem* rs, AaSceneManager* scene, AaShadowMap* shadows) : shadowRender(*shadows)
+FrameCompositor::FrameCompositor(AaRenderSystem* rs, AaSceneManager* scene, AaShadowMap* shadows) : shadowRender(*shadows), sceneVoxelize(*shadows)
 {
 	renderSystem = rs;
 	sceneMgr = scene;

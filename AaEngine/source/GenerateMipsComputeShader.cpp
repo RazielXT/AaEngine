@@ -13,8 +13,7 @@ void GenerateMipsComputeShader::dispatch(ID3D12GraphicsCommandList* commandList,
 	ID3D12DescriptorHeap* ppHeaps[] = { mgr.mainDescriptorHeap[frameIndex] };
 	commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
-	auto b = CD3DX12_RESOURCE_BARRIER::Transition(resource, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-	commandList->ResourceBarrier(1, &b);
+	TextureResource::TransitionState(commandList, frameIndex, texture, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
 	//src Texture
 	commandList->SetComputeRootDescriptorTable(1, texture.textureView.srvHandles[frameIndex]);
@@ -51,7 +50,4 @@ void GenerateMipsComputeShader::dispatch(ID3D12GraphicsCommandList* commandList,
 		auto srvTransition = CD3DX12_RESOURCE_BARRIER::Transition(resource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, mip);
 		commandList->ResourceBarrier(1, &srvTransition);
 	}
-
-	b = CD3DX12_RESOURCE_BARRIER::Transition(resource, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
-	commandList->ResourceBarrier(1, &b);
 }

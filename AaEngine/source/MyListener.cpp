@@ -21,11 +21,8 @@ MyListener::MyListener(AaRenderSystem* render)
 	auto window = renderSystem->getWindow();
 	cameraMan->reload(window->getWidth() / (float)window->getHeight());
 
-	shadowMap = new AaShadowMap(sceneMgr->lights.directionalLight);
+	shadowMap = new AaShadowMap(lights.directionalLight);
 	shadowMap->init(renderSystem);
-
-// 	voxelScene = new AaVoxelScene(mSceneMgr);
-// 	voxelScene->initScene(128);
 
 	AaShaderLibrary::get().loadShaderReferences(SHADER_DIRECTORY, false);
  	AaMaterialResources::get().loadMaterials(MATERIAL_DIRECTORY, false);
@@ -33,7 +30,7 @@ MyListener::MyListener(AaRenderSystem* render)
 	compositor = new FrameCompositor(render, sceneMgr, shadowMap);
 	compositor->load(DATA_DIRECTORY + "frame.compositor");
 
-	Vector3(-1, -1, -1).Normalize(sceneMgr->lights.directionalLight.direction);
+	Vector3(-1, -1, -1).Normalize(lights.directionalLight.direction);
 
  	SceneParser::load("test", sceneMgr, renderSystem);
 
@@ -53,7 +50,6 @@ MyListener::~MyListener()
 }
 
 float elapsedTime = 0;
-int count = 0;
 
 bool MyListener::frameStarted(float timeSinceLastFrame)
 {
@@ -84,7 +80,7 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 
  	elapsedTime += timeSinceLastFrame;
 
-	Vector3(cos(elapsedTime), -1, sin(elapsedTime)).Normalize(sceneMgr->lights.directionalLight.direction);
+	//Vector3(cos(elapsedTime), -1, sin(elapsedTime)).Normalize(sceneMgr->lights.directionalLight.direction);
 
 	if (debugWindow.state.reloadShaders)
 	{
@@ -100,15 +96,10 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 
 	ctx.params.time = elapsedTime;
 	ctx.params.timeDelta = timeSinceLastFrame;
-	ctx.params.sunDirection = sceneMgr->lights.directionalLight.direction;
+	ctx.params.sunDirection = lights.directionalLight.direction;
 	XMStoreFloat4x4(&ctx.params.shadowMapViewProjectionTransposed, XMMatrixTranspose(shadowMap->camera[0].getViewProjectionMatrix()));
 
 	compositor->render(ctx, debugWindow);
-
-// 	//if (count % 2 == 0)
-// 	voxelScene->voxelizeScene(XMFLOAT3(30, 30, 30), XMFLOAT3(0, 0, 0));
-// 	voxelScene->endFrame(XMFLOAT3(30, 30, 30), XMFLOAT3(0, 0, 0));
-// 	count++;
 
 	return continue_rendering;
 }

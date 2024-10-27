@@ -3,11 +3,11 @@ compositor SceneCompositor
 	texture sceneTexture target_width target_height DXGI_FORMAT_R8G8B8A8_UNORM DXGI_FORMAT_R10G10B10A2_UNORM depth_buffer
 	texture sceneTexture2 target_width target_height DXGI_FORMAT_R8G8B8A8_UNORM
 
-	texture bloomTexture target_width_scaled 0.5 target_height_scaled 0.5 DXGI_FORMAT_R8G8B8A8_UNORM
-	texture bloomTexture2 target_width_scaled 0.25 target_height_scaled 0.25 DXGI_FORMAT_R8G8B8A8_UNORM
-	texture bloomTexture3 target_width_scaled 0.125 target_height_scaled 0.125 DXGI_FORMAT_R8G8B8A8_UNORM
-	texture bloomTexture4 target_width_scaled 0.0625 target_height_scaled 0.0625 DXGI_FORMAT_R8G8B8A8_UNORM
-	texture bloomTexture5 target_width_scaled 0.0625 target_height_scaled 0.0625 DXGI_FORMAT_R8G8B8A8_UNORM
+	texture bloomTexture target_width_scaled 0.5 target_height_scaled 0.5 DXGI_FORMAT_R10G10B10A2_UNORM
+	texture bloomTexture2 target_width_scaled 0.25 target_height_scaled 0.25 DXGI_FORMAT_R10G10B10A2_UNORM
+	texture bloomTexture3 target_width_scaled 0.125 target_height_scaled 0.125 DXGI_FORMAT_R10G10B10A2_UNORM
+	texture bloomTexture4 target_width_scaled 0.0625 target_height_scaled 0.0625 DXGI_FORMAT_R10G10B10A2_UNORM
+	texture bloomTexture5 target_width_scaled 0.0625 target_height_scaled 0.0625 DXGI_FORMAT_R10G10B10A2_UNORM
 
 	texture voxelDummy 128 128 DXGI_FORMAT_R8G8B8A8_UNORM
 

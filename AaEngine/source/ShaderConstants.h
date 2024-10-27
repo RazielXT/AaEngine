@@ -5,7 +5,7 @@
 
 enum class CBufferType
 {
-	Generic,
+	Global,
 	Root,
 	Instancing,
 	COUNT

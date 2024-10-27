@@ -33,3 +33,18 @@ void TextureResource::create3D(ID3D12Device* device, UINT w, UINT h, UINT d, DXG
 			IID_PPV_ARGS(&textures[i]));
 	}
 }
+
+void TextureResource::setName(const wchar_t* name)
+{
+	for (auto& t : textures)
+	{
+		t->SetName(name);
+	}
+}
+
+void TextureResource::TransitionState(ID3D12GraphicsCommandList* commandList, int frameIndex, TextureResource& t, D3D12_RESOURCE_STATES targetState)
+{
+	auto b = CD3DX12_RESOURCE_BARRIER::Transition(t.textures[frameIndex].Get(), t.state, targetState);
+	commandList->ResourceBarrier(1, &b);
+	t.state = targetState;
+}

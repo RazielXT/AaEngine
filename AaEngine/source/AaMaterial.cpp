@@ -151,6 +151,15 @@ AaMaterial* MaterialBase::GetAssignedMaterial(MaterialInstance* instance, const 
 
 void MaterialBase::ReloadPipeline()
 {
+	if (rootSignature)
+	{
+		rootSignature->Release();
+		rootSignature = nullptr;
+		info = {};
+	}
+
+	Load();
+
 	std::map<void*, ID3D12PipelineState*> oldMapping;
 
 	for (auto& s : pipelineStates)

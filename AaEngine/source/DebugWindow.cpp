@@ -7,8 +7,11 @@
 #include "AaMaterialResources.h"
 
 bool stopUpdatingVoxel = false;
-float voxelSteppingBounces = 0.07f;
-float voxelSteppingDiffuse = 0.03f;
+
+float voxelSteppingBounces = 0.1f;
+float voxelSteppingDiffuse = 0.01f;
+Vector2 middleConeRatioDistance = { 1.1f, 1.5f };
+Vector2 sideConeRatioDistance = { 2.2f, 5.f };
 
 namespace imgui
 {
@@ -65,16 +68,22 @@ namespace imgui
 		ImGui::SliderFloat("GI weight", &voxelSteppingBounces, 0.0f, 0.15f);
 		ImGui::SliderFloat("Diffuse weight", &voxelSteppingDiffuse, 0.0f, 0.5f);
 
-		static float voxelLightPower = 5.f;
+		static float voxelLightPower = 3.f;
 		if (ImGui::SliderFloat("Light power", &voxelLightPower, 0.0f, 10.f))
 		{
 			AaMaterialResources::get().getMaterial("WhiteVCTLight")->SetParameter(FastParam::Emission, &voxelLightPower);
 		}
 
+		ImGui::SliderFloat("middleConeRatio", &middleConeRatioDistance.x, 0.0f, 5.f);
+		ImGui::SliderFloat("middleConeDistance", &middleConeRatioDistance.y, 0.0f, 5.f);
+		ImGui::SliderFloat("sideConeRatio", &sideConeRatioDistance.x, 0.0f, 5.f);
+		ImGui::SliderFloat("sideConeDistance", &sideConeRatioDistance.y, 0.0f, 5.f);
+
 		const char* scenes[] = {
 			"test",
 			"testCubes",
-			"voxelRoom"
+			"voxelRoom",
+			"voxelOutside"
 		};
 		static int currentScene = 0;
 		if (ImGui::Combo("Scene", &currentScene, scenes, std::size(scenes)))

@@ -146,7 +146,7 @@ public:
 
 	bool operator==(ID3D12PipelineState* pipeline)
 	{
-		return pipelineState = pipeline;
+		return pipelineState == pipeline;
 	}
 
 	void BindPipeline(ID3D12GraphicsCommandList* commandList);

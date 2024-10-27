@@ -36,6 +36,7 @@ private:
 	AaShadowMap* shadowMap;
 // 	AaVoxelScene* voxelScene;
 	imgui::DebugWindow debugWindow;
+	aa::SceneLights lights;
 
 	bool continue_rendering = true;
 

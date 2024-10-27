@@ -74,6 +74,7 @@ std::vector<LoadedShader*> AaShaderLibrary::reloadShaders()
 			struct stat attrib;
 			if (stat((SHADER_HLSL_DIRECTORY + shader->ref.file).c_str(), &attrib) == 0 && attrib.st_mtime > shader->filetime)
 			{
+				shader->desc = {};
 				shader->blob = compiler.compileShader(shader->ref, shader->desc, (ShaderType)type);
 				shader->filetime = attrib.st_mtime;
 

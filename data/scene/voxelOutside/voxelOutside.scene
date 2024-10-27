@@ -1,0 +1,753 @@
+<scene formatVersion="1.0" upAxis="y" unitsPerMeter="39.3701" minOgreVersion="1.8" ogreMaxVersion="2.4.3" author="OgreMax Scene Exporter (www.ogremax.com)" application="3DS Max">
+    <environment>
+        <colourAmbient r="0.333333" g="0.333333" b="0.333333" />
+        <colourBackground r="0" g="0" b="0" />
+        <clipping near="0" far="100000" />
+    </environment>
+    <nodes>
+        <node name="FDirect001">
+            <position x="-26.6448" y="101.717" z="379.625" />
+            <scale x="1" y="1" z="1" />
+            <rotation qx="0.281387" qy="-0.280792" qz="-0.45005" qw="0.799645" />
+            <light name="FDirect001" visible="true" affectDiffuse="true" affectSpecular="true" ambientOnly="false" type="directional" castShadows="true" power="5">
+                <rotation qx="-0.707107" qy="-0" qz="-0" qw="-0.707107" />
+                <colourDiffuse r="1" g="1" b="1" />
+                <colourSpecular r="1" g="1" b="1" />
+                <lightAttenuation range="999999" constant="1" linear="0" quadric="0" />
+            </light>
+        </node>
+        <node name="Box001">
+            <position x="-47.8527" y="73.5813" z="64.1395" />
+            <scale x="0.180543" y="0.567204" z="1.32951" />
+            <rotation qx="0.994971" qy="-0.00778256" qz="-0.0764922" qw="-0.0642" />
+            <entity name="Box001" castShadows="true" receiveShadows="true" meshFile="test3Box001.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="BlueVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box002">
+            <position x="-52.4433" y="82.1131" z="80.204" />
+            <scale x="0.283014" y="0.267884" z="0.519359" />
+            <rotation qx="0.99424" qy="0.0264318" qz="-0.0805602" qw="0.0655655" />
+            <entity name="Box002" castShadows="true" receiveShadows="true" meshFile="test3Box002.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="BlueVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box003">
+            <position x="-67.9669" y="56.4556" z="47.8736" />
+            <scale x="0.149948" y="0.88792" z="1.74245" />
+            <rotation qx="0.995567" qy="-0.0255392" qz="-0.0827222" qw="0.0367503" />
+            <entity name="Box003" castShadows="true" receiveShadows="true" meshFile="test3Box003.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box004">
+            <position x="-2.44215" y="71.9082" z="64.6994" />
+            <scale x="0.0693414" y="0.390432" z="0.845154" />
+            <rotation qx="0.99266" qy="-0.0138442" qz="0.072236" qw="0.096003" />
+            <entity name="Box004" castShadows="true" receiveShadows="true" meshFile="test3Box004.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="BlueVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box006">
+            <position x="-52.9911" y="70.4298" z="74.497" />
+            <scale x="0.488214" y="1.37426" z="1.75208" />
+            <rotation qx="0.983685" qy="0.0831313" qz="0.105516" qw="0.119666" />
+            <entity name="Box006" castShadows="true" receiveShadows="true" meshFile="test3Box006.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box007">
+            <position x="-64.3557" y="81.3461" z="73.8557" />
+            <scale x="0.0742827" y="0.702003" z="0.208846" />
+            <rotation qx="0.990979" qy="0.118352" qz="0.0338751" qw="-0.0529627" />
+            <entity name="Box007" castShadows="true" receiveShadows="true" meshFile="test3Box007.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCTLight" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box008">
+            <position x="-68.1011" y="67.8099" z="83.4762" />
+            <scale x="0.40013" y="1.42992" z="0.527015" />
+            <rotation qx="0.987242" qy="-0.096893" qz="0.0550372" qw="-0.11374" />
+            <entity name="Box008" castShadows="true" receiveShadows="true" meshFile="test3Box008.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box009">
+            <position x="-102.791" y="47.3369" z="99.8249" />
+            <scale x="0.231965" y="0.320627" z="0.658355" />
+            <rotation qx="0.995326" qy="-0.0584815" qz="0.0743206" qw="-0.0195435" />
+            <entity name="Box009" castShadows="true" receiveShadows="true" meshFile="test3Box009.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box010">
+            <position x="-95.2407" y="76.4547" z="73.545" />
+            <scale x="0.433185" y="0.587123" z="0.545315" />
+            <rotation qx="0.993339" qy="-0.000599011" qz="-0.10736" qw="-0.0418464" />
+            <entity name="Box010" castShadows="true" receiveShadows="true" meshFile="test3Box010.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box011">
+            <position x="-85.4413" y="65.8394" z="35.4201" />
+            <scale x="0.265576" y="1.32353" z="0.47828" />
+            <rotation qx="0.992148" qy="-0.0847183" qz="-0.0828662" qw="-0.0399789" />
+            <entity name="Box011" castShadows="true" receiveShadows="true" meshFile="test3Box011.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box012">
+            <position x="-71.2552" y="44.9498" z="24.5275" />
+            <scale x="0.347642" y="1.0001" z="0.857089" />
+            <rotation qx="0.976491" qy="-0.129099" qz="0.158293" qw="-0.0688642" />
+            <entity name="Box012" castShadows="true" receiveShadows="true" meshFile="test3Box012.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="RedVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box013">
+            <position x="-67.0317" y="69.6765" z="38.8712" />
+            <scale x="0.473231" y="0.109267" z="0.224918" />
+            <rotation qx="0.970371" qy="0.173695" qz="0.166232" qw="-0.0240247" />
+            <entity name="Box013" castShadows="true" receiveShadows="true" meshFile="test3Box013.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box014">
+            <position x="-37.2127" y="42.3247" z="49.1625" />
+            <scale x="0.428946" y="1.37312" z="0.230881" />
+            <rotation qx="0.982989" qy="0.109833" qz="0.106316" qw="0.101817" />
+            <entity name="Box014" castShadows="true" receiveShadows="true" meshFile="test3Box014.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="BlueVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box016">
+            <position x="-72.8999" y="78.6558" z="-58.3882" />
+            <scale x="0.892509" y="1.45458" z="0.517297" />
+            <rotation qx="0.995471" qy="0.0755691" qz="0.0470643" qw="-0.0333365" />
+            <entity name="Box016" castShadows="true" receiveShadows="true" meshFile="test3Box016.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="RedVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box017">
+            <position x="-39.7055" y="38.1426" z="-34.3401" />
+            <scale x="0.649401" y="1.48519" z="0.164257" />
+            <rotation qx="0.982241" qy="-0.122221" qz="-0.0843186" qw="-0.114693" />
+            <entity name="Box017" castShadows="true" receiveShadows="true" meshFile="test3Box017.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="RedVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box018">
+            <position x="-80.2331" y="44.1727" z="-53.4154" />
+            <scale x="0.824634" y="0.218434" z="0.23101" />
+            <rotation qx="0.985984" qy="0.0154251" qz="-0.135119" qw="-0.0966486" />
+            <entity name="Box018" castShadows="true" receiveShadows="true" meshFile="test3Box018.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="RedVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box019">
+            <position x="-30.7271" y="36.0488" z="-73.5037" />
+            <scale x="0.42432" y="0.0507447" z="0.912912" />
+            <rotation qx="0.968579" qy="0.203501" qz="0.0919109" qw="0.109521" />
+            <entity name="Box019" castShadows="true" receiveShadows="true" meshFile="test3Box019.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="RedVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box021">
+            <position x="-50.5954" y="66.6631" z="-19.2256" />
+            <scale x="0.384736" y="0.897467" z="1.64654" />
+            <rotation qx="0.977778" qy="-0.118639" qz="0.0454511" qw="-0.166763" />
+            <entity name="Box021" castShadows="true" receiveShadows="true" meshFile="test3Box021.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="RedVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box022">
+            <position x="-50.702" y="71.3704" z="-13.0814" />
+            <scale x="0.995688" y="0.577909" z="1.14078" />
+            <rotation qx="0.992407" qy="-0.101417" qz="0.069268" qw="0.00676136" />
+            <entity name="Box022" castShadows="true" receiveShadows="true" meshFile="test3Box022.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box023">
+            <position x="-69.6284" y="64.8647" z="-10.7602" />
+            <scale x="0.306695" y="0.399654" z="0.915151" />
+            <rotation qx="0.97741" qy="0.175376" qz="-0.116575" qw="0.0179559" />
+            <entity name="Box023" castShadows="true" receiveShadows="true" meshFile="test3Box023.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box024">
+            <position x="-92.5131" y="40.1141" z="9.03466" />
+            <scale x="0.234373" y="0.801744" z="0.208572" />
+            <rotation qx="0.996792" qy="0.0532913" qz="-0.0505002" qw="-0.0318787" />
+            <entity name="Box024" castShadows="true" receiveShadows="true" meshFile="test3Box024.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box025">
+            <position x="-93.9208" y="60.765" z="-50.0807" />
+            <scale x="0.250629" y="0.742016" z="1.65693" />
+            <rotation qx="0.981783" qy="0.0848668" qz="-0.0404833" qw="0.165106" />
+            <entity name="Box025" castShadows="true" receiveShadows="true" meshFile="test3Box025.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="RedVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box026">
+            <position x="-110.886" y="70.385" z="-56.6732" />
+            <scale x="0.033346" y="1.73523" z="0.245148" />
+            <rotation qx="0.988444" qy="0.00627733" qz="-0.0490374" qw="-0.143296" />
+            <entity name="Box026" castShadows="true" receiveShadows="true" meshFile="test3Box026.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="RedVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box027">
+            <position x="-78.466" y="35.0996" z="-60.2822" />
+            <scale x="0.665763" y="1.14598" z="1.32629" />
+            <rotation qx="0.970877" qy="0.131217" qz="-0.108731" qw="-0.168395" />
+            <entity name="Box027" castShadows="true" receiveShadows="true" meshFile="test3Box027.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="RedVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box028">
+            <position x="-46.155" y="42.2533" z="-67.9481" />
+            <scale x="0.174111" y="0.775816" z="0.28388" />
+            <rotation qx="0.996764" qy="-0.0461966" qz="0.0373373" qw="-0.0541618" />
+            <entity name="Box028" castShadows="true" receiveShadows="true" meshFile="test3Box028.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="RedVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box029">
+            <position x="-20.6326" y="73.0767" z="-92.7993" />
+            <scale x="0.86634" y="0.0962928" z="0.60556" />
+            <rotation qx="0.984685" qy="-0.0935393" qz="-0.132485" qw="0.0639807" />
+            <entity name="Box029" castShadows="true" receiveShadows="true" meshFile="test3Box029.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box030">
+            <position x="-9.62666" y="80.8878" z="-69.7309" />
+            <scale x="0.77623" y="1.30417" z="0.986739" />
+            <rotation qx="0.990948" qy="0.027741" qz="0.00865377" qw="-0.131062" />
+            <entity name="Box030" castShadows="true" receiveShadows="true" meshFile="test3Box030.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCTLight" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box031">
+            <position x="71.6786" y="77.9632" z="62.5736" />
+            <scale x="0.387054" y="1.03892" z="0.658986" />
+            <rotation qx="0.995729" qy="0.0281597" qz="0.0409249" qw="0.0778183" />
+            <entity name="Box031" castShadows="true" receiveShadows="true" meshFile="test3Box031.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box032">
+            <position x="80.1067" y="76.2351" z="39.4535" />
+            <scale x="0.467671" y="1.51025" z="1.01804" />
+            <rotation qx="0.999042" qy="0.0221894" qz="-0.00414868" qw="0.0375028" />
+            <entity name="Box032" castShadows="true" receiveShadows="true" meshFile="test3Box032.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box034">
+            <position x="102.564" y="46.975" z="55.427" />
+            <scale x="0.549002" y="0.642954" z="0.122442" />
+            <rotation qx="0.985138" qy="-0.0531505" qz="-0.153174" qw="0.0567003" />
+            <entity name="Box034" castShadows="true" receiveShadows="true" meshFile="test3Box034.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box035">
+            <position x="105.775" y="60.0625" z="72.3832" />
+            <scale x="0.769962" y="0.733531" z="0.131768" />
+            <rotation qx="0.986249" qy="0.0352772" qz="-0.0808266" qw="-0.139767" />
+            <entity name="Box035" castShadows="true" receiveShadows="true" meshFile="test3Box035.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box036">
+            <position x="81.4627" y="37.7158" z="76.6874" />
+            <scale x="0.340516" y="0.100747" z="0.137481" />
+            <rotation qx="0.986012" qy="-0.00803982" qz="-0.150852" qw="0.0704293" />
+            <entity name="Box036" castShadows="true" receiveShadows="true" meshFile="test3Box036.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box037">
+            <position x="49.5622" y="45.4465" z="96.7716" />
+            <scale x="0.682063" y="1.02342" z="1.1344" />
+            <rotation qx="0.984396" qy="-0.0927795" qz="0.101474" qw="-0.109813" />
+            <entity name="Box037" castShadows="true" receiveShadows="true" meshFile="test3Box037.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box038">
+            <position x="33.486" y="70.9948" z="93.2318" />
+            <scale x="0.732634" y="1.01917" z="0.198488" />
+            <rotation qx="0.994493" qy="-0.0994511" qz="0.022858" qw="0.0238985" />
+            <entity name="Box038" castShadows="true" receiveShadows="true" meshFile="test3Box038.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="BlueVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box039">
+            <position x="14.5728" y="50.0491" z="81.7508" />
+            <scale x="0.12423" y="0.828142" z="0.0334342" />
+            <rotation qx="0.979991" qy="0.126264" qz="-0.103702" qw="0.113666" />
+            <entity name="Box039" castShadows="true" receiveShadows="true" meshFile="test3Box039.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="BlueVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box040">
+            <position x="14.8795" y="37.6924" z="59.6975" />
+            <scale x="0.31839" y="0.593486" z="0.296889" />
+            <rotation qx="0.991438" qy="-0.0842705" qz="0.0295338" qw="-0.0952725" />
+            <entity name="Box040" castShadows="true" receiveShadows="true" meshFile="test3Box040.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="BlueVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box043">
+            <position x="56.2832" y="41.6401" z="29.5864" />
+            <scale x="0.174061" y="0.96557" z="1.84894" />
+            <rotation qx="0.986813" qy="0.0112186" qz="-0.0348225" qw="0.157674" />
+            <entity name="Box043" castShadows="true" receiveShadows="true" meshFile="test3Box043.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box044">
+            <position x="77.4581" y="75.4758" z="10.6814" />
+            <scale x="0.55202" y="0.481467" z="0.376168" />
+            <rotation qx="0.988657" qy="-0.105902" qz="0.103146" qw="-0.0265039" />
+            <entity name="Box044" castShadows="true" receiveShadows="true" meshFile="test3Box044.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box045">
+            <position x="109.855" y="34.5914" z="54.8804" />
+            <scale x="1.08258" y="0.218603" z="0.87994" />
+            <rotation qx="0.980292" qy="-0.0412718" qz="0.133374" qw="0.139772" />
+            <entity name="Box045" castShadows="true" receiveShadows="true" meshFile="test3Box045.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box046">
+            <position x="65.9106" y="44.5382" z="-41.1043" />
+            <scale x="0.102474" y="1.35231" z="0.0322711" />
+            <rotation qx="0.971955" qy="-0.0190037" qz="0.191511" qw="-0.135153" />
+            <entity name="Box046" castShadows="true" receiveShadows="true" meshFile="test3Box046.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="YellowVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box047">
+            <position x="88.2067" y="38.7997" z="-71.8154" />
+            <scale x="0.271479" y="1.04983" z="0.814548" />
+            <rotation qx="0.983632" qy="-0.150886" qz="-0.0785448" qw="-0.0594388" />
+            <entity name="Box047" castShadows="true" receiveShadows="true" meshFile="test3Box047.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="YellowVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box048">
+            <position x="45.0156" y="65.422" z="-69.4736" />
+            <scale x="0.647721" y="0.759324" z="0.557494" />
+            <rotation qx="0.993799" qy="0.0998065" qz="0.0489857" qw="0.00185699" />
+            <entity name="Box048" castShadows="true" receiveShadows="true" meshFile="test3Box048.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="YellowVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box049">
+            <position x="106.406" y="37.6219" z="-38.3346" />
+            <scale x="0.354331" y="1.30754" z="0.286899" />
+            <rotation qx="0.980866" qy="-0.0241811" qz="-0.143146" qw="0.129713" />
+            <entity name="Box049" castShadows="true" receiveShadows="true" meshFile="test3Box049.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="YellowVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box050">
+            <position x="100.894" y="61.2975" z="-20.4264" />
+            <scale x="0.581656" y="1.74955" z="1.80726" />
+            <rotation qx="0.982378" qy="-0.025211" qz="0.119416" qw="0.141551" />
+            <entity name="Box050" castShadows="true" receiveShadows="true" meshFile="test3Box050.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="YellowVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box051">
+            <position x="60.7017" y="77.6619" z="-3.74035" />
+            <scale x="0.105854" y="0.556371" z="0.911195" />
+            <rotation qx="0.983957" qy="-0.118657" qz="0.117605" qw="-0.0626021" />
+            <entity name="Box051" castShadows="true" receiveShadows="true" meshFile="test3Box051.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box056">
+            <position x="15.9229" y="66.6855" z="-72.9972" />
+            <scale x="0.765823" y="0.43275" z="0.391609" />
+            <rotation qx="0.971757" qy="-0.20071" qz="0.118402" qw="0.037203" />
+            <entity name="Box056" castShadows="true" receiveShadows="true" meshFile="test3Box056.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box057">
+            <position x="39.995" y="39.7607" z="-63.532" />
+            <scale x="0.143814" y="1.10208" z="1.59451" />
+            <rotation qx="0.99009" qy="-0.0481664" qz="-0.11921" qw="-0.0564869" />
+            <entity name="Box057" castShadows="true" receiveShadows="true" meshFile="test3Box057.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="YellowVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box058">
+            <position x="54.039" y="37.3792" z="-55.4087" />
+            <scale x="0.0254948" y="0.591088" z="0.8148" />
+            <rotation qx="0.994843" qy="-0.0910836" qz="0.0444616" qw="0.00388061" />
+            <entity name="Box058" castShadows="true" receiveShadows="true" meshFile="test3Box058.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="YellowVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box059">
+            <position x="85.2251" y="60.0189" z="-81.7509" />
+            <scale x="0.12925" y="1.15084" z="0.953763" />
+            <rotation qx="0.998228" qy="-0.00614142" qz="0.019893" qw="-0.0557391" />
+            <entity name="Box059" castShadows="true" receiveShadows="true" meshFile="test3Box059.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="YellowVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box060">
+            <position x="122.062" y="66.3389" z="-58.2153" />
+            <scale x="0.831712" y="0.363578" z="0.675593" />
+            <rotation qx="0.96422" qy="-0.162683" qz="0.150714" qw="0.145256" />
+            <entity name="Box060" castShadows="true" receiveShadows="true" meshFile="test3Box060.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="YellowVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Plane001">
+            <position x="1.82105" y="3.36395" z="-2.34821" />
+            <scale x="0.672657" y="1" z="1" />
+            <rotation qx="-0.00126299" qy="0" qz="0" qw="0.999999" />
+            <entity name="Plane001" castShadows="true" receiveShadows="true" meshFile="test3Plane001.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>tree</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="GreenVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Torus001">
+            <position x="-3.52369" y="-3.80416e-007" z="-8.7029" />
+            <scale x="0.358439" y="0.358439" z="0.358439" />
+            <rotation qx="0" qy="0" qz="0" qw="1" />
+            <entity name="Torus001" castShadows="true" receiveShadows="true" meshFile="test3Torus001.mesh">
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCTLight" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box061">
+            <position x="-66.0078" y="7.72995e-007" z="17.6841" />
+            <scale x="1" y="1" z="1" />
+            <rotation qx="0" qy="0" qz="0" qw="1" />
+            <entity name="Box061" castShadows="true" receiveShadows="true" meshFile="test3Box061.mesh">
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCTLight" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box062">
+            <position x="46.109" y="9.11454" z="35.7387" />
+            <scale x="7.44013" y="1" z="1" />
+            <rotation qx="0" qy="0.626319" qz="-2.73773e-008" qw="0.779567" />
+            <entity name="Box062" castShadows="true" receiveShadows="true" meshFile="test3Box062.mesh">
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCTLight" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Pyramid001">
+            <position x="49.6991" y="-7.98998" z="-1.16592" />
+            <scale x="2.06425" y="2.06425" z="2.06425" />
+            <rotation qx="0" qy="0" qz="0" qw="1" />
+            <entity name="Pyramid001" castShadows="true" receiveShadows="true" meshFile="test3Pyramid001.mesh">
+                <subentities>
+                    <subentity index="0" materialName="RedVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Teapot001">
+            <position x="44.8892" y="9.30165e-007" z="21.2797" />
+            <scale x="1" y="1" z="1" />
+            <rotation qx="0" qy="0" qz="0" qw="1" />
+            <entity name="Teapot001" castShadows="true" receiveShadows="true" meshFile="test3Teapot001.mesh">
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Torus002">
+            <position x="52.7721" y="-2.18954e-006" z="-50.0908" />
+            <scale x="1" y="1" z="1" />
+            <rotation qx="0" qy="0" qz="0" qw="1" />
+            <entity name="Torus002" castShadows="true" receiveShadows="true" meshFile="test3Torus002.mesh">
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box063">
+            <position x="52.6235" y="10.938" z="-54.6995" />
+            <scale x="1" y="1" z="1" />
+            <rotation qx="0" qy="0" qz="0" qw="1" />
+            <entity name="Box063" castShadows="true" receiveShadows="true" meshFile="test3Box063.mesh">
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCTLightEx" />
+                </subentities>
+            </entity>
+        </node>
+    </nodes>
+</scene>

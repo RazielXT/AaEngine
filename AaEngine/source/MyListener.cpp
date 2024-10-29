@@ -8,6 +8,7 @@
 #include "AaShaderLibrary.h"
 #include "AaMaterialResources.h"
 #include "FrameCompositor.h"
+#include "GrassArea.h"
 
 MyListener::MyListener(AaRenderSystem* render)
 {
@@ -33,6 +34,14 @@ MyListener::MyListener(AaRenderSystem* render)
 	Vector3(-1, -1, -1).Normalize(lights.directionalLight.direction);
 
  	SceneParser::load("test", sceneMgr, renderSystem);
+
+	auto grassEntity = sceneMgr->createEntity("grass");
+	grassEntity->material = AaMaterialResources::get().getMaterial("GrassLeaves");
+	auto grass = new GrassArea();
+	grass->initialize();
+	grassEntity->geometry.fromGrass(*grass);
+	grassEntity->setBoundingBox(grass->bbox);
+	grassEntity->setScale({ 1, 1, 1 });
 
 	debugWindow.init(renderSystem);
 }

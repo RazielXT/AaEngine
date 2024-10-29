@@ -10,10 +10,3 @@ AaEntity::AaEntity(Renderables& r, std::string name) : RenderObject(r)
 AaEntity::~AaEntity()
 {
 }
-
-void AaEntity::setModel(AaModel* m)
-{
-	model = m;
-
-	setBoundingBox(model->bbox);
-}

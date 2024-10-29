@@ -12,6 +12,11 @@ struct MaterialDepthState
 	bool write = true;
 };
 
+struct MaterialBlendState
+{
+	bool alphaBlend = false;
+};
+
 struct TextureRef
 {
 	std::string id;
@@ -26,6 +31,7 @@ struct MaterialPipelineInfo
 	std::string vs_ref;
 
 	MaterialDepthState depth;
+	MaterialBlendState blend;
 	D3D12_CULL_MODE culling = D3D12_CULL_MODE_BACK;
 };
 

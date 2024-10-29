@@ -70,6 +70,13 @@ static void ParseMaterialObject(MaterialRef& mat, const Config::Object& obj, con
 			else if (member.value == "back")
 				mat.pipeline.culling = D3D12_CULL_MODE_BACK;
 		}
+		else if (member.type == "blend")
+		{
+			if (member.value == "alpha")
+				mat.pipeline.blend.alphaBlend = true;
+			else
+				mat.pipeline.blend.alphaBlend = false;
+		}
 		else
 		{
 			parentInvalidated = false;

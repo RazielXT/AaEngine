@@ -17,12 +17,12 @@ InstanceGroup* InstancingManager::build(AaSceneManager* sceneMgr, const Instance
 	if (!it)
 	{
 		it = std::make_unique<InstanceGroup>();
+		it->create(description);
 
 		static int counter = 0;
 		auto entity = sceneMgr->createEntity("Instancing" + std::to_string(counter++));
-		entity->setModel(description.model);
+		entity->geometry.fromInstancedModel(*description.model, *it);
 		entity->material = description.material;
-		entity->instancingGroup = it.get();
 
 		auto init = description.objects.front().position;
 		BoundingBoxVolume volume{ init, init };
@@ -35,8 +35,6 @@ InstanceGroup* InstancingManager::build(AaSceneManager* sceneMgr, const Instance
 
 		entity->setScale(Vector3::One);
 		entity->setOrientation(Quaternion::Identity);
-
-		it->create(description);
 	}
 
 	return it.get();

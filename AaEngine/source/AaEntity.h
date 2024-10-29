@@ -4,6 +4,7 @@
 #include "AaMaterial.h"
 #include "AaRenderables.h"
 #include <vector>
+#include "EntityGeometry.h"
 
 enum class Order
 {
@@ -19,14 +20,13 @@ public:
 	AaEntity(Renderables&, std::string name);
 	~AaEntity();
 
-	void setModel(AaModel* model);
-	AaModel* model{};
-
-	MaterialInstance* material{};
-
 	std::string name;
 
 	Order order = Order::Normal;
 
-	InstanceGroup* instancingGroup{};
+	MaterialInstance* material{};
+
+	EntityGeometry geometry;
+
+	GrassArea* grass{};
 };

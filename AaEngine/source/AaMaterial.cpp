@@ -10,6 +10,7 @@
 #include "AaLogger.h"
 #include <sstream>
 #include <functional>
+#include <CommonStates.h>
 
 MaterialBase::MaterialBase(AaRenderSystem* rs, ResourcesManager& m, const MaterialRef& matRef) : mgr(m), renderSystem(rs), ref(matRef)
 {
@@ -120,6 +121,9 @@ ID3D12PipelineState* MaterialBase::CreatePipelineState(const std::vector<D3D12_I
 	if (!ref.pipeline.depth.write)
 		psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
 	psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+
+	if (ref.pipeline.blend.alphaBlend)
+		psoDesc.BlendState = CommonStates::AlphaBlend;
 
 	ID3D12PipelineState* pipelineState{};
 	auto hr = renderSystem->device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState));

@@ -1,0 +1,13 @@
+material GrassLeaves
+{
+	vertex_shader vsGrassLeaves
+	pixel_shader psGrassLeaves
+
+	culling none
+	blend alpha
+
+	texture Diffuse
+	{
+		file grassLeaves.dds
+	}
+}

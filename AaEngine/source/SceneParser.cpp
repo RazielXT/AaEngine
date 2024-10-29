@@ -164,7 +164,8 @@ void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible, Aa
 		auto ent = sceneMgr->createEntity(name);
 		ent->order = (Order)renderQueue;
 		ent->material = material;
-		ent->setModel(model);
+		ent->geometry.fromModel(*model);
+		ent->setBoundingBox(model->bbox);
 		ent->setPosition(node->position);
 		ent->setScale(node->scale);
 		ent->setOrientation(node->orientation);

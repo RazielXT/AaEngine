@@ -41,6 +41,9 @@
     <Filter Include="Source Files\Resources\Compute">
       <UniqueIdentifier>{ecc0eef3-6e42-45d2-8b9e-39514e6612c4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\RenderObject">
+      <UniqueIdentifier>{ccfb0542-e308-49c0-b3ff-0affd6bc1c66}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\main.cpp">
@@ -186,6 +189,12 @@
     </ClCompile>
     <ClCompile Include="source\GenerateMipsComputeShader.cpp">
       <Filter>Source Files\Resources\Compute</Filter>
+    </ClCompile>
+    <ClCompile Include="source\GrassArea.cpp">
+      <Filter>Source Files\RenderObject</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EntityGeometry.cpp">
+      <Filter>Source Files\Scene</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -347,6 +356,12 @@
     </ClInclude>
     <ClInclude Include="source\ComputeShader.h">
       <Filter>Source Files\Resources\Compute</Filter>
+    </ClInclude>
+    <ClInclude Include="source\GrassArea.h">
+      <Filter>Source Files\RenderObject</Filter>
+    </ClInclude>
+    <ClInclude Include="source\EntityGeometry.h">
+      <Filter>Source Files\Scene</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

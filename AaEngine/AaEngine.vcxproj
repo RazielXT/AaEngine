@@ -114,6 +114,7 @@
     <ClCompile Include="source\BinaryModelLoader.cpp" />
     <ClCompile Include="source\BinaryModelSerialization.cpp" />
     <ClCompile Include="source\ComputeShader.cpp" />
+    <ClCompile Include="source\EntityGeometry.cpp" />
     <ClCompile Include="source\EntityInstancing.cpp" />
     <ClCompile Include="source\FrameCompositor.cpp" />
     <ClCompile Include="source\CompositorFileParser.cpp" />
@@ -122,6 +123,7 @@
     <ClCompile Include="source\FrameCompositorTaskBuild.cpp" />
     <ClCompile Include="source\FreeCamera.cpp" />
     <ClCompile Include="source\GenerateMipsComputeShader.cpp" />
+    <ClCompile Include="source\GrassArea.cpp" />
     <ClCompile Include="source\InputHandler.cpp" />
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\MyListener.cpp" />
@@ -148,7 +150,9 @@
     <ClInclude Include="source\AaFrameListener.h" />
     <ClInclude Include="source\AaLogger.h" />
     <ClInclude Include="source\AaMaterial.h" />
+    <ClInclude Include="source\EntityGeometry.h" />
     <ClInclude Include="source\GenerateMipsComputeShader.h" />
+    <ClInclude Include="source\GrassArea.h" />
     <ClInclude Include="source\ShaderConstants.h" />
     <ClInclude Include="source\AaMaterialFileParser.h" />
     <ClInclude Include="source\AaMaterialResources.h" />

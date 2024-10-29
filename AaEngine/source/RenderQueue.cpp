@@ -10,11 +10,11 @@ void RenderQueue::update(const EntityChanges& changes)
 		{
 			auto matInstance = entity->material;
 			if (variant == MaterialVariant::Depth)
-				matInstance = AaMaterialResources::get().getMaterial(entity->instancingGroup ? "DepthInstanced" : "Depth");
+				matInstance = AaMaterialResources::get().getMaterial(entity->geometry.usesInstancing() ? "DepthInstanced" : "Depth");
 			else if (variant == MaterialVariant::Voxel)
-				matInstance = AaMaterialResources::get().getMaterial(entity->instancingGroup ? "VoxelizeInstanced" : "Voxelize");
+				matInstance = AaMaterialResources::get().getMaterial(entity->geometry.usesInstancing() ? "VoxelizeInstanced" : "Voxelize");
 
-			auto entry = EntityEntry{ entity, matInstance->Assign(entity->model->vertexLayout, targets) };
+			auto entry = EntityEntry{ entity, matInstance->Assign(entity->geometry.layout ? *entity->geometry.layout : std::vector<D3D12_INPUT_ELEMENT_DESC>{}, targets) };
 			auto& entities = entityOrder[entity->order];
 
 			auto it = std::lower_bound(entities.begin(), entities.end(), entry);
@@ -29,28 +29,27 @@ void RenderQueue::update(const EntityChanges& changes)
 
 static void RenderObject(ID3D12GraphicsCommandList* commandList, AaEntity* e, AaCamera& camera)
 {
-	commandList->IASetVertexBuffers(0, 1, &e->model->vertexBufferView);
-	commandList->IASetIndexBuffer(&e->model->indexBufferView);
-
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	if (e->instancingGroup)
-		commandList->DrawIndexedInstanced(e->model->indexCount, e->instancingGroup->count, 0, 0, 0);
+	if (e->geometry.type != EntityGeometry::Type::Manual)
+	{
+		commandList->IASetVertexBuffers(0, 1, &e->geometry.vertexBufferView);
+		commandList->IASetIndexBuffer(&e->geometry.indexBufferView);
+	}
+
+	if (e->geometry.indexCount)
+		commandList->DrawIndexedInstanced(e->geometry.indexCount, e->geometry.instanceCount, 0, 0, 0);
 	else
-		commandList->DrawIndexedInstanced(e->model->indexCount, 1, 0, 0, 0);
+		commandList->DrawInstanced(e->geometry.vertexCount, e->geometry.instanceCount, 0, 0);
 }
 
 void updateEntityCbuffers(ShaderBuffersInfo& constants, AaEntity* entity)
 {
-	if (entity->instancingGroup)
-		constants.cbuffers.instancing = entity->instancingGroup->buffer;
+	constants.cbuffers.instancing = entity->geometry.geometryCustomBuffer;
 }
 
 void RenderQueue::renderObjects(AaCamera& camera, const RenderInformation& info, const FrameGpuParameters& params, ID3D12GraphicsCommandList* commandList, UINT frameIndex)
 {
-	if (entityOrder.empty())
-		return;
-
 	EntityEntry lastEntry{};
 	ShaderBuffersInfo constants;
 
@@ -59,6 +58,10 @@ void RenderQueue::renderObjects(AaCamera& camera, const RenderInformation& info,
 		for (auto& entry : entities)
 		{
 			if (!entry.entity->isVisible(info.visibility))
+				continue;
+
+			//grass
+			if (!entry.entity->geometry.indexCount && variant != MaterialVariant::Default)
 				continue;
 
 			if (entry.base != lastEntry.base)

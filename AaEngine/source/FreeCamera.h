@@ -25,6 +25,7 @@ public:
 
 private:
 
-	float mouseX, mouseY;
-	bool w, s, a, d, turbo, move;
+	float mouseX{}, mouseY{};
+	bool w{}, s{}, a{}, d{}, turbo{}, move{};
+	bool strafe{};
 };

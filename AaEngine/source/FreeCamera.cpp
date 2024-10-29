@@ -4,8 +4,6 @@
 
 FreeCamera::FreeCamera()
 {
-	w = s = a = d = turbo = move = false;
-	mouseX = mouseY = 0;
 }
 
 FreeCamera::~FreeCamera()
@@ -137,11 +135,22 @@ bool FreeCamera::keyReleased(int key)
 
 bool FreeCamera::mouseMoved(int x, int y)
 {
-	if (!move)
-		return false;
+	if (strafe)
+	{
+		XMFLOAT3 dir(x, y, 0);
+		camera.setInCameraRotation(&dir);
 
-	camera.yaw(-0.01f * x);
-	camera.pitch(-0.01f * y);
+		dir.x += camera.getPosition().x;
+		dir.y += camera.getPosition().y;
+		dir.z += camera.getPosition().z;
+
+		camera.setPosition(dir);
+	}
+	else if (move)
+	{
+		camera.yaw(-0.01f * x);
+		camera.pitch(-0.01f * y);
+	}
 
 	return true;
 }
@@ -151,10 +160,13 @@ bool FreeCamera::mousePressed(MouseButton button)
 	if (button == MouseButton::Right)
 	{
 		move = true;
-		return true;
+	}
+	if (button == MouseButton::Left)
+	{
+		strafe = true;
 	}
 
-	return false;
+	return true;
 }
 
 bool FreeCamera::mouseReleased(MouseButton button)
@@ -163,8 +175,11 @@ bool FreeCamera::mouseReleased(MouseButton button)
 	{
 		move = false;
 		w = s = a = d = turbo = move = false;
-		return true;
+	}
+	if (button == MouseButton::Left)
+	{
+		strafe = false;
 	}
 
-	return false;
+	return true;
 }

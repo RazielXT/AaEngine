@@ -81,10 +81,10 @@ float4 PSAddThrough(VS_OUTPUT input) : SV_TARGET
 	bloom += colorMap2.Sample(colorSampler, input.TexCoord + float2(-offset,-offset)).rgb;
 	bloom /= 5;
 	bloom *= bloom;
-	original.rgb += bloom * 0.01;
 
 	float luma = dot(original.rgb, float3(0.299, 0.587, 0.114));
 	original.w = luma;
 
+	original.rgb += bloom;
     return original;
 }

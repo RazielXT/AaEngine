@@ -8,9 +8,9 @@
 
 bool stopUpdatingVoxel = false;
 
-float voxelSteppingBounces = 0.1f;
-float voxelSteppingDiffuse = 0.01f;
-Vector2 middleConeRatioDistance = { 1.1f, 1.5f };
+float voxelSteppingBounces = 0.075f;
+float voxelSteppingDiffuse = 0.0f;
+Vector2 middleConeRatioDistance = { 1.05f, 1.5f };
 Vector2 sideConeRatioDistance = { 2.2f, 5.f };
 
 bool initialized = false;
@@ -80,7 +80,8 @@ namespace imgui
 		ImGui::SliderFloat("GI weight", &voxelSteppingBounces, 0.0f, 0.15f);
 		ImGui::SliderFloat("Diffuse weight", &voxelSteppingDiffuse, 0.0f, 0.5f);
 
-		static float voxelLightPower = 3.f;
+		static float voxelLightPower = []{ float f; AaMaterialResources::get().getMaterial("WhiteVCTLight")->GetParameter(FastParam::Emission, &f); return f; }();
+
 		if (ImGui::SliderFloat("Light power", &voxelLightPower, 0.0f, 10.f))
 		{
 			AaMaterialResources::get().getMaterial("WhiteVCTLight")->SetParameter(FastParam::Emission, &voxelLightPower);

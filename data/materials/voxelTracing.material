@@ -27,7 +27,7 @@ material WhiteVCTLight : WhiteVCT
 {
 	default_params
 	{
-		float Emission 3
+		float Emission 0.0
 	}
 }
 
@@ -57,9 +57,9 @@ material RedVCT : ColorVCT
 
 material GreenVCT : ColorVCT
 {
-	texture Diffuse
+	default_params
 	{
-		file grass.png
+		float MaterialColor 0.2 0.6 0.2
 	}
 }
 

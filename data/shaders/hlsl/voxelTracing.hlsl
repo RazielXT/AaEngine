@@ -208,20 +208,20 @@ PSOutput PS_Main(PS_Input pin)
     occlusionSample += sampleVox(voxelmap, g_sampler, voxelUV + (geometryNormal - geometryB) / 128, (geometryNormal - geometryB), 2).w;
     occlusionSample = 1 - saturate(occlusionSample / 5);
 
-    float4 albedo = GetTexture(TexIdColor).Sample(diffuse_sampler, pin.uv);
-	albedo.rgb *= MaterialColor;
+    float3 albedo = GetTexture(TexIdColor).Sample(diffuse_sampler, pin.uv).rgb;
+	albedo *= MaterialColor;
 
-	float3 lighting = saturate(dot(-SunDirection,normal)).rrr * getShadow(pin.wp);
-	lighting = max(lighting, traceColor * occlusionSample);
+	float directLight = saturate(dot(-SunDirection,normal)) * getShadow(pin.wp);
+	float3 lighting = max(directLight, traceColor * occlusionSample * 0.5);
 
-    float4 color1 = saturate(albedo * float4(lighting, 1));
-	color1.rgb += MaterialColor * Emission;
+    float4 color1 = float4(saturate(albedo * lighting), 1);
+	color1.rgb += albedo * Emission;
 
 	//color1.rgb = voxelmap.SampleLevel(g_sampler, voxelUV, 0).rgb;
 
 	PSOutput output;
     output.target0 = color1;
-	output.target1 = color1 * 5;
+	output.target1 = color1 * color1 * directLight * 3;
 
 	return output;
 }

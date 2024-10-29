@@ -64,7 +64,7 @@ bool InputHandler::handleMessage(uint32_t message, WPARAM wParam, LPARAM lParam)
 		return false;
 	}
 
-	if (inputs.size() > 10)
+	if (inputs.size() > 50)
 		inputs.erase(inputs.begin());
 
 	return true;

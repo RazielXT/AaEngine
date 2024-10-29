@@ -20,12 +20,14 @@ void RegisterRawInput(HWND hwnd)
 
 // Forward declare message handler from imgui_impl_win32.cpp
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+extern bool ImguiUsesInput();
 
 AaWindow* instance = nullptr;
 
 LRESULT CALLBACK AaWindow::WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
- 	if (ImGui_ImplWin32_WndProcHandler(hwnd, message, wParam, lParam))
+	ImGui_ImplWin32_WndProcHandler(hwnd, message, wParam, lParam);
+	if (ImguiUsesInput())
  		return true;
 
 	static UINT_PTR resizeTimerId = 1;

@@ -13,6 +13,16 @@ float voxelSteppingDiffuse = 0.01f;
 Vector2 middleConeRatioDistance = { 1.1f, 1.5f };
 Vector2 sideConeRatioDistance = { 2.2f, 5.f };
 
+bool initialized = false;
+
+bool ImguiUsesInput()
+{
+	if (initialized && ImGui::GetIO().WantCaptureMouse)
+		return true;
+
+	return false;
+}
+
 namespace imgui
 {
 	static ID3D12DescriptorHeap* g_pd3dSrvDescHeap = nullptr;
@@ -39,6 +49,8 @@ namespace imgui
 			DXGI_FORMAT_R8G8B8A8_UNORM, g_pd3dSrvDescHeap,
 			g_pd3dSrvDescHeap->GetCPUDescriptorHandleForHeapStart(),
 			g_pd3dSrvDescHeap->GetGPUDescriptorHandleForHeapStart());
+
+		initialized = true;
 	}
 
 	void DebugWindow::deinit()

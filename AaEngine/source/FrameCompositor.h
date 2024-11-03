@@ -4,25 +4,23 @@
 #include "ShadowsRenderTask.h"
 #include "SceneRenderTask.h"
 #include "VoxelizeSceneTask.h"
+#include "DebugOverlayTask.h"
 #include <set>
+#include "SceneTestTask.h"
 
 class AaMaterial;
-namespace imgui
-{
-	class DebugWindow;
-}
 
 class FrameCompositor
 {
 public:
 
-	FrameCompositor(AaRenderSystem* rs, AaSceneManager* sceneMgr, AaShadowMap* shadows);
+	FrameCompositor(RenderProvider provider, AaSceneManager* sceneMgr, AaShadowMap* shadows);
 	~FrameCompositor();
 
 	void load(std::string path);
 	void reloadTextures();
 
-	void render(RenderContext& ctx, imgui::DebugWindow& gui);
+	void render(RenderContext& ctx);
 
 protected:
 
@@ -35,6 +33,8 @@ protected:
 	ShadowsRenderTask shadowRender;
 	SceneRenderTask sceneRender;
 	VoxelizeSceneTask sceneVoxelize;
+	DebugOverlayTask debugOverlay;
+	SceneTestTask testTask;
 
 	struct PassData
 	{
@@ -62,6 +62,6 @@ protected:
 	void initializeCommands();
 	void executeCommands();
 
-	AaRenderSystem* renderSystem;
+	RenderProvider provider;
 	AaSceneManager* sceneMgr;
 };

@@ -41,7 +41,26 @@ void SignatureInfo::add(LoadedShader* shader, ShaderType type)
 	for (auto& b : shader->desc.cbuffers)
 	{
 		CBuffer* buffer = nullptr;
-		for (auto& sb : cbuffers)
+		for (auto& cb : cbuffers)
+		{
+			if (cb.info.Name == b.Name)
+			{
+				buffer = &cb;
+				break;
+			}
+		}
+		if (!buffer)
+		{
+			cbuffers.emplace_back(b);
+			buffer = &cbuffers.back();
+		}
+		addVisibility(buffer->visibility, type);
+	}
+
+	for (auto& b : shader->desc.structuredBuffers)
+	{
+		StructuredBuffer* buffer = nullptr;
+		for (auto& sb : structuredBuffers)
 		{
 			if (sb.info.Name == b.Name)
 			{
@@ -51,8 +70,8 @@ void SignatureInfo::add(LoadedShader* shader, ShaderType type)
 		}
 		if (!buffer)
 		{
-			cbuffers.emplace_back(b);
-			buffer = &cbuffers.back();
+			structuredBuffers.emplace_back(b);
+			buffer = &structuredBuffers.back();
 		}
 		addVisibility(buffer->visibility, type);
 	}
@@ -124,7 +143,7 @@ void SignatureInfo::finish()
 	if (!cbuffers.empty())
 	{
 		// +1 for potential move to root constants
-		const auto rootParamsSizeMax = (64 - hasVertexInput - (!bindlessTextures && !textures.empty()) - cbuffers.size() + 1) * sizeof(DWORD);
+		const auto rootParamsSizeMax = (64 - hasVertexInput - (!bindlessTextures && !textures.empty()) - cbuffers.size() - structuredBuffers.size() + 1) * sizeof(DWORD);
 
 		for (auto& b : cbuffers)
 		{
@@ -149,7 +168,7 @@ void SignatureInfo::finish()
 ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device* device, const std::vector<SamplerInfo>& staticSamplers)
 {
 	std::vector<CD3DX12_ROOT_PARAMETER1> params;
-	params.resize(cbuffers.size() + textures.size() + uavs.size());
+	params.resize(cbuffers.size() + textures.size() + uavs.size() + structuredBuffers.size());
 	auto param = params.data();
 
 	for (auto& buffer : cbuffers)
@@ -158,6 +177,13 @@ ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device* device, co
 			param->InitAsConstants(buffer.info.Size / sizeof(DWORD), buffer.info.Slot, buffer.info.Space, buffer.visibility);
 		else
 			param->InitAsConstantBufferView(buffer.info.Slot, buffer.info.Space, D3D12_ROOT_DESCRIPTOR_FLAG_DATA_VOLATILE, buffer.visibility);
+
+		param++;
+	}
+
+	for (auto& buffer : structuredBuffers)
+	{
+		param->InitAsShaderResourceView(buffer.info.Slot, buffer.info.Space, D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE, buffer.visibility);
 
 		param++;
 	}
@@ -245,7 +271,7 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData() const
 
 	for (auto& cb : cbuffers)
 	{
-		ResourcesInfo::CBuffer r;
+		ResourcesInfo::GpuBuffer r;
 		r.defaultData.resize(cb.info.Size / sizeof(float));
 
 		for (const auto& p : cb.info.Params)
@@ -273,20 +299,33 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData() const
 				type = ResourcesInfo::AutoParam::VIEWPORT_SIZE_INV;
 			else if (p.Name == "SunDirection")
 				type = ResourcesInfo::AutoParam::SUN_DIRECTION;
+			else if (p.Name == "CameraPosition")
+				type = ResourcesInfo::AutoParam::CAMERA_POSITION;
 
 			if (type != ResourcesInfo::AutoParam::None)
 				resources->autoParams.emplace_back(type, rootIndex, (UINT)(p.StartOffset / sizeof(float)));
 		}
 
 		if (&cb == rootBuffer)
-			r.type = CBufferType::Root;
-		else if (cb.info.Name == "Instancing")
-			r.type = CBufferType::Instancing;
+			r.type = GpuBufferType::Root;
 		else
-			r.globalBuffer = ShaderConstantBuffers::get().GetCbufferResource(cb.info.Name);
+			r.globalCBuffer = ShaderConstantBuffers::get().GetCbufferResource(cb.info.Name);
 
 		r.rootIndex = rootIndex++;
-		resources->cbuffers.emplace_back(std::move(r));
+		resources->buffers.emplace_back(std::move(r));
+	}
+
+	for (auto& b : structuredBuffers)
+	{
+		ResourcesInfo::GpuBuffer r;
+
+		if (b.info.Name == "InstancingBuffer")
+			r.type = GpuBufferType::Instancing;
+		else if (b.info.Name == "GeometryBuffer")
+			r.type = GpuBufferType::Geometry;
+
+		r.rootIndex = rootIndex++;
+		resources->buffers.emplace_back(std::move(r));
 	}
 
 	resources->textures.resize(textures.size() + bindlessTextures);

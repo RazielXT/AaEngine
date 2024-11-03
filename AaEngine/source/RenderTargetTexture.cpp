@@ -1,19 +1,18 @@
 #include "RenderTargetTexture.h"
 #include "directx\d3dx12.h"
 
-void RenderDepthTargetTexture::Init(ID3D12Device* device, UINT w, UINT h, int frameCount, UINT arraySize)
+void RenderDepthTargetTexture::Init(ID3D12Device* device, UINT w, UINT h, UINT frameCount, UINT arraySize)
 {
 	width = w;
 	height = h;
 
 	CreateDepthBuffer(device, frameCount, arraySize);
-	dsvLastState[0] = dsvLastState[1] = D3D12_RESOURCE_STATE_DEPTH_WRITE;
 }
 
-void RenderTargetHeap::Init(ID3D12Device* device, UINT count, const wchar_t* name)
+void RenderTargetHeap::Init(ID3D12Device* device, UINT count, UINT frameCount, const wchar_t* name)
 {
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-	rtvHeapDesc.NumDescriptors = count;
+	rtvHeapDesc.NumDescriptors = count * frameCount;
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvHeap));
@@ -33,7 +32,7 @@ void RenderTargetHeap::CreateRenderTargetHandle(ID3D12Device* device, ComPtr<ID3
 	handlesCount++;
 }
 
-void RenderTargetTexture::Init(ID3D12Device* device, UINT w, UINT h, int frameCount, RenderTargetHeap& heap, const std::vector<DXGI_FORMAT>& f, bool depthBuffer)
+void RenderTargetTexture::Init(ID3D12Device* device, UINT w, UINT h, UINT frameCount, RenderTargetHeap& heap, const std::vector<DXGI_FORMAT>& f, bool depthBuffer)
 {
 	width = w;
 	height = h;
@@ -60,7 +59,7 @@ void RenderTargetTexture::Init(ID3D12Device* device, UINT w, UINT h, int frameCo
 		RenderDepthTargetTexture::Init(device, width, height, frameCount);
 }
 
-void RenderTargetTexture::InitExisting(ID3D12Resource** textureSource, ID3D12Device* device, UINT w, UINT h, int frameCount, RenderTargetHeap& heap, DXGI_FORMAT f)
+void RenderTargetTexture::InitExisting(ID3D12Resource** textureSource, ID3D12Device* device, UINT w, UINT h, UINT frameCount, RenderTargetHeap& heap, DXGI_FORMAT f)
 {
 	width = w;
 	height = h;
@@ -79,7 +78,7 @@ void RenderTargetTexture::InitExisting(ID3D12Resource** textureSource, ID3D12Dev
 	RenderDepthTargetTexture::Init(device, width, height, frameCount);
 }
 
-void RenderDepthTargetTexture::CreateDepthBuffer(ID3D12Device* device, int frameCount, UINT arraySize)
+void RenderDepthTargetTexture::CreateDepthBuffer(ID3D12Device* device, UINT frameCount, UINT arraySize)
 {
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
 	dsvHeapDesc.NumDescriptors = frameCount;
@@ -119,6 +118,7 @@ void RenderDepthTargetTexture::CreateDepthBuffer(ID3D12Device* device, int frame
 		);
 
 		dsvHandles[n] = CD3DX12_CPU_DESCRIPTOR_HANDLE(dsvHeap->GetCPUDescriptorHandleForHeapStart(), n, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV));
+		dsvLastState[n] = D3D12_RESOURCE_STATE_DEPTH_WRITE;
 
 		if (arraySize > 1)
 		{
@@ -135,7 +135,7 @@ void RenderDepthTargetTexture::CreateDepthBuffer(ID3D12Device* device, int frame
 	}
 }
 
-void RenderTargetTexture::CreateTextureBuffer(ID3D12Device* device, UINT width, UINT height, int frameCount, Texture& t, DXGI_FORMAT format)
+void RenderTargetTexture::CreateTextureBuffer(ID3D12Device* device, UINT width, UINT height, UINT frameCount, Texture& t, DXGI_FORMAT format)
 {
 	D3D12_RESOURCE_DESC textureDesc = {};
 	textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
@@ -154,7 +154,7 @@ void RenderTargetTexture::CreateTextureBuffer(ID3D12Device* device, UINT width, 
 
 	auto heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
-	for (int i = 0; i < 2; ++i)
+	for (int i = 0; i < frameCount; ++i)
 	{
 		device->CreateCommittedResource(
 			&heapProps,
@@ -166,7 +166,7 @@ void RenderTargetTexture::CreateTextureBuffer(ID3D12Device* device, UINT width, 
 	}
 }
 
-void RenderDepthTargetTexture::PrepareAsDepthTarget(ID3D12GraphicsCommandList* commandList, int frameIndex)
+void RenderDepthTargetTexture::PrepareAsDepthTarget(ID3D12GraphicsCommandList* commandList, UINT frameIndex)
 {
 	auto vp = CD3DX12_VIEWPORT(0.0f, 0.0f, width, height);
 	commandList->RSSetViewports(1, &vp);
@@ -189,7 +189,7 @@ void RenderDepthTargetTexture::PrepareAsDepthTarget(ID3D12GraphicsCommandList* c
 	commandList->ClearDepthStencilView(dsvHandles[frameIndex], D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 }
 
-void RenderDepthTargetTexture::PrepareAsDepthView(ID3D12GraphicsCommandList* commandList, int frameIndex)
+void RenderDepthTargetTexture::PrepareAsDepthView(ID3D12GraphicsCommandList* commandList, UINT frameIndex)
 {
 	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
 		depthStencilTexture[frameIndex].Get(),
@@ -200,7 +200,7 @@ void RenderDepthTargetTexture::PrepareAsDepthView(ID3D12GraphicsCommandList* com
 	dsvLastState[frameIndex] = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 }
 
-void RenderTargetTexture::PrepareAsTarget(ID3D12GraphicsCommandList* commandList, int frameIndex, bool clear, bool depth, bool clearDepth)
+void RenderTargetTexture::PrepareAsTarget(ID3D12GraphicsCommandList* commandList, UINT frameIndex, bool clear, bool depth, bool clearDepth)
 {
 	auto vp = CD3DX12_VIEWPORT(0.0f, 0.0f, width, height);
 	commandList->RSSetViewports(1, &vp);
@@ -234,7 +234,7 @@ void RenderTargetTexture::PrepareAsTarget(ID3D12GraphicsCommandList* commandList
 	}
 }
 
-void RenderTargetTexture::PrepareAsView(ID3D12GraphicsCommandList* commandList, int frameIndex)
+void RenderTargetTexture::PrepareAsView(ID3D12GraphicsCommandList* commandList, UINT frameIndex)
 {
 	CD3DX12_RESOURCE_BARRIER barriers[4];
 	for (size_t i = 0; i < textures.size(); i++)
@@ -249,7 +249,7 @@ void RenderTargetTexture::PrepareAsView(ID3D12GraphicsCommandList* commandList, 
 	rtvLastState[frameIndex] = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 }
 
-void RenderTargetTexture::PrepareToPresent(ID3D12GraphicsCommandList* commandList, int frameIndex)
+void RenderTargetTexture::PrepareToPresent(ID3D12GraphicsCommandList* commandList, UINT frameIndex)
 {
 	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
 		textures[0].texture[frameIndex].Get(),
@@ -265,7 +265,8 @@ void RenderTargetTexture::SetName(const wchar_t* name)
 	{
 		for (auto& r : t.texture)
 		{
-			r->SetName(name);
+			if (r)
+				r->SetName(name);
 		}
 	}
 
@@ -278,7 +279,8 @@ void RenderDepthTargetTexture::SetName(const wchar_t* name)
 	{
 		for (auto& t : depthStencilTexture)
 		{
-			t->SetName(name);
+			if (t)
+				t->SetName(name);
 		}
 	}
 }

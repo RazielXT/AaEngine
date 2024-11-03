@@ -118,6 +118,7 @@ void ResourcesManager::createCbufferView(Cbuffer* buffer, UINT count)
 			, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 	}
 
+	descriptorTypes.push_back(D3D12_SRV_DIMENSION_BUFFER);
 	currentDescriptorCount++;
 }
 
@@ -143,10 +144,11 @@ void ResourcesManager::createShaderResourceView(FileTexture& texture)
 		texture.srvHeapIndex = currentDescriptorCount;
 	}
 
+	descriptorTypes.push_back(D3D12_SRV_DIMENSION_TEXTURE2D);
 	currentDescriptorCount++;
 }
 
-void ResourcesManager::createShaderResourceView(RenderTargetTexture& rtt)
+void ResourcesManager::createShaderResourceView(RenderTargetTexture& rtt, UINT& descriptorOffset)
 {
 	for (auto& texture : rtt.textures)
 	{
@@ -155,27 +157,43 @@ void ResourcesManager::createShaderResourceView(RenderTargetTexture& rtt)
 			if (texture.textureView.srvHandles[i].ptr)
 				return;
 
-			auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mainDescriptorHeap[i]->GetCPUDescriptorHandleForHeapStart(), currentDescriptorCount
+			auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mainDescriptorHeap[i]->GetCPUDescriptorHandleForHeapStart(), descriptorOffset
 				, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+
+			//if single frame resource, view same resource from both frames
+			auto& target = texture.texture[i] ? texture.texture[i] : texture.texture[0];
 
 			D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 			srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 			srvDesc.Texture2D.MipLevels = 1;
-			srvDesc.Format = texture.texture[i]->GetDesc().Format;
-			device->CreateShaderResourceView(texture.texture[i].Get(), &srvDesc, handle);
+			srvDesc.Format = target->GetDesc().Format;
+			device->CreateShaderResourceView(target.Get(), &srvDesc, handle);
 
-			texture.textureView.srvHandles[i] = CD3DX12_GPU_DESCRIPTOR_HANDLE(mainDescriptorHeap[i]->GetGPUDescriptorHandleForHeapStart(), currentDescriptorCount
+			texture.textureView.srvHandles[i] = CD3DX12_GPU_DESCRIPTOR_HANDLE(mainDescriptorHeap[i]->GetGPUDescriptorHandleForHeapStart(), descriptorOffset
 				, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-			texture.textureView.srvHeapIndex = currentDescriptorCount;
 		}
 
-		currentDescriptorCount++;
+		texture.textureView.srvHeapIndex = descriptorOffset;
+		descriptorOffset++;
+	}
+}
+
+void ResourcesManager::createShaderResourceView(RenderTargetTexture& texture)
+{
+	auto orig = currentDescriptorCount;
+	createShaderResourceView(texture, currentDescriptorCount);
+
+	for (orig; orig < currentDescriptorCount; orig++)
+	{
+		descriptorTypes.push_back(D3D12_SRV_DIMENSION_TEXTURE2D);
 	}
 }
 
 void ResourcesManager::createShaderResourceView(TextureResource& texture, UINT mipLevel)
 {
+	auto dimension = texture.dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D ? D3D12_SRV_DIMENSION_TEXTURE2D : D3D12_SRV_DIMENSION_TEXTURE3D;
+
 	for (int i = 0; i < 2; ++i)
 	{
 		if (texture.textureView.srvHandles[i].ptr)
@@ -186,7 +204,7 @@ void ResourcesManager::createShaderResourceView(TextureResource& texture, UINT m
 
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		srvDesc.ViewDimension = texture.dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D ? D3D12_SRV_DIMENSION_TEXTURE2D : D3D12_SRV_DIMENSION_TEXTURE3D;
+		srvDesc.ViewDimension = dimension;
 		if (mipLevel != -1)
 		{
 			srvDesc.Texture2D.MipLevels = 1;
@@ -202,6 +220,7 @@ void ResourcesManager::createShaderResourceView(TextureResource& texture, UINT m
 		texture.textureView.srvHeapIndex = currentDescriptorCount;
 	}
 
+	descriptorTypes.push_back(dimension);
 	currentDescriptorCount++;
 }
 
@@ -227,6 +246,7 @@ void ResourcesManager::createDepthShaderResourceView(RenderDepthTargetTexture& t
 		texture.depthView.srvHeapIndex = currentDescriptorCount;
 	}
 
+	descriptorTypes.push_back(D3D12_SRV_DIMENSION_TEXTURE2D);
 	currentDescriptorCount++;
 }
 
@@ -255,6 +275,29 @@ void ResourcesManager::createUAVView(TextureResource& texture)
 				, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 		}
 
+		descriptorTypes.push_back(D3D12_SRV_DIMENSION_BUFFER);
 		currentDescriptorCount++;
 	}
+}
+
+UINT ResourcesManager::nextDescriptor(UINT offset, D3D12_SRV_DIMENSION d) const
+{
+	offset = min(offset, descriptorTypes.size());
+
+	for (auto pos = offset + 1; descriptorTypes.size() > pos; pos++)
+		if (descriptorTypes[pos] == d)
+			return pos;
+
+	return offset;
+}
+
+UINT ResourcesManager::previousDescriptor(UINT offset, D3D12_SRV_DIMENSION d) const
+{
+	offset = min(offset, descriptorTypes.size());
+
+	for (auto pos = offset; pos > 0; pos--)
+		if (descriptorTypes[pos - 1] == d)
+			return pos - 1;
+
+	return offset;
 }

@@ -1,12 +1,19 @@
+#ifdef INSTANCED
+float4x4 ViewProjectionMatrix;
+#else
 float4x4 WorldViewProjectionMatrix;
 float4x4 WorldMatrix;
+#endif
+
+float3 MaterialColor;
+uint TexIdDiffuse;
 
 float4x4 ShadowMatrix;
 float3 SunDirection;
 uint TexIdShadowOffset;
+uint TexIdSceneVoxelBounces;
 
 float Emission;
-float3 MaterialColor;
 
 cbuffer SceneVoxelInfo : register(b1)
 {
@@ -20,12 +27,20 @@ cbuffer SceneVoxelInfo : register(b1)
 	float voxelizeLighting : packoffset(c2.w); 
 };
 
+#ifdef INSTANCED
+StructuredBuffer<float4x4> InstancingBuffer : register(t0);
+#endif
+
 struct VS_Input
 {
     float4 p : POSITION;
     float2 uv : TEXCOORD0;
     float3 n : NORMAL;
     float3 t : TANGENT;
+
+#ifdef INSTANCED
+	uint instanceID : SV_InstanceID;
+#endif
 };
 
 struct PS_Input
@@ -33,19 +48,30 @@ struct PS_Input
     float4 pos : SV_POSITION;
     float2 uv : TEXCOORD0;
     float4 wp : TEXCOORD1;
-    float3 normal : TEXCOORD2;
+    float3 normal : NORMAL;
     float3 tangent : TANGENT;
+	
+#ifdef INSTANCED
+	uint instanceID : TEXCOORD2;
+#endif
 };
 
 PS_Input VS_Main(VS_Input vin)
 {
     PS_Input vsOut;
 
-    vsOut.pos = mul(vin.p, WorldViewProjectionMatrix);
     vsOut.uv = vin.uv;
-    vsOut.normal = vin.n;
     vsOut.tangent = vin.t;
-    vsOut.wp = mul(vin.p, WorldMatrix);
+	vsOut.normal = vin.n;
+
+#ifdef INSTANCED
+	vsOut.wp = mul(vin.p, InstancingBuffer[vin.instanceID]);
+    vsOut.pos = mul(vsOut.wp, ViewProjectionMatrix);
+	vsOut.instanceID = vin.instanceID;
+#else
+	vsOut.wp = mul(vin.p, WorldMatrix);
+    vsOut.pos = mul(vin.p, WorldViewProjectionMatrix);
+#endif
 
     return vsOut;
 }
@@ -114,6 +140,11 @@ Texture2D<float4> GetTexture(uint index)
     return ResourceDescriptorHeap[index];
 }
 
+Texture3D<float4> GetTexture3D(uint index)
+{
+    return ResourceDescriptorHeap[index];
+}
+
 float readShadowmap(Texture2D shadowmap, float2 shadowCoord)
 {
     int2 texCoord = int2(shadowCoord * 512);
@@ -132,20 +163,26 @@ float getShadow(float4 wp)
 	return readShadowmap(shadowmap, sunLookPos.xy) < sunLookPos.z ? 0.0 : 1.0;
 }
 
-Texture3D SceneVoxelBounces : register(t0);
 SamplerState g_sampler : register(s0);
 RWTexture3D<float4> SceneVoxel : register(u0);
 
 float4 PS_Main(PS_Input pin) : SV_TARGET
 {
+#ifdef INSTANCED
+	float3x3 worldMatrix = (float3x3)InstancingBuffer[pin.instanceID];
+#else
+	float3x3 worldMatrix = (float3x3)WorldMatrix;
+#endif
+
 	float3 binormal = cross(pin.normal, pin.tangent);
-	float3 normal = normalize(mul(pin.normal, (float3x3) WorldMatrix).xyz);
+	float3 normal = normalize(mul(pin.normal, worldMatrix).xyz);
 
     float3 geometryNormal = normal;
-    float3 geometryB = normalize(mul(binormal, (float3x3) WorldMatrix).xyz);
-    float3 geometryT = normalize(mul(pin.tangent, (float3x3) WorldMatrix).xyz);
+    float3 geometryB = normalize(mul(binormal, worldMatrix).xyz);
+    float3 geometryT = normalize(mul(pin.tangent, worldMatrix).xyz);
 
     float3 voxelUV = (pin.wp.xyz -sceneCorner) / 300;
+	Texture3D SceneVoxelBounces = GetTexture3D(TexIdSceneVoxelBounces);
 	float4 fullTraceSample = coneTrace(voxelUV, geometryNormal, middleCone.x, middleCone.y, SceneVoxelBounces, g_sampler, 0) * 1;
     fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal + geometryT), sideCone.x, sideCone.y, SceneVoxelBounces, g_sampler, 0) * 1.0;
     fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal - geometryT), sideCone.x, sideCone.y, SceneVoxelBounces, g_sampler, 0) * 1.0;
@@ -153,7 +190,8 @@ float4 PS_Main(PS_Input pin) : SV_TARGET
     fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal - geometryB), sideCone.x, sideCone.y, SceneVoxelBounces, g_sampler, 0) * 1.0;
     float3 traceColor = fullTraceSample.rgb;
 
-	float3 baseColor = MaterialColor * traceColor * steppingBounces + MaterialColor * steppingDiffuse;
+	float3 diffuse = MaterialColor * GetTexture(TexIdDiffuse).Sample(g_sampler, pin.uv).rgb;
+	float3 baseColor = diffuse * traceColor * steppingBounces + diffuse * steppingDiffuse;
 
     float occlusionSample = sampleVox(SceneVoxelBounces, g_sampler, voxelUV + geometryNormal / 128, geometryNormal, 2).w;
     occlusionSample += sampleVox(SceneVoxelBounces, g_sampler, voxelUV + normalize(geometryNormal + geometryT) / 128, normalize(geometryNormal + geometryT), 2).w;
@@ -171,10 +209,10 @@ float4 PS_Main(PS_Input pin) : SV_TARGET
 	float3 prev = SceneVoxelBounces.Load(float4(posUV, 0)).rgb;
     baseColor.rgb = lerp(prev, baseColor.rgb, lerpFactor);
 
-	baseColor = lerp(baseColor, MaterialColor * Emission, saturate(Emission));
+	baseColor = lerp(baseColor, diffuse * Emission, saturate(Emission));
 
     SceneVoxel[posUV] = float4(baseColor, (1 - saturate(Emission)));
 	//SceneVoxel[posUV - normal].w = (1 - saturate(Emission));
 
-	return float4(MaterialColor, 1);
+	return float4(diffuse, 1);
 }

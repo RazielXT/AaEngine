@@ -10,11 +10,12 @@ namespace imgui
 	{
 		bool reloadShaders = false;
 		const char* changeScene{};
+		int TexturePreviewIndex = -1;
 	};
 
-	class DebugWindow
+	struct DebugWindow
 	{
-	public:
+		static DebugWindow& Get();
 
 		void init(AaRenderSystem* renderer);
 		void deinit();

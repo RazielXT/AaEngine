@@ -101,6 +101,7 @@
     <ClCompile Include="source\AaMaterial.cpp" />
     <ClCompile Include="source\AaMaterialFileParser.cpp" />
     <ClCompile Include="source\AaMaterialResources.cpp" />
+    <ClCompile Include="source\AaMath.cpp" />
     <ClCompile Include="source\AaModel.cpp" />
     <ClCompile Include="source\AaModelResources.cpp" />
     <ClCompile Include="source\AaRenderables.cpp" />
@@ -114,6 +115,7 @@
     <ClCompile Include="source\BinaryModelLoader.cpp" />
     <ClCompile Include="source\BinaryModelSerialization.cpp" />
     <ClCompile Include="source\ComputeShader.cpp" />
+    <ClCompile Include="source\DebugOverlayTask.cpp" />
     <ClCompile Include="source\EntityGeometry.cpp" />
     <ClCompile Include="source\EntityInstancing.cpp" />
     <ClCompile Include="source\FrameCompositor.cpp" />
@@ -133,7 +135,10 @@
     <ClCompile Include="source\ResourcesManager.cpp" />
     <ClCompile Include="source\SceneParser.cpp" />
     <ClCompile Include="source\SceneRenderTask.cpp" />
+    <ClCompile Include="source\SceneTestTask.cpp" />
+    <ClCompile Include="source\ScreenQuad.cpp" />
     <ClCompile Include="source\ShaderConstantBuffers.cpp" />
+    <ClCompile Include="source\ShaderConstantsProvider.cpp" />
     <ClCompile Include="source\ShaderSignature.cpp" />
     <ClCompile Include="source\ShadowMap.cpp" />
     <ClCompile Include="source\ShadowsRenderTask.cpp" />
@@ -150,10 +155,13 @@
     <ClInclude Include="source\AaFrameListener.h" />
     <ClInclude Include="source\AaLogger.h" />
     <ClInclude Include="source\AaMaterial.h" />
+    <ClInclude Include="source\DebugOverlayTask.h" />
     <ClInclude Include="source\EntityGeometry.h" />
     <ClInclude Include="source\GenerateMipsComputeShader.h" />
     <ClInclude Include="source\GrassArea.h" />
-    <ClInclude Include="source\ShaderConstants.h" />
+    <ClInclude Include="source\SceneTestTask.h" />
+    <ClInclude Include="source\ScreenQuad.h" />
+    <ClInclude Include="source\ShaderConstantsProvider.h" />
     <ClInclude Include="source\AaMaterialFileParser.h" />
     <ClInclude Include="source\AaMaterialResources.h" />
     <ClInclude Include="source\AaModel.h" />

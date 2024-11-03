@@ -2,24 +2,12 @@
 
 #include "AaEntity.h"
 #include "AaCamera.h"
-
-struct RenderInformation
-{
-	RenderableVisibility visibility;
-	std::vector<XMFLOAT4X4> wvpMatrix;
-};
+#include "AaRenderables.h"
 
 enum class EntityChange
 {
 	Add,
 	DeleteAll,
-};
-
-enum class MaterialVariant
-{
-	Default,
-	Depth,
-	Voxel,
 };
 
 using EntityChanges = std::vector<std::pair<EntityChange, AaEntity*>>;
@@ -44,7 +32,7 @@ struct RenderQueue
 
 	std::map<Order, std::vector<EntityEntry>> entityOrder;
 	std::vector<DXGI_FORMAT> targets;
-	MaterialVariant variant = MaterialVariant::Default;
+	MaterialTechnique technique = MaterialTechnique::Default;
 
 	void update(const EntityChanges&);
 	void renderObjects(AaCamera& cam, const RenderInformation& info, const FrameGpuParameters& params, ID3D12GraphicsCommandList* commandList, UINT frameIndex);

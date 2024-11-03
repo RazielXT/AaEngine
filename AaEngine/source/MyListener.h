@@ -38,7 +38,13 @@ private:
 	imgui::DebugWindow debugWindow;
 	aa::SceneLights lights;
 
+	float elapsedTime = 0;
 	bool continue_rendering = true;
 
+	FrameGpuParameters gpuParams;
 	FrameCompositor* compositor;
+
+	RenderTargetHeap heap;
+	RenderTargetTexture tmp;
+	RenderQueue tmpQueue;
 };

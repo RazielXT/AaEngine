@@ -49,9 +49,9 @@ material BlueVCT : ColorVCT
 
 material RedVCT : ColorVCT
 {
-	default_params
+	texture Diffuse
 	{
-		float MaterialColor 1 0.2 0.2
+		file nicered.png
 	}
 }
 

@@ -9,6 +9,7 @@
 enum class Order
 {
 	Normal = 50,
+	Transparent = 60,
 };
 
 struct InstanceGroup;

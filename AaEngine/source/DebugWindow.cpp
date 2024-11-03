@@ -13,11 +13,13 @@ float voxelSteppingDiffuse = 0.0f;
 Vector2 middleConeRatioDistance = { 1.05f, 1.5f };
 Vector2 sideConeRatioDistance = { 2.2f, 5.f };
 
-bool initialized = false;
+XMFLOAT3 currentCamPos{};
+
+imgui::DebugWindow* instance{};
 
 bool ImguiUsesInput()
 {
-	if (initialized && ImGui::GetIO().WantCaptureMouse)
+	if (instance && ImGui::GetIO().WantCaptureMouse)
 		return true;
 
 	return false;
@@ -26,6 +28,11 @@ bool ImguiUsesInput()
 namespace imgui
 {
 	static ID3D12DescriptorHeap* g_pd3dSrvDescHeap = nullptr;
+
+	imgui::DebugWindow& DebugWindow::Get()
+	{
+		return *instance;
+	}
 
 	void DebugWindow::init(AaRenderSystem* renderer)
 	{
@@ -50,7 +57,7 @@ namespace imgui
 			g_pd3dSrvDescHeap->GetCPUDescriptorHandleForHeapStart(),
 			g_pd3dSrvDescHeap->GetGPUDescriptorHandleForHeapStart());
 
-		initialized = true;
+		instance = this;
 	}
 
 	void DebugWindow::deinit()
@@ -60,6 +67,8 @@ namespace imgui
 		ImGui::DestroyContext();
 
 		g_pd3dSrvDescHeap->Release();
+
+		instance = nullptr;
 	}
 
 	void DebugWindow::draw(ID3D12GraphicsCommandList* commandList)
@@ -73,6 +82,21 @@ namespace imgui
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 		if (ImGui::Button("Reload shaders"))
 			state.reloadShaders = true;
+
+		ImGui::Text("Cam pos %.1f %.1f %.1f", currentCamPos.x, currentCamPos.y, currentCamPos.z);
+
+		int next = state.TexturePreviewIndex;
+		if (ImGui::InputInt("Texture preview", &next))
+		{
+			if (next < 0)
+				state.TexturePreviewIndex = -1;
+			else if (next == 0)
+				state.TexturePreviewIndex = 0;
+			else if (next > state.TexturePreviewIndex)
+				state.TexturePreviewIndex =	ResourcesManager::get().nextDescriptor(state.TexturePreviewIndex, D3D12_SRV_DIMENSION_TEXTURE2D);
+			else
+				state.TexturePreviewIndex = ResourcesManager::get().previousDescriptor(state.TexturePreviewIndex, D3D12_SRV_DIMENSION_TEXTURE2D);
+		}
 
 		if (ImGui::Button(stopUpdatingVoxel ? "startUpdatingVoxel" : "stopUpdatingVoxel"))
 			stopUpdatingVoxel = !stopUpdatingVoxel;

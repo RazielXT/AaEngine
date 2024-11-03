@@ -18,7 +18,7 @@ struct InstanceGroupDescription
 struct InstanceGroup
 {
 	void create(const InstanceGroupDescription&);
-	CbufferData buffer;
+	ComPtr<ID3D12Resource> gpuBuffer;
 	UINT count{};
 };
 

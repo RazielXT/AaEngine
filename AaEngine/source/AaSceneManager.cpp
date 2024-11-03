@@ -24,6 +24,18 @@ AaEntity* AaSceneManager::createEntity(std::string name)
 	return ent;
 }
 
+AaEntity* AaSceneManager::createGrassEntity(std::string name, BoundingBoxVolume extends)
+{
+	auto grassEntity = createEntity(name);
+
+	auto& g = *grass.addGrass(extends);
+	grassEntity->geometry.fromGrass(g);
+	grassEntity->setBoundingBox(g.bbox);
+	grassEntity->material = AaMaterialResources::get().getMaterial("GrassLeaves");
+
+	return grassEntity;
+}
+
 AaEntity* AaSceneManager::getEntity(std::string name) const
 {
 	auto it = entityMap.find(name);
@@ -33,19 +45,36 @@ AaEntity* AaSceneManager::getEntity(std::string name) const
 	return nullptr;
 }
 
-RenderQueue* AaSceneManager::createQueue(const std::vector<DXGI_FORMAT>& targets, MaterialVariant variant)
+RenderQueue* AaSceneManager::createQueue(const std::vector<DXGI_FORMAT>& targets, MaterialTechnique technique)
 {
 	for (auto& q : queues)
 	{
-		if (q->targets == targets && q->variant == variant)
+		if (q->targets == targets && q->technique == technique)
 			return q.get();
 	}
 
 	auto queue = std::make_unique<RenderQueue>();
 	queue->targets = targets;
-	queue->variant = variant;
+	queue->technique = technique;
 
 	return queues.emplace_back(std::move(queue)).get();
+}
+
+RenderQueue AaSceneManager::createManualQueue(MaterialTechnique technique)
+{
+	for (auto& q : queues)
+	{
+		if (q->technique == technique)
+		{
+			RenderQueue queue;
+			queue.technique = technique;
+			queue.targets = q->targets;
+
+			return queue;
+		}
+	}
+
+	return {};
 }
 
 void AaSceneManager::updateQueues()
@@ -69,4 +98,5 @@ void AaSceneManager::clear()
 
 	entityMap.clear();
 	instancing.clear();
+	grass.clear();
 }

@@ -20,7 +20,8 @@ MaterialBase::~MaterialBase()
 {
 	for (const auto& s : pipelineStates)
 	{
-		s.pipeline->Release();
+		if (s.pipeline)
+			s.pipeline->Release();
 	}
 
 	if (rootSignature)
@@ -49,9 +50,6 @@ void MaterialBase::Load()
 void MaterialBase::BindSignature(ID3D12GraphicsCommandList* commandList, int frameIndex) const
 {
 	commandList->SetGraphicsRootSignature(rootSignature);
-
-	ID3D12DescriptorHeap* descriptorHeaps[] = { mgr.mainDescriptorHeap[frameIndex] };
-	commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 }
 
 std::size_t HashInputLayout(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout)
@@ -117,11 +115,17 @@ ID3D12PipelineState* MaterialBase::CreatePipelineState(const std::vector<D3D12_I
 
 	psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-	psoDesc.DepthStencilState.DepthEnable = ref.pipeline.depth.check;
-	if (!ref.pipeline.depth.write)
-		psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
 	psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 
+	if (!ref.pipeline.depth.check)
+	{
+		psoDesc.DepthStencilState.DepthEnable = ref.pipeline.depth.check;
+		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_NONE;
+		psoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN;
+	}
+	if (!ref.pipeline.depth.write)
+		psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+	
 	if (ref.pipeline.blend.alphaBlend)
 		psoDesc.BlendState = CommonStates::AlphaBlend;
 
@@ -204,31 +208,19 @@ std::unique_ptr<MaterialInstance> MaterialBase::CreateMaterialInstance(const Mat
 	return std::move(instance);
 }
 
+const char* MaterialBase::GetTechniqueOverride(MaterialTechnique technique) const
+{
+	const auto& m = ref.techniqueMaterial[int(technique)];
+
+	return m ? m->c_str() : nullptr;
+}
+
 void MaterialInstance::SetTableParameter(const std::string& name, float* data, UINT size, UINT offset)
 {
 	for (size_t i = 0; i < FastParamNames.size(); i++)
 	{
 		if (name == FastParamNames[i])
 			paramsTable[i] = { data, size, offset / UINT(sizeof(float))};
-	}
-}
-
-void MaterialInstance::SetTableParametersFromRef(const MaterialRef& ref)
-{
-	auto& defaults = ref.resources.defaultParams;
-
-	for (size_t i = 0; i < FastParamNames.size(); i++)
-	{
-		if (!paramsTable[i].data)
-		{
-			const auto& it = defaults.find(FastParamNames[i].data());
-			if (it != defaults.end())
-			{
-				paramsTable[i].data = customParamsStorage.emplace_back(it->second).data();
-				paramsTable[i].Size = it->second.size() * sizeof(float);
-				paramsTable[i].Offset = -1; //not used by material
-			}
-		}
 	}
 }
 
@@ -248,9 +240,9 @@ void MaterialBase::CreateResourcesData(MaterialInstance& instance, ResourceUploa
 	size_t idx = 0;
 	for (auto& cb : info.cbuffers)
 	{
-		auto& buffer = instance.resources->cbuffers[idx++];
+		auto& buffer = instance.resources->buffers[idx++];
 
-		if (buffer.type == CBufferType::Root)
+		if (buffer.type == GpuBufferType::Root)
 			for (const auto& p : cb.info.Params)
 			{
 				SetDefaultParameter(p, ref, buffer.defaultData);
@@ -258,8 +250,6 @@ void MaterialBase::CreateResourcesData(MaterialInstance& instance, ResourceUploa
 				instance.SetTableParameter(p.Name, buffer.defaultData.data() + p.StartOffset / sizeof(float), p.Size, p.StartOffset);
 			}
 	}
-
-	instance.SetTableParametersFromRef(instance.ref);
 
 	UINT texSlot = 0;
 	for (const auto& t : instance.ref.resources.textures)
@@ -303,12 +293,17 @@ const MaterialBase* MaterialInstance::GetBase() const
 
 bool MaterialInstance::HasInstancing() const
 {
-	for (auto& r : resources->cbuffers)
+	for (auto& r : resources->buffers)
 	{
-		if (r.type == CBufferType::Instancing)
+		if (r.type == GpuBufferType::Instancing)
 			return true;
 	}
 	return false;
+}
+
+bool MaterialInstance::IsTransparent() const
+{
+	return ref.pipeline.blend.alphaBlend;
 }
 
 void MaterialInstance::SetTexture(ShaderTextureView& texture, UINT slot)
@@ -334,7 +329,7 @@ void MaterialInstance::SetParameter(const std::string& name, float* value, size_
 		{
 			if (p.Name == name)
 			{
-				memcpy(resources->cbuffers[idx].defaultData.data() + p.StartOffset / sizeof(float), value, size * sizeof(float));
+				memcpy(resources->buffers[idx].defaultData.data() + p.StartOffset / sizeof(float), value, size * sizeof(float));
 				break;
 			}
 		}
@@ -360,7 +355,7 @@ void MaterialInstance::GetParameter(const std::string& name, float* output) cons
 		{
 			if (p.Name == name)
 			{
-				memcpy(output, resources->cbuffers[idx].defaultData.data() + p.StartOffset / sizeof(float), p.Size);
+				memcpy(output, resources->buffers[idx].defaultData.data() + p.StartOffset / sizeof(float), p.Size);
 				return;
 			}
 		}
@@ -382,44 +377,46 @@ UINT MaterialInstance::GetParameterOffset(FastParam id) const
 	return paramsTable[(int)id].Offset;
 }
 
-void MaterialInstance::LoadMaterialConstants(ShaderBuffersInfo& buffers) const
+void MaterialInstance::LoadMaterialConstants(ShaderConstantsProvider& buffers) const
 {
-	if (buffers.data.size() < resources->cbuffers.size())
-		buffers.data.resize(resources->cbuffers.size());
+	if (buffers.data.size() < resources->buffers.size())
+		buffers.data.resize(resources->buffers.size());
 
-	for (const auto& p : resources->cbuffers)
+	for (const auto& p : resources->buffers)
 	{
-		if (p.type == CBufferType::Root)
+		if (p.type == GpuBufferType::Root)
 			buffers.data[p.rootIndex] = p.defaultData;
 	}
 }
 
-void MaterialInstance::UpdatePerFrame(ShaderBuffersInfo& buffers, const FrameGpuParameters& info, const XMMATRIX& vpMatrix)
+void MaterialInstance::UpdatePerFrame(ShaderConstantsProvider& buffers, const FrameGpuParameters& info)
 {
 	for (auto p : resources->autoParams)
 	{
 		if (p.type == ResourcesInfo::AutoParam::TIME)
 			buffers.data[p.bufferIdx][p.bufferOffset] = info.time;
+		else if (p.type == ResourcesInfo::AutoParam::SUN_DIRECTION)
+			*(DirectX::XMFLOAT3*)&buffers.data[p.bufferIdx][p.bufferOffset] = info.sunDirection;
 		else if (p.type == ResourcesInfo::AutoParam::VIEWPORT_SIZE_INV)
 		{
 			buffers.data[p.bufferIdx][p.bufferOffset] = info.inverseViewportSize.x;
 			buffers.data[p.bufferIdx][p.bufferOffset + 1] = info.inverseViewportSize.y;
 		}
-		else if (p.type == ResourcesInfo::AutoParam::SUN_DIRECTION)
-			*(DirectX::XMFLOAT3*)&buffers.data[p.bufferIdx][p.bufferOffset] = info.sunDirection;
+		else if (p.type == ResourcesInfo::AutoParam::CAMERA_POSITION)
+			*(DirectX::XMFLOAT3*)&buffers.data[p.bufferIdx][p.bufferOffset] = buffers.getCameraPosition();
 		else if (p.type == ResourcesInfo::AutoParam::VP_MATRIX)
-			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&buffers.data[p.bufferIdx][p.bufferOffset], XMMatrixTranspose(vpMatrix));
+			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&buffers.data[p.bufferIdx][p.bufferOffset], XMMatrixTranspose(buffers.getViewProjectionMatrix()));
 	}
 }
 
-void MaterialInstance::UpdatePerObject(ShaderBuffersInfo& buffers, const XMFLOAT4X4& wvpMatrix, const XMMATRIX& worldMatrix, const FrameGpuParameters& info)
+void MaterialInstance::UpdatePerObject(ShaderConstantsProvider& buffers, const FrameGpuParameters& info)
 {
 	for (auto p : resources->autoParams)
 	{
 		if (p.type == ResourcesInfo::AutoParam::WVP_MATRIX)
-			*(DirectX::XMFLOAT4X4*)&buffers.data[p.bufferIdx][p.bufferOffset] = wvpMatrix;
+			*(DirectX::XMFLOAT4X4*)&buffers.data[p.bufferIdx][p.bufferOffset] = buffers.getWvpMatrix();
 		else if (p.type == ResourcesInfo::AutoParam::WORLD_MATRIX)
-			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&buffers.data[p.bufferIdx][p.bufferOffset], XMMatrixTranspose(worldMatrix));
+			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&buffers.data[p.bufferIdx][p.bufferOffset], XMMatrixTranspose(buffers.getWorldMatrix()));
 		else if (p.type == ResourcesInfo::AutoParam::SHADOW_MATRIX)
 			*(DirectX::XMFLOAT4X4*)&buffers.data[p.bufferIdx][p.bufferOffset] = info.shadowMapViewProjectionTransposed;
 	}
@@ -432,7 +429,7 @@ void MaterialInstance::UpdateBindlessTexture(const ShaderTextureView& texture, U
 	{
 		if (p.type == ResourcesInfo::AutoParam::TEXID && textureIdx++ == slot)
 		{
-			auto& buff = resources->cbuffers[p.bufferIdx].defaultData;
+			auto& buff = resources->buffers[p.bufferIdx].defaultData;
 			*(UINT*)&buff[p.bufferOffset] = texture.srvHeapIndex;
 			break;
 		}
@@ -449,16 +446,16 @@ void MaterialInstance::BindTextures(ID3D12GraphicsCommandList* commandList, int 
 		commandList->SetGraphicsRootDescriptorTable(uav.rootIndex, uav.uav->uavHandles[frameIndex]);
 }
 
-void MaterialInstance::BindConstants(ID3D12GraphicsCommandList* commandList, int frameIndex, const ShaderBuffersInfo& buffers)
+void MaterialInstance::BindConstants(ID3D12GraphicsCommandList* commandList, int frameIndex, const ShaderConstantsProvider& buffers)
 {
-	for (auto& cb : resources->cbuffers)
+	for (auto& b : resources->buffers)
 	{
-		if (cb.type == CBufferType::Root)
-			commandList->SetGraphicsRoot32BitConstants(cb.rootIndex, buffers.data[cb.rootIndex].size(), buffers.data[cb.rootIndex].data(), 0);
-		else if (cb.type == CBufferType::Instancing)
-			commandList->SetGraphicsRootConstantBufferView(cb.rootIndex, buffers.cbuffers.instancing.data[frameIndex]->GpuAddress());
-		else
- 			commandList->SetGraphicsRootConstantBufferView(cb.rootIndex, cb.globalBuffer.data[frameIndex]->GpuAddress());
+		if (b.type == GpuBufferType::Root)
+			commandList->SetGraphicsRoot32BitConstants(b.rootIndex, buffers.data[b.rootIndex].size(), buffers.data[b.rootIndex].data(), 0);
+		else if (b.type == GpuBufferType::Instancing || b.type == GpuBufferType::Geometry)
+			commandList->SetGraphicsRootShaderResourceView(b.rootIndex, buffers.getGeometryBuffer());
+		else if (b.type == GpuBufferType::Global)
+ 			commandList->SetGraphicsRootConstantBufferView(b.rootIndex, b.globalCBuffer.data[frameIndex]->GpuAddress());
 	}
 }
 

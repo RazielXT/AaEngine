@@ -5,6 +5,7 @@
 #include <string>
 #include <d3d12.h>
 #include "ShaderResources.h"
+#include <optional>
 
 struct MaterialDepthState
 {
@@ -44,6 +45,14 @@ struct MaterialResourcesInfo
 	std::map<std::string, std::vector<float>> defaultParams;
 };
 
+enum class MaterialTechnique
+{
+	Default,
+	Depth,
+	Voxelize,
+	COUNT
+};
+
 struct MaterialRef
 {
 	std::string base;
@@ -52,6 +61,8 @@ struct MaterialRef
 
 	MaterialPipelineInfo pipeline;
 	MaterialResourcesInfo resources;
+
+	std::array<std::optional<std::string>, int(MaterialTechnique::COUNT)> techniqueMaterial;
 };
 
 namespace AaMaterialFileParser

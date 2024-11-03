@@ -31,7 +31,5 @@ private:
  	AaShaderLibrary* mShaders;
 	ShaderConstantBuffers* mShaderConstants;
 
-	LARGE_INTEGER lastTime{};
-	float frequency{};
 	std::vector<AaFrameListener*> frameListeners;
 };

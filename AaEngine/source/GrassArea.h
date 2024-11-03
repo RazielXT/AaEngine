@@ -1,18 +1,32 @@
 #pragma once
 
 #include "ShaderConstantBuffers.h"
-#include <DirectXCollision.h>
+#include <vector>
+#include "AaMath.h"
 
-class GrassArea
+struct GrassArea
+{
+	void initialize(BoundingBoxVolume extends);
+	UINT getVertexCount() const;
+
+	ComPtr<ID3D12Resource> gpuBuffer;
+
+	DirectX::BoundingBox bbox;
+	UINT count{};
+};
+
+class GrassManager
 {
 public:
 
-	GrassArea() = default;
+	GrassManager() = default;
+	~GrassManager();
 
-	void initialize();
-	UINT getVertexCount() const;
+	GrassArea* addGrass(BoundingBoxVolume extends);
 
-	UINT count{};
-	CbufferView cbuffer;
-	DirectX::BoundingBox bbox;
+	void clear();
+
+private:
+
+	std::vector<GrassArea*> grasses;
 };

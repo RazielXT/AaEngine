@@ -12,11 +12,11 @@ class SceneRenderTask
 {
 public:
 
-	SceneRenderTask();
+	SceneRenderTask(RenderProvider provider);
 	~SceneRenderTask();
 
-	AsyncTasksInfo initialize(AaRenderSystem* renderSystem, AaSceneManager* sceneMgr, RenderTargetTexture* target);
-	AsyncTasksInfo initializeEarlyZ(AaRenderSystem* renderSystem, AaSceneManager* sceneMgr);
+	AsyncTasksInfo initialize(AaSceneManager* sceneMgr, RenderTargetTexture* target);
+	AsyncTasksInfo initializeEarlyZ(AaSceneManager* sceneMgr);
 	void prepare(RenderContext& ctx, CommandsData& syncCommands);
 
 	struct Work
@@ -31,6 +31,7 @@ public:
 
 	bool running = true;
 
+	RenderProvider provider;
 	RenderContext ctx;
 	RenderInformation sceneInfo;
 

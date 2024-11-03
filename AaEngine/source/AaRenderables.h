@@ -6,7 +6,7 @@ struct WorldCoordinates
 {
 	Quaternion orientation;
 	Vector3 position;
-	Vector3	scale;
+	Vector3	scale{1, 1, 1};
 	bool dirty = true;
 
 	XMMATRIX createWorldMatrix() const;
@@ -21,8 +21,15 @@ struct RenderObjectData
 };
 
 class RenderObject;
+class AaCamera;
 
 using RenderableVisibility = std::vector<bool>;
+
+struct RenderInformation
+{
+	RenderableVisibility visibility;
+	std::vector<XMFLOAT4X4> wvpMatrix;
+};
 
 class Renderables
 {
@@ -36,18 +43,20 @@ public:
 
 	RenderObjectData objectData;
 
-	void updateWorldMatrix();
+	void updateTransformation();
+
+	void updateRenderInformation(AaCamera& camera, RenderInformation&) const;
+
+private:
+
 	void updateWVPMatrix(XMMATRIX viewProjection, const RenderableVisibility&, std::vector<XMFLOAT4X4>&) const;
 	void updateVisibility(const BoundingFrustum&, RenderableVisibility&) const;
 	void updateVisibility(const BoundingOrientedBox&, RenderableVisibility&) const;
-
-private:
 
 	void reset();
 
 	std::vector<UINT> ids;
 	std::vector<UINT> freeIds;
-
 };
 
 class RenderObject
@@ -76,6 +85,8 @@ public:
 	XMFLOAT4X4 getWvpMatrix(const std::vector<XMFLOAT4X4>&) const;
 
 	void setBoundingBox(BoundingBox bbox);
+	BoundingBox getBoundingBox() const;
+	BoundingBox getWorldBoundingBox() const;
 
 private:
 

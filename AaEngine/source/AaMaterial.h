@@ -42,6 +42,8 @@ public:
 
 	std::unique_ptr<MaterialInstance> CreateMaterialInstance(const MaterialRef& childRef, ResourceUploadBatch& batch);
 
+	const char* GetTechniqueOverride(MaterialTechnique technique) const;
+
 	ResourcesManager& mgr;
 
 	SignatureInfo info;
@@ -95,18 +97,19 @@ public:
 	void GetParameter(FastParam param, float* output) const;
 	UINT GetParameterOffset(FastParam param) const;
 
-	void LoadMaterialConstants(ShaderBuffersInfo& buffers) const;
-	void UpdatePerFrame(ShaderBuffersInfo& buffers, const FrameGpuParameters& info, const XMMATRIX& vpMatrix);
-	void UpdatePerObject(ShaderBuffersInfo& buffers, const XMFLOAT4X4& wvpMatrix, const XMMATRIX& worldMatrix, const FrameGpuParameters& info);
+	void LoadMaterialConstants(ShaderConstantsProvider& buffers) const;
+	void UpdatePerFrame(ShaderConstantsProvider& buffers, const FrameGpuParameters& info);
+	void UpdatePerObject(ShaderConstantsProvider& buffers, const FrameGpuParameters& info);
 
 	void BindTextures(ID3D12GraphicsCommandList* commandList, int frameIndex);
-	void BindConstants(ID3D12GraphicsCommandList* commandList, int frameIndex, const ShaderBuffersInfo& buffers);
+	void BindConstants(ID3D12GraphicsCommandList* commandList, int frameIndex, const ShaderConstantsProvider& buffers);
 
 	AaMaterial* Assign(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target);
 
 	const MaterialBase* GetBase() const;
 
 	bool HasInstancing() const;
+	bool IsTransparent() const;
 
 protected:
 
@@ -122,10 +125,8 @@ protected:
 		UINT Offset{};
 	};
 	std::array<FastParamInfo, (int)FastParam::COUNT> paramsTable{};
-	std::vector<std::vector<float>> customParamsStorage;
 
 	void SetTableParameter(const std::string& name, float* data, UINT size, UINT offset);
-	void SetTableParametersFromRef(const MaterialRef& ref);
 
 	void UpdateBindlessTexture(const ShaderTextureView& texture, UINT slot);
 };

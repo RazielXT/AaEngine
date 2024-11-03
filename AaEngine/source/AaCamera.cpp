@@ -3,20 +3,23 @@
 #include "AaCamera.h"
 #include "AaMath.h"
 
+const auto FrontDirection = XMFLOAT3(0, 0, 1);
+const auto UpVector = XMFLOAT3(0, 1, 0);
+
 AaCamera::AaCamera()
 {
 	view_m = XMMatrixIdentity();
 
 	position = XMFLOAT3(0, 0, 0);
-	direction = XMFLOAT3(0, 0, 1);
-	upVector = XMFLOAT3(0, 1, 0);
+	direction = FrontDirection;
+	upVector = UpVector;
 }
 
 AaCamera::~AaCamera()
 {
 }
 
-void AaCamera::setOrthograhicCamera(float width, float height, float nearZ, float farZ)
+void AaCamera::setOrthographicCamera(float width, float height, float nearZ, float farZ)
 {
 	projection_m = XMMatrixOrthographicLH(width, height, nearZ, farZ);
 	this->width = width;
@@ -24,12 +27,19 @@ void AaCamera::setOrthograhicCamera(float width, float height, float nearZ, floa
 	this->nearZ = nearZ;
 	this->farZ = farZ;
 	dirty = true;
+	orthographic = true;
 }
 
 void AaCamera::setPerspectiveCamera(float fov, float aspectRatio, float nearZ, float farZ)
 {
 	projection_m = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), aspectRatio, nearZ, farZ);
 	dirty = true;
+	orthographic = false;
+}
+
+bool AaCamera::isOrthographic() const
+{
+	return orthographic;
 }
 
 const XMMATRIX& AaCamera::getProjectionMatrix() const
@@ -54,78 +64,107 @@ void AaCamera::updateMatrix()
 		view_m = XMMatrixMultiply(XMMatrixLookToLH(XMLoadFloat3(&position), XMLoadFloat3(&direction), XMLoadFloat3(&upVector)), XMMatrixRotationY(yaw_));
 		view_m = XMMatrixMultiply(view_m, XMMatrixRotationX(pitch_));
 		view_m = XMMatrixMultiply(view_m, XMMatrixRotationZ(roll_));
+
+// 		auto quatMatrix = XMMatrixRotationQuaternion(XMLoadFloat4(&rotation));
+// 		view_m = XMMatrixMultiply(XMMatrixLookToLH(XMLoadFloat3(&position), XMLoadFloat3(&direction), XMLoadFloat3(&upVector)), quatMatrix);
+
 		view_projection_m = XMMatrixMultiply(view_m, projection_m);
 		dirty = false;
 	}
 }
 
-void AaCamera::move(XMFLOAT3 position)
+void AaCamera::move(Vector3 p)
 {
-	this->position.x += position.x;
-	this->position.y += position.y;
-	this->position.z += position.z;
-}
+	position += p;
 
-void AaCamera::setPosition(XMFLOAT3 position)
-{
-	this->position = position;
 	dirty = true;
 }
 
-void AaCamera::setInCameraRotation(XMFLOAT3* direction)
+void AaCamera::setPosition(Vector3 p)
 {
-	direction->x *= -1;
+	position = p;
+	dirty = true;
+}
 
-	XMVECTOR dir = XMLoadFloat3(direction);
+void AaCamera::setInCameraRotation(XMFLOAT3& direction) const
+{
+	direction.x *= -1;
+
+	XMVECTOR dir = XMLoadFloat3(&direction);
 	dir = XMVector3Transform(dir, XMMatrixRotationX(pitch_));
 	dir = XMVector3Transform(dir, XMMatrixRotationY(yaw_));
-	XMStoreFloat3(direction, dir);
+	XMStoreFloat3(&direction, dir);
 
-	direction->x *= -1;
-	direction->y *= -1;
+	direction.x *= -1;
+	direction.y *= -1;
 }
 
 void AaCamera::yaw(float Yaw)
 {
+	Vector3 yAxis = rotation * Vector3::UnitY;
+
+	rotate(yAxis, Yaw);
 	yaw_ += Yaw;
 	dirty = true;
 }
 
 void AaCamera::pitch(float Pitch)
 {
+	rotate(Vector3::UnitX, Pitch);
 	pitch_ += Pitch;
 	dirty = true;
 }
 
 void AaCamera::roll(float Roll)
 {
+	rotate(Vector3::UnitZ, Roll);
 	roll_ += Roll;
 	dirty = true;
 }
 
+void AaCamera::rotate(Vector3 axis, float angle)
+{
+// 	rotation *= Quaternion::CreateFromAxisAngle(axis, angle);
+// 	pitch_ = angle * axis.x;
+// 	yaw_ = angle * axis.y;
+// 	roll_ = angle * axis.z;
+// 	dirty = true;
+}
+
 void AaCamera::resetRotation()
 {
+	//rotation = Quaternion::Identity;
 	yaw_ = pitch_ = roll_ = 0;
 	dirty = true;
 }
 
-void AaCamera::lookTo(XMFLOAT3 Direction)
+void AaCamera::setDirection(Vector3 Direction)
 {
-	direction = Direction;
-	yaw_ = pitch_ = 0;
+	resetRotation();
+	//rotation = Quaternion::FromToRotation(FrontDirection, Direction);
+
+	if (Direction == UpVector)
+	{
+		direction = FrontDirection;
+		pitch_ = 90;
+	}
+	else if (Direction == -1 * UpVector)
+	{
+		direction = FrontDirection;
+		pitch_ = -90;
+	}
+	else
+		direction = Direction;
+
 	dirty = true;
 }
 
-void AaCamera::lookAt(XMFLOAT3 target)
+void AaCamera::lookAt(Vector3 target)
 {
-	direction.x = target.x - position.x;
-	direction.y = target.y - position.y;
-	direction.z = target.z - position.z;
-	yaw_ = pitch_ = 0;
-	dirty = true;
+	setDirection(target - position);
 }
 
-XMFLOAT3 AaCamera::getPosition() const
+Vector3 AaCamera::getPosition() const
 {
 	return position;
 }
@@ -134,8 +173,6 @@ DirectX::BoundingFrustum AaCamera::prepareFrustum()
 {
 	DirectX::BoundingFrustum frustum;
 	DirectX::BoundingFrustum::CreateFromMatrix(frustum, projection_m);
-
-	// Transform the frustum to camera space
 	frustum.Transform(frustum, DirectX::XMMatrixInverse(nullptr, view_m));
 
 	return frustum;
@@ -146,28 +183,6 @@ DirectX::BoundingOrientedBox AaCamera::prepareOrientedBox()
 	DirectX::BoundingOrientedBox orientedBox;
 	orientedBox.Extents = { width / 2.0f, height / 2.0f, (farZ - nearZ) / 2.0f };
 	orientedBox.Transform(orientedBox, DirectX::XMMatrixInverse(nullptr, view_m));
-// 
-// 	{
-// 		XMVECTOR axis = DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f); // Common axis (0, 0, 1)
-// 		XMVECTOR directionV = XMLoadFloat3(&direction);
-// 
-// 		// Calculate the cross product
-// 		XMVECTOR crossProduct = DirectX::XMVector3Cross(axis, directionV);
-// 
-// 		// Calculate the dot product
-// 		float dotProduct = DirectX::XMVector3Dot(axis, directionV).m128_f32[0];
-// 
-// 		// Calculate the angle
-// 		float angle = acosf(dotProduct);
-// 
-// 		// Create the quaternion
-// 		XMVECTOR quaternion = DirectX::XMQuaternionRotationAxis(crossProduct, angle);
-// 
-// 		XMStoreFloat4(&orientedBox.Orientation, quaternion);
-// 	}
-// 	Quaternion dir = orientedBox.Orientation;
-// 	Vector3 dirBox = { 0,-1, 0 };
-// 	dirBox = dir * dirBox;
 
 	return orientedBox;
 }

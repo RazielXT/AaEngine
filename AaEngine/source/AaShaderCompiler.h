@@ -42,6 +42,13 @@ namespace ShaderReflection
 		UINT Slot;
 		UINT Space;
 	};
+
+	struct StructuredBuffer
+	{
+		std::string Name;
+		UINT Slot;
+		UINT Space;
+	};
 };
 
 struct ShaderDescription
@@ -52,6 +59,7 @@ struct ShaderDescription
 	std::vector<ShaderReflection::Texture> textures;
 	std::vector<ShaderReflection::Sampler> samplers;
 	std::vector<ShaderReflection::UAV> uavs;
+	std::vector<ShaderReflection::StructuredBuffer> structuredBuffers;
 
 	bool bindlessTextures = false;
 };

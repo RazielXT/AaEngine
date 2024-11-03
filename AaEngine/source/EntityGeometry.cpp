@@ -23,13 +23,13 @@ void EntityGeometry::fromInstancedModel(const AaModel& model, InstanceGroup& gro
 {
 	fromModel(model);
 	instanceCount = group.count;
-	geometryCustomBuffer = group.buffer;
+	geometryCustomBuffer = group.gpuBuffer->GetGPUVirtualAddress();
 	type = Type::Instancing;
 }
 
-void EntityGeometry::fromGrass(const GrassArea& grass)
+void EntityGeometry::fromGrass(GrassArea& grass)
 {
-	geometryCustomBuffer = grass.cbuffer;
+	geometryCustomBuffer = grass.gpuBuffer->GetGPUVirtualAddress();
 	vertexCount = grass.getVertexCount();
 	instanceCount = 1;
 	type = Type::Manual;

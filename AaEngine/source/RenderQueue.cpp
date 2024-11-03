@@ -9,10 +9,29 @@ void RenderQueue::update(const EntityChanges& changes)
 		if (change == EntityChange::Add)
 		{
 			auto matInstance = entity->material;
-			if (variant == MaterialVariant::Depth)
-				matInstance = AaMaterialResources::get().getMaterial(entity->geometry.usesInstancing() ? "DepthInstanced" : "Depth");
-			else if (variant == MaterialVariant::Voxel)
-				matInstance = AaMaterialResources::get().getMaterial(entity->geometry.usesInstancing() ? "VoxelizeInstanced" : "Voxelize");
+			if (technique != MaterialTechnique::Default)
+			{
+				std::string techniqueMaterial;
+
+				if (technique == MaterialTechnique::Depth)
+					techniqueMaterial = "Depth";
+				else if (technique == MaterialTechnique::Voxelize)
+					techniqueMaterial = "Voxelize";
+
+				if (auto techniqueOverride = matInstance->GetBase()->GetTechniqueOverride(technique))
+				{
+					if (techniqueOverride[0] == '\0') //skip
+						continue;
+
+					techniqueMaterial = techniqueOverride;
+				}
+				else if (matInstance->HasInstancing())
+				{
+					techniqueMaterial += "Instancing";
+				}
+
+				matInstance = AaMaterialResources::get().getMaterial(techniqueMaterial);
+			}
 
 			auto entry = EntityEntry{ entity, matInstance->Assign(entity->geometry.layout ? *entity->geometry.layout : std::vector<D3D12_INPUT_ELEMENT_DESC>{}, targets) };
 			auto& entities = entityOrder[entity->order];
@@ -43,15 +62,10 @@ static void RenderObject(ID3D12GraphicsCommandList* commandList, AaEntity* e, Aa
 		commandList->DrawInstanced(e->geometry.vertexCount, e->geometry.instanceCount, 0, 0);
 }
 
-void updateEntityCbuffers(ShaderBuffersInfo& constants, AaEntity* entity)
-{
-	constants.cbuffers.instancing = entity->geometry.geometryCustomBuffer;
-}
-
 void RenderQueue::renderObjects(AaCamera& camera, const RenderInformation& info, const FrameGpuParameters& params, ID3D12GraphicsCommandList* commandList, UINT frameIndex)
 {
 	EntityEntry lastEntry{};
-	ShaderBuffersInfo constants;
+	ShaderConstantsProvider constants(info, camera);
 
 	for (auto& [order, entities] : entityOrder)
 	{
@@ -60,9 +74,7 @@ void RenderQueue::renderObjects(AaCamera& camera, const RenderInformation& info,
 			if (!entry.entity->isVisible(info.visibility))
 				continue;
 
-			//grass
-			if (!entry.entity->geometry.indexCount && variant != MaterialVariant::Default)
-				continue;
+			constants.entity = entry.entity;
 
 			if (entry.base != lastEntry.base)
 				entry.base->BindSignature(commandList, frameIndex);
@@ -70,24 +82,24 @@ void RenderQueue::renderObjects(AaCamera& camera, const RenderInformation& info,
 			if (entry.material != lastEntry.material)
 			{
 				entry.material->LoadMaterialConstants(constants);
-				entry.material->UpdatePerFrame(constants, params, camera.getViewProjectionMatrix());
+				entry.material->UpdatePerFrame(constants, params);
 				entry.material->BindPipeline(commandList);
 				entry.material->BindTextures(commandList, frameIndex);
 			}
 
-			if (variant == MaterialVariant::Voxel)
+			if (technique == MaterialTechnique::Voxelize)
 			{
 				entry.entity->material->GetParameter(FastParam::Emission, constants.data.front().data() + entry.material->GetParameterOffset(FastParam::Emission));
 				entry.entity->material->GetParameter(FastParam::MaterialColor, constants.data.front().data() + entry.material->GetParameterOffset(FastParam::MaterialColor));
+				entry.entity->material->GetParameter(FastParam::TexIdDiffuse, constants.data.front().data() + entry.material->GetParameterOffset(FastParam::TexIdDiffuse));
 			}
 
-			updateEntityCbuffers(constants, entry.entity);
-			entry.material->UpdatePerObject(constants, entry.entity->getWvpMatrix(info.wvpMatrix), entry.entity->getWorldMatrix(), params);
+			entry.material->UpdatePerObject(constants, params);
 			entry.material->BindConstants(commandList, frameIndex, constants);
 
 			RenderObject(commandList, entry.entity, camera);
 
-			if (variant == MaterialVariant::Voxel)
+			if (technique == MaterialTechnique::Voxelize)
 			{
 				auto uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(nullptr);
 				commandList->ResourceBarrier(1, &uavBarrier);

@@ -15,10 +15,10 @@ class VoxelizeSceneTask
 {
 public:
 
-	VoxelizeSceneTask(AaShadowMap& shadows);
+	VoxelizeSceneTask(RenderProvider provider, AaShadowMap& shadows);
 	~VoxelizeSceneTask();
 
-	AsyncTasksInfo initialize(AaRenderSystem* renderSystem, AaSceneManager* sceneMgr, RenderTargetTexture* target);
+	AsyncTasksInfo initialize(AaSceneManager* sceneMgr, RenderTargetTexture* target);
 	void prepare(RenderContext& ctx, CommandsData& syncCommands);
 
 	CommandsData commands;
@@ -59,4 +59,6 @@ public:
 	GenerateMipsComputeShader computeMips;
 
 	AaShadowMap& shadowMaps;
+
+	RenderProvider provider;
 };

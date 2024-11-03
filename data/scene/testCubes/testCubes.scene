@@ -37,7 +37,7 @@
                     <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>tree</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
 </userData>
                 <subentities>
-                    <subentity index="0" materialName="terrainGrass" />
+                    <subentity index="0" materialName="WhiteVCT" />
                 </subentities>
             </entity>
         </node>

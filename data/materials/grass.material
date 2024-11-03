@@ -4,10 +4,19 @@ material GrassLeaves
 	pixel_shader psGrassLeaves
 
 	culling none
-	blend alpha
+	blend none
 
 	texture Diffuse
 	{
 		file grassLeaves.dds
 	}
+	
+	technique Depth GrassLeavesDepth
+	technique Voxelize skip
+}
+
+material GrassLeavesDepth : GrassLeaves
+{
+	pixel_shader psGrassLeavesDepth
+	blend none
 }

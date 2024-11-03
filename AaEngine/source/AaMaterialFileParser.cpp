@@ -104,7 +104,7 @@ static void ParseMaterialObject(MaterialRef& mat, const Config::Object& obj, con
 		{
 			mat.resources.uavs.push_back(member.value);
 		}
-		else if (member.type.starts_with("texture"))
+		else if (member.type == "texture")
 		{
 			auto& texturesTarget = mat.resources.textures;
 
@@ -133,7 +133,7 @@ static void ParseMaterialObject(MaterialRef& mat, const Config::Object& obj, con
 			if (!prevTextureIndex)
 				texturesTarget.push_back(tex);
 		}
-		else if (member.type.starts_with("sampler"))
+		else if (member.type == "sampler")
 		{
 			SamplerRef sampler;
 			auto sparams = member.params;
@@ -162,6 +162,22 @@ static void ParseMaterialObject(MaterialRef& mat, const Config::Object& obj, con
 			}
 
 			mat.resources.samplers.push_back(sampler);
+		}
+		else if (member.type == "technique")
+		{
+			auto technique = MaterialTechnique::Default;
+			if (member.value == "Depth")
+				technique = MaterialTechnique::Depth;
+			else if (member.value == "Voxelize")
+				technique = MaterialTechnique::Voxelize;
+
+			for (auto& p : member.params)
+			{
+				if (p == "skip")
+					mat.techniqueMaterial[int(technique)] = "";
+				else
+					mat.techniqueMaterial[int(technique)] = p;
+			}
 		}
 	}
 }

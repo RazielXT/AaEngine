@@ -1,4 +1,5 @@
 #include "AaRenderables.h"
+#include "AaCamera.h"
 
 Renderables::Renderables()
 {
@@ -49,7 +50,7 @@ void Renderables::deleteId(UINT id)
 		reset();
 }
 
-void Renderables::updateWorldMatrix()
+void Renderables::updateTransformation()
 {
 	for (auto id : ids)
 	{
@@ -96,6 +97,18 @@ void Renderables::updateVisibility(const BoundingOrientedBox& box, RenderableVis
 	}
 }
 
+void Renderables::updateRenderInformation(AaCamera& camera, RenderInformation& info) const
+{
+	camera.updateMatrix();
+
+	if (camera.isOrthographic())
+		updateVisibility(camera.prepareOrientedBox(), info.visibility);
+	else
+		updateVisibility(camera.prepareFrustum(), info.visibility);
+
+	updateWVPMatrix(camera.getViewProjectionMatrix(), info.visibility, info.wvpMatrix);
+}
+
 void Renderables::reset()
 {
 	freeIds.clear();
@@ -104,11 +117,19 @@ void Renderables::reset()
 
 DirectX::XMMATRIX WorldCoordinates::createWorldMatrix() const
 {
-	XMMATRIX translationM = XMMatrixTranslation(position.x, position.y, position.z);
-	XMMATRIX rotationM = XMMatrixRotationQuaternion(orientation);
-	XMMATRIX scaleM = XMMatrixScaling(scale.x, scale.y, scale.z);
+// 	XMMATRIX translationM = XMMatrixTranslation(position.x, position.y, position.z);
+// 	XMMATRIX rotationM = XMMatrixRotationQuaternion(orientation);
+// 	XMMATRIX scaleM = XMMatrixScaling(scale.x, scale.y, scale.z);
+// 
+// 	return XMMatrixMultiply(XMMatrixMultiply(scaleM, rotationM), translationM);
 
-	return XMMatrixMultiply(XMMatrixMultiply(scaleM, rotationM), translationM);
+	XMMATRIX affineMatrix = XMMatrixAffineTransformation(
+		XMVectorSet(scale.x, scale.y, scale.z, 0.0f),
+		XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f), // rotation origin at the object's origin
+		orientation, // rotation quaternion
+		XMVectorSet(position.x, position.y, position.z, 0.0f)); // translation
+
+	return affineMatrix;
 }
 
 RenderObject::RenderObject(Renderables& r) : source(r)
@@ -205,4 +226,18 @@ DirectX::XMFLOAT4X4 RenderObject::getWvpMatrix(const std::vector<XMFLOAT4X4>& wv
 void RenderObject::setBoundingBox(BoundingBox bbox)
 {
 	source.objectData.bbox[id] = bbox;
+}
+
+DirectX::BoundingBox RenderObject::getBoundingBox() const
+{
+	return source.objectData.bbox[id];
+}
+
+DirectX::BoundingBox RenderObject::getWorldBoundingBox() const
+{
+	auto bbox = getBoundingBox();
+	bbox.Center += getPosition();
+	bbox.Extents *= getScale();
+
+	return bbox;
 }

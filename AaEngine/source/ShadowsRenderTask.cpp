@@ -3,7 +3,7 @@
 #include "AaSceneManager.h"
 #include "ShadowMap.h"
 
-ShadowsRenderTask::ShadowsRenderTask(AaShadowMap& shadows) : shadowMaps(shadows)
+ShadowsRenderTask::ShadowsRenderTask(RenderProvider p, AaShadowMap& shadows) : shadowMaps(shadows), provider(p)
 {
 }
 
@@ -26,7 +26,7 @@ ShadowsRenderTask::~ShadowsRenderTask()
 
 AsyncTasksInfo ShadowsRenderTask::initialize(AaRenderSystem* renderSystem, AaSceneManager* sceneMgr)
 {
-	depthQueue = sceneMgr->createQueue({}, MaterialVariant::Depth);
+	depthQueue = sceneMgr->createQueue({}, MaterialTechnique::Depth);
 
 	AsyncTasksInfo tasks;
 
@@ -42,17 +42,16 @@ AsyncTasksInfo ShadowsRenderTask::initialize(AaRenderSystem* renderSystem, AaSce
 
 				while (WaitForSingleObject(shadow.eventBegin, INFINITE) == WAIT_OBJECT_0 && running)
 				{
-					ctx.renderSystem->StartCommandList(shadow.commands);
+					provider.renderSystem->StartCommandList(shadow.commands);
 
-					thread_local RenderInformation info;
-					ctx.renderables->updateVisibility(shadowMaps.camera[idx].prepareOrientedBox(), info.visibility);
-					ctx.renderables->updateWVPMatrix(shadowMaps.camera[idx].getViewProjectionMatrix(), info.visibility, info.wvpMatrix);
+					auto& info = shadow.renderablesData;
+					ctx.renderables->updateRenderInformation(shadowMaps.camera[idx], info);
 
-					shadowMaps.texture[idx].PrepareAsDepthTarget(shadow.commands.commandList, ctx.renderSystem->frameIndex);
+					shadowMaps.texture[idx].PrepareAsDepthTarget(shadow.commands.commandList, provider.renderSystem->frameIndex);
 
-					depthQueue->renderObjects(shadowMaps.camera[idx], info, ctx.params, shadow.commands.commandList, ctx.renderSystem->frameIndex);
+					depthQueue->renderObjects(shadowMaps.camera[idx], info, provider.params, shadow.commands.commandList, provider.renderSystem->frameIndex);
 
-					shadowMaps.texture[idx].PrepareAsDepthView(shadow.commands.commandList, ctx.renderSystem->frameIndex);
+					shadowMaps.texture[idx].PrepareAsDepthView(shadow.commands.commandList, provider.renderSystem->frameIndex);
 
 					SetEvent(shadow.eventFinish);
 				}

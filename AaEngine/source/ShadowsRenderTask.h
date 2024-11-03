@@ -1,17 +1,17 @@
 #pragma once
 
 #include "RenderContext.h"
+#include "RenderQueue.h"
 #include <thread>
 
 class AaShadowMap;
 class AaSceneManager;
-struct RenderQueue;
 
 class ShadowsRenderTask
 {
 public:
 
-	ShadowsRenderTask(AaShadowMap& shadows);
+	ShadowsRenderTask(RenderProvider provider, AaShadowMap& shadows);
 	~ShadowsRenderTask();
 
 	AsyncTasksInfo initialize(AaRenderSystem* renderSystem, AaSceneManager* sceneMgr);
@@ -20,9 +20,11 @@ public:
 	struct 
 	{
 		CommandsData commands;
-		HANDLE eventBegin;
-		HANDLE eventFinish;
+		HANDLE eventBegin{};
+		HANDLE eventFinish{};
 		std::thread worker;
+
+		RenderInformation renderablesData;
 	}
 	shadowsData[2];
 
@@ -33,4 +35,6 @@ public:
 	RenderQueue* depthQueue;
 
 	AaShadowMap& shadowMaps;
+
+	RenderProvider provider;
 };

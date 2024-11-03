@@ -1,6 +1,6 @@
 #pragma once
 
-#include <DirectXMath.h>
+#include "AaMath.h"
 #include <DirectXCollision.h>
 
 using namespace DirectX;
@@ -12,8 +12,10 @@ public:
 	AaCamera();
 	~AaCamera();
 
-	void setOrthograhicCamera(float width, float height, float nearZ, float farZ);
+	void setOrthographicCamera(float width, float height, float nearZ, float farZ);
 	void setPerspectiveCamera(float fov, float aspectRatio, float nearZ, float farZ);
+
+	bool isOrthographic() const;
 
 	const XMMATRIX& getProjectionMatrix() const;
 	const XMMATRIX& getViewMatrix() const;
@@ -21,33 +23,38 @@ public:
 
 	void updateMatrix();
 
-	void move(XMFLOAT3 position);
-	void setPosition(XMFLOAT3 position);
-	void setInCameraRotation(XMFLOAT3* direction);
+	void move(Vector3 position);
+	void setPosition(Vector3 position);
+	void setInCameraRotation(XMFLOAT3& direction) const;
 
 	void yaw(float Yaw);
 	void pitch(float Pitch);
 	void roll(float Roll);
+	void rotate(Vector3 axis, float angle);
 	void resetRotation();
 
-	void lookTo(XMFLOAT3 Direction);
-	void lookAt(XMFLOAT3 target);
+	void setDirection(Vector3 Direction);
+	void lookAt(Vector3 target);
 
-	XMFLOAT3 getPosition() const;
+	Vector3 getPosition() const;
 
 	DirectX::BoundingFrustum prepareFrustum();
 	DirectX::BoundingOrientedBox prepareOrientedBox();
 
 private:
 
-	float width, height, nearZ, farZ;
+	float width{}, height{}, nearZ{}, farZ{};
 
 	bool dirty = true;
 	float yaw_ = 0, pitch_ = 0, roll_ = 0;
+	bool orthographic = false;
+
 	XMMATRIX view_m;
 	XMMATRIX projection_m;
 	XMMATRIX view_projection_m;
-	XMFLOAT3 position;
-	XMFLOAT3 direction;
-	XMFLOAT3 upVector;
+	Vector3 position;
+	Vector3 direction;
+	Vector3 upVector;
+
+	Quaternion rotation;
 };

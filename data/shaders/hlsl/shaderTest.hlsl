@@ -2,9 +2,7 @@ float4x4 WorldViewProjectionMatrix;
 float4x4 ViewProjectionMatrix;
 float4x4 WorldMatrix;
 float3 MaterialColor;
-float Time;
-float2 ViewportSizeInverse;
-uint TexIdColor;
+uint TexIdDiffuse;
 
 cbuffer PSSMShadows : register(b1)
 {
@@ -14,10 +12,7 @@ cbuffer PSSMShadows : register(b1)
 }
 
 #ifdef INSTANCED
-cbuffer Instancing : register(b2)
-{
-	float4x4 instanceTransform[1024];
-}
+StructuredBuffer<float4x4> InstancingBuffer : register(t0);
 #endif
 
 struct VSInput
@@ -49,9 +44,9 @@ PSInput VSMain(VSInput input)
     PSInput result;
 
 #ifdef INSTANCED
-	result.worldPosition = mul(input.position, instanceTransform[input.instanceID]);
+	result.worldPosition = mul(input.position, InstancingBuffer[input.instanceID]);
     result.position = mul(result.worldPosition, ViewProjectionMatrix);
-	result.normal = mul(input.normal, (float3x3)instanceTransform[input.instanceID]);
+	result.normal = mul(input.normal, (float3x3)InstancingBuffer[input.instanceID]);
 #else
 	result.worldPosition = mul(input.position, WorldMatrix);
     result.position = mul(input.position, WorldViewProjectionMatrix);
@@ -182,23 +177,18 @@ PSOutput PSMain(PSInput input)
 
 	float diffuse = saturate(dot(-LightDirection, input.normal));
 
-	float2 screenCoords = input.position.xy;
-    float2 normalizedCoords = screenCoords * ViewportSizeInverse;
-
-	//input.color * lerp(GetTexture(TexIdGrass).Sample(g_sampler, normalizedCoords * 2), GetTexture(TexIdColor).Sample(g_sampler, input.uv), abs(sin(Time)))
-	
 #ifdef USE_VC
 	float4 ambientColor = input.color;
 #else
 	float4 ambientColor = float4(0.2,0.2,0.2,1);
 #endif
 
-	float4 albedo = GetTexture(TexIdColor).Sample(g_sampler, input.uv);
+	float4 albedo = GetTexture(TexIdDiffuse).Sample(g_sampler, input.uv);
 	albedo.rgb *= MaterialColor;
 
 	PSOutput output;
     output.target0 = (ambientColor + getShadow(input.worldPosition) * diffuse) * albedo;
-	output.target1 = ambientColor;
+	output.target1 = output.target0 * output.target0 * 2;
 
 	return output;
 }

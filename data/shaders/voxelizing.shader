@@ -5,9 +5,19 @@ vertex_shader voxelizeVS
 	profile vs_6_6
 }
 
+vertex_shader voxelizeVSInstancing : voxelizeVS
+{
+	defines INSTANCED
+}
+
 pixel_shader voxelizePS
 {
 	file voxelizing.hlsl
 	entry PS_Main
 	profile ps_6_6
+}
+
+pixel_shader voxelizePSInstancing : voxelizePS
+{
+	defines INSTANCED
 }

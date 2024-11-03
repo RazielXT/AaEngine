@@ -3,7 +3,7 @@ float4x4 WorldMatrix;
 float3 MaterialColor;
 float Emission;
 
-uint TexIdColor;
+uint TexIdDiffuse;
 uint TexIdSceneVoxel;
 
 float4x4 ShadowMatrix;
@@ -208,7 +208,7 @@ PSOutput PS_Main(PS_Input pin)
     occlusionSample += sampleVox(voxelmap, g_sampler, voxelUV + (geometryNormal - geometryB) / 128, (geometryNormal - geometryB), 2).w;
     occlusionSample = 1 - saturate(occlusionSample / 5);
 
-    float3 albedo = GetTexture(TexIdColor).Sample(diffuse_sampler, pin.uv).rgb;
+    float3 albedo = GetTexture(TexIdDiffuse).Sample(diffuse_sampler, pin.uv).rgb;
 	albedo *= MaterialColor;
 
 	float directLight = saturate(dot(-SunDirection,normal)) * getShadow(pin.wp);

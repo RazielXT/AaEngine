@@ -23,7 +23,7 @@ void AaShadowMap::init(AaRenderSystem* renderSystem)
 		ResourcesManager::get().createDepthShaderResourceView(texture[i]);
 		AaTextureResources::get().setNamedTexture("ShadowMap" + std::to_string(i), &texture[i].depthView);
 
-		camera[i].setOrthograhicCamera(400 + i * 400, 400 + i * 400, 1, 1000);
+		camera[i].setOrthographicCamera(400 + i * 400, 400 + i * 400, 1, 1000);
 	}
 
 	data.TexIdShadowOffsetStart = texture[0].depthView.srvHeapIndex;
@@ -37,7 +37,7 @@ void AaShadowMap::update(UINT frameIndex)
 {
 	for (auto& c : camera)
 	{
-		c.lookTo(light.direction);
+		c.setDirection(light.direction);
 		c.setPosition(XMFLOAT3{ light.direction.x * -300, light.direction.y * -300, light.direction.z * -300 });
 		c.updateMatrix();
 	}

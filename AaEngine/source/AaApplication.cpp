@@ -6,11 +6,6 @@
 
 AaApplication::AaApplication(HINSTANCE hInstance)
 {
-	LARGE_INTEGER freq;
-	QueryPerformanceFrequency(&freq);
-	frequency = (float)freq.QuadPart;
-	QueryPerformanceCounter(&lastTime);
-
 	int x = 1280;
 	int y = 800;
 
@@ -60,6 +55,13 @@ void AaApplication::start()
 
 void AaApplication::runtime()
 {
+	LARGE_INTEGER freq;
+	QueryPerformanceFrequency(&freq);
+	auto frequency = (float)freq.QuadPart;
+
+	LARGE_INTEGER lastTime{};
+	QueryPerformanceCounter(&lastTime);
+
 	MSG msg{};
 	while (msg.message != WM_QUIT)
 	{
@@ -75,6 +77,9 @@ void AaApplication::runtime()
 			QueryPerformanceCounter(&thisTime);
 			float timeSinceLastFrame = (thisTime.QuadPart - lastTime.QuadPart) / frequency;
 			lastTime = thisTime;
+
+			if (timeSinceLastFrame > 1.f)
+				timeSinceLastFrame = 1.f;
 
 			for (auto f : frameListeners)
 			{

@@ -6,6 +6,16 @@ material Voxelize
 	culling none
 	depth off
 
-	texture SceneVoxelBounces
+	texture Diffuse
+	{
+		file white.png
+	}
 	texture ShadowMap0
+	texture SceneVoxelBounces
+}
+
+material VoxelizeInstancing : Voxelize
+{
+	vertex_shader voxelizeVSInstancing
+	pixel_shader voxelizePSInstancing
 }

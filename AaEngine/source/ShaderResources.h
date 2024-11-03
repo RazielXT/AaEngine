@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ShaderConstants.h"
+#include "ShaderConstantsProvider.h"
 #include <DirectXMath.h>
 #include <array>
 
@@ -17,16 +17,25 @@ struct SamplerInfo
 	D3D12_STATIC_BORDER_COLOR borderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
 };
 
+enum class GpuBufferType
+{
+	Global,
+	Root,
+	Instancing,
+	Geometry,
+	COUNT
+};
+
 struct ResourcesInfo
 {
-	struct CBuffer
+	struct GpuBuffer
 	{
 		std::vector<float> defaultData;
-		CBufferType type{};
+		GpuBufferType type{};
 		UINT rootIndex{};
-		CbufferView globalBuffer;
+		CbufferView globalCBuffer;
 	};
-	std::vector<CBuffer> cbuffers;
+	std::vector<GpuBuffer> buffers;
 
 	struct Texture
 	{
@@ -54,6 +63,7 @@ struct ResourcesInfo
 		SUN_DIRECTION,
 		TIME,
 		VIEWPORT_SIZE_INV,
+		CAMERA_POSITION,
 	};
 	struct AutoParamInfo
 	{

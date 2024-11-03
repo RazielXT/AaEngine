@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <map>
+#include "Directx.h"
 
 class AaRenderSystem;
 
@@ -32,6 +33,8 @@ public:
 	CbufferData CreateCbufferResource(UINT size);
 	CbufferView CreateCbufferResource(UINT size, std::string name);
 	CbufferView GetCbufferResource(std::string name);
+
+	ComPtr<ID3D12Resource> CreateStructuredBuffer(const void* data, UINT dataSize);
 
 private:
 

@@ -35,14 +35,17 @@
     <Filter Include="Source Files\imgui\backend">
       <UniqueIdentifier>{b1c8f387-1969-4e79-a413-76f0eb9eb3da}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Frame">
-      <UniqueIdentifier>{6af66a8c-48b8-4fd6-9718-1d4722af9c53}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Resources\Compute">
       <UniqueIdentifier>{ecc0eef3-6e42-45d2-8b9e-39514e6612c4}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\RenderObject">
       <UniqueIdentifier>{ccfb0542-e308-49c0-b3ff-0affd6bc1c66}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\FrameCompositor">
+      <UniqueIdentifier>{6af66a8c-48b8-4fd6-9718-1d4722af9c53}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\FrameCompositor\Tasks">
+      <UniqueIdentifier>{fd0882c9-9d4b-4a12-9a1c-ea1addcda019}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -146,16 +149,10 @@
       <Filter>Source Files\App</Filter>
     </ClCompile>
     <ClCompile Include="source\FrameCompositor.cpp">
-      <Filter>Source Files\Frame</Filter>
+      <Filter>Source Files\FrameCompositor</Filter>
     </ClCompile>
     <ClCompile Include="source\CompositorFileParser.cpp">
-      <Filter>Source Files\Frame</Filter>
-    </ClCompile>
-    <ClCompile Include="source\ShadowsRenderTask.cpp">
-      <Filter>Source Files\Frame</Filter>
-    </ClCompile>
-    <ClCompile Include="source\SceneRenderTask.cpp">
-      <Filter>Source Files\Frame</Filter>
+      <Filter>Source Files\FrameCompositor</Filter>
     </ClCompile>
     <ClCompile Include="source\RenderQueue.cpp">
       <Filter>Source Files\Scene</Filter>
@@ -166,11 +163,8 @@
     <ClCompile Include="source\EntityInstancing.cpp">
       <Filter>Source Files\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="source\VoxelizeSceneTask.cpp">
-      <Filter>Source Files\Frame</Filter>
-    </ClCompile>
     <ClCompile Include="source\FrameCompositorTaskBuild.cpp">
-      <Filter>Source Files\Frame</Filter>
+      <Filter>Source Files\FrameCompositor</Filter>
     </ClCompile>
     <ClCompile Include="source\BinaryModelLoader.cpp">
       <Filter>Source Files\Resources\Model</Filter>
@@ -195,6 +189,30 @@
     </ClCompile>
     <ClCompile Include="source\EntityGeometry.cpp">
       <Filter>Source Files\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ShaderConstantsProvider.cpp">
+      <Filter>Source Files\Resources\Shader</Filter>
+    </ClCompile>
+    <ClCompile Include="source\DebugOverlayTask.cpp">
+      <Filter>Source Files\FrameCompositor\Tasks</Filter>
+    </ClCompile>
+    <ClCompile Include="source\SceneRenderTask.cpp">
+      <Filter>Source Files\FrameCompositor\Tasks</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ShadowsRenderTask.cpp">
+      <Filter>Source Files\FrameCompositor\Tasks</Filter>
+    </ClCompile>
+    <ClCompile Include="source\VoxelizeSceneTask.cpp">
+      <Filter>Source Files\FrameCompositor\Tasks</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ScreenQuad.cpp">
+      <Filter>Source Files\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="source\SceneTestTask.cpp">
+      <Filter>Source Files\FrameCompositor\Tasks</Filter>
+    </ClCompile>
+    <ClCompile Include="source\AaMath.cpp">
+      <Filter>Source Files\Utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -304,19 +322,13 @@
       <Filter>Source Files\App</Filter>
     </ClInclude>
     <ClInclude Include="source\FrameCompositor.h">
-      <Filter>Source Files\Frame</Filter>
+      <Filter>Source Files\FrameCompositor</Filter>
     </ClInclude>
     <ClInclude Include="source\CompositorFileParser.h">
-      <Filter>Source Files\Frame</Filter>
-    </ClInclude>
-    <ClInclude Include="source\ShadowsRenderTask.h">
-      <Filter>Source Files\Frame</Filter>
-    </ClInclude>
-    <ClInclude Include="source\SceneRenderTask.h">
-      <Filter>Source Files\Frame</Filter>
+      <Filter>Source Files\FrameCompositor</Filter>
     </ClInclude>
     <ClInclude Include="source\RenderContext.h">
-      <Filter>Source Files\Frame</Filter>
+      <Filter>Source Files\FrameCompositor</Filter>
     </ClInclude>
     <ClInclude Include="source\RenderQueue.h">
       <Filter>Source Files\Scene</Filter>
@@ -326,9 +338,6 @@
     </ClInclude>
     <ClInclude Include="source\EntityInstancing.h">
       <Filter>Source Files\Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="source\VoxelizeSceneTask.h">
-      <Filter>Source Files\Frame</Filter>
     </ClInclude>
     <ClInclude Include="source\BinaryModelLoader.h">
       <Filter>Source Files\Resources\Model</Filter>
@@ -348,7 +357,7 @@
     <ClInclude Include="source\ShaderSignature.h">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClInclude>
-    <ClInclude Include="source\ShaderConstants.h">
+    <ClInclude Include="source\ShaderConstantsProvider.h">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClInclude>
     <ClInclude Include="source\GenerateMipsComputeShader.h">
@@ -362,6 +371,24 @@
     </ClInclude>
     <ClInclude Include="source\EntityGeometry.h">
       <Filter>Source Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="source\DebugOverlayTask.h">
+      <Filter>Source Files\FrameCompositor\Tasks</Filter>
+    </ClInclude>
+    <ClInclude Include="source\SceneRenderTask.h">
+      <Filter>Source Files\FrameCompositor\Tasks</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ShadowsRenderTask.h">
+      <Filter>Source Files\FrameCompositor\Tasks</Filter>
+    </ClInclude>
+    <ClInclude Include="source\VoxelizeSceneTask.h">
+      <Filter>Source Files\FrameCompositor\Tasks</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ScreenQuad.h">
+      <Filter>Source Files\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="source\SceneTestTask.h">
+      <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

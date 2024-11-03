@@ -37,6 +37,13 @@ struct SignatureInfo
 	};
 	std::vector<UAV> uavs;
 
+	struct StructuredBuffer
+	{
+		ShaderReflection::StructuredBuffer& info;
+		D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY(-1);
+	};
+	std::vector<StructuredBuffer> structuredBuffers;
+
 	CBuffer* rootBuffer = nullptr;
 	UINT textureTargets{};
 	bool hasVertexInput = false;

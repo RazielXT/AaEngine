@@ -55,7 +55,7 @@ void FrameCompositor::initializeCommands()
 			if (!generalCommands.commandList || (!syncPass && syncCount && needsPassResources(pushedAsyncResources, passData.info)))
 			{
 				buildSyncCommands();
-				generalCommands = generalCommandsArray.emplace_back(renderSystem->CreateCommandList(L"Compositor"));
+				generalCommands = generalCommandsArray.emplace_back(provider.renderSystem->CreateCommandList(L"Compositor"));
 				passData.startCommands = true;
 				syncCount = 0;
 			}
@@ -70,19 +70,29 @@ void FrameCompositor::initializeCommands()
 
 		if (pass.info.render == "Shadows")
 		{
-			pushAsyncTasks(pass.info, shadowRender.initialize(renderSystem, sceneMgr));
+			pushAsyncTasks(pass.info, shadowRender.initialize(provider.renderSystem, sceneMgr));
 		}
 		else if (pass.info.render == "VoxelScene")
 		{
-			pushAsyncTasks(pass.info, sceneVoxelize.initialize(renderSystem, sceneMgr, pass.target));
+			pushAsyncTasks(pass.info, sceneVoxelize.initialize(sceneMgr, pass.target));
+		}
+		else if (pass.info.render == "DebugOverlay")
+		{
+			debugOverlay.initialize(pass.target);
+			syncPass = true;
+		}
+		else if (pass.info.render == "Test")
+		{
+			testTask.initialize(sceneMgr, pass.target);
+			syncPass = true;
 		}
 		else if (pass.info.render == "Scene")
 		{
-			pushAsyncTasks(pass.info, sceneRender.initialize(renderSystem, sceneMgr, pass.target));
+			pushAsyncTasks(pass.info, sceneRender.initialize(sceneMgr, pass.target));
 		}
 		else if (pass.info.render == "SceneEarlyZ")
 		{
-			pushAsyncTasks(pass.info, sceneRender.initializeEarlyZ(renderSystem, sceneMgr));
+			pushAsyncTasks(pass.info, sceneRender.initializeEarlyZ(sceneMgr));
 		}
 		else
 		{

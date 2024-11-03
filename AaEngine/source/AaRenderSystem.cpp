@@ -59,7 +59,7 @@ AaRenderSystem::AaRenderSystem(AaWindow* mWindow)
 	{
 		swapChain->GetBuffer(n, IID_PPV_ARGS(&swapChainTextures[n]));
 	}
-	backbufferHeap.Init(device, FrameCount, L"BackbufferRTV");
+	backbufferHeap.Init(device, 1, FrameCount, L"BackbufferRTV");
 	backbuffer.InitExisting(swapChainTextures, device, width, height, FrameCount, backbufferHeap);
 
 	device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
@@ -139,6 +139,9 @@ void AaRenderSystem::StartCommandList(CommandsData commands)
 	// Reset command allocator and command list
 	commands.commandAllocators[frameIndex]->Reset();
 	commands.commandList->Reset(commands.commandAllocators[frameIndex], nullptr);
+
+	ID3D12DescriptorHeap* descriptorHeaps[] = { ResourcesManager::get().mainDescriptorHeap[frameIndex]};
+	commands.commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 }
 
 void AaRenderSystem::ExecuteCommandList(CommandsData commands)

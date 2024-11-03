@@ -10,8 +10,11 @@ FreeCamera::~FreeCamera()
 {
 }
 
+extern XMFLOAT3 currentCamPos;
 void FreeCamera::update(float time)
 {
+	currentCamPos = camera.getPosition();
+
 	if (!move)
 		return;
 
@@ -64,13 +67,9 @@ void FreeCamera::update(float time)
 			}
 		}
 
-		camera.setInCameraRotation(&dir);
+		camera.setInCameraRotation(dir);
 
-		dir.x += camera.getPosition().x;
-		dir.y += camera.getPosition().y;
-		dir.z += camera.getPosition().z;
-
-		camera.setPosition(dir);
+		camera.move(dir);
 	}
 }
 
@@ -138,13 +137,8 @@ bool FreeCamera::mouseMoved(int x, int y)
 	if (strafe)
 	{
 		XMFLOAT3 dir(x, y, 0);
-		camera.setInCameraRotation(&dir);
-
-		dir.x += camera.getPosition().x;
-		dir.y += camera.getPosition().y;
-		dir.z += camera.getPosition().z;
-
-		camera.setPosition(dir);
+		camera.setInCameraRotation(dir);
+		camera.move(dir);
 	}
 	else if (move)
 	{

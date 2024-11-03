@@ -11,3 +11,10 @@ pixel_shader psGrassLeaves
 	entry PSMain
 	profile ps_6_6
 }
+
+pixel_shader psGrassLeavesDepth
+{
+	file grass.hlsl
+	entry PSMainDepth
+	profile ps_6_6
+}

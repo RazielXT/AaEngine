@@ -101,6 +101,11 @@ compositor SceneCompositor
 		target Backbuffer
 	}
 
+	render DebugOverlay
+	{
+		target Backbuffer
+	}
+
 	render Imgui
 	{
 		target Backbuffer

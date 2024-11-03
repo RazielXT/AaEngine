@@ -96,24 +96,18 @@ bool AllDigits(std::string text)
 	return true;
 }
 
-int ParseRenderQueue(std::string_view renderQueue)
+Order ParseRenderQueue(std::string_view renderQueue)
 {
 	if (renderQueue == "skiesEarly")
-		return 0;
-
-	if (renderQueue == "main")
-		return 5;
-
-	if (renderQueue == "queue6")
-		return 6;
+		return Order(5);
 
 	if (auto q = strtoul(renderQueue.data(), 0, 10))
 	{
 		if (q <= 100)
-			return q;
+			return Order(q);
 	}
 
-	return 5;
+	return Order::Normal;
 }
 
 // void loadLight(const XmlParser::Element* lightElement, SceneNode* node, AaSceneManager* sceneMgr)
@@ -135,6 +129,83 @@ int ParseRenderQueue(std::string_view renderQueue)
 // 	}
 // }
 
+struct ExtensionFunction
+{
+	std::string name;
+	std::map<std::string, std::string> parameters;
+};
+
+std::vector<ExtensionFunction> parseExtensionFunctions(const std::string& input)
+{
+	std::vector<ExtensionFunction> functions;
+	std::stringstream ss(input);
+	std::string line;
+
+	while (std::getline(ss, line, ';'))
+	{
+		std::stringstream lineStream(line);
+		std::string functionName;
+		std::getline(lineStream, functionName, '(');
+
+		std::string params;
+		std::getline(lineStream, params, ')');
+
+		ExtensionFunction func;
+		func.name = functionName;
+
+		std::stringstream paramStream(params);
+		std::string param;
+
+		while (std::getline(paramStream, param, ','))
+		{
+			param.erase(std::remove_if(param.begin(), param.end(), ::isspace), param.end());
+
+			size_t colonPos = param.find(':');
+			if (colonPos != std::string::npos)
+			{
+				auto type = param.substr(0, colonPos);
+				auto value = param.substr(colonPos + 1);
+
+				func.parameters[type] = value;
+			}
+			else
+			{
+				func.parameters[std::to_string(func.parameters.size())] = param;
+			}
+		}
+
+		functions.push_back(func);
+	}
+
+	return functions;
+}
+
+void loadExtensions(const xml_node& element, AaEntity* ent, SceneNode* node, AaSceneManager* sceneMgr)
+{
+	auto extensions = parseExtensionFunctions(element.text().get());
+
+	for (auto& e : extensions)
+	{
+		if (e.name == "addGrass")
+		{
+			sceneMgr->createGrassEntity("grass" + ent->name, ent->getWorldBoundingBox());
+		}
+	}
+}
+
+void loadEntityUserData(const xml_node& element, AaEntity* ent, SceneNode* node, AaSceneManager* sceneMgr)
+{
+	pugi::xml_document subdoc;
+	if (subdoc.load_string(element.text().get()))
+	{
+		if (auto physicalElement = subdoc.child("PhysicalBody"))
+		{
+			if (auto extensionElement = physicalElement.child("Extension"))
+				loadExtensions(extensionElement, ent, node, sceneMgr);
+		}
+	}
+}
+
 std::map<MaterialInstance*, InstanceGroupDescription> instanceDescriptions;
 
 void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible, AaSceneManager* sceneMgr)
@@ -144,6 +215,7 @@ void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible, Aa
 	auto renderQueue = ParseRenderQueue(entityElement.attribute("renderQueue").value());
 
 	AaLogger::log("Loading entity " + name + " with mesh file " + mesh);
+	AaEntity* ent{};
 
 	for (const auto& element : entityElement.child("subentities").children())
 	{
@@ -161,8 +233,8 @@ void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible, Aa
 			break;
 		}
 
-		auto ent = sceneMgr->createEntity(name);
-		ent->order = (Order)renderQueue;
+		ent = sceneMgr->createEntity(name);
+		ent->order = renderQueue;
 		ent->material = material;
 		ent->geometry.fromModel(*model);
 		ent->setBoundingBox(model->bbox);
@@ -172,6 +244,11 @@ void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible, Aa
 		//ent->setVisible(visible);
 
 		break;
+	}
+
+	if (const auto& element = entityElement.child("userData"))
+	{
+		loadEntityUserData(element, ent, node, sceneMgr);
 	}
 }
 

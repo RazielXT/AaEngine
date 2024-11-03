@@ -3,7 +3,7 @@ material Depth
 	vertex_shader vsDepthWrite
 }
 
-material DepthInstanced
+material DepthInstancing
 {
 	vertex_shader vsDepthWriteInstancing
 }

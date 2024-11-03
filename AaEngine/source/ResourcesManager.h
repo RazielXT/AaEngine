@@ -33,10 +33,16 @@ public:
 	void createShaderResourceView(TextureResource& texture, UINT mipLevel = -1);
 	void createShaderResourceView(FileTexture& texture);
 	void createShaderResourceView(RenderTargetTexture& texture);
+	void createShaderResourceView(RenderTargetTexture& texture, UINT& descriptorOffset);
 	void createDepthShaderResourceView(RenderDepthTargetTexture& texture);
 	void createUAVView(TextureResource& texture);
 
+	UINT nextDescriptor(UINT offset, D3D12_SRV_DIMENSION) const;
+	UINT previousDescriptor(UINT offset, D3D12_SRV_DIMENSION) const;
+
 private:
+
+	std::vector<D3D12_SRV_DIMENSION> descriptorTypes;
 
 	UINT currentDescriptorCount = 0;
 	ID3D12Device* device{};

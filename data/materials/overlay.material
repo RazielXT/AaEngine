@@ -1,0 +1,9 @@
+material TexturePreview
+{
+	vertex_shader vsCustomQuad
+	pixel_shader psTexturePreview
+
+	culling none
+	depth off
+	sampler clamp bilinear
+}

@@ -28,20 +28,45 @@ MyListener::MyListener(AaRenderSystem* render)
 	AaShaderLibrary::get().loadShaderReferences(SHADER_DIRECTORY, false);
  	AaMaterialResources::get().loadMaterials(MATERIAL_DIRECTORY, false);
 
-	compositor = new FrameCompositor(render, sceneMgr, shadowMap);
+	compositor = new FrameCompositor({ gpuParams, render }, sceneMgr, shadowMap);
 	compositor->load(DATA_DIRECTORY + "frame.compositor");
 
 	Vector3(-1, -1, -1).Normalize(lights.directionalLight.direction);
 
  	SceneParser::load("test", sceneMgr, renderSystem);
 
-	auto grassEntity = sceneMgr->createEntity("grass");
-	grassEntity->material = AaMaterialResources::get().getMaterial("GrassLeaves");
-	auto grass = new GrassArea();
-	grass->initialize();
-	grassEntity->geometry.fromGrass(*grass);
-	grassEntity->setBoundingBox(grass->bbox);
-	grassEntity->setScale({ 1, 1, 1 });
+	{
+		tmpQueue = sceneMgr->createManualQueue();
+		tmpQueue.update({ { EntityChange::Add, sceneMgr->getEntity("Plane001") } });
+		tmpQueue.update({ { EntityChange::Add, sceneMgr->getEntity("Torus001") } });
+		heap.Init(renderSystem->device, tmpQueue.targets.size(), 1, L"tempHeap");
+		tmp.Init(renderSystem->device, 512, 512, 1, heap, tmpQueue.targets, true);
+		tmp.SetName(L"tmpTex");
+
+		ResourcesManager::get().createShaderResourceView(tmp);
+
+		AaCamera tmpCamera;
+		tmpCamera.setOrthographicCamera(100, 100, 1, 300);
+		tmpCamera.setPosition({ 81, 100, -72 });
+		tmpCamera.setDirection({ 0, -1, 0 });
+
+		sceneMgr->renderables.updateTransformation();
+
+		RenderInformation objInfo;
+		sceneMgr->renderables.updateRenderInformation(tmpCamera, objInfo);
+
+		auto commands = renderSystem->CreateCommandList(L"tempCmd");
+
+		renderSystem->StartCommandList(commands);
+
+		tmp.PrepareAsTarget(commands.commandList, 0);
+
+		tmpQueue.renderObjects(tmpCamera, objInfo, gpuParams, commands.commandList, 0);
+
+		tmp.PrepareAsView(commands.commandList, 0);
+
+		renderSystem->ExecuteCommandList(commands);
+	}
 
 	debugWindow.init(renderSystem);
 }
@@ -58,10 +83,10 @@ MyListener::~MyListener()
 	delete sceneMgr;
 }
 
-float elapsedTime = 0;
-
 bool MyListener::frameStarted(float timeSinceLastFrame)
 {
+	elapsedTime += timeSinceLastFrame;
+
 	InputHandler::consumeInput(*this);
 
  	cameraMan->update(timeSinceLastFrame);
@@ -87,8 +112,6 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 		ent->setPosition({ cos(elapsedTime / 2.f) * 5, ent->getPosition().y, ent->getPosition().z });
 	}
 
- 	elapsedTime += timeSinceLastFrame;
-
 	//Vector3(cos(elapsedTime), -1, sin(elapsedTime)).Normalize(sceneMgr->lights.directionalLight.direction);
 
 	if (debugWindow.state.reloadShaders)
@@ -99,16 +122,19 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 	}
 
 	sceneMgr->updateQueues();
+	sceneMgr->renderables.updateTransformation();
+
 	shadowMap->update(renderSystem->frameIndex);
 
-	RenderContext ctx = { &cameraMan->camera, renderSystem, &sceneMgr->renderables };
+	gpuParams.time = elapsedTime;
+	gpuParams.timeDelta = timeSinceLastFrame;
+	gpuParams.sunDirection = lights.directionalLight.direction;
+	XMStoreFloat4x4(&gpuParams.shadowMapViewProjectionTransposed, XMMatrixTranspose(shadowMap->camera[0].getViewProjectionMatrix()));
 
-	ctx.params.time = elapsedTime;
-	ctx.params.timeDelta = timeSinceLastFrame;
-	ctx.params.sunDirection = lights.directionalLight.direction;
-	XMStoreFloat4x4(&ctx.params.shadowMapViewProjectionTransposed, XMMatrixTranspose(shadowMap->camera[0].getViewProjectionMatrix()));
+	RenderContext ctx = { &cameraMan->camera, &sceneMgr->renderables };
+	compositor->render(ctx);
 
-	compositor->render(ctx, debugWindow);
+	Sleep(10);
 
 	return continue_rendering;
 }

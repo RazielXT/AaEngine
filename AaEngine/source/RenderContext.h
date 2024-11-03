@@ -6,14 +6,17 @@
 class AaCamera;
 class Renderables;
 
+struct RenderProvider
+{
+	FrameGpuParameters& params;
+	AaRenderSystem* renderSystem;
+};
+
 struct RenderContext
 {
 	AaCamera* camera;
-	AaRenderSystem* renderSystem;
 	Renderables* renderables;
-	RenderTargetTexture* target;
-
-	FrameGpuParameters params;
+	RenderTargetTexture* target{};
 };
 
 struct AsyncTaskInfo

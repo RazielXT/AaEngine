@@ -28,9 +28,9 @@ struct EntityGeometry
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 	D3D12_INDEX_BUFFER_VIEW indexBufferView;
 
-	CbufferView geometryCustomBuffer;
+	D3D12_GPU_VIRTUAL_ADDRESS geometryCustomBuffer{};
 
 	void fromModel(const AaModel& model);
 	void fromInstancedModel(const AaModel& model, InstanceGroup& group);
-	void fromGrass(const GrassArea& grass);
+	void fromGrass(GrassArea& grass);
 };

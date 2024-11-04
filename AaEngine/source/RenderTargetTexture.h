@@ -58,6 +58,9 @@ public:
 	void Init(ID3D12Device* device, UINT width, UINT height, UINT frameCount, RenderTargetHeap& heap, const std::vector<DXGI_FORMAT>& formats, bool depthBuffer = true);
 	void InitExisting(ID3D12Resource**, ID3D12Device* device, UINT width, UINT height, UINT frameCount, RenderTargetHeap& heap, DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM);
 
+	void PrepareAsSingleTarget(ID3D12GraphicsCommandList* commandList, UINT frameIndex, UINT textureIndex, D3D12_RESOURCE_STATES from, bool clear = true, bool depth = true, bool clearDepth = true);
+	void PrepareAsSingleView(ID3D12GraphicsCommandList* commandList, UINT frameIndex, UINT textureIndex, D3D12_RESOURCE_STATES from);
+
 	void PrepareAsTarget(ID3D12GraphicsCommandList* commandList, UINT frameIndex, bool clear = true, bool depth = true, bool clearDepth = true);
 	void PrepareAsView(ID3D12GraphicsCommandList* commandList, UINT frameIndex);
 	void PrepareToPresent(ID3D12GraphicsCommandList* commandList, UINT frameIndex);

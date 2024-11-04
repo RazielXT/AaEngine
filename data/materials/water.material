@@ -1,0 +1,20 @@
+material WaterLake
+{
+	vertex_shader vsWaterLake
+	pixel_shader psWaterLake
+
+	culling none
+	blend alpha
+
+	texture Diffuse
+	{
+		file water.dds
+	}
+	texture Height
+	{
+		file waterHeight.dds
+	}
+
+	technique Depth skip
+	technique Voxelize skip
+}

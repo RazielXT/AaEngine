@@ -8,6 +8,9 @@ void RenderQueue::update(const EntityChanges& changes)
 	{
 		if (change == EntityChange::Add)
 		{
+			if (entity->order != targetOrder)
+				continue;
+
 			auto matInstance = entity->material;
 			if (technique != MaterialTechnique::Default)
 			{
@@ -69,6 +72,9 @@ void RenderQueue::renderObjects(AaCamera& camera, const RenderInformation& info,
 
 	for (auto& [order, entities] : entityOrder)
 	{
+		if (targetOrder != order)
+			continue;
+
 		for (auto& entry : entities)
 		{
 			if (!entry.entity->isVisible(info.visibility))

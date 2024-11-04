@@ -31,6 +31,12 @@ compositor SceneCompositor
 		target sceneTexture
 	}
 
+	render SceneTransparent
+	{
+		//input sceneTexture depth_buffer
+		target sceneTexture 1
+	}
+
 	pass BloomDownscale
 	{
 		material PassThrough

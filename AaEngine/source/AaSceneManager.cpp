@@ -45,17 +45,18 @@ AaEntity* AaSceneManager::getEntity(std::string name) const
 	return nullptr;
 }
 
-RenderQueue* AaSceneManager::createQueue(const std::vector<DXGI_FORMAT>& targets, MaterialTechnique technique)
+RenderQueue* AaSceneManager::createQueue(const std::vector<DXGI_FORMAT>& targets, MaterialTechnique technique, Order order)
 {
 	for (auto& q : queues)
 	{
-		if (q->targets == targets && q->technique == technique)
+		if (q->targets == targets && q->technique == technique && q->targetOrder == order)
 			return q.get();
 	}
 
 	auto queue = std::make_unique<RenderQueue>();
 	queue->targets = targets;
 	queue->technique = technique;
+	queue->targetOrder = order;
 
 	return queues.emplace_back(std::move(queue)).get();
 }

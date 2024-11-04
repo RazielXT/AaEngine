@@ -90,6 +90,10 @@ void FrameCompositor::initializeCommands()
 		{
 			pushAsyncTasks(pass.info, sceneRender.initialize(sceneMgr, pass.target));
 		}
+		else if (pass.info.render == "SceneTransparent")
+		{
+			pushAsyncTasks(pass.info, sceneRender.initializeTransparent(sceneMgr, pass.target));
+		}
 		else if (pass.info.render == "SceneEarlyZ")
 		{
 			pushAsyncTasks(pass.info, sceneRender.initializeEarlyZ(sceneMgr));

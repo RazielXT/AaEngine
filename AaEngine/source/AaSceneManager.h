@@ -20,7 +20,7 @@ public:
 
 	AaEntity* getEntity(std::string name) const;
 
-	RenderQueue* createQueue(const std::vector<DXGI_FORMAT>& targets, MaterialTechnique technique = MaterialTechnique::Default);
+	RenderQueue* createQueue(const std::vector<DXGI_FORMAT>& targets, MaterialTechnique technique = MaterialTechnique::Default, Order order = Order::Normal);
 
 	RenderQueue createManualQueue(MaterialTechnique technique = MaterialTechnique::Default);
 

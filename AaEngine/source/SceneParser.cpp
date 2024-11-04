@@ -241,6 +241,10 @@ void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible, Aa
 		ent->setPosition(node->position);
 		ent->setScale(node->scale);
 		ent->setOrientation(node->orientation);
+
+		if (material->IsTransparent() && renderQueue < Order::Transparent)
+			ent->order = Order::Transparent;
+
 		//ent->setVisible(visible);
 
 		break;

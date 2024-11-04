@@ -16,6 +16,7 @@ public:
 	~SceneRenderTask();
 
 	AsyncTasksInfo initialize(AaSceneManager* sceneMgr, RenderTargetTexture* target);
+	AsyncTasksInfo initializeTransparent(AaSceneManager* sceneMgr, RenderTargetTexture* target);
 	AsyncTasksInfo initializeEarlyZ(AaSceneManager* sceneMgr);
 	void prepare(RenderContext& ctx, CommandsData& syncCommands);
 
@@ -28,6 +29,7 @@ public:
 	};
 	Work earlyZ;
 	Work scene;
+	Work transparent;
 
 	bool running = true;
 
@@ -38,8 +40,10 @@ public:
 private:
 
 	void renderScene();
+	void renderTransparentScene();
 	void renderEarlyZ();
 
 	RenderQueue* depthQueue;
 	RenderQueue* sceneQueue;
+	RenderQueue* transparentQueue;
 };

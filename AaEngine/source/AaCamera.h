@@ -25,7 +25,7 @@ public:
 
 	void move(Vector3 position);
 	void setPosition(Vector3 position);
-	void setInCameraRotation(XMFLOAT3& direction) const;
+	void setInCameraRotation(Vector3& direction) const;
 
 	void yaw(float Yaw);
 	void pitch(float Pitch);

@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <windows.h>
 
-enum class MouseButton { Left, Right };
+enum class MouseButton { Left, Right, Middle };
 
 class InputListener
 {
@@ -15,6 +15,7 @@ public:
 	virtual bool mousePressed(MouseButton button) = 0;
 	virtual bool mouseReleased(MouseButton button) = 0;
 	virtual bool mouseMoved(int x, int y) = 0;
+	virtual bool mouseWheel(float change) = 0;
 };
 
 namespace InputHandler

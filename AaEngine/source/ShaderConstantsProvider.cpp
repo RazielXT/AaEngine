@@ -21,6 +21,11 @@ XMMATRIX ShaderConstantsProvider::getViewProjectionMatrix() const
 	return camera.getViewProjectionMatrix();
 }
 
+DirectX::XMFLOAT3 ShaderConstantsProvider::getWorldPosition() const
+{
+	return entity->getPosition();
+}
+
 DirectX::XMFLOAT3 ShaderConstantsProvider::getCameraPosition() const
 {
 	return camera.getPosition();

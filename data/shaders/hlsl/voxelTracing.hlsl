@@ -221,7 +221,7 @@ PSOutput PS_Main(PS_Input pin)
 
 	PSOutput output;
     output.target0 = color1;
-	output.target1 = color1 * color1 * directLight * 3;
+	output.target1 = color1 * color1 * 3;
 
 	return output;
 }

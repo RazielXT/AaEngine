@@ -64,6 +64,7 @@ struct ResourcesInfo
 		TIME,
 		VIEWPORT_SIZE_INV,
 		CAMERA_POSITION,
+		WORLD_POSITION,
 	};
 	struct AutoParamInfo
 	{

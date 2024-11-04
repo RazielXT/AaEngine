@@ -20,10 +20,13 @@ public:
 	bool mouseMoved(int x, int y);
 	bool mousePressed(MouseButton button);
 	bool mouseReleased(MouseButton button);
+	bool mouseWheel(float change);
 
 	AaCamera camera;
 
 private:
+
+	float wheelDiff{};
 
 	float mouseX{}, mouseY{};
 	bool w{}, s{}, a{}, d{}, turbo{}, move{};

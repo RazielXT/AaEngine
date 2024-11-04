@@ -25,6 +25,7 @@ public:
 	bool mousePressed(MouseButton button) override;
 	bool mouseReleased(MouseButton button) override;
 	bool mouseMoved(int x, int y) override;
+	bool mouseWheel(float change) override;
 
 	void onScreenResize() override;
 

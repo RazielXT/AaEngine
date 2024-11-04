@@ -20,6 +20,7 @@ public:
 	XMMATRIX getWorldMatrix() const;
 	XMMATRIX getViewProjectionMatrix() const;
 
+	XMFLOAT3 getWorldPosition() const;
 	XMFLOAT3 getCameraPosition() const;
 
 	D3D12_GPU_VIRTUAL_ADDRESS getGeometryBuffer() const;

@@ -32,6 +32,15 @@ void InputHandler::consumeInput(InputListener& listener)
 		case WM_RBUTTONUP:
 			listener.mouseReleased(MouseButton::Right);
 			break;
+		case WM_MBUTTONDOWN:
+			listener.mousePressed(MouseButton::Middle);
+			break;
+		case WM_MBUTTONUP:
+			listener.mouseReleased(MouseButton::Middle);
+			break;
+		case WM_MOUSEWHEEL:
+			listener.mouseWheel(GET_WHEEL_DELTA_WPARAM(i.wParam) / float(WHEEL_DELTA));
+			break;
 		}
 	}
 
@@ -46,6 +55,9 @@ bool InputHandler::handleMessage(uint32_t message, WPARAM wParam, LPARAM lParam)
 	case WM_LBUTTONUP:
 	case WM_RBUTTONDOWN:
 	case WM_RBUTTONUP:
+	case WM_MBUTTONDOWN:
+	case WM_MBUTTONUP:
+	case WM_MOUSEWHEEL:
 	case WM_KEYDOWN:
 	case WM_KEYUP:
 		inputs.push_back({ message, (int)wParam, (int)lParam });

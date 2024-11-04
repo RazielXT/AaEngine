@@ -172,6 +172,11 @@ void MyListener::onScreenResize()
 	compositor->reloadTextures();
 }
 
+bool MyListener::mouseWheel(float change)
+{
+	return cameraMan->mouseWheel(change);
+}
+
 bool MyListener::mousePressed(MouseButton button)
 {
 	return cameraMan->mousePressed(button);

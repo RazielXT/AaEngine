@@ -15,60 +15,29 @@ void FreeCamera::update(float time)
 {
 	currentCamPos = camera.getPosition();
 
-	if (!move)
-		return;
+	Vector3 dir;
 
-	XMFLOAT3 dir(0, 0, 0);
 	float speed = 30 * time;
-	if (turbo) speed *= 5;
+	if (turbo)
+		speed *= 5;
 
-	if (w || s || a || d)
+	if (w)
+		dir.z += speed;
+	else if (s)
+		dir.z -= speed;
+
+	if (a)
+		dir.x -= speed;
+	else if (d)
+		dir.x += speed;
+
+	dir.z += wheelDiff * 5;
+	wheelDiff = 0;
+
+	if (dir != Vector3::Zero)
 	{
-		if (!a && !d)
-		{
-			if (w) { dir.z = speed; }
-			if (s) { dir.z = -speed; }
-		}
-		else
-		{
-			if (d)
-			{
-				if (!w && !s)
-				{
-					dir.x = speed;
-				}
-				else if (w)
-				{
-					dir.x = 0.7f * speed;
-					dir.z = 0.7f * speed;
-				}
-				else if (s)
-				{
-					dir.x = 0.7f * speed; dir.z = -0.7f * speed;
-				}
-			}
-
-			if (a)
-			{
-				if (!w && !s)
-				{
-					dir.x = -speed;
-				}
-				else if (w)
-				{
-					dir.x = -0.7f * speed;
-					dir.z = 0.7f * speed;
-				}
-				else if (s)
-				{
-					dir.x = -0.7f * speed;
-					dir.z = -0.7f * speed;
-				}
-			}
-		}
-
+		dir.Normalize();
 		camera.setInCameraRotation(dir);
-
 		camera.move(dir);
 	}
 }
@@ -136,7 +105,7 @@ bool FreeCamera::mouseMoved(int x, int y)
 {
 	if (strafe)
 	{
-		XMFLOAT3 dir(x, y, 0);
+		Vector3 dir(x, y, 0);
 		camera.setInCameraRotation(dir);
 		camera.move(dir);
 	}
@@ -155,7 +124,7 @@ bool FreeCamera::mousePressed(MouseButton button)
 	{
 		move = true;
 	}
-	if (button == MouseButton::Left)
+	if (button == MouseButton::Middle)
 	{
 		strafe = true;
 	}
@@ -170,10 +139,16 @@ bool FreeCamera::mouseReleased(MouseButton button)
 		move = false;
 		w = s = a = d = turbo = move = false;
 	}
-	if (button == MouseButton::Left)
+	if (button == MouseButton::Middle)
 	{
 		strafe = false;
 	}
 
+	return true;
+}
+
+bool FreeCamera::mouseWheel(float change)
+{
+	wheelDiff += change;
 	return true;
 }

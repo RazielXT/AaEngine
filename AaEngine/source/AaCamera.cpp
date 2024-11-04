@@ -86,7 +86,7 @@ void AaCamera::setPosition(Vector3 p)
 	dirty = true;
 }
 
-void AaCamera::setInCameraRotation(XMFLOAT3& direction) const
+void AaCamera::setInCameraRotation(Vector3& direction) const
 {
 	direction.x *= -1;
 

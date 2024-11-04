@@ -301,6 +301,8 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData() const
 				type = ResourcesInfo::AutoParam::SUN_DIRECTION;
 			else if (p.Name == "CameraPosition")
 				type = ResourcesInfo::AutoParam::CAMERA_POSITION;
+			else if (p.Name == "WorldPosition")
+				type = ResourcesInfo::AutoParam::WORLD_POSITION;
 
 			if (type != ResourcesInfo::AutoParam::None)
 				resources->autoParams.emplace_back(type, rootIndex, (UINT)(p.StartOffset / sizeof(float)));

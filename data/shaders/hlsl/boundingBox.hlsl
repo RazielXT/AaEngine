@@ -1,5 +1,7 @@
 float4x4 WorldViewProjectionMatrix;
 float4x4 WorldMatrix;
+float3 WorldPosition;
+float3 CameraPosition;
 
 struct VSInput
 {
@@ -46,7 +48,9 @@ struct PSOutput
 
 float getLimit(float thickness)
 {
-	float limit = 0.1 * min(0.9, thickness / 30);
+	float distScale = length(WorldPosition - CameraPosition) / 5;
+
+	float limit = 0.1 * min(0.8,  thickness / distScale);
 	limit += 0.4;
 
 	return limit;
@@ -54,17 +58,20 @@ float getLimit(float thickness)
 
 PSOutput PSMain(PSInput input)
 {
-	input.uv.x = input.uv.x - 0.5;
-	input.uv.y = input.uv.y - 0.5;
+	input.uv.x = abs(input.uv.x - 0.5);
+	input.uv.y = abs(input.uv.y - 0.5);
 
 	float limit = getLimit(input.thickness);
 
-	if (abs(input.uv.x) < limit && abs(input.uv.y) < limit)
+	if (input.uv.x < limit && input.uv.y < limit)
 		discard;
 
+	float shade = 1 - input.uv.x * input.uv.y * 2;
+	float4 outColor = float4(1,1,1,1) * shade;
+
 	PSOutput output;
-    output.target0 = input.color;
-	output.target1 = input.color;
+    output.target0 = outColor;
+	output.target1 = outColor;
 
 	return output;
 }

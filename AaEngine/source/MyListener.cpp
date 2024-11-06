@@ -40,7 +40,7 @@ MyListener::MyListener(AaRenderSystem* render)
 		tmpQueue.update({ { EntityChange::Add, sceneMgr->getEntity("Plane001") } });
 		tmpQueue.update({ { EntityChange::Add, sceneMgr->getEntity("Torus001") } });
 		heap.Init(renderSystem->device, tmpQueue.targets.size(), 1, L"tempHeap");
-		tmp.Init(renderSystem->device, 512, 512, 1, heap, tmpQueue.targets, true);
+		tmp.Init(renderSystem->device, 512, 512, 1, heap, tmpQueue.targets, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
 		tmp.SetName(L"tmpTex");
 
 		ResourcesManager::get().createShaderResourceView(tmp);
@@ -59,11 +59,11 @@ MyListener::MyListener(AaRenderSystem* render)
 
 		renderSystem->StartCommandList(commands);
 
-		tmp.PrepareAsTarget(commands.commandList, 0);
+		tmp.PrepareAsTarget(commands.commandList, 0, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 		tmpQueue.renderObjects(tmpCamera, objInfo, gpuParams, commands.commandList, 0);
 
-		tmp.PrepareAsView(commands.commandList, 0);
+		tmp.PrepareAsView(commands.commandList, 0, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 		renderSystem->ExecuteCommandList(commands);
 	}

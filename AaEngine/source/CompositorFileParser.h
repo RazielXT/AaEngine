@@ -15,16 +15,20 @@ struct CompositorTexture
 	bool depthBuffer = false;
 };
 
+constexpr UINT AllTargets = -1;
+
 struct CompositorPass
 {
 	std::string name;
 	std::string target;
+	UINT targetIndex = AllTargets;
 
 	std::string render;
 	std::string after;
 
 	std::string material;
 	std::vector<std::pair<std::string, UINT>> inputs;
+	std::vector<std::string> params;
 };
 
 struct CompositorInfo

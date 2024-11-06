@@ -1,21 +1,20 @@
 #pragma once
 
-#include "RenderContext.h"
+#include "CompositorTask.h"
 #include "ScreenQuad.h"
 
 class AaMaterial;
 
-class DebugOverlayTask
+class DebugOverlayTask : CompositorTask
 {
 public:
 
 	DebugOverlayTask(RenderProvider);
 	~DebugOverlayTask();
 
-	AsyncTasksInfo initialize(RenderTargetTexture* target);
-
-	void resize(RenderTargetTexture* target);
-	void prepare(RenderContext& ctx, CommandsData& syncCommands);
+	AsyncTasksInfo initialize(AaSceneManager* sceneMgr, RenderTargetTexture* target) override;
+	void resize(RenderTargetTexture* target) override;
+	void run(RenderContext& ctx, CommandsData& syncCommands) override;
 
 private:
 

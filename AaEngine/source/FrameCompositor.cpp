@@ -30,6 +30,8 @@ void FrameCompositor::load(CompositorInfo i)
 		passes.emplace_back(p);
 	}
 
+	initializeTextureStates();
+
 	UINT textureCount = 0;
 	for (auto& t : info.textures)
 		textureCount += t.formats.size();
@@ -42,13 +44,8 @@ void FrameCompositor::load(CompositorInfo i)
 		const auto& passInfo = info.passes[i];
 		auto& pass = passes[i];
 
-		if (!passInfo.material.empty() && pass.target)
-			pass.material = AaMaterialResources::get().getMaterial(passInfo.material)->Assign({}, pass.target->formats);
-	}
-
-	if (!passes.empty() && passes.back().target == &provider.renderSystem->backbuffer)
-	{
-		passes.back().present = true;
+		if (!passInfo.material.empty() && pass.target.texture)
+			pass.material = AaMaterialResources::get().getMaterial(passInfo.material)->Assign({}, pass.target.texture->formats);
 	}
 
 	initializeCommands();
@@ -80,8 +77,10 @@ void FrameCompositor::reloadTextures()
 			h = provider.renderSystem->getWindow()->getHeight() * t.height;
 		}
 
+		auto lastState = getInitialTextureState(t.name);
+
 		RenderTargetTexture& tex = textures[t.name];
-		tex.Init(provider.renderSystem->device, w, h, provider.renderSystem->FrameCount, rtvHeap, t.formats, t.depthBuffer);
+		tex.Init(provider.renderSystem->device, w, h, provider.renderSystem->FrameCount, rtvHeap, t.formats, lastState, t.depthBuffer);
 		tex.SetName(std::wstring(t.name.begin(), t.name.end()).c_str());
 
 		if (reusedHeapDescriptors.empty())
@@ -92,23 +91,23 @@ void FrameCompositor::reloadTextures()
 
 	for (auto& p : passes)
 	{
-		p.inputs.clear();
-		for (auto& [name, idx] : p.info.inputs)
+		for (UINT i = 0; auto& [name, idx] : p.info.inputs)
 		{
-			p.inputs.push_back(&textures[name].textures[idx].textureView);
+			p.inputs[i].view = &textures[name].textures[idx].textureView;
+			p.inputs[i++].texture = &textures[name];
 		}
 
 		if (!p.info.target.empty())
 		{
 			if (p.info.target == "Backbuffer")
-				p.target = &provider.renderSystem->backbuffer;
+				p.target.texture = &provider.renderSystem->backbuffer;
 			else
-				p.target = &textures[p.info.target];
+				p.target.texture = &textures[p.info.target];
 		}
 
 		if (p.info.render == "DebugOverlay")
 		{
-			debugOverlay.resize(p.target);
+			debugOverlay.resize(p.target.texture);
 		}
 	}
 }
@@ -137,67 +136,57 @@ void FrameCompositor::render(RenderContext& ctx)
 		if (pass.startCommands)
 			provider.renderSystem->StartCommandList(generalCommands);
 
-		ctx.target = pass.target;
+		ctx.target = pass.target.texture;
 
-		if (pass.target)
+		if (pass.target.texture)
 		{
-			provider.params.inverseViewportSize = { 1.f / pass.target->width, 1.f / pass.target->height };
+			provider.params.inverseViewportSize = { 1.f / pass.target.texture->width, 1.f / pass.target.texture->height };
 		}
 
 		if (pass.material)
 		{
- 			pass.target->PrepareAsTarget(generalCommands.commandList, provider.renderSystem->frameIndex, false, false);
+ 			pass.target.texture->PrepareAsTarget(generalCommands.commandList, provider.renderSystem->frameIndex, pass.target.previousState, false, false);
 
-			for (UINT i = 0; i < pass.inputs.size(); i++)
-				pass.material->SetTexture(*pass.inputs[i], i);
+			for (UINT i = 0; auto & input : pass.inputs)
+			{
+				input.texture->PrepareAsView(generalCommands.commandList, provider.renderSystem->frameIndex, input.previousState);
+				pass.material->SetTexture(*input.view, i++);
+			}
 
  			RenderQuad(pass.material, provider, ctx, generalCommands.commandList, provider.renderSystem->frameIndex);
-
-			if (pass.present)
-				pass.target->PrepareToPresent(generalCommands.commandList, provider.renderSystem->frameIndex);
-			else
-				pass.target->PrepareAsView(generalCommands.commandList, provider.renderSystem->frameIndex);
 		}
 		else if (pass.info.render == "Shadows")
 		{
-			shadowRender.prepare(ctx, generalCommands);
+			shadowRender.run(ctx, generalCommands);
 		}
 		else if (pass.info.render == "Scene")
 		{
-			sceneRender.prepare(ctx, generalCommands);
+			sceneRender.run(ctx, generalCommands);
 		}
 		else if (pass.info.render == "VoxelScene")
 		{
-			sceneVoxelize.prepare(ctx, generalCommands);
+			sceneVoxelize.run(ctx, generalCommands);
 		}
 		else if (pass.info.render == "Test")
 		{
-			testTask.prepare(ctx, generalCommands);
+			testTask.run(ctx, generalCommands);
 		}
 		else if (pass.info.render == "DebugOverlay")
 		{
-			pass.target->PrepareAsTarget(generalCommands.commandList, provider.renderSystem->frameIndex, false, false);
+			pass.target.texture->PrepareAsTarget(generalCommands.commandList, provider.renderSystem->frameIndex, pass.target.previousState, false, false);
 
-			debugOverlay.prepare(ctx, generalCommands);
-
-			if (pass.present)
-				pass.target->PrepareToPresent(generalCommands.commandList, provider.renderSystem->frameIndex);
-			else
-				pass.target->PrepareAsView(generalCommands.commandList, provider.renderSystem->frameIndex);
+			debugOverlay.run(ctx, generalCommands);
 		}
 		else if (pass.info.render == "Imgui")
 		{
-			pass.target->PrepareAsTarget(generalCommands.commandList, provider.renderSystem->frameIndex, false);
+			pass.target.texture->PrepareAsTarget(generalCommands.commandList, provider.renderSystem->frameIndex, pass.target.previousState, false);
 
 			imgui::DebugWindow::Get().draw(generalCommands.commandList);
-
-			if (pass.present)
-				pass.target->PrepareToPresent(generalCommands.commandList, provider.renderSystem->frameIndex);
-			else
-				pass.target->PrepareAsView(generalCommands.commandList, provider.renderSystem->frameIndex);
 		}
+
+		if (pass.target.present)
+			pass.target.texture->PrepareToPresent(generalCommands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	}
-	testTask.finish();
 	executeCommands();
 
 	provider.renderSystem->Present();

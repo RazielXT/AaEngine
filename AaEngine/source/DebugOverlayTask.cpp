@@ -11,7 +11,7 @@ DebugOverlayTask::~DebugOverlayTask()
 {
 }
 
-AsyncTasksInfo DebugOverlayTask::initialize(RenderTargetTexture* target)
+AsyncTasksInfo DebugOverlayTask::initialize(AaSceneManager*, RenderTargetTexture* target)
 {
 	material = AaMaterialResources::get().getMaterial("TexturePreview")->Assign({}, target->formats);
 
@@ -23,7 +23,7 @@ void DebugOverlayTask::resize(RenderTargetTexture* target)
 	quad.SetPosition({ }, 0.5f, ScreenQuad::TopRight, target->width / float(target->height));
 }
 
-void DebugOverlayTask::prepare(RenderContext& ctx, CommandsData& syncCommands)
+void DebugOverlayTask::run(RenderContext& ctx, CommandsData& syncCommands)
 {
 	auto idx = imgui::DebugWindow::Get().state.TexturePreviewIndex;
 

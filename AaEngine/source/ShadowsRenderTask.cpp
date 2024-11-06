@@ -24,7 +24,7 @@ ShadowsRenderTask::~ShadowsRenderTask()
 	}
 }
 
-AsyncTasksInfo ShadowsRenderTask::initialize(AaRenderSystem* renderSystem, AaSceneManager* sceneMgr)
+AsyncTasksInfo ShadowsRenderTask::initialize(AaSceneManager* sceneMgr, RenderTargetTexture*)
 {
 	depthQueue = sceneMgr->createQueue({}, MaterialTechnique::Depth);
 
@@ -34,7 +34,7 @@ AsyncTasksInfo ShadowsRenderTask::initialize(AaRenderSystem* renderSystem, AaSce
 	{
 		shadow.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
 		shadow.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
-		shadow.commands = renderSystem->CreateCommandList(L"Shadows");
+		shadow.commands = provider.renderSystem->CreateCommandList(L"Shadows");
 
 		shadow.worker = std::thread([this, idx = tasks.size()]
 			{
@@ -47,11 +47,11 @@ AsyncTasksInfo ShadowsRenderTask::initialize(AaRenderSystem* renderSystem, AaSce
 					auto& info = shadow.renderablesData;
 					ctx.renderables->updateRenderInformation(shadowMaps.camera[idx], info);
 
-					shadowMaps.texture[idx].PrepareAsDepthTarget(shadow.commands.commandList, provider.renderSystem->frameIndex);
+					shadowMaps.texture[idx].PrepareAsDepthTarget(shadow.commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 					depthQueue->renderObjects(shadowMaps.camera[idx], info, provider.params, shadow.commands.commandList, provider.renderSystem->frameIndex);
 
-					shadowMaps.texture[idx].PrepareAsDepthView(shadow.commands.commandList, provider.renderSystem->frameIndex);
+					shadowMaps.texture[idx].PrepareAsDepthView(shadow.commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
 					SetEvent(shadow.eventFinish);
 				}
@@ -63,7 +63,7 @@ AsyncTasksInfo ShadowsRenderTask::initialize(AaRenderSystem* renderSystem, AaSce
 	return tasks;
 }
 
-void ShadowsRenderTask::prepare(RenderContext& renderCtx, CommandsData&)
+void ShadowsRenderTask::run(RenderContext& renderCtx, CommandsData&)
 {
 	ctx = renderCtx;
 

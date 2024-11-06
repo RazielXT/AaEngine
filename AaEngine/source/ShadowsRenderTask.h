@@ -1,21 +1,21 @@
 #pragma once
 
-#include "RenderContext.h"
+#include "CompositorTask.h"
 #include "RenderQueue.h"
 #include <thread>
 
 class AaShadowMap;
 class AaSceneManager;
 
-class ShadowsRenderTask
+class ShadowsRenderTask : public CompositorTask
 {
 public:
 
 	ShadowsRenderTask(RenderProvider provider, AaShadowMap& shadows);
 	~ShadowsRenderTask();
 
-	AsyncTasksInfo initialize(AaRenderSystem* renderSystem, AaSceneManager* sceneMgr);
-	void prepare(RenderContext& ctx, CommandsData& syncCommands);
+	AsyncTasksInfo initialize(AaSceneManager* sceneMgr, RenderTargetTexture* target) override;
+	void run(RenderContext& ctx, CommandsData& syncCommands) override;
 
 	struct 
 	{

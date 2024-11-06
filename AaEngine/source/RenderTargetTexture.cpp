@@ -1,12 +1,12 @@
 #include "RenderTargetTexture.h"
 #include "directx\d3dx12.h"
 
-void RenderDepthTargetTexture::Init(ID3D12Device* device, UINT w, UINT h, UINT frameCount, UINT arraySize)
+void RenderDepthTargetTexture::Init(ID3D12Device* device, UINT w, UINT h, UINT frameCount, D3D12_RESOURCE_STATES initialState, UINT arraySize)
 {
 	width = w;
 	height = h;
 
-	CreateDepthBuffer(device, frameCount, arraySize);
+	CreateDepthBuffer(device, frameCount, initialState, arraySize);
 }
 
 void RenderTargetHeap::Init(ID3D12Device* device, UINT count, UINT frameCount, const wchar_t* name)
@@ -32,7 +32,7 @@ void RenderTargetHeap::CreateRenderTargetHandle(ID3D12Device* device, ComPtr<ID3
 	handlesCount++;
 }
 
-void RenderTargetTexture::Init(ID3D12Device* device, UINT w, UINT h, UINT frameCount, RenderTargetHeap& heap, const std::vector<DXGI_FORMAT>& f, bool depthBuffer)
+void RenderTargetTexture::Init(ID3D12Device* device, UINT w, UINT h, UINT frameCount, RenderTargetHeap& heap, const std::vector<DXGI_FORMAT>& f, D3D12_RESOURCE_STATES state, bool depthBuffer)
 {
 	width = w;
 	height = h;
@@ -41,7 +41,7 @@ void RenderTargetTexture::Init(ID3D12Device* device, UINT w, UINT h, UINT frameC
 	for (auto format : f)
 	{
 		auto& t = textures.emplace_back();
-		CreateTextureBuffer(device, width, height, frameCount, t, format);
+		CreateTextureBuffer(device, width, height, frameCount, t, format, state);
 	}
 
 	for (int i = 0; i < frameCount; i++)
@@ -70,15 +70,13 @@ void RenderTargetTexture::InitExisting(ID3D12Resource** textureSource, ID3D12Dev
 	for (int i = 0; i < frameCount; i++)
 	{
 		t.texture[i].Attach(textureSource[i]);
-		rtvLastState[i] = D3D12_RESOURCE_STATE_PRESENT;
-
 		heap.CreateRenderTargetHandle(device, t.texture[i], rtvHandles[i].emplace_back());
 	}
 
 	RenderDepthTargetTexture::Init(device, width, height, frameCount);
 }
 
-void RenderDepthTargetTexture::CreateDepthBuffer(ID3D12Device* device, UINT frameCount, UINT arraySize)
+void RenderDepthTargetTexture::CreateDepthBuffer(ID3D12Device* device, UINT frameCount, D3D12_RESOURCE_STATES initialState, UINT arraySize)
 {
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
 	dsvHeapDesc.NumDescriptors = frameCount;
@@ -112,13 +110,12 @@ void RenderDepthTargetTexture::CreateDepthBuffer(ID3D12Device* device, UINT fram
 			&heapProps,
 			D3D12_HEAP_FLAG_NONE,
 			&depthStencilResDesc,
-			D3D12_RESOURCE_STATE_DEPTH_WRITE,
+			initialState,
 			&clearValue,
 			IID_PPV_ARGS(&depthStencilTexture[n])
 		);
 
 		dsvHandles[n] = CD3DX12_CPU_DESCRIPTOR_HANDLE(dsvHeap->GetCPUDescriptorHandleForHeapStart(), n, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV));
-		dsvLastState[n] = D3D12_RESOURCE_STATE_DEPTH_WRITE;
 
 		if (arraySize > 1)
 		{
@@ -135,7 +132,7 @@ void RenderDepthTargetTexture::CreateDepthBuffer(ID3D12Device* device, UINT fram
 	}
 }
 
-void RenderTargetTexture::CreateTextureBuffer(ID3D12Device* device, UINT width, UINT height, UINT frameCount, Texture& t, DXGI_FORMAT format)
+void RenderTargetTexture::CreateTextureBuffer(ID3D12Device* device, UINT width, UINT height, UINT frameCount, Texture& t, DXGI_FORMAT format, D3D12_RESOURCE_STATES state)
 {
 	D3D12_RESOURCE_DESC textureDesc = {};
 	textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
@@ -160,66 +157,65 @@ void RenderTargetTexture::CreateTextureBuffer(ID3D12Device* device, UINT width, 
 			&heapProps,
 			D3D12_HEAP_FLAG_NONE,
 			&textureDesc,
-			D3D12_RESOURCE_STATE_COMMON,
+			state,
 			&clearValue,
 			IID_PPV_ARGS(&t.texture[i]));
 	}
 }
 
-void RenderDepthTargetTexture::PrepareAsDepthTarget(ID3D12GraphicsCommandList* commandList, UINT frameIndex)
+void RenderDepthTargetTexture::PrepareAsDepthTarget(ID3D12GraphicsCommandList* commandList, UINT frameIndex, D3D12_RESOURCE_STATES from)
 {
 	auto vp = CD3DX12_VIEWPORT(0.0f, 0.0f, width, height);
 	commandList->RSSetViewports(1, &vp);
 	auto rect = CD3DX12_RECT(0, 0, width, height);
 	commandList->RSSetScissorRects(1, &rect);
 
-	if (dsvLastState[frameIndex] != D3D12_RESOURCE_STATE_DEPTH_WRITE)
+	if (from != D3D12_RESOURCE_STATE_DEPTH_WRITE)
 	{
 		auto barrierToRT = CD3DX12_RESOURCE_BARRIER::Transition(
 			depthStencilTexture[frameIndex].Get(),
-			dsvLastState[frameIndex],
+			from,
 			D3D12_RESOURCE_STATE_DEPTH_WRITE);
 		commandList->ResourceBarrier(1, &barrierToRT);
-
-		dsvLastState[frameIndex] = D3D12_RESOURCE_STATE_DEPTH_WRITE;
 	}
 
 	commandList->OMSetRenderTargets(0, nullptr, FALSE, &dsvHandles[frameIndex]);
-	//commandList->ClearRenderTargetView(rtvHandles[frameIndex], &clearColor.x, 0, nullptr);
 	commandList->ClearDepthStencilView(dsvHandles[frameIndex], D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 }
 
-void RenderDepthTargetTexture::PrepareAsDepthView(ID3D12GraphicsCommandList* commandList, UINT frameIndex)
+void RenderDepthTargetTexture::PrepareAsDepthView(ID3D12GraphicsCommandList* commandList, UINT frameIndex, D3D12_RESOURCE_STATES from)
 {
-	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-		depthStencilTexture[frameIndex].Get(),
-		dsvLastState[frameIndex],
-		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-	commandList->ResourceBarrier(1, &barrier);
-
-	dsvLastState[frameIndex] = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	if (from != D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+	{
+		auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+			depthStencilTexture[frameIndex].Get(),
+			from,
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+		commandList->ResourceBarrier(1, &barrier);
+	}
 }
 
-void RenderTargetTexture::PrepareAsTarget(ID3D12GraphicsCommandList* commandList, UINT frameIndex, bool clear, bool depth, bool clearDepth)
+void RenderTargetTexture::PrepareAsTarget(ID3D12GraphicsCommandList* commandList, UINT frameIndex, D3D12_RESOURCE_STATES from, bool clear, bool depth, bool clearDepth)
 {
 	auto vp = CD3DX12_VIEWPORT(0.0f, 0.0f, width, height);
 	commandList->RSSetViewports(1, &vp);
 	auto rect = CD3DX12_RECT(0, 0, width, height);
 	commandList->RSSetScissorRects(1, &rect);
 
-	CD3DX12_RESOURCE_BARRIER barriers[4];
-	if (rtvLastState[frameIndex] != D3D12_RESOURCE_STATE_RENDER_TARGET)
+	if (from != D3D12_RESOURCE_STATE_RENDER_TARGET)
 	{
-		for (size_t i = 0; i < textures.size(); i++)
-		{	
-			barriers[i] = CD3DX12_RESOURCE_BARRIER::Transition(
-				textures[i].texture[frameIndex].Get(),
-				rtvLastState[frameIndex],
-				D3D12_RESOURCE_STATE_RENDER_TARGET);
-		}
+		CD3DX12_RESOURCE_BARRIER barriers[4];
+		{
+			for (size_t i = 0; i < textures.size(); i++)
+			{
+				barriers[i] = CD3DX12_RESOURCE_BARRIER::Transition(
+					textures[i].texture[frameIndex].Get(),
+					from,
+					D3D12_RESOURCE_STATE_RENDER_TARGET);
+			}
 
-		commandList->ResourceBarrier(textures.size(), barriers);
-		rtvLastState[frameIndex] = D3D12_RESOURCE_STATE_RENDER_TARGET;
+			commandList->ResourceBarrier(textures.size(), barriers);
+		}
 	}
 
 	commandList->OMSetRenderTargets(rtvHandles[frameIndex].size(), rtvHandles[frameIndex].data(), TRUE, (depth && dsvHeap) ? &dsvHandles[frameIndex] : nullptr);
@@ -241,12 +237,15 @@ void RenderTargetTexture::PrepareAsSingleTarget(ID3D12GraphicsCommandList* comma
 	auto rect = CD3DX12_RECT(0, 0, width, height);
 	commandList->RSSetScissorRects(1, &rect);
 
-	CD3DX12_RESOURCE_BARRIER barriers = CD3DX12_RESOURCE_BARRIER::Transition(
-		textures[textureIndex].texture[frameIndex].Get(),
-		from,
-		D3D12_RESOURCE_STATE_RENDER_TARGET);
+	if (from != D3D12_RESOURCE_STATE_RENDER_TARGET)
+	{
+		CD3DX12_RESOURCE_BARRIER barriers = CD3DX12_RESOURCE_BARRIER::Transition(
+			textures[textureIndex].texture[frameIndex].Get(),
+			from,
+			D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-	commandList->ResourceBarrier(1, &barriers);
+		commandList->ResourceBarrier(1, &barriers);
+	}
 
 	commandList->OMSetRenderTargets(1, &rtvHandles[frameIndex][textureIndex], TRUE, (depth && dsvHeap) ? &dsvHandles[frameIndex] : nullptr);
 
@@ -259,23 +258,28 @@ void RenderTargetTexture::PrepareAsSingleTarget(ID3D12GraphicsCommandList* comma
 	}
 }
 
-void RenderTargetTexture::PrepareAsView(ID3D12GraphicsCommandList* commandList, UINT frameIndex)
+void RenderTargetTexture::PrepareAsView(ID3D12GraphicsCommandList* commandList, UINT frameIndex, D3D12_RESOURCE_STATES from)
 {
+	if (from == D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+		return;
+
 	CD3DX12_RESOURCE_BARRIER barriers[4];
 	for (size_t i = 0; i < textures.size(); i++)
 	{
 		barriers[i] = CD3DX12_RESOURCE_BARRIER::Transition(
 			textures[i].texture[frameIndex].Get(),
-			rtvLastState[frameIndex],
+			from,
 			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	}
 
 	commandList->ResourceBarrier(textures.size(), barriers);
-	rtvLastState[frameIndex] = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 }
 
 void RenderTargetTexture::PrepareAsSingleView(ID3D12GraphicsCommandList* commandList, UINT frameIndex, UINT textureIndex, D3D12_RESOURCE_STATES from)
 {
+	if (from == D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+		return;
+
 	CD3DX12_RESOURCE_BARRIER barriers = CD3DX12_RESOURCE_BARRIER::Transition(
 		textures[textureIndex].texture[frameIndex].Get(),
 		from,
@@ -284,14 +288,12 @@ void RenderTargetTexture::PrepareAsSingleView(ID3D12GraphicsCommandList* command
 	commandList->ResourceBarrier(1, &barriers);
 }
 
-void RenderTargetTexture::PrepareToPresent(ID3D12GraphicsCommandList* commandList, UINT frameIndex)
+void RenderTargetTexture::PrepareToPresent(ID3D12GraphicsCommandList* commandList, UINT frameIndex, D3D12_RESOURCE_STATES from)
 {
 	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
 		textures[0].texture[frameIndex].Get(),
-		rtvLastState[frameIndex], D3D12_RESOURCE_STATE_PRESENT);
+		from, D3D12_RESOURCE_STATE_PRESENT);
 	commandList->ResourceBarrier(1, &barrier);
-
-	rtvLastState[frameIndex] = D3D12_RESOURCE_STATE_PRESENT;
 }
 
 void RenderTargetTexture::SetName(const wchar_t* name)

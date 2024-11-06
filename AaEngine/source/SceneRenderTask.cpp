@@ -38,7 +38,7 @@ SceneRenderTask::~SceneRenderTask()
 	}
 }
 
-AsyncTasksInfo SceneRenderTask::initialize(AaSceneManager* sceneMgr, RenderTargetTexture* target)
+AsyncTasksInfo SceneRenderTask::initialize(AaSceneManager* sceneMgr, RenderTargetTexture* target, const std::vector<std::string>& params)
 {
 	sceneQueue = sceneMgr->createQueue(target->formats);
 	
@@ -56,12 +56,21 @@ AsyncTasksInfo SceneRenderTask::initialize(AaSceneManager* sceneMgr, RenderTarge
 			}
 		});
 
-	return { { scene.eventFinish, scene.commands } };
+	AsyncTasksInfo tasks;
+
+	if (!params.empty() && params.front() == "EarlyZ")
+	{
+		tasks = initializeEarlyZ(sceneMgr);
+	}
+
+	tasks.push_back({ scene.eventFinish, scene.commands });
+
+	return tasks;
 }
 
 AsyncTasksInfo SceneRenderTask::initializeTransparent(AaSceneManager* sceneMgr, RenderTargetTexture* target)
 {
-	transparentQueue = sceneMgr->createQueue(target->formats, MaterialTechnique::Default, Order::Transparent);
+	transparentQueue = sceneMgr->createQueue({ target->formats.front() }, MaterialTechnique::Default, Order::Transparent);
 
 	transparent.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
 	transparent.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -101,7 +110,7 @@ AsyncTasksInfo SceneRenderTask::initializeEarlyZ(AaSceneManager* sceneMgr)
 	return { { earlyZ.eventFinish, earlyZ.commands } };
 }
 
-void SceneRenderTask::prepare(RenderContext& renderCtx, CommandsData&)
+void SceneRenderTask::run(RenderContext& renderCtx, CommandsData&)
 {
 	ctx = renderCtx;
 	SetEvent(scene.eventBegin);
@@ -118,26 +127,26 @@ void SceneRenderTask::renderScene()
 
 	provider.renderSystem->StartCommandList(scene.commands);
 
-	ctx.target->PrepareAsTarget(scene.commands.commandList, provider.renderSystem->frameIndex, true, true, !earlyZ.eventBegin);
+	ctx.target->PrepareAsTarget(scene.commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true, true, !earlyZ.eventBegin);
 	sceneQueue->renderObjects(*ctx.camera, sceneInfo, provider.params, scene.commands.commandList, provider.renderSystem->frameIndex);
 
-	ctx.target->PrepareAsView(scene.commands.commandList, provider.renderSystem->frameIndex);
+	//ctx.target->PrepareAsView(scene.commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_RENDER_TARGET);
 }
 
 void SceneRenderTask::renderTransparentScene()
 {
 	provider.renderSystem->StartCommandList(transparent.commands);
 
-	ctx.target->PrepareAsSingleTarget(transparent.commands.commandList, provider.renderSystem->frameIndex, 0, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, false, true, false);
+	ctx.target->PrepareAsSingleTarget(transparent.commands.commandList, provider.renderSystem->frameIndex, 0, D3D12_RESOURCE_STATE_RENDER_TARGET, false, true, false);
 	transparentQueue->renderObjects(*ctx.camera, sceneInfo, provider.params, transparent.commands.commandList, provider.renderSystem->frameIndex);
 
-	ctx.target->PrepareAsSingleView(transparent.commands.commandList, provider.renderSystem->frameIndex, 0, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	//ctx.target->PrepareAsSingleView(transparent.commands.commandList, provider.renderSystem->frameIndex, 0, D3D12_RESOURCE_STATE_RENDER_TARGET);
 }
 
 void SceneRenderTask::renderEarlyZ()
 {
 	provider.renderSystem->StartCommandList(earlyZ.commands);
 
-	ctx.target->PrepareAsDepthTarget(earlyZ.commands.commandList, provider.renderSystem->frameIndex);
+	ctx.target->PrepareAsDepthTarget(earlyZ.commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 	depthQueue->renderObjects(*ctx.camera, sceneInfo, provider.params, earlyZ.commands.commandList, provider.renderSystem->frameIndex);
 }

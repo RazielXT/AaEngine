@@ -390,5 +390,8 @@
     <ClInclude Include="source\SceneTestTask.h">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClInclude>
+    <ClInclude Include="source\CompositorTask.h">
+      <Filter>Source Files\FrameCompositor\Tasks</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

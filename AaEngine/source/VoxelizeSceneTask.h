@@ -1,6 +1,6 @@
 #pragma once
 
-#include "RenderContext.h"
+#include "CompositorTask.h"
 #include "TextureResource.h"
 #include "AaCamera.h"
 #include "AaMath.h"
@@ -11,15 +11,15 @@
 struct RenderQueue;
 class AaSceneManager;
 
-class VoxelizeSceneTask
+class VoxelizeSceneTask : public CompositorTask
 {
 public:
 
 	VoxelizeSceneTask(RenderProvider provider, AaShadowMap& shadows);
 	~VoxelizeSceneTask();
 
-	AsyncTasksInfo initialize(AaSceneManager* sceneMgr, RenderTargetTexture* target);
-	void prepare(RenderContext& ctx, CommandsData& syncCommands);
+	AsyncTasksInfo initialize(AaSceneManager* sceneMgr, RenderTargetTexture* target) override;
+	void run(RenderContext& ctx, CommandsData& syncCommands) override;
 
 	CommandsData commands;
 	HANDLE eventBegin{};

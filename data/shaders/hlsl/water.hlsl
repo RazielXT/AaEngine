@@ -48,12 +48,6 @@ PSInput VSMain(VSInput input)
     return result;
 }
 
-struct PSOutput
-{
-    float4 target0 : SV_Target0;
-    float4 target1 : SV_Target1;
-};
-
 float4 GetWaves(float2 uv)
 {
 	uv = uv * 0.5;
@@ -63,14 +57,10 @@ float4 GetWaves(float2 uv)
 	return albedo;
 }
 
-PSOutput PSMain(PSInput input)
+float4 PSMain(PSInput input) : SV_TARGET
 {
 	float4 albedo = GetWaves(input.uv);
 	albedo.a = albedo.r;
 
-	PSOutput output;
-    output.target0 = albedo;
-	output.target1 = albedo;
-
-	return output;
+	return albedo;
 }

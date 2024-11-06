@@ -3,6 +3,7 @@
 #include "AaMaterialResources.h"
 #include "AaTextureResources.h"
 #include "GenerateMipsComputeShader.h"
+#include "DebugWindow.h"
 
 VoxelizeSceneTask::VoxelizeSceneTask(RenderProvider p, AaShadowMap& shadows) : shadowMaps(shadows), provider(p)
 {
@@ -21,8 +22,6 @@ VoxelizeSceneTask::~VoxelizeSceneTask()
 		CloseHandle(eventFinish);
 	}
 }
-
-extern bool stopUpdatingVoxel;
 
 const float VoxelSize = 128;
 
@@ -75,7 +74,7 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(AaSceneManager* sceneMgr, RenderTar
 					counter = 0;
 
 				provider.renderSystem->StartCommandList(commands);
-				if (stopUpdatingVoxel)
+				if (imgui::DebugWindow::state.stopUpdatingVoxel)
 				{
 					SetEvent(eventFinish);
 					continue;
@@ -94,7 +93,7 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(AaSceneManager* sceneMgr, RenderTar
 
 				static RenderInformation info;
 
-				ctx.target->PrepareAsTarget(commands.commandList, FrameIndex, true, false, false);
+				//ctx.target->PrepareAsTarget(commands.commandList, FrameIndex, D3D12_RESOURCE_STATE_COMMON, true, false, false);
 
 				TextureResource::TransitionState(commands.commandList, FrameIndex, voxelPreviousSceneTexture, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 				TextureResource::TransitionState(commands.commandList, FrameIndex, voxelSceneTexture, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
@@ -115,12 +114,6 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(AaSceneManager* sceneMgr, RenderTar
 				ctx.renderables->updateRenderInformation(camera, info);
 				sceneQueue->renderObjects(camera, info, provider.params, commands.commandList, FrameIndex);
 
-// 				updateCBuffer(false, FrameIndex);
-// 
-// 				ctx.renderables->updateVisibility(shadowMaps.camera[1].prepareOrientedBox(), info.visibility);
-// 				ctx.renderables->updateWVPMatrix(shadowMaps.camera[1].getViewProjectionMatrix(), info.visibility, info.wvpMatrix);
-// 				sceneQueue->renderObjects(shadowMaps.camera[1], info, ctx.params, commands.commandList, FrameIndex);
-
 				computeMips.dispatch(commands.commandList, voxelSceneTexture, ResourcesManager::get(), FrameIndex);
 
 				SetEvent(eventFinish);
@@ -132,16 +125,11 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(AaSceneManager* sceneMgr, RenderTar
 	return tasks;
 }
 
-void VoxelizeSceneTask::prepare(RenderContext& renderCtx, CommandsData& syncCommands)
+void VoxelizeSceneTask::run(RenderContext& renderCtx, CommandsData& syncCommands)
 {
 	ctx = renderCtx;
 	SetEvent(eventBegin);
 }
-
-extern float voxelSteppingBounces;
-extern float voxelSteppingDiffuse;
-extern Vector2 middleConeRatioDistance;
-extern Vector2 sideConeRatioDistance;
 
 void VoxelizeSceneTask::updateCBuffer(Vector3 orthoHalfSize, Vector3 corner, UINT frameIndex)
 {
@@ -150,11 +138,13 @@ void VoxelizeSceneTask::updateCBuffer(Vector3 orthoHalfSize, Vector3 corner, UIN
 
 	cbufferData.voxelOffset = corner;
 
-	cbufferData.steppingBounces = voxelSteppingBounces;
-	cbufferData.steppingDiffuse = voxelSteppingDiffuse;
+	auto& state = imgui::DebugWindow::state;
 
-	cbufferData.middleConeRatioDistance = middleConeRatioDistance;
-	cbufferData.sideConeRatioDistance = sideConeRatioDistance;
+	cbufferData.steppingBounces = state.voxelSteppingBounces;
+	cbufferData.steppingDiffuse = state.voxelSteppingDiffuse;
+
+	cbufferData.middleConeRatioDistance = state.middleConeRatioDistance;
+	cbufferData.sideConeRatioDistance = state.sideConeRatioDistance;
 
 	float deltaTime = provider.params.timeDelta * 2;
 	deltaTime += deltaTime - deltaTime * deltaTime;

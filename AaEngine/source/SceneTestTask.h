@@ -1,23 +1,21 @@
 #pragma once
 
-#include "AaRenderSystem.h"
-#include "RenderContext.h"
+#include "CompositorTask.h"
 #include "AaSceneManager.h"
 #include <thread>
 
 struct RenderQueue;
 class AaSceneManager;
 
-class SceneTestTask
+class SceneTestTask : public CompositorTask
 {
 public:
 
 	SceneTestTask(RenderProvider provider);
 	~SceneTestTask();
 
-	AsyncTasksInfo initialize(AaSceneManager* sceneMgr, RenderTargetTexture* target);
-	void prepare(RenderContext& ctx, CommandsData& syncCommands);
-	void finish();
+	AsyncTasksInfo initialize(AaSceneManager* sceneMgr, RenderTargetTexture* target) override;
+	void run(RenderContext& ctx, CommandsData& syncCommands) override;
 
 private:
 

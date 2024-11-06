@@ -15,10 +15,11 @@ public:
 	SceneRenderTask(RenderProvider provider);
 	~SceneRenderTask();
 
-	AsyncTasksInfo initialize(AaSceneManager* sceneMgr, RenderTargetTexture* target);
-	AsyncTasksInfo initializeTransparent(AaSceneManager* sceneMgr, RenderTargetTexture* target);
 	AsyncTasksInfo initializeEarlyZ(AaSceneManager* sceneMgr);
-	void prepare(RenderContext& ctx, CommandsData& syncCommands);
+	AsyncTasksInfo initialize(AaSceneManager* sceneMgr, RenderTargetTexture* target, const std::vector<std::string>& params);
+	AsyncTasksInfo initializeTransparent(AaSceneManager* sceneMgr, RenderTargetTexture* target);
+
+	void run(RenderContext& ctx, CommandsData& syncCommands);
 
 	struct Work
 	{

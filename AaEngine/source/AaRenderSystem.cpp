@@ -61,6 +61,7 @@ AaRenderSystem::AaRenderSystem(AaWindow* mWindow)
 	}
 	backbufferHeap.Init(device, 1, FrameCount, L"BackbufferRTV");
 	backbuffer.InitExisting(swapChainTextures, device, width, height, FrameCount, backbufferHeap);
+	backbuffer.SetName(L"Backbuffer");
 
 	device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
 	fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
@@ -98,6 +99,7 @@ void AaRenderSystem::onScreenResize()
 	}
 	backbufferHeap.Reset();
 	backbuffer.InitExisting(swapChainTextures, device, width, height, FrameCount, backbufferHeap);
+	backbuffer.SetName(L"Backbuffer");
 
 	MoveToNextFrame();
 }

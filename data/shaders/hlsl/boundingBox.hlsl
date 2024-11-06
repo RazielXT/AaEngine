@@ -56,7 +56,7 @@ float getLimit(float thickness)
 	return limit;
 }
 
-PSOutput PSMain(PSInput input)
+float4 PSMain(PSInput input) : SV_TARGET
 {
 	input.uv.x = abs(input.uv.x - 0.5);
 	input.uv.y = abs(input.uv.y - 0.5);
@@ -69,9 +69,5 @@ PSOutput PSMain(PSInput input)
 	float shade = 1 - input.uv.x * input.uv.y * 2;
 	float4 outColor = float4(1,1,1,1) * shade;
 
-	PSOutput output;
-    output.target0 = outColor;
-	output.target1 = outColor;
-
-	return output;
+	return outColor;
 }

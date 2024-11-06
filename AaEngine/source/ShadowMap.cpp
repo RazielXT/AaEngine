@@ -17,7 +17,7 @@ void AaShadowMap::init(AaRenderSystem* renderSystem)
 {
 	for (UINT i = 0; i < 2; i++)
 	{
-		texture[i].Init(renderSystem->device, 512, 512, renderSystem->FrameCount);
+		texture[i].Init(renderSystem->device, 512, 512, renderSystem->FrameCount, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 		texture[i].SetName(L"ShadowMap");
 
 		ResourcesManager::get().createDepthShaderResourceView(texture[i]);

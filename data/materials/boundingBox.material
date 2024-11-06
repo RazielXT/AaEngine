@@ -2,9 +2,6 @@ material BoundingBox
 {
 	vertex_shader vsBoundingBox
 	pixel_shader psBoundingBox
-	
-	technique Depth skip
-	technique Voxelize skip
-	
+
 	culling none
 }

@@ -136,6 +136,9 @@ CompositorInfo CompositorFileParser::parseFile(std::string path)
 						if (param.type == "target")
 						{
 							pass.target = param.value;
+
+							if (!param.params.empty())
+								pass.targetIndex = std::stoul(param.params.front());
 						}
 						else if (param.type == "material")
 						{
@@ -160,10 +163,17 @@ CompositorInfo CompositorFileParser::parseFile(std::string path)
 						if (param.type == "target")
 						{
 							pass.target = param.value;
+
+							if (!param.params.empty())
+								pass.targetIndex = std::stoul(param.params.front());
 						}
 						else if (param.type == "after")
 						{
 							pass.after = param.value;
+						}
+						else if (param.type == "params")
+						{
+							pass.params = { param.value };
 						}
 					}
 

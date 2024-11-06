@@ -36,17 +36,16 @@ protected:
 	DebugOverlayTask debugOverlay;
 	SceneTestTask testTask;
 
-	struct PassData
+	struct PassData : public PassResources
 	{
+		PassData(CompositorPass& i) : info(i) {}
+
 		CompositorPass& info;
-		std::vector<ShaderTextureView*> inputs;
+
 		AaMaterial* material = nullptr;
-		RenderTargetTexture* target = nullptr;
-		bool present = false;
 
 		CommandsData generalCommands;
 		bool startCommands = false;
-
 	};
 	std::vector<PassData> passes;
 
@@ -60,6 +59,9 @@ protected:
 	std::vector<TasksGroup> tasks;
 
 	void initializeCommands();
+	void initializeTextureStates();
+	D3D12_RESOURCE_STATES getInitialTextureState(const std::string& name) const;
+
 	void executeCommands();
 
 	RenderProvider provider;

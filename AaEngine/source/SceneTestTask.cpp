@@ -20,7 +20,7 @@ AsyncTasksInfo SceneTestTask::initialize(AaSceneManager* s, RenderTargetTexture*
 	tmpQueue.targets = target->formats;
 
 	heap.Init(provider.renderSystem->device, target->formats.size(), provider.renderSystem->FrameCount, L"tempHeap");
-	tmp.Init(provider.renderSystem->device, 512, 512, 2, heap, target->formats, true);
+	tmp.Init(provider.renderSystem->device, 512, 512, 2, heap, target->formats, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
 	tmp.SetName(L"tmpTex");
 
 	ResourcesManager::get().createShaderResourceView(tmp);
@@ -30,7 +30,7 @@ AsyncTasksInfo SceneTestTask::initialize(AaSceneManager* s, RenderTargetTexture*
 	return {};
 }
 
-void SceneTestTask::prepare(RenderContext& ctx, CommandsData& c)
+void SceneTestTask::run(RenderContext& ctx, CommandsData& c)
 {
 	static bool initialize = false;
 	if (!initialize)
@@ -46,30 +46,15 @@ void SceneTestTask::prepare(RenderContext& ctx, CommandsData& c)
 	tmpCamera.setPosition({ 81, 100, -72 });
 	tmpCamera.pitch(-90);
 
-	//sceneMgr->renderables.updateTransformation();
-
 	RenderInformation objInfo;
 	ctx.renderables->updateRenderInformation(tmpCamera, objInfo);
 
-// 	FrameGpuParameters gpuParams;
-// 	gpuParams.time = 0;
-// 	gpuParams.timeDelta = 0;
-//	gpuParams.sunDirection = lights.directionalLight.direction;
-//	XMStoreFloat4x4(&gpuParams.shadowMapViewProjectionTransposed, XMMatrixTranspose(shadowMap->camera[0].getViewProjectionMatrix()));
-
-//	static auto commands = ctx.renderSystem->CreateCommandList(L"tempCmd");
-
 	provider.renderSystem->StartCommandList(commands);
 
-	tmp.PrepareAsTarget(commands.commandList, provider.renderSystem->frameIndex);
+	tmp.PrepareAsTarget(commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_COMMON);
 
 	tmpQueue.renderObjects(tmpCamera, objInfo, provider.params, commands.commandList, provider.renderSystem->frameIndex);
 
-	tmp.PrepareAsView(commands.commandList, provider.renderSystem->frameIndex);
+	tmp.PrepareAsView(commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_COMMON);
 	provider.renderSystem->ExecuteCommandList(commands);
-}
-
-void SceneTestTask::finish()
-{
-	//renderSystem->ExecuteCommandList(commands);
 }

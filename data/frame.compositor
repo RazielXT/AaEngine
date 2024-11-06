@@ -20,13 +20,10 @@ compositor SceneCompositor
 	{
 	}
 
-	render SceneEarlyZ
-	{
-		target sceneTexture
-	}
-
 	render Scene
 	{
+		params EarlyZ
+
 		after Shadows
 		target sceneTexture
 	}

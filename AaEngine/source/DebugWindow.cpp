@@ -6,13 +6,6 @@
 #include "AaSceneManager.h"
 #include "AaMaterialResources.h"
 
-bool stopUpdatingVoxel = false;
-
-float voxelSteppingBounces = 0.075f;
-float voxelSteppingDiffuse = 0.0f;
-Vector2 middleConeRatioDistance = { 1.05f, 1.5f };
-Vector2 sideConeRatioDistance = { 2.2f, 5.f };
-
 XMFLOAT3 currentCamPos{};
 
 imgui::DebugWindow* instance{};
@@ -28,6 +21,7 @@ bool ImguiUsesInput()
 namespace imgui
 {
 	static ID3D12DescriptorHeap* g_pd3dSrvDescHeap = nullptr;
+	DebugState DebugWindow::state;
 
 	imgui::DebugWindow& DebugWindow::Get()
 	{
@@ -98,11 +92,11 @@ namespace imgui
 				state.TexturePreviewIndex = ResourcesManager::get().previousDescriptor(state.TexturePreviewIndex, D3D12_SRV_DIMENSION_TEXTURE2D);
 		}
 
-		if (ImGui::Button(stopUpdatingVoxel ? "startUpdatingVoxel" : "stopUpdatingVoxel"))
-			stopUpdatingVoxel = !stopUpdatingVoxel;
+		if (ImGui::Button(state.stopUpdatingVoxel ? "startUpdatingVoxel" : "stopUpdatingVoxel"))
+			state.stopUpdatingVoxel = !state.stopUpdatingVoxel;
 		
-		ImGui::SliderFloat("GI weight", &voxelSteppingBounces, 0.0f, 0.15f);
-		ImGui::SliderFloat("Diffuse weight", &voxelSteppingDiffuse, 0.0f, 0.5f);
+		ImGui::SliderFloat("GI weight", &state.voxelSteppingBounces, 0.0f, 0.15f);
+		ImGui::SliderFloat("Diffuse weight", &state.voxelSteppingDiffuse, 0.0f, 0.5f);
 
 		static float voxelLightPower = []{ float f; AaMaterialResources::get().getMaterial("WhiteVCTLight")->GetParameter(FastParam::Emission, &f); return f; }();
 
@@ -111,10 +105,10 @@ namespace imgui
 			AaMaterialResources::get().getMaterial("WhiteVCTLight")->SetParameter(FastParam::Emission, &voxelLightPower);
 		}
 
-		ImGui::SliderFloat("middleConeRatio", &middleConeRatioDistance.x, 0.0f, 5.f);
-		ImGui::SliderFloat("middleConeDistance", &middleConeRatioDistance.y, 0.0f, 5.f);
-		ImGui::SliderFloat("sideConeRatio", &sideConeRatioDistance.x, 0.0f, 5.f);
-		ImGui::SliderFloat("sideConeDistance", &sideConeRatioDistance.y, 0.0f, 5.f);
+		ImGui::SliderFloat("middleConeRatio", &state.middleConeRatioDistance.x, 0.0f, 5.f);
+		ImGui::SliderFloat("middleConeDistance", &state.middleConeRatioDistance.y, 0.0f, 5.f);
+		ImGui::SliderFloat("sideConeRatio", &state.sideConeRatioDistance.x, 0.0f, 5.f);
+		ImGui::SliderFloat("sideConeDistance", &state.sideConeRatioDistance.y, 0.0f, 5.f);
 
 		const char* scenes[] = {
 			"test",

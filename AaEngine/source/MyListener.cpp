@@ -28,7 +28,7 @@ MyListener::MyListener(AaRenderSystem* render)
 	AaShaderLibrary::get().loadShaderReferences(SHADER_DIRECTORY, false);
  	AaMaterialResources::get().loadMaterials(MATERIAL_DIRECTORY, false);
 
-	compositor = new FrameCompositor({ gpuParams, render }, sceneMgr, shadowMap);
+	compositor = new FrameCompositor({ gpuParams, render }, *sceneMgr, *shadowMap);
 	compositor->load(DATA_DIRECTORY + "frame.compositor");
 
 	Vector3(-1, -1, -1).Normalize(lights.directionalLight.direction);
@@ -37,7 +37,8 @@ MyListener::MyListener(AaRenderSystem* render)
 
 	{
 		tmpQueue = sceneMgr->createManualQueue();
-		tmpQueue.update({ { EntityChange::Add, sceneMgr->getEntity("Plane001") } });
+		auto plane = sceneMgr->getEntity("Plane001");
+		tmpQueue.update({ { EntityChange::Add, plane } });
 		tmpQueue.update({ { EntityChange::Add, sceneMgr->getEntity("Torus001") } });
 		heap.Init(renderSystem->device, tmpQueue.targets.size(), 1, L"tempHeap");
 		tmp.Init(renderSystem->device, 512, 512, 1, heap, tmpQueue.targets, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
@@ -46,14 +47,14 @@ MyListener::MyListener(AaRenderSystem* render)
 		ResourcesManager::get().createShaderResourceView(tmp);
 
 		AaCamera tmpCamera;
-		tmpCamera.setOrthographicCamera(100, 100, 1, 300);
-		tmpCamera.setPosition({ 81, 100, -72 });
+		tmpCamera.setOrthographicCamera(300, 300, 1, 300);
+		tmpCamera.setPosition(plane->getPosition() + Vector3(0,50,0));
 		tmpCamera.setDirection({ 0, -1, 0 });
+		tmpCamera.updateMatrix();
 
-		sceneMgr->renderables.updateTransformation();
-
-		RenderInformation objInfo;
-		sceneMgr->renderables.updateRenderInformation(tmpCamera, objInfo);
+		RenderInformation objInfo{ sceneMgr->getRenderables(Order::Normal) };
+		objInfo.source->updateTransformation();
+		objInfo.updateVisibility(tmpCamera);
 
 		auto commands = renderSystem->CreateCommandList(L"tempCmd");
 
@@ -66,6 +67,10 @@ MyListener::MyListener(AaRenderSystem* render)
 		tmp.PrepareAsView(commands.commandList, 0, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 		renderSystem->ExecuteCommandList(commands);
+
+		renderSystem->WaitForAllFrames();
+
+		commands.deinit();
 	}
 
 	debugWindow.init(renderSystem);
@@ -122,8 +127,8 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 	}
 
 	sceneMgr->updateQueues();
-	sceneMgr->renderables.updateTransformation();
-
+	sceneMgr->updateTransformations();
+	cameraMan->camera.updateMatrix();
 	shadowMap->update(renderSystem->frameIndex);
 
 	gpuParams.time = elapsedTime;
@@ -131,7 +136,7 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 	gpuParams.sunDirection = lights.directionalLight.direction;
 	XMStoreFloat4x4(&gpuParams.shadowMapViewProjectionTransposed, XMMatrixTranspose(shadowMap->camera[0].getViewProjectionMatrix()));
 
-	RenderContext ctx = { &cameraMan->camera, &sceneMgr->renderables };
+	RenderContext ctx = { &cameraMan->camera };
 	compositor->render(ctx);
 
 	Sleep(10);

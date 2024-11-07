@@ -15,11 +15,13 @@ class VoxelizeSceneTask : public CompositorTask
 {
 public:
 
-	VoxelizeSceneTask(RenderProvider provider, AaShadowMap& shadows);
+	VoxelizeSceneTask(RenderProvider provider, AaSceneManager&, AaShadowMap& shadows);
 	~VoxelizeSceneTask();
 
-	AsyncTasksInfo initialize(AaSceneManager* sceneMgr, RenderTargetTexture* target) override;
-	void run(RenderContext& ctx, CommandsData& syncCommands) override;
+	AsyncTasksInfo initialize(CompositorPass& pass) override;
+	void run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
+
+private:
 
 	CommandsData commands;
 	HANDLE eventBegin{};
@@ -30,7 +32,7 @@ public:
 
 	RenderContext ctx;
 
-	RenderQueue* sceneQueue;
+	RenderQueue* sceneQueue{};
 
 	AaCamera camera;
 
@@ -41,7 +43,6 @@ public:
 	CbufferView cbuffer;
 	void updateCBuffer(Vector3 orthoHalfSize, Vector3 offset, UINT frameIndex);
 	void updateCBuffer(bool lighting, UINT frameIndex);
-
 
 	XM_ALIGNED_STRUCT(16)
 	{
@@ -59,6 +60,4 @@ public:
 	GenerateMipsComputeShader computeMips;
 
 	AaShadowMap& shadowMaps;
-
-	RenderProvider provider;
 };

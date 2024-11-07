@@ -22,13 +22,18 @@ struct RenderObjectData
 
 class RenderObject;
 class AaCamera;
+class Renderables;
 
 using RenderableVisibility = std::vector<bool>;
 
 struct RenderInformation
 {
+	Renderables* source{};
+
 	RenderableVisibility visibility;
 	std::vector<XMFLOAT4X4> wvpMatrix;
+
+	void updateVisibility(AaCamera& camera);
 };
 
 class Renderables

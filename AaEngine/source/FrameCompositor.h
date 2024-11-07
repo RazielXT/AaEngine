@@ -1,20 +1,16 @@
 #pragma once
+
 #include "AaRenderSystem.h"
-#include "CompositorFileParser.h"
-#include "ShadowsRenderTask.h"
-#include "SceneRenderTask.h"
-#include "VoxelizeSceneTask.h"
-#include "DebugOverlayTask.h"
-#include <set>
-#include "SceneTestTask.h"
+#include "CompositorTask.h"
 
 class AaMaterial;
+class AaShadowMap;
 
 class FrameCompositor
 {
 public:
 
-	FrameCompositor(RenderProvider provider, AaSceneManager* sceneMgr, AaShadowMap* shadows);
+	FrameCompositor(RenderProvider provider, AaSceneManager& sceneMgr, AaShadowMap& shadows);
 	~FrameCompositor();
 
 	void load(std::string path);
@@ -30,19 +26,12 @@ protected:
 	std::map<std::string, RenderTargetTexture> textures;
 	RenderTargetHeap rtvHeap;
 
-	ShadowsRenderTask shadowRender;
-	SceneRenderTask sceneRender;
-	VoxelizeSceneTask sceneVoxelize;
-	DebugOverlayTask debugOverlay;
-	SceneTestTask testTask;
-
-	struct PassData : public PassResources
+	struct PassData : public CompositorPass
 	{
-		PassData(CompositorPass& i) : info(i) {}
+		PassData(CompositorPassInfo& i) : CompositorPass{ i } {}
 
-		CompositorPass& info;
-
-		AaMaterial* material = nullptr;
+		AaMaterial* material{};
+		std::unique_ptr<CompositorTask> task;
 
 		CommandsData generalCommands;
 		bool startCommands = false;
@@ -55,6 +44,7 @@ protected:
 	{
 		std::vector<HANDLE> finishEvents;
 		std::vector<CommandsData> data;
+		std::vector<std::string> pass;
 	};
 	std::vector<TasksGroup> tasks;
 
@@ -65,5 +55,6 @@ protected:
 	void executeCommands();
 
 	RenderProvider provider;
-	AaSceneManager* sceneMgr;
+	AaSceneManager& sceneMgr;
+	AaShadowMap& shadowMaps;
 };

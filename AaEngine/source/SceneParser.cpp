@@ -233,18 +233,16 @@ void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible, Aa
 			break;
 		}
 
-		ent = sceneMgr->createEntity(name);
-		ent->order = renderQueue;
+		if (material->IsTransparent() && renderQueue < Order::Transparent)
+			renderQueue = Order::Transparent;
+
+		ent = sceneMgr->createEntity(name, renderQueue);
 		ent->material = material;
 		ent->geometry.fromModel(*model);
 		ent->setBoundingBox(model->bbox);
 		ent->setPosition(node->position);
 		ent->setScale(node->scale);
 		ent->setOrientation(node->orientation);
-
-		if (material->IsTransparent() && renderQueue < Order::Transparent)
-			ent->order = Order::Transparent;
-
 		//ent->setVisible(visible);
 
 		break;

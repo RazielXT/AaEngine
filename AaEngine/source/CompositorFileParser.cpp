@@ -73,7 +73,7 @@ CompositorInfo CompositorFileParser::parseFile(std::string path)
 			{
 				if (member.type == "texture")
 				{
-					CompositorTexture tex;
+					CompositorTextureInfo tex;
 					tex.name = member.value;
 
 					if (member.params.size() >= 3)
@@ -128,7 +128,7 @@ CompositorInfo CompositorFileParser::parseFile(std::string path)
 				}
 				else if (member.type == "pass")
 				{
-					CompositorPass pass;
+					CompositorPassInfo pass;
 					pass.name = member.value;
 
 					for (auto& param : member.children)
@@ -155,7 +155,7 @@ CompositorInfo CompositorFileParser::parseFile(std::string path)
 				}
 				else if (member.type == "render")
 				{
-					CompositorPass pass;
+					CompositorPassInfo pass;
 					pass.render = pass.name = member.value;
 
 					for (auto& param : member.children)

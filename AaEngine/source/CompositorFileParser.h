@@ -5,7 +5,7 @@
 #include <vector>
 #include <d3d12.h>
 
-struct CompositorTexture
+struct CompositorTextureInfo
 {
 	std::string name;
 	float width;
@@ -15,12 +15,12 @@ struct CompositorTexture
 	bool depthBuffer = false;
 };
 
-constexpr UINT AllTargets = -1;
-
-struct CompositorPass
+struct CompositorPassInfo
 {
 	std::string name;
 	std::string target;
+
+	static const UINT AllTargets = -1;
 	UINT targetIndex = AllTargets;
 
 	std::string render;
@@ -34,8 +34,8 @@ struct CompositorPass
 struct CompositorInfo
 {
 	std::string name;
-	std::vector<CompositorTexture> textures;
-	std::vector<CompositorPass> passes;
+	std::vector<CompositorTextureInfo> textures;
+	std::vector<CompositorPassInfo> passes;
 };
 
 namespace CompositorFileParser

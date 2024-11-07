@@ -15,23 +15,23 @@ public:
 
 	void clear();
 
-	AaEntity* createEntity(std::string name);
-	AaEntity* createGrassEntity(std::string name, BoundingBoxVolume extends);
-
+	AaEntity* createEntity(std::string name, Order order = Order::Normal);
+	AaEntity* createGrassEntity(std::string name, BoundingBoxVolume extends, Order order = Order::Normal);
 	AaEntity* getEntity(std::string name) const;
 
 	RenderQueue* createQueue(const std::vector<DXGI_FORMAT>& targets, MaterialTechnique technique = MaterialTechnique::Default, Order order = Order::Normal);
-
-	RenderQueue createManualQueue(MaterialTechnique technique = MaterialTechnique::Default);
-
+	RenderQueue createManualQueue(MaterialTechnique technique = MaterialTechnique::Default, Order order = Order::Normal);
 	void updateQueues();
+
+	void updateTransformations();
+	Renderables* getRenderables(Order order);
 
 	InstancingManager instancing;
 	GrassManager grass;
 
-	Renderables renderables;
-
 private:
+
+	std::map<Order, Renderables> renderables;
 
 	EntityChanges changes;
 

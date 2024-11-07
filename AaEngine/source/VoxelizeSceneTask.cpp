@@ -5,7 +5,7 @@
 #include "GenerateMipsComputeShader.h"
 #include "DebugWindow.h"
 
-VoxelizeSceneTask::VoxelizeSceneTask(RenderProvider p, AaShadowMap& shadows) : shadowMaps(shadows), provider(p)
+VoxelizeSceneTask::VoxelizeSceneTask(RenderProvider p, AaSceneManager& s, AaShadowMap& shadows) : shadowMaps(shadows), CompositorTask(p, s)
 {
 }
 
@@ -25,7 +25,7 @@ VoxelizeSceneTask::~VoxelizeSceneTask()
 
 const float VoxelSize = 128;
 
-AsyncTasksInfo VoxelizeSceneTask::initialize(AaSceneManager* sceneMgr, RenderTargetTexture* target)
+AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 {
 	voxelSceneTexture.create3D(provider.renderSystem->device, VoxelSize, VoxelSize, VoxelSize, DXGI_FORMAT_R16G16B16A16_FLOAT, provider.renderSystem->FrameCount);
 	voxelSceneTexture.setName(L"SceneVoxel");
@@ -46,14 +46,14 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(AaSceneManager* sceneMgr, RenderTar
 
 	computeMips.init(provider.renderSystem->device, "generateMipmaps");
 
-	sceneQueue = sceneMgr->createQueue(target->formats, MaterialTechnique::Voxelize);
+	sceneQueue = sceneMgr.createQueue(pass.target.texture->formats, MaterialTechnique::Voxelize);
 
 	AsyncTasksInfo tasks;
 	eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
 	eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
 	commands = provider.renderSystem->CreateCommandList(L"Voxelize");
 
-	worker = std::thread([this]
+	worker = std::thread([this, &pass]
 		{
 			while (WaitForSingleObject(eventBegin, INFINITE) == WAIT_OBJECT_0 && running)
 			{
@@ -91,9 +91,9 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(AaSceneManager* sceneMgr, RenderTar
 
 				commands.commandList->OMSetRenderTargets(0, nullptr, FALSE, nullptr);
 
-				static RenderInformation info;
+				static RenderInformation info{ sceneMgr.getRenderables(Order::Normal) };
 
-				//ctx.target->PrepareAsTarget(commands.commandList, FrameIndex, D3D12_RESOURCE_STATE_COMMON, true, false, false);
+				pass.target.texture->PrepareAsTarget(commands.commandList, FrameIndex, pass.target.previousState, true, false, false);
 
 				TextureResource::TransitionState(commands.commandList, FrameIndex, voxelPreviousSceneTexture, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 				TextureResource::TransitionState(commands.commandList, FrameIndex, voxelSceneTexture, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
@@ -101,17 +101,20 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(AaSceneManager* sceneMgr, RenderTar
 				//from all 3 axes
 				camera.setPosition(XMFLOAT3(center.x, center.y, center.z - orthoHalfSize.z - 1));
 				camera.setDirection(XMFLOAT3(0, 0, 1));
-				ctx.renderables->updateRenderInformation(camera, info);
+				camera.updateMatrix();
+				info.updateVisibility(camera);
 				sceneQueue->renderObjects(camera, info, provider.params, commands.commandList, FrameIndex);
 
 				camera.setPosition(XMFLOAT3(center.x - orthoHalfSize.x - 1, center.y, center.z));
 				camera.setDirection(XMFLOAT3(1, 0, 0));
-				ctx.renderables->updateRenderInformation(camera, info);
+				camera.updateMatrix();
+				info.updateVisibility(camera);
 				sceneQueue->renderObjects(camera, info, provider.params, commands.commandList, FrameIndex);
 
 				camera.setPosition(XMFLOAT3(center.x, center.y - orthoHalfSize.y - 1, center.z));
 				camera.pitch(XM_PIDIV2);
-				ctx.renderables->updateRenderInformation(camera, info);
+				camera.updateMatrix();
+				info.updateVisibility(camera);
 				sceneQueue->renderObjects(camera, info, provider.params, commands.commandList, FrameIndex);
 
 				computeMips.dispatch(commands.commandList, voxelSceneTexture, ResourcesManager::get(), FrameIndex);
@@ -125,7 +128,7 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(AaSceneManager* sceneMgr, RenderTar
 	return tasks;
 }
 
-void VoxelizeSceneTask::run(RenderContext& renderCtx, CommandsData& syncCommands)
+void VoxelizeSceneTask::run(RenderContext& renderCtx, CommandsData& syncCommands, CompositorPass&)
 {
 	ctx = renderCtx;
 	SetEvent(eventBegin);

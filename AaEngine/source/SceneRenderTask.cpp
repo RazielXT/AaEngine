@@ -2,8 +2,9 @@
 #include "AaRenderables.h"
 #include "AaSceneManager.h"
 
-SceneRenderTask::SceneRenderTask(RenderProvider p) : provider(p)
+SceneRenderTask::SceneRenderTask(RenderProvider p, AaSceneManager& s) : CompositorTask(p, s)
 {
+	sceneInfo = { sceneMgr.getRenderables(Order::Normal) };
 }
 
 SceneRenderTask::~SceneRenderTask()
@@ -27,6 +28,96 @@ SceneRenderTask::~SceneRenderTask()
 		CloseHandle(earlyZ.eventBegin);
 		CloseHandle(earlyZ.eventFinish);
 	}
+}
+
+AsyncTasksInfo SceneRenderTask::initialize(CompositorPass& pass)
+{
+	sceneQueue = sceneMgr.createQueue(pass.target.texture->formats);
+	
+	scene.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
+	scene.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
+	scene.commands = provider.renderSystem->CreateCommandList(L"Scene");
+
+	scene.worker = std::thread([this, &pass]
+		{
+			while (WaitForSingleObject(scene.eventBegin, INFINITE) == WAIT_OBJECT_0 && running)
+			{
+				renderScene(pass);
+
+				SetEvent(scene.eventFinish);
+			}
+		});
+
+	AsyncTasksInfo tasks;
+
+	if (!pass.info.params.empty() && pass.info.params.front() == "EarlyZ")
+	{
+		tasks = initializeEarlyZ(pass);
+	}
+
+	tasks.push_back({ scene.eventFinish, scene.commands });
+
+	return tasks;
+}
+
+AsyncTasksInfo SceneRenderTask::initializeEarlyZ(CompositorPass& pass)
+{
+	depthQueue = sceneMgr.createQueue({}, MaterialTechnique::Depth);
+
+	earlyZ.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
+	earlyZ.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
+	earlyZ.commands = provider.renderSystem->CreateCommandList(L"EarlyZ");
+
+	earlyZ.worker = std::thread([this, &pass]
+		{
+			while (WaitForSingleObject(earlyZ.eventBegin, INFINITE) == WAIT_OBJECT_0 && running)
+			{
+				renderEarlyZ(pass);
+
+				SetEvent(earlyZ.eventFinish);
+			}
+		});
+
+	return { { earlyZ.eventFinish, earlyZ.commands } };
+}
+
+void SceneRenderTask::run(RenderContext& renderCtx, CommandsData&, CompositorPass&)
+{
+	ctx = renderCtx;
+	SetEvent(scene.eventBegin);
+}
+
+void SceneRenderTask::renderScene(CompositorPass& pass)
+{
+	sceneInfo.updateVisibility(*ctx.camera);
+
+	if (earlyZ.eventBegin)
+		SetEvent(earlyZ.eventBegin);
+
+	provider.renderSystem->StartCommandList(scene.commands);
+
+	pass.target.texture->PrepareAsTarget(scene.commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true, true, !earlyZ.eventBegin);
+	sceneQueue->renderObjects(*ctx.camera, sceneInfo, provider.params, scene.commands.commandList, provider.renderSystem->frameIndex);
+
+	//ctx.target->PrepareAsView(scene.commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_RENDER_TARGET);
+}
+
+void SceneRenderTask::renderEarlyZ(CompositorPass& pass)
+{
+	provider.renderSystem->StartCommandList(earlyZ.commands);
+
+	pass.target.texture->PrepareAsDepthTarget(earlyZ.commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+	depthQueue->renderObjects(*ctx.camera, sceneInfo, provider.params, earlyZ.commands.commandList, provider.renderSystem->frameIndex);
+}
+
+SceneRenderTransparentTask::SceneRenderTransparentTask(RenderProvider p, AaSceneManager& s) : CompositorTask(p, s)
+{
+	sceneInfo = { sceneMgr.getRenderables(Order::Transparent) };
+}
+
+SceneRenderTransparentTask::~SceneRenderTransparentTask()
+{
+	running = false;
 
 	if (transparent.eventBegin)
 	{
@@ -38,49 +129,19 @@ SceneRenderTask::~SceneRenderTask()
 	}
 }
 
-AsyncTasksInfo SceneRenderTask::initialize(AaSceneManager* sceneMgr, RenderTargetTexture* target, const std::vector<std::string>& params)
+AsyncTasksInfo SceneRenderTransparentTask::initialize(CompositorPass& pass)
 {
-	sceneQueue = sceneMgr->createQueue(target->formats);
-	
-	scene.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
-	scene.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
-	scene.commands = provider.renderSystem->CreateCommandList(L"Scene");
-
-	scene.worker = std::thread([this]
-		{
-			while (WaitForSingleObject(scene.eventBegin, INFINITE) == WAIT_OBJECT_0 && running)
-			{
-				renderScene();
-
-				SetEvent(scene.eventFinish);
-			}
-		});
-
-	AsyncTasksInfo tasks;
-
-	if (!params.empty() && params.front() == "EarlyZ")
-	{
-		tasks = initializeEarlyZ(sceneMgr);
-	}
-
-	tasks.push_back({ scene.eventFinish, scene.commands });
-
-	return tasks;
-}
-
-AsyncTasksInfo SceneRenderTask::initializeTransparent(AaSceneManager* sceneMgr, RenderTargetTexture* target)
-{
-	transparentQueue = sceneMgr->createQueue({ target->formats.front() }, MaterialTechnique::Default, Order::Transparent);
+	transparentQueue = sceneMgr.createQueue({ pass.target.texture->formats.front() }, MaterialTechnique::Default, Order::Transparent);
 
 	transparent.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
 	transparent.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
 	transparent.commands = provider.renderSystem->CreateCommandList(L"SceneTransparent");
 
-	transparent.worker = std::thread([this]
+	transparent.worker = std::thread([this, &pass]
 		{
 			while (WaitForSingleObject(transparent.eventBegin, INFINITE) == WAIT_OBJECT_0 && running)
 			{
-				renderTransparentScene();
+				renderTransparentScene(pass);
 
 				SetEvent(transparent.eventFinish);
 			}
@@ -89,64 +150,20 @@ AsyncTasksInfo SceneRenderTask::initializeTransparent(AaSceneManager* sceneMgr, 
 	return { { transparent.eventFinish, transparent.commands } };
 }
 
-AsyncTasksInfo SceneRenderTask::initializeEarlyZ(AaSceneManager* sceneMgr)
-{
-	depthQueue = sceneMgr->createQueue({}, MaterialTechnique::Depth);
-
-	earlyZ.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
-	earlyZ.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
-	earlyZ.commands = provider.renderSystem->CreateCommandList(L"EarlyZ");
-
-	earlyZ.worker = std::thread([this]
-		{
-			while (WaitForSingleObject(earlyZ.eventBegin, INFINITE) == WAIT_OBJECT_0 && running)
-			{
-				renderEarlyZ();
-
-				SetEvent(earlyZ.eventFinish);
-			}
-		});
-
-	return { { earlyZ.eventFinish, earlyZ.commands } };
-}
-
-void SceneRenderTask::run(RenderContext& renderCtx, CommandsData&)
+void SceneRenderTransparentTask::run(RenderContext& renderCtx, CommandsData&, CompositorPass&)
 {
 	ctx = renderCtx;
-	SetEvent(scene.eventBegin);
+	SetEvent(transparent.eventBegin);
 }
 
-void SceneRenderTask::renderScene()
+void SceneRenderTransparentTask::renderTransparentScene(CompositorPass& pass)
 {
-	ctx.renderables->updateRenderInformation(*ctx.camera, sceneInfo);
+	sceneInfo.updateVisibility(*ctx.camera);
 
-	if (earlyZ.eventBegin)
-		SetEvent(earlyZ.eventBegin);
-	if (transparent.eventBegin)
-		SetEvent(transparent.eventBegin);
-
-	provider.renderSystem->StartCommandList(scene.commands);
-
-	ctx.target->PrepareAsTarget(scene.commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true, true, !earlyZ.eventBegin);
-	sceneQueue->renderObjects(*ctx.camera, sceneInfo, provider.params, scene.commands.commandList, provider.renderSystem->frameIndex);
-
-	//ctx.target->PrepareAsView(scene.commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_RENDER_TARGET);
-}
-
-void SceneRenderTask::renderTransparentScene()
-{
 	provider.renderSystem->StartCommandList(transparent.commands);
 
-	ctx.target->PrepareAsSingleTarget(transparent.commands.commandList, provider.renderSystem->frameIndex, 0, D3D12_RESOURCE_STATE_RENDER_TARGET, false, true, false);
+	pass.target.texture->PrepareAsSingleTarget(transparent.commands.commandList, provider.renderSystem->frameIndex, 0, D3D12_RESOURCE_STATE_RENDER_TARGET, false, true, false);
 	transparentQueue->renderObjects(*ctx.camera, sceneInfo, provider.params, transparent.commands.commandList, provider.renderSystem->frameIndex);
 
 	//ctx.target->PrepareAsSingleView(transparent.commands.commandList, provider.renderSystem->frameIndex, 0, D3D12_RESOURCE_STATE_RENDER_TARGET);
-}
-
-void SceneRenderTask::renderEarlyZ()
-{
-	provider.renderSystem->StartCommandList(earlyZ.commands);
-
-	ctx.target->PrepareAsDepthTarget(earlyZ.commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_DEPTH_WRITE);
-	depthQueue->renderObjects(*ctx.camera, sceneInfo, provider.params, earlyZ.commands.commandList, provider.renderSystem->frameIndex);
 }

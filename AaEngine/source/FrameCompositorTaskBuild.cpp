@@ -1,4 +1,6 @@
 #include "FrameCompositor.h"
+#include <set>
+#include <algorithm>
 
 void FrameCompositor::initializeTextureStates()
 {
@@ -48,13 +50,14 @@ D3D12_RESOURCE_STATES FrameCompositor::getInitialTextureState(const std::string&
 
 void FrameCompositor::initializeCommands()
 {
-	auto needsPassResources = [](const std::set<std::string>& pushedResources, const CompositorPass& pass)
+	auto needsPassResources = [](const std::set<std::string>& pushedResources, const CompositorPassInfo& pass)
 		{
 			return pushedResources.contains(pass.after)
 				|| pushedResources.contains(pass.target)
 				|| std::any_of(pass.inputs.begin(), pass.inputs.end(), [&pushedResources](const std::pair<std::string, UINT>& s) { return pushedResources.find(s.first) != pushedResources.end(); });
 		};
 
+	std::vector<std::string> asyncNames;
 	AsyncTasksInfo pushedAsyncTasks;
 	std::set<std::string> pushedAsyncResources;
 
@@ -69,17 +72,33 @@ void FrameCompositor::initializeCommands()
 				group.data.push_back(t.commands);
 				group.finishEvents.push_back(t.finishEvent);
 			}
+			group.pass = std::move(asyncNames);
 
 			pushedAsyncTasks.clear();
 			pushedAsyncResources.clear();
 		};
 
-	auto pushAsyncTasks = [&](const CompositorPass& pass, const AsyncTasksInfo& info)
+	auto pushAsyncTasks = [&](const CompositorPassInfo& pass, const AsyncTasksInfo& tasks, bool forceOrder)
 		{
 			if (needsPassResources(pushedAsyncResources, pass))
 				prepareAsyncTasks();
 
-			pushedAsyncTasks.insert(pushedAsyncTasks.end(), info.begin(), info.end());
+			if (!forceOrder)
+			{
+				asyncNames.push_back(pass.name);
+				pushedAsyncTasks.insert(pushedAsyncTasks.end(), tasks.begin(), tasks.end());
+			}
+			else
+			{
+				for (int i = 0; auto& t : tasks)
+				{
+					if (i++)
+						prepareAsyncTasks();
+
+					asyncNames.push_back(pass.name);
+					pushedAsyncTasks.push_back(t);
+				}
+			}
 
 			if (!pass.name.empty())
 				pushedAsyncResources.insert(pass.name);
@@ -109,43 +128,12 @@ void FrameCompositor::initializeCommands()
 			return generalCommands;
 		};
 
-	auto sz = passes.size();
 	for (auto& pass : passes)
 	{
-		bool syncPass = false;
+		if (pass.task)
+			pushAsyncTasks(pass.info, pass.task->initialize(pass), pass.task->forceTaskOrder());
 
-		if (pass.info.render == "Shadows")
-		{
-			pushAsyncTasks(pass.info, shadowRender.initialize(sceneMgr, pass.target.texture));
-		}
-		else if (pass.info.render == "VoxelScene")
-		{
-			pushAsyncTasks(pass.info, sceneVoxelize.initialize(sceneMgr, pass.target.texture));
-		}
-		else if (pass.info.render == "DebugOverlay")
-		{
-			debugOverlay.initialize(sceneMgr, pass.target.texture);
-			syncPass = true;
-		}
-		else if (pass.info.render == "Test")
-		{
-			testTask.initialize(sceneMgr, pass.target.texture);
-			syncPass = true;
-		}
-		else if (pass.info.render == "Scene")
-		{
-			pushAsyncTasks(pass.info, sceneRender.initialize(sceneMgr, pass.target.texture, pass.info.params));
-		}
-		else if (pass.info.render == "SceneTransparent")
-		{
-			pushAsyncTasks(pass.info, sceneRender.initializeTransparent(sceneMgr, pass.target.texture));
-		}
-		else
-		{
-			syncPass = true;
-		}
-
-		pass.generalCommands = refreshSyncCommands(pass, syncPass);
+		pass.generalCommands = refreshSyncCommands(pass, !pass.task || pass.task->isSync());
 	}
 
 	prepareAsyncTasks();

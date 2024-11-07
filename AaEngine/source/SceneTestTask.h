@@ -11,18 +11,17 @@ class SceneTestTask : public CompositorTask
 {
 public:
 
-	SceneTestTask(RenderProvider provider);
+	SceneTestTask(RenderProvider provider, AaSceneManager&);
 	~SceneTestTask();
 
-	AsyncTasksInfo initialize(AaSceneManager* sceneMgr, RenderTargetTexture* target) override;
-	void run(RenderContext& ctx, CommandsData& syncCommands) override;
+	AsyncTasksInfo initialize(CompositorPass& pass) override;
+	void run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
+
+	bool isSync() const override;
 
 private:
 
 	RenderTargetHeap heap;
 	RenderTargetTexture tmp;
 	RenderQueue tmpQueue;
-
-	AaSceneManager* sceneMgr;
-	RenderProvider provider;
 };

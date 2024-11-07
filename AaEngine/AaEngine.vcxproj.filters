@@ -214,6 +214,9 @@
     <ClCompile Include="source\AaMath.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="source\ImguiDebugWindowTask.cpp">
+      <Filter>Source Files\FrameCompositor\Tasks</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\AaApplication.h">
@@ -391,6 +394,9 @@
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClInclude>
     <ClInclude Include="source\CompositorTask.h">
+      <Filter>Source Files\FrameCompositor\Tasks</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ImguiDebugWindowTask.h">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClInclude>
   </ItemGroup>

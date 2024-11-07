@@ -15,8 +15,6 @@ struct RenderProvider
 struct RenderContext
 {
 	AaCamera* camera;
-	Renderables* renderables;
-	RenderTargetTexture* target{};
 };
 
 struct AsyncTaskInfo

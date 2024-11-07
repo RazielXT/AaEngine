@@ -30,10 +30,10 @@ struct RenderQueue
 		}
 	};
 
-	std::map<Order, std::vector<EntityEntry>> entityOrder;
 	std::vector<DXGI_FORMAT> targets;
 	MaterialTechnique technique = MaterialTechnique::Default;
 	Order targetOrder = Order::Normal;
+	std::vector<EntityEntry> entities;
 
 	void update(const EntityChanges&);
 	void renderObjects(AaCamera& cam, const RenderInformation& info, const FrameGpuParameters& params, ID3D12GraphicsCommandList* commandList, UINT frameIndex);

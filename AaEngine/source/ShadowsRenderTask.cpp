@@ -3,8 +3,12 @@
 #include "AaSceneManager.h"
 #include "ShadowMap.h"
 
-ShadowsRenderTask::ShadowsRenderTask(RenderProvider p, AaShadowMap& shadows) : shadowMaps(shadows), provider(p)
+ShadowsRenderTask::ShadowsRenderTask(RenderProvider p, AaSceneManager& s, AaShadowMap& shadows) : shadowMaps(shadows), CompositorTask(p, s)
 {
+	for (auto& shadow : shadowsData)
+	{
+		shadow.renderablesData = { sceneMgr.getRenderables(Order::Normal) };
+	}
 }
 
 ShadowsRenderTask::~ShadowsRenderTask()
@@ -24,9 +28,9 @@ ShadowsRenderTask::~ShadowsRenderTask()
 	}
 }
 
-AsyncTasksInfo ShadowsRenderTask::initialize(AaSceneManager* sceneMgr, RenderTargetTexture*)
+AsyncTasksInfo ShadowsRenderTask::initialize(CompositorPass&)
 {
-	depthQueue = sceneMgr->createQueue({}, MaterialTechnique::Depth);
+	depthQueue = sceneMgr.createQueue({}, MaterialTechnique::Depth);
 
 	AsyncTasksInfo tasks;
 
@@ -45,7 +49,7 @@ AsyncTasksInfo ShadowsRenderTask::initialize(AaSceneManager* sceneMgr, RenderTar
 					provider.renderSystem->StartCommandList(shadow.commands);
 
 					auto& info = shadow.renderablesData;
-					ctx.renderables->updateRenderInformation(shadowMaps.camera[idx], info);
+					info.updateVisibility(shadowMaps.camera[idx]);
 
 					shadowMaps.texture[idx].PrepareAsDepthTarget(shadow.commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
@@ -63,7 +67,7 @@ AsyncTasksInfo ShadowsRenderTask::initialize(AaSceneManager* sceneMgr, RenderTar
 	return tasks;
 }
 
-void ShadowsRenderTask::run(RenderContext& renderCtx, CommandsData&)
+void ShadowsRenderTask::run(RenderContext& renderCtx, CommandsData&, CompositorPass&)
 {
 	ctx = renderCtx;
 

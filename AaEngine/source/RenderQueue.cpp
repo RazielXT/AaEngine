@@ -37,14 +37,13 @@ void RenderQueue::update(const EntityChanges& changes)
 			}
 
 			auto entry = EntityEntry{ entity, matInstance->Assign(entity->geometry.layout ? *entity->geometry.layout : std::vector<D3D12_INPUT_ELEMENT_DESC>{}, targets) };
-			auto& entities = entityOrder[entity->order];
 
 			auto it = std::lower_bound(entities.begin(), entities.end(), entry);
 			entities.insert(it, entry);
 		}
 		if (change == EntityChange::DeleteAll)
 		{
-			entityOrder.clear();
+			entities.clear();
 		}
 	}
 }
@@ -70,49 +69,43 @@ void RenderQueue::renderObjects(AaCamera& camera, const RenderInformation& info,
 	EntityEntry lastEntry{};
 	ShaderConstantsProvider constants(info, camera);
 
-	for (auto& [order, entities] : entityOrder)
+	for (auto& entry : entities)
 	{
-		if (targetOrder != order)
+		if (!entry.entity->isVisible(info.visibility))
 			continue;
 
-		for (auto& entry : entities)
+		constants.entity = entry.entity;
+
+		if (entry.base != lastEntry.base)
+			entry.base->BindSignature(commandList, frameIndex);
+
+		if (entry.material != lastEntry.material)
 		{
-			if (!entry.entity->isVisible(info.visibility))
-				continue;
-
-			constants.entity = entry.entity;
-
-			if (entry.base != lastEntry.base)
-				entry.base->BindSignature(commandList, frameIndex);
-
-			if (entry.material != lastEntry.material)
-			{
-				entry.material->LoadMaterialConstants(constants);
-				entry.material->UpdatePerFrame(constants, params);
-				entry.material->BindPipeline(commandList);
-				entry.material->BindTextures(commandList, frameIndex);
-			}
-
-			if (technique == MaterialTechnique::Voxelize)
-			{
-				entry.entity->material->GetParameter(FastParam::Emission, constants.data.front().data() + entry.material->GetParameterOffset(FastParam::Emission));
-				entry.entity->material->GetParameter(FastParam::MaterialColor, constants.data.front().data() + entry.material->GetParameterOffset(FastParam::MaterialColor));
-				entry.entity->material->GetParameter(FastParam::TexIdDiffuse, constants.data.front().data() + entry.material->GetParameterOffset(FastParam::TexIdDiffuse));
-			}
-
-			entry.material->UpdatePerObject(constants, params);
-			entry.material->BindConstants(commandList, frameIndex, constants);
-
-			RenderObject(commandList, entry.entity, camera);
-
-			if (technique == MaterialTechnique::Voxelize)
-			{
-				auto uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(nullptr);
-				commandList->ResourceBarrier(1, &uavBarrier);
-			}
-
-			lastEntry = entry;
+			entry.material->LoadMaterialConstants(constants);
+			entry.material->UpdatePerFrame(constants, params);
+			entry.material->BindPipeline(commandList);
+			entry.material->BindTextures(commandList, frameIndex);
 		}
+
+		if (technique == MaterialTechnique::Voxelize)
+		{
+			entry.entity->material->GetParameter(FastParam::Emission, constants.data.front().data() + entry.material->GetParameterOffset(FastParam::Emission));
+			entry.entity->material->GetParameter(FastParam::MaterialColor, constants.data.front().data() + entry.material->GetParameterOffset(FastParam::MaterialColor));
+			entry.entity->material->GetParameter(FastParam::TexIdDiffuse, constants.data.front().data() + entry.material->GetParameterOffset(FastParam::TexIdDiffuse));
+		}
+
+		entry.material->UpdatePerObject(constants, params);
+		entry.material->BindConstants(commandList, frameIndex, constants);
+
+		RenderObject(commandList, entry.entity, camera);
+
+		if (technique == MaterialTechnique::Voxelize)
+		{
+			auto uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(nullptr);
+			commandList->ResourceBarrier(1, &uavBarrier);
+		}
+
+		lastEntry = entry;
 	}
 }
 

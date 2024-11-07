@@ -99,8 +99,6 @@ void Renderables::updateVisibility(const BoundingOrientedBox& box, RenderableVis
 
 void Renderables::updateRenderInformation(AaCamera& camera, RenderInformation& info) const
 {
-	camera.updateMatrix();
-
 	if (camera.isOrthographic())
 		updateVisibility(camera.prepareOrientedBox(), info.visibility);
 	else
@@ -240,4 +238,9 @@ DirectX::BoundingBox RenderObject::getWorldBoundingBox() const
 	bbox.Extents *= getScale();
 
 	return bbox;
+}
+
+void RenderInformation::updateVisibility(AaCamera& camera)
+{
+	source->updateRenderInformation(camera, *this);
 }

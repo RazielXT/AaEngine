@@ -11,11 +11,13 @@ class ShadowsRenderTask : public CompositorTask
 {
 public:
 
-	ShadowsRenderTask(RenderProvider provider, AaShadowMap& shadows);
+	ShadowsRenderTask(RenderProvider provider, AaSceneManager&, AaShadowMap& shadows);
 	~ShadowsRenderTask();
 
-	AsyncTasksInfo initialize(AaSceneManager* sceneMgr, RenderTargetTexture* target) override;
-	void run(RenderContext& ctx, CommandsData& syncCommands) override;
+	AsyncTasksInfo initialize(CompositorPass& pass) override;
+	void run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
+
+private:
 
 	struct 
 	{
@@ -32,9 +34,7 @@ public:
 
 	RenderContext ctx;
 
-	RenderQueue* depthQueue;
+	RenderQueue* depthQueue{};
 
 	AaShadowMap& shadowMaps;
-
-	RenderProvider provider;
 };

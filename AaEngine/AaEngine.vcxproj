@@ -126,6 +126,7 @@
     <ClCompile Include="source\FreeCamera.cpp" />
     <ClCompile Include="source\GenerateMipsComputeShader.cpp" />
     <ClCompile Include="source\GrassArea.cpp" />
+    <ClCompile Include="source\ImguiDebugWindowTask.cpp" />
     <ClCompile Include="source\InputHandler.cpp" />
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\MyListener.cpp" />
@@ -160,6 +161,7 @@
     <ClInclude Include="source\EntityGeometry.h" />
     <ClInclude Include="source\GenerateMipsComputeShader.h" />
     <ClInclude Include="source\GrassArea.h" />
+    <ClInclude Include="source\ImguiDebugWindowTask.h" />
     <ClInclude Include="source\SceneTestTask.h" />
     <ClInclude Include="source\ScreenQuad.h" />
     <ClInclude Include="source\ShaderConstantsProvider.h" />

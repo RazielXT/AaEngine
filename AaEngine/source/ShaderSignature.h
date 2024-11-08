@@ -61,7 +61,7 @@ struct SignatureInfo
 	void add(LoadedShader* shader, ShaderType type);
 	void finish();
 
-	ID3D12RootSignature* createRootSignature(ID3D12Device* device, const std::vector<SamplerInfo>& staticSamplers = {});
+	ID3D12RootSignature* createRootSignature(ID3D12Device* device, const wchar_t* name, const std::vector<SamplerInfo>& staticSamplers = {});
 	std::shared_ptr<ResourcesInfo> createResourcesData() const;
 
 private:

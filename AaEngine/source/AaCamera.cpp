@@ -146,12 +146,12 @@ void AaCamera::setDirection(Vector3 Direction)
 	if (Direction == UpVector)
 	{
 		direction = FrontDirection;
-		pitch_ = 90;
+		pitch_ = XM_PIDIV2;
 	}
 	else if (Direction == -1 * UpVector)
 	{
 		direction = FrontDirection;
-		pitch_ = -90;
+		pitch_ = -XM_PIDIV2;
 	}
 	else
 		direction = Direction;

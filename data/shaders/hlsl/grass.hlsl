@@ -70,7 +70,7 @@ PSOutput PSMain(PSInput input)
 
 	albedo.rgb *= float3(0.1,0.5,0.1);
 
-	float shading = saturate(1.5 - input.uv.y);
+	float shading = saturate(1.3 - input.uv.y);
 
 	PSOutput output;
     output.target0 = albedo * distanceFade * shading;

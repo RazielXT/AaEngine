@@ -44,7 +44,7 @@ void MaterialBase::Load()
 
 	info.finish();
 
-	rootSignature = info.createRootSignature(renderSystem->device, ref.resources.samplers);
+	rootSignature = info.createRootSignature(renderSystem->device, std::wstring(ref.name.begin(), ref.name.end()).data(), ref.resources.samplers);
 }
 
 void MaterialBase::BindSignature(ID3D12GraphicsCommandList* commandList, int frameIndex) const

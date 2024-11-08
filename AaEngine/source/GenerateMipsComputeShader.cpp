@@ -8,7 +8,7 @@ void GenerateMipsComputeShader::dispatch(ID3D12GraphicsCommandList* commandList,
 	auto resource = texture.textures[frameIndex].Get();
 
 	commandList->SetPipelineState(pipelineState.Get());
-	commandList->SetComputeRootSignature(signature.Get());
+	commandList->SetComputeRootSignature(signature);
 
 	ID3D12DescriptorHeap* ppHeaps[] = { mgr.mainDescriptorHeap[frameIndex] };
 	commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);

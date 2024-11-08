@@ -165,7 +165,7 @@ void SignatureInfo::finish()
 		flags |= D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED;
 }
 
-ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device* device, const std::vector<SamplerInfo>& staticSamplers)
+ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device* device, const wchar_t* name, const std::vector<SamplerInfo>& staticSamplers)
 {
 	std::vector<CD3DX12_ROOT_PARAMETER1> params;
 	params.resize(cbuffers.size() + textures.size() + uavs.size() + structuredBuffers.size());
@@ -259,6 +259,7 @@ ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device* device, co
 
 	ID3D12RootSignature* rootSignature{};
 	device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
+	rootSignature->SetName(name);
 
 	return rootSignature;
 }

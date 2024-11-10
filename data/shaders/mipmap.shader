@@ -1,6 +1,6 @@
 compute_shader generateMipmaps
 {
-	file generateMipsSimple.hlsl
+	file generateMipsCS.hlsl
 	entry CSMain
 	profile cs_6_6
 }

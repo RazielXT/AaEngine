@@ -234,12 +234,14 @@ void ResourcesManager::createDepthShaderResourceView(RenderDepthTargetTexture& t
 		auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mainDescriptorHeap[i]->GetCPUDescriptorHandleForHeapStart(), currentDescriptorCount
 			, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 
+		auto& target = texture.depthStencilTexture[i] ? texture.depthStencilTexture[i] : texture.depthStencilTexture[0];
+
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 		srvDesc.Texture2D.MipLevels = 1;
 		srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
-		device->CreateShaderResourceView(texture.depthStencilTexture[i].Get(), &srvDesc, handle);
+		device->CreateShaderResourceView(target.Get(), &srvDesc, handle);
 
 		texture.depthView.srvHandles[i] = CD3DX12_GPU_DESCRIPTOR_HANDLE(mainDescriptorHeap[i]->GetGPUDescriptorHandleForHeapStart(), currentDescriptorCount
 			, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));

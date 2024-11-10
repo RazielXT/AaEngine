@@ -19,6 +19,7 @@ public:
 	XMFLOAT4X4 getWvpMatrix() const;
 	XMMATRIX getWorldMatrix() const;
 	XMMATRIX getViewProjectionMatrix() const;
+	XMMATRIX getInverseViewProjectionMatrix() const;
 
 	XMFLOAT3 getWorldPosition() const;
 	XMFLOAT3 getCameraPosition() const;

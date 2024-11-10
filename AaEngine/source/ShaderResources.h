@@ -23,6 +23,7 @@ enum class GpuBufferType
 	Root,
 	Instancing,
 	Geometry,
+	RWBuffer,
 	COUNT
 };
 
@@ -56,6 +57,7 @@ struct ResourcesInfo
 		None,
 		WVP_MATRIX,
 		VP_MATRIX,
+		INV_VP_MATRIX,
 		WORLD_MATRIX,
 		SHADOW_MATRIX,
 		TEXID,

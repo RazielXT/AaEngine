@@ -217,6 +217,12 @@
     <ClCompile Include="source\ImguiDebugWindowTask.cpp">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClCompile>
+    <ClCompile Include="source\TextureData.cpp">
+      <Filter>Source Files\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="source\GrassInitComputeShader.cpp">
+      <Filter>Source Files\Resources\Compute</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\AaApplication.h">
@@ -398,6 +404,12 @@
     </ClInclude>
     <ClInclude Include="source\ImguiDebugWindowTask.h">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
+    </ClInclude>
+    <ClInclude Include="source\TextureData.h">
+      <Filter>Source Files\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="source\GrassInitComputeShader.h">
+      <Filter>Source Files\Resources\Compute</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -54,7 +54,7 @@ void InstanceGroup::create(const InstanceGroupDescription& description)
 		XMStoreFloat4x4(&data[i].transform, XMMatrixTranspose(description.objects[i].createWorldMatrix()));
 	}
 
-	gpuBuffer = ShaderConstantBuffers::get().CreateStructuredBuffer(data.data(), sizeof(InstanceData) * data.size());
+	gpuBuffer = ShaderConstantBuffers::get().CreateUploadStructuredBuffer(data.data(), sizeof(InstanceData) * data.size());
 
 	count = description.objects.size();
 }

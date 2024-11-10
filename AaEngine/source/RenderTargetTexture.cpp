@@ -9,6 +9,11 @@ void RenderDepthTargetTexture::Init(ID3D12Device* device, UINT w, UINT h, UINT f
 	CreateDepthBuffer(device, frameCount, initialState, arraySize);
 }
 
+void RenderDepthTargetTexture::Clear(ID3D12GraphicsCommandList* commandList, UINT frameIndex)
+{
+	commandList->ClearDepthStencilView(dsvHandles[frameIndex], D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+}
+
 void RenderTargetHeap::Init(ID3D12Device* device, UINT count, UINT frameCount, const wchar_t* name)
 {
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
@@ -187,12 +192,17 @@ void RenderDepthTargetTexture::PrepareAsDepthView(ID3D12GraphicsCommandList* com
 {
 	if (from != D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
 	{
-		auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-			depthStencilTexture[frameIndex].Get(),
-			from,
-			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-		commandList->ResourceBarrier(1, &barrier);
+		TransitionDepth(commandList, frameIndex, from, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	}
+}
+
+void RenderDepthTargetTexture::TransitionDepth(ID3D12GraphicsCommandList* commandList, UINT frameIndex, D3D12_RESOURCE_STATES from, D3D12_RESOURCE_STATES to)
+{
+	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+		depthStencilTexture[frameIndex].Get(),
+		from,
+		to);
+	commandList->ResourceBarrier(1, &barrier);
 }
 
 void RenderTargetTexture::PrepareAsTarget(ID3D12GraphicsCommandList* commandList, UINT frameIndex, D3D12_RESOURCE_STATES from, bool clear, bool depth, bool clearDepth)

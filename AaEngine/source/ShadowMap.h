@@ -18,6 +18,7 @@ public:
 
 	aa::SceneLights::Light& light;
 	void update(UINT frameIndex);
+	void clear(ID3D12GraphicsCommandList* commandList, UINT frameIndex);
 
 private:
 

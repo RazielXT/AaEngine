@@ -46,6 +46,11 @@ struct BoundingBoxVolume
 		max = _max;
 	}
 
+	BoundingBoxVolume(Vector3 start)
+	{
+		min = max = start;
+	}
+
 	void add(Vector3 point)
 	{
 		min = Vector3::Min(min, point);

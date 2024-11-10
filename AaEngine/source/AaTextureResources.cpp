@@ -13,12 +13,11 @@ HRESULT LoadTextureFromFile(ResourceUploadBatch& resourceUpload, ID3D12Device* d
 
 	if (filename.ends_with("dds"))
 	{
-		hr = DirectX::CreateDDSTextureFromFile(
+		hr = DirectX::CreateDDSTextureFromFileEx(
 			device,
 			resourceUpload,
-			std::wstring(filename.begin(), filename.end()).c_str(),
-			texture,
-			true);
+			std::wstring(filename.begin(), filename.end()).c_str(), -1, D3D12_RESOURCE_FLAG_NONE, DX12::DDS_LOADER_FORCE_SRGB,
+			texture);
 	}
 	else
 	{

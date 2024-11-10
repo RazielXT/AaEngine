@@ -178,6 +178,15 @@ bool AaShaderCompiler::reflectShaderInfo(IDxcResult* compiledShaderBuffer, Shade
 
 			description.structuredBuffers.push_back(uavInfo);
 		}
+		else if (shaderInputBindDesc.Type == D3D_SIT_UAV_RWSTRUCTURED || shaderInputBindDesc.Type == D3D_SIT_UAV_RWBYTEADDRESS)
+		{
+			ShaderReflection::StructuredBuffer uavInfo;
+			uavInfo.Name = shaderInputBindDesc.Name;
+			uavInfo.Slot = shaderInputBindDesc.BindPoint;
+			uavInfo.Space = shaderInputBindDesc.Space;
+
+			description.rwStructuredBuffers.push_back(uavInfo);
+		}
 	}
 
 	if (description.textures.empty() && shaderDesc.TextureNormalInstructions)

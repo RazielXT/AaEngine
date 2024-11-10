@@ -30,7 +30,7 @@ void EntityGeometry::fromInstancedModel(const AaModel& model, InstanceGroup& gro
 void EntityGeometry::fromGrass(GrassArea& grass)
 {
 	geometryCustomBuffer = grass.gpuBuffer->GetGPUVirtualAddress();
-	vertexCount = grass.getVertexCount();
+	vertexCount = grass.vertexCount;
 	instanceCount = 1;
 	type = Type::Manual;
 }

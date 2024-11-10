@@ -16,7 +16,7 @@ public:
 	void clear();
 
 	AaEntity* createEntity(std::string name, Order order = Order::Normal);
-	AaEntity* createGrassEntity(std::string name, BoundingBoxVolume extends, Order order = Order::Normal);
+	AaEntity* createGrassEntity(AaEntity* terrain);
 	AaEntity* getEntity(std::string name) const;
 
 	RenderQueue* createQueue(const std::vector<DXGI_FORMAT>& targets, MaterialTechnique technique = MaterialTechnique::Default, Order order = Order::Normal);

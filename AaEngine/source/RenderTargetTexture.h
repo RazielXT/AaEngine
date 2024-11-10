@@ -14,9 +14,11 @@ class RenderDepthTargetTexture
 public:
 
 	void Init(ID3D12Device* device, UINT width, UINT height, UINT frameCount, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_DEPTH_WRITE, UINT arraySize = 1);
+	void Clear(ID3D12GraphicsCommandList* commandList, UINT frameIndex);
 
 	void PrepareAsDepthTarget(ID3D12GraphicsCommandList* commandList, UINT frameIndex, D3D12_RESOURCE_STATES from);
 	void PrepareAsDepthView(ID3D12GraphicsCommandList* commandList, UINT frameIndex, D3D12_RESOURCE_STATES from);
+	void TransitionDepth(ID3D12GraphicsCommandList* commandList, UINT frameIndex, D3D12_RESOURCE_STATES from, D3D12_RESOURCE_STATES to);
 
 	void SetName(const wchar_t* name);
 

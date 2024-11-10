@@ -126,6 +126,7 @@
     <ClCompile Include="source\FreeCamera.cpp" />
     <ClCompile Include="source\GenerateMipsComputeShader.cpp" />
     <ClCompile Include="source\GrassArea.cpp" />
+    <ClCompile Include="source\GrassInitComputeShader.cpp" />
     <ClCompile Include="source\ImguiDebugWindowTask.cpp" />
     <ClCompile Include="source\InputHandler.cpp" />
     <ClCompile Include="source\main.cpp" />
@@ -143,6 +144,7 @@
     <ClCompile Include="source\ShaderSignature.cpp" />
     <ClCompile Include="source\ShadowMap.cpp" />
     <ClCompile Include="source\ShadowsRenderTask.cpp" />
+    <ClCompile Include="source\TextureData.cpp" />
     <ClCompile Include="source\TextureResource.cpp" />
     <ClCompile Include="source\VoxelizeSceneTask.cpp" />
   </ItemGroup>
@@ -161,6 +163,7 @@
     <ClInclude Include="source\EntityGeometry.h" />
     <ClInclude Include="source\GenerateMipsComputeShader.h" />
     <ClInclude Include="source\GrassArea.h" />
+    <ClInclude Include="source\GrassInitComputeShader.h" />
     <ClInclude Include="source\ImguiDebugWindowTask.h" />
     <ClInclude Include="source\SceneTestTask.h" />
     <ClInclude Include="source\ScreenQuad.h" />
@@ -205,6 +208,7 @@
     <ClInclude Include="source\ShaderSignature.h" />
     <ClInclude Include="source\ShadowMap.h" />
     <ClInclude Include="source\ShadowsRenderTask.h" />
+    <ClInclude Include="source\TextureData.h" />
     <ClInclude Include="source\TextureResource.h" />
     <ClInclude Include="source\VoxelizeSceneTask.h" />
   </ItemGroup>

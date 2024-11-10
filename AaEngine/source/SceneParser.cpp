@@ -188,7 +188,7 @@ void loadExtensions(const xml_node& element, AaEntity* ent, SceneNode* node, AaS
 	{
 		if (e.name == "addGrass")
 		{
-			sceneMgr->createGrassEntity("grass" + ent->name, ent->getWorldBoundingBox());
+			sceneMgr->createGrassEntity(ent);
 		}
 	}
 }

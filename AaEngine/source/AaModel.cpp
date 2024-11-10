@@ -137,7 +137,6 @@ static uint32_t getTypeSize(DXGI_FORMAT t)
 	case DXGI_FORMAT_UNKNOWN:
 	default:
 		return 0;
-		//throw gcnew InvalidOperationException("Cannot determine format element size; invalid format specified.");
 	}
 }
 
@@ -164,6 +163,7 @@ void AaModel::CreateVertexBuffer(ID3D12Device* device, ResourceUploadBatch* memo
 	vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
 	vertexBufferView.SizeInBytes = vertexCount * vertexSize;
 	vertexBufferView.StrideInBytes = vertexSize;
+	vertexBuffer->SetName(L"VB");
 }
 
 void AaModel::CreateIndexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, const std::vector<uint16_t>& data)
@@ -176,6 +176,7 @@ void AaModel::CreateIndexBuffer(ID3D12Device* device, ResourceUploadBatch* memor
 	indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
 	indexBufferView.SizeInBytes = static_cast<UINT>(data.size()) * sizeof(uint16_t);
 	indexBufferView.Format = DXGI_FORMAT_R16_UINT;
+	indexBuffer->SetName(L"IB");
 }
 
 void AaModel::calculateBounds(const std::vector<float>& positions)

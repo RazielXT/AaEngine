@@ -76,6 +76,25 @@ void SignatureInfo::add(LoadedShader* shader, ShaderType type)
 		addVisibility(buffer->visibility, type);
 	}
 
+	for (auto& b : shader->desc.rwStructuredBuffers)
+	{
+		StructuredBuffer* buffer = nullptr;
+		for (auto& sb : rwStructuredBuffers)
+		{
+			if (sb.info.Name == b.Name)
+			{
+				buffer = &sb;
+				break;
+			}
+		}
+		if (!buffer)
+		{
+			rwStructuredBuffers.emplace_back(b);
+			buffer = &rwStructuredBuffers.back();
+		}
+		addVisibility(buffer->visibility, type);
+	}
+
 	for (auto& t : shader->desc.textures)
 	{
 		Texture* texture = nullptr;
@@ -143,7 +162,7 @@ void SignatureInfo::finish()
 	if (!cbuffers.empty())
 	{
 		// +1 for potential move to root constants
-		const auto rootParamsSizeMax = (64 - hasVertexInput - (!bindlessTextures && !textures.empty()) - cbuffers.size() - structuredBuffers.size() + 1) * sizeof(DWORD);
+		const auto rootParamsSizeMax = (64 - hasVertexInput - (!bindlessTextures && !textures.empty()) - cbuffers.size() - structuredBuffers.size() - rwStructuredBuffers.size() + 1) * sizeof(DWORD);
 
 		for (auto& b : cbuffers)
 		{
@@ -168,7 +187,7 @@ void SignatureInfo::finish()
 ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device* device, const wchar_t* name, const std::vector<SamplerInfo>& staticSamplers)
 {
 	std::vector<CD3DX12_ROOT_PARAMETER1> params;
-	params.resize(cbuffers.size() + textures.size() + uavs.size() + structuredBuffers.size());
+	params.resize(cbuffers.size() + textures.size() + uavs.size() + structuredBuffers.size() + rwStructuredBuffers.size());
 	auto param = params.data();
 
 	for (auto& buffer : cbuffers)
@@ -184,6 +203,13 @@ ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device* device, co
 	for (auto& buffer : structuredBuffers)
 	{
 		param->InitAsShaderResourceView(buffer.info.Slot, buffer.info.Space, D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE, buffer.visibility);
+
+		param++;
+	}
+
+	for (auto& buffer : rwStructuredBuffers)
+	{
+		param->InitAsUnorderedAccessView(buffer.info.Slot, buffer.info.Space, D3D12_ROOT_DESCRIPTOR_FLAG_NONE, buffer.visibility);
 
 		param++;
 	}
@@ -285,6 +311,8 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData() const
 				type = ResourcesInfo::AutoParam::WVP_MATRIX;
 			else if (p.Name == "ViewProjectionMatrix")
 				type = ResourcesInfo::AutoParam::VP_MATRIX;
+			else if (p.Name == "InvViewProjectionMatrix")
+				type = ResourcesInfo::AutoParam::INV_VP_MATRIX;
 			else if (p.Name == "WorldMatrix")
 				type = ResourcesInfo::AutoParam::WORLD_MATRIX;
 			else if (p.Name == "ShadowMatrix")
@@ -327,6 +355,14 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData() const
 		else if (b.info.Name == "GeometryBuffer")
 			r.type = GpuBufferType::Geometry;
 
+		r.rootIndex = rootIndex++;
+		resources->buffers.emplace_back(std::move(r));
+	}
+
+	for (auto& b : rwStructuredBuffers)
+	{
+		ResourcesInfo::GpuBuffer r;
+		r.type = GpuBufferType::RWBuffer;
 		r.rootIndex = rootIndex++;
 		resources->buffers.emplace_back(std::move(r));
 	}

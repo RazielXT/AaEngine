@@ -9,9 +9,13 @@
 #include "AaMaterialResources.h"
 #include "FrameCompositor.h"
 #include "GrassArea.h"
+#include "TextureData.h"
 
 MyListener::MyListener(AaRenderSystem* render)
 {
+	AaShaderLibrary::get().loadShaderReferences(SHADER_DIRECTORY, false);
+	AaMaterialResources::get().loadMaterials(MATERIAL_DIRECTORY, false);
+
 	sceneMgr = new AaSceneManager(render);
 
  	renderSystem = render;
@@ -25,9 +29,6 @@ MyListener::MyListener(AaRenderSystem* render)
 	shadowMap = new AaShadowMap(lights.directionalLight);
 	shadowMap->init(renderSystem);
 
-	AaShaderLibrary::get().loadShaderReferences(SHADER_DIRECTORY, false);
- 	AaMaterialResources::get().loadMaterials(MATERIAL_DIRECTORY, false);
-
 	compositor = new FrameCompositor({ gpuParams, render }, *sceneMgr, *shadowMap);
 	compositor->load(DATA_DIRECTORY + "frame.compositor");
 
@@ -35,20 +36,23 @@ MyListener::MyListener(AaRenderSystem* render)
 
  	SceneParser::load("test", sceneMgr, renderSystem);
 
+	if (true)
 	{
 		tmpQueue = sceneMgr->createManualQueue();
 		auto plane = sceneMgr->getEntity("Plane001");
 		tmpQueue.update({ { EntityChange::Add, plane } });
-		tmpQueue.update({ { EntityChange::Add, sceneMgr->getEntity("Torus001") } });
 		heap.Init(renderSystem->device, tmpQueue.targets.size(), 1, L"tempHeap");
 		tmp.Init(renderSystem->device, 512, 512, 1, heap, tmpQueue.targets, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
 		tmp.SetName(L"tmpTex");
 
 		ResourcesManager::get().createShaderResourceView(tmp);
+		ResourcesManager::get().createDepthShaderResourceView(tmp);
+
+		auto bbox = plane->getBoundingBox();
 
 		AaCamera tmpCamera;
-		tmpCamera.setOrthographicCamera(300, 300, 1, 300);
-		tmpCamera.setPosition(plane->getPosition() + Vector3(0,50,0));
+		tmpCamera.setOrthographicCamera(bbox.Extents.x * 2, bbox.Extents.z * 2, 1, bbox.Extents.y * 2 + 1);
+		tmpCamera.setPosition(bbox.Center + plane->getPosition() + Vector3(0, bbox.Extents.y + 1 ,0));
 		tmpCamera.setDirection({ 0, -1, 0 });
 		tmpCamera.updateMatrix();
 
@@ -60,17 +64,42 @@ MyListener::MyListener(AaRenderSystem* render)
 
 		renderSystem->StartCommandList(commands);
 
+		shadowMap->update(renderSystem->frameIndex);
+		shadowMap->clear(commands.commandList, renderSystem->frameIndex);
+
 		tmp.PrepareAsTarget(commands.commandList, 0, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 		tmpQueue.renderObjects(tmpCamera, objInfo, gpuParams, commands.commandList, 0);
 
 		tmp.PrepareAsView(commands.commandList, 0, D3D12_RESOURCE_STATE_RENDER_TARGET);
+		tmp.TransitionDepth(commands.commandList, 0, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+
+		auto grassEntity = sceneMgr->getEntity("grass_Plane001");
+		{
+			sceneMgr->grass.bakeTerrain(*grassEntity->grass, plane, XMMatrixInverse(nullptr, tmpCamera.getProjectionMatrix()), commands.commandList, 0);
+
+			CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(grassEntity->grass->vertexCounter.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
+			commands.commandList->ResourceBarrier(1, &barrier);
+			commands.commandList->CopyResource(grassEntity->grass->vertexCounterRead.Get(), grassEntity->grass->vertexCounter.Get());
+		}
 
 		renderSystem->ExecuteCommandList(commands);
 
-		renderSystem->WaitForAllFrames();
-
+		renderSystem->WaitForCurrentFrame();
+		
+		{
+			uint32_t* pCounterValue = nullptr;
+			CD3DX12_RANGE readbackRange(0, sizeof(uint32_t));
+			grassEntity->grass->vertexCounterRead->Map(0, &readbackRange, reinterpret_cast<void**>(&pCounterValue));
+			grassEntity->grass->count = *pCounterValue;
+			grassEntity->grass->vertexCount = grassEntity->grass->count * 6;
+			grassEntity->grass->vertexCounterRead->Unmap(0, nullptr);
+		}
 		commands.deinit();
+
+		std::vector<UCHAR> textureData;
+		SaveTextureToMemory(renderSystem->commandQueue, tmp.textures.front().texture[0].Get(), textureData, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+		SaveBMP(textureData, 512, 512, "Test.bmp");
 	}
 
 	debugWindow.init(renderSystem);

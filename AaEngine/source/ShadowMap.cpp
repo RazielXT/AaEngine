@@ -1,5 +1,6 @@
 #include "ShadowMap.h"
 #include "ResourcesManager.h"
+#include "../Src/d3dx12.h"
 
 AaShadowMap::AaShadowMap(aa::SceneLights::Light& l) : light(l)
 {
@@ -48,4 +49,24 @@ void AaShadowMap::update(UINT frameIndex)
 
 	auto& cbufferResource = *cbuffer.data[frameIndex];
 	memcpy(cbufferResource.Memory(), &data, sizeof(data));
+}
+
+void AaShadowMap::clear(ID3D12GraphicsCommandList* commandList, UINT frameIndex)
+{
+	for (auto& t : texture)
+	{
+		auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+			t.depthStencilTexture[frameIndex].Get(),
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+			D3D12_RESOURCE_STATE_DEPTH_WRITE);
+		commandList->ResourceBarrier(1, &barrier);
+
+		t.Clear(commandList, frameIndex);
+
+		barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+			t.depthStencilTexture[frameIndex].Get(),
+			D3D12_RESOURCE_STATE_DEPTH_WRITE,
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+		commandList->ResourceBarrier(1, &barrier);
+	}
 }

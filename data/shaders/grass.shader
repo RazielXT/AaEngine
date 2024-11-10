@@ -18,3 +18,10 @@ pixel_shader psGrassLeavesDepth
 	entry PSMainDepth
 	profile ps_6_6
 }
+
+compute_shader grassInit
+{
+	file grassInitCS.hlsl
+	entry CSMain
+	profile cs_6_6
+}

@@ -1,7 +1,7 @@
 #include "AaSceneManager.h"
 #include "AaMaterialResources.h"
 
-AaSceneManager::AaSceneManager(AaRenderSystem* rs)
+AaSceneManager::AaSceneManager(AaRenderSystem* rs) : grass(rs)
 {
 	renderSystem = rs;
 }
@@ -26,14 +26,13 @@ AaEntity* AaSceneManager::createEntity(std::string name, Order order)
 	return ent;
 }
 
-AaEntity* AaSceneManager::createGrassEntity(std::string name, BoundingBoxVolume extends, Order order)
+AaEntity* AaSceneManager::createGrassEntity(AaEntity* terrain)
 {
-	auto grassEntity = createEntity(name, order);
-	grassEntity->order = order;
+	auto grassEntity = createEntity("grass_" + terrain->name);
 
-	auto& g = *grass.addGrass(extends);
-	grassEntity->geometry.fromGrass(g);
-	grassEntity->setBoundingBox(g.bbox);
+	grassEntity->grass = grass.addGrass(terrain->getWorldBoundingBox());
+	grassEntity->geometry.fromGrass(*grassEntity->grass);
+	grassEntity->setBoundingBox(grassEntity->grass->bbox);
 	grassEntity->material = AaMaterialResources::get().getMaterial("GrassLeaves");
 
 	return grassEntity;

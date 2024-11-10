@@ -408,6 +408,8 @@ void MaterialInstance::UpdatePerFrame(ShaderConstantsProvider& buffers, const Fr
 			*(DirectX::XMFLOAT3*)&buffers.data[p.bufferIdx][p.bufferOffset] = buffers.getWorldPosition();
 		else if (p.type == ResourcesInfo::AutoParam::VP_MATRIX)
 			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&buffers.data[p.bufferIdx][p.bufferOffset], XMMatrixTranspose(buffers.getViewProjectionMatrix()));
+		else if (p.type == ResourcesInfo::AutoParam::INV_VP_MATRIX)
+			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&buffers.data[p.bufferIdx][p.bufferOffset], XMMatrixTranspose(buffers.getInverseViewProjectionMatrix()));
 	}
 }
 

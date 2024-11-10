@@ -43,6 +43,7 @@ struct SignatureInfo
 		D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY(-1);
 	};
 	std::vector<StructuredBuffer> structuredBuffers;
+	std::vector<StructuredBuffer> rwStructuredBuffers;
 
 	CBuffer* rootBuffer = nullptr;
 	UINT textureTargets{};

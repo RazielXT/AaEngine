@@ -39,7 +39,7 @@ void AaShadowMap::update(UINT frameIndex)
 	for (auto& c : camera)
 	{
 		c.setDirection(light.direction);
-		c.setPosition(XMFLOAT3{ light.direction.x * -300, light.direction.y * -300, light.direction.z * -300 });
+		c.setPosition(XMFLOAT3{ light.direction.x * -300 + 150, light.direction.y * -300, light.direction.z * -300 - 50 });
 		c.updateMatrix();
 	}
 

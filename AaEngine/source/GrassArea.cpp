@@ -4,9 +4,9 @@
 
 void GrassArea::initialize(BoundingBoxVolume extends)
 {
-//	width = 2;
-	const float density = 1;
-	const float halfWidth = density * width / 2;
+	width = 2;
+//	const float density = 1;
+//	const float halfWidth = density * width / 2;
 
 	const float heightPosition = extends.max.y;
 	const Vector2 areaSize = Vector2(extends.max.x, extends.max.z) - Vector2(extends.min.x, extends.min.z);
@@ -20,25 +20,25 @@ void GrassArea::initialize(BoundingBoxVolume extends)
 		Vector3 pos;
 		Vector3 color;
 	};
-	std::vector<Vertex> positions;
-	positions.reserve(count * 2);
-
-	for (UINT x = 0; x < areaCount.x; x++)
-		for (UINT z = 0; z < areaCount.y; z++)
-		{
-			float xPos = extends.min.x + getRandomFloat(x * width - halfWidth, x * width + halfWidth);
-			float zPos = extends.min.z + getRandomFloat(z * width - halfWidth, z * width + halfWidth);
-
-			float angle = getRandomAngleInRadians();
-			float xTrans = cos(angle) * halfWidth;
-			float zTrans = sin(angle) * halfWidth;
-
-			float x1 = xPos - xTrans, z1 = zPos - zTrans;
-			float x2 = xPos + xTrans, z2 = zPos + zTrans;
-
-			positions.emplace_back(Vector3{ x1, heightPosition, z1 });
-			positions.emplace_back(Vector3{ x2, heightPosition, z2 });
-		}
+// 	std::vector<Vertex> positions;
+// 	positions.reserve(count * 2);
+// 
+// 	for (UINT x = 0; x < areaCount.x; x++)
+// 		for (UINT z = 0; z < areaCount.y; z++)
+// 		{
+// 			float xPos = extends.min.x + getRandomFloat(x * width - halfWidth, x * width + halfWidth);
+// 			float zPos = extends.min.z + getRandomFloat(z * width - halfWidth, z * width + halfWidth);
+// 
+// 			float angle = getRandomAngleInRadians();
+// 			float xTrans = cos(angle) * halfWidth;
+// 			float zTrans = sin(angle) * halfWidth;
+// 
+// 			float x1 = xPos - xTrans, z1 = zPos - zTrans;
+// 			float x2 = xPos + xTrans, z2 = zPos + zTrans;
+// 
+// 			positions.emplace_back(Vector3{ x1, heightPosition, z1 });
+// 			positions.emplace_back(Vector3{ x2, heightPosition, z2 });
+// 		}
 
 	gpuBuffer = ShaderConstantBuffers::get().CreateStructuredBuffer(sizeof(Vertex) * count * 2);
 	gpuBuffer->SetName(L"GrassArea");

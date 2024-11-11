@@ -17,12 +17,13 @@ void GrassInitComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, Gr
 		XMFLOAT3 boundsMin;
 		float padding;
 		XMFLOAT3 boundsMax;
+		float width;
 		UINT count;
 		UINT rows;
 		UINT depthTexture;
 		UINT colorTexture;
 	}
-	constants = { invVPMatrix, grass.bbox.Center - grass.bbox.Extents, {}, grass.bbox.Center + grass.bbox.Extents, grass.count, grass.areaCount.y, depthTexture, colorTexture };
+	constants = { invVPMatrix, grass.bbox.Center - grass.bbox.Extents, {}, grass.bbox.Center + grass.bbox.Extents, grass.width, grass.count, grass.areaCount.y, depthTexture, colorTexture };
 
 	commandList->SetComputeRoot32BitConstants(0, sizeof(constants) / sizeof(float), &constants, 0);
 	commandList->SetComputeRootUnorderedAccessView(1, grass.gpuBuffer->GetGPUVirtualAddress());

@@ -39,8 +39,9 @@ MyListener::MyListener(AaRenderSystem* render)
 	if (true)
 	{
 		tmpQueue = sceneMgr->createManualQueue();
-		auto plane = sceneMgr->getEntity("Plane001");
-		tmpQueue.update({ { EntityChange::Add, plane } });
+		auto terrainTarget = sceneMgr->getEntity("Plane001");
+		tmpQueue.update({ { EntityChange::Add, terrainTarget } });
+
 		heap.Init(renderSystem->device, tmpQueue.targets.size(), 1, L"tempHeap");
 		tmp.Init(renderSystem->device, 512, 512, 1, heap, tmpQueue.targets, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
 		tmp.SetName(L"tmpTex");
@@ -48,11 +49,11 @@ MyListener::MyListener(AaRenderSystem* render)
 		ResourcesManager::get().createShaderResourceView(tmp);
 		ResourcesManager::get().createDepthShaderResourceView(tmp);
 
-		auto bbox = plane->getBoundingBox();
+		auto bbox = terrainTarget->getBoundingBox();
 
 		AaCamera tmpCamera;
 		tmpCamera.setOrthographicCamera(bbox.Extents.x * 2, bbox.Extents.z * 2, 1, bbox.Extents.y * 2 + 1);
-		tmpCamera.setPosition(bbox.Center + plane->getPosition() + Vector3(0, bbox.Extents.y + 1 ,0));
+		tmpCamera.setPosition(bbox.Center + terrainTarget->getPosition() + Vector3(0, bbox.Extents.y + 1 ,0));
 		tmpCamera.setDirection({ 0, -1, 0 });
 		tmpCamera.updateMatrix();
 
@@ -61,7 +62,6 @@ MyListener::MyListener(AaRenderSystem* render)
 		objInfo.updateVisibility(tmpCamera);
 
 		auto commands = renderSystem->CreateCommandList(L"tempCmd");
-
 		renderSystem->StartCommandList(commands);
 
 		shadowMap->update(renderSystem->frameIndex);
@@ -76,7 +76,7 @@ MyListener::MyListener(AaRenderSystem* render)
 
 		auto grassEntity = sceneMgr->getEntity("grass_Plane001");
 		{
-			sceneMgr->grass.bakeTerrain(*grassEntity->grass, plane, XMMatrixInverse(nullptr, tmpCamera.getProjectionMatrix()), commands.commandList, 0);
+			sceneMgr->grass.bakeTerrain(*grassEntity->grass, terrainTarget, XMMatrixInverse(nullptr, tmpCamera.getProjectionMatrix()), commands.commandList, 0);
 
 			CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(grassEntity->grass->vertexCounter.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
 			commands.commandList->ResourceBarrier(1, &barrier);
@@ -92,7 +92,8 @@ MyListener::MyListener(AaRenderSystem* render)
 			CD3DX12_RANGE readbackRange(0, sizeof(uint32_t));
 			grassEntity->grass->vertexCounterRead->Map(0, &readbackRange, reinterpret_cast<void**>(&pCounterValue));
 			grassEntity->grass->count = *pCounterValue;
-			grassEntity->grass->vertexCount = grassEntity->grass->count * 6;
+			grassEntity->grass->vertexCount = grassEntity->grass->count * 3;
+			grassEntity->geometry.fromGrass(*grassEntity->grass);
 			grassEntity->grass->vertexCounterRead->Unmap(0, nullptr);
 		}
 		commands.deinit();

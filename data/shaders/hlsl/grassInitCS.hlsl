@@ -1,6 +1,7 @@
 float4x4 InvProjectionMatrix;
 float3 BoundsMin;
 float3 BoundsMax;
+float GrassWidth;
 uint GrassCount;
 uint GrassCountRows;
 uint TexIdTerrainDepth;
@@ -30,10 +31,10 @@ float2 getGrassCoords(float3 position)
 
 float getRandom(float seed)
 {
-	return ((abs(seed) * 373) % 100) / 100.0;
+	return ((abs(seed) * 43758.5453123) % 100) / 100.0;
 }
 
-float getRandomFloat(float from, float to)
+float getRandomFloat(float from, float to, float seed)
 {
 	return lerp(from, to, getRandom(from*to));
 }
@@ -43,18 +44,18 @@ void createGrassPositions(uint index, out float3 pos1, out float3 pos2)
 	uint x = index / GrassCountRows;
 	uint z = index % GrassCountRows;
 	
-	float width = 2;
-	float halfWidth = width / 2;
+	float width = GrassWidth;
 
-	float xPos = BoundsMin.x + getRandomFloat(x * width - halfWidth, x * width + halfWidth);
-	float zPos = BoundsMin.z + getRandomFloat(z * width - halfWidth, z * width + halfWidth);
+	float xPos = BoundsMin.x + x * width;
+	float zPos = BoundsMin.z + z * width;
 	
-	float angle = getRandom(x * z * xPos * zPos) * 6.28;
+	float angle = getRandom(xPos * zPos) * 6.28;
 	float xTrans = cos(angle) * width;
 	float zTrans = sin(angle) * width;
 
-	xPos += getRandom(xPos * zPos) * width;
-	
+	zPos += getRandom(zPos * xTrans) * width;
+	xPos += getRandom(xPos * zTrans) * width;
+
 	pos1 = float3(xPos - xTrans, 0, zPos - zTrans);
 	pos2 = float3(xPos + xTrans, 0, zPos + zTrans);
 }
@@ -79,7 +80,7 @@ float3 getGrassColor(float2 coords)
 [numthreads(128, 1, 1)]
 void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
-    uint index = dispatchThreadID.x * 2;
+    uint index = dispatchThreadID.x;
 	
 	if (index >= GrassCount) return;
 

@@ -127,7 +127,7 @@ ID3D12PipelineState* MaterialBase::CreatePipelineState(const std::vector<D3D12_I
 		psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
 	
 	if (ref.pipeline.blend.alphaBlend)
-		psoDesc.BlendState = CommonStates::AlphaBlend;
+		psoDesc.BlendState = CommonStates::NonPremultiplied;
 
 	ID3D12PipelineState* pipelineState{};
 	auto hr = renderSystem->device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState));

@@ -67,11 +67,11 @@ Texture2D<float4> GetTexture(uint index)
 }
 
 SamplerState g_sampler : register(s0);
+SamplerState DepthSampler : register(s1);
 
 float readShadowmap(Texture2D shadowmap, float2 shadowCoord)
 {
-    int2 texCoord = int2(shadowCoord * 512);
-	return shadowmap.Load(int3(texCoord, 0)).r;
+	return shadowmap.SampleLevel(DepthSampler, shadowCoord, 0).r;
 }
 
 float CalcShadowTermSoftPCF(Texture2D shadowmap, float fLightDepth, float2 vShadowTexCoord, int iSqrtSamples)
@@ -140,13 +140,16 @@ PSOutput PSMain(PSInput input)
 
 	float distanceFade = saturate(200 * input.position.z / input.position.w);
 
+	//albedo.a *= 2;
+
 	if (albedo.a * distanceFade <0.5) discard;
 
 	albedo.rgb *= input.color * 2;
 
 	float shadowing = getShadow(input.worldPosition);
-	float shading = saturate(1.7 - (1 - shadowing) * 0.5 - input.uv.y) * (0.5 + 0.5 * shadowing);
-
+	float shading = saturate(1.2 - input.uv.y + shadowing);
+	shading *= lerp(0.5, 1, shadowing);
+	
 	PSOutput output;
     output.target0 = albedo * distanceFade * shading;
 	output.target1 = albedo * albedo;

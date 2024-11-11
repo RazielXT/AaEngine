@@ -68,13 +68,11 @@ Texture2D<float4> GetTexture(uint index)
 }
 
 SamplerState g_sampler : register(s0);
+SamplerState DepthSampler : register(s1);
 
 float readShadowmap(Texture2D shadowmap, float2 shadowCoord)
 {
-    int2 texCoord = int2(shadowCoord * 512);
-	return shadowmap.Load(int3(texCoord, 0)).r;
-	
-	//return shadowmap.Sample(g_sampler, shadowCoord).r;
+	return shadowmap.SampleLevel(DepthSampler, shadowCoord, 0).r;
 }
 
 float ShadowPCF(Texture2D shadowmap, float4 shadowCoord)

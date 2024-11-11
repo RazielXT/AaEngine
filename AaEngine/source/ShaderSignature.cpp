@@ -267,6 +267,14 @@ ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device* device, co
 			sampler.MaxAnisotropy = refSampler.maxAnisotropy;
 			sampler.BorderColor = refSampler.borderColor;
 		}
+		if (samplers[i].info.Name == "DepthSampler")
+		{
+			sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+			sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+			sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+			sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+			sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;
+		}
 	}
 
 	// create the root signature

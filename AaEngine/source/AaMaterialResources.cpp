@@ -79,7 +79,7 @@ void AaMaterialResources::loadMaterials(std::string directory, bool subDirectori
 		auto& base = materialBaseMap[info.base];
 		if (!base)
 		{
-			base = std::make_unique<MaterialBase>(renderSystem, ResourcesManager::get(), info);
+			base = std::make_unique<MaterialBase>(renderSystem, DescriptorManager::get(), info);
 		}
 	}
 }

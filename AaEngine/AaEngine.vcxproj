@@ -134,7 +134,7 @@
     <ClCompile Include="source\OgreMeshFileParser.cpp" />
     <ClCompile Include="source\RenderQueue.cpp" />
     <ClCompile Include="source\RenderTargetTexture.cpp" />
-    <ClCompile Include="source\ResourcesManager.cpp" />
+    <ClCompile Include="source\DescriptorManager.cpp" />
     <ClCompile Include="source\SceneParser.cpp" />
     <ClCompile Include="source\SceneRenderTask.cpp" />
     <ClCompile Include="source\SceneTestTask.cpp" />
@@ -200,7 +200,7 @@
     <ClInclude Include="source\OgreMeshFileParser.h" />
     <ClInclude Include="source\RenderQueue.h" />
     <ClInclude Include="source\RenderTargetTexture.h" />
-    <ClInclude Include="source\ResourcesManager.h" />
+    <ClInclude Include="source\DescriptorManager.h" />
     <ClInclude Include="source\SceneLights.h" />
     <ClInclude Include="source\SceneParser.h" />
     <ClInclude Include="source\SceneRenderTask.h" />

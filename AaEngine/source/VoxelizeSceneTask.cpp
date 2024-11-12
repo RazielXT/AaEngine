@@ -29,14 +29,14 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 {
 	voxelSceneTexture.create3D(provider.renderSystem->device, VoxelSize, VoxelSize, VoxelSize, DXGI_FORMAT_R16G16B16A16_FLOAT, provider.renderSystem->FrameCount);
 	voxelSceneTexture.setName(L"SceneVoxel");
-	ResourcesManager::get().createUAVView(voxelSceneTexture);
+	DescriptorManager::get().createUAVView(voxelSceneTexture);
 	AaTextureResources::get().setNamedUAV("SceneVoxel", &voxelSceneTexture.uav.front());
-	ResourcesManager::get().createShaderResourceView(voxelSceneTexture);
+	DescriptorManager::get().createTextureView(voxelSceneTexture);
 	AaTextureResources::get().setNamedTexture("SceneVoxel", &voxelSceneTexture.textureView);
 
 	voxelPreviousSceneTexture.create3D(provider.renderSystem->device, VoxelSize, VoxelSize, VoxelSize, DXGI_FORMAT_R16G16B16A16_FLOAT, provider.renderSystem->FrameCount);
 	voxelPreviousSceneTexture.setName(L"SceneVoxelBounces");
-	ResourcesManager::get().createShaderResourceView(voxelPreviousSceneTexture);
+	DescriptorManager::get().createTextureView(voxelPreviousSceneTexture);
 	AaTextureResources::get().setNamedTexture("SceneVoxelBounces", &voxelPreviousSceneTexture.textureView);
 
 	clearSceneTexture.create3D(provider.renderSystem->device, VoxelSize, VoxelSize, VoxelSize, DXGI_FORMAT_R16G16B16A16_FLOAT, provider.renderSystem->FrameCount);
@@ -117,7 +117,7 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 				info.updateVisibility(camera);
 				sceneQueue->renderObjects(camera, info, provider.params, commands.commandList, FrameIndex);
 
-				computeMips.dispatch(commands.commandList, voxelSceneTexture, ResourcesManager::get(), FrameIndex);
+				computeMips.dispatch(commands.commandList, voxelSceneTexture, DescriptorManager::get(), FrameIndex);
 
 				SetEvent(eventFinish);
 			}

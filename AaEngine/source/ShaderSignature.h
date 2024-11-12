@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AaShaderCompiler.h"
-#include "ResourcesManager.h"
+#include "DescriptorManager.h"
 #include "ShaderConstantBuffers.h"
 #include "ShaderResources.h"
 

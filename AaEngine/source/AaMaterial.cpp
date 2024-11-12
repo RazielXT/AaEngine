@@ -12,7 +12,7 @@
 #include <functional>
 #include <CommonStates.h>
 
-MaterialBase::MaterialBase(AaRenderSystem* rs, ResourcesManager& m, const MaterialRef& matRef) : mgr(m), renderSystem(rs), ref(matRef)
+MaterialBase::MaterialBase(AaRenderSystem* rs, DescriptorManager& m, const MaterialRef& matRef) : mgr(m), renderSystem(rs), ref(matRef)
 {
 }
 
@@ -257,7 +257,7 @@ void MaterialBase::CreateResourcesData(MaterialInstance& instance, ResourceUploa
 		if (!t.file.empty())
 		{
 			auto texture = AaTextureResources::get().loadFile(renderSystem->device, batch, t.file);
-			mgr.createShaderResourceView(*texture);
+			mgr.createTextureView(*texture);
 
 			instance.SetTexture(*texture, texSlot);
 		}

@@ -44,8 +44,4 @@ private:
 
 	FrameGpuParameters gpuParams;
 	FrameCompositor* compositor;
-
-	RenderTargetHeap heap;
-	RenderTargetTexture tmp;
-	RenderQueue tmpQueue;
 };

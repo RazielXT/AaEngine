@@ -38,16 +38,18 @@ MyListener::MyListener(AaRenderSystem* render)
 
 	if (true)
 	{
-		tmpQueue = sceneMgr->createManualQueue();
+		auto tmpQueue = sceneMgr->createManualQueue();
 		auto terrainTarget = sceneMgr->getEntity("Plane001");
 		tmpQueue.update({ { EntityChange::Add, terrainTarget } });
 
+		RenderTargetHeap heap;
+		RenderTargetTexture tmp;
 		heap.Init(renderSystem->device, tmpQueue.targets.size(), 1, L"tempHeap");
 		tmp.Init(renderSystem->device, 512, 512, 1, heap, tmpQueue.targets, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
 		tmp.SetName(L"tmpTex");
 
-		ResourcesManager::get().createShaderResourceView(tmp);
-		ResourcesManager::get().createDepthShaderResourceView(tmp);
+		DescriptorManager::get().createTextureView(tmp);
+		DescriptorManager::get().createDepthView(tmp);
 
 		auto bbox = terrainTarget->getBoundingBox();
 
@@ -106,6 +108,9 @@ MyListener::MyListener(AaRenderSystem* render)
 		std::vector<UCHAR> textureData;
 		SaveTextureToMemory(renderSystem->commandQueue, tmp.textures.front().texture[0].Get(), textureData, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 		SaveBMP(textureData, 512, 512, "Test.bmp");
+
+		DescriptorManager::get().removeDepthView(tmp);
+		DescriptorManager::get().removeTextureView(tmp);
 	}
 
 	debugWindow.init(renderSystem);

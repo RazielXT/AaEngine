@@ -100,7 +100,7 @@
     <ClCompile Include="source\AaShaderLibrary.cpp">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClCompile>
-    <ClCompile Include="source\ResourcesManager.cpp">
+    <ClCompile Include="source\DescriptorManager.cpp">
       <Filter>Source Files\Resources</Filter>
     </ClCompile>
     <ClCompile Include="source\AaCamera.cpp">
@@ -279,7 +279,7 @@
     <ClInclude Include="source\AaShaderLibrary.h">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClInclude>
-    <ClInclude Include="source\ResourcesManager.h">
+    <ClInclude Include="source\DescriptorManager.h">
       <Filter>Source Files\Resources</Filter>
     </ClInclude>
     <ClInclude Include="source\AaCamera.h">

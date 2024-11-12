@@ -1,10 +1,11 @@
-#include "ResourcesManager.h"
+#include "DescriptorManager.h"
 #include "directx\d3dx12.h"
 #include "AaTextureResources.h"
+#include <ranges>
 
-static ResourcesManager* instance = nullptr;
+static DescriptorManager* instance = nullptr;
 
-ResourcesManager::ResourcesManager(ID3D12Device* d) : device(d)
+DescriptorManager::DescriptorManager(ID3D12Device* d) : device(d)
 {
 	if (instance)
 		throw std::exception("Duplicate ResourcesManager");
@@ -12,7 +13,7 @@ ResourcesManager::ResourcesManager(ID3D12Device* d) : device(d)
 	instance = this;
 }
 
-ResourcesManager::~ResourcesManager()
+DescriptorManager::~DescriptorManager()
 {
 	for (auto h : mainDescriptorHeap)
 	{
@@ -22,12 +23,12 @@ ResourcesManager::~ResourcesManager()
 	instance = nullptr;
 }
 
-ResourcesManager& ResourcesManager::get()
+DescriptorManager& DescriptorManager::get()
 {
 	return *instance;
 }
 
-void ResourcesManager::init(UINT maxDescriptors)
+void DescriptorManager::init(UINT maxDescriptors)
 {
 	for (int i = 0; i < 2; ++i)
 	{
@@ -46,83 +47,7 @@ void ResourcesManager::init(UINT maxDescriptors)
 	}
 }
 
-void ResourcesManager::createCbuffer(Cbuffer* buffer, UINT count, UINT bufferSize, void* defaultValue)
-{
-	// create the constant buffer resource heap
-	// We will update the constant buffer one or more times per frame, so we will use only an upload heap
-	// unlike previously we used an upload heap to upload the vertex and index data, and then copied over
-	// to a default heap. If you plan to use a resource for more than a couple frames, it is usually more
-	// efficient to copy to a default heap where it stays on the gpu. In this case, our constant buffer
-	// will be modified and uploaded at least once per frame, so we only use an upload heap
-
-	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	UINT size = 1024 * 64;
-	auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(size);
-
-	// create a resource heap, descriptor heap, and pointer to cbv for each frame
-	for (int i = 0; i < count; ++i)
-	{
-		auto hr = device->CreateCommittedResource(
-			&heapProp, // this heap will be used to upload the constant buffer data
-			D3D12_HEAP_FLAG_NONE, // no flags
-			&resDesc, // size of the resource heap. Must be a multiple of 64KB for single-textures and constant buffers
-			D3D12_RESOURCE_STATE_GENERIC_READ, // will be data that is read from so we keep it in the generic read state
-			nullptr, // we do not have use an optimized clear value for constant buffers
-			IID_PPV_ARGS(&buffer[i].resource));
-
-		buffer[i].resource->SetName(L"Constant Buffer Upload Resource");
-
-		CD3DX12_RANGE readRange(0, 0);    // We do not intend to read from this resource on the CPU. (End is less than or equal to begin)
-		hr = buffer[i].resource->Map(0, &readRange, reinterpret_cast<void**>(&buffer[i].gpuAddress));
-		buffer[i].size = bufferSize;
-	}
-
-// 	D3D12_HEAP_PROPERTIES heapProps = {};
-// 	heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
-// 
-// 	auto reservedbufferSize = 1024 * 64;
-// 	auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(reservedbufferSize);
-// 
-// 	for (int i = 0; i < 2; ++i)
-// 	{
-// 		device->CreateCommittedResource(
-// 			&heapProps,
-// 			D3D12_HEAP_FLAG_NONE,
-// 			&resDesc,
-// 			D3D12_RESOURCE_STATE_GENERIC_READ,
-// 			nullptr,
-// 			IID_PPV_ARGS(&constantBufferResource[i]));
-// 
-// 
-// 		UINT8* pCbvDataBegin;
-// 		D3D12_RANGE readRange = {}; // We do not intend to read from this resource on the CPU.
-// 		constantBufferResource[i]->Map(0, &readRange, reinterpret_cast<void**>(&pCbvDataBegin));
-// 		memcpy(pCbvDataBegin, &defaultValue, bufferSize);
-// 		constantBufferResource[i]->Unmap(0, nullptr);
-// 	}
-}
-
-void ResourcesManager::createCbufferView(Cbuffer* buffer, UINT count)
-{
-	for (int i = 0; i < count; ++i)
-	{
-		auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mainDescriptorHeap[i]->GetCPUDescriptorHandleForHeapStart(), currentDescriptorCount
-			, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-
-		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-		cbvDesc.BufferLocation = buffer[i].resource->GetGPUVirtualAddress();
-		cbvDesc.SizeInBytes = (buffer[i].size + 255) & ~255;    // CB size is required to be 256-byte aligned.
-		device->CreateConstantBufferView(&cbvDesc, handle);
-
-		buffer[i].viewHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(mainDescriptorHeap[i]->GetGPUDescriptorHandleForHeapStart(), currentDescriptorCount
-			, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-	}
-
-	descriptorTypes.push_back(D3D12_SRV_DIMENSION_BUFFER);
-	currentDescriptorCount++;
-}
-
-void ResourcesManager::createShaderResourceView(FileTexture& texture)
+void DescriptorManager::createTextureView(FileTexture& texture)
 {
 	for (int i = 0; i < 2; ++i)
 	{
@@ -148,7 +73,7 @@ void ResourcesManager::createShaderResourceView(FileTexture& texture)
 	currentDescriptorCount++;
 }
 
-void ResourcesManager::createShaderResourceView(RenderTargetTexture& rtt, UINT& descriptorOffset)
+void DescriptorManager::createTextureView(RenderTargetTexture& rtt, UINT& descriptorOffset)
 {
 	for (auto& texture : rtt.textures)
 	{
@@ -179,10 +104,10 @@ void ResourcesManager::createShaderResourceView(RenderTargetTexture& rtt, UINT& 
 	}
 }
 
-void ResourcesManager::createShaderResourceView(RenderTargetTexture& texture)
+void DescriptorManager::createTextureView(RenderTargetTexture& texture)
 {
 	auto orig = currentDescriptorCount;
-	createShaderResourceView(texture, currentDescriptorCount);
+	createTextureView(texture, currentDescriptorCount);
 
 	for (orig; orig < currentDescriptorCount; orig++)
 	{
@@ -190,7 +115,7 @@ void ResourcesManager::createShaderResourceView(RenderTargetTexture& texture)
 	}
 }
 
-void ResourcesManager::createShaderResourceView(TextureResource& texture, UINT mipLevel)
+void DescriptorManager::createTextureView(TextureResource& texture, UINT mipLevel)
 {
 	auto dimension = texture.dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D ? D3D12_SRV_DIMENSION_TEXTURE2D : D3D12_SRV_DIMENSION_TEXTURE3D;
 
@@ -224,7 +149,7 @@ void ResourcesManager::createShaderResourceView(TextureResource& texture, UINT m
 	currentDescriptorCount++;
 }
 
-void ResourcesManager::createDepthShaderResourceView(RenderDepthTargetTexture& texture)
+void DescriptorManager::createDepthView(RenderDepthTargetTexture& texture)
 {
 	for (int i = 0; i < 2; ++i)
 	{
@@ -252,7 +177,7 @@ void ResourcesManager::createDepthShaderResourceView(RenderDepthTargetTexture& t
 	currentDescriptorCount++;
 }
 
-void ResourcesManager::createUAVView(TextureResource& texture)
+void DescriptorManager::createUAVView(TextureResource& texture)
 {
 	auto mipLevels = texture.textures[0]->GetDesc().MipLevels;
 	texture.uav.resize(mipLevels);
@@ -282,7 +207,7 @@ void ResourcesManager::createUAVView(TextureResource& texture)
 	}
 }
 
-UINT ResourcesManager::nextDescriptor(UINT offset, D3D12_SRV_DIMENSION d) const
+UINT DescriptorManager::nextDescriptor(UINT offset, D3D12_SRV_DIMENSION d) const
 {
 	offset = min(offset, descriptorTypes.size());
 
@@ -293,7 +218,7 @@ UINT ResourcesManager::nextDescriptor(UINT offset, D3D12_SRV_DIMENSION d) const
 	return offset;
 }
 
-UINT ResourcesManager::previousDescriptor(UINT offset, D3D12_SRV_DIMENSION d) const
+UINT DescriptorManager::previousDescriptor(UINT offset, D3D12_SRV_DIMENSION d) const
 {
 	offset = min(offset, descriptorTypes.size());
 
@@ -302,4 +227,33 @@ UINT ResourcesManager::previousDescriptor(UINT offset, D3D12_SRV_DIMENSION d) co
 			return pos - 1;
 
 	return offset;
+}
+
+void DescriptorManager::removeTextureView(RenderTargetTexture& rtt)
+{
+	for (auto& texture : rtt.textures | std::ranges::views::reverse)
+	{
+		auto index = texture.textureView.srvHeapIndex;
+
+		if (index + 1 == currentDescriptorCount)
+		{
+			currentDescriptorCount--;
+			descriptorTypes.pop_back();
+		}
+		else
+			descriptorTypes[index] = D3D12_SRV_DIMENSION_UNKNOWN;
+	}
+}
+
+void DescriptorManager::removeDepthView(RenderDepthTargetTexture& texture)
+{
+	auto index = texture.depthView.srvHeapIndex;
+
+	if (index + 1 == currentDescriptorCount)
+	{
+		currentDescriptorCount--;
+		descriptorTypes.pop_back();
+	}
+	else
+		descriptorTypes[index] = D3D12_SRV_DIMENSION_UNKNOWN;
 }

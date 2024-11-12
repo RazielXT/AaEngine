@@ -1,9 +1,9 @@
 #include "GenerateMipsComputeShader.h"
-#include "ResourcesManager.h"
+#include "DescriptorManager.h"
 #include "Directx.h"
 #include "../Src/d3dx12.h"
 
-void GenerateMipsComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, TextureResource& texture, ResourcesManager& mgr, UINT frameIndex)
+void GenerateMipsComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, TextureResource& texture, DescriptorManager& mgr, UINT frameIndex)
 {
 	auto resource = texture.textures[frameIndex].Get();
 

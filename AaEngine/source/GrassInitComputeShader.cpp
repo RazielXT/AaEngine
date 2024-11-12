@@ -1,5 +1,5 @@
 #include "GrassInitComputeShader.h"
-#include "ResourcesManager.h"
+#include "DescriptorManager.h"
 #include "../Src/d3dx12.h"
 #include "GrassArea.h"
 
@@ -8,7 +8,7 @@ void GrassInitComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, Gr
 	commandList->SetPipelineState(pipelineState.Get());
 	commandList->SetComputeRootSignature(signature);
 
-	ID3D12DescriptorHeap* ppHeaps[] = { ResourcesManager::get().mainDescriptorHeap[frameIndex] };
+	ID3D12DescriptorHeap* ppHeaps[] = { DescriptorManager::get().mainDescriptorHeap[frameIndex] };
 	commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
 	struct

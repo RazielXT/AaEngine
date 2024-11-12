@@ -87,9 +87,9 @@ namespace imgui
 			else if (next == 0)
 				state.TexturePreviewIndex = 0;
 			else if (next > state.TexturePreviewIndex)
-				state.TexturePreviewIndex =	ResourcesManager::get().nextDescriptor(state.TexturePreviewIndex, D3D12_SRV_DIMENSION_TEXTURE2D);
+				state.TexturePreviewIndex =	DescriptorManager::get().nextDescriptor(state.TexturePreviewIndex, D3D12_SRV_DIMENSION_TEXTURE2D);
 			else
-				state.TexturePreviewIndex = ResourcesManager::get().previousDescriptor(state.TexturePreviewIndex, D3D12_SRV_DIMENSION_TEXTURE2D);
+				state.TexturePreviewIndex = DescriptorManager::get().previousDescriptor(state.TexturePreviewIndex, D3D12_SRV_DIMENSION_TEXTURE2D);
 		}
 
 		if (ImGui::Button(state.stopUpdatingVoxel ? "startUpdatingVoxel" : "stopUpdatingVoxel"))

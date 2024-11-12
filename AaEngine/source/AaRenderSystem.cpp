@@ -142,7 +142,7 @@ void AaRenderSystem::StartCommandList(CommandsData commands)
 	commands.commandAllocators[frameIndex]->Reset();
 	commands.commandList->Reset(commands.commandAllocators[frameIndex], nullptr);
 
-	ID3D12DescriptorHeap* descriptorHeaps[] = { ResourcesManager::get().mainDescriptorHeap[frameIndex]};
+	ID3D12DescriptorHeap* descriptorHeaps[] = { DescriptorManager::get().mainDescriptorHeap[frameIndex]};
 	commands.commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 }
 

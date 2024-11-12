@@ -4,7 +4,7 @@
 #include <DirectXMath.h>
 #include <wrl.h>
 #include "RenderTargetTexture.h"
-#include "ResourcesManager.h"
+#include "DescriptorManager.h"
 #include "AaModel.h"
 #include <dxcapi.h>
 #include <memory>
@@ -29,7 +29,7 @@ class MaterialBase
 {
 public:
 
-	MaterialBase(AaRenderSystem* renderSystem, ResourcesManager& mgr, const MaterialRef& ref);
+	MaterialBase(AaRenderSystem* renderSystem, DescriptorManager& mgr, const MaterialRef& ref);
 	~MaterialBase();
 
 	void Load();
@@ -44,7 +44,7 @@ public:
 
 	const char* GetTechniqueOverride(MaterialTechnique technique) const;
 
-	ResourcesManager& mgr;
+	DescriptorManager& mgr;
 
 	SignatureInfo info;
 

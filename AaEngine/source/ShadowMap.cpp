@@ -1,5 +1,5 @@
 #include "ShadowMap.h"
-#include "ResourcesManager.h"
+#include "DescriptorManager.h"
 #include "../Src/d3dx12.h"
 
 AaShadowMap::AaShadowMap(aa::SceneLights::Light& l) : sun(l)
@@ -13,7 +13,7 @@ void AaShadowMap::init(AaRenderSystem* renderSystem)
 		texture[i].Init(renderSystem->device, 512, 512, renderSystem->FrameCount, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 		texture[i].SetName(L"ShadowMap");
 
-		ResourcesManager::get().createDepthShaderResourceView(texture[i]);
+		DescriptorManager::get().createDepthView(texture[i]);
 		AaTextureResources::get().setNamedTexture("ShadowMap" + std::to_string(i), &texture[i].depthView);
 
 		camera[i].setOrthographicCamera(400 + i * 400, 400 + i * 400, 1, 1000);

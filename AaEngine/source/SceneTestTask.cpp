@@ -21,7 +21,7 @@ AsyncTasksInfo SceneTestTask::initialize(CompositorPass& pass)
 	tmp.Init(provider.renderSystem->device, 512, 512, 2, heap, tmpQueue.targets, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
 	tmp.SetName(L"tmpTex");
 
-	ResourcesManager::get().createShaderResourceView(tmp);
+	DescriptorManager::get().createTextureView(tmp);
 
 	commands = provider.renderSystem->CreateCommandList(L"tempCmd");
 

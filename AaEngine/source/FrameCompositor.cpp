@@ -120,9 +120,9 @@ void FrameCompositor::reloadTextures()
 		tex.SetName(std::wstring(t.name.begin(), t.name.end()).c_str());
 
 		if (reusedHeapDescriptors.empty())
-			ResourcesManager::get().createShaderResourceView(tex);
+			DescriptorManager::get().createTextureView(tex);
 		else
-			ResourcesManager::get().createShaderResourceView(tex, reusedHeapDescriptors[i++]);
+			DescriptorManager::get().createTextureView(tex, reusedHeapDescriptors[i++]);
 	}
 
 	for (auto& p : passes)

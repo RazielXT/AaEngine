@@ -25,7 +25,7 @@ private:
 
 	AaWindow* mWindow{};
  	AaRenderSystem* mRenderSystem{};
-	ResourcesManager* mResources{};
+	DescriptorManager* mResources{};
  	AaMaterialResources* mMaterials;
  	AaModelResources* mModels;
  	AaShaderLibrary* mShaders;

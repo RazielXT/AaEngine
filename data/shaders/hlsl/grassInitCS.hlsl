@@ -29,14 +29,13 @@ float2 getGrassCoords(float3 position)
 	return coords;
 }
 
-float getRandom(float seed)
+float getRandom(float x, float z)
 {
-	return ((abs(seed) * 43758.5453123) % 100) / 100.0;
-}
-
-float getRandomFloat(float from, float to, float seed)
-{
-	return lerp(from, to, getRandom(from*to));
+    float2 K1 = float2(
+        23.14069263277926, // e^pi (Gelfond's constant)
+         2.665144142690225 // 2^sqrt(2) (Gelfond–Schneider constant)
+    );
+    return frac(cos( dot(float2(x,z),K1) ) * 12345.6789 );
 }
 
 void createGrassPositions(uint index, out float3 pos1, out float3 pos2)
@@ -49,12 +48,12 @@ void createGrassPositions(uint index, out float3 pos1, out float3 pos2)
 	float xPos = BoundsMin.x + x * width;
 	float zPos = BoundsMin.z + z * width;
 	
-	float angle = getRandom(xPos * zPos) * 6.28;
+	float angle = getRandom(xPos, zPos) * 6.28;
 	float xTrans = cos(angle) * width;
 	float zTrans = sin(angle) * width;
 
-	zPos += getRandom(zPos * xTrans) * width;
-	xPos += getRandom(xPos * zTrans) * width;
+	zPos += getRandom(zPos, xPos) * width;
+	xPos += getRandom(xPos, zPos) * width;
 
 	pos1 = float3(xPos - xTrans, 0, zPos - zTrans);
 	pos2 = float3(xPos + xTrans, 0, zPos + zTrans);

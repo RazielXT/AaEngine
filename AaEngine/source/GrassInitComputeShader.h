@@ -4,13 +4,11 @@
 #include "DirectXMath.h"
 #include "AaMath.h"
 
-struct TextureResource;
-class ResourcesManager;
-struct GrassArea;
+struct GrassAreaDescription;
 
 class GrassInitComputeShader : public ComputeShader
 {
 public:
 
-	void dispatch(ID3D12GraphicsCommandList* commandList, GrassArea& grass, UINT colorTexture, UINT depthTexture, XMMATRIX invVPMatrix, ResourcesManager& mgr, UINT frameIndex);
+	void dispatch(ID3D12GraphicsCommandList* commandList, GrassAreaDescription& desc, XMMATRIX invView, UINT colorTex, UINT depthTex, ID3D12Resource* vertexBuffer, ID3D12Resource* vertexCounter, UINT frameIndex);
 };

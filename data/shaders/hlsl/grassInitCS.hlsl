@@ -1,4 +1,5 @@
 float4x4 InvProjectionMatrix;
+float GrassSpacing;
 float3 BoundsMin;
 float3 BoundsMax;
 float GrassWidth;
@@ -42,18 +43,16 @@ void createGrassPositions(uint index, out float3 pos1, out float3 pos2)
 {
 	uint x = index / GrassCountRows;
 	uint z = index % GrassCountRows;
-	
-	float width = GrassWidth;
 
-	float xPos = BoundsMin.x + x * width;
-	float zPos = BoundsMin.z + z * width;
+	float xPos = BoundsMin.x + x * GrassSpacing;
+	float zPos = BoundsMin.z + z * GrassSpacing;
 	
 	float angle = getRandom(xPos, zPos) * 6.28;
-	float xTrans = cos(angle) * width;
-	float zTrans = sin(angle) * width;
+	float xTrans = cos(angle) * GrassWidth;
+	float zTrans = sin(angle) * GrassWidth;
 
-	zPos += getRandom(zPos, xPos) * width;
-	xPos += getRandom(xPos, zPos) * width;
+	zPos += getRandom(zPos, xPos) * GrassWidth;
+	xPos += getRandom(xPos, zPos) * GrassWidth;
 
 	pos1 = float3(xPos - xTrans, 0, zPos - zTrans);
 	pos2 = float3(xPos + xTrans, 0, zPos + zTrans);
@@ -68,7 +67,9 @@ float getGrassHeight(float2 coords)
     float4 viewSpacePosition = mul(InvProjectionMatrix, clipSpacePosition);
     viewSpacePosition /= viewSpacePosition.w;
 
-	return BoundsMax.y - viewSpacePosition.z / 2 - 12;
+	float offset = (BoundsMax.y - BoundsMin.y) / 2;
+
+	return BoundsMax.y - viewSpacePosition.z / 2 - offset;
 }
 
 float3 getGrassColor(float2 coords)

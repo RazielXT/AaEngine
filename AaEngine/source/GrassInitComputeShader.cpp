@@ -3,19 +3,19 @@
 #include "../Src/d3dx12.h"
 #include "GrassArea.h"
 
-void GrassInitComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, GrassArea& grass, UINT colorTexture, UINT depthTexture, XMMATRIX invVPMatrix, ResourcesManager& mgr, UINT frameIndex)
+void GrassInitComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, GrassAreaDescription& desc, XMMATRIX invView, UINT colorTex, UINT depthTex, ID3D12Resource* vertexBuffer, ID3D12Resource* vertexCounter, UINT frameIndex)
 {
 	commandList->SetPipelineState(pipelineState.Get());
 	commandList->SetComputeRootSignature(signature);
 
-	ID3D12DescriptorHeap* ppHeaps[] = { mgr.mainDescriptorHeap[frameIndex] };
+	ID3D12DescriptorHeap* ppHeaps[] = { ResourcesManager::get().mainDescriptorHeap[frameIndex] };
 	commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
 	struct
 	{
-		XMMATRIX invVPMatrix;
+		XMMATRIX invViewMatrix;
+		float spacing;
 		XMFLOAT3 boundsMin;
-		float padding;
 		XMFLOAT3 boundsMax;
 		float width;
 		UINT count;
@@ -23,12 +23,19 @@ void GrassInitComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, Gr
 		UINT depthTexture;
 		UINT colorTexture;
 	}
-	constants = { invVPMatrix, grass.bbox.Center - grass.bbox.Extents, {}, grass.bbox.Center + grass.bbox.Extents, grass.width, grass.count, grass.areaCount.y, depthTexture, colorTexture };
+	ctx = {
+		invView,
+		desc.spacing,
+		desc.bbox.Center - desc.bbox.Extents,
+		desc.bbox.Center + desc.bbox.Extents,
+		desc.width, desc.count, desc.areaCount.y,
+		depthTex, colorTex
+	};
 
-	commandList->SetComputeRoot32BitConstants(0, sizeof(constants) / sizeof(float), &constants, 0);
-	commandList->SetComputeRootUnorderedAccessView(1, grass.gpuBuffer->GetGPUVirtualAddress());
-	commandList->SetComputeRootUnorderedAccessView(2, grass.vertexCounter->GetGPUVirtualAddress());
+	commandList->SetComputeRoot32BitConstants(0, sizeof(ctx) / sizeof(float), &ctx, 0);
+	commandList->SetComputeRootUnorderedAccessView(1, vertexBuffer->GetGPUVirtualAddress());
+	commandList->SetComputeRootUnorderedAccessView(2, vertexCounter->GetGPUVirtualAddress());
 
-	UINT threads = (grass.count + 127) / 128;
+	UINT threads = (ctx.count + 127) / 128;
 	commandList->Dispatch(threads, 1, 1);
 }

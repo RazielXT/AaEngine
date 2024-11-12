@@ -7,6 +7,8 @@ cbuffer PSSMShadows : register(b1)
 	float4x4 ShadowMatrix[2];
 	float3 LightDirection;
 	uint TexIdShadowOffset;
+	float ShadowMapSize;
+	float ShadowMapSizeInv;
 }
 
 struct GrassVertex { float3 pos; float3 color; };
@@ -50,7 +52,8 @@ PSInput VSMain(uint vertexIdx : SV_VertexId)
 
 	float3 windDirection = float3(1,0,1);
 	float frequency = 1;
-	pos.xyz += top * windDirection * sin(Time * frequency + pos.x * pos.z + pos.y);
+	float scale = 1;
+	pos.xyz += top * windDirection * sin(Time * frequency + (pos.x + pos.z + pos.y) / scale);
 
     // Output position and UV
 	output.worldPosition = float4(pos,1);
@@ -87,7 +90,7 @@ float CalcShadowTermSoftPCF(Texture2D shadowmap, float fLightDepth, float2 vShad
 		{
 			float2 vOffset = 0;
 			vOffset = float2(x, y);
-			vOffset /= 512;
+			vOffset *= ShadowMapSizeInv;
 			float2 vSamplePoint = vShadowTexCoord + vOffset;
 			float fDepth = readShadowmap(shadowmap, vSamplePoint).x;
 			float fSample = (fLightDepth <= fDepth);
@@ -96,13 +99,13 @@ float CalcShadowTermSoftPCF(Texture2D shadowmap, float fLightDepth, float2 vShad
 			float xWeight = 1;
 			float yWeight = 1;
 			if (x == -fRadius)
-				xWeight = 1 - frac(vShadowTexCoord.x * 512);
+				xWeight = 1 - frac(vShadowTexCoord.x * ShadowMapSize);
 			else if (x == fRadius)
-				xWeight = frac(vShadowTexCoord.x * 512);
+				xWeight = frac(vShadowTexCoord.x * ShadowMapSize);
 			if (y == -fRadius)
-				yWeight = 1 - frac(vShadowTexCoord.y * 512);
+				yWeight = 1 - frac(vShadowTexCoord.y * ShadowMapSize);
 			else if (y == fRadius)
-				yWeight = frac(vShadowTexCoord.y * 512);
+				yWeight = frac(vShadowTexCoord.y * ShadowMapSize);
 			fShadowTerm += fSample * xWeight * yWeight;
 			fWeightAccum = xWeight * yWeight;
 		}
@@ -133,6 +136,7 @@ struct PSOutput
     float4 target0 : SV_Target0;
     float4 target1 : SV_Target1;
 };
+
 
 PSOutput PSMain(PSInput input)
 {

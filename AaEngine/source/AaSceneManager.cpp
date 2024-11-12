@@ -26,7 +26,7 @@ AaEntity* AaSceneManager::createEntity(std::string name, Order order)
 	return ent;
 }
 
-AaEntity* AaSceneManager::createGrassEntity(AaEntity* terrain)
+AaEntity* AaSceneManager::createGrassEntity(std::string name, GrassAreaDescription& desc)
 {
 	auto material = AaMaterialResources::get().getMaterial("GrassLeaves");
 
@@ -34,11 +34,10 @@ AaEntity* AaSceneManager::createGrassEntity(AaEntity* terrain)
 	if (material->IsTransparent())
 		renderQueue = Order::Transparent;
 
-	auto grassEntity = createEntity("grass_" + terrain->name, renderQueue);
+	auto grassEntity = createEntity(name, renderQueue);
 
-	grassEntity->grass = grass.addGrass(terrain->getWorldBoundingBox());
-	grassEntity->geometry.fromGrass(*grassEntity->grass);
-	grassEntity->setBoundingBox(grassEntity->grass->bbox);
+ 	grassEntity->grass = grass.createGrass(desc);
+ 	grassEntity->setBoundingBox(desc.bbox);
 	grassEntity->material = material;
 
 	return grassEntity;

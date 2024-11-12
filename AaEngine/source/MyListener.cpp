@@ -74,9 +74,15 @@ MyListener::MyListener(AaRenderSystem* render)
 		tmp.PrepareAsView(commands.commandList, 0, D3D12_RESOURCE_STATE_RENDER_TARGET);
 		tmp.TransitionDepth(commands.commandList, 0, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
-		auto grassEntity = sceneMgr->getEntity("grass_Plane001");
+		GrassAreaDescription desc;
+		desc.initialize(terrainTarget->getWorldBoundingBox());
+
+		auto grassEntity = sceneMgr->createGrassEntity("grass_" + terrainTarget->name, desc);
 		{
-			sceneMgr->grass.bakeTerrain(*grassEntity->grass, terrainTarget, XMMatrixInverse(nullptr, tmpCamera.getProjectionMatrix()), commands.commandList, 0);
+			auto colorTex = tmp.textures[0].textureView.srvHeapIndex;
+			auto depthTex = tmp.depthView.srvHeapIndex;
+
+			sceneMgr->grass.initializeGrassBuffer(*grassEntity->grass, desc, XMMatrixInverse(nullptr, tmpCamera.getProjectionMatrix()), colorTex, depthTex, commands.commandList, 0);
 
 			CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(grassEntity->grass->vertexCounter.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
 			commands.commandList->ResourceBarrier(1, &barrier);
@@ -91,8 +97,7 @@ MyListener::MyListener(AaRenderSystem* render)
 			uint32_t* pCounterValue = nullptr;
 			CD3DX12_RANGE readbackRange(0, sizeof(uint32_t));
 			grassEntity->grass->vertexCounterRead->Map(0, &readbackRange, reinterpret_cast<void**>(&pCounterValue));
-			grassEntity->grass->count = *pCounterValue;
-			grassEntity->grass->vertexCount = grassEntity->grass->count * 3;
+			grassEntity->grass->vertexCount = *pCounterValue * 3;
 			grassEntity->geometry.fromGrass(*grassEntity->grass);
 			grassEntity->grass->vertexCounterRead->Unmap(0, nullptr);
 		}

@@ -9,6 +9,8 @@ cbuffer PSSMShadows : register(b1)
 	float4x4 ShadowMatrix[2];
 	float3 LightDirection;
 	uint TexIdShadowOffset;
+	float ShadowMapSize;
+	float ShadowMapSizeInv;
 }
 
 #ifdef INSTANCED
@@ -78,7 +80,7 @@ float readShadowmap(Texture2D shadowmap, float2 shadowCoord)
 float ShadowPCF(Texture2D shadowmap, float4 shadowCoord)
 {
     float shadow = 0.0;
-    float2 texelSize = 1.0 / 512;
+    float2 texelSize = ShadowMapSizeInv;
     int samples = 4; // Number of samples for PCF
     float2 offsets[4] = { float2(-1, -1), float2(1, -1), float2(-1, 1), float2(1, 1) };
 
@@ -113,7 +115,7 @@ float CalcShadowTermSoftPCF(Texture2D shadowmap, float fLightDepth, float2 vShad
 		{
 			float2 vOffset = 0;
 			vOffset = float2(x, y);
-			vOffset /= 512;
+			vOffset *= ShadowMapSizeInv;
 			float2 vSamplePoint = vShadowTexCoord + vOffset;
 			float fDepth = readShadowmap(shadowmap, vSamplePoint).x;
 			float fSample = (fLightDepth <= fDepth);
@@ -122,13 +124,13 @@ float CalcShadowTermSoftPCF(Texture2D shadowmap, float fLightDepth, float2 vShad
 			float xWeight = 1;
 			float yWeight = 1;
 			if (x == -fRadius)
-				xWeight = 1 - frac(vShadowTexCoord.x * 512);
+				xWeight = 1 - frac(vShadowTexCoord.x * ShadowMapSize);
 			else if (x == fRadius)
-				xWeight = frac(vShadowTexCoord.x * 512);
+				xWeight = frac(vShadowTexCoord.x * ShadowMapSize);
 			if (y == -fRadius)
-				yWeight = 1 - frac(vShadowTexCoord.y * 512);
+				yWeight = 1 - frac(vShadowTexCoord.y * ShadowMapSize);
 			else if (y == fRadius)
-				yWeight = frac(vShadowTexCoord.y * 512);
+				yWeight = frac(vShadowTexCoord.y * ShadowMapSize);
 			fShadowTerm += fSample * xWeight * yWeight;
 			fWeightAccum = xWeight * yWeight;
 		}

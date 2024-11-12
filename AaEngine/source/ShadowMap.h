@@ -4,6 +4,7 @@
 #include "AaCamera.h"
 #include "SceneLights.h"
 #include "ShaderConstantBuffers.h"
+#include "ShaderResources.h"
 
 class AaShadowMap
 {
@@ -16,9 +17,11 @@ public:
 	RenderDepthTargetTexture texture[2];
 	AaCamera camera[2];
 
-	aa::SceneLights::Light& light;
+	aa::SceneLights::Light& sun;
 	void update(UINT frameIndex);
 	void clear(ID3D12GraphicsCommandList* commandList, UINT frameIndex);
+
+	PssmParameters data;
 
 private:
 

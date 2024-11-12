@@ -396,7 +396,13 @@ void MaterialInstance::UpdatePerFrame(ShaderConstantsProvider& buffers, const Fr
 		if (p.type == ResourcesInfo::AutoParam::TIME)
 			buffers.data[p.bufferIdx][p.bufferOffset] = info.time;
 		else if (p.type == ResourcesInfo::AutoParam::SUN_DIRECTION)
-			*(DirectX::XMFLOAT3*)&buffers.data[p.bufferIdx][p.bufferOffset] = info.sunDirection;
+			*(DirectX::XMFLOAT3*)&buffers.data[p.bufferIdx][p.bufferOffset] = info.sun.SunDirection;
+		else if (p.type == ResourcesInfo::AutoParam::SHADOW_MATRIX)
+			*(DirectX::XMFLOAT4X4*)&buffers.data[p.bufferIdx][p.bufferOffset] = info.sun.ShadowMatrix[0];
+		else if (p.type == ResourcesInfo::AutoParam::SHADOW_MAP_SIZE)
+			buffers.data[p.bufferIdx][p.bufferOffset] = info.sun.ShadowMapSize;
+		else if (p.type == ResourcesInfo::AutoParam::SHADOW_MAP_SIZE_INV)
+			buffers.data[p.bufferIdx][p.bufferOffset] = info.sun.ShadowMapSizeInv;
 		else if (p.type == ResourcesInfo::AutoParam::VIEWPORT_SIZE_INV)
 		{
 			buffers.data[p.bufferIdx][p.bufferOffset] = info.inverseViewportSize.x;
@@ -421,8 +427,6 @@ void MaterialInstance::UpdatePerObject(ShaderConstantsProvider& buffers, const F
 			*(DirectX::XMFLOAT4X4*)&buffers.data[p.bufferIdx][p.bufferOffset] = buffers.getWvpMatrix();
 		else if (p.type == ResourcesInfo::AutoParam::WORLD_MATRIX)
 			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&buffers.data[p.bufferIdx][p.bufferOffset], XMMatrixTranspose(buffers.getWorldMatrix()));
-		else if (p.type == ResourcesInfo::AutoParam::SHADOW_MATRIX)
-			*(DirectX::XMFLOAT4X4*)&buffers.data[p.bufferIdx][p.bufferOffset] = info.shadowMapViewProjectionTransposed;
 	}
 }
 

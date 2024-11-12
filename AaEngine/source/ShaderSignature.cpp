@@ -325,6 +325,10 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData() const
 				type = ResourcesInfo::AutoParam::WORLD_MATRIX;
 			else if (p.Name == "ShadowMatrix")
 				type = ResourcesInfo::AutoParam::SHADOW_MATRIX;
+			else if (p.Name == "ShadowMapSize")
+				type = ResourcesInfo::AutoParam::SHADOW_MAP_SIZE;
+			else if (p.Name == "ShadowMapSizeInv")
+				type = ResourcesInfo::AutoParam::SHADOW_MAP_SIZE_INV;
 			else if (p.Name.starts_with("TexId"))
 			{
 				type = ResourcesInfo::AutoParam::TEXID;

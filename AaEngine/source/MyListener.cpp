@@ -163,8 +163,7 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 
 	gpuParams.time = elapsedTime;
 	gpuParams.timeDelta = timeSinceLastFrame;
-	gpuParams.sunDirection = lights.directionalLight.direction;
-	XMStoreFloat4x4(&gpuParams.shadowMapViewProjectionTransposed, XMMatrixTranspose(shadowMap->camera[0].getViewProjectionMatrix()));
+	gpuParams.sun = shadowMap->data;
 
 	RenderContext ctx = { &cameraMan->camera };
 	compositor->render(ctx);

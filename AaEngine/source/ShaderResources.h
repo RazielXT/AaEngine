@@ -59,9 +59,11 @@ struct ResourcesInfo
 		VP_MATRIX,
 		INV_VP_MATRIX,
 		WORLD_MATRIX,
-		SHADOW_MATRIX,
 		TEXID,
 
+		SHADOW_MATRIX,
+		SHADOW_MAP_SIZE,
+		SHADOW_MAP_SIZE_INV,
 		SUN_DIRECTION,
 		TIME,
 		VIEWPORT_SIZE_INV,
@@ -92,10 +94,19 @@ constexpr std::array<std::string_view, (int)FastParam::COUNT> FastParamNames =
 	"Emission",
 };
 
+struct PssmParameters
+{
+	XMFLOAT4X4 ShadowMatrix[2];
+	XMFLOAT3 SunDirection;
+	UINT TexIdShadowOffsetStart;
+	float ShadowMapSize;
+	float ShadowMapSizeInv;
+};
+
 struct FrameGpuParameters
 {
-	DirectX::XMFLOAT4X4 shadowMapViewProjectionTransposed;
-	DirectX::XMFLOAT3 sunDirection;
+	PssmParameters sun;
+
 	DirectX::XMFLOAT2 inverseViewportSize;
 	float time;
 	float timeDelta;

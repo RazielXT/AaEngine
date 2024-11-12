@@ -2,17 +2,9 @@
 #include "ResourcesManager.h"
 #include "../Src/d3dx12.h"
 
-AaShadowMap::AaShadowMap(aa::SceneLights::Light& l) : light(l)
+AaShadowMap::AaShadowMap(aa::SceneLights::Light& l) : sun(l)
 {
 }
-
-struct
-{
-	XMFLOAT4X4 ShadowMatrix[2];
-	XMFLOAT3 LightDirection;
-	UINT TexIdShadowOffsetStart;
-}
-data;
 
 void AaShadowMap::init(AaRenderSystem* renderSystem)
 {
@@ -28,6 +20,8 @@ void AaShadowMap::init(AaRenderSystem* renderSystem)
 	}
 
 	data.TexIdShadowOffsetStart = texture[0].depthView.srvHeapIndex;
+	data.ShadowMapSize = 512;
+	data.ShadowMapSizeInv = 1 / data.ShadowMapSize;
 
 	cbuffer = ShaderConstantBuffers::get().CreateCbufferResource(sizeof(data), "PSSMShadows");
 
@@ -38,14 +32,14 @@ void AaShadowMap::update(UINT frameIndex)
 {
 	for (auto& c : camera)
 	{
-		c.setDirection(light.direction);
-		c.setPosition(XMFLOAT3{ light.direction.x * -300 + 150, light.direction.y * -300, light.direction.z * -300 - 50 });
+		c.setDirection(sun.direction);
+		c.setPosition(XMFLOAT3{ sun.direction.x * -300 + 150, sun.direction.y * -300, sun.direction.z * -300 - 50 });
 		c.updateMatrix();
 	}
 
 	XMStoreFloat4x4(&data.ShadowMatrix[0], XMMatrixTranspose(camera[0].getViewProjectionMatrix()));
 	XMStoreFloat4x4(&data.ShadowMatrix[1], XMMatrixTranspose(camera[1].getViewProjectionMatrix()));
-	data.LightDirection = light.direction;
+	data.SunDirection = sun.direction;
 
 	auto& cbufferResource = *cbuffer.data[frameIndex];
 	memcpy(cbufferResource.Memory(), &data, sizeof(data));

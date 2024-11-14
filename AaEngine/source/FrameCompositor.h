@@ -54,6 +54,8 @@ protected:
 
 	void executeCommands();
 
+	void renderQuad(PassData& pass, RenderContext& ctx, ID3D12GraphicsCommandList* commandList, UINT frameIndex);
+
 	RenderProvider provider;
 	AaSceneManager& sceneMgr;
 	AaShadowMap& shadowMaps;

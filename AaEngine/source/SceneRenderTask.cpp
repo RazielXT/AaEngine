@@ -4,7 +4,7 @@
 
 SceneRenderTask::SceneRenderTask(RenderProvider p, AaSceneManager& s) : CompositorTask(p, s)
 {
-	sceneInfo = { sceneMgr.getRenderables(Order::Normal) };
+	renderables = sceneMgr.getRenderables(Order::Normal);
 }
 
 SceneRenderTask::~SceneRenderTask()
@@ -89,7 +89,7 @@ void SceneRenderTask::run(RenderContext& renderCtx, CommandsData&, CompositorPas
 
 void SceneRenderTask::renderScene(CompositorPass& pass)
 {
-	sceneInfo.updateVisibility(*ctx.camera);
+	renderables->updateRenderInformation(*ctx.camera, sceneInfo);
 
 	if (earlyZ.eventBegin)
 		SetEvent(earlyZ.eventBegin);
@@ -97,7 +97,9 @@ void SceneRenderTask::renderScene(CompositorPass& pass)
 	provider.renderSystem->StartCommandList(scene.commands);
 
 	pass.target.texture->PrepareAsTarget(scene.commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true, true, !earlyZ.eventBegin);
-	sceneQueue->renderObjects(*ctx.camera, sceneInfo, provider.params, scene.commands.commandList, provider.renderSystem->frameIndex);
+
+	ShaderConstantsProvider constants(sceneInfo, *ctx.camera, *pass.target.texture);
+	sceneQueue->renderObjects(constants, provider.params, scene.commands.commandList, provider.renderSystem->frameIndex);
 
 	//ctx.target->PrepareAsView(scene.commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_RENDER_TARGET);
 }
@@ -107,12 +109,14 @@ void SceneRenderTask::renderEarlyZ(CompositorPass& pass)
 	provider.renderSystem->StartCommandList(earlyZ.commands);
 
 	pass.target.texture->PrepareAsDepthTarget(earlyZ.commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_DEPTH_WRITE);
-	depthQueue->renderObjects(*ctx.camera, sceneInfo, provider.params, earlyZ.commands.commandList, provider.renderSystem->frameIndex);
+
+	ShaderConstantsProvider constants(sceneInfo, *ctx.camera, *pass.target.texture);
+	depthQueue->renderObjects(constants, provider.params, earlyZ.commands.commandList, provider.renderSystem->frameIndex);
 }
 
 SceneRenderTransparentTask::SceneRenderTransparentTask(RenderProvider p, AaSceneManager& s) : CompositorTask(p, s)
 {
-	sceneInfo = { sceneMgr.getRenderables(Order::Transparent) };
+	renderables = sceneMgr.getRenderables(Order::Transparent);
 }
 
 SceneRenderTransparentTask::~SceneRenderTransparentTask()
@@ -158,12 +162,14 @@ void SceneRenderTransparentTask::run(RenderContext& renderCtx, CommandsData&, Co
 
 void SceneRenderTransparentTask::renderTransparentScene(CompositorPass& pass)
 {
-	sceneInfo.updateVisibility(*ctx.camera);
+	renderables->updateRenderInformation(*ctx.camera, sceneInfo);
 
 	provider.renderSystem->StartCommandList(transparent.commands);
 
 	pass.target.texture->PrepareAsSingleTarget(transparent.commands.commandList, provider.renderSystem->frameIndex, 0, D3D12_RESOURCE_STATE_RENDER_TARGET, false, true, false);
-	transparentQueue->renderObjects(*ctx.camera, sceneInfo, provider.params, transparent.commands.commandList, provider.renderSystem->frameIndex);
+
+	ShaderConstantsProvider constants(sceneInfo, *ctx.camera, *pass.target.texture);
+	transparentQueue->renderObjects(constants, provider.params, transparent.commands.commandList, provider.renderSystem->frameIndex);
 
 	//ctx.target->PrepareAsSingleView(transparent.commands.commandList, provider.renderSystem->frameIndex, 0, D3D12_RESOURCE_STATE_RENDER_TARGET);
 }

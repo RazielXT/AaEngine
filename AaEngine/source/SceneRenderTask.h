@@ -38,6 +38,7 @@ private:
 
 	RenderContext ctx;
 	RenderInformation sceneInfo;
+	Renderables* renderables;
 
 	void renderScene(CompositorPass& pass);
 	void renderEarlyZ(CompositorPass& pass);
@@ -71,6 +72,7 @@ private:
 
 	RenderContext ctx;
 	RenderInformation sceneInfo;
+	Renderables* renderables;
 
 	void renderTransparentScene(CompositorPass& pass);
 

@@ -7,6 +7,12 @@
 
 class AaEntity;
 
+struct GrassAreaPlacementTask
+{
+	AaEntity* terrain{};
+	BoundingBox bbox;
+};
+
 struct GrassAreaDescription
 {
 	void initialize(BoundingBoxVolume extends);

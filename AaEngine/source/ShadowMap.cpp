@@ -55,7 +55,7 @@ void AaShadowMap::clear(ID3D12GraphicsCommandList* commandList, UINT frameIndex)
 			D3D12_RESOURCE_STATE_DEPTH_WRITE);
 		commandList->ResourceBarrier(1, &barrier);
 
-		t.Clear(commandList, frameIndex);
+		t.ClearDepth(commandList, frameIndex);
 
 		barrier = CD3DX12_RESOURCE_BARRIER::Transition(
 			t.depthStencilTexture[frameIndex].Get(),

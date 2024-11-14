@@ -30,8 +30,6 @@ private:
 
 	bool running = true;
 
-	RenderContext ctx;
-
 	RenderQueue* sceneQueue{};
 
 	AaCamera camera;

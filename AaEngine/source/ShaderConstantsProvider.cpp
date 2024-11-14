@@ -2,8 +2,9 @@
 #include "RenderQueue.h"
 #include "AaRenderables.h"
 
-ShaderConstantsProvider::ShaderConstantsProvider(const RenderInformation& i, const AaCamera& c) : info(i), camera(c)
+ShaderConstantsProvider::ShaderConstantsProvider(const RenderInformation& i, const AaCamera& c, const RenderTargetInfo& target) : info(i), camera(c)
 {
+	inverseViewportSize = { 1.f / target.width, 1.f / target.height };
 }
 
 XMFLOAT4X4 ShaderConstantsProvider::getWvpMatrix() const

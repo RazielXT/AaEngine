@@ -27,12 +27,11 @@ private:
 		std::thread worker;
 
 		RenderInformation renderablesData;
+		Renderables* renderables;
 	}
 	shadowsData[2];
 
 	bool running = true;
-
-	RenderContext ctx;
 
 	RenderQueue* depthQueue{};
 

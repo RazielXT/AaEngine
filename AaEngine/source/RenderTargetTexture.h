@@ -9,22 +9,38 @@
 
 using namespace Microsoft::WRL;
 
-class RenderDepthTargetTexture
+class RenderTargetInfo
+{
+public:
+
+	RenderTargetInfo() = default;
+
+	struct Texture
+	{
+		ComPtr<ID3D12Resource> texture[2];
+		ShaderTextureView textureView;
+	};
+	std::vector<Texture> textures;
+
+	std::vector<DXGI_FORMAT> formats;
+
+	UINT width = 0;
+	UINT height = 0;
+	UINT arraySize = 1;
+};
+
+class RenderDepthTargetTexture : public RenderTargetInfo
 {
 public:
 
 	void Init(ID3D12Device* device, UINT width, UINT height, UINT frameCount, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_DEPTH_WRITE, UINT arraySize = 1);
-	void Clear(ID3D12GraphicsCommandList* commandList, UINT frameIndex);
+	void ClearDepth(ID3D12GraphicsCommandList* commandList, UINT frameIndex);
 
 	void PrepareAsDepthTarget(ID3D12GraphicsCommandList* commandList, UINT frameIndex, D3D12_RESOURCE_STATES from);
 	void PrepareAsDepthView(ID3D12GraphicsCommandList* commandList, UINT frameIndex, D3D12_RESOURCE_STATES from);
 	void TransitionDepth(ID3D12GraphicsCommandList* commandList, UINT frameIndex, D3D12_RESOURCE_STATES from, D3D12_RESOURCE_STATES to);
 
 	void SetName(const wchar_t* name);
-
-	UINT width = 0;
-	UINT height = 0;
-	UINT arraySize = 1;
 
 	ComPtr<ID3D12Resource> depthStencilTexture[2];
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandles[2]{};
@@ -69,15 +85,6 @@ public:
 	void SetName(const wchar_t* name);
 
 	DirectX::XMFLOAT4 clearColor = { 0.55f, 0.75f, 0.9f, 1.0f };
-
-	struct Texture
-	{
-		ComPtr<ID3D12Resource> texture[2];
-		ShaderTextureView textureView;
-	};
-	std::vector<Texture> textures;
-
-	std::vector<DXGI_FORMAT> formats;
 
 private:
 

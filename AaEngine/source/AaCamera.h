@@ -38,8 +38,8 @@ public:
 
 	Vector3 getPosition() const;
 
-	DirectX::BoundingFrustum prepareFrustum();
-	DirectX::BoundingOrientedBox prepareOrientedBox();
+	DirectX::BoundingFrustum prepareFrustum() const;
+	DirectX::BoundingOrientedBox prepareOrientedBox() const;
 
 private:
 

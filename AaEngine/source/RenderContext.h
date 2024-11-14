@@ -8,7 +8,7 @@ class Renderables;
 
 struct RenderProvider
 {
-	FrameGpuParameters& params;
+	const FrameParameters& params;
 	AaRenderSystem* renderSystem;
 };
 

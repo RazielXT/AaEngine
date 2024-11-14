@@ -377,56 +377,56 @@ UINT MaterialInstance::GetParameterOffset(FastParam id) const
 	return paramsTable[(int)id].Offset;
 }
 
-void MaterialInstance::LoadMaterialConstants(ShaderConstantsProvider& buffers) const
+void MaterialInstance::LoadMaterialConstants(ShaderConstantsProvider& constants) const
 {
-	if (buffers.data.size() < resources->buffers.size())
-		buffers.data.resize(resources->buffers.size());
+	if (constants.buffers.size() < resources->buffers.size())
+		constants.buffers.resize(resources->buffers.size());
 
 	for (const auto& p : resources->buffers)
 	{
 		if (p.type == GpuBufferType::Root)
-			buffers.data[p.rootIndex] = p.defaultData;
+			constants.buffers[p.rootIndex] = p.defaultData;
 	}
 }
 
-void MaterialInstance::UpdatePerFrame(ShaderConstantsProvider& buffers, const FrameGpuParameters& info)
+void MaterialInstance::UpdatePerFrame(ShaderConstantsProvider& constants, const FrameParameters& info)
 {
 	for (auto p : resources->autoParams)
 	{
 		if (p.type == ResourcesInfo::AutoParam::TIME)
-			buffers.data[p.bufferIdx][p.bufferOffset] = info.time;
+			constants.buffers[p.bufferIdx][p.bufferOffset] = info.time;
 		else if (p.type == ResourcesInfo::AutoParam::SUN_DIRECTION)
-			*(DirectX::XMFLOAT3*)&buffers.data[p.bufferIdx][p.bufferOffset] = info.sun.SunDirection;
+			*(DirectX::XMFLOAT3*)&constants.buffers[p.bufferIdx][p.bufferOffset] = info.sun.SunDirection;
 		else if (p.type == ResourcesInfo::AutoParam::SHADOW_MATRIX)
-			*(DirectX::XMFLOAT4X4*)&buffers.data[p.bufferIdx][p.bufferOffset] = info.sun.ShadowMatrix[0];
+			*(DirectX::XMFLOAT4X4*)&constants.buffers[p.bufferIdx][p.bufferOffset] = info.sun.ShadowMatrix[0];
 		else if (p.type == ResourcesInfo::AutoParam::SHADOW_MAP_SIZE)
-			buffers.data[p.bufferIdx][p.bufferOffset] = info.sun.ShadowMapSize;
+			constants.buffers[p.bufferIdx][p.bufferOffset] = info.sun.ShadowMapSize;
 		else if (p.type == ResourcesInfo::AutoParam::SHADOW_MAP_SIZE_INV)
-			buffers.data[p.bufferIdx][p.bufferOffset] = info.sun.ShadowMapSizeInv;
+			constants.buffers[p.bufferIdx][p.bufferOffset] = info.sun.ShadowMapSizeInv;
 		else if (p.type == ResourcesInfo::AutoParam::VIEWPORT_SIZE_INV)
 		{
-			buffers.data[p.bufferIdx][p.bufferOffset] = info.inverseViewportSize.x;
-			buffers.data[p.bufferIdx][p.bufferOffset + 1] = info.inverseViewportSize.y;
+			constants.buffers[p.bufferIdx][p.bufferOffset] = constants.inverseViewportSize.x;
+			constants.buffers[p.bufferIdx][p.bufferOffset + 1] = constants.inverseViewportSize.y;
 		}
 		else if (p.type == ResourcesInfo::AutoParam::CAMERA_POSITION)
-			*(DirectX::XMFLOAT3*)&buffers.data[p.bufferIdx][p.bufferOffset] = buffers.getCameraPosition();
+			*(DirectX::XMFLOAT3*)&constants.buffers[p.bufferIdx][p.bufferOffset] = constants.getCameraPosition();
 		else if (p.type == ResourcesInfo::AutoParam::WORLD_POSITION)
-			*(DirectX::XMFLOAT3*)&buffers.data[p.bufferIdx][p.bufferOffset] = buffers.getWorldPosition();
+			*(DirectX::XMFLOAT3*)&constants.buffers[p.bufferIdx][p.bufferOffset] = constants.getWorldPosition();
 		else if (p.type == ResourcesInfo::AutoParam::VP_MATRIX)
-			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&buffers.data[p.bufferIdx][p.bufferOffset], XMMatrixTranspose(buffers.getViewProjectionMatrix()));
+			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&constants.buffers[p.bufferIdx][p.bufferOffset], XMMatrixTranspose(constants.getViewProjectionMatrix()));
 		else if (p.type == ResourcesInfo::AutoParam::INV_VP_MATRIX)
-			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&buffers.data[p.bufferIdx][p.bufferOffset], XMMatrixTranspose(buffers.getInverseViewProjectionMatrix()));
+			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&constants.buffers[p.bufferIdx][p.bufferOffset], XMMatrixTranspose(constants.getInverseViewProjectionMatrix()));
 	}
 }
 
-void MaterialInstance::UpdatePerObject(ShaderConstantsProvider& buffers, const FrameGpuParameters& info)
+void MaterialInstance::UpdatePerObject(ShaderConstantsProvider& constants, const FrameParameters& info)
 {
 	for (auto p : resources->autoParams)
 	{
 		if (p.type == ResourcesInfo::AutoParam::WVP_MATRIX)
-			*(DirectX::XMFLOAT4X4*)&buffers.data[p.bufferIdx][p.bufferOffset] = buffers.getWvpMatrix();
+			*(DirectX::XMFLOAT4X4*)&constants.buffers[p.bufferIdx][p.bufferOffset] = constants.getWvpMatrix();
 		else if (p.type == ResourcesInfo::AutoParam::WORLD_MATRIX)
-			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&buffers.data[p.bufferIdx][p.bufferOffset], XMMatrixTranspose(buffers.getWorldMatrix()));
+			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&constants.buffers[p.bufferIdx][p.bufferOffset], XMMatrixTranspose(constants.getWorldMatrix()));
 	}
 }
 
@@ -454,14 +454,14 @@ void MaterialInstance::BindTextures(ID3D12GraphicsCommandList* commandList, int 
 		commandList->SetGraphicsRootDescriptorTable(uav.rootIndex, uav.uav->uavHandles[frameIndex]);
 }
 
-void MaterialInstance::BindConstants(ID3D12GraphicsCommandList* commandList, int frameIndex, const ShaderConstantsProvider& buffers)
+void MaterialInstance::BindConstants(ID3D12GraphicsCommandList* commandList, int frameIndex, const ShaderConstantsProvider& constants)
 {
 	for (auto& b : resources->buffers)
 	{
 		if (b.type == GpuBufferType::Root)
-			commandList->SetGraphicsRoot32BitConstants(b.rootIndex, buffers.data[b.rootIndex].size(), buffers.data[b.rootIndex].data(), 0);
+			commandList->SetGraphicsRoot32BitConstants(b.rootIndex, constants.buffers[b.rootIndex].size(), constants.buffers[b.rootIndex].data(), 0);
 		else if (b.type == GpuBufferType::Instancing || b.type == GpuBufferType::Geometry)
-			commandList->SetGraphicsRootShaderResourceView(b.rootIndex, buffers.getGeometryBuffer());
+			commandList->SetGraphicsRootShaderResourceView(b.rootIndex, constants.getGeometryBuffer());
 		else if (b.type == GpuBufferType::Global)
  			commandList->SetGraphicsRootConstantBufferView(b.rootIndex, b.globalCBuffer.data[frameIndex]->GpuAddress());
 	}

@@ -148,10 +148,19 @@ void FrameCompositor::reloadTextures()
 	}
 }
 
-static void RenderQuad(AaMaterial* material, RenderProvider& provider, RenderContext& ctx, ID3D12GraphicsCommandList* commandList, UINT frameIndex)
+void FrameCompositor::renderQuad(PassData& pass, RenderContext& ctx, ID3D12GraphicsCommandList* commandList, UINT frameIndex)
 {
-	ShaderConstantsProvider constants({}, *ctx.camera);
+	pass.target.texture->PrepareAsTarget(commandList, provider.renderSystem->frameIndex, pass.target.previousState, false, false);
 
+	for (UINT i = 0; auto & input : pass.inputs)
+	{
+		input.texture->PrepareAsView(commandList, provider.renderSystem->frameIndex, input.previousState);
+		pass.material->SetTexture(*input.view, i++);
+	}
+
+	ShaderConstantsProvider constants({}, *ctx.camera, *pass.target.texture);
+
+	auto material = pass.material;
 	material->GetBase()->BindSignature(commandList, frameIndex);
 
 	material->LoadMaterialConstants(constants);
@@ -172,22 +181,9 @@ void FrameCompositor::render(RenderContext& ctx)
 		if (pass.startCommands)
 			provider.renderSystem->StartCommandList(syncCommands);
 
-		if (pass.target.texture)
-		{
-			provider.params.inverseViewportSize = { 1.f / pass.target.texture->width, 1.f / pass.target.texture->height };
-		}
-
 		if (pass.material)
 		{
- 			pass.target.texture->PrepareAsTarget(syncCommands.commandList, provider.renderSystem->frameIndex, pass.target.previousState, false, false);
-
-			for (UINT i = 0; auto & input : pass.inputs)
-			{
-				input.texture->PrepareAsView(syncCommands.commandList, provider.renderSystem->frameIndex, input.previousState);
-				pass.material->SetTexture(*input.view, i++);
-			}
-
- 			RenderQuad(pass.material, provider, ctx, syncCommands.commandList, provider.renderSystem->frameIndex);
+ 			renderQuad(pass, ctx, syncCommands.commandList, provider.renderSystem->frameIndex);
 		}
 		else if (pass.task)
 		{
@@ -195,7 +191,7 @@ void FrameCompositor::render(RenderContext& ctx)
 		}
 
 		if (pass.target.present)
-			pass.target.texture->PrepareToPresent(syncCommands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_RENDER_TARGET);
+			pass.target.texture->PrepareToPresent(syncCommands.commandList, provider.renderSystem->frameIndex, pass.target.previousState);
 	}
 	executeCommands();
 

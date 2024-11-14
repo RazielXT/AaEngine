@@ -10,7 +10,14 @@ enum class EntityChange
 	DeleteAll,
 };
 
-using EntityChanges = std::vector<std::pair<EntityChange, AaEntity*>>;
+struct EntityChangeDescritpion
+{
+	EntityChange type;
+	Order order;
+	AaEntity* entity{};
+};
+
+using EntityChanges = std::vector<EntityChangeDescritpion>;
 
 struct RenderQueue
 {
@@ -36,5 +43,6 @@ struct RenderQueue
 	std::vector<EntityEntry> entities;
 
 	void update(const EntityChanges&);
-	void renderObjects(AaCamera& cam, const RenderInformation& info, const FrameGpuParameters& params, ID3D12GraphicsCommandList* commandList, UINT frameIndex);
+	std::vector<UINT> createEntityFilter() const;
+	void renderObjects(ShaderConstantsProvider& info, const FrameParameters& params, ID3D12GraphicsCommandList* commandList, UINT frameIndex);
 };

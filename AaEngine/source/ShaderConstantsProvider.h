@@ -7,14 +7,17 @@
 struct RenderInformation;
 class AaEntity;
 class AaCamera;
+class RenderTargetInfo;
 
 class ShaderConstantsProvider
 {
 public:
 
-	ShaderConstantsProvider(const RenderInformation& info, const AaCamera& camera);
+	ShaderConstantsProvider(const RenderInformation& info, const AaCamera& camera, const RenderTargetInfo& target);
 
-	std::vector<std::vector<float>> data;
+	DirectX::XMFLOAT2 inverseViewportSize;
+
+	std::vector<std::vector<float>> buffers;
 
 	XMFLOAT4X4 getWvpMatrix() const;
 	XMMATRIX getWorldMatrix() const;
@@ -28,8 +31,7 @@ public:
 
 	AaEntity* entity{};
 
-private:
-
 	const RenderInformation& info;
+
 	const AaCamera& camera;
 };

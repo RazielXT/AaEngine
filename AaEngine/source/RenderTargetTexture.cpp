@@ -9,7 +9,7 @@ void RenderDepthTargetTexture::Init(ID3D12Device* device, UINT w, UINT h, UINT f
 	CreateDepthBuffer(device, frameCount, initialState, arraySize);
 }
 
-void RenderDepthTargetTexture::Clear(ID3D12GraphicsCommandList* commandList, UINT frameIndex)
+void RenderDepthTargetTexture::ClearDepth(ID3D12GraphicsCommandList* commandList, UINT frameIndex)
 {
 	commandList->ClearDepthStencilView(dsvHandles[frameIndex], D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 }

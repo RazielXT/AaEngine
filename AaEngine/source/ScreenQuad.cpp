@@ -2,15 +2,15 @@
 #include "RenderQueue.h"
 #include "AaMaterial.h"
 
-void ScreenQuad::Render(AaMaterial* material, RenderProvider& provider, RenderContext& ctx, ID3D12GraphicsCommandList* commandList) const
+void ScreenQuad::Render(AaMaterial* material, const RenderTargetInfo& target, RenderProvider& provider, RenderContext& ctx, ID3D12GraphicsCommandList* commandList) const
 {
 	UINT frameIndex = provider.renderSystem->frameIndex;
-	ShaderConstantsProvider constants({}, *ctx.camera);
+	ShaderConstantsProvider constants({}, *ctx.camera, target);
 
 	material->GetBase()->BindSignature(commandList, frameIndex);
 
 	material->LoadMaterialConstants(constants);
-	memcpy(constants.data.front().data(), &data, sizeof(data));
+	memcpy(constants.buffers.front().data(), &data, sizeof(data));
 
 	material->UpdatePerFrame(constants, provider.params);
 	material->BindPipeline(commandList);

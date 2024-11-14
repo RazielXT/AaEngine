@@ -36,7 +36,7 @@ public:
 	virtual void resize(CompositorPass& pass) {};
 	virtual void run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) = 0;
 
-	virtual bool isSync() const { return false; }
+	virtual bool writesSyncCommands() const { return false; }
 	virtual bool forceTaskOrder() const { return false; }
 
 protected:

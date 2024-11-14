@@ -103,11 +103,10 @@ struct PssmParameters
 	float ShadowMapSizeInv;
 };
 
-struct FrameGpuParameters
+struct FrameParameters
 {
 	PssmParameters sun;
 
-	DirectX::XMFLOAT2 inverseViewportSize;
 	float time;
 	float timeDelta;
 };

@@ -18,16 +18,13 @@ class AaEntity : public RenderObject
 {
 public:
 
-	AaEntity(Renderables&, std::string name);
+	AaEntity(Renderables&, std::string_view name);
+	AaEntity(Renderables&, AaEntity& source);
 	~AaEntity();
 
-	std::string name;
-
-	Order order = Order::Normal;
+	const char* name;
 
 	MaterialInstance* material{};
 
 	EntityGeometry geometry;
-
-	GrassArea* grass{};
 };

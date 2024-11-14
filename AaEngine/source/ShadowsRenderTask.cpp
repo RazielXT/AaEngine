@@ -7,7 +7,7 @@ ShadowsRenderTask::ShadowsRenderTask(RenderProvider p, AaSceneManager& s, AaShad
 {
 	for (auto& shadow : shadowsData)
 	{
-		shadow.renderablesData = { sceneMgr.getRenderables(Order::Normal) };
+		shadow.renderables = sceneMgr.getRenderables(Order::Normal);
 	}
 }
 
@@ -48,12 +48,14 @@ AsyncTasksInfo ShadowsRenderTask::initialize(CompositorPass&)
 				{
 					provider.renderSystem->StartCommandList(shadow.commands);
 
-					auto& info = shadow.renderablesData;
-					info.updateVisibility(shadowMaps.camera[idx]);
+					auto& sceneInfo = shadow.renderablesData;
+
+					shadow.renderables->updateRenderInformation(shadowMaps.camera[idx], sceneInfo);
 
 					shadowMaps.texture[idx].PrepareAsDepthTarget(shadow.commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
-					depthQueue->renderObjects(shadowMaps.camera[idx], info, provider.params, shadow.commands.commandList, provider.renderSystem->frameIndex);
+					ShaderConstantsProvider constants(sceneInfo, shadowMaps.camera[idx], shadowMaps.texture[idx]);
+					depthQueue->renderObjects(constants, provider.params, shadow.commands.commandList, provider.renderSystem->frameIndex);
 
 					shadowMaps.texture[idx].PrepareAsDepthView(shadow.commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
@@ -69,8 +71,6 @@ AsyncTasksInfo ShadowsRenderTask::initialize(CompositorPass&)
 
 void ShadowsRenderTask::run(RenderContext& renderCtx, CommandsData&, CompositorPass&)
 {
-	ctx = renderCtx;
-
 	for (auto& shadow : shadowsData)
 	{
 		SetEvent(shadow.eventBegin);

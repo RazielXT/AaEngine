@@ -14,36 +14,32 @@ AaSceneManager::~AaSceneManager()
 	}
 }
 
-AaEntity* AaSceneManager::createEntity(std::string name, Order order)
+void AaSceneManager::update()
 {
-	auto ent = new AaEntity(renderables[order], name);
-	ent->order = order;
+	updateQueues();
+	updateTransformations();
+}
 
-	entityMap[name] = ent;
+AaEntity* AaSceneManager::createEntity(const std::string& name, Order order)
+{
+	auto nameIt = entityMap.try_emplace(name, nullptr).first;
+	auto ent = nameIt->second = new AaEntity(renderables[order], nameIt->first);
 
-	changes.emplace_back(EntityChange::Add, ent);
+	changes.emplace_back(EntityChange::Add, order, ent);
 
 	return ent;
 }
 
-AaEntity* AaSceneManager::createGrassEntity(std::string name, GrassAreaDescription& desc)
+AaEntity* AaSceneManager::createEntity(const std::string& name, const ObjectTransformation& transformation, BoundingBox bbox, Order order)
 {
-	auto material = AaMaterialResources::get().getMaterial("GrassLeaves");
+	auto entity = createEntity(name, order);
+	entity->setBoundingBox(bbox);
+	entity->setTransformation(transformation, true);
 
-	Order renderQueue = Order::Normal;
-	if (material->IsTransparent())
-		renderQueue = Order::Transparent;
-
-	auto grassEntity = createEntity(name, renderQueue);
-
- 	grassEntity->grass = grass.createGrass(desc);
- 	grassEntity->setBoundingBox(desc.bbox);
-	grassEntity->material = material;
-
-	return grassEntity;
+	return entity;
 }
 
-AaEntity* AaSceneManager::getEntity(std::string name) const
+AaEntity* AaSceneManager::getEntity(const std::string& name) const
 {
 	auto it = entityMap.find(name);
 	if (it != entityMap.end())
@@ -111,7 +107,7 @@ Renderables* AaSceneManager::getRenderables(Order order)
 
 void AaSceneManager::clear()
 {
-	changes.emplace_back(EntityChange::DeleteAll, nullptr);
+	changes.emplace_back(EntityChange::DeleteAll);
 
 	for (auto& [name, entity] : entityMap)
 	{

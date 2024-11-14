@@ -35,8 +35,8 @@ void SceneTestTask::run(RenderContext& ctx, CommandsData& c, CompositorPass&)
 	{
 		initialize = true;
 
-		tmpQueue.update({ { EntityChange::Add, sceneMgr.getEntity("Plane001") } });
-		tmpQueue.update({ { EntityChange::Add, sceneMgr.getEntity("Torus001") } });
+		tmpQueue.update({ { EntityChange::Add, Order::Normal, sceneMgr.getEntity("Plane001") } });
+		tmpQueue.update({ { EntityChange::Add, Order::Normal, sceneMgr.getEntity("Torus001") } });
 	}
 
 	AaCamera tmpCamera;
@@ -45,20 +45,21 @@ void SceneTestTask::run(RenderContext& ctx, CommandsData& c, CompositorPass&)
 	tmpCamera.pitch(-90);
 	tmpCamera.updateMatrix();
 
-	static RenderInformation objInfo{ sceneMgr.getRenderables(Order::Normal) };
-	objInfo.updateVisibility(tmpCamera);
+	static RenderInformation sceneInfo;
+	sceneMgr.getRenderables(Order::Normal)->updateRenderInformation(tmpCamera, sceneInfo);
 
 	provider.renderSystem->StartCommandList(commands);
 
 	tmp.PrepareAsTarget(commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_COMMON);
 
-	tmpQueue.renderObjects(tmpCamera, objInfo, provider.params, commands.commandList, provider.renderSystem->frameIndex);
+	ShaderConstantsProvider constants(sceneInfo, tmpCamera, tmp);
+	tmpQueue.renderObjects(constants, provider.params, commands.commandList, provider.renderSystem->frameIndex);
 
 	tmp.PrepareAsView(commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_COMMON);
 	provider.renderSystem->ExecuteCommandList(commands);
 }
 
-bool SceneTestTask::isSync() const
+bool SceneTestTask::writesSyncCommands() const
 {
 	return true;
 }

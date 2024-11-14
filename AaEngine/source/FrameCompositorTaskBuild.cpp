@@ -133,7 +133,7 @@ void FrameCompositor::initializeCommands()
 		if (pass.task)
 			pushAsyncTasks(pass.info, pass.task->initialize(pass), pass.task->forceTaskOrder());
 
-		pass.generalCommands = refreshSyncCommands(pass, !pass.task || pass.task->isSync());
+		pass.generalCommands = refreshSyncCommands(pass, !pass.task || pass.task->writesSyncCommands());
 	}
 
 	prepareAsyncTasks();

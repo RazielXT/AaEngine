@@ -169,7 +169,7 @@ Vector3 AaCamera::getPosition() const
 	return position;
 }
 
-DirectX::BoundingFrustum AaCamera::prepareFrustum()
+DirectX::BoundingFrustum AaCamera::prepareFrustum() const
 {
 	DirectX::BoundingFrustum frustum;
 	DirectX::BoundingFrustum::CreateFromMatrix(frustum, projection_m);
@@ -178,7 +178,7 @@ DirectX::BoundingFrustum AaCamera::prepareFrustum()
 	return frustum;
 }
 
-DirectX::BoundingOrientedBox AaCamera::prepareOrientedBox()
+DirectX::BoundingOrientedBox AaCamera::prepareOrientedBox() const
 {
 	DirectX::BoundingOrientedBox orientedBox;
 	orientedBox.Extents = { width / 2.0f, height / 2.0f, (farZ - nearZ) / 2.0f };

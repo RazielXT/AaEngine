@@ -16,7 +16,7 @@ UINT Renderables::createId(RenderObject* obj)
 		auto id = freeIds.back();
 		freeIds.pop_back();
 
-		objectData.coordinates[id] = {};
+		objectData.transformation[id] = {};
 		objectData.bbox[id] = {};
 		objectData.worldBbox[id] = {};
 		objectData.worldMatrix[id] = {};
@@ -29,7 +29,7 @@ UINT Renderables::createId(RenderObject* obj)
 
 	auto id = (UINT)ids.size();
 
-	objectData.coordinates.push_back({});
+	objectData.transformation.push_back({});
 	objectData.bbox.emplace_back();
 	objectData.worldBbox.emplace_back();
 	objectData.worldMatrix.emplace_back();
@@ -54,14 +54,18 @@ void Renderables::updateTransformation()
 {
 	for (auto id : ids)
 	{
-		auto& coords = objectData.coordinates[id];
-		if (!coords.dirty)
-			continue;
+		auto& transformation = objectData.transformation[id];
 
-		coords.dirty = false;
-		objectData.worldMatrix[id] = coords.createWorldMatrix();
-		objectData.bbox[id].Transform(objectData.worldBbox[id], objectData.worldMatrix[id]);
+		if (transformation.dirty)
+			updateTransformation(id, transformation);
 	}
+}
+
+void Renderables::updateTransformation(UINT id, ObjectTransformation& transformation)
+{
+	transformation.dirty = false;
+	objectData.worldMatrix[id] = transformation.createWorldMatrix();
+	objectData.bbox[id].Transform(objectData.worldBbox[id], objectData.worldMatrix[id]);
 }
 
 void Renderables::updateWVPMatrix(XMMATRIX viewProjection, const RenderableVisibility& visible, std::vector<XMFLOAT4X4>& wvpMatrix) const
@@ -69,6 +73,19 @@ void Renderables::updateWVPMatrix(XMMATRIX viewProjection, const RenderableVisib
 	wvpMatrix.resize(ids.size());
 
 	for (auto id : ids)
+	{
+		if (visible[id])
+		{
+			XMStoreFloat4x4(&wvpMatrix[id], XMMatrixMultiplyTranspose(objectData.worldMatrix[id], viewProjection));
+		}
+	}
+}
+
+void Renderables::updateWVPMatrix(XMMATRIX viewProjection, const RenderableVisibility& visible, std::vector<XMFLOAT4X4>& wvpMatrix, const RenderableFilter& filter) const
+{
+	wvpMatrix.resize(ids.size());
+
+	for (auto id : filter)
 	{
 		if (visible[id])
 		{
@@ -97,7 +114,27 @@ void Renderables::updateVisibility(const BoundingOrientedBox& box, RenderableVis
 	}
 }
 
-void Renderables::updateRenderInformation(AaCamera& camera, RenderInformation& info) const
+void Renderables::updateVisibility(const BoundingFrustum& frustum, RenderableVisibility& visible, const RenderableFilter& filter) const
+{
+	visible.resize(ids.size());
+
+	for (auto id : filter)
+	{
+		visible[id] = frustum.Intersects(objectData.worldBbox[id]);
+	}
+}
+
+void Renderables::updateVisibility(const BoundingOrientedBox& box, RenderableVisibility& visible, const RenderableFilter& filter) const
+{
+	visible.resize(ids.size());
+
+	for (auto id : filter)
+	{
+		visible[id] = box.Intersects(objectData.worldBbox[id]);
+	}
+}
+
+void Renderables::updateRenderInformation(const AaCamera& camera, RenderInformation& info) const
 {
 	if (camera.isOrthographic())
 		updateVisibility(camera.prepareOrientedBox(), info.visibility);
@@ -107,13 +144,23 @@ void Renderables::updateRenderInformation(AaCamera& camera, RenderInformation& i
 	updateWVPMatrix(camera.getViewProjectionMatrix(), info.visibility, info.wvpMatrix);
 }
 
+void Renderables::updateRenderInformation(const AaCamera& camera, RenderInformation& info, const RenderableFilter& filter) const
+{
+	if (camera.isOrthographic())
+		updateVisibility(camera.prepareOrientedBox(), info.visibility, filter);
+	else
+		updateVisibility(camera.prepareFrustum(), info.visibility, filter);
+
+	updateWVPMatrix(camera.getViewProjectionMatrix(), info.visibility, info.wvpMatrix, filter);
+}
+
 void Renderables::reset()
 {
 	freeIds.clear();
 	objectData = {};
 }
 
-DirectX::XMMATRIX WorldCoordinates::createWorldMatrix() const
+DirectX::XMMATRIX ObjectTransformation::createWorldMatrix() const
 {
 // 	XMMATRIX translationM = XMMatrixTranslation(position.x, position.y, position.z);
 // 	XMMATRIX rotationM = XMMatrixRotationQuaternion(orientation);
@@ -142,68 +189,82 @@ RenderObject::~RenderObject()
 
 void RenderObject::setPosition(Vector3 position)
 {
-	auto& coords = source.objectData.coordinates[id];
+	auto& coords = source.objectData.transformation[id];
 	coords.dirty = true;
 	coords.position = position;
 }
 
 void RenderObject::setScale(Vector3 scale)
 {
-	auto& coords = source.objectData.coordinates[id];
+	auto& coords = source.objectData.transformation[id];
 	coords.dirty = true;
 	coords.scale = scale;
 }
 
 Vector3 RenderObject::getPosition() const
 {
-	return source.objectData.coordinates[id].position;
+	return source.objectData.transformation[id].position;
 }
 
 Vector3 RenderObject::getScale() const
 {
-	return source.objectData.coordinates[id].scale;
+	return source.objectData.transformation[id].scale;
 }
 
 Quaternion RenderObject::getOrientation() const
 {
 	Quaternion q;
-	XMStoreFloat4(&q, source.objectData.coordinates[id].orientation);
+	XMStoreFloat4(&q, source.objectData.transformation[id].orientation);
 	return q;
 }
 
 void RenderObject::setOrientation(Quaternion orientation)
 {
-	auto& coords = source.objectData.coordinates[id];
+	auto& coords = source.objectData.transformation[id];
 	coords.dirty = true;
 	coords.orientation = orientation;
 }
 
 void RenderObject::yaw(float yaw)
 {
-	auto& coords = source.objectData.coordinates[id];
+	auto& coords = source.objectData.transformation[id];
 	coords.dirty = true;
 	coords.orientation = XMQuaternionMultiply(coords.orientation, XMQuaternionRotationRollPitchYaw(0, yaw, 0));
 }
 
 void RenderObject::pitch(float pitch)
 {
-	auto& coords = source.objectData.coordinates[id];
+	auto& coords = source.objectData.transformation[id];
 	coords.dirty = true;
 	coords.orientation = XMQuaternionMultiply(coords.orientation, XMQuaternionRotationRollPitchYaw(pitch, 0, 0));
 }
 
 void RenderObject::roll(float roll)
 {
-	auto& coords = source.objectData.coordinates[id];
+	auto& coords = source.objectData.transformation[id];
 	coords.dirty = true;
 	coords.orientation = XMQuaternionMultiply(coords.orientation, XMQuaternionRotationRollPitchYaw(0, 0, roll));
 }
 
 void RenderObject::resetRotation()
 {
-	auto& coords = source.objectData.coordinates[id];
+	auto& coords = source.objectData.transformation[id];
 	coords.dirty = true;
 	coords.orientation = XMQuaternionIdentity();
+}
+
+void RenderObject::setTransformation(const ObjectTransformation& transformation, bool forceUpdate)
+{
+	auto& t = source.objectData.transformation[id];
+	t = transformation;
+
+	if (forceUpdate)
+		source.updateTransformation(id, t);
+}
+
+const ObjectTransformation& RenderObject::getTransformation() const
+{
+	return source.objectData.transformation[id];
 }
 
 bool RenderObject::isVisible(const RenderableVisibility& visible) const
@@ -233,14 +294,10 @@ DirectX::BoundingBox RenderObject::getBoundingBox() const
 
 DirectX::BoundingBox RenderObject::getWorldBoundingBox() const
 {
-	auto bbox = getBoundingBox();
-	bbox.Center += getPosition();
-	bbox.Extents *= getScale();
-
-	return bbox;
+	return source.objectData.worldBbox[id];
 }
 
-void RenderInformation::updateVisibility(AaCamera& camera)
+UINT RenderObject::getId() const
 {
-	source->updateRenderInformation(camera, *this);
+	return id;
 }

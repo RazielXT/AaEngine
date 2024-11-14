@@ -13,13 +13,12 @@
 
 using namespace pugi;
 
+static SceneParseResult* parseResult{};
 static ModelLoadContext* ctx{};
 
 struct SceneNode
 {
-	XMFLOAT3 position;
-	XMFLOAT4 orientation;
-	XMFLOAT3 scale;
+	ObjectTransformation transformation;
 };
 
 bool getBool(std::string_view value)
@@ -188,7 +187,7 @@ void loadExtensions(const xml_node& element, AaEntity* ent, SceneNode* node, AaS
 	{
 		if (e.name == "addGrass")
 		{
-			//sceneMgr->createGrassEntity(ent);
+			parseResult->grassTask.emplace_back(ent, ent->getWorldBoundingBox());
 		}
 	}
 }
@@ -205,8 +204,6 @@ void loadEntityUserData(const xml_node& element, AaEntity* ent, SceneNode* node,
 		}
 	}
 }
-
-std::map<MaterialInstance*, InstanceGroupDescription> instanceDescriptions;
 
 void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible, AaSceneManager* sceneMgr)
 {
@@ -225,10 +222,10 @@ void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible, Aa
 
 		if (material->HasInstancing())
 		{
-			auto& instanceDescription = instanceDescriptions[material];
+			auto& instanceDescription = parseResult->instanceDescriptions[material];
 			instanceDescription.material = material;
 			instanceDescription.model = model;
-			instanceDescription.objects.emplace_back(node->orientation, node->position, node->scale);
+			instanceDescription.objects.emplace_back(node->transformation);
 
 			break;
 		}
@@ -236,13 +233,9 @@ void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible, Aa
 		if (material->IsTransparent() && renderQueue < Order::Transparent)
 			renderQueue = Order::Transparent;
 
-		ent = sceneMgr->createEntity(name, renderQueue);
+		ent = sceneMgr->createEntity(name, node->transformation, model->bbox, renderQueue);
 		ent->material = material;
 		ent->geometry.fromModel(*model);
-		ent->setBoundingBox(model->bbox);
-		ent->setPosition(node->position);
-		ent->setScale(node->scale);
-		ent->setOrientation(node->orientation);
 		//ent->setVisible(visible);
 
 		break;
@@ -257,9 +250,9 @@ void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible, Aa
 void loadNode(const xml_node& nodeElement, AaSceneManager* sceneMgr)
 {
 	SceneNode node;
-	node.position = LoadXYZ(nodeElement.child("position"));
-	node.orientation = LoadRotation(nodeElement.child("rotation"));
-	node.scale = LoadXYZ(nodeElement.child("scale"));
+	node.transformation.position = LoadXYZ(nodeElement.child("position"));
+	node.transformation.orientation = LoadRotation(nodeElement.child("rotation"));
+	node.transformation.scale = LoadXYZ(nodeElement.child("scale"));
 
 	auto name = nodeElement.attribute("name").value();
 	bool visible = nodeElement.attribute("visibility").value() != std::string("hidden");
@@ -288,18 +281,18 @@ static std::string findFileWithExtension(const std::string& directoryPath, const
 	return {};
 }
 
-void SceneParser::load(std::string name, AaSceneManager* sceneMgr, AaRenderSystem* renderSystem)
+SceneParseResult SceneParser::load(std::string name, AaSceneManager* sceneMgr, AaRenderSystem* renderSystem)
 {
+	SceneParseResult result;
+	parseResult = &result;
+
 	auto folder = SCENE_DIRECTORY + name + "/";
 	auto filename = findFileWithExtension(folder, ".scene");
 
 	if (filename.empty())
-		return;
+		return result;
 
-	xml_document doc;
-	xml_parse_result result = doc.load_file(filename.c_str());
-
-	if (result)
+	if (xml_document doc; doc.load_file(filename.c_str()))
 	{
 		ModelLoadContext loadCtx(renderSystem);
 		ctx = &loadCtx;
@@ -317,9 +310,5 @@ void SceneParser::load(std::string name, AaSceneManager* sceneMgr, AaRenderSyste
 		uploadResourcesFinished.wait();
 	}
 
-	for (auto& desc : instanceDescriptions)
-	{
-		sceneMgr->instancing.build(sceneMgr, desc.second);
-	}
-	instanceDescriptions.clear();
+	return result;
 }

@@ -1,14 +1,15 @@
 #include "RenderQueue.h"
 #include "EntityInstancing.h"
 #include "AaMaterialResources.h"
+#include <algorithm>
 
 void RenderQueue::update(const EntityChanges& changes)
 {
-	for (auto& [change, entity] : changes)
+	for (auto& [change, order, entity] : changes)
 	{
 		if (change == EntityChange::Add)
 		{
-			if (entity->order != targetOrder)
+			if (order != targetOrder)
 				continue;
 
 			auto matInstance = entity->material;
@@ -48,7 +49,21 @@ void RenderQueue::update(const EntityChanges& changes)
 	}
 }
 
-static void RenderObject(ID3D12GraphicsCommandList* commandList, AaEntity* e, AaCamera& camera)
+std::vector<UINT> RenderQueue::createEntityFilter() const
+{
+	std::vector<UINT> out;
+
+	for (auto& entry : entities)
+	{
+		out.push_back(entry.entity->getId());
+	}
+
+	std::sort(out.begin(), out.end());
+
+	return out;
+}
+
+static void RenderObject(ID3D12GraphicsCommandList* commandList, AaEntity* e)
 {
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -64,14 +79,13 @@ static void RenderObject(ID3D12GraphicsCommandList* commandList, AaEntity* e, Aa
 		commandList->DrawInstanced(e->geometry.vertexCount, e->geometry.instanceCount, 0, 0);
 }
 
-void RenderQueue::renderObjects(AaCamera& camera, const RenderInformation& info, const FrameGpuParameters& params, ID3D12GraphicsCommandList* commandList, UINT frameIndex)
+void RenderQueue::renderObjects(ShaderConstantsProvider& constants, const FrameParameters& params, ID3D12GraphicsCommandList* commandList, UINT frameIndex)
 {
 	EntityEntry lastEntry{};
-	ShaderConstantsProvider constants(info, camera);
 
 	for (auto& entry : entities)
 	{
-		if (!entry.entity->isVisible(info.visibility))
+		if (!entry.entity->isVisible(constants.info.visibility))
 			continue;
 
 		constants.entity = entry.entity;
@@ -89,15 +103,15 @@ void RenderQueue::renderObjects(AaCamera& camera, const RenderInformation& info,
 
 		if (technique == MaterialTechnique::Voxelize)
 		{
-			entry.entity->material->GetParameter(FastParam::Emission, constants.data.front().data() + entry.material->GetParameterOffset(FastParam::Emission));
-			entry.entity->material->GetParameter(FastParam::MaterialColor, constants.data.front().data() + entry.material->GetParameterOffset(FastParam::MaterialColor));
-			entry.entity->material->GetParameter(FastParam::TexIdDiffuse, constants.data.front().data() + entry.material->GetParameterOffset(FastParam::TexIdDiffuse));
+			entry.entity->material->GetParameter(FastParam::Emission, constants.buffers.front().data() + entry.material->GetParameterOffset(FastParam::Emission));
+			entry.entity->material->GetParameter(FastParam::MaterialColor, constants.buffers.front().data() + entry.material->GetParameterOffset(FastParam::MaterialColor));
+			entry.entity->material->GetParameter(FastParam::TexIdDiffuse, constants.buffers.front().data() + entry.material->GetParameterOffset(FastParam::TexIdDiffuse));
 		}
 
 		entry.material->UpdatePerObject(constants, params);
 		entry.material->BindConstants(commandList, frameIndex, constants);
 
-		RenderObject(commandList, entry.entity, camera);
+		RenderObject(commandList, entry.entity);
 
 		if (technique == MaterialTechnique::Voxelize)
 		{

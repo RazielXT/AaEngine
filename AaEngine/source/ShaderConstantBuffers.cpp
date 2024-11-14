@@ -57,7 +57,7 @@ ComPtr<ID3D12Resource> ShaderConstantBuffers::CreateUploadStructuredBuffer(const
 	desc.Format = DXGI_FORMAT_UNKNOWN;
 	desc.SampleDesc.Count = 1;
 	desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-	desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+	desc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
 	D3D12_HEAP_PROPERTIES props = {};
 	props.Type = D3D12_HEAP_TYPE_UPLOAD;

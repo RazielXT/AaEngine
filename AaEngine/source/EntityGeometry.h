@@ -10,11 +10,6 @@ class GrassArea;
 
 struct EntityGeometry
 {
-	UINT vertexCount{};
-	UINT indexCount{};
-	UINT instanceCount{};
-	const std::vector<D3D12_INPUT_ELEMENT_DESC>* layout{};
-
 	enum Type
 	{
 		Model,
@@ -22,6 +17,11 @@ struct EntityGeometry
 		Manual,
 	}
 	type{};
+
+	UINT vertexCount{};
+	UINT indexCount{};
+	UINT instanceCount{};
+	const std::vector<D3D12_INPUT_ELEMENT_DESC>* layout{};
 
 	bool usesInstancing() const;
 

@@ -2,7 +2,7 @@
 
 #include "AaMath.h"
 
-struct WorldCoordinates
+struct ObjectTransformation
 {
 	Quaternion orientation;
 	Vector3 position;
@@ -14,7 +14,7 @@ struct WorldCoordinates
 
 struct RenderObjectData
 {
-	std::vector<WorldCoordinates> coordinates;
+	std::vector<ObjectTransformation> transformation;
 	std::vector<XMMATRIX> worldMatrix;
 	std::vector<BoundingBox> worldBbox;
 	std::vector<BoundingBox> bbox;
@@ -26,14 +26,12 @@ class Renderables;
 
 using RenderableVisibility = std::vector<bool>;
 
+using RenderableFilter = std::vector<UINT>;
+
 struct RenderInformation
 {
-	Renderables* source{};
-
 	RenderableVisibility visibility;
 	std::vector<XMFLOAT4X4> wvpMatrix;
-
-	void updateVisibility(AaCamera& camera);
 };
 
 class Renderables
@@ -49,14 +47,20 @@ public:
 	RenderObjectData objectData;
 
 	void updateTransformation();
+	void updateTransformation(UINT id, ObjectTransformation& transformation);
 
-	void updateRenderInformation(AaCamera& camera, RenderInformation&) const;
+	void updateRenderInformation(const AaCamera& camera, RenderInformation&) const;
+	void updateRenderInformation(const AaCamera& camera, RenderInformation&, const RenderableFilter&) const;
 
 private:
 
 	void updateWVPMatrix(XMMATRIX viewProjection, const RenderableVisibility&, std::vector<XMFLOAT4X4>&) const;
+	void updateWVPMatrix(XMMATRIX viewProjection, const RenderableVisibility&, std::vector<XMFLOAT4X4>&, const RenderableFilter&) const;
+
 	void updateVisibility(const BoundingFrustum&, RenderableVisibility&) const;
+	void updateVisibility(const BoundingFrustum&, RenderableVisibility&, const RenderableFilter&) const;
 	void updateVisibility(const BoundingOrientedBox&, RenderableVisibility&) const;
+	void updateVisibility(const BoundingOrientedBox&, RenderableVisibility&, const RenderableFilter&) const;
 
 	void reset();
 
@@ -84,6 +88,9 @@ public:
 	void roll(float roll);
 	void resetRotation();
 
+	void setTransformation(const ObjectTransformation& transformation, bool forceUpdate);
+	const ObjectTransformation& getTransformation() const;
+
 	bool isVisible(const RenderableVisibility&) const;
 
 	XMMATRIX getWorldMatrix() const;
@@ -92,6 +99,8 @@ public:
 	void setBoundingBox(BoundingBox bbox);
 	BoundingBox getBoundingBox() const;
 	BoundingBox getWorldBoundingBox() const;
+
+	UINT getId() const;
 
 private:
 

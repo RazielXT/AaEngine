@@ -33,11 +33,11 @@ void DebugOverlayTask::run(RenderContext& ctx, CommandsData& syncCommands, Compo
 	{
 		quad.data.textureIndex = UINT(idx);
 
-		quad.Render(material, provider, ctx, syncCommands.commandList);
+		quad.Render(material, *pass.target.texture, provider, ctx, syncCommands.commandList);
 	}
 }
 
-bool DebugOverlayTask::isSync() const
+bool DebugOverlayTask::writesSyncCommands() const
 {
 	return true;
 }

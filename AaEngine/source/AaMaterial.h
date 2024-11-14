@@ -98,8 +98,8 @@ public:
 	UINT GetParameterOffset(FastParam param) const;
 
 	void LoadMaterialConstants(ShaderConstantsProvider& buffers) const;
-	void UpdatePerFrame(ShaderConstantsProvider& buffers, const FrameGpuParameters& info);
-	void UpdatePerObject(ShaderConstantsProvider& buffers, const FrameGpuParameters& info);
+	void UpdatePerFrame(ShaderConstantsProvider& buffers, const FrameParameters& info);
+	void UpdatePerObject(ShaderConstantsProvider& buffers, const FrameParameters& info);
 
 	void BindTextures(ID3D12GraphicsCommandList* commandList, int frameIndex);
 	void BindConstants(ID3D12GraphicsCommandList* commandList, int frameIndex, const ShaderConstantsProvider& buffers);

@@ -21,7 +21,7 @@ void ImguiDebugWindowTask::run(RenderContext& ctx, CommandsData& syncCommands, C
 	imgui::DebugWindow::Get().draw(syncCommands.commandList);
 }
 
-bool ImguiDebugWindowTask::isSync() const
+bool ImguiDebugWindowTask::writesSyncCommands() const
 {
 	return true;
 }

@@ -17,7 +17,7 @@ public:
 	AsyncTasksInfo initialize(CompositorPass& pass) override;
 	void run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
 
-	bool isSync() const override;
+	bool writesSyncCommands() const override;
 
 private:
 

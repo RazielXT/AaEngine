@@ -91,31 +91,34 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 
 				commands.commandList->OMSetRenderTargets(0, nullptr, FALSE, nullptr);
 
-				static RenderInformation info{ sceneMgr.getRenderables(Order::Normal) };
+				static RenderInformation sceneInfo;
+				auto& renderables = *sceneMgr.getRenderables(Order::Normal);
 
 				pass.target.texture->PrepareAsTarget(commands.commandList, FrameIndex, pass.target.previousState, true, false, false);
 
 				TextureResource::TransitionState(commands.commandList, FrameIndex, voxelPreviousSceneTexture, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 				TextureResource::TransitionState(commands.commandList, FrameIndex, voxelSceneTexture, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
+				ShaderConstantsProvider constants(sceneInfo, camera, *pass.target.texture);
+
 				//from all 3 axes
 				camera.setPosition(XMFLOAT3(center.x, center.y, center.z - orthoHalfSize.z - 1));
 				camera.setDirection(XMFLOAT3(0, 0, 1));
 				camera.updateMatrix();
-				info.updateVisibility(camera);
-				sceneQueue->renderObjects(camera, info, provider.params, commands.commandList, FrameIndex);
+				renderables.updateRenderInformation(camera, sceneInfo);
+				sceneQueue->renderObjects(constants, provider.params, commands.commandList, FrameIndex);
 
 				camera.setPosition(XMFLOAT3(center.x - orthoHalfSize.x - 1, center.y, center.z));
 				camera.setDirection(XMFLOAT3(1, 0, 0));
 				camera.updateMatrix();
-				info.updateVisibility(camera);
-				sceneQueue->renderObjects(camera, info, provider.params, commands.commandList, FrameIndex);
+				renderables.updateRenderInformation(camera, sceneInfo);
+				sceneQueue->renderObjects(constants, provider.params, commands.commandList, FrameIndex);
 
 				camera.setPosition(XMFLOAT3(center.x, center.y - orthoHalfSize.y - 1, center.z));
 				camera.pitch(XM_PIDIV2);
 				camera.updateMatrix();
-				info.updateVisibility(camera);
-				sceneQueue->renderObjects(camera, info, provider.params, commands.commandList, FrameIndex);
+				renderables.updateRenderInformation(camera, sceneInfo);
+				sceneQueue->renderObjects(constants, provider.params, commands.commandList, FrameIndex);
 
 				computeMips.dispatch(commands.commandList, voxelSceneTexture, DescriptorManager::get(), FrameIndex);
 
@@ -130,7 +133,6 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 
 void VoxelizeSceneTask::run(RenderContext& renderCtx, CommandsData& syncCommands, CompositorPass&)
 {
-	ctx = renderCtx;
 	SetEvent(eventBegin);
 }
 

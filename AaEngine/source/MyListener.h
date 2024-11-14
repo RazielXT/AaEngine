@@ -35,13 +35,18 @@ private:
  	AaRenderSystem* renderSystem;
  	AaSceneManager* sceneMgr;
 	AaShadowMap* shadowMap;
-// 	AaVoxelScene* voxelScene;
 	imgui::DebugWindow debugWindow;
 	aa::SceneLights lights;
 
 	float elapsedTime = 0;
 	bool continue_rendering = true;
 
-	FrameGpuParameters gpuParams;
+	FrameParameters gpuParams;
 	FrameCompositor* compositor;
+
+	void initializeGpuResources();
+
+	void updateFrameParams(float tslf);
+
+	void loadScene(const char* scene);
 };

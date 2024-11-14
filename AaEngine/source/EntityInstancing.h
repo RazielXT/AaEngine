@@ -12,7 +12,7 @@ struct InstanceGroupDescription
 {
 	MaterialInstance* material;
 	AaModel* model;
-	std::vector<WorldCoordinates> objects;
+	std::vector<ObjectTransformation> objects;
 };
 
 struct InstanceGroup

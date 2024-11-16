@@ -3,7 +3,7 @@
 #include "backends/imgui_impl_win32.h"
 #include "backends/imgui_impl_dx12.h"
 #include "AaRenderSystem.h"
-#include "AaSceneManager.h"
+#include "SceneManager.h"
 #include "AaMaterialResources.h"
 
 XMFLOAT3 currentCamPos{};

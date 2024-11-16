@@ -4,20 +4,21 @@
 #include "AaMath.h"
 #include <vector>
 
-struct RenderInformation;
+struct RenderObjectsVisibilityData;
 class AaEntity;
 class AaCamera;
 class RenderTargetInfo;
+class FrameParameters;
 
 class ShaderConstantsProvider
 {
 public:
 
-	ShaderConstantsProvider(const RenderInformation& info, const AaCamera& camera, const RenderTargetInfo& target);
+	ShaderConstantsProvider(const FrameParameters& params, const RenderObjectsVisibilityData& info, const AaCamera& camera, const RenderTargetInfo& target);
 
 	DirectX::XMFLOAT2 inverseViewportSize;
 
-	std::vector<std::vector<float>> buffers;
+	AaEntity* entity{};
 
 	XMFLOAT4X4 getWvpMatrix() const;
 	XMMATRIX getWorldMatrix() const;
@@ -29,9 +30,9 @@ public:
 
 	D3D12_GPU_VIRTUAL_ADDRESS getGeometryBuffer() const;
 
-	AaEntity* entity{};
-
-	const RenderInformation& info;
+	const RenderObjectsVisibilityData& info;
 
 	const AaCamera& camera;
+
+	const FrameParameters& params;
 };

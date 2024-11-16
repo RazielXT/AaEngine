@@ -13,7 +13,7 @@ public:
 	~FreeCamera();
 
 	void update(float time);
-	void reload(float aspectRatio);
+	void init(float aspectRatio);
 
 	bool keyPressed(int key);
 	bool keyReleased(int key);

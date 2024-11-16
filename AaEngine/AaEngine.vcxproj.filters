@@ -118,10 +118,10 @@
     <ClCompile Include="source\ConfigParser.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="source\AaSceneManager.cpp">
+    <ClCompile Include="source\SceneManager.cpp">
       <Filter>Source Files\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="source\AaRenderables.cpp">
+    <ClCompile Include="source\RenderObject.cpp">
       <Filter>Source Files\Scene</Filter>
     </ClCompile>
     <ClCompile Include="source\ShadowMap.cpp">
@@ -288,7 +288,7 @@
     <ClInclude Include="source\AaEntity.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="source\AaSceneManager.h">
+    <ClInclude Include="source\SceneManager.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
     <ClInclude Include="source\FreeCamera.h">
@@ -309,7 +309,7 @@
     <ClInclude Include="source\AaMath.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="source\AaRenderables.h">
+    <ClInclude Include="source\RenderObject.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
     <ClInclude Include="source\SceneLights.h">

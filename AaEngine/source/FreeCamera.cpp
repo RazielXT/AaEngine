@@ -45,7 +45,7 @@ void FreeCamera::update(float time)
 	}
 }
 
-void FreeCamera::reload(float aspectRatio)
+void FreeCamera::init(float aspectRatio)
 {
 	camera.setPerspectiveCamera(70, aspectRatio, 0.3, 10000);
 }

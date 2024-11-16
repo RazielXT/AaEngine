@@ -1,14 +1,14 @@
 #pragma once
 
-#include "AaSceneManager.h"
+#include "SceneManager.h"
 
 struct SceneParseResult
 {
-	std::vector<GrassAreaPlacementTask> grassTask;
+	std::vector<GrassAreaPlacementTask> grassTasks;
 	std::map<MaterialInstance*, InstanceGroupDescription> instanceDescriptions;
 };
 
 namespace SceneParser
 {
-	SceneParseResult load(std::string filename, AaSceneManager* mSceneMgr, AaRenderSystem* renderSystem);
+	SceneParseResult load(std::string filename, SceneManager* mSceneMgr, AaRenderSystem* renderSystem);
 }

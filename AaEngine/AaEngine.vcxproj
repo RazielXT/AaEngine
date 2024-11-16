@@ -104,9 +104,9 @@
     <ClCompile Include="source\AaMath.cpp" />
     <ClCompile Include="source\AaModel.cpp" />
     <ClCompile Include="source\AaModelResources.cpp" />
-    <ClCompile Include="source\AaRenderables.cpp" />
+    <ClCompile Include="source\RenderObject.cpp" />
     <ClCompile Include="source\AaRenderSystem.cpp" />
-    <ClCompile Include="source\AaSceneManager.cpp" />
+    <ClCompile Include="source\SceneManager.cpp" />
     <ClCompile Include="source\AaShaderCompiler.cpp" />
     <ClCompile Include="source\AaShaderFileParser.cpp" />
     <ClCompile Include="source\AaShaderLibrary.cpp" />
@@ -172,9 +172,9 @@
     <ClInclude Include="source\AaMaterialResources.h" />
     <ClInclude Include="source\AaModel.h" />
     <ClInclude Include="source\AaModelResources.h" />
-    <ClInclude Include="source\AaRenderables.h" />
+    <ClInclude Include="source\RenderObject.h" />
     <ClInclude Include="source\AaRenderSystem.h" />
-    <ClInclude Include="source\AaSceneManager.h" />
+    <ClInclude Include="source\SceneManager.h" />
     <ClInclude Include="source\AaShaderCompiler.h" />
     <ClInclude Include="source\AaShaderFileParser.h" />
     <ClInclude Include="source\AaShaderLibrary.h" />

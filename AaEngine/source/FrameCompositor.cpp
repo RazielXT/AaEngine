@@ -1,7 +1,7 @@
 #include "FrameCompositor.h"
 #include "CompositorFileParser.h"
 #include "AaMaterialResources.h"
-#include "AaSceneManager.h"
+#include "SceneManager.h"
 #include "ShadowMap.h"
 #include "DebugWindow.h"
 #include "ShadowsRenderTask.h"
@@ -11,7 +11,7 @@
 #include "SceneTestTask.h"
 #include "ImguiDebugWindowTask.h"
 
-FrameCompositor::FrameCompositor(RenderProvider p, AaSceneManager& scene, AaShadowMap& shadows) : provider(p), sceneMgr(scene), shadowMaps(shadows)
+FrameCompositor::FrameCompositor(RenderProvider p, SceneManager& scene, AaShadowMap& shadows) : provider(p), sceneMgr(scene), shadowMaps(shadows)
 {
 }
 
@@ -158,16 +158,17 @@ void FrameCompositor::renderQuad(PassData& pass, RenderContext& ctx, ID3D12Graph
 		pass.material->SetTexture(*input.view, i++);
 	}
 
-	ShaderConstantsProvider constants({}, *ctx.camera, *pass.target.texture);
+	ShaderConstantsProvider constants(provider.params, {}, *ctx.camera, *pass.target.texture);
+	MaterialDataStorage storage;
 
 	auto material = pass.material;
 	material->GetBase()->BindSignature(commandList, frameIndex);
 
-	material->LoadMaterialConstants(constants);
-	material->UpdatePerFrame(constants, provider.params);
+	material->LoadMaterialConstants(storage);
+	material->UpdatePerFrame(storage, constants);
 	material->BindPipeline(commandList);
 	material->BindTextures(commandList, frameIndex);
-	material->BindConstants(commandList, frameIndex, constants);
+	material->BindConstants(commandList, frameIndex, storage, constants);
 
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	commandList->DrawInstanced(3, 1, 0, 0);

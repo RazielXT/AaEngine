@@ -3,17 +3,17 @@
 #include "AaRenderSystem.h"
 #include "RenderContext.h"
 #include "CompositorTask.h"
-#include "AaRenderables.h"
+#include "RenderObject.h"
 #include <thread>
 
 struct RenderQueue;
-class AaSceneManager;
+class SceneManager;
 
 class SceneRenderTask : public CompositorTask
 {
 public:
 
-	SceneRenderTask(RenderProvider provider, AaSceneManager&);
+	SceneRenderTask(RenderProvider provider, SceneManager&);
 	~SceneRenderTask();
 
 	AsyncTasksInfo initialize(CompositorPass& pass) override;
@@ -37,8 +37,8 @@ private:
 	bool running = true;
 
 	RenderContext ctx;
-	RenderInformation sceneInfo;
-	Renderables* renderables;
+	RenderObjectsVisibilityData sceneInfo;
+	RenderObjectsStorage* renderables;
 
 	void renderScene(CompositorPass& pass);
 	void renderEarlyZ(CompositorPass& pass);
@@ -51,7 +51,7 @@ class SceneRenderTransparentTask : public CompositorTask
 {
 public:
 
-	SceneRenderTransparentTask(RenderProvider provider, AaSceneManager&);
+	SceneRenderTransparentTask(RenderProvider provider, SceneManager&);
 	~SceneRenderTransparentTask();
 
 	AsyncTasksInfo initialize(CompositorPass& pass) override;
@@ -71,8 +71,8 @@ private:
 	bool running = true;
 
 	RenderContext ctx;
-	RenderInformation sceneInfo;
-	Renderables* renderables;
+	RenderObjectsVisibilityData sceneInfo;
+	RenderObjectsStorage* renderables;
 
 	void renderTransparentScene(CompositorPass& pass);
 

@@ -13,7 +13,6 @@
 #include "ShaderResources.h"
 #include "ShaderSignature.h"
 #include <map>
-#include "ShaderConstantBuffers.h"
 #include <array>
 
 using namespace Microsoft::WRL;
@@ -24,6 +23,11 @@ class AaModel;
 class AaEntity;
 class MaterialInstance;
 class AaMaterial;
+
+struct MaterialDataStorage
+{
+	std::vector<float> rootParams;
+};
 
 class MaterialBase
 {
@@ -97,12 +101,12 @@ public:
 	void GetParameter(FastParam param, float* output) const;
 	UINT GetParameterOffset(FastParam param) const;
 
-	void LoadMaterialConstants(ShaderConstantsProvider& buffers) const;
-	void UpdatePerFrame(ShaderConstantsProvider& buffers, const FrameParameters& info);
-	void UpdatePerObject(ShaderConstantsProvider& buffers, const FrameParameters& info);
+	void LoadMaterialConstants(MaterialDataStorage& buffers) const;
+	void UpdatePerFrame(MaterialDataStorage& data, const ShaderConstantsProvider& info);
+	void UpdatePerObject(MaterialDataStorage& buffers, const ShaderConstantsProvider& info);
 
 	void BindTextures(ID3D12GraphicsCommandList* commandList, int frameIndex);
-	void BindConstants(ID3D12GraphicsCommandList* commandList, int frameIndex, const ShaderConstantsProvider& buffers);
+	void BindConstants(ID3D12GraphicsCommandList* commandList, int frameIndex, const MaterialDataStorage& data, const ShaderConstantsProvider& buffers);
 
 	AaMaterial* Assign(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target);
 
@@ -126,7 +130,7 @@ protected:
 	};
 	std::array<FastParamInfo, (int)FastParam::COUNT> paramsTable{};
 
-	void SetTableParameter(const std::string& name, float* data, UINT size, UINT offset);
+	void SetFastTableParameter(const std::string& name, float* data, UINT size, UINT offset);
 
 	void UpdateBindlessTexture(const ShaderTextureView& texture, UINT slot);
 };

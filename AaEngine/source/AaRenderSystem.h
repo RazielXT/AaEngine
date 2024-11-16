@@ -10,7 +10,7 @@
 
 using namespace DirectX;
 
-class AaSceneManager;
+class SceneManager;
 class AaCamera;
 
 struct CommandsData

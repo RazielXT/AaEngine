@@ -3,15 +3,15 @@
 #include "RenderQueue.h"
 #include "EntityInstancing.h"
 #include <unordered_map>
-#include "AaRenderables.h"
+#include "RenderObject.h"
 #include "GrassArea.h"
 
-class AaSceneManager
+class SceneManager
 {
 public:
 
-	AaSceneManager(AaRenderSystem* rs);
-	~AaSceneManager();
+	SceneManager(AaRenderSystem* rs);
+	~SceneManager();
 
 	void update();
 	void clear();
@@ -22,19 +22,17 @@ public:
 	AaEntity* getEntity(const std::string& name) const;
 
 	RenderQueue* createQueue(const std::vector<DXGI_FORMAT>& targets, MaterialTechnique technique = MaterialTechnique::Default, Order order = Order::Normal);
+	std::vector<DXGI_FORMAT> getQueueTargetFormats(MaterialTechnique technique = MaterialTechnique::Default, Order order = Order::Normal) const;
 	RenderQueue createManualQueue(MaterialTechnique technique = MaterialTechnique::Default, Order order = Order::Normal);
 
-	Renderables* getRenderables(Order order);
-
-	InstancingManager instancing;
-	GrassManager grass;
+	RenderObjectsStorage* getRenderables(Order order);
 
 private:
 
 	void updateQueues();
 	void updateTransformations();
 
-	std::map<Order, Renderables> renderables;
+	std::map<Order, RenderObjectsStorage> renderables;
 
 	EntityChanges changes;
 

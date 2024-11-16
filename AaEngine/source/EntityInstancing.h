@@ -1,10 +1,10 @@
 #pragma once
 
 #include "ShaderConstantBuffers.h"
-#include "AaRenderables.h"
+#include "RenderObject.h"
 #include <vector>
 
-class AaSceneManager;
+class SceneManager;
 class MaterialInstance;
 class AaModel;
 
@@ -28,7 +28,7 @@ public:
 
 	InstancingManager() = default;
 
-	InstanceGroup* build(AaSceneManager* sceneMgr, const InstanceGroupDescription&);
+	InstanceGroup* build(SceneManager* sceneMgr, const InstanceGroupDescription&);
 	void clear();
 
 private:

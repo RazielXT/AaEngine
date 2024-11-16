@@ -10,7 +10,7 @@ class FrameCompositor
 {
 public:
 
-	FrameCompositor(RenderProvider provider, AaSceneManager& sceneMgr, AaShadowMap& shadows);
+	FrameCompositor(RenderProvider provider, SceneManager& sceneMgr, AaShadowMap& shadows);
 	~FrameCompositor();
 
 	void load(std::string path);
@@ -57,6 +57,6 @@ protected:
 	void renderQuad(PassData& pass, RenderContext& ctx, ID3D12GraphicsCommandList* commandList, UINT frameIndex);
 
 	RenderProvider provider;
-	AaSceneManager& sceneMgr;
+	SceneManager& sceneMgr;
 	AaShadowMap& shadowMaps;
 };

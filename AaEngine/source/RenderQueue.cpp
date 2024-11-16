@@ -79,9 +79,10 @@ static void RenderObject(ID3D12GraphicsCommandList* commandList, AaEntity* e)
 		commandList->DrawInstanced(e->geometry.vertexCount, e->geometry.instanceCount, 0, 0);
 }
 
-void RenderQueue::renderObjects(ShaderConstantsProvider& constants, const FrameParameters& params, ID3D12GraphicsCommandList* commandList, UINT frameIndex)
+void RenderQueue::renderObjects(ShaderConstantsProvider& constants, ID3D12GraphicsCommandList* commandList, UINT frameIndex)
 {
 	EntityEntry lastEntry{};
+	MaterialDataStorage storage;
 
 	for (auto& entry : entities)
 	{
@@ -95,21 +96,21 @@ void RenderQueue::renderObjects(ShaderConstantsProvider& constants, const FrameP
 
 		if (entry.material != lastEntry.material)
 		{
-			entry.material->LoadMaterialConstants(constants);
-			entry.material->UpdatePerFrame(constants, params);
+			entry.material->LoadMaterialConstants(storage);
+			entry.material->UpdatePerFrame(storage, constants);
 			entry.material->BindPipeline(commandList);
 			entry.material->BindTextures(commandList, frameIndex);
 		}
 
 		if (technique == MaterialTechnique::Voxelize)
 		{
-			entry.entity->material->GetParameter(FastParam::Emission, constants.buffers.front().data() + entry.material->GetParameterOffset(FastParam::Emission));
-			entry.entity->material->GetParameter(FastParam::MaterialColor, constants.buffers.front().data() + entry.material->GetParameterOffset(FastParam::MaterialColor));
-			entry.entity->material->GetParameter(FastParam::TexIdDiffuse, constants.buffers.front().data() + entry.material->GetParameterOffset(FastParam::TexIdDiffuse));
+			entry.entity->material->GetParameter(FastParam::Emission, storage.rootParams.data() + entry.material->GetParameterOffset(FastParam::Emission));
+			entry.entity->material->GetParameter(FastParam::MaterialColor, storage.rootParams.data() + entry.material->GetParameterOffset(FastParam::MaterialColor));
+			entry.entity->material->GetParameter(FastParam::TexIdDiffuse, storage.rootParams.data() + entry.material->GetParameterOffset(FastParam::TexIdDiffuse));
 		}
 
-		entry.material->UpdatePerObject(constants, params);
-		entry.material->BindConstants(commandList, frameIndex, constants);
+		entry.material->UpdatePerObject(storage, constants);
+		entry.material->BindConstants(commandList, frameIndex, storage, constants);
 
 		RenderObject(commandList, entry.entity);
 

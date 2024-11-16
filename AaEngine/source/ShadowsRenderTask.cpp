@@ -1,9 +1,9 @@
 #include "ShadowsRenderTask.h"
-#include "AaRenderables.h"
-#include "AaSceneManager.h"
+#include "RenderObject.h"
+#include "SceneManager.h"
 #include "ShadowMap.h"
 
-ShadowsRenderTask::ShadowsRenderTask(RenderProvider p, AaSceneManager& s, AaShadowMap& shadows) : shadowMaps(shadows), CompositorTask(p, s)
+ShadowsRenderTask::ShadowsRenderTask(RenderProvider p, SceneManager& s, AaShadowMap& shadows) : shadowMaps(shadows), CompositorTask(p, s)
 {
 	for (auto& shadow : shadowsData)
 	{
@@ -50,12 +50,12 @@ AsyncTasksInfo ShadowsRenderTask::initialize(CompositorPass&)
 
 					auto& sceneInfo = shadow.renderablesData;
 
-					shadow.renderables->updateRenderInformation(shadowMaps.camera[idx], sceneInfo);
+					shadow.renderables->updateVisibility(shadowMaps.camera[idx], sceneInfo);
 
 					shadowMaps.texture[idx].PrepareAsDepthTarget(shadow.commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
-					ShaderConstantsProvider constants(sceneInfo, shadowMaps.camera[idx], shadowMaps.texture[idx]);
-					depthQueue->renderObjects(constants, provider.params, shadow.commands.commandList, provider.renderSystem->frameIndex);
+					ShaderConstantsProvider constants(provider.params, sceneInfo, shadowMaps.camera[idx], shadowMaps.texture[idx]);
+					depthQueue->renderObjects(constants, shadow.commands.commandList, provider.renderSystem->frameIndex);
 
 					shadowMaps.texture[idx].PrepareAsDepthView(shadow.commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 

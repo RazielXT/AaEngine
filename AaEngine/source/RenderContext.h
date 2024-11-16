@@ -4,7 +4,7 @@
 #include "ShaderResources.h"
 
 class AaCamera;
-class Renderables;
+class RenderObjectsStorage;
 
 struct RenderProvider
 {

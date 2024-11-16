@@ -2,20 +2,21 @@
 #include "RenderQueue.h"
 #include "AaMaterial.h"
 
-void ScreenQuad::Render(AaMaterial* material, const RenderTargetInfo& target, RenderProvider& provider, RenderContext& ctx, ID3D12GraphicsCommandList* commandList) const
+void ScreenQuad::Render(AaMaterial* material, const RenderTargetInfo& target, const RenderProvider& provider, RenderContext& ctx, ID3D12GraphicsCommandList* commandList) const
 {
 	UINT frameIndex = provider.renderSystem->frameIndex;
-	ShaderConstantsProvider constants({}, *ctx.camera, target);
+	ShaderConstantsProvider constants(provider.params, {}, * ctx.camera, target);
+	MaterialDataStorage storage;
 
 	material->GetBase()->BindSignature(commandList, frameIndex);
 
-	material->LoadMaterialConstants(constants);
-	memcpy(constants.buffers.front().data(), &data, sizeof(data));
+	material->LoadMaterialConstants(storage);
+	memcpy(storage.rootParams.data(), &data, sizeof(data));
 
-	material->UpdatePerFrame(constants, provider.params);
+	material->UpdatePerFrame(storage, constants);
 	material->BindPipeline(commandList);
 	material->BindTextures(commandList, frameIndex);
-	material->BindConstants(commandList, frameIndex, constants);
+	material->BindConstants(commandList, frameIndex, storage, constants);
 
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	commandList->DrawInstanced(6, 1, 0, 0);

@@ -4,7 +4,7 @@
 #include "AaMaterial.h"
 #include "Model.h"
 #include "OgreMeshFileParser.h"
-#include "AaSceneManager.h"
+#include "SceneManager.h"
 #include "AaMaterialResources.h"
 
 AaRenderSystem::AaRenderSystem(AaWindow* mWindow)

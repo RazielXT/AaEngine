@@ -1,12 +1,12 @@
-#include "AaSceneManager.h"
+#include "SceneManager.h"
 #include "AaMaterialResources.h"
 
-AaSceneManager::AaSceneManager(AaRenderSystem* rs) : grass(rs)
+SceneManager::SceneManager(AaRenderSystem* rs)
 {
 	renderSystem = rs;
 }
 
-AaSceneManager::~AaSceneManager()
+SceneManager::~SceneManager()
 {
 	for (auto& [name, entity] : entityMap)
 	{
@@ -14,13 +14,13 @@ AaSceneManager::~AaSceneManager()
 	}
 }
 
-void AaSceneManager::update()
+void SceneManager::update()
 {
 	updateQueues();
 	updateTransformations();
 }
 
-AaEntity* AaSceneManager::createEntity(const std::string& name, Order order)
+AaEntity* SceneManager::createEntity(const std::string& name, Order order)
 {
 	auto nameIt = entityMap.try_emplace(name, nullptr).first;
 	auto ent = nameIt->second = new AaEntity(renderables[order], nameIt->first);
@@ -30,7 +30,7 @@ AaEntity* AaSceneManager::createEntity(const std::string& name, Order order)
 	return ent;
 }
 
-AaEntity* AaSceneManager::createEntity(const std::string& name, const ObjectTransformation& transformation, BoundingBox bbox, Order order)
+AaEntity* SceneManager::createEntity(const std::string& name, const ObjectTransformation& transformation, BoundingBox bbox, Order order)
 {
 	auto entity = createEntity(name, order);
 	entity->setBoundingBox(bbox);
@@ -39,7 +39,7 @@ AaEntity* AaSceneManager::createEntity(const std::string& name, const ObjectTran
 	return entity;
 }
 
-AaEntity* AaSceneManager::getEntity(const std::string& name) const
+AaEntity* SceneManager::getEntity(const std::string& name) const
 {
 	auto it = entityMap.find(name);
 	if (it != entityMap.end())
@@ -48,7 +48,7 @@ AaEntity* AaSceneManager::getEntity(const std::string& name) const
 	return nullptr;
 }
 
-RenderQueue* AaSceneManager::createQueue(const std::vector<DXGI_FORMAT>& targets, MaterialTechnique technique, Order order)
+RenderQueue* SceneManager::createQueue(const std::vector<DXGI_FORMAT>& targets, MaterialTechnique technique, Order order)
 {
 	for (auto& q : queues)
 	{
@@ -64,7 +64,18 @@ RenderQueue* AaSceneManager::createQueue(const std::vector<DXGI_FORMAT>& targets
 	return queues.emplace_back(std::move(queue)).get();
 }
 
-RenderQueue AaSceneManager::createManualQueue(MaterialTechnique technique, Order order)
+std::vector<DXGI_FORMAT> SceneManager::getQueueTargetFormats(MaterialTechnique technique, Order order) const
+{
+	for (auto& q : queues)
+	{
+		if (q->technique == technique && q->targetOrder == order)
+			return q->targets;
+	}
+
+	return {};
+}
+
+RenderQueue SceneManager::createManualQueue(MaterialTechnique technique, Order order)
 {
 	for (auto& q : queues)
 	{
@@ -82,7 +93,7 @@ RenderQueue AaSceneManager::createManualQueue(MaterialTechnique technique, Order
 	return {};
 }
 
-void AaSceneManager::updateQueues()
+void SceneManager::updateQueues()
 {
 	for (auto& queue : queues)
 	{
@@ -92,7 +103,7 @@ void AaSceneManager::updateQueues()
 	changes.clear();
 }
 
-void AaSceneManager::updateTransformations()
+void SceneManager::updateTransformations()
 {
 	for (auto& r : renderables)
 	{
@@ -100,12 +111,12 @@ void AaSceneManager::updateTransformations()
 	}
 }
 
-Renderables* AaSceneManager::getRenderables(Order order)
+RenderObjectsStorage* SceneManager::getRenderables(Order order)
 {
 	return &renderables[order];
 }
 
-void AaSceneManager::clear()
+void SceneManager::clear()
 {
 	changes.emplace_back(EntityChange::DeleteAll);
 
@@ -115,6 +126,4 @@ void AaSceneManager::clear()
 	}
 
 	entityMap.clear();
-	instancing.clear();
-	grass.clear();
 }

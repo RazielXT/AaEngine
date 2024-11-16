@@ -4,7 +4,7 @@
 #include "FreeCamera.h"
 #include "InputHandler.h"
 #include "AaRenderSystem.h"
-#include "AaSceneManager.h"
+#include "SceneManager.h"
 #include "AaModelResources.h"
 #include "FrameCompositor.h"
 #include "ShadowMap.h"
@@ -33,7 +33,9 @@ private:
 
  	FreeCamera* cameraMan;
  	AaRenderSystem* renderSystem;
- 	AaSceneManager* sceneMgr;
+ 	SceneManager* sceneMgr;
+	InstancingManager instancing;
+	GrassAreaGenerator* grass;
 	AaShadowMap* shadowMap;
 	imgui::DebugWindow debugWindow;
 	aa::SceneLights lights;
@@ -43,8 +45,6 @@ private:
 
 	FrameParameters gpuParams;
 	FrameCompositor* compositor;
-
-	void initializeGpuResources();
 
 	void updateFrameParams(float tslf);
 

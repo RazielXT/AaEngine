@@ -3,7 +3,7 @@
 #include "RenderContext.h"
 #include "CompositorFileParser.h"
 
-class AaSceneManager;
+class SceneManager;
 
 struct PassInput
 {
@@ -29,7 +29,7 @@ class CompositorTask
 {
 public:
 
-	CompositorTask(RenderProvider& p, AaSceneManager& s) : provider(p), sceneMgr(s) {};
+	CompositorTask(RenderProvider& p, SceneManager& s) : provider(p), sceneMgr(s) {};
 	virtual ~CompositorTask() = default;
 
 	virtual AsyncTasksInfo initialize(CompositorPass& pass) = 0;
@@ -42,5 +42,5 @@ public:
 protected:
 
 	RenderProvider provider;
-	AaSceneManager& sceneMgr;
+	SceneManager& sceneMgr;
 };

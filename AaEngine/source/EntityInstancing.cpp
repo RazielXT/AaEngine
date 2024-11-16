@@ -1,5 +1,5 @@
 #include "EntityInstancing.h"
-#include "AaSceneManager.h"
+#include "SceneManager.h"
 #include "AaMaterial.h"
 
 void InstancingManager::clear()
@@ -7,7 +7,7 @@ void InstancingManager::clear()
 	groups.clear();
 }
 
-InstanceGroup* InstancingManager::build(AaSceneManager* sceneMgr, const InstanceGroupDescription& description)
+InstanceGroup* InstancingManager::build(SceneManager* sceneMgr, const InstanceGroupDescription& description)
 {
 	if (description.objects.empty())
 		return nullptr;

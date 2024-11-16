@@ -8,7 +8,7 @@ class ImguiDebugWindowTask : public CompositorTask
 {
 public:
 
-	ImguiDebugWindowTask(RenderProvider, AaSceneManager&);
+	ImguiDebugWindowTask(RenderProvider, SceneManager&);
 	~ImguiDebugWindowTask();
 
 	AsyncTasksInfo initialize(CompositorPass& pass) override;

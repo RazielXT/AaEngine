@@ -19,6 +19,7 @@ struct SamplerInfo
 
 enum class GpuBufferType
 {
+	None,
 	Global,
 	Root,
 	Instancing,
@@ -29,9 +30,15 @@ enum class GpuBufferType
 
 struct ResourcesInfo
 {
-	struct GpuBuffer
+	struct RootGpuBuffer
 	{
 		std::vector<float> defaultData;
+		UINT rootIndex{};
+	};
+	RootGpuBuffer rootBuffer;
+
+	struct GpuBuffer
+	{
 		GpuBufferType type{};
 		UINT rootIndex{};
 		CbufferView globalCBuffer;
@@ -73,7 +80,6 @@ struct ResourcesInfo
 	struct AutoParamInfo
 	{
 		AutoParam type;
-		UINT bufferIdx;
 		UINT bufferOffset;
 	};
 	std::vector<AutoParamInfo> autoParams;

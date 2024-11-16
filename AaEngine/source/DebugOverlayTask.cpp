@@ -3,7 +3,7 @@
 #include "AaMaterialResources.h"
 #include "DebugWindow.h"
 
-DebugOverlayTask::DebugOverlayTask(RenderProvider p, AaSceneManager& s) : CompositorTask(p, s)
+DebugOverlayTask::DebugOverlayTask(RenderProvider p, SceneManager& s) : CompositorTask(p, s)
 {
 }
 

@@ -1,17 +1,17 @@
 #pragma once
 
 #include "CompositorTask.h"
-#include "AaSceneManager.h"
+#include "SceneManager.h"
 #include <thread>
 
 struct RenderQueue;
-class AaSceneManager;
+class SceneManager;
 
 class SceneTestTask : public CompositorTask
 {
 public:
 
-	SceneTestTask(RenderProvider provider, AaSceneManager&);
+	SceneTestTask(RenderProvider provider, SceneManager&);
 	~SceneTestTask();
 
 	AsyncTasksInfo initialize(CompositorPass& pass) override;

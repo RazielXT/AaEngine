@@ -5,13 +5,13 @@
 #include <thread>
 
 class AaShadowMap;
-class AaSceneManager;
+class SceneManager;
 
 class ShadowsRenderTask : public CompositorTask
 {
 public:
 
-	ShadowsRenderTask(RenderProvider provider, AaSceneManager&, AaShadowMap& shadows);
+	ShadowsRenderTask(RenderProvider provider, SceneManager&, AaShadowMap& shadows);
 	~ShadowsRenderTask();
 
 	AsyncTasksInfo initialize(CompositorPass& pass) override;
@@ -26,8 +26,8 @@ private:
 		HANDLE eventFinish{};
 		std::thread worker;
 
-		RenderInformation renderablesData;
-		Renderables* renderables;
+		RenderObjectsVisibilityData renderablesData;
+		RenderObjectsStorage* renderables;
 	}
 	shadowsData[2];
 

@@ -1,8 +1,8 @@
 #include "ShaderConstantsProvider.h"
 #include "RenderQueue.h"
-#include "AaRenderables.h"
+#include "RenderObject.h"
 
-ShaderConstantsProvider::ShaderConstantsProvider(const RenderInformation& i, const AaCamera& c, const RenderTargetInfo& target) : info(i), camera(c)
+ShaderConstantsProvider::ShaderConstantsProvider(const FrameParameters& p, const RenderObjectsVisibilityData& i, const AaCamera& c, const RenderTargetInfo& target) : info(i), camera(c), params(p)
 {
 	inverseViewportSize = { 1.f / target.width, 1.f / target.height };
 }

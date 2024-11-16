@@ -179,7 +179,7 @@ std::vector<ExtensionFunction> parseExtensionFunctions(const std::string& input)
 	return functions;
 }
 
-void loadExtensions(const xml_node& element, AaEntity* ent, SceneNode* node, AaSceneManager* sceneMgr)
+void loadExtensions(const xml_node& element, AaEntity* ent, SceneNode* node, SceneManager* sceneMgr)
 {
 	auto extensions = parseExtensionFunctions(element.text().get());
 
@@ -187,12 +187,12 @@ void loadExtensions(const xml_node& element, AaEntity* ent, SceneNode* node, AaS
 	{
 		if (e.name == "addGrass")
 		{
-			parseResult->grassTask.emplace_back(ent, ent->getWorldBoundingBox());
+			parseResult->grassTasks.emplace_back(ent, ent->getWorldBoundingBox());
 		}
 	}
 }
 
-void loadEntityUserData(const xml_node& element, AaEntity* ent, SceneNode* node, AaSceneManager* sceneMgr)
+void loadEntityUserData(const xml_node& element, AaEntity* ent, SceneNode* node, SceneManager* sceneMgr)
 {
 	pugi::xml_document subdoc;
 	if (subdoc.load_string(element.text().get()))
@@ -205,7 +205,7 @@ void loadEntityUserData(const xml_node& element, AaEntity* ent, SceneNode* node,
 	}
 }
 
-void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible, AaSceneManager* sceneMgr)
+void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible, SceneManager* sceneMgr)
 {
 	auto name = GetStringAttribute(entityElement, "name");
 	auto mesh = GetStringAttribute(entityElement, "meshFile");
@@ -247,7 +247,7 @@ void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible, Aa
 	}
 }
 
-void loadNode(const xml_node& nodeElement, AaSceneManager* sceneMgr)
+void loadNode(const xml_node& nodeElement, SceneManager* sceneMgr)
 {
 	SceneNode node;
 	node.transformation.position = LoadXYZ(nodeElement.child("position"));
@@ -281,7 +281,7 @@ static std::string findFileWithExtension(const std::string& directoryPath, const
 	return {};
 }
 
-SceneParseResult SceneParser::load(std::string name, AaSceneManager* sceneMgr, AaRenderSystem* renderSystem)
+SceneParseResult SceneParser::load(std::string name, SceneManager* sceneMgr, AaRenderSystem* renderSystem)
 {
 	SceneParseResult result;
 	parseResult = &result;

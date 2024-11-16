@@ -306,56 +306,57 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData() const
 
 	for (auto& cb : cbuffers)
 	{
-		ResourcesInfo::GpuBuffer r;
-		r.defaultData.resize(cb.info.Size / sizeof(float));
-
-		for (const auto& p : cb.info.Params)
-		{
-			if (&cb != rootBuffer)
-				break;
-
-			ResourcesInfo::AutoParam type = ResourcesInfo::AutoParam::None;
-			if (p.Name == "WorldViewProjectionMatrix")
-				type = ResourcesInfo::AutoParam::WVP_MATRIX;
-			else if (p.Name == "ViewProjectionMatrix")
-				type = ResourcesInfo::AutoParam::VP_MATRIX;
-			else if (p.Name == "InvViewProjectionMatrix")
-				type = ResourcesInfo::AutoParam::INV_VP_MATRIX;
-			else if (p.Name == "WorldMatrix")
-				type = ResourcesInfo::AutoParam::WORLD_MATRIX;
-			else if (p.Name == "ShadowMatrix")
-				type = ResourcesInfo::AutoParam::SHADOW_MATRIX;
-			else if (p.Name == "ShadowMapSize")
-				type = ResourcesInfo::AutoParam::SHADOW_MAP_SIZE;
-			else if (p.Name == "ShadowMapSizeInv")
-				type = ResourcesInfo::AutoParam::SHADOW_MAP_SIZE_INV;
-			else if (p.Name.starts_with("TexId"))
-			{
-				type = ResourcesInfo::AutoParam::TEXID;
-				bindlessTextures++;
-			}
-			else if (p.Name == "Time")
-				type = ResourcesInfo::AutoParam::TIME;
-			else if (p.Name == "ViewportSizeInverse")
-				type = ResourcesInfo::AutoParam::VIEWPORT_SIZE_INV;
-			else if (p.Name == "SunDirection")
-				type = ResourcesInfo::AutoParam::SUN_DIRECTION;
-			else if (p.Name == "CameraPosition")
-				type = ResourcesInfo::AutoParam::CAMERA_POSITION;
-			else if (p.Name == "WorldPosition")
-				type = ResourcesInfo::AutoParam::WORLD_POSITION;
-
-			if (type != ResourcesInfo::AutoParam::None)
-				resources->autoParams.emplace_back(type, rootIndex, (UINT)(p.StartOffset / sizeof(float)));
-		}
-
 		if (&cb == rootBuffer)
-			r.type = GpuBufferType::Root;
-		else
-			r.globalCBuffer = ShaderConstantBuffers::get().GetCbufferResource(cb.info.Name);
+		{
+			resources->rootBuffer.defaultData.resize(cb.info.Size / sizeof(float));
+			resources->rootBuffer.rootIndex = rootIndex++;
 
-		r.rootIndex = rootIndex++;
-		resources->buffers.emplace_back(std::move(r));
+			for (const auto& p : cb.info.Params)
+			{
+				ResourcesInfo::AutoParam type = ResourcesInfo::AutoParam::None;
+				if (p.Name == "WorldViewProjectionMatrix")
+					type = ResourcesInfo::AutoParam::WVP_MATRIX;
+				else if (p.Name == "ViewProjectionMatrix")
+					type = ResourcesInfo::AutoParam::VP_MATRIX;
+				else if (p.Name == "InvViewProjectionMatrix")
+					type = ResourcesInfo::AutoParam::INV_VP_MATRIX;
+				else if (p.Name == "WorldMatrix")
+					type = ResourcesInfo::AutoParam::WORLD_MATRIX;
+				else if (p.Name == "ShadowMatrix")
+					type = ResourcesInfo::AutoParam::SHADOW_MATRIX;
+				else if (p.Name == "ShadowMapSize")
+					type = ResourcesInfo::AutoParam::SHADOW_MAP_SIZE;
+				else if (p.Name == "ShadowMapSizeInv")
+					type = ResourcesInfo::AutoParam::SHADOW_MAP_SIZE_INV;
+				else if (p.Name.starts_with("TexId"))
+				{
+					type = ResourcesInfo::AutoParam::TEXID;
+					bindlessTextures++;
+				}
+				else if (p.Name == "Time")
+					type = ResourcesInfo::AutoParam::TIME;
+				else if (p.Name == "ViewportSizeInverse")
+					type = ResourcesInfo::AutoParam::VIEWPORT_SIZE_INV;
+				else if (p.Name == "SunDirection")
+					type = ResourcesInfo::AutoParam::SUN_DIRECTION;
+				else if (p.Name == "CameraPosition")
+					type = ResourcesInfo::AutoParam::CAMERA_POSITION;
+				else if (p.Name == "WorldPosition")
+					type = ResourcesInfo::AutoParam::WORLD_POSITION;
+
+				if (type != ResourcesInfo::AutoParam::None)
+					resources->autoParams.emplace_back(type, (UINT)(p.StartOffset / sizeof(float)));
+			}
+		}
+		else
+		{
+			ResourcesInfo::GpuBuffer r;
+			r.globalCBuffer = ShaderConstantBuffers::get().GetCbufferResource(cb.info.Name);
+			r.type = GpuBufferType::Global;
+			r.rootIndex = rootIndex++;
+
+			resources->buffers.push_back(r);
+		}
 	}
 
 	for (auto& b : structuredBuffers)
@@ -368,7 +369,7 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData() const
 			r.type = GpuBufferType::Geometry;
 
 		r.rootIndex = rootIndex++;
-		resources->buffers.emplace_back(std::move(r));
+		resources->buffers.push_back(r);
 	}
 
 	for (auto& b : rwStructuredBuffers)
@@ -376,7 +377,7 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData() const
 		ResourcesInfo::GpuBuffer r;
 		r.type = GpuBufferType::RWBuffer;
 		r.rootIndex = rootIndex++;
-		resources->buffers.emplace_back(std::move(r));
+		resources->buffers.push_back(r);
 	}
 
 	resources->textures.resize(textures.size() + bindlessTextures);

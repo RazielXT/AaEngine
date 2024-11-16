@@ -37,7 +37,7 @@ void RenderTargetHeap::CreateRenderTargetHandle(ID3D12Device* device, ComPtr<ID3
 	handlesCount++;
 }
 
-void RenderTargetTexture::Init(ID3D12Device* device, UINT w, UINT h, UINT frameCount, RenderTargetHeap& heap, const std::vector<DXGI_FORMAT>& f, D3D12_RESOURCE_STATES state, bool depthBuffer)
+void RenderTargetTexture::Init(ID3D12Device* device, UINT w, UINT h, UINT frameCount, RenderTargetHeap& heap, const std::vector<DXGI_FORMAT>& f, D3D12_RESOURCE_STATES state, bool depthBuffer, D3D12_RESOURCE_STATES initialDepthState)
 {
 	width = w;
 	height = h;
@@ -61,7 +61,7 @@ void RenderTargetTexture::Init(ID3D12Device* device, UINT w, UINT h, UINT frameC
 	}
 
 	if (depthBuffer)
-		RenderDepthTargetTexture::Init(device, width, height, frameCount);
+		RenderDepthTargetTexture::Init(device, width, height, frameCount, initialDepthState);
 }
 
 void RenderTargetTexture::InitExisting(ID3D12Resource** textureSource, ID3D12Device* device, UINT w, UINT h, UINT frameCount, RenderTargetHeap& heap, DXGI_FORMAT f)
@@ -192,11 +192,11 @@ void RenderDepthTargetTexture::PrepareAsDepthView(ID3D12GraphicsCommandList* com
 {
 	if (from != D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
 	{
-		TransitionDepth(commandList, frameIndex, from, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+		TransitionDepth(commandList, frameIndex, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, from);
 	}
 }
 
-void RenderDepthTargetTexture::TransitionDepth(ID3D12GraphicsCommandList* commandList, UINT frameIndex, D3D12_RESOURCE_STATES from, D3D12_RESOURCE_STATES to)
+void RenderDepthTargetTexture::TransitionDepth(ID3D12GraphicsCommandList* commandList, UINT frameIndex, D3D12_RESOURCE_STATES to, D3D12_RESOURCE_STATES from)
 {
 	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
 		depthStencilTexture[frameIndex].Get(),
@@ -268,21 +268,26 @@ void RenderTargetTexture::PrepareAsSingleTarget(ID3D12GraphicsCommandList* comma
 	}
 }
 
-void RenderTargetTexture::PrepareAsView(ID3D12GraphicsCommandList* commandList, UINT frameIndex, D3D12_RESOURCE_STATES from)
+void RenderTargetTexture::TransitionTarget(ID3D12GraphicsCommandList* commandList, UINT frameIndex, D3D12_RESOURCE_STATES to, D3D12_RESOURCE_STATES from)
 {
-	if (from == D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
-		return;
-
 	CD3DX12_RESOURCE_BARRIER barriers[4];
 	for (size_t i = 0; i < textures.size(); i++)
 	{
 		barriers[i] = CD3DX12_RESOURCE_BARRIER::Transition(
 			textures[i].texture[frameIndex].Get(),
 			from,
-			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+			to);
 	}
 
 	commandList->ResourceBarrier(textures.size(), barriers);
+}
+
+void RenderTargetTexture::PrepareAsView(ID3D12GraphicsCommandList* commandList, UINT frameIndex, D3D12_RESOURCE_STATES from)
+{
+	if (from == D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+		return;
+
+	TransitionTarget(commandList, frameIndex, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, from);
 }
 
 void RenderTargetTexture::PrepareAsSingleView(ID3D12GraphicsCommandList* commandList, UINT frameIndex, UINT textureIndex, D3D12_RESOURCE_STATES from)

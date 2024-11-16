@@ -1,7 +1,7 @@
 #include "ImguiDebugWindowTask.h"
 #include "DebugWindow.h"
 
-ImguiDebugWindowTask::ImguiDebugWindowTask(RenderProvider p, AaSceneManager& s) : CompositorTask(p, s)
+ImguiDebugWindowTask::ImguiDebugWindowTask(RenderProvider p, SceneManager& s) : CompositorTask(p, s)
 {
 }
 

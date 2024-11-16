@@ -9,13 +9,13 @@
 #include "ShadowMap.h"
 
 struct RenderQueue;
-class AaSceneManager;
+class SceneManager;
 
 class VoxelizeSceneTask : public CompositorTask
 {
 public:
 
-	VoxelizeSceneTask(RenderProvider provider, AaSceneManager&, AaShadowMap& shadows);
+	VoxelizeSceneTask(RenderProvider provider, SceneManager&, AaShadowMap& shadows);
 	~VoxelizeSceneTask();
 
 	AsyncTasksInfo initialize(CompositorPass& pass) override;

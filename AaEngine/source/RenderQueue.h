@@ -2,7 +2,7 @@
 
 #include "AaEntity.h"
 #include "AaCamera.h"
-#include "AaRenderables.h"
+#include "RenderObject.h"
 
 enum class EntityChange
 {
@@ -44,5 +44,5 @@ struct RenderQueue
 
 	void update(const EntityChanges&);
 	std::vector<UINT> createEntityFilter() const;
-	void renderObjects(ShaderConstantsProvider& info, const FrameParameters& params, ID3D12GraphicsCommandList* commandList, UINT frameIndex);
+	void renderObjects(ShaderConstantsProvider& info, ID3D12GraphicsCommandList* commandList, UINT frameIndex);
 };

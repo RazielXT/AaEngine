@@ -1,6 +1,6 @@
 #include "SceneTestTask.h"
 
-SceneTestTask::SceneTestTask(RenderProvider p, AaSceneManager& s) : CompositorTask(p, s)
+SceneTestTask::SceneTestTask(RenderProvider p, SceneManager& s) : CompositorTask(p, s)
 {
 
 }
@@ -45,15 +45,15 @@ void SceneTestTask::run(RenderContext& ctx, CommandsData& c, CompositorPass&)
 	tmpCamera.pitch(-90);
 	tmpCamera.updateMatrix();
 
-	static RenderInformation sceneInfo;
-	sceneMgr.getRenderables(Order::Normal)->updateRenderInformation(tmpCamera, sceneInfo);
+	static RenderObjectsVisibilityData sceneInfo;
+	sceneMgr.getRenderables(Order::Normal)->updateVisibility(tmpCamera, sceneInfo);
 
 	provider.renderSystem->StartCommandList(commands);
 
 	tmp.PrepareAsTarget(commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_COMMON);
 
-	ShaderConstantsProvider constants(sceneInfo, tmpCamera, tmp);
-	tmpQueue.renderObjects(constants, provider.params, commands.commandList, provider.renderSystem->frameIndex);
+	ShaderConstantsProvider constants(provider.params, sceneInfo, tmpCamera, tmp);
+	tmpQueue.renderObjects(constants, commands.commandList, provider.renderSystem->frameIndex);
 
 	tmp.PrepareAsView(commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_COMMON);
 	provider.renderSystem->ExecuteCommandList(commands);

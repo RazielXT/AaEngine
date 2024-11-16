@@ -2,6 +2,7 @@
 
 #include "ShaderConstantBuffers.h"
 #include "GrassInitComputeShader.h"
+#include "RenderQueue.h"
 #include "AaMath.h"
 #include <vector>
 
@@ -34,21 +35,31 @@ struct GrassArea
 	ComPtr<ID3D12Resource> vertexCounterRead;
 };
 
-class GrassManager
+class GrassAreaGenerator
 {
 public:
 
-	GrassManager(AaRenderSystem* rs);
-	~GrassManager();
+	GrassAreaGenerator();
+	~GrassAreaGenerator();
 
-	GrassArea* createGrass(const GrassAreaDescription& desc);
-	void initializeGrassBuffer(GrassArea& grass, GrassAreaDescription& desc, XMMATRIX invView, UINT colorTex, UINT depthTex, ID3D12GraphicsCommandList* commandList, UINT frameIndex);
-
+	void initializeGpuResources(AaRenderSystem* renderSystem, const std::vector<DXGI_FORMAT>& formats);
 	void clear();
+
+	void scheduleGrassCreation(GrassAreaPlacementTask grassTask, ID3D12GraphicsCommandList* commandList, const FrameParameters& frame, SceneManager* sceneMgr);
+	std::vector<std::pair<AaEntity*, GrassArea*>> finishGrassCreation();
 
 private:
 
-	std::vector<GrassArea*> grasses;
+
+	AaEntity* createGrassEntity(const std::string& name, const GrassAreaDescription& desc, SceneManager* sceneMgr);
+	GrassArea* createGrassArea(const GrassAreaDescription& desc);
 
 	GrassInitComputeShader grassCS;
+
+	RenderTargetHeap heap;
+	RenderTargetTexture rtt;
+
+	std::vector<std::pair<AaEntity*, GrassArea*>> scheduled;
+
+	std::vector<GrassArea*> grasses;
 };

@@ -2,7 +2,7 @@
 
 #include "AaModel.h"
 #include "AaMaterial.h"
-#include "AaRenderables.h"
+#include "RenderObject.h"
 #include <vector>
 #include "EntityGeometry.h"
 
@@ -18,8 +18,8 @@ class AaEntity : public RenderObject
 {
 public:
 
-	AaEntity(Renderables&, std::string_view name);
-	AaEntity(Renderables&, AaEntity& source);
+	AaEntity(RenderObjectsStorage&, std::string_view name);
+	AaEntity(RenderObjectsStorage&, AaEntity& source);
 	~AaEntity();
 
 	const char* name;

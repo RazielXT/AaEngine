@@ -11,6 +11,14 @@
 struct RenderQueue;
 class SceneManager;
 
+struct VoxelSceneSettings
+{
+	Vector3 center = Vector3(0, 0, 0);
+	Vector3 extends = Vector3(150, 150, 150);
+
+	static VoxelSceneSettings& get();
+};
+
 class VoxelizeSceneTask : public CompositorTask
 {
 public:
@@ -46,6 +54,8 @@ private:
 	{
 		Vector3 voxelOffset;
 		float voxelDensity;
+		Vector3 voxelSceneSize;
+		float padding;
 		Vector2 middleConeRatioDistance = { 1, 0.9 };
 		Vector2 sideConeRatioDistance = { 2, 0.8 };
 		float lerpFactor = 0.01f;

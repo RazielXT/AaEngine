@@ -19,12 +19,13 @@ cbuffer SceneVoxelInfo : register(b1)
 {
 	float3 sceneCorner : packoffset(c0);
 	float voxelDensity : packoffset(c0.w);
-    float2 middleCone : packoffset(c1);
-    float2 sideCone : packoffset(c1.z);
-    float lerpFactor : packoffset(c2);
-	float steppingBounces : packoffset(c2.y);
-    float steppingDiffuse : packoffset(c2.z);
-	float voxelizeLighting : packoffset(c2.w); 
+	float3 voxelSceneSize : packoffset(c1);
+    float2 middleCone : packoffset(c2);
+    float2 sideCone : packoffset(c2.z);
+    float lerpFactor : packoffset(c3);
+	float steppingBounces : packoffset(c3.y);
+    float steppingDiffuse : packoffset(c3.z);
+	float voxelizeLighting : packoffset(c3.w); 
 };
 
 #ifdef INSTANCED
@@ -181,7 +182,7 @@ float4 PS_Main(PS_Input pin) : SV_TARGET
     float3 geometryB = normalize(mul(binormal, worldMatrix).xyz);
     float3 geometryT = normalize(mul(pin.tangent, worldMatrix).xyz);
 
-    float3 voxelUV = (pin.wp.xyz -sceneCorner) / 300;
+    float3 voxelUV = (pin.wp.xyz -sceneCorner) / voxelSceneSize;
 	Texture3D SceneVoxelBounces = GetTexture3D(TexIdSceneVoxelBounces);
 	float4 fullTraceSample = coneTrace(voxelUV, geometryNormal, middleCone.x, middleCone.y, SceneVoxelBounces, g_sampler, 0) * 1;
     fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal + geometryT), sideCone.x, sideCone.y, SceneVoxelBounces, g_sampler, 0) * 1.0;

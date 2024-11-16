@@ -10,7 +10,7 @@ class AaShadowMap
 {
 public:
 
-	AaShadowMap(aa::SceneLights::Light&);
+	AaShadowMap(aa::SceneLights::Light&, PssmParameters&);
 
 	void init(AaRenderSystem* renderSystem);
 
@@ -21,9 +21,8 @@ public:
 	void update(UINT frameIndex);
 	void clear(ID3D12GraphicsCommandList* commandList, UINT frameIndex);
 
-	PssmParameters data;
-
 private:
 
+	PssmParameters& data;
 	CbufferView cbuffer;
 };

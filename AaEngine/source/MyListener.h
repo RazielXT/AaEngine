@@ -40,13 +40,10 @@ private:
 	imgui::DebugWindow debugWindow;
 	aa::SceneLights lights;
 
-	float elapsedTime = 0;
-	bool continue_rendering = true;
+	bool continueRendering = true;
 
-	FrameParameters gpuParams;
+	FrameParameters params;
 	FrameCompositor* compositor;
-
-	void updateFrameParams(float tslf);
 
 	void loadScene(const char* scene);
 };

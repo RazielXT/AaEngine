@@ -2,7 +2,7 @@
 #include "DescriptorManager.h"
 #include "../Src/d3dx12.h"
 
-AaShadowMap::AaShadowMap(aa::SceneLights::Light& l) : sun(l)
+AaShadowMap::AaShadowMap(aa::SceneLights::Light& l,	PssmParameters& d) : sun(l), data(d)
 {
 }
 

@@ -10,6 +10,7 @@
 #include "FrameCompositor.h"
 #include "GrassArea.h"
 #include "TextureData.h"
+#include "VoxelizeSceneTask.h"
 
 MyListener::MyListener(AaRenderSystem* render)
 {
@@ -29,11 +30,11 @@ MyListener::MyListener(AaRenderSystem* render)
 
 	Vector3(-1, -1, -1).Normalize(lights.directionalLight.direction);
 
-	shadowMap = new AaShadowMap(lights.directionalLight);
+	shadowMap = new AaShadowMap(lights.directionalLight, params.sun);
 	shadowMap->init(renderSystem);
 	shadowMap->update(renderSystem->frameIndex);
 
-	compositor = new FrameCompositor({ gpuParams, renderSystem }, *sceneMgr, *shadowMap);
+	compositor = new FrameCompositor({ params, renderSystem }, *sceneMgr, *shadowMap);
 	compositor->load(DATA_DIRECTORY + "frame.compositor");
 
 	grass->initializeGpuResources(renderSystem, sceneMgr->getQueueTargetFormats());
@@ -58,7 +59,8 @@ MyListener::~MyListener()
 
 bool MyListener::frameStarted(float timeSinceLastFrame)
 {
-	elapsedTime += timeSinceLastFrame;
+	params.time += timeSinceLastFrame;
+	params.timeDelta = timeSinceLastFrame;
 
 	InputHandler::consumeInput(*this);
 
@@ -79,7 +81,7 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 	if (auto ent = sceneMgr->getEntity("Suzanne"))
 	{
 		ent->yaw(timeSinceLastFrame);
-		ent->setPosition({ cos(elapsedTime / 2.f) * 5, ent->getPosition().y, ent->getPosition().z });
+		ent->setPosition({ cos(params.time / 2.f) * 5, ent->getPosition().y, ent->getPosition().z });
 	}
 
 	//Vector3(cos(elapsedTime), -1, sin(elapsedTime)).Normalize(sceneMgr->lights.directionalLight.direction);
@@ -94,14 +96,13 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 	sceneMgr->update();
 	cameraMan->camera.updateMatrix();
 	shadowMap->update(renderSystem->frameIndex);
-	updateFrameParams(timeSinceLastFrame);
 
 	RenderContext ctx = { &cameraMan->camera };
 	compositor->render(ctx);
 
 	Sleep(10);
 
-	return continue_rendering;
+	return continueRendering;
 }
 
 bool MyListener::keyPressed(int key)
@@ -109,7 +110,7 @@ bool MyListener::keyPressed(int key)
 	switch (key)
 	{
 	case VK_ESCAPE:
-		continue_rendering = false;
+		continueRendering = false;
 		break;
 
 	default:
@@ -137,15 +138,13 @@ void MyListener::onScreenResize()
 	compositor->reloadTextures();
 }
 
-void MyListener::updateFrameParams(float tslf)
-{
-	gpuParams.time = elapsedTime;
-	gpuParams.timeDelta = tslf;
-	gpuParams.sun = shadowMap->data;
-}
-
 void MyListener::loadScene(const char* scene)
 {
+	if (scene == std::string_view("voxelRoom"))
+		VoxelSceneSettings::get() = { Vector3(0, 0, 0), Vector3(30, 30, 30) };
+	else
+		VoxelSceneSettings::get() = {};
+
 	renderSystem->WaitForAllFrames();
 	grass->clear();
 	instancing.clear();
@@ -153,11 +152,11 @@ void MyListener::loadScene(const char* scene)
 	AaModelResources::get().clear();
 
 	auto result = SceneParser::load(scene, sceneMgr, renderSystem);
-	updateFrameParams(0);
 
 	auto commands = renderSystem->CreateCommandList(L"initCmd");
 	renderSystem->StartCommandList(commands);
 
+	//initialize gpu resources
 	{
 		shadowMap->clear(commands.commandList, renderSystem->frameIndex);
 	}
@@ -169,7 +168,7 @@ void MyListener::loadScene(const char* scene)
 
 	for (const auto& g : result.grassTasks)
 	{
-		grass->scheduleGrassCreation(g, commands.commandList, gpuParams, sceneMgr);
+		grass->scheduleGrassCreation(g, commands.commandList, params, sceneMgr);
 	}
 
 	renderSystem->ExecuteCommandList(commands);

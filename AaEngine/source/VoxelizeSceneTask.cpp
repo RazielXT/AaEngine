@@ -24,6 +24,7 @@ VoxelizeSceneTask::~VoxelizeSceneTask()
 }
 
 const float VoxelSize = 128;
+VoxelSceneSettings settings;
 
 AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 {
@@ -59,19 +60,14 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 			{
 				const auto FrameIndex = provider.renderSystem->frameIndex;
 
-				auto orthoHalfSize = XMFLOAT3(150, 150, 150);
-				camera.setOrthographicCamera(orthoHalfSize.x * 2, orthoHalfSize.y * 2, 1, 1 + orthoHalfSize.z * 2 + 200);
+				auto orthoHalfSize = settings.extends;
+				float NearClipDistance = 1;
+				camera.setOrthographicCamera(orthoHalfSize.x * 2, orthoHalfSize.y * 2, NearClipDistance, NearClipDistance + orthoHalfSize.z * 2 + 200);
 
-				auto center = XMFLOAT3(0, 0, 0);
+				auto center = settings.center;
 
 				XMFLOAT3 corner(center.x - orthoHalfSize.x, center.y - orthoHalfSize.y, center.z - orthoHalfSize.z);
 				updateCBuffer(orthoHalfSize, corner, FrameIndex);
-
-				static int counter = 0;
-				bool skipUpdate = counter >= 2;
-				counter++;
-				if (counter > 2 * 6)
-					counter = 0;
 
 				provider.renderSystem->StartCommandList(commands);
 				if (imgui::DebugWindow::state.stopUpdatingVoxel)
@@ -102,19 +98,20 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 				ShaderConstantsProvider constants(provider.params, sceneInfo, camera, *pass.target.texture);
 
 				//from all 3 axes
-				camera.setPosition(XMFLOAT3(center.x, center.y, center.z - orthoHalfSize.z - 1));
+				//Z
+				camera.setPosition(XMFLOAT3(center.x, center.y, center.z - orthoHalfSize.z - NearClipDistance));
 				camera.setDirection(XMFLOAT3(0, 0, 1));
 				camera.updateMatrix();
 				renderables.updateVisibility(camera, sceneInfo);
 				sceneQueue->renderObjects(constants, commands.commandList, FrameIndex);
-
-				camera.setPosition(XMFLOAT3(center.x - orthoHalfSize.x - 1, center.y, center.z));
+				//X
+				camera.setPosition(XMFLOAT3(center.x - orthoHalfSize.x - NearClipDistance, center.y, center.z));
 				camera.setDirection(XMFLOAT3(1, 0, 0));
 				camera.updateMatrix();
 				renderables.updateVisibility(camera, sceneInfo);
 				sceneQueue->renderObjects(constants, commands.commandList, FrameIndex);
-
-				camera.setPosition(XMFLOAT3(center.x, center.y - orthoHalfSize.y - 1, center.z));
+				//Y
+				camera.setPosition(XMFLOAT3(center.x, center.y - orthoHalfSize.y - NearClipDistance, center.z));
 				camera.pitch(XM_PIDIV2);
 				camera.updateMatrix();
 				renderables.updateVisibility(camera, sceneInfo);
@@ -138,7 +135,9 @@ void VoxelizeSceneTask::run(RenderContext& renderCtx, CommandsData& syncCommands
 
 void VoxelizeSceneTask::updateCBuffer(Vector3 orthoHalfSize, Vector3 corner, UINT frameIndex)
 {
-	float sceneToVoxel = VoxelSize / (2 * orthoHalfSize.x);
+	cbufferData.voxelSceneSize = orthoHalfSize * 2;
+
+	float sceneToVoxel = VoxelSize / (cbufferData.voxelSceneSize.x);
 	cbufferData.voxelDensity = sceneToVoxel;
 
 	cbufferData.voxelOffset = corner;
@@ -167,4 +166,9 @@ void VoxelizeSceneTask::updateCBuffer(bool lighting, UINT frameIndex)
 	cbufferData.voxelizeLighting = lighting ? 1.0f : 0.0f;
 	auto& cbufferResource = *cbuffer.data[frameIndex];
 	memcpy(cbufferResource.Memory(), &cbufferData, sizeof(cbufferData));
+}
+
+VoxelSceneSettings& VoxelSceneSettings::get()
+{
+	return settings;
 }

@@ -113,6 +113,6 @@ struct FrameParameters
 {
 	PssmParameters sun;
 
-	float time;
-	float timeDelta;
+	float time{};
+	float timeDelta{};
 };

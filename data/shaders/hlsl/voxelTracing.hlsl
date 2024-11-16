@@ -14,8 +14,9 @@ cbuffer SceneVoxelInfo : register(b1)
 {
 	float3 sceneCorner : packoffset(c0);
 	float voxelDensity : packoffset(c0.w);
-    float2 middleCone : packoffset(c1);
-    float2 sideCone : packoffset(c1.z);
+	float3 voxelSceneSize : packoffset(c1);
+    float2 middleCone : packoffset(c2);
+    float2 sideCone : packoffset(c2.z);
 };
 
 struct VS_Input
@@ -192,7 +193,7 @@ PSOutput PS_Main(PS_Input pin)
     float3 geometryB = normalize(mul(binormal, (float3x3) WorldMatrix).xyz);
     float3 geometryT = normalize(mul(pin.tangent, (float3x3) WorldMatrix).xyz);
 
-    float3 voxelUV = (pin.wp.xyz-sceneCorner)/300;
+    float3 voxelUV = (pin.wp.xyz-sceneCorner)/voxelSceneSize;
 	Texture3D voxelmap = GetTexture3D(TexIdSceneVoxel);
     float4 fullTraceSample = coneTrace(voxelUV, geometryNormal, middleCone.x, middleCone.y, voxelmap, g_sampler, 0) * 1;
     fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal + geometryT), sideCone.x, sideCone.y, voxelmap, g_sampler, 0) * 1.0;

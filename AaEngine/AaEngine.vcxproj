@@ -104,6 +104,9 @@
     <ClCompile Include="source\AaMath.cpp" />
     <ClCompile Include="source\AaModel.cpp" />
     <ClCompile Include="source\AaModelResources.cpp" />
+    <ClCompile Include="source\AoBlurAndUpsampleCS.cpp" />
+    <ClCompile Include="source\AoRenderCS.cpp" />
+    <ClCompile Include="source\AoPrepareDepthBuffersCS.cpp" />
     <ClCompile Include="source\RenderObject.cpp" />
     <ClCompile Include="source\AaRenderSystem.cpp" />
     <ClCompile Include="source\SceneManager.cpp" />
@@ -144,6 +147,7 @@
     <ClCompile Include="source\ShaderSignature.cpp" />
     <ClCompile Include="source\ShadowMap.cpp" />
     <ClCompile Include="source\ShadowsRenderTask.cpp" />
+    <ClCompile Include="source\SsaoComputeTask.cpp" />
     <ClCompile Include="source\TextureData.cpp" />
     <ClCompile Include="source\TextureResource.cpp" />
     <ClCompile Include="source\VoxelizeSceneTask.cpp" />
@@ -158,6 +162,8 @@
     <ClInclude Include="source\AaFrameListener.h" />
     <ClInclude Include="source\AaLogger.h" />
     <ClInclude Include="source\AaMaterial.h" />
+    <ClInclude Include="source\AoBlurAndUpsampleCS.h" />
+    <ClInclude Include="source\AoRenderCS.h" />
     <ClInclude Include="source\CompositorTask.h" />
     <ClInclude Include="source\DebugOverlayTask.h" />
     <ClInclude Include="source\EntityGeometry.h" />
@@ -165,6 +171,7 @@
     <ClInclude Include="source\GrassArea.h" />
     <ClInclude Include="source\GrassInitComputeShader.h" />
     <ClInclude Include="source\ImguiDebugWindowTask.h" />
+    <ClInclude Include="source\AoPrepareDepthBuffersCS.h" />
     <ClInclude Include="source\SceneTestTask.h" />
     <ClInclude Include="source\ScreenQuad.h" />
     <ClInclude Include="source\ShaderConstantsProvider.h" />
@@ -208,6 +215,7 @@
     <ClInclude Include="source\ShaderSignature.h" />
     <ClInclude Include="source\ShadowMap.h" />
     <ClInclude Include="source\ShadowsRenderTask.h" />
+    <ClInclude Include="source\SsaoComputeTask.h" />
     <ClInclude Include="source\TextureData.h" />
     <ClInclude Include="source\TextureResource.h" />
     <ClInclude Include="source\VoxelizeSceneTask.h" />

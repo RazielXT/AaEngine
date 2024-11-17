@@ -169,13 +169,14 @@ struct PSOutput
 {
     float4 target0 : SV_Target0;
     float4 target1 : SV_Target1;
+    float4 target2 : SV_Target2;
 };
 
 PSOutput PSMain(PSInput input)
 {
-	//float3 normal = normalize(mul(input.normal, (float3x3)WorldMatrix).xyz);
+	float3 normal = input.normal;//normalize(mul(input.normal, (float3x3)WorldMatrix).xyz);
 
-	float diffuse = saturate(dot(-LightDirection, input.normal));
+	float diffuse = saturate(dot(-LightDirection, normal));
 
 #ifdef USE_VC
 	float4 ambientColor = input.color;
@@ -188,7 +189,8 @@ PSOutput PSMain(PSInput input)
 
 	PSOutput output;
     output.target0 = (ambientColor + getShadow(input.worldPosition) * diffuse) * albedo;
-	output.target1 = output.target0 * output.target0 * 2;
+	output.target1 = float4(albedo.rgb, 1);
+	output.target2 = float4(normal, 1);
 
 	return output;
 }

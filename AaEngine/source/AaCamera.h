@@ -41,6 +41,9 @@ public:
 	DirectX::BoundingFrustum prepareFrustum() const;
 	DirectX::BoundingOrientedBox prepareOrientedBox() const;
 
+	float getCameraZ() const;
+	float getTanHalfFovH() const;
+
 private:
 
 	float width{}, height{}, nearZ{}, farZ{};
@@ -48,9 +51,11 @@ private:
 	bool dirty = true;
 	float yaw_ = 0, pitch_ = 0, roll_ = 0;
 	bool orthographic = false;
+	float zProjection{};
 
 	XMMATRIX view_m;
 	XMMATRIX projection_m;
+	XMMATRIX reversedProjection_m;
 	XMMATRIX view_projection_m;
 	Vector3 position;
 	Vector3 direction;

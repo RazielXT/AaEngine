@@ -11,7 +11,7 @@ void RenderDepthTargetTexture::Init(ID3D12Device* device, UINT w, UINT h, UINT f
 
 void RenderDepthTargetTexture::ClearDepth(ID3D12GraphicsCommandList* commandList, UINT frameIndex)
 {
-	commandList->ClearDepthStencilView(dsvHandles[frameIndex], D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	commandList->ClearDepthStencilView(dsvHandles[frameIndex], D3D12_CLEAR_FLAG_DEPTH, depthClearValue, 0, 0, nullptr);
 }
 
 void RenderTargetHeap::Init(ID3D12Device* device, UINT count, UINT frameCount, const wchar_t* name)
@@ -49,14 +49,17 @@ void RenderTargetTexture::Init(ID3D12Device* device, UINT w, UINT h, UINT frameC
 		CreateTextureBuffer(device, width, height, frameCount, t, format, state);
 	}
 
-	for (int i = 0; i < frameCount; i++)
+	if (flags & AllowRenderTarget)
 	{
-		rtvHandles[i].resize(textures.size());
-		UINT c = 0;
-
-		for (auto& t : textures)
+		for (int i = 0; i < frameCount; i++)
 		{
-			heap.CreateRenderTargetHandle(device, t.texture[i], rtvHandles[i][c++]);
+			rtvHandles[i].resize(textures.size());
+			UINT c = 0;
+
+			for (auto& t : textures)
+			{
+				heap.CreateRenderTargetHandle(device, t.texture[i], rtvHandles[i][c++]);
+			}
 		}
 	}
 
@@ -105,7 +108,7 @@ void RenderDepthTargetTexture::CreateDepthBuffer(ID3D12Device* device, UINT fram
 
 	D3D12_CLEAR_VALUE clearValue = {};
 	clearValue.Format = DXGI_FORMAT_D32_FLOAT;
-	clearValue.DepthStencil.Depth = 1.0f;
+	clearValue.DepthStencil.Depth = depthClearValue;
 	clearValue.DepthStencil.Stencil = 0;
 
 	for (UINT n = 0; n < frameCount; n++)
@@ -143,16 +146,24 @@ void RenderTargetTexture::CreateTextureBuffer(ID3D12Device* device, UINT width, 
 	textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	textureDesc.Width = width;
 	textureDesc.Height = height;
-	textureDesc.DepthOrArraySize = 1;
+	textureDesc.DepthOrArraySize = arraySize;
 	textureDesc.MipLevels = 1;
 	textureDesc.Format = format;
 	textureDesc.SampleDesc.Count = 1;
 	textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-	textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 
 	D3D12_CLEAR_VALUE clearValue = {};
 	clearValue.Format = format;
 	memcpy(clearValue.Color, &clearColor, sizeof(clearColor));
+	auto clearValuePtr = &clearValue;
+
+	if (flags & AllowRenderTarget)
+		textureDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+	if (flags & AllowUAV)
+	{
+		textureDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+		clearValuePtr = nullptr;
+	}
 
 	auto heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
@@ -163,7 +174,7 @@ void RenderTargetTexture::CreateTextureBuffer(ID3D12Device* device, UINT width, 
 			D3D12_HEAP_FLAG_NONE,
 			&textureDesc,
 			state,
-			&clearValue,
+			clearValuePtr,
 			IID_PPV_ARGS(&t.texture[i]));
 	}
 }
@@ -185,7 +196,7 @@ void RenderDepthTargetTexture::PrepareAsDepthTarget(ID3D12GraphicsCommandList* c
 	}
 
 	commandList->OMSetRenderTargets(0, nullptr, FALSE, &dsvHandles[frameIndex]);
-	commandList->ClearDepthStencilView(dsvHandles[frameIndex], D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	commandList->ClearDepthStencilView(dsvHandles[frameIndex], D3D12_CLEAR_FLAG_DEPTH, depthClearValue, 0, 0, nullptr);
 }
 
 void RenderDepthTargetTexture::PrepareAsDepthView(ID3D12GraphicsCommandList* commandList, UINT frameIndex, D3D12_RESOURCE_STATES from)
@@ -231,7 +242,7 @@ void RenderTargetTexture::PrepareAsTarget(ID3D12GraphicsCommandList* commandList
 	commandList->OMSetRenderTargets(rtvHandles[frameIndex].size(), rtvHandles[frameIndex].data(), TRUE, (depth && dsvHeap) ? &dsvHandles[frameIndex] : nullptr);
 
 	if (depth && clearDepth)
-		commandList->ClearDepthStencilView(dsvHandles[frameIndex], D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+		commandList->ClearDepthStencilView(dsvHandles[frameIndex], D3D12_CLEAR_FLAG_DEPTH, depthClearValue, 0, 0, nullptr);
 
 	if (clear)
 	{
@@ -260,7 +271,7 @@ void RenderTargetTexture::PrepareAsSingleTarget(ID3D12GraphicsCommandList* comma
 	commandList->OMSetRenderTargets(1, &rtvHandles[frameIndex][textureIndex], TRUE, (depth && dsvHeap) ? &dsvHandles[frameIndex] : nullptr);
 
 	if (depth && clearDepth)
-		commandList->ClearDepthStencilView(dsvHandles[frameIndex], D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+		commandList->ClearDepthStencilView(dsvHandles[frameIndex], D3D12_CLEAR_FLAG_DEPTH, depthClearValue, 0, 0, nullptr);
 
 	if (clear)
 	{
@@ -335,4 +346,19 @@ void RenderDepthTargetTexture::SetName(const wchar_t* name)
 				t->SetName(name);
 		}
 	}
+}
+
+ShaderTextureView& RenderTargetInfo::textureView()
+{
+	return textures.front().textureView;
+}
+
+UINT RenderTargetInfo::srvHeapIndex() const
+{
+	return textures.front().textureView.srvHeapIndex;
+}
+
+UINT RenderTargetInfo::uavHeapIndex() const
+{
+	return textures.front().textureView.uavHeapIndex;
 }

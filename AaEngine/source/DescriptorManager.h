@@ -25,6 +25,7 @@ public:
 	void createTextureView(RenderTargetTexture& texture, UINT& descriptorOffset);
 	void createDepthView(RenderDepthTargetTexture& texture);
 	void createUAVView(TextureResource& texture);
+	UINT createUAVView(RenderTargetTexture& texture, UINT mipLevel = 0);
 
 	UINT nextDescriptor(UINT offset, D3D12_SRV_DIMENSION) const;
 	UINT previousDescriptor(UINT offset, D3D12_SRV_DIMENSION) const;

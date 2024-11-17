@@ -110,6 +110,15 @@ namespace imgui
 		ImGui::SliderFloat("sideConeRatio", &state.sideConeRatioDistance.x, 0.0f, 5.f);
 		ImGui::SliderFloat("sideConeDistance", &state.sideConeRatioDistance.y, 0.0f, 5.f);
 
+		if (ImGui::CollapsingHeader("SSAO"))
+		{
+			ImGui::SliderFloat("Accentuation", &state.ssao.Accentuation, 0.0f, 1.f);
+			ImGui::SliderFloat("RejectionFalloff", &state.ssao.RejectionFalloff, 1.0f, 10.f);
+			ImGui::SliderFloat("BlurTolerance", &state.ssao.BlurTolerance, -8.0f, -1.f);
+			ImGui::SliderFloat("NoiseFilterTolerance", &state.ssao.NoiseFilterTolerance, -8.0f, 0.f);
+			ImGui::SliderFloat("UpsampleTolerance", &state.ssao.UpsampleTolerance, -12.0f, -1.f);
+		}
+
 		const char* scenes[] = {
 			"test",
 			"testCubes",

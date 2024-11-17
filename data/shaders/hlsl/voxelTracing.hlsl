@@ -179,6 +179,7 @@ struct PSOutput
 {
     float4 target0 : SV_Target0;
     float4 target1 : SV_Target1;
+    float4 target2 : SV_Target2;
 };
 
 SamplerState g_sampler : register(s0);
@@ -222,7 +223,8 @@ PSOutput PS_Main(PS_Input pin)
 
 	PSOutput output;
     output.target0 = color1;
-	output.target1 = color1 * color1 * 3;
+	output.target1 = color1 * color1 * float4(albedo, 1);
+	output.target2 = float4(normal, 1);
 
 	return output;
 }

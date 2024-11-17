@@ -88,3 +88,11 @@ float4 PSAddThrough(VS_OUTPUT input) : SV_TARGET
 	original.rgb += bloom;
     return original;
 }
+
+float4 PSDarken(VS_OUTPUT input) : SV_TARGET
+{
+	float4 color = colorMap.Sample(colorSampler, input.TexCoord);
+	color.rbg *= 0.5 + 0.5 * colorMap2.Sample(colorSampler, input.TexCoord).r;
+
+    return color;
+}

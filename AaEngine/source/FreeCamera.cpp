@@ -47,7 +47,7 @@ void FreeCamera::update(float time)
 
 void FreeCamera::init(float aspectRatio)
 {
-	camera.setPerspectiveCamera(70, aspectRatio, 0.3, 10000);
+	camera.setPerspectiveCamera(70, aspectRatio, 1, 1000);
 }
 
 bool FreeCamera::keyPressed(int key)

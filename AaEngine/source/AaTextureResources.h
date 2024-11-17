@@ -19,6 +19,8 @@ public:
 
 	D3D12_GPU_DESCRIPTOR_HANDLE srvHandles[2]{};
 	UINT srvHeapIndex{};
+	D3D12_GPU_DESCRIPTOR_HANDLE uavHandles[2]{};
+	UINT uavHeapIndex{};
 };
 
 class ShaderUAV

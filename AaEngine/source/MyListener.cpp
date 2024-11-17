@@ -35,7 +35,7 @@ MyListener::MyListener(AaRenderSystem* render)
 	shadowMap->update(renderSystem->frameIndex);
 
 	compositor = new FrameCompositor({ params, renderSystem }, *sceneMgr, *shadowMap);
-	compositor->load(DATA_DIRECTORY + "frame.compositor");
+	compositor->load("frame.compositor");
 
 	grass->initializeGpuResources(renderSystem, sceneMgr->getQueueTargetFormats());
 
@@ -71,6 +71,12 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 		loadScene(debugWindow.state.changeScene);
 		debugWindow.state.changeScene = {};
 	}
+	if (debugWindow.state.reloadShaders)
+	{
+		renderSystem->WaitForAllFrames();
+		AaMaterialResources::get().ReloadShaders();
+		debugWindow.state.reloadShaders = false;
+	}
 
  	if (auto ent = sceneMgr->getEntity("Torus001"))
  	{
@@ -83,15 +89,7 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 		ent->yaw(timeSinceLastFrame);
 		ent->setPosition({ cos(params.time / 2.f) * 5, ent->getPosition().y, ent->getPosition().z });
 	}
-
 	//Vector3(cos(elapsedTime), -1, sin(elapsedTime)).Normalize(sceneMgr->lights.directionalLight.direction);
-
-	if (debugWindow.state.reloadShaders)
-	{
-		renderSystem->WaitForAllFrames();
-		AaMaterialResources::get().ReloadShaders();
-		debugWindow.state.reloadShaders = false;
-	}
 
 	sceneMgr->update();
 	cameraMan->camera.updateMatrix();

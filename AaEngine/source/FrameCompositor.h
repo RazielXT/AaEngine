@@ -50,7 +50,7 @@ protected:
 
 	void initializeCommands();
 	void initializeTextureStates();
-	D3D12_RESOURCE_STATES getInitialTextureState(const std::string& name) const;
+	std::map<std::string, D3D12_RESOURCE_STATES> lastTextureStates;
 
 	void executeCommands();
 

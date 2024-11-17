@@ -1,0 +1,47 @@
+compositor SSAO
+{
+	rwtexture linearDepth target_width target_height DXGI_FORMAT_R16_UNORM
+	rwtexture linearDepthDownsample2 target_size_div 2 DXGI_FORMAT_R32_FLOAT
+	rwtexture linearDepthDownsampleAtlas2 target_size_div 2 DXGI_FORMAT_R16_FLOAT [16]
+	rwtexture linearDepthDownsample4 target_size_div 4 DXGI_FORMAT_R32_FLOAT
+	rwtexture linearDepthDownsampleAtlas4 target_size_div 4 DXGI_FORMAT_R16_FLOAT [16]
+
+	rwtexture linearDepthDownsample8 target_size_div 8 DXGI_FORMAT_R32_FLOAT
+	rwtexture linearDepthDownsampleAtlas8 target_size_div 8 DXGI_FORMAT_R16_FLOAT [16]
+	rwtexture linearDepthDownsample16 target_size_div 16 DXGI_FORMAT_R32_FLOAT
+	rwtexture linearDepthDownsampleAtlas16 target_size_div 16 DXGI_FORMAT_R16_FLOAT [16]
+
+	rwtexture occlusionInterleaved8 target_size_div 8 DXGI_FORMAT_R8_UNORM
+	rwtexture occlusion8 target_size_div 8 DXGI_FORMAT_R8_UNORM
+	rwtexture occlusionInterleaved4 target_size_div 4 DXGI_FORMAT_R8_UNORM
+	rwtexture occlusion4 target_size_div 4 DXGI_FORMAT_R8_UNORM
+	rwtexture occlusionInterleaved2 target_size_div 2 DXGI_FORMAT_R8_UNORM
+
+	rwtexture aoSmooth4 target_size_div 4 DXGI_FORMAT_R8_UNORM
+	rwtexture aoSmooth2 target_size_div 2 DXGI_FORMAT_R8_UNORM
+	rwtexture aoSmooth target_width target_height DXGI_FORMAT_R8_UNORM
+
+	task SSAO
+	{
+		input sceneTexture depth
+		input linearDepth
+		input linearDepthDownsample2
+		input linearDepthDownsampleAtlas2
+		input linearDepthDownsample4
+		input linearDepthDownsampleAtlas4
+		input linearDepthDownsample8
+		input linearDepthDownsampleAtlas8
+		input linearDepthDownsample16
+		input linearDepthDownsampleAtlas16
+
+		input occlusionInterleaved8
+		input occlusion8
+		input occlusionInterleaved4
+		input occlusion4
+		input occlusionInterleaved2
+		
+		input aoSmooth4
+		input aoSmooth2
+		input aoSmooth
+	}
+}

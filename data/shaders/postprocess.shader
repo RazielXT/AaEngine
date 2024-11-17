@@ -40,6 +40,13 @@ pixel_shader psBlurY
 	profile ps_6_6
 }
 
+pixel_shader psDarken
+{
+	file postprocess.hlsl
+	entry PSDarken
+	profile ps_6_6
+}
+
 pixel_shader psFXAA
 {
 	file fxaa.hlsl

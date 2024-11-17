@@ -13,6 +13,15 @@ struct CompositorTextureInfo
 	bool targetScale = false;
 	std::vector<DXGI_FORMAT> formats;
 	bool depthBuffer = false;
+	UINT arraySize = 1;
+	bool uav = false;
+};
+
+struct CompositorTextureInput
+{
+	std::string name;
+	UINT index{};
+	enum { Full, Index, Depth } type = Full;
 };
 
 struct CompositorPassInfo
@@ -23,22 +32,22 @@ struct CompositorPassInfo
 	static const UINT AllTargets = -1;
 	UINT targetIndex = AllTargets;
 
-	std::string render;
+	std::string task;
 	std::string after;
 
 	std::string material;
-	std::vector<std::pair<std::string, UINT>> inputs;
+	std::vector<CompositorTextureInput> inputs;
 	std::vector<std::string> params;
 };
 
 struct CompositorInfo
 {
 	std::string name;
-	std::vector<CompositorTextureInfo> textures;
+	std::map<std::string, CompositorTextureInfo> textures;
 	std::vector<CompositorPassInfo> passes;
 };
 
 namespace CompositorFileParser
 {
-	CompositorInfo parseFile(std::string path);
+	CompositorInfo parseFile(std::string directory, std::string path);
 };

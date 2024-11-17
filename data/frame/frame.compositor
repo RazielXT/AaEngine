@@ -1,7 +1,10 @@
+import ssao
+
 compositor SceneCompositor
 {
-	texture sceneTexture target_width target_height DXGI_FORMAT_R8G8B8A8_UNORM DXGI_FORMAT_R10G10B10A2_UNORM depth_buffer
+	texture sceneTexture target_width target_height DXGI_FORMAT_R8G8B8A8_UNORM DXGI_FORMAT_R8G8B8A8_UNORM DXGI_FORMAT_R10G10B10A2_UNORM depth_buffer
 	texture sceneTexture2 target_width target_height DXGI_FORMAT_R8G8B8A8_UNORM
+	texture sceneTexture3 target_width target_height DXGI_FORMAT_R8G8B8A8_UNORM
 
 	texture bloomTexture target_width_scaled 0.5 target_height_scaled 0.5 DXGI_FORMAT_R10G10B10A2_UNORM
 	texture bloomTexture2 target_width_scaled 0.25 target_height_scaled 0.25 DXGI_FORMAT_R10G10B10A2_UNORM
@@ -11,16 +14,16 @@ compositor SceneCompositor
 
 	texture voxelDummy 128 128 DXGI_FORMAT_R8G8B8A8_UNORM
 
-	render VoxelScene
+	task VoxelScene
 	{
 		target voxelDummy
 	}
 
-	render Shadows
+	task Shadows
 	{
 	}
 
-	render Scene
+	task Scene
 	{
 		params EarlyZ
 
@@ -28,10 +31,12 @@ compositor SceneCompositor
 		target sceneTexture
 	}
 
-	render SceneTransparent
+	ref SSAO:SSAO
+
+	task SceneTransparent
 	{
 		//input sceneTexture depth_buffer
-		target sceneTexture 1
+		target sceneTexture
 	}
 
 	pass BloomDownscale
@@ -97,19 +102,27 @@ compositor SceneCompositor
 		target sceneTexture2
 	}
 
+	pass SSAODarken
+	{
+		material Darken
+		input sceneTexture2
+		input aoSmooth
+		target sceneTexture3
+	}
+
 	pass Fxaa
 	{
 		material FXAA
-		input sceneTexture2
+		input sceneTexture3
 		target Backbuffer
 	}
 
-	render DebugOverlay
+	task DebugOverlay
 	{
 		target Backbuffer
 	}
 
-	render Imgui
+	task Imgui
 	{
 		target Backbuffer
 	}

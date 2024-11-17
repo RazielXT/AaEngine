@@ -21,20 +21,41 @@ AaCamera::~AaCamera()
 
 void AaCamera::setOrthographicCamera(float width, float height, float nearZ, float farZ)
 {
-	projection_m = XMMatrixOrthographicLH(width, height, nearZ, farZ);
+	projection_m = reversedProjection_m = XMMatrixOrthographicLH(width, height, nearZ, farZ);
 	this->width = width;
 	this->height = height;
 	this->nearZ = nearZ;
 	this->farZ = farZ;
 	dirty = true;
 	orthographic = true;
+	zProjection = (farZ - nearZ) / nearZ;
 }
 
 void AaCamera::setPerspectiveCamera(float fov, float aspectRatio, float nearZ, float farZ)
 {
 	projection_m = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), aspectRatio, nearZ, farZ);
+	{
+		float Y = 1.0f / std::tanf(XMConvertToRadians(fov) * 0.5f);
+		float X = Y * 1/aspectRatio;
+
+		// ReverseZ puts far plane at Z=0 and near plane at Z=1.  This is never a bad idea, and it's
+		// actually a great idea with F32 depth buffers to redistribute precision more evenly across
+		// the entire range.  It requires clearing Z to 0.0f and using a GREATER variant depth test.
+		// Some care must also be done to properly reconstruct linear W in a pixel shader from hyperbolic Z.
+		float Q1 = nearZ / (farZ - nearZ);
+		float Q2 = nearZ * (farZ / (farZ - nearZ));
+
+		XMFLOAT4X4 proj(
+			X, 0.0f, 0.0f, 0.0f,
+			0.0f, Y, 0.0f, 0.0f,
+			0.0f, 0.0f, Q1, 1.0f,
+			0.0f, 0.0f, Q2, 0.0f
+		);
+		reversedProjection_m = XMLoadFloat4x4(&proj);
+	}
 	dirty = true;
 	orthographic = false;
+	zProjection = (farZ - nearZ) / nearZ;
 }
 
 bool AaCamera::isOrthographic() const
@@ -68,7 +89,7 @@ void AaCamera::updateMatrix()
 // 		auto quatMatrix = XMMatrixRotationQuaternion(XMLoadFloat4(&rotation));
 // 		view_m = XMMatrixMultiply(XMMatrixLookToLH(XMLoadFloat3(&position), XMLoadFloat3(&direction), XMLoadFloat3(&upVector)), quatMatrix);
 
-		view_projection_m = XMMatrixMultiply(view_m, projection_m);
+		view_projection_m = XMMatrixMultiply(view_m, reversedProjection_m);
 		dirty = false;
 	}
 }
@@ -185,4 +206,16 @@ DirectX::BoundingOrientedBox AaCamera::prepareOrientedBox() const
 	orientedBox.Transform(orientedBox, DirectX::XMMatrixInverse(nullptr, view_m));
 
 	return orientedBox;
+}
+
+float AaCamera::getCameraZ() const
+{
+	return zProjection;
+}
+
+float AaCamera::getTanHalfFovH() const
+{
+	XMFLOAT4X4 proj;
+	XMStoreFloat4x4(&proj, reversedProjection_m);
+	return proj._11;
 }

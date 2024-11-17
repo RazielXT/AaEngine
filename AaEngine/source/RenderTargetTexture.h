@@ -27,6 +27,10 @@ public:
 	UINT width = 0;
 	UINT height = 0;
 	UINT arraySize = 1;
+
+	ShaderTextureView& textureView();
+	UINT srvHeapIndex() const;
+	UINT uavHeapIndex() const;
 };
 
 class RenderDepthTargetTexture : public RenderTargetInfo
@@ -51,6 +55,7 @@ protected:
 	void CreateDepthBuffer(ID3D12Device* device, UINT frameCount, D3D12_RESOURCE_STATES initialState, UINT arraySize);
 
 	ComPtr<ID3D12DescriptorHeap> dsvHeap;
+	float depthClearValue = 0.f;
 };
 
 class RenderTargetHeap
@@ -71,6 +76,8 @@ private:
 class RenderTargetTexture : public RenderDepthTargetTexture
 {
 public:
+
+	enum { AllowRenderTarget = 1, AllowUAV = 2 } flags = AllowRenderTarget;
 
 	void Init(ID3D12Device* device, UINT width, UINT height, UINT frameCount, RenderTargetHeap& heap, const std::vector<DXGI_FORMAT>& formats, D3D12_RESOURCE_STATES state, bool depthBuffer = true, D3D12_RESOURCE_STATES initialDepthState = D3D12_RESOURCE_STATE_DEPTH_WRITE);
 	void InitExisting(ID3D12Resource**, ID3D12Device* device, UINT width, UINT height, UINT frameCount, RenderTargetHeap& heap, DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM);

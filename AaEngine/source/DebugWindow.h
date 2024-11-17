@@ -20,6 +20,16 @@ namespace imgui
 		float voxelSteppingDiffuse = 0.0f;
 		Vector2 middleConeRatioDistance = { 1.05f, 1.5f };
 		Vector2 sideConeRatioDistance = { 2.2f, 5.f };
+
+		struct 
+		{
+			float RejectionFalloff = 2.5f;// 1.0f - 10.0f
+			float Accentuation = 0.1f; //0.0f - 1.0f
+			float BlurTolerance = -5.0f; // -8.0f, -1.0f
+			float UpsampleTolerance = -7.0f; //-12.0f, -1.0f
+			float NoiseFilterTolerance = -3.0f; // -8.0f, 0.0f
+		}
+		ssao;
 	};
 
 	struct DebugWindow

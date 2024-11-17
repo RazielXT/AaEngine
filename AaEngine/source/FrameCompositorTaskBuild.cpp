@@ -14,13 +14,12 @@ void FrameCompositor::initializeTextureStates()
 		}
 	}
 
-	std::map<std::string, D3D12_RESOURCE_STATES> lastTextureStates;
 	//iterate to get last states first
 	for (auto& pass : passes)
 	{
 		lastTextureStates[pass.info.target] = pass.target.present ? D3D12_RESOURCE_STATE_PRESENT : D3D12_RESOURCE_STATE_RENDER_TARGET;
 		for (auto& i : pass.info.inputs)
-			lastTextureStates[i.first] = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+			lastTextureStates[i.name] = info.textures[i.name].uav && pass.task ? D3D12_RESOURCE_STATE_UNORDERED_ACCESS : D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 	}
 
 	for (auto& pass : passes)
@@ -31,21 +30,10 @@ void FrameCompositor::initializeTextureStates()
 		pass.inputs.resize(pass.info.inputs.size());
 		for (UINT idx = 0; auto & i : pass.info.inputs)
 		{
-			pass.inputs[idx++].previousState = lastTextureStates[i.first];
-			lastTextureStates[i.first] = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+			pass.inputs[idx++].previousState = lastTextureStates[i.name];
+			lastTextureStates[i.name] = info.textures[i.name].uav && pass.task ? D3D12_RESOURCE_STATE_UNORDERED_ACCESS : D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 		}
 	}
-}
-
-D3D12_RESOURCE_STATES FrameCompositor::getInitialTextureState(const std::string& name) const
-{
-	for (auto& pass : passes)
-	{
-		if (pass.info.target == name)
-			return pass.target.previousState;
-	}
-
-	return D3D12_RESOURCE_STATE_COMMON;
 }
 
 void FrameCompositor::initializeCommands()
@@ -54,7 +42,7 @@ void FrameCompositor::initializeCommands()
 		{
 			return pushedResources.contains(pass.after)
 				|| pushedResources.contains(pass.target)
-				|| std::any_of(pass.inputs.begin(), pass.inputs.end(), [&pushedResources](const std::pair<std::string, UINT>& s) { return pushedResources.find(s.first) != pushedResources.end(); });
+				|| std::any_of(pass.inputs.begin(), pass.inputs.end(), [&pushedResources](const CompositorTextureInput& i) { return pushedResources.find(i.name) != pushedResources.end(); });
 		};
 
 	std::vector<std::string> asyncNames;

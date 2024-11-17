@@ -176,11 +176,14 @@ void SignatureInfo::finish()
 
 				if (p.Name.starts_with("TexId"))
 					bindlessTextures = true;
+
+				if (p.Name.starts_with("ResId"))
+					bindlessResources = true;
 			}
 		}
 	}
 
-	if (bindlessTextures)
+	if (bindlessTextures || bindlessResources)
 		flags |= D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED;
 }
 
@@ -274,6 +277,21 @@ ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device* device, co
 			sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
 			sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
 			sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;
+		}
+		else if (samplers[i].info.Name == "LinearSampler")
+		{
+			sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+			sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+			sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+			sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		}
+		else if (samplers[i].info.Name == "LinearBorderSampler")
+		{
+			sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+			sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+			sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+			sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+			sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
 		}
 	}
 

@@ -10,6 +10,8 @@
 #include "DebugOverlayTask.h"
 #include "SceneTestTask.h"
 #include "ImguiDebugWindowTask.h"
+#include "Directories.h"
+#include "SsaoComputeTask.h"
 
 FrameCompositor::FrameCompositor(RenderProvider p, SceneManager& scene, AaShadowMap& shadows) : provider(p), sceneMgr(scene), shadowMaps(shadows)
 {
@@ -25,7 +27,7 @@ FrameCompositor::~FrameCompositor()
 
 void FrameCompositor::load(std::string path)
 {
-	load(CompositorFileParser::parseFile(path));
+	load(CompositorFileParser::parseFile(FRAME_DIRECTORY, path));
 }
 
 void FrameCompositor::load(CompositorInfo i)
@@ -36,31 +38,35 @@ void FrameCompositor::load(CompositorInfo i)
 	{
 		auto& pass = passes.emplace_back(p);
 
-		if (pass.info.render == "Scene")
+		if (pass.info.task == "Scene")
 		{
 			pass.task = std::make_unique<SceneRenderTask>(provider, sceneMgr);
 		}
-		else if (pass.info.render == "SceneTransparent")
+		else if (pass.info.task == "SceneTransparent")
 		{
 			pass.task = std::make_unique<SceneRenderTransparentTask>(provider, sceneMgr);
 		}
-		else if (pass.info.render == "Shadows")
+		else if (pass.info.task == "Shadows")
 		{
 			pass.task = std::make_unique<ShadowsRenderTask>(provider, sceneMgr, shadowMaps);
 		}
-		else if (pass.info.render == "VoxelScene")
+		else if (pass.info.task == "VoxelScene")
 		{
 			pass.task = std::make_unique<VoxelizeSceneTask>(provider, sceneMgr, shadowMaps);
 		}
-		else if (pass.info.render == "DebugOverlay")
+		else if (pass.info.task == "DebugOverlay")
 		{
 			pass.task = std::make_unique<DebugOverlayTask>(provider, sceneMgr);
 		}
-		else if (pass.info.render == "Imgui")
+		else if (pass.info.task == "Imgui")
 		{
 			pass.task = std::make_unique<ImguiDebugWindowTask>(provider, sceneMgr);
 		}
-		else if (pass.info.render == "Test")
+		else if (pass.info.task == "SSAO")
+		{
+			pass.task = std::make_unique<SsaoComputeTask>(provider, sceneMgr);
+		}
+		else if (pass.info.task == "Test")
 		{
 			pass.task = std::make_unique<SceneTestTask>(provider, sceneMgr);
 		}
@@ -69,7 +75,7 @@ void FrameCompositor::load(CompositorInfo i)
 	initializeTextureStates();
 
 	UINT textureCount = 0;
-	for (auto& t : info.textures)
+	for (auto& [name, t] : info.textures)
 		textureCount += t.formats.size();
 
 	rtvHeap.Init(provider.renderSystem->device, textureCount, provider.renderSystem->FrameCount, L"CompositorRTV");
@@ -94,15 +100,15 @@ void FrameCompositor::reloadTextures()
 	std::vector<UINT> reusedHeapDescriptors;
 	if (!textures.empty())
 	{
-		for (auto& t : info.textures)
+		for (auto& [name, t] : info.textures)
 		{
-			auto& tex = textures[t.name];
+			auto& tex = textures[name];
 			reusedHeapDescriptors.push_back(tex.textures.front().textureView.srvHeapIndex);
 		}
 		textures.clear();
 	}
 
-	for (int i = 0; auto& t : info.textures)
+	for (int i = 0; auto& [name,t] : info.textures)
 	{
 		UINT w = t.width;
 		UINT h = t.height;
@@ -113,9 +119,19 @@ void FrameCompositor::reloadTextures()
 			h = provider.renderSystem->getWindow()->getHeight() * t.height;
 		}
 
-		auto lastState = getInitialTextureState(t.name);
+		auto lastState = lastTextureStates[t.name];
 
 		RenderTargetTexture& tex = textures[t.name];
+		if (t.uav)
+			tex.flags = RenderTargetTexture::AllowUAV;
+		tex.arraySize = t.arraySize;
+		if (t.arraySize > 1)
+		{
+			auto sqr = sqrt(tex.arraySize);
+			w /= sqr;
+			h /= sqr;
+		}
+
 		tex.Init(provider.renderSystem->device, w, h, provider.renderSystem->FrameCount, rtvHeap, t.formats, lastState, t.depthBuffer);
 		tex.SetName(std::wstring(t.name.begin(), t.name.end()).c_str());
 
@@ -127,7 +143,7 @@ void FrameCompositor::reloadTextures()
 
 	for (auto& p : passes)
 	{
-		for (UINT i = 0; auto& [name, idx] : p.info.inputs)
+		for (UINT i = 0; auto& [name, idx, type] : p.info.inputs)
 		{
 			p.inputs[i].view = &textures[name].textures[idx].textureView;
 			p.inputs[i++].texture = &textures[name];

@@ -31,6 +31,12 @@ material BlurY : PostProcess
 	pixel_shader psBlurY
 }
 
+material Darken : PostProcess
+{
+	pixel_shader psDarken
+}
+
+
 material FXAA : PostProcess
 {
 	pixel_shader psFXAA

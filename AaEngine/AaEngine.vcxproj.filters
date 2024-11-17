@@ -223,6 +223,18 @@
     <ClCompile Include="source\GrassInitComputeShader.cpp">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClCompile>
+    <ClCompile Include="source\SsaoComputeTask.cpp">
+      <Filter>Source Files\FrameCompositor\Tasks</Filter>
+    </ClCompile>
+    <ClCompile Include="source\AoPrepareDepthBuffersCS.cpp">
+      <Filter>Source Files\Resources\Compute</Filter>
+    </ClCompile>
+    <ClCompile Include="source\AoRenderCS.cpp">
+      <Filter>Source Files\Resources\Compute</Filter>
+    </ClCompile>
+    <ClCompile Include="source\AoBlurAndUpsampleCS.cpp">
+      <Filter>Source Files\Resources\Compute</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\AaApplication.h">
@@ -409,6 +421,18 @@
       <Filter>Source Files\Render</Filter>
     </ClInclude>
     <ClInclude Include="source\GrassInitComputeShader.h">
+      <Filter>Source Files\Resources\Compute</Filter>
+    </ClInclude>
+    <ClInclude Include="source\SsaoComputeTask.h">
+      <Filter>Source Files\FrameCompositor\Tasks</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AoPrepareDepthBuffersCS.h">
+      <Filter>Source Files\Resources\Compute</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AoRenderCS.h">
+      <Filter>Source Files\Resources\Compute</Filter>
+    </ClInclude>
+    <ClInclude Include="source\AoBlurAndUpsampleCS.h">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClInclude>
   </ItemGroup>

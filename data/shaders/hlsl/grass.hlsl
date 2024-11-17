@@ -18,9 +18,10 @@ StructuredBuffer<GrassVertex> GeometryBuffer : register(t0);
 struct PSInput
 {
     float4 position : SV_POSITION;
-	float2 uv : TEXCOORD1;
-	float3 color : TEXCOORD2;
-	float4 worldPosition : TEXCOORD3;
+	float2 uv : TEXCOORD0;
+	float3 color : TEXCOORD1;
+	float4 worldPosition : TEXCOORD2;
+	float3 normal : TEXCOORD3;
 };
 
 static const float2 coords[4] = {
@@ -53,13 +54,20 @@ PSInput VSMain(uint vertexIdx : SV_VertexId)
 	float3 windDirection = float3(1,0,1);
 	float frequency = 1;
 	float scale = 1;
-	pos.xyz += top * windDirection * sin(Time * frequency + (pos.x + pos.z + pos.y) / scale);
+	float3 windEffect = top * windDirection * sin(Time * frequency + (pos.x + pos.z + pos.y) * scale);
+	pos.xyz += windEffect;
 
     // Output position and UV
 	output.worldPosition = float4(pos,1);
     output.position = mul(output.worldPosition, ViewProjectionMatrix);
     output.uv = uv;
 	output.color = v.color;
+
+    // Calculate the normal
+    float3 up = float3(0, grassHeight, 0) + windEffect;
+	float3 right = GeometryBuffer[quadID * 2].pos - GeometryBuffer[quadID * 2 + 1].pos;
+    float3 normal = normalize(cross(up, right));
+    output.normal = normal;
 
     return output;
 }
@@ -135,6 +143,7 @@ struct PSOutput
 {
     float4 target0 : SV_Target0;
     float4 target1 : SV_Target1;
+    float4 target2 : SV_Target2;
 };
 
 
@@ -156,7 +165,8 @@ PSOutput PSMain(PSInput input)
 	
 	PSOutput output;
     output.target0 = albedo * distanceFade * shading;
-	output.target1 = albedo * albedo;
+	output.target1 = albedo;
+	output.target2 = float4(input.normal, 1);
 
 	return output;
 }

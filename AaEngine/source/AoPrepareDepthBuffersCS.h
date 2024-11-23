@@ -19,7 +19,7 @@ public:
 	}
 	data;
 
-	void dispatch(UINT width, UINT height, const ShaderTextureView& input, ID3D12GraphicsCommandList* commandList, UINT frameIndex);
+	void dispatch(UINT width, UINT height, const ShaderTextureView& input, ID3D12GraphicsCommandList* commandList);
 };
 
 class AoPrepareDepthBuffers2CS : public ComputeShader
@@ -35,5 +35,5 @@ public:
 	}
 	data;
 
-	void dispatch(UINT width, UINT height, const ShaderTextureView& input, ID3D12GraphicsCommandList* commandList, UINT frameIndex);
+	void dispatch(UINT width, UINT height, const ShaderTextureView& input, ID3D12GraphicsCommandList* commandList);
 };

@@ -38,7 +38,7 @@ public:
 
 	void Load();
 
-	void BindSignature(ID3D12GraphicsCommandList* commandList, int frameIndex) const;
+	void BindSignature(ID3D12GraphicsCommandList* commandList) const;
 
 	AaMaterial* GetAssignedMaterial(MaterialInstance* instance, const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target);
 	void ReloadPipeline();
@@ -105,8 +105,8 @@ public:
 	void UpdatePerFrame(MaterialDataStorage& data, const ShaderConstantsProvider& info);
 	void UpdatePerObject(MaterialDataStorage& buffers, const ShaderConstantsProvider& info);
 
-	void BindTextures(ID3D12GraphicsCommandList* commandList, int frameIndex);
-	void BindConstants(ID3D12GraphicsCommandList* commandList, int frameIndex, const MaterialDataStorage& data, const ShaderConstantsProvider& buffers);
+	void BindTextures(ID3D12GraphicsCommandList* commandList);
+	void BindConstants(ID3D12GraphicsCommandList* commandList, const MaterialDataStorage& data, const ShaderConstantsProvider& buffers);
 
 	AaMaterial* Assign(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target);
 

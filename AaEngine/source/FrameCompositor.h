@@ -54,7 +54,7 @@ protected:
 
 	void executeCommands();
 
-	void renderQuad(PassData& pass, RenderContext& ctx, ID3D12GraphicsCommandList* commandList, UINT frameIndex);
+	void renderQuad(PassData& pass, RenderContext& ctx, ID3D12GraphicsCommandList* commandList);
 
 	RenderProvider provider;
 	SceneManager& sceneMgr;

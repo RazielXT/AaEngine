@@ -17,9 +17,9 @@ public:
 	ShaderTextureView() = default;
 	ShaderTextureView(D3D12_GPU_DESCRIPTOR_HANDLE*);
 
-	D3D12_GPU_DESCRIPTOR_HANDLE srvHandles[2]{};
+	D3D12_GPU_DESCRIPTOR_HANDLE srvHandles{};
 	UINT srvHeapIndex{};
-	D3D12_GPU_DESCRIPTOR_HANDLE uavHandles[2]{};
+	D3D12_GPU_DESCRIPTOR_HANDLE uavHandles{};
 	UINT uavHeapIndex{};
 };
 
@@ -30,8 +30,8 @@ public:
 	ShaderUAV() = default;
 	ShaderUAV(D3D12_GPU_DESCRIPTOR_HANDLE*);
 
-	D3D12_GPU_DESCRIPTOR_HANDLE uavHandles[2]{};
-	D3D12_CPU_DESCRIPTOR_HANDLE uavCpuHandles[2]{};
+	D3D12_GPU_DESCRIPTOR_HANDLE uavHandles{};
+	D3D12_CPU_DESCRIPTOR_HANDLE uavCpuHandles{};
 	UINT mipLevel{};
 };
 

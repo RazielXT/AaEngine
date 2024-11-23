@@ -96,10 +96,10 @@ void SceneRenderTask::renderScene(CompositorPass& pass)
 
 	provider.renderSystem->StartCommandList(scene.commands);
 
-	pass.target.texture->PrepareAsTarget(scene.commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true, true, !earlyZ.eventBegin);
+	pass.target.texture->PrepareAsTarget(scene.commands.commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true, true, !earlyZ.eventBegin);
 
 	ShaderConstantsProvider constants(provider.params, sceneInfo, *ctx.camera, *pass.target.texture);
-	sceneQueue->renderObjects(constants, scene.commands.commandList, provider.renderSystem->frameIndex);
+	sceneQueue->renderObjects(constants, scene.commands.commandList);
 
 	//ctx.target->PrepareAsView(scene.commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_RENDER_TARGET);
 }
@@ -108,10 +108,10 @@ void SceneRenderTask::renderEarlyZ(CompositorPass& pass)
 {
 	provider.renderSystem->StartCommandList(earlyZ.commands);
 
-	pass.target.texture->PrepareAsDepthTarget(earlyZ.commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+	pass.target.texture->PrepareAsDepthTarget(earlyZ.commands.commandList, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
 	ShaderConstantsProvider constants(provider.params, sceneInfo, *ctx.camera, *pass.target.texture);
-	depthQueue->renderObjects(constants, earlyZ.commands.commandList, provider.renderSystem->frameIndex);
+	depthQueue->renderObjects(constants, earlyZ.commands.commandList);
 }
 
 SceneRenderTransparentTask::SceneRenderTransparentTask(RenderProvider p, SceneManager& s) : CompositorTask(p, s)
@@ -166,10 +166,8 @@ void SceneRenderTransparentTask::renderTransparentScene(CompositorPass& pass)
 
 	provider.renderSystem->StartCommandList(transparent.commands);
 
-	pass.target.texture->PrepareAsSingleTarget(transparent.commands.commandList, provider.renderSystem->frameIndex, 0, D3D12_RESOURCE_STATE_RENDER_TARGET, false, true, false);
+	pass.target.texture->PrepareAsSingleTarget(transparent.commands.commandList, pass.target.idx, D3D12_RESOURCE_STATE_RENDER_TARGET, false, true, false);
 
 	ShaderConstantsProvider constants(provider.params, sceneInfo, *ctx.camera, *pass.target.texture);
-	transparentQueue->renderObjects(constants, transparent.commands.commandList, provider.renderSystem->frameIndex);
-
-	//ctx.target->PrepareAsSingleView(transparent.commands.commandList, provider.renderSystem->frameIndex, 0, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	transparentQueue->renderObjects(constants, transparent.commands.commandList);
 }

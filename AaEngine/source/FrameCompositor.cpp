@@ -78,7 +78,7 @@ void FrameCompositor::load(CompositorInfo i)
 	for (auto& [name, t] : info.textures)
 		textureCount += t.formats.size();
 
-	rtvHeap.Init(provider.renderSystem->device, textureCount, provider.renderSystem->FrameCount, L"CompositorRTV");
+	rtvHeap.Init(provider.renderSystem->device, textureCount, L"CompositorRTV");
 	reloadTextures();
 
 	for (size_t i = 0; i < passes.size(); i++)
@@ -132,7 +132,7 @@ void FrameCompositor::reloadTextures()
 			h /= sqr;
 		}
 
-		tex.Init(provider.renderSystem->device, w, h, provider.renderSystem->FrameCount, rtvHeap, t.formats, lastState, t.depthBuffer);
+		tex.Init(provider.renderSystem->device, w, h, rtvHeap, t.formats, lastState, t.depthBuffer);
 		tex.SetName(std::wstring(t.name.begin(), t.name.end()).c_str());
 
 		if (reusedHeapDescriptors.empty())
@@ -151,8 +151,13 @@ void FrameCompositor::reloadTextures()
 
 		if (!p.info.target.empty())
 		{
+			p.target.idx = p.info.targetIndex;
+
 			if (p.info.target == "Backbuffer")
-				p.target.texture = &provider.renderSystem->backbuffer;
+			{
+				p.target.texture = &provider.renderSystem->backbuffer[0];
+				p.target.backbuffer = true;
+			}
 			else
 				p.target.texture = &textures[p.info.target];
 		}
@@ -164,13 +169,13 @@ void FrameCompositor::reloadTextures()
 	}
 }
 
-void FrameCompositor::renderQuad(PassData& pass, RenderContext& ctx, ID3D12GraphicsCommandList* commandList, UINT frameIndex)
+void FrameCompositor::renderQuad(PassData& pass, RenderContext& ctx, ID3D12GraphicsCommandList* commandList)
 {
-	pass.target.texture->PrepareAsTarget(commandList, provider.renderSystem->frameIndex, pass.target.previousState, false, false);
+	pass.target.texture->PrepareAsTarget(commandList, pass.target.previousState, false, false);
 
 	for (UINT i = 0; auto & input : pass.inputs)
 	{
-		input.texture->PrepareAsView(commandList, provider.renderSystem->frameIndex, input.previousState);
+		input.texture->PrepareAsView(commandList, input.previousState);
 		pass.material->SetTexture(input.texture->textureView(input.idx), i++);
 	}
 
@@ -178,13 +183,13 @@ void FrameCompositor::renderQuad(PassData& pass, RenderContext& ctx, ID3D12Graph
 	MaterialDataStorage storage;
 
 	auto material = pass.material;
-	material->GetBase()->BindSignature(commandList, frameIndex);
+	material->GetBase()->BindSignature(commandList);
 
 	material->LoadMaterialConstants(storage);
 	material->UpdatePerFrame(storage, constants);
 	material->BindPipeline(commandList);
-	material->BindTextures(commandList, frameIndex);
-	material->BindConstants(commandList, frameIndex, storage, constants);
+	material->BindTextures(commandList);
+	material->BindConstants(commandList, storage, constants);
 
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	commandList->DrawInstanced(3, 1, 0, 0);
@@ -197,10 +202,12 @@ void FrameCompositor::render(RenderContext& ctx)
 		auto& syncCommands = pass.generalCommands;
 		if (pass.startCommands)
 			provider.renderSystem->StartCommandList(syncCommands);
+		if (pass.target.backbuffer)
+			pass.target.texture = &provider.renderSystem->backbuffer[provider.renderSystem->frameIndex];
 
 		if (pass.material)
 		{
- 			renderQuad(pass, ctx, syncCommands.commandList, provider.renderSystem->frameIndex);
+ 			renderQuad(pass, ctx, syncCommands.commandList);
 		}
 		else if (pass.task)
 		{
@@ -208,7 +215,7 @@ void FrameCompositor::render(RenderContext& ctx)
 		}
 
 		if (pass.target.present)
-			pass.target.texture->PrepareToPresent(syncCommands.commandList, provider.renderSystem->frameIndex, pass.target.previousState);
+			pass.target.texture->PrepareToPresent(syncCommands.commandList, pass.target.previousState);
 	}
 	executeCommands();
 

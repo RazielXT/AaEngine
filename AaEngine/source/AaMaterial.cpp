@@ -47,7 +47,7 @@ void MaterialBase::Load()
 	rootSignature = info.createRootSignature(renderSystem->device, std::wstring(ref.name.begin(), ref.name.end()).data(), ref.resources.samplers);
 }
 
-void MaterialBase::BindSignature(ID3D12GraphicsCommandList* commandList, int frameIndex) const
+void MaterialBase::BindSignature(ID3D12GraphicsCommandList* commandList) const
 {
 	commandList->SetGraphicsRootSignature(rootSignature);
 }
@@ -430,17 +430,17 @@ void MaterialInstance::UpdateBindlessTexture(const ShaderTextureView& texture, U
 	}
 }
 
-void MaterialInstance::BindTextures(ID3D12GraphicsCommandList* commandList, int frameIndex)
+void MaterialInstance::BindTextures(ID3D12GraphicsCommandList* commandList)
 {
 	for (auto& t : resources->textures)
 		if (t.texture && t.rootIndex != BindlessTextureIndex)
-			commandList->SetGraphicsRootDescriptorTable(t.rootIndex, t.texture->srvHandles[frameIndex]);
+			commandList->SetGraphicsRootDescriptorTable(t.rootIndex, t.texture->srvHandles);
 
 	for (auto& uav : resources->uavs)
-		commandList->SetGraphicsRootDescriptorTable(uav.rootIndex, uav.uav->uavHandles[frameIndex]);
+		commandList->SetGraphicsRootDescriptorTable(uav.rootIndex, uav.uav->uavHandles);
 }
 
-void MaterialInstance::BindConstants(ID3D12GraphicsCommandList* commandList, int frameIndex, const MaterialDataStorage& data, const ShaderConstantsProvider& constants)
+void MaterialInstance::BindConstants(ID3D12GraphicsCommandList* commandList, const MaterialDataStorage& data, const ShaderConstantsProvider& constants)
 {
 	if (data.rootParams.size())
 		commandList->SetGraphicsRoot32BitConstants(resources->rootBuffer.rootIndex, data.rootParams.size(), data.rootParams.data(), 0);
@@ -450,7 +450,7 @@ void MaterialInstance::BindConstants(ID3D12GraphicsCommandList* commandList, int
 		if (b.type == GpuBufferType::Instancing || b.type == GpuBufferType::Geometry)
 			commandList->SetGraphicsRootShaderResourceView(b.rootIndex, constants.getGeometryBuffer());
 		else if (b.type == GpuBufferType::Global)
- 			commandList->SetGraphicsRootConstantBufferView(b.rootIndex, b.globalCBuffer.data[frameIndex]->GpuAddress());
+ 			commandList->SetGraphicsRootConstantBufferView(b.rootIndex, b.globalCBuffer.data[constants.params.frameIndex]->GpuAddress());
 	}
 }
 

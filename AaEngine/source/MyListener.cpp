@@ -77,6 +77,7 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 {
 	params.time += timeSinceLastFrame;
 	params.timeDelta = timeSinceLastFrame;
+	params.frameIndex = renderSystem->frameIndex;
 
 	InputHandler::consumeInput(*this);
 
@@ -107,7 +108,7 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 		ent->yaw(timeSinceLastFrame);
 		ent->setPosition({ cos(params.time / 2.f) * 5, ent->getPosition().y, ent->getPosition().z });
 	}
-	//Vector3(cos(elapsedTime), -1, sin(elapsedTime)).Normalize(sceneMgr->lights.directionalLight.direction);
+	//Vector3(cos(params.time), -1, sin(params.time)).Normalize(lights.directionalLight.direction);
 
 	sceneMgr->update();
 	cameraMan->camera.updateMatrix();
@@ -174,7 +175,7 @@ void MyListener::loadScene(const char* scene)
 
 	//initialize gpu resources
 	{
-		shadowMap->clear(commands.commandList, renderSystem->frameIndex);
+		shadowMap->clear(commands.commandList);
 	}
 
 	for (const auto& i : result.instanceDescriptions)

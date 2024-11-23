@@ -10,7 +10,7 @@ void AaShadowMap::init(AaRenderSystem* renderSystem)
 {
 	for (UINT i = 0; i < 2; i++)
 	{
-		texture[i].Init(renderSystem->device, 512, 512, renderSystem->FrameCount, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+		texture[i].Init(renderSystem->device, 512, 512, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 		texture[i].SetName(L"ShadowMap");
 
 		DescriptorManager::get().createDepthView(texture[i]);
@@ -45,20 +45,20 @@ void AaShadowMap::update(UINT frameIndex)
 	memcpy(cbufferResource.Memory(), &data, sizeof(data));
 }
 
-void AaShadowMap::clear(ID3D12GraphicsCommandList* commandList, UINT frameIndex)
+void AaShadowMap::clear(ID3D12GraphicsCommandList* commandList)
 {
 	for (auto& t : texture)
 	{
 		auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-			t.depthStencilTexture[frameIndex].Get(),
+			t.depthStencilTexture.Get(),
 			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
 			D3D12_RESOURCE_STATE_DEPTH_WRITE);
 		commandList->ResourceBarrier(1, &barrier);
 
-		t.ClearDepth(commandList, frameIndex);
+		t.ClearDepth(commandList);
 
 		barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-			t.depthStencilTexture[frameIndex].Get(),
+			t.depthStencilTexture.Get(),
 			D3D12_RESOURCE_STATE_DEPTH_WRITE,
 			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 		commandList->ResourceBarrier(1, &barrier);

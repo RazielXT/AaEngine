@@ -36,7 +36,7 @@ compositor SceneCompositor
 	task SceneTransparent
 	{
 		//input sceneTexture depth_buffer
-		target sceneTexture
+		target sceneTexture 0
 	}
 
 	pass BloomDownscale

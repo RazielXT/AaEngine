@@ -115,4 +115,5 @@ struct FrameParameters
 
 	float time{};
 	float timeDelta{};
+	UINT frameIndex{};
 };

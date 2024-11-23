@@ -18,7 +18,7 @@ public:
 
 	struct Texture
 	{
-		ComPtr<ID3D12Resource> texture[2];
+		ComPtr<ID3D12Resource> texture;
 		ShaderTextureView textureView;
 	};
 	std::vector<Texture> textures;
@@ -38,22 +38,22 @@ class RenderDepthTargetTexture : public RenderTargetInfo
 {
 public:
 
-	void Init(ID3D12Device* device, UINT width, UINT height, UINT frameCount, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_DEPTH_WRITE, UINT arraySize = 1);
-	void ClearDepth(ID3D12GraphicsCommandList* commandList, UINT frameIndex);
+	void Init(ID3D12Device* device, UINT width, UINT height, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_DEPTH_WRITE, UINT arraySize = 1);
+	void ClearDepth(ID3D12GraphicsCommandList* commandList);
 
-	void PrepareAsDepthTarget(ID3D12GraphicsCommandList* commandList, UINT frameIndex, D3D12_RESOURCE_STATES from);
-	void PrepareAsDepthView(ID3D12GraphicsCommandList* commandList, UINT frameIndex, D3D12_RESOURCE_STATES from);
-	void TransitionDepth(ID3D12GraphicsCommandList* commandList, UINT frameIndex, D3D12_RESOURCE_STATES to, D3D12_RESOURCE_STATES from);
+	void PrepareAsDepthTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from);
+	void PrepareAsDepthView(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from);
+	void TransitionDepth(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES to, D3D12_RESOURCE_STATES from);
 
 	void SetName(const wchar_t* name);
 
-	ComPtr<ID3D12Resource> depthStencilTexture[2];
-	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandles[2]{};
+	ComPtr<ID3D12Resource> depthStencilTexture;
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandles{};
 	ShaderTextureView depthView;
 
 protected:
 
-	void CreateDepthBuffer(ID3D12Device* device, UINT frameCount, D3D12_RESOURCE_STATES initialState, UINT arraySize);
+	void CreateDepthBuffer(ID3D12Device* device, D3D12_RESOURCE_STATES initialState, UINT arraySize);
 
 	ComPtr<ID3D12DescriptorHeap> dsvHeap;
 	float depthClearValue = 0.f;
@@ -63,7 +63,7 @@ class RenderTargetHeap
 {
 public:
 
-	void Init(ID3D12Device* device, UINT count, UINT frameCount, const wchar_t* name = nullptr);
+	void Init(ID3D12Device* device, UINT count, const wchar_t* name = nullptr);
 	void Reset();
 
 	void CreateRenderTargetHandle(ID3D12Device* device, ComPtr<ID3D12Resource>& texture, D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle);
@@ -80,16 +80,16 @@ public:
 
 	enum { AllowRenderTarget = 1, AllowUAV = 2 } flags = AllowRenderTarget;
 
-	void Init(ID3D12Device* device, UINT width, UINT height, UINT frameCount, RenderTargetHeap& heap, const std::vector<DXGI_FORMAT>& formats, D3D12_RESOURCE_STATES state, bool depthBuffer = true, D3D12_RESOURCE_STATES initialDepthState = D3D12_RESOURCE_STATE_DEPTH_WRITE);
-	void InitExisting(ID3D12Resource**, ID3D12Device* device, UINT width, UINT height, UINT frameCount, RenderTargetHeap& heap, DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM);
+	void Init(ID3D12Device* device, UINT width, UINT height, RenderTargetHeap& heap, const std::vector<DXGI_FORMAT>& formats, D3D12_RESOURCE_STATES state, bool depthBuffer = true, D3D12_RESOURCE_STATES initialDepthState = D3D12_RESOURCE_STATE_DEPTH_WRITE);
+	void InitExisting(ID3D12Resource*, ID3D12Device* device, UINT width, UINT height, RenderTargetHeap& heap, DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM);
 
-	void PrepareAsSingleTarget(ID3D12GraphicsCommandList* commandList, UINT frameIndex, UINT textureIndex, D3D12_RESOURCE_STATES from, bool clear = true, bool depth = true, bool clearDepth = true);
-	void PrepareAsSingleView(ID3D12GraphicsCommandList* commandList, UINT frameIndex, UINT textureIndex, D3D12_RESOURCE_STATES from);
+	void PrepareAsSingleTarget(ID3D12GraphicsCommandList* commandList, UINT textureIndex, D3D12_RESOURCE_STATES from, bool clear = true, bool depth = true, bool clearDepth = true);
+	void PrepareAsSingleView(ID3D12GraphicsCommandList* commandList, UINT textureIndex, D3D12_RESOURCE_STATES from);
 
-	void PrepareAsTarget(ID3D12GraphicsCommandList* commandList, UINT frameIndex, D3D12_RESOURCE_STATES from, bool clear = true, bool depth = true, bool clearDepth = true);
-	void PrepareAsView(ID3D12GraphicsCommandList* commandList, UINT frameIndex, D3D12_RESOURCE_STATES from);
-	void PrepareToPresent(ID3D12GraphicsCommandList* commandList, UINT frameIndex, D3D12_RESOURCE_STATES from);
-	void TransitionTarget(ID3D12GraphicsCommandList* commandList, UINT frameIndex, D3D12_RESOURCE_STATES to, D3D12_RESOURCE_STATES from);
+	void PrepareAsTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from, bool clear = true, bool depth = true, bool clearDepth = true);
+	void PrepareAsView(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from);
+	void PrepareToPresent(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from);
+	void TransitionTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES to, D3D12_RESOURCE_STATES from);
 
 	void SetName(const wchar_t* name);
 
@@ -97,9 +97,9 @@ public:
 
 private:
 
-	void CreateTextureBuffer(ID3D12Device* device, UINT width, UINT height, UINT frameCount, Texture& t, DXGI_FORMAT, D3D12_RESOURCE_STATES);
+	void CreateTextureBuffer(ID3D12Device* device, UINT width, UINT height, Texture& t, DXGI_FORMAT, D3D12_RESOURCE_STATES);
 
-	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtvHandles[2]{};
+	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtvHandles;
 };
 
 struct RenderTargetTextureState
@@ -112,14 +112,13 @@ struct RenderTargetTextureState
 template<UINT MAX>
 struct RenderTargetTransitions
 {
-	UINT frameIndex{};
 	UINT c = 0;
 	CD3DX12_RESOURCE_BARRIER barriers[MAX];
 
 	void add(RenderTargetTextureState& state, D3D12_RESOURCE_STATES to)
 	{
 		barriers[c] = CD3DX12_RESOURCE_BARRIER::Transition(
-			state.texture->textures[0].texture[frameIndex].Get(),
+			state.texture->textures[0].texture.Get(),
 			state.previousState,
 			to);
 
@@ -136,7 +135,7 @@ struct RenderTargetTransitions
 	void addDepth(RenderTargetTextureState& state, D3D12_RESOURCE_STATES to)
 	{
 		barriers[c] = CD3DX12_RESOURCE_BARRIER::Transition(
-			state.texture->depthStencilTexture[frameIndex].Get(),
+			state.texture->depthStencilTexture.Get(),
 			state.previousState,
 			to);
 

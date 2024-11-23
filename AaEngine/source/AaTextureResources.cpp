@@ -102,16 +102,10 @@ ShaderUAV* AaTextureResources::getNamedUAV(std::string name)
 
 ShaderTextureView::ShaderTextureView(D3D12_GPU_DESCRIPTOR_HANDLE* handles)
 {
-	for (int i = 0; i < _countof(srvHandles); i++)
-	{
-		srvHandles[i] = handles[i];
-	}
+	srvHandles = *handles;
 }
 
 ShaderUAV::ShaderUAV(D3D12_GPU_DESCRIPTOR_HANDLE* handles)
 {
-	for (int i = 0; i < _countof(uavHandles); i++)
-	{
-		uavHandles[i] = handles[i];
-	}
+	uavHandles = *handles;
 }

@@ -52,12 +52,12 @@ AsyncTasksInfo ShadowsRenderTask::initialize(CompositorPass&)
 
 					shadow.renderables->updateVisibility(shadowMaps.camera[idx], sceneInfo);
 
-					shadowMaps.texture[idx].PrepareAsDepthTarget(shadow.commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+					shadowMaps.texture[idx].PrepareAsDepthTarget(shadow.commands.commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 					ShaderConstantsProvider constants(provider.params, sceneInfo, shadowMaps.camera[idx], shadowMaps.texture[idx]);
-					depthQueue->renderObjects(constants, shadow.commands.commandList, provider.renderSystem->frameIndex);
+					depthQueue->renderObjects(constants, shadow.commands.commandList);
 
-					shadowMaps.texture[idx].PrepareAsDepthView(shadow.commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+					shadowMaps.texture[idx].PrepareAsDepthView(shadow.commands.commandList, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
 					SetEvent(shadow.eventFinish);
 				}

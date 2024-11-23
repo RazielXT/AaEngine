@@ -25,7 +25,7 @@ void DebugOverlayTask::resize(CompositorPass& pass)
 
 void DebugOverlayTask::run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass)
 {
-	pass.target.texture->PrepareAsTarget(syncCommands.commandList, provider.renderSystem->frameIndex, pass.target.previousState, false, false);
+	pass.target.texture->PrepareAsTarget(syncCommands.commandList, pass.target.previousState, false, false);
 
 	auto idx = imgui::DebugWindow::Get().state.TexturePreviewIndex;
 

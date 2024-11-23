@@ -79,7 +79,7 @@ static void RenderObject(ID3D12GraphicsCommandList* commandList, AaEntity* e)
 		commandList->DrawInstanced(e->geometry.vertexCount, e->geometry.instanceCount, 0, 0);
 }
 
-void RenderQueue::renderObjects(ShaderConstantsProvider& constants, ID3D12GraphicsCommandList* commandList, UINT frameIndex)
+void RenderQueue::renderObjects(ShaderConstantsProvider& constants, ID3D12GraphicsCommandList* commandList)
 {
 	EntityEntry lastEntry{};
 	MaterialDataStorage storage;
@@ -92,14 +92,14 @@ void RenderQueue::renderObjects(ShaderConstantsProvider& constants, ID3D12Graphi
 		constants.entity = entry.entity;
 
 		if (entry.base != lastEntry.base)
-			entry.base->BindSignature(commandList, frameIndex);
+			entry.base->BindSignature(commandList);
 
 		if (entry.material != lastEntry.material)
 		{
 			entry.material->LoadMaterialConstants(storage);
 			entry.material->UpdatePerFrame(storage, constants);
 			entry.material->BindPipeline(commandList);
-			entry.material->BindTextures(commandList, frameIndex);
+			entry.material->BindTextures(commandList);
 		}
 
 		if (technique == MaterialTechnique::Voxelize)
@@ -110,7 +110,7 @@ void RenderQueue::renderObjects(ShaderConstantsProvider& constants, ID3D12Graphi
 		}
 
 		entry.material->UpdatePerObject(storage, constants);
-		entry.material->BindConstants(commandList, frameIndex, storage, constants);
+		entry.material->BindConstants(commandList, storage, constants);
 
 		RenderObject(commandList, entry.entity);
 

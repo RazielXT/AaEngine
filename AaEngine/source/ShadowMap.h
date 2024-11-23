@@ -19,7 +19,7 @@ public:
 
 	aa::SceneLights::Light& sun;
 	void update(UINT frameIndex);
-	void clear(ID3D12GraphicsCommandList* commandList, UINT frameIndex);
+	void clear(ID3D12GraphicsCommandList* commandList);
 
 private:
 

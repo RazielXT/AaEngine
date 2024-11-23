@@ -54,14 +54,18 @@ AaRenderSystem::AaRenderSystem(AaWindow* mWindow)
 
 	frameIndex = swapChain->GetCurrentBackBufferIndex();
 
-	ID3D12Resource* swapChainTextures[2];
+	ID3D12Resource* swapChainTextures[FrameCount];
 	for (UINT n = 0; n < FrameCount; n++)
 	{
 		swapChain->GetBuffer(n, IID_PPV_ARGS(&swapChainTextures[n]));
 	}
-	backbufferHeap.Init(device, 1, FrameCount, L"BackbufferRTV");
-	backbuffer.InitExisting(swapChainTextures, device, width, height, FrameCount, backbufferHeap);
-	backbuffer.SetName(L"Backbuffer");
+	backbufferHeap.Init(device, FrameCount, L"BackbufferRTV");
+
+	for (int i = 0; auto& b : backbuffer)
+	{
+		b.InitExisting(swapChainTextures[i++], device, width, height, backbufferHeap);
+		b.SetName(L"Backbuffer");
+	}
 
 	device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
 	fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
@@ -82,7 +86,10 @@ void AaRenderSystem::onScreenResize()
 {
 	WaitForAllFrames();
 
-	backbuffer = {};
+	for (auto& b : backbuffer)
+	{
+		b = {};
+	}
 
 	auto width = mWindow->getWidth();
 	auto height = mWindow->getHeight();
@@ -92,14 +99,18 @@ void AaRenderSystem::onScreenResize()
 	swapChain->GetDesc(&swapChainDesc);
 	swapChain->ResizeBuffers(FrameCount, width, height, swapChainDesc.BufferDesc.Format, swapChainDesc.Flags);
 
-	ID3D12Resource* swapChainTextures[2];
+	ID3D12Resource* swapChainTextures[FrameCount];
 	for (UINT n = 0; n < FrameCount; n++)
 	{
 		swapChain->GetBuffer(n, IID_PPV_ARGS(&swapChainTextures[n]));
 	}
 	backbufferHeap.Reset();
-	backbuffer.InitExisting(swapChainTextures, device, width, height, FrameCount, backbufferHeap);
-	backbuffer.SetName(L"Backbuffer");
+
+	for (int i = 0; auto& b : backbuffer)
+	{
+		b.InitExisting(swapChainTextures[i++], device, width, height, backbufferHeap);
+		b.SetName(L"Backbuffer");
+	}
 
 	MoveToNextFrame();
 }
@@ -142,7 +153,7 @@ void AaRenderSystem::StartCommandList(CommandsData commands)
 	commands.commandAllocators[frameIndex]->Reset();
 	commands.commandList->Reset(commands.commandAllocators[frameIndex], nullptr);
 
-	ID3D12DescriptorHeap* descriptorHeaps[] = { DescriptorManager::get().mainDescriptorHeap[frameIndex]};
+	ID3D12DescriptorHeap* descriptorHeaps[] = { DescriptorManager::get().mainDescriptorHeap };
 	commands.commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 }
 

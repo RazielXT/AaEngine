@@ -6,12 +6,12 @@
 
 struct TextureResource
 {
-	void create3D(ID3D12Device* device, UINT width, UINT height, UINT depth, DXGI_FORMAT format, int frameCount);
+	void create3D(ID3D12Device* device, UINT width, UINT height, UINT depth, DXGI_FORMAT format);
 	void setName(const wchar_t* name);
 
-	static void TransitionState(ID3D12GraphicsCommandList* commandList, int frameIndex, TextureResource&, D3D12_RESOURCE_STATES);
+	static void TransitionState(ID3D12GraphicsCommandList* commandList, TextureResource&, D3D12_RESOURCE_STATES);
 
-	ComPtr<ID3D12Resource> textures[2];
+	ComPtr<ID3D12Resource> texture;
 	std::vector<ShaderUAV> uav;
 	ShaderTextureView textureView;
 

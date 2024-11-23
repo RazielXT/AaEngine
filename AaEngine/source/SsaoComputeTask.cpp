@@ -41,7 +41,7 @@ AsyncTasksInfo SsaoComputeTask::initialize(CompositorPass& pass)
 			{
 				provider.renderSystem->StartCommandList(commands);
 
-				RenderTargetTransitions<11> tr{ provider.renderSystem->frameIndex };
+				RenderTargetTransitions<11> tr;
 
 				auto textures = this->textures;
 
@@ -50,7 +50,7 @@ AsyncTasksInfo SsaoComputeTask::initialize(CompositorPass& pass)
 					auto& input = textures.sceneDepth;
 					tr.addDepthAndPush(input, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, commands.commandList);
 
-					prepareDepthBuffersCS.dispatch(input.texture->width, input.texture->height, input.texture->depthView, commands.commandList, provider.renderSystem->frameIndex);
+					prepareDepthBuffersCS.dispatch(input.texture->width, input.texture->height, input.texture->depthView, commands.commandList);
 
 					tr.addDepthAndPush(input, D3D12_RESOURCE_STATE_DEPTH_WRITE, commands.commandList);
 				}
@@ -58,7 +58,7 @@ AsyncTasksInfo SsaoComputeTask::initialize(CompositorPass& pass)
 					auto& input = textures.linearDepthDownsample4;
 					tr.addAndPush(input, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, commands.commandList);
 
-					prepareDepthBuffers2CS.dispatch(input.texture->width, input.texture->height, input.texture->textureView(), commands.commandList, provider.renderSystem->frameIndex);
+					prepareDepthBuffers2CS.dispatch(input.texture->width, input.texture->height, input.texture->textureView(), commands.commandList);
 
 					tr.addAndPush(input, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, commands.commandList);	
 				}
@@ -68,7 +68,7 @@ AsyncTasksInfo SsaoComputeTask::initialize(CompositorPass& pass)
 					{
 						tr.addAndPush(input, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, commands.commandList);
 
-						aoRenderCS.dispatch(input.texture->width, input.texture->height, input.texture->arraySize, TanHalfFovH, input.texture->textureView(), output.texture->textureView(), commands.commandList, provider.renderSystem->frameIndex);
+						aoRenderCS.dispatch(input.texture->width, input.texture->height, input.texture->arraySize, TanHalfFovH, input.texture->textureView(), output.texture->textureView(), commands.commandList);
 
 						tr.addAndPush(input, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, commands.commandList);
 					};
@@ -97,7 +97,7 @@ AsyncTasksInfo SsaoComputeTask::initialize(CompositorPass& pass)
 					aoBlurAndUpsampleCS.data.ResIdAoResult = textures.aoSmooth4.texture->uavHeapIndex();
 
 					aoBlurAndUpsampleCS.dispatch(textures.aoSmooth.texture->width, textures.aoSmooth4.texture->height, textures.aoSmooth4.texture->width, textures.occlusion8.texture->height, textures.occlusion8.texture->width,
-						commands.commandList, provider.renderSystem->frameIndex);
+						commands.commandList);
 				}
 				tr.addAndPush(textures.aoSmooth4, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, commands.commandList);
 				{
@@ -109,7 +109,7 @@ AsyncTasksInfo SsaoComputeTask::initialize(CompositorPass& pass)
 					aoBlurAndUpsampleCS.data.ResIdAoResult = textures.aoSmooth2.texture->uavHeapIndex();
 
 					aoBlurAndUpsampleCS.dispatch(textures.aoSmooth.texture->width, textures.aoSmooth2.texture->height, textures.aoSmooth2.texture->width, textures.occlusion4.texture->height, textures.occlusion4.texture->width,
-						commands.commandList, provider.renderSystem->frameIndex);
+						commands.commandList);
 				}
 				tr.add(textures.aoSmooth2, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 				tr.addAndPush(textures.aoSmooth, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, commands.commandList);
@@ -120,7 +120,7 @@ AsyncTasksInfo SsaoComputeTask::initialize(CompositorPass& pass)
 					aoBlurAndUpsampleFinalCS.data.ResIdAoResult = textures.aoSmooth.texture->uavHeapIndex();
 
 					aoBlurAndUpsampleFinalCS.dispatch(textures.aoSmooth.texture->width, textures.aoSmooth.texture->height, textures.aoSmooth.texture->width, textures.aoSmooth2.texture->height, textures.aoSmooth2.texture->width,
-						commands.commandList, provider.renderSystem->frameIndex);
+						commands.commandList);
 				}
 				tr.add(textures.linearDepthDownsample8, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 				tr.add(textures.linearDepthDownsample4, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);

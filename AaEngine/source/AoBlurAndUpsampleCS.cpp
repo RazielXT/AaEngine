@@ -2,7 +2,7 @@
 #include "DescriptorManager.h"
 #include "DebugWindow.h"
 
-void AoBlurAndUpsampleCS::dispatch(UINT fullWidth, UINT highHeight, UINT highWidth, UINT lowHeight, UINT lowWidth, ID3D12GraphicsCommandList* commandList, UINT frameIndex)
+void AoBlurAndUpsampleCS::dispatch(UINT fullWidth, UINT highHeight, UINT highWidth, UINT lowHeight, UINT lowWidth, ID3D12GraphicsCommandList* commandList)
 {
 	const float g_BlurTolerance = imgui::DebugWindow::state.ssao.BlurTolerance;
 	const float g_UpsampleTolerance = imgui::DebugWindow::state.ssao.UpsampleTolerance;
@@ -25,7 +25,7 @@ void AoBlurAndUpsampleCS::dispatch(UINT fullWidth, UINT highHeight, UINT highWid
 	commandList->SetPipelineState(pipelineState.Get());
 	commandList->SetComputeRootSignature(signature);
 
-	ID3D12DescriptorHeap* ppHeaps[] = { DescriptorManager::get().mainDescriptorHeap[frameIndex] };
+	ID3D12DescriptorHeap* ppHeaps[] = { DescriptorManager::get().mainDescriptorHeap };
 	commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
 	commandList->SetComputeRoot32BitConstants(0, sizeof(data) / sizeof(float), &data, 0);

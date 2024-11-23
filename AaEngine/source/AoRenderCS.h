@@ -20,7 +20,7 @@ public:
 
 	__declspec(align(16)) float SsaoCB[28];
 
-	void dispatch(UINT width, UINT height, UINT arraySize, float TanHalfFovH, const ShaderTextureView& input, const ShaderTextureView& output, ID3D12GraphicsCommandList* commandList, UINT frameIndex);
+	void dispatch(UINT width, UINT height, UINT arraySize, float TanHalfFovH, const ShaderTextureView& input, const ShaderTextureView& output, ID3D12GraphicsCommandList* commandList);
 
 private:
 

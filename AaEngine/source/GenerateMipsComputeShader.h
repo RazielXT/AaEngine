@@ -9,5 +9,5 @@ class GenerateMipsComputeShader : public ComputeShader
 {
 public:
 
-	void dispatch(ID3D12GraphicsCommandList* commandList, TextureResource& texture, DescriptorManager& mgr, UINT frameIndex);
+	void dispatch(ID3D12GraphicsCommandList* commandList, TextureResource& texture, DescriptorManager& mgr);
 };

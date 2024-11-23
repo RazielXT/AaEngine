@@ -44,5 +44,5 @@ struct RenderQueue
 
 	void update(const EntityChanges&);
 	std::vector<UINT> createEntityFilter() const;
-	void renderObjects(ShaderConstantsProvider& info, ID3D12GraphicsCommandList* commandList, UINT frameIndex);
+	void renderObjects(ShaderConstantsProvider& info, ID3D12GraphicsCommandList* commandList);
 };

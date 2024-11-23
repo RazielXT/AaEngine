@@ -3,20 +3,20 @@
 #include "Directx.h"
 #include "../Src/d3dx12.h"
 
-void GenerateMipsComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, TextureResource& texture, DescriptorManager& mgr, UINT frameIndex)
+void GenerateMipsComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, TextureResource& texture, DescriptorManager& mgr)
 {
-	auto resource = texture.textures[frameIndex].Get();
+	auto resource = texture.texture.Get();
 
 	commandList->SetPipelineState(pipelineState.Get());
 	commandList->SetComputeRootSignature(signature);
 
-	ID3D12DescriptorHeap* ppHeaps[] = { mgr.mainDescriptorHeap[frameIndex] };
+	ID3D12DescriptorHeap* ppHeaps[] = { mgr.mainDescriptorHeap };
 	commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
-	TextureResource::TransitionState(commandList, frameIndex, texture, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	TextureResource::TransitionState(commandList, texture, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
 	//src Texture
-	commandList->SetComputeRootDescriptorTable(1, texture.textureView.srvHandles[frameIndex]);
+	commandList->SetComputeRootDescriptorTable(1, texture.textureView.srvHandles);
 
 	UINT size = texture.width;
 
@@ -35,7 +35,7 @@ void GenerateMipsComputeShader::dispatch(ID3D12GraphicsCommandList* commandList,
 		commandList->ResourceBarrier(1, &uavTransition);
 
 		//target UAV
-		commandList->SetComputeRootDescriptorTable(2, texture.uav[mip].uavHandles[frameIndex]);
+		commandList->SetComputeRootDescriptorTable(2, texture.uav[mip].uavHandles);
 		constants.SrcMipIndex = mip - 1;
 		constants.InvOutTexelSize = DirectX::XMFLOAT3(1 / float(size), 1 / float(size), 1 / float(size));
 

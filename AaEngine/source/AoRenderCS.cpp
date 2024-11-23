@@ -2,18 +2,18 @@
 #include "DescriptorManager.h"
 #include "DebugWindow.h"
 
-void AoRenderCS::dispatch(UINT width, UINT height, UINT arraySize, float TanHalfFovH, const ShaderTextureView& input, const ShaderTextureView& output, ID3D12GraphicsCommandList* commandList, UINT frameIndex)
+void AoRenderCS::dispatch(UINT width, UINT height, UINT arraySize, float TanHalfFovH, const ShaderTextureView& input, const ShaderTextureView& output, ID3D12GraphicsCommandList* commandList)
 {
 	commandList->SetPipelineState(pipelineState.Get());
 	commandList->SetComputeRootSignature(signature);
 
-	ID3D12DescriptorHeap* ppHeaps[] = { DescriptorManager::get().mainDescriptorHeap[frameIndex] };
+	ID3D12DescriptorHeap* ppHeaps[] = { DescriptorManager::get().mainDescriptorHeap };
 	commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
 	setupData(width, height, arraySize, TanHalfFovH);
 	commandList->SetComputeRoot32BitConstants(0, sizeof(SsaoCB) / sizeof(float), &SsaoCB, 0);
-	commandList->SetComputeRootDescriptorTable(1, input.srvHandles[frameIndex]);
-	commandList->SetComputeRootDescriptorTable(2, output.uavHandles[frameIndex]);
+	commandList->SetComputeRootDescriptorTable(1, input.srvHandles);
+	commandList->SetComputeRootDescriptorTable(2, output.uavHandles);
 
 	const UINT threadSize = arraySize == 1 ? 16 : 8;
 	const uint32_t bufferWidth = (width + threadSize - 1) / threadSize;

@@ -28,19 +28,19 @@ VoxelSceneSettings settings;
 
 AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 {
-	voxelSceneTexture.create3D(provider.renderSystem->device, VoxelSize, VoxelSize, VoxelSize, DXGI_FORMAT_R16G16B16A16_FLOAT, provider.renderSystem->FrameCount);
+	voxelSceneTexture.create3D(provider.renderSystem->device, VoxelSize, VoxelSize, VoxelSize, DXGI_FORMAT_R16G16B16A16_FLOAT);
 	voxelSceneTexture.setName(L"SceneVoxel");
 	DescriptorManager::get().createUAVView(voxelSceneTexture);
 	AaTextureResources::get().setNamedUAV("SceneVoxel", &voxelSceneTexture.uav.front());
 	DescriptorManager::get().createTextureView(voxelSceneTexture);
 	AaTextureResources::get().setNamedTexture("SceneVoxel", &voxelSceneTexture.textureView);
 
-	voxelPreviousSceneTexture.create3D(provider.renderSystem->device, VoxelSize, VoxelSize, VoxelSize, DXGI_FORMAT_R16G16B16A16_FLOAT, provider.renderSystem->FrameCount);
+	voxelPreviousSceneTexture.create3D(provider.renderSystem->device, VoxelSize, VoxelSize, VoxelSize, DXGI_FORMAT_R16G16B16A16_FLOAT);
 	voxelPreviousSceneTexture.setName(L"SceneVoxelBounces");
 	DescriptorManager::get().createTextureView(voxelPreviousSceneTexture);
 	AaTextureResources::get().setNamedTexture("SceneVoxelBounces", &voxelPreviousSceneTexture.textureView);
 
-	clearSceneTexture.create3D(provider.renderSystem->device, VoxelSize, VoxelSize, VoxelSize, DXGI_FORMAT_R16G16B16A16_FLOAT, provider.renderSystem->FrameCount);
+	clearSceneTexture.create3D(provider.renderSystem->device, VoxelSize, VoxelSize, VoxelSize, DXGI_FORMAT_R16G16B16A16_FLOAT);
 	clearSceneTexture.setName(L"VoxelClear");
 
 	cbuffer = ShaderConstantBuffers::get().CreateCbufferResource(sizeof(cbufferData), "SceneVoxelInfo");
@@ -58,8 +58,6 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 		{
 			while (WaitForSingleObject(eventBegin, INFINITE) == WAIT_OBJECT_0 && running)
 			{
-				const auto FrameIndex = provider.renderSystem->frameIndex;
-
 				auto orthoHalfSize = settings.extends;
 				float NearClipDistance = 1;
 				camera.setOrthographicCamera(orthoHalfSize.x * 2, orthoHalfSize.y * 2, NearClipDistance, NearClipDistance + orthoHalfSize.z * 2 + 200);
@@ -67,7 +65,7 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 				auto center = settings.center;
 
 				XMFLOAT3 corner(center.x - orthoHalfSize.x, center.y - orthoHalfSize.y, center.z - orthoHalfSize.z);
-				updateCBuffer(orthoHalfSize, corner, FrameIndex);
+				updateCBuffer(orthoHalfSize, corner, provider.renderSystem->frameIndex);
 
 				provider.renderSystem->StartCommandList(commands);
 				if (imgui::DebugWindow::state.stopUpdatingVoxel)
@@ -76,24 +74,24 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 					continue;
 				}
 
-				TextureResource::TransitionState(commands.commandList, FrameIndex, voxelSceneTexture, D3D12_RESOURCE_STATE_COPY_SOURCE);
-				TextureResource::TransitionState(commands.commandList, FrameIndex, voxelPreviousSceneTexture, D3D12_RESOURCE_STATE_COPY_DEST);
+				TextureResource::TransitionState(commands.commandList, voxelSceneTexture, D3D12_RESOURCE_STATE_COPY_SOURCE);
+				TextureResource::TransitionState(commands.commandList, voxelPreviousSceneTexture, D3D12_RESOURCE_STATE_COPY_DEST);
 
-				commands.commandList->CopyResource(voxelPreviousSceneTexture.textures[FrameIndex].Get(), voxelSceneTexture.textures[FrameIndex].Get());
+				commands.commandList->CopyResource(voxelPreviousSceneTexture.texture.Get(), voxelSceneTexture.texture.Get());
 
 				//fast clear
-				TextureResource::TransitionState(commands.commandList, FrameIndex, voxelSceneTexture, D3D12_RESOURCE_STATE_COPY_DEST);
-				commands.commandList->CopyResource(voxelSceneTexture.textures[FrameIndex].Get(), clearSceneTexture.textures[FrameIndex].Get());
+				TextureResource::TransitionState(commands.commandList, voxelSceneTexture, D3D12_RESOURCE_STATE_COPY_DEST);
+				commands.commandList->CopyResource(voxelSceneTexture.texture.Get(), clearSceneTexture.texture.Get());
 
 				commands.commandList->OMSetRenderTargets(0, nullptr, FALSE, nullptr);
 
 				static RenderObjectsVisibilityData sceneInfo;
 				auto& renderables = *sceneMgr.getRenderables(Order::Normal);
 
-				pass.target.texture->PrepareAsTarget(commands.commandList, FrameIndex, pass.target.previousState, true, false, false);
+				pass.target.texture->PrepareAsTarget(commands.commandList, pass.target.previousState, true, false, false);
 
-				TextureResource::TransitionState(commands.commandList, FrameIndex, voxelPreviousSceneTexture, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-				TextureResource::TransitionState(commands.commandList, FrameIndex, voxelSceneTexture, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+				TextureResource::TransitionState(commands.commandList, voxelPreviousSceneTexture, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+				TextureResource::TransitionState(commands.commandList, voxelSceneTexture, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 				ShaderConstantsProvider constants(provider.params, sceneInfo, camera, *pass.target.texture);
 
@@ -103,21 +101,21 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 				camera.setDirection(XMFLOAT3(0, 0, 1));
 				camera.updateMatrix();
 				renderables.updateVisibility(camera, sceneInfo);
-				sceneQueue->renderObjects(constants, commands.commandList, FrameIndex);
+				sceneQueue->renderObjects(constants, commands.commandList);
 				//X
 				camera.setPosition(XMFLOAT3(center.x - orthoHalfSize.x - NearClipDistance, center.y, center.z));
 				camera.setDirection(XMFLOAT3(1, 0, 0));
 				camera.updateMatrix();
 				renderables.updateVisibility(camera, sceneInfo);
-				sceneQueue->renderObjects(constants, commands.commandList, FrameIndex);
+				sceneQueue->renderObjects(constants, commands.commandList);
 				//Y
 				camera.setPosition(XMFLOAT3(center.x, center.y - orthoHalfSize.y - NearClipDistance, center.z));
 				camera.pitch(XM_PIDIV2);
 				camera.updateMatrix();
 				renderables.updateVisibility(camera, sceneInfo);
-				sceneQueue->renderObjects(constants, commands.commandList, FrameIndex);
+				sceneQueue->renderObjects(constants, commands.commandList);
 
-				computeMips.dispatch(commands.commandList, voxelSceneTexture, DescriptorManager::get(), FrameIndex);
+				computeMips.dispatch(commands.commandList, voxelSceneTexture, DescriptorManager::get());
 
 				SetEvent(eventFinish);
 			}
@@ -150,7 +148,7 @@ void VoxelizeSceneTask::updateCBuffer(Vector3 orthoHalfSize, Vector3 corner, UIN
 	cbufferData.middleConeRatioDistance = state.middleConeRatioDistance;
 	cbufferData.sideConeRatioDistance = state.sideConeRatioDistance;
 
-	float deltaTime = provider.params.timeDelta * 2;
+	float deltaTime = provider.params.timeDelta;
 	deltaTime += deltaTime - deltaTime * deltaTime;
 	deltaTime = max(deltaTime, 1.0f);
 

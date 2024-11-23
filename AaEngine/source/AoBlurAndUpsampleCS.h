@@ -24,5 +24,5 @@ public:
 	}
 	data;
 
-	void dispatch(UINT fullWidth, UINT highHeight, UINT highWidth, UINT lowHeight, UINT lowWidth, ID3D12GraphicsCommandList* commandList, UINT frameIndex);
+	void dispatch(UINT fullWidth, UINT highHeight, UINT highWidth, UINT lowHeight, UINT lowWidth, ID3D12GraphicsCommandList* commandList);
 };

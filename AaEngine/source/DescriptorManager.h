@@ -15,7 +15,7 @@ public:
 
 	static DescriptorManager& get();
 
-	ID3D12DescriptorHeap* mainDescriptorHeap[2];
+	ID3D12DescriptorHeap* mainDescriptorHeap;
 
 	void init(UINT maxDescriptors);
 

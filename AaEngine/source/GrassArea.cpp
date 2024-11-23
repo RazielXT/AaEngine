@@ -13,11 +13,6 @@ void GrassAreaDescription::initialize(BoundingBoxVolume extends)
 	bbox = extends.createBbox();
 }
 
-// void GrassManager::initializeGrassBuffer(GrassArea& grass, GrassAreaDescription& desc, XMMATRIX invView, UINT colorTex, UINT depthTex, ID3D12GraphicsCommandList* commandList, UINT frameIndex)
-// {
-// 	grassCS.dispatch(commandList, desc, invView, colorTex, depthTex, grass.gpuBuffer.Get(), grass.vertexCounter.Get(), frameIndex);
-// }
-
 GrassAreaGenerator::GrassAreaGenerator()
 {
 }
@@ -34,8 +29,8 @@ void GrassAreaGenerator::initializeGpuResources(AaRenderSystem* renderSystem, co
 {
 	grassCS.init(renderSystem->device, "grassInit");
 
-	heap.Init(renderSystem->device, formats.size(), 1, L"GrassGeneratorHeap");
-	rtt.Init(renderSystem->device, 512, 512, 1, heap, formats, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, true, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	heap.Init(renderSystem->device, formats.size(), L"GrassGeneratorHeap");
+	rtt.Init(renderSystem->device, 512, 512, heap, formats, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, true, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 	rtt.SetName(L"GrassGeneratorRttTex");
 
 	DescriptorManager::get().createTextureView(rtt);
@@ -67,18 +62,18 @@ void GrassAreaGenerator::scheduleGrassCreation(GrassAreaPlacementTask grassTask,
 	RenderObjectsVisibilityData visibility;
 	tmpStorage.updateVisibility(tmpCamera, visibility);
 
-	rtt.TransitionDepth(commandList, 0, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-	rtt.PrepareAsTarget(commandList, 0, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	rtt.TransitionDepth(commandList, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	rtt.PrepareAsTarget(commandList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
 	ShaderConstantsProvider constants(frame, visibility, tmpCamera, rtt);
 
 	auto queue = sceneMgr->createManualQueue();
 	queue.update({ { EntityChange::Add, Order::Normal, &entity } });
-	queue.renderObjects(constants, commandList, 0);
+	queue.renderObjects(constants, commandList);
 	//queue.update({ { EntityChange::DeleteAll } });
 
-	rtt.TransitionTarget(commandList, 0, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
-	rtt.TransitionDepth(commandList, 0, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+	rtt.TransitionTarget(commandList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	rtt.TransitionDepth(commandList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
 	GrassAreaDescription desc;
 	desc.initialize(grassTask.bbox);
@@ -90,7 +85,7 @@ void GrassAreaGenerator::scheduleGrassCreation(GrassAreaPlacementTask grassTask,
 		auto colorTex = rtt.textures[0].textureView.srvHeapIndex;
 		auto depthTex = rtt.depthView.srvHeapIndex;
 
-		grassCS.dispatch(commandList, desc, XMMatrixInverse(nullptr, tmpCamera.getProjectionMatrix()), colorTex, depthTex, grassArea->gpuBuffer.Get(), grassArea->vertexCounter.Get(), 0);
+		grassCS.dispatch(commandList, desc, XMMatrixInverse(nullptr, tmpCamera.getProjectionMatrix()), colorTex, depthTex, grassArea->gpuBuffer.Get(), grassArea->vertexCounter.Get());
 
 		CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(grassArea->vertexCounter.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
 		commandList->ResourceBarrier(1, &barrier);

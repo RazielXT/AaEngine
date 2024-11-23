@@ -53,7 +53,7 @@ public:
 	void WaitForAllFrames();
 	void WaitForCurrentFrame();
 
-	RenderTargetTexture backbuffer;
+	RenderTargetTexture backbuffer[FrameCount];
 
 private:
 

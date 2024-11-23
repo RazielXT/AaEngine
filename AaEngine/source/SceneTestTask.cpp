@@ -17,8 +17,8 @@ AsyncTasksInfo SceneTestTask::initialize(CompositorPass& pass)
 	tmpQueue = sceneMgr.createManualQueue();
 	tmpQueue.targets = pass.target.texture->formats;
 
-	heap.Init(provider.renderSystem->device, tmpQueue.targets.size(), provider.renderSystem->FrameCount, L"tempHeap");
-	tmp.Init(provider.renderSystem->device, 512, 512, 2, heap, tmpQueue.targets, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
+	heap.Init(provider.renderSystem->device, tmpQueue.targets.size(), L"tempHeap");
+	tmp.Init(provider.renderSystem->device, 512, 512, heap, tmpQueue.targets, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
 	tmp.SetName(L"tmpTex");
 
 	DescriptorManager::get().createTextureView(tmp);
@@ -50,12 +50,12 @@ void SceneTestTask::run(RenderContext& ctx, CommandsData& c, CompositorPass&)
 
 	provider.renderSystem->StartCommandList(commands);
 
-	tmp.PrepareAsTarget(commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_COMMON);
+	tmp.PrepareAsTarget(commands.commandList, D3D12_RESOURCE_STATE_COMMON);
 
 	ShaderConstantsProvider constants(provider.params, sceneInfo, tmpCamera, tmp);
-	tmpQueue.renderObjects(constants, commands.commandList, provider.renderSystem->frameIndex);
+	tmpQueue.renderObjects(constants, commands.commandList);
 
-	tmp.PrepareAsView(commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_COMMON);
+	tmp.PrepareAsView(commands.commandList, D3D12_RESOURCE_STATE_COMMON);
 	provider.renderSystem->ExecuteCommandList(commands);
 }
 

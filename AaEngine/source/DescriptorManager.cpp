@@ -15,10 +15,7 @@ DescriptorManager::DescriptorManager(ID3D12Device* d) : device(d)
 
 DescriptorManager::~DescriptorManager()
 {
-	for (auto h : mainDescriptorHeap)
-	{
-		h->Release();
-	}
+	mainDescriptorHeap->Release();
 
 	instance = nullptr;
 }
@@ -30,44 +27,38 @@ DescriptorManager& DescriptorManager::get()
 
 void DescriptorManager::init(UINT maxDescriptors)
 {
-	for (int i = 0; i < 2; ++i)
+	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+	heapDesc.NumDescriptors = maxDescriptors;
+	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	HRESULT hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&mainDescriptorHeap));
+	if (FAILED(hr))
 	{
-		D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-		heapDesc.NumDescriptors = maxDescriptors;
-		heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-		heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-		HRESULT hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&mainDescriptorHeap[i]));
-		if (FAILED(hr))
-		{
-			// Handle error
-			return;
-		}
-
-		mainDescriptorHeap[i]->SetName(L"CBV_SRV_UAV");
+		// Handle error
+		return;
 	}
+
+	mainDescriptorHeap->SetName(L"CBV_SRV_UAV");
 }
 
 void DescriptorManager::createTextureView(FileTexture& texture)
 {
-	for (int i = 0; i < 2; ++i)
-	{
-		if (texture.srvHandles[i].ptr)
-			return;
+	if (texture.srvHandles.ptr)
+		return;
 
-		auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mainDescriptorHeap[i]->GetCPUDescriptorHandleForHeapStart(), currentDescriptorCount
-			, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+	auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mainDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), currentDescriptorCount
+		, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 
-		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		srvDesc.Format = texture.texture->GetDesc().Format;
-		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		srvDesc.Texture2D.MipLevels = -1;
-		device->CreateShaderResourceView(texture.texture.Get(), &srvDesc, handle);
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = texture.texture->GetDesc().Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = -1;
+	device->CreateShaderResourceView(texture.texture.Get(), &srvDesc, handle);
 
-		texture.srvHandles[i] = CD3DX12_GPU_DESCRIPTOR_HANDLE(mainDescriptorHeap[i]->GetGPUDescriptorHandleForHeapStart(), currentDescriptorCount
-			, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-		texture.srvHeapIndex = currentDescriptorCount;
-	}
+	texture.srvHandles = CD3DX12_GPU_DESCRIPTOR_HANDLE(mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart(), currentDescriptorCount
+		, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+	texture.srvHeapIndex = currentDescriptorCount;
 
 	descriptorTypes.push_back(D3D12_SRV_DIMENSION_TEXTURE2D);
 	currentDescriptorCount++;
@@ -77,38 +68,32 @@ void DescriptorManager::createTextureView(RenderTargetTexture& rtt, UINT& descri
 {
 	for (auto& texture : rtt.textures)
 	{
-		for (int i = 0; i < 2; ++i)
+		if (texture.textureView.srvHandles.ptr)
+			return;
+
+		auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mainDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), descriptorOffset
+			, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+
+		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+		if (rtt.arraySize > 1)
 		{
-			if (texture.textureView.srvHandles[i].ptr)
-				return;
-
-			auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mainDescriptorHeap[i]->GetCPUDescriptorHandleForHeapStart(), descriptorOffset
-				, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-
-			//if single frame resource, view same resource from both frames
-			auto& target = texture.texture[i] ? texture.texture[i] : texture.texture[0];
-
-			D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-			srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-
-			if (rtt.arraySize > 1)
-			{
-				srvDesc.Texture2D.MipLevels = 1;
-				srvDesc.Texture2DArray.ArraySize = rtt.arraySize;
-				srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
-			}
-			else
-			{
-				srvDesc.Texture2D.MipLevels = 1;
-				srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-			}
-
-			srvDesc.Format = target->GetDesc().Format;
-			device->CreateShaderResourceView(target.Get(), &srvDesc, handle);
-
-			texture.textureView.srvHandles[i] = CD3DX12_GPU_DESCRIPTOR_HANDLE(mainDescriptorHeap[i]->GetGPUDescriptorHandleForHeapStart(), descriptorOffset
-				, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+			srvDesc.Texture2D.MipLevels = 1;
+			srvDesc.Texture2DArray.ArraySize = rtt.arraySize;
+			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
 		}
+		else
+		{
+			srvDesc.Texture2D.MipLevels = 1;
+			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		}
+
+		srvDesc.Format = texture.texture->GetDesc().Format;
+		device->CreateShaderResourceView(texture.texture.Get(), &srvDesc, handle);
+
+		texture.textureView.srvHandles = CD3DX12_GPU_DESCRIPTOR_HANDLE(mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart(), descriptorOffset
+			, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 
 		texture.textureView.srvHeapIndex = descriptorOffset;
 		descriptorOffset++;
@@ -128,33 +113,29 @@ void DescriptorManager::createTextureView(RenderTargetTexture& texture)
 
 void DescriptorManager::createTextureView(TextureResource& texture, UINT mipLevel)
 {
+	if (texture.textureView.srvHandles.ptr)
+		return;
+
 	auto dimension = texture.dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D ? D3D12_SRV_DIMENSION_TEXTURE2D : D3D12_SRV_DIMENSION_TEXTURE3D;
+	auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mainDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), currentDescriptorCount
+		, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 
-	for (int i = 0; i < 2; ++i)
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.ViewDimension = dimension;
+	if (mipLevel != -1)
 	{
-		if (texture.textureView.srvHandles[i].ptr)
-			return;
-
-		auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mainDescriptorHeap[i]->GetCPUDescriptorHandleForHeapStart(), currentDescriptorCount
-			, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-
-		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		srvDesc.ViewDimension = dimension;
-		if (mipLevel != -1)
-		{
-			srvDesc.Texture2D.MipLevels = 1;
-			srvDesc.Texture2D.MostDetailedMip = mipLevel;
-		}
-		else
-			srvDesc.Texture2D.MipLevels = -1;
-		srvDesc.Format = texture.textures[i]->GetDesc().Format;
-		device->CreateShaderResourceView(texture.textures[i].Get(), &srvDesc, handle);
-
-		texture.textureView.srvHandles[i] = CD3DX12_GPU_DESCRIPTOR_HANDLE(mainDescriptorHeap[i]->GetGPUDescriptorHandleForHeapStart(), currentDescriptorCount
-			, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-		texture.textureView.srvHeapIndex = currentDescriptorCount;
+		srvDesc.Texture2D.MipLevels = 1;
+		srvDesc.Texture2D.MostDetailedMip = mipLevel;
 	}
+	else
+		srvDesc.Texture2D.MipLevels = -1;
+	srvDesc.Format = texture.texture->GetDesc().Format;
+	device->CreateShaderResourceView(texture.texture.Get(), &srvDesc, handle);
+
+	texture.textureView.srvHandles = CD3DX12_GPU_DESCRIPTOR_HANDLE(mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart(), currentDescriptorCount
+		, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+	texture.textureView.srvHeapIndex = currentDescriptorCount;
 
 	descriptorTypes.push_back(dimension);
 	currentDescriptorCount++;
@@ -162,27 +143,22 @@ void DescriptorManager::createTextureView(TextureResource& texture, UINT mipLeve
 
 void DescriptorManager::createDepthView(RenderDepthTargetTexture& texture)
 {
-	for (int i = 0; i < 2; ++i)
-	{
-		if (texture.depthView.srvHandles[i].ptr)
-			return;
+	if (texture.depthView.srvHandles.ptr)
+		return;
 
-		auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mainDescriptorHeap[i]->GetCPUDescriptorHandleForHeapStart(), currentDescriptorCount
-			, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+	auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mainDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), currentDescriptorCount
+		, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 
-		auto& target = texture.depthStencilTexture[i] ? texture.depthStencilTexture[i] : texture.depthStencilTexture[0];
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+	device->CreateShaderResourceView(texture.depthStencilTexture.Get(), &srvDesc, handle);
 
-		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		srvDesc.Texture2D.MipLevels = 1;
-		srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
-		device->CreateShaderResourceView(target.Get(), &srvDesc, handle);
-
-		texture.depthView.srvHandles[i] = CD3DX12_GPU_DESCRIPTOR_HANDLE(mainDescriptorHeap[i]->GetGPUDescriptorHandleForHeapStart(), currentDescriptorCount
-			, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-		texture.depthView.srvHeapIndex = currentDescriptorCount;
-	}
+	texture.depthView.srvHandles = CD3DX12_GPU_DESCRIPTOR_HANDLE(mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart(), currentDescriptorCount
+		, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+	texture.depthView.srvHeapIndex = currentDescriptorCount;
 
 	descriptorTypes.push_back(D3D12_SRV_DIMENSION_TEXTURE2D);
 	currentDescriptorCount++;
@@ -190,7 +166,7 @@ void DescriptorManager::createDepthView(RenderDepthTargetTexture& texture)
 
 void DescriptorManager::createUAVView(TextureResource& texture)
 {
-	auto mipLevels = texture.textures[0]->GetDesc().MipLevels;
+	auto mipLevels = texture.texture->GetDesc().MipLevels;
 	texture.uav.resize(mipLevels);
 
 	for (UINT mipLevel = 0; mipLevel < mipLevels; mipLevel++)
@@ -202,16 +178,13 @@ void DescriptorManager::createUAVView(TextureResource& texture)
 		uavDesc.Texture3D.FirstWSlice = 0;
 		uavDesc.Texture3D.WSize = -1;
 
-		for (int i = 0; i < 2; ++i)
-		{
-			texture.uav[mipLevel].uavCpuHandles[i] = CD3DX12_CPU_DESCRIPTOR_HANDLE(mainDescriptorHeap[i]->GetCPUDescriptorHandleForHeapStart(), currentDescriptorCount
-				, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+		texture.uav[mipLevel].uavCpuHandles = CD3DX12_CPU_DESCRIPTOR_HANDLE(mainDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), currentDescriptorCount
+			, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 
-			device->CreateUnorderedAccessView(texture.textures[i].Get(), nullptr, &uavDesc, texture.uav[mipLevel].uavCpuHandles[i]);
+		device->CreateUnorderedAccessView(texture.texture.Get(), nullptr, &uavDesc, texture.uav[mipLevel].uavCpuHandles);
 
-			texture.uav[mipLevel].uavHandles[i] = CD3DX12_GPU_DESCRIPTOR_HANDLE(mainDescriptorHeap[i]->GetGPUDescriptorHandleForHeapStart(), currentDescriptorCount
-				, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-		}
+		texture.uav[mipLevel].uavHandles = CD3DX12_GPU_DESCRIPTOR_HANDLE(mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart(), currentDescriptorCount
+			, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 
 		descriptorTypes.push_back(D3D12_SRV_DIMENSION_BUFFER);
 		currentDescriptorCount++;
@@ -240,16 +213,13 @@ UINT DescriptorManager::createUAVView(RenderTargetTexture& texture, UINT mipLeve
 
 		uavDesc.Format = texture.formats[i++];
 
-		for (int i = 0; i < 2; ++i)
-		{
-			auto uavCpuHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mainDescriptorHeap[i]->GetCPUDescriptorHandleForHeapStart(), currentDescriptorCount
-				, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+		auto uavCpuHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mainDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), currentDescriptorCount
+			, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 
-			device->CreateUnorderedAccessView(t.texture[i].Get(), nullptr, &uavDesc, uavCpuHandle);
+		device->CreateUnorderedAccessView(t.texture.Get(), nullptr, &uavDesc, uavCpuHandle);
 
-			t.textureView.uavHandles[i] = CD3DX12_GPU_DESCRIPTOR_HANDLE(mainDescriptorHeap[i]->GetGPUDescriptorHandleForHeapStart(), currentDescriptorCount
-				, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-		}
+		t.textureView.uavHandles = CD3DX12_GPU_DESCRIPTOR_HANDLE(mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart(), currentDescriptorCount
+			, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 
 		descriptorTypes.push_back(D3D12_SRV_DIMENSION_BUFFER);
 		t.textureView.uavHeapIndex = currentDescriptorCount;

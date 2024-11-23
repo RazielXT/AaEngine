@@ -8,11 +8,10 @@ class SceneManager;
 struct PassInput : public RenderTargetTextureState
 {
 };
-struct PassTarget
+struct PassTarget : public RenderTargetTextureState
 {
-	RenderTargetTexture* texture{};
-	D3D12_RESOURCE_STATES previousState{};
 	bool present = false;
+	bool backbuffer = false;
 };
 struct CompositorPass
 {

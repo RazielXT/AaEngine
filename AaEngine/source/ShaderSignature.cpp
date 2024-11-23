@@ -276,7 +276,7 @@ ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device* device, co
 			sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
 			sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
 			sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-			sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;
+			sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
 		}
 		else if (samplers[i].info.Name == "LinearSampler")
 		{

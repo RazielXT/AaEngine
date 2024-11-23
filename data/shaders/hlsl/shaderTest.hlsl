@@ -87,7 +87,7 @@ float ShadowPCF(Texture2D shadowmap, float4 shadowCoord)
     for (int i = 0; i < samples; ++i)
     {
         float2 offset = offsets[i] * texelSize;
-        shadow += readShadowmap(shadowmap, shadowCoord.xy + offset).r < shadowCoord.z ? 0.0 : 1.0;
+        shadow += readShadowmap(shadowmap, shadowCoord.xy + offset).r > shadowCoord.z ? 0.0 : 1.0;
     }
 
     return shadow / samples;
@@ -118,7 +118,7 @@ float CalcShadowTermSoftPCF(Texture2D shadowmap, float fLightDepth, float2 vShad
 			vOffset *= ShadowMapSizeInv;
 			float2 vSamplePoint = vShadowTexCoord + vOffset;
 			float fDepth = readShadowmap(shadowmap, vSamplePoint).x;
-			float fSample = (fLightDepth <= fDepth);
+			float fSample = (fLightDepth > fDepth);
 
 			// Edge tap smoothing
 			float xWeight = 1;
@@ -151,7 +151,7 @@ float getShadow(float4 wp)
 	sunLookPos.xy /= float2(2, -2);
     sunLookPos.xy += 0.5;
 
-	sunLookPos.z -= 0.01;
+	sunLookPos.z += 0.01;
 
     // Convert shadow coordinates to texture coordinates
     //int2 texCoord = int2(shadowCoord * 512);
@@ -179,17 +179,22 @@ PSOutput PSMain(PSInput input)
 	float diffuse = saturate(dot(-LightDirection, normal));
 
 #ifdef USE_VC
-	float4 ambientColor = input.color;
+	float3 ambientColor = input.color.rgb;
 #else
-	float4 ambientColor = float4(0.2,0.2,0.2,1);
+	float3 ambientColor = float3(0.2,0.2,0.2);
 #endif
 
 	float4 albedo = GetTexture(TexIdDiffuse).Sample(g_sampler, input.uv);
 	albedo.rgb *= MaterialColor;
 
+	float3 lighting = (ambientColor + getShadow(input.worldPosition) * diffuse);
+	float lightPower = (lighting.r + lighting.g + lighting.b) / 3;
+	float4 outColor = float4(lighting * albedo.rgb, lightPower);
+	
+	
 	PSOutput output;
-    output.target0 = (ambientColor + getShadow(input.worldPosition) * diffuse) * albedo;
-	output.target1 = float4(albedo.rgb, 1);
+    output.target0 = outColor;
+	output.target1 = outColor * float4(albedo.rgb, 1);
 	output.target2 = float4(normal, 1);
 
 	return output;

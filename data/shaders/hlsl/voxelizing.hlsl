@@ -159,9 +159,9 @@ float getShadow(float4 wp)
     sunLookPos.xy = sunLookPos.xy / sunLookPos.w;
 	sunLookPos.xy /= float2(2, -2);
     sunLookPos.xy += 0.5;
-	sunLookPos.z -= 0.01;
+	sunLookPos.z += 0.01;
 
-	return readShadowmap(shadowmap, sunLookPos.xy) < sunLookPos.z ? 0.0 : 1.0;
+	return readShadowmap(shadowmap, sunLookPos.xy) > sunLookPos.z ? 0.0 : 1.0;
 }
 
 SamplerState g_sampler : register(s0);

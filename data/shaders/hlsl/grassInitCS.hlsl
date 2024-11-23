@@ -60,7 +60,7 @@ void createGrassPositions(uint index, out float3 pos1, out float3 pos2)
 
 float getGrassHeight(float2 coords)
 {
-	float depth = GetTexture(TexIdTerrainDepth).SampleLevel(g_sampler, coords, 0).r;
+	float depth = 1 - GetTexture(TexIdTerrainDepth).SampleLevel(g_sampler, coords, 0).r;
 	
 	float z = depth * 2.0 - 1.0;
     float4 clipSpacePosition = float4(coords * 2.0 - 1.0, z, 1.0);

@@ -139,7 +139,7 @@ float CalcShadowTermSoftPCF(Texture2D shadowmap, float fLightDepth, float2 vShad
 			vOffset /= 512;
 			float2 vSamplePoint = vShadowTexCoord + vOffset;
 			float fDepth = readShadowmap(shadowmap, vSamplePoint).x;
-			float fSample = (fLightDepth <= fDepth);
+			float fSample = (fLightDepth > fDepth);
 
 			// Edge tap smoothing
 			float xWeight = 1;
@@ -169,7 +169,7 @@ float getShadow(float4 wp)
     sunLookPos.xy = sunLookPos.xy / sunLookPos.w;
 	sunLookPos.xy /= float2(2, -2);
     sunLookPos.xy += 0.5;
-	sunLookPos.z -= 0.01;
+	sunLookPos.z += 0.01;
 
 	//return readShadowmap(shadowmap, sunLookPos.xy) < sunLookPos.z ? 0.0 : 1.0;
 	return CalcShadowTermSoftPCF(shadowmap, sunLookPos.z, sunLookPos.xy, 5);
@@ -213,12 +213,13 @@ PSOutput PS_Main(PS_Input pin)
     float3 albedo = GetTexture(TexIdDiffuse).Sample(diffuse_sampler, pin.uv).rgb;
 	albedo *= MaterialColor;
 
-	float directLight = saturate(dot(-SunDirection,normal)) * getShadow(pin.wp);
+	float directShadow = getShadow(pin.wp);
+	float directLight = saturate(dot(-SunDirection,normal)) * directShadow;
 	float3 lighting = max(directLight, traceColor * occlusionSample * 0.5);
 
     float4 color1 = float4(saturate(albedo * lighting), 1);
 	color1.rgb += albedo * Emission;
-
+	color1.a = (lighting.r + lighting.g + lighting.b) / 3;
 	//color1.rgb = voxelmap.SampleLevel(g_sampler, voxelUV, 0).rgb;
 
 	PSOutput output;

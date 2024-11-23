@@ -21,7 +21,20 @@ AaCamera::~AaCamera()
 
 void AaCamera::setOrthographicCamera(float width, float height, float nearZ, float farZ)
 {
-	projection_m = reversedProjection_m = XMMatrixOrthographicLH(width, height, nearZ, farZ);
+	projection_m = XMMatrixOrthographicLH(width, height, nearZ, farZ);
+	{
+		float rcpWidth = 1.0f / width;
+		float rcpHeight = 1.0f / height;
+		float rcpDepth = 1.0f / (nearZ - farZ);
+
+		// Create the orthographic projection matrix with reverse Z
+		reversedProjection_m = XMMATRIX(
+			2.0f * rcpWidth, 0.0f, 0.0f, 0.0f,
+			0.0f, 2.0f * rcpHeight, 0.0f, 0.0f,
+			0.0f, 0.0f, rcpDepth, 0.0f,
+			0.0f, 0.0f, -farZ * rcpDepth, 1.0f
+		);
+	}
 	this->width = width;
 	this->height = height;
 	this->nearZ = nearZ;
@@ -45,13 +58,12 @@ void AaCamera::setPerspectiveCamera(float fov, float aspectRatio, float nearZ, f
 		float Q1 = nearZ / (farZ - nearZ);
 		float Q2 = nearZ * (farZ / (farZ - nearZ));
 
-		XMFLOAT4X4 proj(
+		reversedProjection_m = XMMATRIX(
 			X, 0.0f, 0.0f, 0.0f,
 			0.0f, Y, 0.0f, 0.0f,
 			0.0f, 0.0f, Q1, 1.0f,
 			0.0f, 0.0f, Q2, 0.0f
 		);
-		reversedProjection_m = XMLoadFloat4x4(&proj);
 	}
 	dirty = true;
 	orthographic = false;

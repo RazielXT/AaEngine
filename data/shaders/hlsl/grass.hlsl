@@ -101,7 +101,7 @@ float CalcShadowTermSoftPCF(Texture2D shadowmap, float fLightDepth, float2 vShad
 			vOffset *= ShadowMapSizeInv;
 			float2 vSamplePoint = vShadowTexCoord + vOffset;
 			float fDepth = readShadowmap(shadowmap, vSamplePoint).x;
-			float fSample = (fLightDepth <= fDepth);
+			float fSample = (fLightDepth > fDepth);
 
 			// Edge tap smoothing
 			float xWeight = 1;
@@ -134,7 +134,7 @@ float getShadow(float4 wp)
 	sunLookPos.xy /= float2(2, -2);
     sunLookPos.xy += 0.5;
 
-	sunLookPos.z -= 0.01;
+	sunLookPos.z += 0.01;
 
 	return CalcShadowTermSoftPCF(shadowmap, sunLookPos.z, sunLookPos.xy, 3);
 }
@@ -151,11 +151,11 @@ PSOutput PSMain(PSInput input)
 {
 	float4 albedo = GetTexture(TexIdDiffuse).Sample(g_sampler, input.uv);
 
-	float distanceFade = saturate(200 * input.position.z / input.position.w);
+	float distanceFade = saturate(2000 * input.worldPosition.z / input.position.w);
 
 	//albedo.a *= 2;
 
-	if (albedo.a * distanceFade <0.5) discard;
+	if (albedo.a <0.5) discard;
 
 	albedo.rgb *= input.color * 2;
 
@@ -164,7 +164,7 @@ PSOutput PSMain(PSInput input)
 	shading *= lerp(0.5, 1, shadowing);
 	
 	PSOutput output;
-    output.target0 = albedo * distanceFade * shading;
+    output.target0 = albedo * shading;
 	output.target1 = albedo;
 	output.target2 = float4(input.normal, 1);
 
@@ -175,7 +175,7 @@ void PSMainDepth(PSInput input)
 {
 	float4 albedo = GetTexture(TexIdDiffuse).Sample(g_sampler, input.uv);
 
-	float distanceFade = saturate(200 * input.position.z / input.position.w);
+	float distanceFade = saturate(2000 * input.worldPosition.z / input.position.w);
 
-	if (albedo.a * distanceFade <0.5) discard;
+	if (albedo.a <0.5) discard;
 }

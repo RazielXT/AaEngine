@@ -77,7 +77,7 @@ namespace imgui
 		if (ImGui::Button("Reload shaders"))
 			state.reloadShaders = true;
 
-		ImGui::Text("Cam pos %.1f %.1f %.1f", currentCamPos.x, currentCamPos.y, currentCamPos.z);
+		ImGui::Text("VRAM used %uMB", state.vramUsage);
 
 		int next = state.TexturePreviewIndex;
 		if (ImGui::InputInt("Texture preview", &next))

@@ -2,6 +2,7 @@
 
 #include "AaTextureResources.h"
 #include "d3d12.h"
+#include "directx\d3dx12.h"
 #include <DirectXMath.h>
 #include <vector>
 #include <string>
@@ -28,7 +29,7 @@ public:
 	UINT height = 0;
 	UINT arraySize = 1;
 
-	ShaderTextureView& textureView();
+	ShaderTextureView& textureView(UINT i = 0);
 	UINT srvHeapIndex() const;
 	UINT uavHeapIndex() const;
 };
@@ -101,23 +102,51 @@ private:
 	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtvHandles[2]{};
 };
 
-struct RenderTargetTextureView
+struct RenderTargetTextureState
 {
-	RenderTargetTextureView() = default;
-	RenderTargetTextureView(RenderTargetTexture&);
-	RenderTargetTextureView(RenderTargetTexture&, UINT index);
+	RenderTargetTexture* texture{};
+	D3D12_RESOURCE_STATES previousState{};
+	UINT idx{};
+};
 
-	void SetDepth(RenderDepthTargetTexture*);
+template<UINT MAX>
+struct RenderTargetTransitions
+{
+	UINT frameIndex{};
+	UINT c = 0;
+	CD3DX12_RESOURCE_BARRIER barriers[MAX];
 
-	void PrepareAsTarget(ID3D12GraphicsCommandList* commandList, UINT frameIndex, D3D12_RESOURCE_STATES from, bool clear = true, bool depth = true, bool clearDepth = true);
-	void PrepareAsView(ID3D12GraphicsCommandList* commandList, UINT frameIndex, D3D12_RESOURCE_STATES from);
-	void PrepareToPresent(ID3D12GraphicsCommandList* commandList, UINT frameIndex, D3D12_RESOURCE_STATES from);
+	void add(RenderTargetTextureState& state, D3D12_RESOURCE_STATES to)
+	{
+		barriers[c] = CD3DX12_RESOURCE_BARRIER::Transition(
+			state.texture->textures[0].texture[frameIndex].Get(),
+			state.previousState,
+			to);
 
-private:
+		state.previousState = to;
+		c++;
+	}
+	void addAndPush(RenderTargetTextureState& state, D3D12_RESOURCE_STATES to, ID3D12GraphicsCommandList* commandList)
+	{
+		add(state, to);
+		commandList->ResourceBarrier(c, barriers);
+		c = 0;
+	}
 
-	const UINT IndexAll = 100;
-	UINT index = IndexAll;
+	void addDepth(RenderTargetTextureState& state, D3D12_RESOURCE_STATES to)
+	{
+		barriers[c] = CD3DX12_RESOURCE_BARRIER::Transition(
+			state.texture->depthStencilTexture[frameIndex].Get(),
+			state.previousState,
+			to);
 
-	RenderTargetTexture* target{};
-	RenderDepthTargetTexture* targetDepth{};
+		state.previousState = to;
+		c++;
+	}
+	void addDepthAndPush(RenderTargetTextureState& state, D3D12_RESOURCE_STATES to, ID3D12GraphicsCommandList* commandList)
+	{
+		addDepth(state, to);
+		commandList->ResourceBarrier(c, barriers);
+		c = 0;
+	}
 };

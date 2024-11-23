@@ -30,8 +30,14 @@ void FrameCompositor::initializeTextureStates()
 		pass.inputs.resize(pass.info.inputs.size());
 		for (UINT idx = 0; auto & i : pass.info.inputs)
 		{
-			pass.inputs[idx++].previousState = lastTextureStates[i.name];
-			lastTextureStates[i.name] = info.textures[i.name].uav && pass.task ? D3D12_RESOURCE_STATE_UNORDERED_ACCESS : D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+			auto& tState = lastTextureStates[i.name];
+
+			if (i.type == CompositorTextureInput::Depth && tState == D3D12_RESOURCE_STATE_RENDER_TARGET)
+				pass.inputs[idx++].previousState = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+			else
+				pass.inputs[idx++].previousState = tState;
+
+			tState = info.textures[i.name].uav && pass.task ? D3D12_RESOURCE_STATE_UNORDERED_ACCESS : D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 		}
 	}
 }

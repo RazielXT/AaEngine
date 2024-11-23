@@ -94,19 +94,19 @@ compositor SceneCompositor
 		target bloomTexture
 	}
 
-	pass Combine
-	{
-		material AddThrough
-		input sceneTexture 0
-		input bloomTexture
-		target sceneTexture2
-	}
-
 	pass SSAODarken
 	{
 		material Darken
-		input sceneTexture2
+		input sceneTexture 0
 		input aoSmooth
+		target sceneTexture2
+	}
+
+	pass Combine
+	{
+		material AddThrough
+		input sceneTexture2
+		input bloomTexture
 		target sceneTexture3
 	}
 

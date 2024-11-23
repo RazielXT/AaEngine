@@ -145,7 +145,7 @@ void FrameCompositor::reloadTextures()
 	{
 		for (UINT i = 0; auto& [name, idx, type] : p.info.inputs)
 		{
-			p.inputs[i].view = &textures[name].textures[idx].textureView;
+			p.inputs[i].idx = idx;
 			p.inputs[i++].texture = &textures[name];
 		}
 
@@ -171,7 +171,7 @@ void FrameCompositor::renderQuad(PassData& pass, RenderContext& ctx, ID3D12Graph
 	for (UINT i = 0; auto & input : pass.inputs)
 	{
 		input.texture->PrepareAsView(commandList, provider.renderSystem->frameIndex, input.previousState);
-		pass.material->SetTexture(*input.view, i++);
+		pass.material->SetTexture(input.texture->textureView(input.idx), i++);
 	}
 
 	ShaderConstantsProvider constants(provider.params, {}, *ctx.camera, *pass.target.texture);

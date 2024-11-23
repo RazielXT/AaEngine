@@ -5,11 +5,8 @@
 
 class SceneManager;
 
-struct PassInput
+struct PassInput : public RenderTargetTextureState
 {
-	ShaderTextureView* view{};
-	RenderTargetTexture* texture{};
-	D3D12_RESOURCE_STATES previousState{};
 };
 struct PassTarget
 {

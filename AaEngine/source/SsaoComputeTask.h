@@ -41,28 +41,28 @@ private:
 
 	void initializeResources(CompositorPass& pass);
 
-	struct
+	struct Txt
 	{
-		RenderTargetTexture* sceneDepth;
-		RenderTargetTexture* linearDepth;
-		RenderTargetTexture* linearDepthDownsample2;
-		RenderTargetTexture* linearDepthDownsampleAtlas2;
-		RenderTargetTexture* linearDepthDownsample4;
-		RenderTargetTexture* linearDepthDownsampleAtlas4;
-		RenderTargetTexture* linearDepthDownsample8;
-		RenderTargetTexture* linearDepthDownsampleAtlas8;
-		RenderTargetTexture* linearDepthDownsample16;
-		RenderTargetTexture* linearDepthDownsampleAtlas16;
+		RenderTargetTextureState sceneDepth;
+		RenderTargetTextureState linearDepth;
+		RenderTargetTextureState linearDepthDownsample2;
+		RenderTargetTextureState linearDepthDownsampleAtlas2;
+		RenderTargetTextureState linearDepthDownsample4;
+		RenderTargetTextureState linearDepthDownsampleAtlas4;
+		RenderTargetTextureState linearDepthDownsample8;
+		RenderTargetTextureState linearDepthDownsampleAtlas8;
+		RenderTargetTextureState linearDepthDownsample16;
+		RenderTargetTextureState linearDepthDownsampleAtlas16;
 
-		RenderTargetTexture* occlusionInterleaved8;
-		RenderTargetTexture* occlusion8;
-		RenderTargetTexture* occlusionInterleaved4;
-		RenderTargetTexture* occlusion4;
-		RenderTargetTexture* occlusionInterleaved2;
+		RenderTargetTextureState occlusionInterleaved8;
+		RenderTargetTextureState occlusion8;
+		RenderTargetTextureState occlusionInterleaved4;
+		RenderTargetTextureState occlusion4;
+		RenderTargetTextureState occlusionInterleaved2;
 
-		RenderTargetTexture* aoSmooth4;
-		RenderTargetTexture* aoSmooth2;
-		RenderTargetTexture* aoSmooth;
+		RenderTargetTextureState aoSmooth4;
+		RenderTargetTextureState aoSmooth2;
+		RenderTargetTextureState aoSmooth;
 	}
 	textures;
 

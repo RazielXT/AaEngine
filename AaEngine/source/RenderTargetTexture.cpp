@@ -1,5 +1,4 @@
 #include "RenderTargetTexture.h"
-#include "directx\d3dx12.h"
 
 void RenderDepthTargetTexture::Init(ID3D12Device* device, UINT w, UINT h, UINT frameCount, D3D12_RESOURCE_STATES initialState, UINT arraySize)
 {
@@ -348,9 +347,9 @@ void RenderDepthTargetTexture::SetName(const wchar_t* name)
 	}
 }
 
-ShaderTextureView& RenderTargetInfo::textureView()
+ShaderTextureView& RenderTargetInfo::textureView(UINT i)
 {
-	return textures.front().textureView;
+	return textures[i].textureView;
 }
 
 UINT RenderTargetInfo::srvHeapIndex() const

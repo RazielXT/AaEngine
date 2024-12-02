@@ -42,7 +42,7 @@ public:
 	GrassAreaGenerator();
 	~GrassAreaGenerator();
 
-	void initializeGpuResources(AaRenderSystem* renderSystem, const std::vector<DXGI_FORMAT>& formats);
+	void initializeGpuResources(RenderSystem* renderSystem, const std::vector<DXGI_FORMAT>& formats);
 	void clear();
 
 	void scheduleGrassCreation(GrassAreaPlacementTask grassTask, ID3D12GraphicsCommandList* commandList, const FrameParameters& frame, SceneManager* sceneMgr);
@@ -57,7 +57,7 @@ private:
 	GrassInitComputeShader grassCS;
 
 	RenderTargetHeap heap;
-	RenderTargetTexture rtt;
+	RenderTargetTextures rtt;
 
 	std::vector<std::pair<AaEntity*, GrassArea*>> scheduled;
 

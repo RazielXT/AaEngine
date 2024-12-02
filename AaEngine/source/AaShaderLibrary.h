@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AaRenderSystem.h"
+#include "RenderSystem.h"
 #include "AaShaderFileParser.h"
 #include "AaShaderCompiler.h"
 #include <dxcapi.h>
@@ -18,12 +18,13 @@ class AaShaderLibrary
 {
 public:
 
-	AaShaderLibrary(AaRenderSystem* mRS);
+	AaShaderLibrary(RenderSystem* mRS);
 	~AaShaderLibrary();
 
 	static AaShaderLibrary& get();
 
 	void loadShaderReferences(std::string directory, bool subDirectories = false);
+	void addShaderReferences(const shaderRefMaps& maps);
 
 	LoadedShader* getShader(const std::string& name, ShaderType);
 
@@ -33,7 +34,7 @@ private:
 
  	std::map<std::string, std::unique_ptr<LoadedShader>> loadedShaders[ShaderType_COUNT];
 
-	AaRenderSystem* mRenderSystem;
+	RenderSystem* mRenderSystem;
 
 	AaShaderCompiler compiler;
 };

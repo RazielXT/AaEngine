@@ -10,7 +10,7 @@ class SceneManager
 {
 public:
 
-	SceneManager(AaRenderSystem* rs);
+	SceneManager(RenderSystem* rs);
 	~SceneManager();
 
 	void update();
@@ -40,5 +40,5 @@ private:
 
 	std::vector<std::unique_ptr<RenderQueue>> queues;
 
-	AaRenderSystem* renderSystem;
+	RenderSystem* renderSystem;
 };

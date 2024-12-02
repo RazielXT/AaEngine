@@ -108,7 +108,7 @@
     <ClCompile Include="source\AoRenderCS.cpp" />
     <ClCompile Include="source\AoPrepareDepthBuffersCS.cpp" />
     <ClCompile Include="source\RenderObject.cpp" />
-    <ClCompile Include="source\AaRenderSystem.cpp" />
+    <ClCompile Include="source\RenderSystem.cpp" />
     <ClCompile Include="source\SceneManager.cpp" />
     <ClCompile Include="source\AaShaderCompiler.cpp" />
     <ClCompile Include="source\AaShaderFileParser.cpp" />
@@ -180,7 +180,7 @@
     <ClInclude Include="source\AaModel.h" />
     <ClInclude Include="source\AaModelResources.h" />
     <ClInclude Include="source\RenderObject.h" />
-    <ClInclude Include="source\AaRenderSystem.h" />
+    <ClInclude Include="source\RenderSystem.h" />
     <ClInclude Include="source\SceneManager.h" />
     <ClInclude Include="source\AaShaderCompiler.h" />
     <ClInclude Include="source\AaShaderFileParser.h" />

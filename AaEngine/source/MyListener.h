@@ -3,7 +3,7 @@
 #include "AaApplication.h"
 #include "FreeCamera.h"
 #include "InputHandler.h"
-#include "AaRenderSystem.h"
+#include "RenderSystem.h"
 #include "SceneManager.h"
 #include "AaModelResources.h"
 #include "FrameCompositor.h"
@@ -15,7 +15,7 @@ class MyListener : public AaFrameListener, public InputListener, public ScreenLi
 {
 public:
 
-	MyListener(AaRenderSystem* render);
+	MyListener(RenderSystem* render);
 	~MyListener();
 
 	bool frameStarted(float timeSinceLastFrame) override;
@@ -32,7 +32,7 @@ public:
 private:
 
  	FreeCamera* cameraMan;
- 	AaRenderSystem* renderSystem;
+ 	RenderSystem* renderSystem;
  	SceneManager* sceneMgr;
 	InstancingManager instancing;
 	GrassAreaGenerator* grass;

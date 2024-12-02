@@ -12,7 +12,7 @@
 #include <functional>
 #include <CommonStates.h>
 
-MaterialBase::MaterialBase(AaRenderSystem* rs, DescriptorManager& m, const MaterialRef& matRef) : mgr(m), renderSystem(rs), ref(matRef)
+MaterialBase::MaterialBase(RenderSystem* rs, DescriptorManager& m, const MaterialRef& matRef) : mgr(m), renderSystem(rs), ref(matRef)
 {
 }
 
@@ -52,7 +52,7 @@ void MaterialBase::BindSignature(ID3D12GraphicsCommandList* commandList) const
 	commandList->SetGraphicsRootSignature(rootSignature);
 }
 
-std::size_t HashInputLayout(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout)
+std::size_t HashInputLayout(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target)
 {
 	std::size_t seed = 0;
 	for (const auto& element : layout)
@@ -65,12 +65,16 @@ std::size_t HashInputLayout(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout)
 // 		seed ^= hashUint32(element.Format) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 // 		seed ^= hashUint32(element.AlignedByteOffset) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 	}
+	for (const auto& t : target)
+	{
+		seed ^= t + (seed << 6) + (seed >> 2);
+	}
 	return seed;
 }
 
 ID3D12PipelineState* MaterialBase::GetPipelineState(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target)
 {
-	auto layoutHash = HashInputLayout(layout);
+	auto layoutHash = HashInputLayout(layout, target);
 
 	for (const auto& s : pipelineStates)
 	{
@@ -123,7 +127,7 @@ ID3D12PipelineState* MaterialBase::CreatePipelineState(const std::vector<D3D12_I
 		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_NONE;
 		psoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN;
 	}
-	if (!ref.pipeline.depth.write)
+	if (!ref.pipeline.depth.write || ref.pipeline.blend.alphaBlend)
 		psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
 	
 	if (ref.pipeline.blend.alphaBlend)
@@ -258,6 +262,13 @@ void MaterialBase::CreateResourcesData(MaterialInstance& instance, ResourceUploa
 
 			instance.SetTexture(*texture, texSlot);
 		}
+		else if (!t.compositorId.empty())
+		{
+			if (auto texture = AaTextureResources::get().getNamedTexture("c_" + t.compositorId))
+			{
+				instance.SetTexture(*texture, texSlot);
+			}
+		}
 		else if (!t.id.empty())
 		{
 			if (auto texture = AaTextureResources::get().getNamedTexture(t.id))
@@ -381,8 +392,12 @@ void MaterialInstance::UpdatePerFrame(MaterialDataStorage& data, const ShaderCon
 	{
 		if (p.type == ResourcesInfo::AutoParam::TIME)
 			data.rootParams[p.bufferOffset] = info.params.time;
+		else if (p.type == ResourcesInfo::AutoParam::DELTA_TIME)
+			data.rootParams[p.bufferOffset] = info.params.timeDelta;
 		else if (p.type == ResourcesInfo::AutoParam::SUN_DIRECTION)
 			*(DirectX::XMFLOAT3*)&data.rootParams[p.bufferOffset] = info.params.sun.SunDirection;
+		else if (p.type == ResourcesInfo::AutoParam::SUN_COLOR)
+			*(DirectX::XMFLOAT3*)&data.rootParams[p.bufferOffset] = info.params.sun.SunColor;
 		else if (p.type == ResourcesInfo::AutoParam::SHADOW_MATRIX)
 			*(DirectX::XMFLOAT4X4*)&data.rootParams[p.bufferOffset] = info.params.sun.ShadowMatrix[0];
 		else if (p.type == ResourcesInfo::AutoParam::SHADOW_MAP_SIZE)
@@ -394,14 +409,24 @@ void MaterialInstance::UpdatePerFrame(MaterialDataStorage& data, const ShaderCon
 			data.rootParams[p.bufferOffset] = info.inverseViewportSize.x;
 			data.rootParams[p.bufferOffset + 1] = info.inverseViewportSize.y;
 		}
+		else if (p.type == ResourcesInfo::AutoParam::VIEWPORT_SIZE)
+			*(DirectX::XMUINT2*)&data.rootParams[p.bufferOffset] = info.viewportSize;
 		else if (p.type == ResourcesInfo::AutoParam::CAMERA_POSITION)
 			*(DirectX::XMFLOAT3*)&data.rootParams[p.bufferOffset] = info.getCameraPosition();
 		else if (p.type == ResourcesInfo::AutoParam::WORLD_POSITION)
 			*(DirectX::XMFLOAT3*)&data.rootParams[p.bufferOffset] = info.getWorldPosition();
 		else if (p.type == ResourcesInfo::AutoParam::VP_MATRIX)
 			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&data.rootParams[p.bufferOffset], XMMatrixTranspose(info.getViewProjectionMatrix()));
+		else if (p.type == ResourcesInfo::AutoParam::VIEW_MATRIX)
+			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&data.rootParams[p.bufferOffset], XMMatrixTranspose(info.getViewMatrix()));
 		else if (p.type == ResourcesInfo::AutoParam::INV_VP_MATRIX)
 			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&data.rootParams[p.bufferOffset], XMMatrixTranspose(info.getInverseViewProjectionMatrix()));
+		else if (p.type == ResourcesInfo::AutoParam::INV_VIEW_MATRIX)
+			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&data.rootParams[p.bufferOffset], XMMatrixTranspose(info.getInverseViewMatrix()));
+		else if (p.type == ResourcesInfo::AutoParam::INV_PROJ_MATRIX)
+			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&data.rootParams[p.bufferOffset], XMMatrixTranspose(info.getInverseProjectionMatrix()));
+		else if (p.type == ResourcesInfo::AutoParam::Z_MAGIC)
+			data.rootParams[p.bufferOffset] = info.camera.getCameraZ();
 	}
 }
 

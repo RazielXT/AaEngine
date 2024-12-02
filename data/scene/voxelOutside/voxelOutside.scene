@@ -752,7 +752,7 @@
         <node name="Plane002">
             <position x="2.78121" y="-6.31578" z="12.2427" />
             <scale x="1" y="1" z="1" />
-            <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
+            <rotation qx="0" qy="0" qz="0" qw="1" />
             <entity name="Plane002" castShadows="true" receiveShadows="true" meshFile="test3Plane002.mesh">
                 <subentities>
                     <subentity index="0" materialName="WaterLake" />

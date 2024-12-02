@@ -6,20 +6,23 @@ AaShadowMap::AaShadowMap(aa::SceneLights::Light& l,	PssmParameters& d) : sun(l),
 {
 }
 
-void AaShadowMap::init(AaRenderSystem* renderSystem)
+void AaShadowMap::init(RenderSystem* renderSystem)
 {
-	for (UINT i = 0; i < 2; i++)
+	const UINT count = std::size(texture);
+	targetHeap.InitDsv(renderSystem->device, count, L"ShadowMapsDSV");
+
+	for (UINT i = 0; i < count; i++)
 	{
-		texture[i].Init(renderSystem->device, 512, 512, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+		texture[i].InitDepth(renderSystem->device, 512, 512, targetHeap, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 		texture[i].SetName(L"ShadowMap");
 
-		DescriptorManager::get().createDepthView(texture[i]);
-		AaTextureResources::get().setNamedTexture("ShadowMap" + std::to_string(i), &texture[i].depthView);
+		DescriptorManager::get().createTextureView(texture[i]);
+		AaTextureResources::get().setNamedTexture("ShadowMap" + std::to_string(i), &texture[i].view);
 
 		camera[i].setOrthographicCamera(400 + i * 400, 400 + i * 400, 1, 1000);
 	}
 
-	data.TexIdShadowOffsetStart = texture[0].depthView.srvHeapIndex;
+	data.TexIdShadowOffsetStart = texture[0].view.srvHeapIndex;
 	data.ShadowMapSize = 512;
 	data.ShadowMapSizeInv = 1 / data.ShadowMapSize;
 
@@ -40,6 +43,7 @@ void AaShadowMap::update(UINT frameIndex)
 	XMStoreFloat4x4(&data.ShadowMatrix[0], XMMatrixTranspose(camera[0].getViewProjectionMatrix()));
 	XMStoreFloat4x4(&data.ShadowMatrix[1], XMMatrixTranspose(camera[1].getViewProjectionMatrix()));
 	data.SunDirection = sun.direction;
+	data.SunColor = sun.color;
 
 	auto& cbufferResource = *cbuffer.data[frameIndex];
 	memcpy(cbufferResource.Memory(), &data, sizeof(data));
@@ -50,7 +54,7 @@ void AaShadowMap::clear(ID3D12GraphicsCommandList* commandList)
 	for (auto& t : texture)
 	{
 		auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-			t.depthStencilTexture.Get(),
+			t.texture.Get(),
 			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
 			D3D12_RESOURCE_STATE_DEPTH_WRITE);
 		commandList->ResourceBarrier(1, &barrier);
@@ -58,7 +62,7 @@ void AaShadowMap::clear(ID3D12GraphicsCommandList* commandList)
 		t.ClearDepth(commandList);
 
 		barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-			t.depthStencilTexture.Get(),
+			t.texture.Get(),
 			D3D12_RESOURCE_STATE_DEPTH_WRITE,
 			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 		commandList->ResourceBarrier(1, &barrier);

@@ -5,24 +5,8 @@
 
 using ParsedObjects = std::map<std::string, const Config::Object*>[ShaderType_COUNT];
 
-static void ParseShaderParams(ShaderRef& shader, ShaderType type, const Config::Object& obj, const ParsedObjects& previous)
+void AaShaderFileParser::ParseShaderParams(ShaderRef& shader, const Config::Object& obj)
 {
-	if (obj.params.size() > 1 && obj.params[0] == ":")
-	{
-		for (size_t i = 1; i < obj.params.size(); i++)
-		{
-			auto parentName = obj.params[i];
-			if (!parentName.empty())
-			{
-				for (auto& [name, parent] : previous[type])
-				{
-					if (name == parentName)
-						ParseShaderParams(shader, type, *parent, previous);
-				}
-			}
-		}
-	}
-
 	for (auto& param : obj.children)
 	{
 		if (param.type == "file")
@@ -59,6 +43,40 @@ static void ParseShaderParams(ShaderRef& shader, ShaderType type, const Config::
 	}
 }
 
+static void ParseShaderParams(ShaderRef& shader, ShaderType type, const Config::Object& obj, const ParsedObjects& previous)
+{
+	if (obj.params.size() > 1 && obj.params[0] == ":")
+	{
+		for (size_t i = 1; i < obj.params.size(); i++)
+		{
+			auto parentName = obj.params[i];
+			if (!parentName.empty())
+			{
+				for (auto& [name, parent] : previous[type])
+				{
+					if (name == parentName)
+						ParseShaderParams(shader, type, *parent, previous);
+				}
+			}
+		}
+	}
+
+	AaShaderFileParser::ParseShaderParams(shader, obj);
+}
+
+ShaderType AaShaderFileParser::ParseShaderType(const std::string& t)
+{
+	ShaderType type = ShaderTypeNone;
+	if (t == "vertex_shader")
+		type = ShaderTypeVertex;
+	else if (t == "pixel_shader")
+		type = ShaderTypePixel;
+	else if (t == "compute_shader")
+		type = ShaderTypeCompute;
+
+	return type;
+}
+
 void parseShaderFile(shaderRefMaps& shds, const std::string& file)
 {
 	auto objects = Config::Parse(file);
@@ -66,14 +84,8 @@ void parseShaderFile(shaderRefMaps& shds, const std::string& file)
 	ParsedObjects parsed;
 	for (auto& obj : objects)
 	{
-		ShaderType type = ShaderTypeNone;
-		if (obj.type == "vertex_shader")
-			type = ShaderTypeVertex;
-		else if (obj.type == "pixel_shader")
-			type = ShaderTypePixel;
-		else if (obj.type == "compute_shader")
-			type = ShaderTypeCompute;
-
+		auto type = AaShaderFileParser::ParseShaderType(obj.type);
+		
 		if (type != ShaderTypeNone)
 		{
 			ShaderRef shader;

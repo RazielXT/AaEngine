@@ -75,10 +75,15 @@ void FrameCompositor::load(CompositorInfo i)
 	initializeTextureStates();
 
 	UINT textureCount = 0;
+	UINT depthCount = 0;
 	for (auto& [name, t] : info.textures)
-		textureCount += t.formats.size();
+		if (name.ends_with(":Depth"))
+			depthCount++;
+		else
+			textureCount++;
 
-	rtvHeap.Init(provider.renderSystem->device, textureCount, L"CompositorRTV");
+	rtvHeap.InitRtv(provider.renderSystem->device, textureCount, L"CompositorRTV");
+	rtvHeap.InitDsv(provider.renderSystem->device, depthCount, L"CompositorDSV");
 	reloadTextures();
 
 	for (size_t i = 0; i < passes.size(); i++)
@@ -87,7 +92,7 @@ void FrameCompositor::load(CompositorInfo i)
 		auto& pass = passes[i];
 
 		if (!passInfo.material.empty() && pass.target.texture)
-			pass.material = AaMaterialResources::get().getMaterial(passInfo.material)->Assign({}, pass.target.texture->formats);
+			pass.material = AaMaterialResources::get().getMaterial(passInfo.material)->Assign({}, { pass.target.texture->format });
 	}
 
 	initializeCommands();
@@ -97,18 +102,19 @@ void FrameCompositor::reloadTextures()
 {
 	rtvHeap.Reset();
 
-	std::vector<UINT> reusedHeapDescriptors;
+	const UINT DescriptorMax = 10000;
+	UINT descriptorOffset = DescriptorMax;
 	if (!textures.empty())
 	{
 		for (auto& [name, t] : info.textures)
 		{
 			auto& tex = textures[name];
-			reusedHeapDescriptors.push_back(tex.textures.front().textureView.srvHeapIndex);
+			descriptorOffset = min(descriptorOffset, tex.view.srvHeapIndex);
+			tex = {};
 		}
-		textures.clear();
 	}
 
-	for (int i = 0; auto& [name,t] : info.textures)
+	for (auto& [name,t] : info.textures)
 	{
 		UINT w = t.width;
 		UINT h = t.height;
@@ -118,48 +124,73 @@ void FrameCompositor::reloadTextures()
 			w = provider.renderSystem->getWindow()->getWidth() * t.width;
 			h = provider.renderSystem->getWindow()->getHeight() * t.height;
 		}
-
-		auto lastState = lastTextureStates[t.name];
-
-		RenderTargetTexture& tex = textures[t.name];
-		if (t.uav)
-			tex.flags = RenderTargetTexture::AllowUAV;
-		tex.arraySize = t.arraySize;
 		if (t.arraySize > 1)
 		{
-			auto sqr = sqrt(tex.arraySize);
+			auto sqr = sqrt(t.arraySize);
 			w /= sqr;
 			h /= sqr;
 		}
 
-		tex.Init(provider.renderSystem->device, w, h, rtvHeap, t.formats, lastState, t.depthBuffer);
-		tex.SetName(std::wstring(t.name.begin(), t.name.end()).c_str());
+		{
+			auto lastState = lastTextureStates[name];
 
-		if (reusedHeapDescriptors.empty())
-			DescriptorManager::get().createTextureView(tex);
-		else
-			DescriptorManager::get().createTextureView(tex, reusedHeapDescriptors[i++]);
+			RenderTargetTexture& tex = textures[name];
+			tex.arraySize = t.arraySize;
+
+			if (name.ends_with(":Depth"))
+				tex.InitDepth(provider.renderSystem->device, w, h, rtvHeap, lastState);
+			else
+				tex.Init(provider.renderSystem->device, w, h, rtvHeap, t.format, lastState, t.uav ? RenderTargetTexture::AllowUAV : RenderTargetTexture::AllowRenderTarget);
+	
+			tex.SetName(std::wstring(name.begin(), name.end()).c_str());
+
+			if (descriptorOffset == DescriptorMax)
+			{
+				DescriptorManager::get().createTextureView(tex);
+				AaTextureResources::get().setNamedTexture("c_" + name, &tex.view);
+			}
+			else
+			{
+				DescriptorManager::get().createTextureView(tex, descriptorOffset++);
+			}
+		}
 	}
 
 	for (auto& p : passes)
 	{
-		for (UINT i = 0; auto& [name, idx, type] : p.info.inputs)
+		for (UINT i = 0; auto& [name,_] : p.info.inputs)
 		{
-			p.inputs[i].idx = idx;
 			p.inputs[i++].texture = &textures[name];
 		}
 
-		if (!p.info.target.empty())
+		if (!p.info.targets.empty())
 		{
-			p.target.idx = p.info.targetIndex;
-
-			if (p.info.target == "Backbuffer")
+			if (p.info.targets.front().name == "Backbuffer")
 			{
 				p.target.texture = &provider.renderSystem->backbuffer[0];
 				p.target.backbuffer = true;
 			}
 			else
-				p.target.texture = &textures[p.info.target];
+			{
+				p.target.texture = &textures[p.info.targets.front().name];
+			}
+			
+			if (p.target.textureSet)
+			{
+				auto textureSet = p.target.textureSet.get();
+
+				for (int c = 0; auto& [targetName,_] : p.info.targets)
+				{
+					auto t = &textures[targetName];
+
+					if (targetName.ends_with(":Depth"))
+						textureSet->depthState.texture = t;
+					else
+						textureSet->texturesState[c++].texture = t;
+				}
+
+				textureSet->Init();
+			}
 		}
 
 		if (p.task)
@@ -171,12 +202,12 @@ void FrameCompositor::reloadTextures()
 
 void FrameCompositor::renderQuad(PassData& pass, RenderContext& ctx, ID3D12GraphicsCommandList* commandList)
 {
-	pass.target.texture->PrepareAsTarget(commandList, pass.target.previousState, false, false);
+	pass.target.texture->PrepareAsTarget(commandList, pass.target.previousState);
 
 	for (UINT i = 0; auto & input : pass.inputs)
 	{
 		input.texture->PrepareAsView(commandList, input.previousState);
-		pass.material->SetTexture(input.texture->textureView(input.idx), i++);
+		pass.material->SetTexture(input.texture->view, i++);
 	}
 
 	ShaderConstantsProvider constants(provider.params, {}, *ctx.camera, *pass.target.texture);

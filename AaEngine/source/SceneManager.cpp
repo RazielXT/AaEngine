@@ -1,7 +1,7 @@
 #include "SceneManager.h"
 #include "AaMaterialResources.h"
 
-SceneManager::SceneManager(AaRenderSystem* rs)
+SceneManager::SceneManager(RenderSystem* rs)
 {
 	renderSystem = rs;
 }

@@ -2,7 +2,7 @@
 #include "imgui.h"
 #include "backends/imgui_impl_win32.h"
 #include "backends/imgui_impl_dx12.h"
-#include "AaRenderSystem.h"
+#include "RenderSystem.h"
 #include "SceneManager.h"
 #include "AaMaterialResources.h"
 
@@ -28,7 +28,7 @@ namespace imgui
 		return *instance;
 	}
 
-	void DebugWindow::init(AaRenderSystem* renderer)
+	void DebugWindow::init(RenderSystem* renderer)
 	{
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();

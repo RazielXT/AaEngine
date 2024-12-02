@@ -21,12 +21,12 @@ struct CommandsData
 	void deinit();
 };
 
-class AaRenderSystem : public ScreenListener
+class RenderSystem : public ScreenListener
 {
 public:
 
-	AaRenderSystem(AaWindow* mWindow);
-	~AaRenderSystem();
+	RenderSystem(AaWindow* mWindow);
+	~RenderSystem();
 
 	static const UINT FrameCount = 2;
 

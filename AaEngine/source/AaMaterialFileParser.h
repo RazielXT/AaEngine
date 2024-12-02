@@ -22,6 +22,7 @@ struct TextureRef
 {
 	std::string id;
 	std::string file;
+	std::string compositorId;
 };
 
 using SamplerRef = SamplerInfo;
@@ -65,7 +66,9 @@ struct MaterialRef
 	std::array<std::optional<std::string>, int(MaterialTechnique::COUNT)> techniqueMaterial;
 };
 
+struct shaderRefMaps;
+
 namespace AaMaterialFileParser
 {
-	void parseAllMaterialFiles(std::vector<MaterialRef>& mats, std::string directory, bool subFolders = false);
+	void parseAllMaterialFiles(std::vector<MaterialRef>& mats, shaderRefMaps& shaders, std::string directory, bool subFolders = false);
 };

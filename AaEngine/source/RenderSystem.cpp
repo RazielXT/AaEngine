@@ -1,4 +1,4 @@
-#include "AaRenderSystem.h"
+#include "RenderSystem.h"
 #include "..\..\DirectX-Headers\include\directx\d3dx12.h"
 #include <wrl.h>
 #include "AaMaterial.h"
@@ -7,7 +7,7 @@
 #include "SceneManager.h"
 #include "AaMaterialResources.h"
 
-AaRenderSystem::AaRenderSystem(AaWindow* mWindow)
+RenderSystem::RenderSystem(AaWindow* mWindow)
 {
 	this->mWindow = mWindow;
 	mWindow->listeners.push_back(this);
@@ -59,11 +59,11 @@ AaRenderSystem::AaRenderSystem(AaWindow* mWindow)
 	{
 		swapChain->GetBuffer(n, IID_PPV_ARGS(&swapChainTextures[n]));
 	}
-	backbufferHeap.Init(device, FrameCount, L"BackbufferRTV");
+	backbufferHeap.InitRtv(device, FrameCount, L"BackbufferRTV");
 
 	for (int i = 0; auto& b : backbuffer)
 	{
-		b.InitExisting(swapChainTextures[i++], device, width, height, backbufferHeap);
+		b.InitExisting(swapChainTextures[i++], device, width, height, backbufferHeap, DXGI_FORMAT_R8G8B8A8_UNORM);
 		b.SetName(L"Backbuffer");
 	}
 
@@ -71,7 +71,7 @@ AaRenderSystem::AaRenderSystem(AaWindow* mWindow)
 	fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 }
 
-AaRenderSystem::~AaRenderSystem()
+RenderSystem::~RenderSystem()
 {
 	fence->Release();
 
@@ -82,7 +82,7 @@ AaRenderSystem::~AaRenderSystem()
 	CloseHandle(fenceEvent);
 }
 
-void AaRenderSystem::onScreenResize()
+void RenderSystem::onScreenResize()
 {
 	WaitForAllFrames();
 
@@ -108,14 +108,14 @@ void AaRenderSystem::onScreenResize()
 
 	for (int i = 0; auto& b : backbuffer)
 	{
-		b.InitExisting(swapChainTextures[i++], device, width, height, backbufferHeap);
+		b.InitExisting(swapChainTextures[i++], device, width, height, backbufferHeap, DXGI_FORMAT_R8G8B8A8_UNORM);
 		b.SetName(L"Backbuffer");
 	}
 
 	MoveToNextFrame();
 }
 
-void AaRenderSystem::WaitForCurrentFrame()
+void RenderSystem::WaitForCurrentFrame()
 {
 	const UINT64 currentFenceValue = fenceValues[frameIndex];
 	commandQueue->Signal(fence, currentFenceValue);
@@ -129,7 +129,7 @@ void AaRenderSystem::WaitForCurrentFrame()
 	fenceValues[frameIndex]++;
 }
 
-CommandsData AaRenderSystem::CreateCommandList(const wchar_t* name)
+CommandsData RenderSystem::CreateCommandList(const wchar_t* name)
 {
 	CommandsData data;
 
@@ -147,7 +147,7 @@ CommandsData AaRenderSystem::CreateCommandList(const wchar_t* name)
 	return data;
 }
 
-void AaRenderSystem::StartCommandList(CommandsData commands)
+void RenderSystem::StartCommandList(CommandsData commands)
 {
 	// Reset command allocator and command list
 	commands.commandAllocators[frameIndex]->Reset();
@@ -157,7 +157,7 @@ void AaRenderSystem::StartCommandList(CommandsData commands)
 	commands.commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 }
 
-void AaRenderSystem::ExecuteCommandList(CommandsData commands)
+void RenderSystem::ExecuteCommandList(CommandsData commands)
 {
 	// Close the command list and execute it
 	commands.commandList->Close();
@@ -166,17 +166,17 @@ void AaRenderSystem::ExecuteCommandList(CommandsData commands)
 	commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
 }
 
-void AaRenderSystem::Present()
+void RenderSystem::Present()
 {
 	swapChain->Present(1, 0);
 }
 
-void AaRenderSystem::EndFrame()
+void RenderSystem::EndFrame()
 {
 	MoveToNextFrame();
 }
 
-void AaRenderSystem::WaitForAllFrames()
+void RenderSystem::WaitForAllFrames()
 {
 	for (int i = 0; i < FrameCount; i++)
 	{
@@ -194,7 +194,7 @@ void AaRenderSystem::WaitForAllFrames()
 }
 
 // Prepare to render the next frame.
-void AaRenderSystem::MoveToNextFrame()
+void RenderSystem::MoveToNextFrame()
 {
 	// Schedule a Signal command in the queue.
 	const UINT64 currentFenceValue = fenceValues[frameIndex];

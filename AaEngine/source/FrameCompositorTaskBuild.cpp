@@ -7,7 +7,7 @@ void FrameCompositor::initializeTextureStates()
 	//find last backbuffer write
 	for (auto it = passes.rbegin(); it != passes.rend(); ++it)
 	{
-		if (it->info.target == "Backbuffer")
+		if (!it->info.targets.empty() && it->info.targets.front().name == "Backbuffer")
 		{
 			it->target.present = true;
 			break;
@@ -17,119 +17,213 @@ void FrameCompositor::initializeTextureStates()
 	//iterate to get last states first
 	for (auto& pass : passes)
 	{
-		lastTextureStates[pass.info.target] = pass.target.present ? D3D12_RESOURCE_STATE_PRESENT : D3D12_RESOURCE_STATE_RENDER_TARGET;
-		for (auto& i : pass.info.inputs)
-			lastTextureStates[i.name] = info.textures[i.name].uav && pass.task ? D3D12_RESOURCE_STATE_UNORDERED_ACCESS : D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+		for (auto& [name, flags] : pass.info.inputs)
+		{
+			auto& state = lastTextureStates[name];
+			if (flags & Compositor::PixelShader)
+				state = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+			else if (flags & Compositor::ComputeShader && info.textures[name].uav)
+				state = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+			else
+				state = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+		}
+		for (auto& [name, flags] : pass.info.targets)
+		{
+			auto& state = lastTextureStates[name];
+			if (pass.target.present)
+				state = D3D12_RESOURCE_STATE_PRESENT;
+			else if (name.ends_with(":Depth"))
+			{
+				if (flags & Compositor::DepthRead)
+					state = D3D12_RESOURCE_STATE_DEPTH_READ;
+				else
+					state = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+			}
+			else
+				state = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		}
 	}
 
 	for (auto& pass : passes)
 	{
-		pass.target.previousState = lastTextureStates[pass.info.target];
-		lastTextureStates[pass.info.target] = D3D12_RESOURCE_STATE_RENDER_TARGET;
-
 		pass.inputs.resize(pass.info.inputs.size());
-		for (UINT idx = 0; auto & i : pass.info.inputs)
+		for (UINT idx = 0; auto & [name, flags] : pass.info.inputs)
 		{
-			auto& tState = lastTextureStates[i.name];
+			auto& tState = lastTextureStates[name];
+			pass.inputs[idx++].previousState = tState;
 
-			if (i.type == CompositorTextureInput::Depth && tState == D3D12_RESOURCE_STATE_RENDER_TARGET)
-				pass.inputs[idx++].previousState = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+			if (flags & Compositor::PixelShader)
+				tState = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+			else if (flags & Compositor::ComputeShader && info.textures[name].uav)
+				tState = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 			else
-				pass.inputs[idx++].previousState = tState;
+				tState = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+		}
 
-			tState = info.textures[i.name].uav && pass.task ? D3D12_RESOURCE_STATE_UNORDERED_ACCESS : D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+		if (!pass.info.targets.empty())
+		{
+			auto& [targetName, flags] = pass.info.targets[0];
+			auto& lastState = lastTextureStates[targetName];
+			pass.target.previousState = lastState;
+
+			if (pass.info.targets.size() == 1)
+			{
+				if (targetName.ends_with(":Depth"))
+				{
+					if (flags & Compositor::DepthRead)
+						lastState = D3D12_RESOURCE_STATE_DEPTH_READ;
+					else
+						lastState = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+				}
+				else
+					lastState = D3D12_RESOURCE_STATE_RENDER_TARGET;
+			}
+			else
+			{
+				pass.target.textureSet = std::make_unique<RenderTargetTexturesView>();
+				auto textureSet = pass.target.textureSet.get();
+
+				for (auto& [targetName, flags] : pass.info.targets)
+				{
+					auto& lastState = lastTextureStates[targetName];
+
+					if (targetName.ends_with(":Depth"))
+					{
+						textureSet->depthState.previousState = lastState;
+
+						if (flags & Compositor::DepthRead)
+							lastState = D3D12_RESOURCE_STATE_DEPTH_READ;
+						else
+							lastState = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+					}
+					else
+					{
+						textureSet->texturesState.push_back({ nullptr, lastState });
+						lastState = D3D12_RESOURCE_STATE_RENDER_TARGET;
+					}
+				}
+			}
 		}
 	}
 }
 
 void FrameCompositor::initializeCommands()
 {
-	auto needsPassResources = [](const std::set<std::string>& pushedResources, const CompositorPassInfo& pass)
+	CommandsData syncCommands{};
+	std::vector<CompositorPassInfo*> syncPasses;
+	AsyncTasksInfo asyncTasks;
+	std::vector<CompositorPassInfo*> asyncPasses;
+
+	auto buildSyncCommands = [&]()
 		{
-			return pushedResources.contains(pass.after)
-				|| pushedResources.contains(pass.target)
-				|| std::any_of(pass.inputs.begin(), pass.inputs.end(), [&pushedResources](const CompositorTextureInput& i) { return pushedResources.find(i.name) != pushedResources.end(); });
+			if (syncCommands.commandList)
+				tasks.push_back({ {}, { syncCommands }, std::move(syncPasses) });
+
+			syncCommands = {};
 		};
-
-	std::vector<std::string> asyncNames;
-	AsyncTasksInfo pushedAsyncTasks;
-	std::set<std::string> pushedAsyncResources;
-
-	auto prepareAsyncTasks = [&]()
+	auto buildAsyncCommands = [&]()
 		{
-			if (pushedAsyncTasks.empty())
+			if (asyncTasks.empty())
 				return;
 
 			TasksGroup& group = tasks.emplace_back();
-			for (auto& t : pushedAsyncTasks)
+			for (auto& t : asyncTasks)
 			{
 				group.data.push_back(t.commands);
 				group.finishEvents.push_back(t.finishEvent);
 			}
-			group.pass = std::move(asyncNames);
-
-			pushedAsyncTasks.clear();
-			pushedAsyncResources.clear();
+			group.pass = std::move(asyncPasses);
+			asyncTasks.clear();
 		};
-
-	auto pushAsyncTasks = [&](const CompositorPassInfo& pass, const AsyncTasksInfo& tasks, bool forceOrder)
+	auto pushAsyncTasks = [&](CompositorPassInfo& pass, const AsyncTasksInfo& tasks, bool forceOrder)
 		{
-			if (needsPassResources(pushedAsyncResources, pass))
-				prepareAsyncTasks();
+			if (tasks.empty())
+				return;
 
 			if (!forceOrder)
 			{
-				asyncNames.push_back(pass.name);
-				pushedAsyncTasks.insert(pushedAsyncTasks.end(), tasks.begin(), tasks.end());
+				asyncPasses.push_back(&pass);
+				asyncTasks.insert(asyncTasks.end(), tasks.begin(), tasks.end());
 			}
 			else
 			{
 				for (int i = 0; auto& t : tasks)
 				{
 					if (i++)
-						prepareAsyncTasks();
+						buildAsyncCommands();
 
-					asyncNames.push_back(pass.name);
-					pushedAsyncTasks.push_back(t);
+					asyncPasses.push_back(&pass);
+					asyncTasks.push_back(t);
 				}
 			}
-
-			if (!pass.name.empty())
-				pushedAsyncResources.insert(pass.name);
-
-			if (!pass.target.empty())
-				pushedAsyncResources.insert(pass.target);
 		};
-
-	CommandsData generalCommands{};
-	auto buildSyncCommands = [&]()
+	auto pushSyncCommands = [&](FrameCompositor::PassData& passData)
 		{
-			if (generalCommands.commandList)
-				tasks.push_back({ {}, { generalCommands } });
-		};
-	auto refreshSyncCommands = [&](FrameCompositor::PassData& passData, bool syncPass)
-		{
-			static uint32_t syncCount = 0;
-
-			if (!generalCommands.commandList || (!syncPass && syncCount && needsPassResources(pushedAsyncResources, passData.info)))
+			if (!syncCommands.commandList)
 			{
-				buildSyncCommands();
-				generalCommands = generalCommandsArray.emplace_back(provider.renderSystem->CreateCommandList(L"Compositor"));
+				syncCommands = generalCommandsArray.emplace_back(provider.renderSystem->CreateCommandList(L"Compositor"));
 				passData.startCommands = true;
-				syncCount = 0;
 			}
-			syncCount += syncPass;
-			return generalCommands;
+			passData.generalCommands = syncCommands;
+			syncPasses.push_back(&passData.info);
+		};
+	auto dependsOnPreviousPass = [](const CompositorPassInfo& pass, const std::vector<CompositorPassInfo*>& passes, bool forceTargetOrder = false)
+		{
+			for (auto& target : passes)
+			{
+				if (pass.after == target->name)
+					return true;
+
+				for (auto& input : target->inputs)
+				{
+					for (auto& myInput : pass.inputs)
+					{
+						if (myInput.name == input.name && myInput.flags != input.flags)
+							return true;
+					}
+				}
+				for (auto& target : target->targets)
+				{
+					for (auto& myTarget : pass.targets)
+					{
+						if (myTarget.name == target.name && myTarget.flags != target.flags)
+							return true;
+					}
+
+					if (forceTargetOrder)
+					{
+						for (auto& myInput : pass.inputs)
+						{
+							if (myInput.name == target.name)
+								return true;
+						}
+						for (auto& myTarget : pass.targets)
+						{
+							if (myTarget.name == target.name)
+								return true;
+						}
+					}
+				}
+			}
+			return false;
 		};
 
 	for (auto& pass : passes)
 	{
-		if (pass.task)
-			pushAsyncTasks(pass.info, pass.task->initialize(pass), pass.task->forceTaskOrder());
+		auto isSync = !pass.task || pass.task->writesSyncCommands();
 
-		pass.generalCommands = refreshSyncCommands(pass, !pass.task || pass.task->writesSyncCommands());
+		if (dependsOnPreviousPass(pass.info, asyncPasses, true))
+			buildAsyncCommands();
+		if (dependsOnPreviousPass(pass.info, syncPasses, !isSync))
+			buildSyncCommands();
+
+		if (pass.task)
+ 			pushAsyncTasks(pass.info, pass.task->initialize(pass), pass.task->forceTaskOrder());
+
+		if (isSync)
+			pushSyncCommands(pass);
 	}
 
-	prepareAsyncTasks();
+	buildAsyncCommands();
 	buildSyncCommands();
 }

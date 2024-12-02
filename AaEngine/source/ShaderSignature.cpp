@@ -155,6 +155,14 @@ void SignatureInfo::add(LoadedShader* shader, ShaderType type)
 	bindlessTextures |= shader->desc.bindlessTextures;
 }
 
+void SignatureInfo::setTexturesVolatile()
+{
+	for (auto& t : textures)
+	{
+		t.staticWhileExecute = false;
+	}
+}
+
 void SignatureInfo::finish()
 {
 	UINT rootIndex = 0;
@@ -166,7 +174,7 @@ void SignatureInfo::finish()
 
 		for (auto& b : cbuffers)
 		{
-			if (b.info.Size < rootParamsSizeMax && (!rootBuffer || b.info.Name == "$Globals"))
+			if (b.info.Size <= rootParamsSizeMax && (!rootBuffer || b.info.Name == "$Globals"))
 				rootBuffer = &b;
 
 			for (auto& p : b.info.Params)
@@ -224,7 +232,7 @@ ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device* device, co
 		auto& tex = textures[i];
 		auto& range = srvRanges[i];
 
-		range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, tex.info.Slot, tex.info.Space, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
+		range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, tex.info.Slot, tex.info.Space, tex.staticWhileExecute ? D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE : D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
 		param->InitAsDescriptorTable(1, &range, tex.visibility);
 
 		param++;
@@ -336,8 +344,14 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData() const
 					type = ResourcesInfo::AutoParam::WVP_MATRIX;
 				else if (p.Name == "ViewProjectionMatrix")
 					type = ResourcesInfo::AutoParam::VP_MATRIX;
+				else if (p.Name == "ViewMatrix")
+					type = ResourcesInfo::AutoParam::VIEW_MATRIX;
 				else if (p.Name == "InvViewProjectionMatrix")
 					type = ResourcesInfo::AutoParam::INV_VP_MATRIX;
+				else if (p.Name == "InvViewMatrix")
+					type = ResourcesInfo::AutoParam::INV_VIEW_MATRIX;
+				else if (p.Name == "InvProjectionMatrix")
+					type = ResourcesInfo::AutoParam::INV_PROJ_MATRIX;
 				else if (p.Name == "WorldMatrix")
 					type = ResourcesInfo::AutoParam::WORLD_MATRIX;
 				else if (p.Name == "ShadowMatrix")
@@ -353,14 +367,22 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData() const
 				}
 				else if (p.Name == "Time")
 					type = ResourcesInfo::AutoParam::TIME;
+				else if (p.Name == "DeltaTime")
+					type = ResourcesInfo::AutoParam::DELTA_TIME;
 				else if (p.Name == "ViewportSizeInverse")
 					type = ResourcesInfo::AutoParam::VIEWPORT_SIZE_INV;
+				else if (p.Name == "ViewportSize")
+					type = ResourcesInfo::AutoParam::VIEWPORT_SIZE;
 				else if (p.Name == "SunDirection")
 					type = ResourcesInfo::AutoParam::SUN_DIRECTION;
+				else if (p.Name == "SunColor")
+					type = ResourcesInfo::AutoParam::SUN_COLOR;
 				else if (p.Name == "CameraPosition")
 					type = ResourcesInfo::AutoParam::CAMERA_POSITION;
 				else if (p.Name == "WorldPosition")
 					type = ResourcesInfo::AutoParam::WORLD_POSITION;
+				else if (p.Name == "ZMagic")
+					type = ResourcesInfo::AutoParam::Z_MAGIC;
 
 				if (type != ResourcesInfo::AutoParam::None)
 					resources->autoParams.emplace_back(type, (UINT)(p.StartOffset / sizeof(float)));

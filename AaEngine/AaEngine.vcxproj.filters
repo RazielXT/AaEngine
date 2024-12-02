@@ -64,7 +64,7 @@
     <ClCompile Include="source\MyListener.cpp">
       <Filter>Source Files\App</Filter>
     </ClCompile>
-    <ClCompile Include="source\AaRenderSystem.cpp">
+    <ClCompile Include="source\RenderSystem.cpp">
       <Filter>Source Files\Render</Filter>
     </ClCompile>
     <ClCompile Include="source\RenderTargetTexture.cpp">
@@ -255,7 +255,7 @@
     <ClInclude Include="source\MyListener.h">
       <Filter>Source Files\App</Filter>
     </ClInclude>
-    <ClInclude Include="source\AaRenderSystem.h">
+    <ClInclude Include="source\RenderSystem.h">
       <Filter>Source Files\Render</Filter>
     </ClInclude>
     <ClInclude Include="source\RenderTargetTexture.h">

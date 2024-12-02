@@ -1,9 +1,9 @@
 #include "ShaderConstantBuffers.h"
-#include "AaRenderSystem.h"
+#include "RenderSystem.h"
 
 static ShaderConstantBuffers* instance = nullptr;
 
-ShaderConstantBuffers::ShaderConstantBuffers(AaRenderSystem* rs)
+ShaderConstantBuffers::ShaderConstantBuffers(RenderSystem* rs)
 {
 	renderSystem = rs;
 	graphicsMemory = std::make_unique<DirectX::DX12::GraphicsMemory>(renderSystem->device);

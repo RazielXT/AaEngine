@@ -10,7 +10,7 @@ AaMaterialResources& AaMaterialResources::get()
 	return *instance;
 }
 
-AaMaterialResources::AaMaterialResources(AaRenderSystem* rs)
+AaMaterialResources::AaMaterialResources(RenderSystem* rs)
 {
 	if (instance)
 		throw std::exception("Duplicate AaMaterialResources");
@@ -72,7 +72,9 @@ MaterialInstance* AaMaterialResources::loadMaterial(std::string name, ResourceUp
 
 void AaMaterialResources::loadMaterials(std::string directory, bool subDirectories)
 {
-	AaMaterialFileParser::parseAllMaterialFiles(knownMaterials, directory, subDirectories);
+	shaderRefMaps shaders;
+	AaMaterialFileParser::parseAllMaterialFiles(knownMaterials, shaders, directory, subDirectories);
+	AaShaderLibrary::get().addShaderReferences(shaders);
 
 	for (const MaterialRef& info : knownMaterials)
 	{

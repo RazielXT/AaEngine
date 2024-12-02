@@ -1,0 +1,47 @@
+compositor Exposure
+{
+	texture exposureDs target_size_div 4 DXGI_FORMAT_R8_UNORM
+	texture exposureDs2 64 64 DXGI_FORMAT_R8_UNORM
+	texture exposureDs3 16 16 DXGI_FORMAT_R8_UNORM
+	texture exposureDs4 4 4 DXGI_FORMAT_R8_UNORM
+	texture exposureDs5 1 1 DXGI_FORMAT_R8_UNORM
+	texture exposure 1 1 DXGI_FORMAT_R8_UNORM
+
+	pass ExposureDownsample
+	{
+		material PassThroughAvg
+		input sceneTexture 1
+		target exposureDs
+	}
+	pass ExposureDownsample2
+	{
+		material Downsample3x3
+		input exposureDs
+		target exposureDs2
+	}
+	pass ExposureDownsample3
+	{
+		material Downsample3x3
+		input exposureDs2
+		target exposureDs3
+	}
+	pass ExposureDownsample4
+	{
+		material Downsample3x3
+		input exposureDs3
+		target exposureDs4
+	}
+	pass ExposureDownsample5
+	{
+		material Downsample3x3Exposure
+		input exposureDs4
+		input exposure
+		target exposureDs5
+	}
+	pass ExposureDownsampleFinal
+	{
+		material PassThrough
+		input exposureDs5
+		target exposure
+	}
+}

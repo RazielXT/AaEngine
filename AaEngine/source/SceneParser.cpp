@@ -281,7 +281,7 @@ static std::string findFileWithExtension(const std::string& directoryPath, const
 	return {};
 }
 
-SceneParseResult SceneParser::load(std::string name, SceneManager* sceneMgr, AaRenderSystem* renderSystem)
+SceneParseResult SceneParser::load(std::string name, SceneManager* sceneMgr, RenderSystem* renderSystem)
 {
 	SceneParseResult result;
 	parseResult = &result;

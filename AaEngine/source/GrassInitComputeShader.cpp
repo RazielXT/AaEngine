@@ -13,7 +13,7 @@ void GrassInitComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, Gr
 
 	struct
 	{
-		XMMATRIX invViewMatrix;
+		XMFLOAT4X4 invViewMatrix;
 		float spacing;
 		XMFLOAT3 boundsMin;
 		XMFLOAT3 boundsMax;
@@ -24,13 +24,15 @@ void GrassInitComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, Gr
 		UINT colorTexture;
 	}
 	ctx = {
-		invView,
+		{},
 		desc.spacing,
 		desc.bbox.Center - desc.bbox.Extents,
 		desc.bbox.Center + desc.bbox.Extents,
 		desc.width, desc.count, desc.areaCount.y,
 		depthTex, colorTex
 	};
+
+	XMStoreFloat4x4(&ctx.invViewMatrix, invView);
 
 	commandList->SetComputeRoot32BitConstants(0, sizeof(ctx) / sizeof(float), &ctx, 0);
 	commandList->SetComputeRootUnorderedAccessView(1, vertexBuffer->GetGPUVirtualAddress());

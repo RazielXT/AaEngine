@@ -33,7 +33,7 @@ class MaterialBase
 {
 public:
 
-	MaterialBase(AaRenderSystem* renderSystem, DescriptorManager& mgr, const MaterialRef& ref);
+	MaterialBase(RenderSystem* renderSystem, DescriptorManager& mgr, const MaterialRef& ref);
 	~MaterialBase();
 
 	void Load();
@@ -59,7 +59,7 @@ private:
 	LoadedShader* shaders[ShaderType_COUNT]{};
 
 	ID3D12RootSignature* rootSignature{};
-	AaRenderSystem* renderSystem;
+	RenderSystem* renderSystem;
 
 	ID3D12PipelineState* GetPipelineState(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target);
 	ID3D12PipelineState* CreatePipelineState(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target);

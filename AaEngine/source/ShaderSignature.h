@@ -20,6 +20,7 @@ struct SignatureInfo
 	{
 		ShaderReflection::Texture& info;
 		D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY(-1);
+		bool staticWhileExecute = true;
 	};
 	std::vector<Texture> textures;
 
@@ -61,6 +62,7 @@ struct SignatureInfo
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS;
 
 	void add(LoadedShader* shader, ShaderType type);
+	void setTexturesVolatile();
 	void finish();
 
 	ID3D12RootSignature* createRootSignature(ID3D12Device* device, const wchar_t* name, const std::vector<SamplerInfo>& staticSamplers = {});

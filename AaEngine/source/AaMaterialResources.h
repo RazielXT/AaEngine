@@ -1,7 +1,7 @@
 #pragma once
 
 #include <map>
-#include "AaRenderSystem.h"
+#include "RenderSystem.h"
 #include "AaMaterial.h"
 #include "AaMaterialFileParser.h"
 #include "AaTextureResources.h"
@@ -10,7 +10,7 @@ class AaMaterialResources
 {
 public:
 
-	AaMaterialResources(AaRenderSystem* rs);
+	AaMaterialResources(RenderSystem* rs);
 	~AaMaterialResources();
 
 	static AaMaterialResources& get();
@@ -24,7 +24,7 @@ public:
 
 private:
 
-	AaRenderSystem* renderSystem{};
+	RenderSystem* renderSystem{};
 
 	std::vector<MaterialRef> knownMaterials;
 

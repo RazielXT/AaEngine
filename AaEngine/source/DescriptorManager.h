@@ -22,16 +22,16 @@ public:
 	void createTextureView(TextureResource& texture, UINT mipLevel = -1);
 	void createTextureView(FileTexture& texture);
 	void createTextureView(RenderTargetTexture& texture);
-	void createTextureView(RenderTargetTexture& texture, UINT& descriptorOffset);
-	void createDepthView(RenderDepthTargetTexture& texture);
+	void createTextureView(RenderTargetTexture& texture, UINT descriptorOffset);
+	void createTextureView(RenderTargetTextures& textures);
 	void createUAVView(TextureResource& texture);
 	UINT createUAVView(RenderTargetTexture& texture, UINT mipLevel = 0);
 
 	UINT nextDescriptor(UINT offset, D3D12_SRV_DIMENSION) const;
 	UINT previousDescriptor(UINT offset, D3D12_SRV_DIMENSION) const;
 
+	void removeTextureView(RenderTargetTextures& textures);
 	void removeTextureView(RenderTargetTexture& texture);
-	void removeDepthView(RenderDepthTargetTexture& texture);
 
 private:
 

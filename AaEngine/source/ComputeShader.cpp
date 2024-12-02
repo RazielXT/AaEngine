@@ -19,6 +19,9 @@ void ComputeShader::init(ID3D12Device* device, const std::string& name)
 	info.add(shader, ShaderTypeCompute);
 	info.finish();
 
+	if (volatileTextures)
+		info.setTexturesVolatile();
+
 	signature = info.createRootSignature(device, std::wstring(name.begin(), name.end()).data(), {{.bordering = D3D12_TEXTURE_ADDRESS_MODE_BORDER}});
 
 	D3D12_COMPUTE_PIPELINE_STATE_DESC computePsoDesc = {};

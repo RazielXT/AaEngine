@@ -10,7 +10,7 @@ AaApplication::AaApplication(HINSTANCE hInstance)
 	int y = 800;
 
 	mWindow = new AaWindow(hInstance, x, y);
- 	mRenderSystem = new AaRenderSystem(mWindow);
+ 	mRenderSystem = new RenderSystem(mWindow);
 	mResources = new DescriptorManager(mRenderSystem->device);
 	mResources->init(1000);
 	mShaderConstants = new ShaderConstantBuffers(mRenderSystem);

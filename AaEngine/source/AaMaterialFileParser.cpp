@@ -2,6 +2,7 @@
 #include "AaLogger.h"
 #include <filesystem>
 #include "ConfigParser.h"
+#include "AaShaderFileParser.h"
 
 static bool parseToggleValue(const std::string& value)
 {
@@ -10,7 +11,7 @@ static bool parseToggleValue(const std::string& value)
 
 using ParsedObjects = std::map<std::string, const Config::Object*>;
 
-static void ParseMaterialObject(MaterialRef& mat, const Config::Object& obj, const ParsedObjects& previous)
+static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const Config::Object& obj, const ParsedObjects& previous)
 {
 	if (obj.params.size() > 1 && obj.params[0] == ":")
 	{
@@ -22,7 +23,7 @@ static void ParseMaterialObject(MaterialRef& mat, const Config::Object& obj, con
 				for (auto& [name, parent] : previous)
 				{
 					if (name == parentName)
-						ParseMaterialObject(mat, *parent, previous);
+						ParseMaterialObject(mat, shaders, *parent, previous);
 				}
 			}
 		}
@@ -41,14 +42,36 @@ static void ParseMaterialObject(MaterialRef& mat, const Config::Object& obj, con
 	{
 		bool parentInvalidated = true;
 
-		if (member.type == "vertex_shader")
+		if (member.type.ends_with("_shader"))
 		{
-			mat.pipeline.vs_ref = member.value;
+			std::string* refNamePtr = nullptr;
+			if (member.type == "vertex_shader")
+			{
+				refNamePtr = &mat.pipeline.vs_ref;
+			}
+			else if (member.type == "pixel_shader")
+			{
+				refNamePtr = &mat.pipeline.ps_ref;
+			}
+
+			if (refNamePtr)
+			{
+				if (!member.value.empty())
+					*refNamePtr = member.value;
+				else
+				{
+					if (member.value.empty() && !member.children.empty())
+					{
+						auto generatedName = mat.pipeline.ps_ref = mat.name + "_" + member.type;
+						auto shaderType = AaShaderFileParser::ParseShaderType(member.type);
+
+						auto& ref = shaders.shaderRefs[shaderType][generatedName];
+						AaShaderFileParser::ParseShaderParams(ref, member);
+					}
+				}
+			}	
 		}
-		else if (member.type == "pixel_shader")
-		{
-			mat.pipeline.ps_ref = member.value;
-		}
+		
 		else if (member.type == "depth")
 		{
 			mat.pipeline.depth.check = mat.pipeline.depth.write = parseToggleValue(member.value);
@@ -128,6 +151,10 @@ static void ParseMaterialObject(MaterialRef& mat, const Config::Object& obj, con
 				{
 					tex.file = param.value;
 				}
+				else if (param.type == "compositor")
+				{
+					tex.compositorId = param.value;
+				}
 			}
 
 			if (!prevTextureIndex)
@@ -182,7 +209,7 @@ static void ParseMaterialObject(MaterialRef& mat, const Config::Object& obj, con
 	}
 }
 
-void parseMaterialFile(std::vector<MaterialRef>& mats, std::string file)
+void parseMaterialFile(std::vector<MaterialRef>& mats, shaderRefMaps& shaders, std::string file)
 {
 	auto objects = Config::Parse(file);
 
@@ -193,7 +220,7 @@ void parseMaterialFile(std::vector<MaterialRef>& mats, std::string file)
 		{
 			MaterialRef mat;
 
-			ParseMaterialObject(mat, obj, parsed);
+			ParseMaterialObject(mat, shaders, obj, parsed);
 
 			mats.push_back(mat);
 			parsed[obj.value] = &obj;
@@ -201,7 +228,7 @@ void parseMaterialFile(std::vector<MaterialRef>& mats, std::string file)
 	}
 }
 
-void AaMaterialFileParser::parseAllMaterialFiles(std::vector<MaterialRef>& mats, std::string directory, bool subFolders)
+void AaMaterialFileParser::parseAllMaterialFiles(std::vector<MaterialRef>& mats, shaderRefMaps& shaders, std::string directory, bool subFolders)
 {
 	std::error_code ec;
 
@@ -209,12 +236,12 @@ void AaMaterialFileParser::parseAllMaterialFiles(std::vector<MaterialRef>& mats,
 	{
 		if (entry.is_directory() && subFolders)
 		{
-			parseAllMaterialFiles(mats, entry.path().generic_string(), subFolders);
+			parseAllMaterialFiles(mats, shaders, entry.path().generic_string(), subFolders);
 		}
 		else if (entry.is_regular_file() && entry.path().generic_string().ends_with(".material"))
 		{
 			AaLogger::log("Parsing " + entry.path().generic_string());
-			parseMaterialFile(mats, entry.path().generic_string());
+			parseMaterialFile(mats, shaders, entry.path().generic_string());
 		}
 	}
 

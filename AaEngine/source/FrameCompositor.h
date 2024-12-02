@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AaRenderSystem.h"
+#include "RenderSystem.h"
 #include "CompositorTask.h"
 
 class AaMaterial;
@@ -24,6 +24,7 @@ protected:
 
 	CompositorInfo info;
 	std::map<std::string, RenderTargetTexture> textures;
+
 	RenderTargetHeap rtvHeap;
 
 	struct PassData : public CompositorPass
@@ -44,7 +45,7 @@ protected:
 	{
 		std::vector<HANDLE> finishEvents;
 		std::vector<CommandsData> data;
-		std::vector<std::string> pass;
+		std::vector<CompositorPassInfo*> pass;
 	};
 	std::vector<TasksGroup> tasks;
 

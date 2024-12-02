@@ -10,103 +10,122 @@
 
 using namespace Microsoft::WRL;
 
-class RenderTargetInfo
-{
-public:
-
-	RenderTargetInfo() = default;
-
-	struct Texture
-	{
-		ComPtr<ID3D12Resource> texture;
-		ShaderTextureView textureView;
-	};
-	std::vector<Texture> textures;
-
-	std::vector<DXGI_FORMAT> formats;
-
-	UINT width = 0;
-	UINT height = 0;
-	UINT arraySize = 1;
-
-	ShaderTextureView& textureView(UINT i = 0);
-	UINT srvHeapIndex() const;
-	UINT uavHeapIndex() const;
-};
-
-class RenderDepthTargetTexture : public RenderTargetInfo
-{
-public:
-
-	void Init(ID3D12Device* device, UINT width, UINT height, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_DEPTH_WRITE, UINT arraySize = 1);
-	void ClearDepth(ID3D12GraphicsCommandList* commandList);
-
-	void PrepareAsDepthTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from);
-	void PrepareAsDepthView(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from);
-	void TransitionDepth(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES to, D3D12_RESOURCE_STATES from);
-
-	void SetName(const wchar_t* name);
-
-	ComPtr<ID3D12Resource> depthStencilTexture;
-	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandles{};
-	ShaderTextureView depthView;
-
-protected:
-
-	void CreateDepthBuffer(ID3D12Device* device, D3D12_RESOURCE_STATES initialState, UINT arraySize);
-
-	ComPtr<ID3D12DescriptorHeap> dsvHeap;
-	float depthClearValue = 0.f;
-};
-
 class RenderTargetHeap
 {
 public:
 
-	void Init(ID3D12Device* device, UINT count, const wchar_t* name = nullptr);
+	void InitRtv(ID3D12Device* device, UINT count, const wchar_t* name = nullptr);
+	void InitDsv(ID3D12Device* device, UINT count, const wchar_t* name = nullptr);
 	void Reset();
 
 	void CreateRenderTargetHandle(ID3D12Device* device, ComPtr<ID3D12Resource>& texture, D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle);
+	void CreateDepthTargetHandle(ID3D12Device* device, ComPtr<ID3D12Resource>& texture, D3D12_CPU_DESCRIPTOR_HANDLE& dsvHandle);
 
 private:
 
 	ComPtr<ID3D12DescriptorHeap> rtvHeap;
-	UINT handlesCount = 0;
+	UINT rtvHandlesCount = 0;
+
+	ComPtr<ID3D12DescriptorHeap> dsvHeap;
+	UINT dsvHandlesCount = 0;
 };
 
-class RenderTargetTexture : public RenderDepthTargetTexture
+class RenderTextureInfo
 {
 public:
 
-	enum { AllowRenderTarget = 1, AllowUAV = 2 } flags = AllowRenderTarget;
+	RenderTextureInfo() = default;
 
-	void Init(ID3D12Device* device, UINT width, UINT height, RenderTargetHeap& heap, const std::vector<DXGI_FORMAT>& formats, D3D12_RESOURCE_STATES state, bool depthBuffer = true, D3D12_RESOURCE_STATES initialDepthState = D3D12_RESOURCE_STATE_DEPTH_WRITE);
-	void InitExisting(ID3D12Resource*, ID3D12Device* device, UINT width, UINT height, RenderTargetHeap& heap, DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM);
+	ComPtr<ID3D12Resource> texture;
+	ShaderTextureView view;
 
-	void PrepareAsSingleTarget(ID3D12GraphicsCommandList* commandList, UINT textureIndex, D3D12_RESOURCE_STATES from, bool clear = true, bool depth = true, bool clearDepth = true);
-	void PrepareAsSingleView(ID3D12GraphicsCommandList* commandList, UINT textureIndex, D3D12_RESOURCE_STATES from);
+	DXGI_FORMAT format{};
 
-	void PrepareAsTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from, bool clear = true, bool depth = true, bool clearDepth = true);
-	void PrepareAsView(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from);
-	void PrepareToPresent(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from);
-	void TransitionTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES to, D3D12_RESOURCE_STATES from);
+	UINT width = 0;
+	UINT height = 0;
+	UINT arraySize = 1;
+};
+
+class RenderTargetTexture : public RenderTextureInfo
+{
+public:
+
+	enum Flags { AllowRenderTarget = 1, AllowUAV = 2 };
+	void Init(ID3D12Device* device, UINT width, UINT height, RenderTargetHeap& heap, DXGI_FORMAT format, D3D12_RESOURCE_STATES state, Flags flags = AllowRenderTarget);
+	void InitDepth(ID3D12Device* device, UINT width, UINT height, RenderTargetHeap& heap, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_DEPTH_WRITE);
+	void InitExisting(ID3D12Resource*, ID3D12Device* device, UINT width, UINT height, RenderTargetHeap& heap, DXGI_FORMAT format);
 
 	void SetName(const wchar_t* name);
 
-	DirectX::XMFLOAT4 clearColor = { 0.55f, 0.75f, 0.9f, 1.0f };
+ 	void PrepareAsTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from, bool clear = false);
+ 	void PrepareAsView(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from);
+ 	void PrepareToPresent(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from);
+// 	void TransitionTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES to, D3D12_RESOURCE_STATES from);
+
+	void PrepareAsDepthTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from, bool clear = true);
+	void ClearDepth(ID3D12GraphicsCommandList* commandList);
 
 private:
 
-	void CreateTextureBuffer(ID3D12Device* device, UINT width, UINT height, Texture& t, DXGI_FORMAT, D3D12_RESOURCE_STATES);
-
-	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtvHandles;
+	void CreateTextureBuffer(ID3D12Device* device, UINT width, UINT height, DXGI_FORMAT, D3D12_RESOURCE_STATES, Flags flags);
+	void CreateDepthBuffer(ID3D12Device* device, RenderTargetHeap& heap, D3D12_RESOURCE_STATES initialState);
 };
 
 struct RenderTargetTextureState
 {
 	RenderTargetTexture* texture{};
 	D3D12_RESOURCE_STATES previousState{};
-	UINT idx{};
+};
+
+namespace TransitionFlags
+{
+	enum Flags
+	{
+		NoDepth = 0,
+		UseDepth = 1,
+		ClearDepth = 2,
+		ReadOnlyDepth = 4,
+		SkipTransitionDepth = 8,
+		DepthPrepareClearWrite = TransitionFlags::UseDepth | TransitionFlags::ClearDepth,
+		DepthPrepareRead = TransitionFlags::UseDepth | TransitionFlags::ReadOnlyDepth,
+	};
+}
+
+class RenderTargetTexturesView
+{
+public:
+
+	void Init();
+
+	std::vector<RenderTargetTextureState> texturesState;
+	RenderTargetTextureState depthState;
+
+	void PrepareAsTarget(ID3D12GraphicsCommandList* commandList, bool clear = true, UINT flags = TransitionFlags::DepthPrepareClearWrite);
+	void PrepareAsTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from, bool clear = true, UINT flags = TransitionFlags::DepthPrepareClearWrite);
+
+	void TransitionFromTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES to, bool depth = true);
+	void PrepareAsView(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from);
+	void PrepareToPresent(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from);
+
+	std::vector<DXGI_FORMAT> formats;
+
+private:
+
+	UINT width;
+	UINT height;
+
+	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtvHandles;
+};
+
+class RenderTargetTextures : public RenderTargetTexturesView
+{
+public:
+
+	void Init(ID3D12Device* device, UINT width, UINT height, RenderTargetHeap& heap, const std::vector<DXGI_FORMAT>& format, D3D12_RESOURCE_STATES state, bool depthBuffer = true, D3D12_RESOURCE_STATES initialDepthState = D3D12_RESOURCE_STATE_DEPTH_WRITE);
+	void SetName(const wchar_t* name);
+
+	std::vector<RenderTargetTexture> textures;
+	RenderTargetTexture depth;
 };
 
 template<UINT MAX>
@@ -118,7 +137,7 @@ struct RenderTargetTransitions
 	void add(RenderTargetTextureState& state, D3D12_RESOURCE_STATES to)
 	{
 		barriers[c] = CD3DX12_RESOURCE_BARRIER::Transition(
-			state.texture->textures[0].texture.Get(),
+			state.texture->texture.Get(),
 			state.previousState,
 			to);
 
@@ -128,23 +147,10 @@ struct RenderTargetTransitions
 	void addAndPush(RenderTargetTextureState& state, D3D12_RESOURCE_STATES to, ID3D12GraphicsCommandList* commandList)
 	{
 		add(state, to);
-		commandList->ResourceBarrier(c, barriers);
-		c = 0;
+		push(commandList);
 	}
-
-	void addDepth(RenderTargetTextureState& state, D3D12_RESOURCE_STATES to)
+	void push(ID3D12GraphicsCommandList* commandList)
 	{
-		barriers[c] = CD3DX12_RESOURCE_BARRIER::Transition(
-			state.texture->depthStencilTexture.Get(),
-			state.previousState,
-			to);
-
-		state.previousState = to;
-		c++;
-	}
-	void addDepthAndPush(RenderTargetTextureState& state, D3D12_RESOURCE_STATES to, ID3D12GraphicsCommandList* commandList)
-	{
-		addDepth(state, to);
 		commandList->ResourceBarrier(c, barriers);
 		c = 0;
 	}

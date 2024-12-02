@@ -4,7 +4,7 @@
 #include <windows.h>
 
 #include "AaWindow.h"
-#include "AaRenderSystem.h"
+#include "RenderSystem.h"
 #include "AaFrameListener.h"
 #include "AaModelResources.h"
 #include "AaMaterialResources.h"
@@ -24,7 +24,7 @@ private:
 	void runtime();
 
 	AaWindow* mWindow{};
- 	AaRenderSystem* mRenderSystem{};
+ 	RenderSystem* mRenderSystem{};
 	DescriptorManager* mResources{};
  	AaMaterialResources* mMaterials;
  	AaModelResources* mModels;

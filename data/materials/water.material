@@ -10,10 +10,27 @@ material WaterLake
 	{
 		file water.dds
 	}
+	texture Normal
+	{
+		file water_NORM.dds
+	}
 	texture Height
 	{
 		file waterHeight.dds
 	}
+	texture CamDistance
+	{
+		compositor sceneTexture:2
+	}
+	texture Depth
+	{
+		compositor depthDownsample8
+	}
+	texture SceneColor
+	{
+		compositor sceneDownscale4
+	}
+	texture SceneVoxel
 
 	technique Depth skip
 	technique Voxelize skip

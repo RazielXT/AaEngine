@@ -5,38 +5,38 @@
 #include <vector>
 #include <d3d12.h>
 
+namespace Compositor
+{
+	enum UsageFlags { PixelShader = 1, ComputeShader = 2, DepthRead = 4 };
+};
+
 struct CompositorTextureInfo
 {
 	std::string name;
-	float width;
-	float height;
+	float width{};
+	float height{};
 	bool targetScale = false;
-	std::vector<DXGI_FORMAT> formats;
-	bool depthBuffer = false;
+	DXGI_FORMAT format{};
 	UINT arraySize = 1;
 	bool uav = false;
 };
 
-struct CompositorTextureInput
+struct CompositorTextureSlot
 {
 	std::string name;
-	UINT index{};
-	enum { Full, Index, Depth } type = Full;
-};
 
+	Compositor::UsageFlags flags = Compositor::PixelShader;
+};
 struct CompositorPassInfo
 {
 	std::string name;
-	std::string target;
-
-	static const UINT AllTargets = -1;
-	UINT targetIndex = AllTargets;
-
 	std::string task;
 	std::string after;
 
+	std::vector<CompositorTextureSlot> inputs;
+	std::vector<CompositorTextureSlot> targets;
+
 	std::string material;
-	std::vector<CompositorTextureInput> inputs;
 	std::vector<std::string> params;
 };
 

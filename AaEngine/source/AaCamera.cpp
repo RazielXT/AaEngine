@@ -51,10 +51,6 @@ void AaCamera::setPerspectiveCamera(float fov, float aspectRatio, float nearZ, f
 		float Y = 1.0f / std::tanf(XMConvertToRadians(fov) * 0.5f);
 		float X = Y * 1/aspectRatio;
 
-		// ReverseZ puts far plane at Z=0 and near plane at Z=1.  This is never a bad idea, and it's
-		// actually a great idea with F32 depth buffers to redistribute precision more evenly across
-		// the entire range.  It requires clearing Z to 0.0f and using a GREATER variant depth test.
-		// Some care must also be done to properly reconstruct linear W in a pixel shader from hyperbolic Z.
 		float Q1 = nearZ / (farZ - nearZ);
 		float Q2 = nearZ * (farZ / (farZ - nearZ));
 
@@ -77,7 +73,7 @@ bool AaCamera::isOrthographic() const
 
 const XMMATRIX& AaCamera::getProjectionMatrix() const
 {
-	return projection_m;
+	return reversedProjection_m;
 }
 
 const XMMATRIX& AaCamera::getViewMatrix() const

@@ -32,7 +32,7 @@ SceneRenderTask::~SceneRenderTask()
 
 AsyncTasksInfo SceneRenderTask::initialize(CompositorPass& pass)
 {
-	sceneQueue = sceneMgr.createQueue(pass.target.texture->formats);
+	sceneQueue = sceneMgr.createQueue(pass.target.textureSet->formats);
 	
 	scene.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
 	scene.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -96,21 +96,20 @@ void SceneRenderTask::renderScene(CompositorPass& pass)
 
 	provider.renderSystem->StartCommandList(scene.commands);
 
-	pass.target.texture->PrepareAsTarget(scene.commands.commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true, true, !earlyZ.eventBegin);
+	pass.target.textureSet->PrepareAsTarget(scene.commands.commandList, true, TransitionFlags::DepthPrepareRead | TransitionFlags::SkipTransitionDepth);
 
 	ShaderConstantsProvider constants(provider.params, sceneInfo, *ctx.camera, *pass.target.texture);
 	sceneQueue->renderObjects(constants, scene.commands.commandList);
-
-	//ctx.target->PrepareAsView(scene.commands.commandList, provider.renderSystem->frameIndex, D3D12_RESOURCE_STATE_RENDER_TARGET);
 }
 
 void SceneRenderTask::renderEarlyZ(CompositorPass& pass)
 {
 	provider.renderSystem->StartCommandList(earlyZ.commands);
 
-	pass.target.texture->PrepareAsDepthTarget(earlyZ.commands.commandList, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+	auto depthState = pass.target.textureSet->depthState;
+	depthState.texture->PrepareAsDepthTarget(earlyZ.commands.commandList, depthState.previousState);
 
-	ShaderConstantsProvider constants(provider.params, sceneInfo, *ctx.camera, *pass.target.texture);
+	ShaderConstantsProvider constants(provider.params, sceneInfo, *ctx.camera, *depthState.texture);
 	depthQueue->renderObjects(constants, earlyZ.commands.commandList);
 }
 
@@ -135,7 +134,7 @@ SceneRenderTransparentTask::~SceneRenderTransparentTask()
 
 AsyncTasksInfo SceneRenderTransparentTask::initialize(CompositorPass& pass)
 {
-	transparentQueue = sceneMgr.createQueue({ pass.target.texture->formats.front() }, MaterialTechnique::Default, Order::Transparent);
+	transparentQueue = sceneMgr.createQueue(pass.target.textureSet->formats, MaterialTechnique::Default, Order::Transparent);
 
 	transparent.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
 	transparent.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -166,7 +165,12 @@ void SceneRenderTransparentTask::renderTransparentScene(CompositorPass& pass)
 
 	provider.renderSystem->StartCommandList(transparent.commands);
 
-	pass.target.texture->PrepareAsSingleTarget(transparent.commands.commandList, pass.target.idx, D3D12_RESOURCE_STATE_RENDER_TARGET, false, true, false);
+	for (auto& i : pass.inputs)
+	{
+		i.texture->PrepareAsView(transparent.commands.commandList, i.previousState);
+	}
+
+	pass.target.textureSet->PrepareAsTarget(transparent.commands.commandList, false, TransitionFlags::DepthPrepareRead);
 
 	ShaderConstantsProvider constants(provider.params, sceneInfo, *ctx.camera, *pass.target.texture);
 	transparentQueue->renderObjects(constants, transparent.commands.commandList);

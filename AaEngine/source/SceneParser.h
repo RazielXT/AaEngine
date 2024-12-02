@@ -10,5 +10,5 @@ struct SceneParseResult
 
 namespace SceneParser
 {
-	SceneParseResult load(std::string filename, SceneManager* mSceneMgr, AaRenderSystem* renderSystem);
+	SceneParseResult load(std::string filename, SceneManager* mSceneMgr, RenderSystem* renderSystem);
 }

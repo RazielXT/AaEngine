@@ -11,6 +11,11 @@ material PassThrough : PostProcess
 	pixel_shader psPassThrough
 }
 
+material PassThroughAvg : PostProcess
+{
+	pixel_shader psPassThroughAvg
+}
+
 material PutBlurThrough : PostProcess
 {
 	pixel_shader psPutBlurThrough
@@ -36,8 +41,57 @@ material Darken : PostProcess
 	pixel_shader psDarken
 }
 
-
 material FXAA : PostProcess
 {
 	pixel_shader psFXAA
+}
+
+material LoadThrough : PostProcess
+{
+	pixel_shader
+	{
+		file downsample.hlsl
+		entry PSLoadThrough
+		profile ps_6_6
+	}
+}
+
+material Downsample3x3 : PostProcess
+{
+	pixel_shader
+	{
+		file downsample.hlsl
+		entry PSDownsample3x3
+		profile ps_6_6
+	}
+}
+
+material Downsample3x3Exposure : PostProcess
+{
+	pixel_shader
+	{
+		file downsample.hlsl
+		entry PSDownsample3x3Exposure
+		profile ps_6_6
+	}
+}
+
+material BloomBlurX : PostProcess
+{
+	pixel_shader
+	{
+		file downsample.hlsl
+		entry PSBloomBlurX
+		profile ps_6_6
+	}
+}
+
+material BloomBlurY : PostProcess
+{
+	pixel_shader
+	{
+		file downsample.hlsl
+		entry PSBloomBlurY
+		profile ps_6_6
+	}
 }

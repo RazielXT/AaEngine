@@ -3,6 +3,11 @@
 #include "Directx.h"
 #include "../Src/d3dx12.h"
 
+GenerateMipsComputeShader::GenerateMipsComputeShader()
+{
+	volatileTextures = true;
+}
+
 void GenerateMipsComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, TextureResource& texture, DescriptorManager& mgr)
 {
 	auto resource = texture.texture.Get();

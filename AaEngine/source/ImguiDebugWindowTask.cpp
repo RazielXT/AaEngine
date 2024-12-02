@@ -16,7 +16,7 @@ AsyncTasksInfo ImguiDebugWindowTask::initialize(CompositorPass&)
 
 void ImguiDebugWindowTask::run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass)
 {
-	pass.target.texture->PrepareAsTarget(syncCommands.commandList, pass.target.previousState, false);
+	pass.target.texture->PrepareAsTarget(syncCommands.commandList, pass.target.previousState);
 
 	imgui::DebugWindow::Get().draw(syncCommands.commandList);
 }

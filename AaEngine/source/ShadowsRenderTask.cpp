@@ -57,7 +57,7 @@ AsyncTasksInfo ShadowsRenderTask::initialize(CompositorPass&)
 					ShaderConstantsProvider constants(provider.params, sceneInfo, shadowMaps.camera[idx], shadowMaps.texture[idx]);
 					depthQueue->renderObjects(constants, shadow.commands.commandList);
 
-					shadowMaps.texture[idx].PrepareAsDepthView(shadow.commands.commandList, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+					shadowMaps.texture[idx].PrepareAsView(shadow.commands.commandList, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
 					SetEvent(shadow.eventFinish);
 				}

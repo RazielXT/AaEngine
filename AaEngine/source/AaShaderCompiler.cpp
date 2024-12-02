@@ -125,7 +125,7 @@ bool AaShaderCompiler::reflectShaderInfo(IDxcResult* compiledShaderBuffer, Shade
 
 			ShaderReflection::CBuffer cbufferInfo;
 			cbufferInfo.Name = constantBufferDesc.Name;
-			cbufferInfo.Size = constantBufferDesc.Size;
+			cbufferInfo.Size = 0;// constantBufferDesc.Size;
 			cbufferInfo.Slot = shaderInputBindDesc.BindPoint;
 			cbufferInfo.Space = shaderInputBindDesc.Space;
 
@@ -134,6 +134,9 @@ bool AaShaderCompiler::reflectShaderInfo(IDxcResult* compiledShaderBuffer, Shade
 				auto v = shaderReflectionConstantBuffer->GetVariableByIndex(i);
 				D3D12_SHADER_VARIABLE_DESC desc;
 				v->GetDesc(&desc);
+
+				cbufferInfo.Size = max(cbufferInfo.Size, desc.StartOffset + desc.Size);
+
 				cbufferInfo.Params.emplace_back(ShaderReflection::CBuffer::Parameter{
 					.Name = desc.Name,
 					.StartOffset = desc.StartOffset,

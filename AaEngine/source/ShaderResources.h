@@ -64,16 +64,23 @@ struct ResourcesInfo
 		None,
 		WVP_MATRIX,
 		VP_MATRIX,
+		VIEW_MATRIX,
 		INV_VP_MATRIX,
+		INV_VIEW_MATRIX,
+		INV_PROJ_MATRIX,
 		WORLD_MATRIX,
+		Z_MAGIC,
 		TEXID,
 
 		SHADOW_MATRIX,
 		SHADOW_MAP_SIZE,
 		SHADOW_MAP_SIZE_INV,
 		SUN_DIRECTION,
+		SUN_COLOR,
 		TIME,
+		DELTA_TIME,
 		VIEWPORT_SIZE_INV,
+		VIEWPORT_SIZE,
 		CAMERA_POSITION,
 		WORLD_POSITION,
 	};
@@ -105,6 +112,7 @@ struct PssmParameters
 	XMFLOAT4X4 ShadowMatrix[2];
 	XMFLOAT3 SunDirection;
 	UINT TexIdShadowOffsetStart;
+	XMFLOAT3 SunColor;
 	float ShadowMapSize;
 	float ShadowMapSizeInv;
 };

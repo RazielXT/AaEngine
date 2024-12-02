@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AaRenderSystem.h"
+#include "RenderSystem.h"
 #include "ShaderResources.h"
 
 class AaCamera;
@@ -9,7 +9,7 @@ class RenderObjectsStorage;
 struct RenderProvider
 {
 	const FrameParameters& params;
-	AaRenderSystem* renderSystem;
+	RenderSystem* renderSystem;
 };
 
 struct RenderContext

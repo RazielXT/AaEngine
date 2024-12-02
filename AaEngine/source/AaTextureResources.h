@@ -17,9 +17,10 @@ public:
 	ShaderTextureView() = default;
 	ShaderTextureView(D3D12_GPU_DESCRIPTOR_HANDLE*);
 
+	D3D12_CPU_DESCRIPTOR_HANDLE handle;
 	D3D12_GPU_DESCRIPTOR_HANDLE srvHandles{};
-	UINT srvHeapIndex{};
 	D3D12_GPU_DESCRIPTOR_HANDLE uavHandles{};
+	UINT srvHeapIndex{};
 	UINT uavHeapIndex{};
 };
 

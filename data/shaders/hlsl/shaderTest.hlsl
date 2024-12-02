@@ -9,6 +9,7 @@ cbuffer PSSMShadows : register(b1)
 	float4x4 ShadowMatrix[2];
 	float3 LightDirection;
 	uint TexIdShadowOffset;
+	float3 LightColor;
 	float ShadowMapSize;
 	float ShadowMapSizeInv;
 }
@@ -176,7 +177,7 @@ PSOutput PSMain(PSInput input)
 {
 	float3 normal = input.normal;//normalize(mul(input.normal, (float3x3)WorldMatrix).xyz);
 
-	float diffuse = saturate(dot(-LightDirection, normal));
+	float3 diffuse = saturate(dot(-LightDirection, normal)) * LightColor;
 
 #ifdef USE_VC
 	float3 ambientColor = input.color.rgb;

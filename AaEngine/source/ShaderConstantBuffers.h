@@ -6,7 +6,7 @@
 #include <map>
 #include "Directx.h"
 
-class AaRenderSystem;
+class RenderSystem;
 
 struct CbufferData
 {
@@ -25,7 +25,7 @@ class ShaderConstantBuffers
 {
 public:
 
-	ShaderConstantBuffers(AaRenderSystem* rs);
+	ShaderConstantBuffers(RenderSystem* rs);
 	~ShaderConstantBuffers();
 
 	static ShaderConstantBuffers& get();
@@ -40,7 +40,7 @@ public:
 private:
 
 	std::unique_ptr<DirectX::DX12::GraphicsMemory> graphicsMemory;
-	AaRenderSystem* renderSystem;
+	RenderSystem* renderSystem;
 
 	std::map<std::string, CbufferData> cbuffers;
 };

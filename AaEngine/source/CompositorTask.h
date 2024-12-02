@@ -12,6 +12,8 @@ struct PassTarget : public RenderTargetTextureState
 {
 	bool present = false;
 	bool backbuffer = false;
+
+	std::unique_ptr<RenderTargetTexturesView> textureSet;
 };
 struct CompositorPass
 {

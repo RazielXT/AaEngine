@@ -61,22 +61,51 @@ static DXGI_FORMAT StringToFormat(const std::string& str)
 	return DXGI_FORMAT_UNKNOWN;
 }
 
-static CompositorTextureInput parseCompositorInput(const Config::Object& param)
+static UINT parseFlags(const Config::Object& member)
 {
-	CompositorTextureInput input;
-	input.name = param.value;
-
-	if (!param.params.empty())
+	UINT flags = 0;
+	for (auto& p : member.params)
 	{
-		if (param.params.front() == "depth")
-			input.type = CompositorTextureInput::Depth;
-		else
+		if (p.starts_with('(') && p.ends_with(')'))
 		{
-			input.index = std::stoul(param.params.front());
-			input.type = CompositorTextureInput::Index;
+			if (p == "(compute_shader)")
+				flags |= Compositor::ComputeShader;
+			else if (p == "(depth_read)")
+				flags |= Compositor::DepthRead;
 		}
 	}
-	return input;
+	return flags;
+}
+
+static std::vector<CompositorTextureSlot> parseCompositorTextureSlot(const Config::Object& param, const CompositorInfo& info, UINT flags = 0)
+{
+	flags |= parseFlags(param);
+	if (!flags)
+		flags = Compositor::PixelShader;
+
+	std::vector<CompositorTextureSlot> textures;
+
+	if (param.params.empty())
+	{
+		if (info.textures.contains(param.value) || param.value == "Backbuffer")
+			return { { param.value, Compositor::UsageFlags(flags) } };
+		
+		auto findStr = param.value + ":";
+		for (const auto& t : info.textures)
+		{
+			if (t.first.starts_with(findStr))
+				textures.push_back({ t.first, Compositor::UsageFlags(flags) });
+		}
+
+		return textures;
+	}
+
+	for (auto& p : param.params)
+	{
+		if (!p.starts_with('('))
+			textures.push_back({ param.value + ":" + p, Compositor::UsageFlags(flags) });
+	}
+	return textures;
 }
 
 CompositorInfo CompositorFileParser::parseFile(std::string directory, std::string path)
@@ -153,18 +182,28 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 							}
 						}
 
+						std::vector<DXGI_FORMAT> formats;
 						for (; idx < member.params.size(); idx++)
 						{
 							if (member.params[idx].starts_with("DXGI_FORMAT"))
-								tex.formats.push_back(StringToFormat(member.params[idx]));
-							else if (member.params[idx] == "depth_buffer")
-								tex.depthBuffer = true;
+								formats.push_back(StringToFormat(member.params[idx]));
+							else if (member.params[idx] == "Depth")
+								info.textures.emplace(tex.name + ":Depth", tex);
 							else if (member.params[idx].starts_with('[') && member.params[idx].ends_with(']'))
 								tex.arraySize = std::stoul(member.params[idx].c_str() + 1);
 						}
+
+						for (int i = 0; auto f : formats)
+						{
+							auto name = tex.name;
+							if (formats.size() > 1)
+								name += ":" + std::to_string(i++);
+
+							tex.format = f;
+							info.textures.emplace(name , tex);
+						}
 					}
 
-					info.textures.emplace(tex.name, tex);
 				}
 				else if (member.type == "pass")
 				{
@@ -175,10 +214,7 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 					{
 						if (param.type == "target")
 						{
-							pass.target = param.value;
-
-							if (!param.params.empty())
-								pass.targetIndex = std::stoul(param.params.front());
+							pass.targets = parseCompositorTextureSlot(param, info);
 						}
 						else if (param.type == "material")
 						{
@@ -186,7 +222,7 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 						}
 						else if (param.type == "input")
 						{
-							pass.inputs.push_back(parseCompositorInput(param));
+							pass.inputs.push_back(parseCompositorTextureSlot(param, info).front());
 						}
 					}
 
@@ -197,14 +233,13 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 					CompositorPassInfo pass;
 					pass.task = pass.name = member.value;
 
+					UINT flags = parseFlags(member);
+
 					for (auto& param : member.children)
 					{
 						if (param.type == "target")
 						{
-							pass.target = param.value;
-
-							if (!param.params.empty())
-								pass.targetIndex = std::stoul(param.params.front());
+							pass.targets = parseCompositorTextureSlot(param, info, flags);
 						}
 						else if (param.type == "after")
 						{
@@ -216,7 +251,7 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 						}
 						else if (param.type == "input")
 						{
-							pass.inputs.push_back(parseCompositorInput(param));
+							pass.inputs.push_back(parseCompositorTextureSlot(param, info, flags).front());
 						}
 					}
 
@@ -231,14 +266,14 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 					auto& ref = imports[from];
 					for (auto& pass : ref.passes)
 					{
-						if (pass.name == what)
+						if (pass.name == what || what == "*")
 						{
 							info.passes.push_back(pass);
-
-							info.textures.insert(ref.textures.begin(), ref.textures.end());
-							ref.textures.clear();
 						}
 					}
+
+					info.textures.insert(ref.textures.begin(), ref.textures.end());
+					ref.textures.clear();
 				}
 			}
 

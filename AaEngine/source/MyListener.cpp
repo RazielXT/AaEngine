@@ -12,7 +12,7 @@
 #include "TextureData.h"
 #include "VoxelizeSceneTask.h"
 
-MyListener::MyListener(AaRenderSystem* render)
+MyListener::MyListener(RenderSystem* render)
 {
 	AaShaderLibrary::get().loadShaderReferences(SHADER_DIRECTORY);
 	AaMaterialResources::get().loadMaterials(MATERIAL_DIRECTORY);

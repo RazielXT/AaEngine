@@ -2,7 +2,7 @@
 
 #include "AaMath.h"
 
-class AaRenderSystem;
+class RenderSystem;
 struct ID3D12GraphicsCommandList;
 struct ID3D12DescriptorHeap;
 
@@ -23,8 +23,8 @@ namespace imgui
 
 		struct 
 		{
-			float RejectionFalloff = 2.5f;// 1.0f - 10.0f
-			float Accentuation = 0.1f; //0.0f - 1.0f
+			float RejectionFalloff = 1.0f;// 1.0f - 10.0f
+			float Accentuation = 0.0f; //0.0f - 1.0f
 			float BlurTolerance = -5.0f; // -8.0f, -1.0f
 			float UpsampleTolerance = -7.0f; //-12.0f, -1.0f
 			float NoiseFilterTolerance = -3.0f; // -8.0f, 0.0f
@@ -38,7 +38,7 @@ namespace imgui
 	{
 		static DebugWindow& Get();
 
-		void init(AaRenderSystem* renderer);
+		void init(RenderSystem* renderer);
 		void deinit();
 
 		void draw(ID3D12GraphicsCommandList* list);

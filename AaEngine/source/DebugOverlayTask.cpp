@@ -13,7 +13,7 @@ DebugOverlayTask::~DebugOverlayTask()
 
 AsyncTasksInfo DebugOverlayTask::initialize(CompositorPass& pass)
 {
-	material = AaMaterialResources::get().getMaterial("TexturePreview")->Assign({}, pass.target.texture->formats);
+	material = AaMaterialResources::get().getMaterial("TexturePreview")->Assign({}, { pass.target.texture->format });
 
 	return {};
 }
@@ -25,7 +25,7 @@ void DebugOverlayTask::resize(CompositorPass& pass)
 
 void DebugOverlayTask::run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass)
 {
-	pass.target.texture->PrepareAsTarget(syncCommands.commandList, pass.target.previousState, false, false);
+	pass.target.texture->PrepareAsTarget(syncCommands.commandList, pass.target.previousState);
 
 	auto idx = imgui::DebugWindow::Get().state.TexturePreviewIndex;
 

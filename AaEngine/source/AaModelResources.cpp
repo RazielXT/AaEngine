@@ -8,7 +8,7 @@
 
 static AaModelResources* instance = nullptr;
 
-AaModelResources::AaModelResources(AaRenderSystem* mRS)
+AaModelResources::AaModelResources(RenderSystem* mRS)
 {
 	mRenderSystem = mRS;
 
@@ -92,6 +92,6 @@ AaModel* AaModelResources::loadModel(const std::string& filename, ModelLoadConte
 	return model;
 }
 
-ModelLoadContext::ModelLoadContext(AaRenderSystem* rs) : batch(rs->device)
+ModelLoadContext::ModelLoadContext(RenderSystem* rs) : batch(rs->device)
 {
 }

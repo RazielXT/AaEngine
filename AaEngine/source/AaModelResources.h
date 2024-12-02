@@ -1,13 +1,13 @@
 #pragma once
 
 #include <string>
-#include "AaRenderSystem.h"
+#include "RenderSystem.h"
 #include "AaModel.h"
 #include "ResourceUploadBatch.h"
 
 struct ModelLoadContext
 {
-	ModelLoadContext(AaRenderSystem*);
+	ModelLoadContext(RenderSystem*);
 
 	ResourceUploadBatch batch;
 	std::string folder;
@@ -17,7 +17,7 @@ class AaModelResources
 {
 public:
 
-	AaModelResources(AaRenderSystem* mRenderSystem);
+	AaModelResources(RenderSystem* mRenderSystem);
 	~AaModelResources();
 
 	static AaModelResources& get();
@@ -28,7 +28,7 @@ public:
 
 private:
 
-	AaRenderSystem* mRenderSystem;
+	RenderSystem* mRenderSystem;
 
 	AaModel* loadModel(const std::string& name, ModelLoadContext& ctx);
 	std::map<std::string, AaModel*> loadedModels;

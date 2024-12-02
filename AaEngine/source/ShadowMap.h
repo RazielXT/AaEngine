@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AaRenderSystem.h"
+#include "RenderSystem.h"
 #include "AaCamera.h"
 #include "SceneLights.h"
 #include "ShaderConstantBuffers.h"
@@ -12,9 +12,9 @@ public:
 
 	AaShadowMap(aa::SceneLights::Light&, PssmParameters&);
 
-	void init(AaRenderSystem* renderSystem);
+	void init(RenderSystem* renderSystem);
 
-	RenderDepthTargetTexture texture[2];
+	RenderTargetTexture texture[2];
 	AaCamera camera[2];
 
 	aa::SceneLights::Light& sun;
@@ -23,6 +23,7 @@ public:
 
 private:
 
+	RenderTargetHeap targetHeap;
 	PssmParameters& data;
 	CbufferView cbuffer;
 };

@@ -1,13 +1,15 @@
 float4x4 WorldViewProjectionMatrix;
 float4x4 WorldMatrix;
-float3 MaterialColor;
+float4x4 ShadowMatrix;
+
+float3 CameraPosition;
 float Emission;
 
+float3 MaterialColor;
 uint TexIdDiffuse;
-uint TexIdSceneVoxel;
-
-float4x4 ShadowMatrix;
 float3 SunDirection;
+
+uint TexIdSceneVoxel;
 uint TexIdShadowOffset;
 
 cbuffer SceneVoxelInfo : register(b1)
@@ -224,8 +226,10 @@ PSOutput PS_Main(PS_Input pin)
 
 	PSOutput output;
     output.target0 = color1;
-	output.target1 = color1 * color1 * float4(albedo, 1);
-	output.target2 = float4(normal, 1);
+	output.target1 = float4(normal, 1);
+	
+	float camDistance = length(CameraPosition - pin.wp.xyz) / 10000;
+	output.target2 = float4(camDistance, 0, 0, 0);
 
 	return output;
 }

@@ -7,6 +7,7 @@ cbuffer PSSMShadows : register(b1)
 	float4x4 ShadowMatrix[2];
 	float3 LightDirection;
 	uint TexIdShadowOffset;
+	float3 LightColor;
 	float ShadowMapSize;
 	float ShadowMapSizeInv;
 }

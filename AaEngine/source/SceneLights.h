@@ -13,7 +13,7 @@ namespace aa
 		struct Light
 		{
 			Vector3 direction = { 0,0,1 };
-			Vector3 color;
+			Vector3 color = { 1,1,1 };
 		};
 		Light directionalLight;
 	};

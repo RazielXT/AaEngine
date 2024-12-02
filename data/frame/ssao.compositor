@@ -21,9 +21,9 @@ compositor SSAO
 	rwtexture aoSmooth2 target_size_div 2 DXGI_FORMAT_R8_UNORM
 	rwtexture aoSmooth target_width target_height DXGI_FORMAT_R8_UNORM
 
-	task SSAO
+	task SSAO (compute_shader)
 	{
-		input sceneTexture depth
+		input sceneTexture Depth
 		input linearDepth
 		input linearDepthDownsample2
 		input linearDepthDownsampleAtlas2

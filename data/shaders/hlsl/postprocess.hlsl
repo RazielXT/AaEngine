@@ -27,6 +27,13 @@ float4 PSPassThrough(VS_OUTPUT input) : SV_TARGET
     return colorMap.Sample(colorSampler, input.TexCoord);
 }
 
+float4 PSPassThroughAvg(VS_OUTPUT input) : SV_TARGET
+{
+	float4 color = colorMap.Sample(colorSampler, input.TexCoord);
+	float avg = length(color.rgb)/1.5; //color.r + color.g + color.b / 3;
+    return float4(avg.rrr, color.a);
+}
+
 float4 PSPutBlurThrough(VS_OUTPUT input) : SV_TARGET
 {
 	float4 color = colorMap.Sample(colorSampler, input.TexCoord);
@@ -68,19 +75,16 @@ float4 PSBlurY(VS_OUTPUT input) : SV_TARGET
 }
 
 Texture2D colorMap2 : register(t1);
+Texture2D exposureMap : register(t2);
 
 float4 PSAddThrough(VS_OUTPUT input) : SV_TARGET
 {
 	float4 original = colorMap.Sample(colorSampler, input.TexCoord);
-	
+	float exposure = 1 - exposureMap.Load(int3(0, 0, 0)).r;
+
 	float3 bloom = colorMap2.Sample(colorSampler, input.TexCoord).rgb;
-	float offset = BlurSize;
-	bloom += colorMap2.Sample(colorSampler, input.TexCoord + float2(offset, offset)).rgb;
-	bloom += colorMap2.Sample(colorSampler, input.TexCoord + float2(-offset,offset)).rgb;
-	bloom += colorMap2.Sample(colorSampler, input.TexCoord + float2(offset,-offset)).rgb;
-	bloom += colorMap2.Sample(colorSampler, input.TexCoord + float2(-offset,-offset)).rgb;
-	bloom /= 5;
 	bloom *= bloom;
+	bloom *= saturate(exposure * exposure);
 
 	float luma = dot(original.rgb, float3(0.299, 0.587, 0.114));
 	original.w = luma;

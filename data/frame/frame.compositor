@@ -1,16 +1,22 @@
 import ssao
+import exposure
 
 compositor SceneCompositor
 {
-	texture sceneTexture target_width target_height DXGI_FORMAT_R8G8B8A8_UNORM DXGI_FORMAT_R8G8B8A8_UNORM DXGI_FORMAT_R10G10B10A2_UNORM depth_buffer
+	texture sceneTexture target_width target_height DXGI_FORMAT_R8G8B8A8_UNORM DXGI_FORMAT_R10G10B10A2_UNORM DXGI_FORMAT_R16G16_UNORM Depth
 	texture sceneTexture2 target_width target_height DXGI_FORMAT_R8G8B8A8_UNORM
 	texture sceneTexture3 target_width target_height DXGI_FORMAT_R8G8B8A8_UNORM
+
+	texture sceneDownscale2 target_size_div 2 DXGI_FORMAT_R8G8B8A8_UNORM
+	texture sceneDownscale4 target_size_div 8 DXGI_FORMAT_R8G8B8A8_UNORM
 
 	texture bloomTexture target_width_scaled 0.5 target_height_scaled 0.5 DXGI_FORMAT_R10G10B10A2_UNORM
 	texture bloomTexture2 target_width_scaled 0.25 target_height_scaled 0.25 DXGI_FORMAT_R10G10B10A2_UNORM
 	texture bloomTexture3 target_width_scaled 0.125 target_height_scaled 0.125 DXGI_FORMAT_R10G10B10A2_UNORM
 	texture bloomTexture4 target_width_scaled 0.0625 target_height_scaled 0.0625 DXGI_FORMAT_R10G10B10A2_UNORM
 	texture bloomTexture5 target_width_scaled 0.0625 target_height_scaled 0.0625 DXGI_FORMAT_R10G10B10A2_UNORM
+
+	texture depthDownsample8 target_size_div 8 DXGI_FORMAT_R32_FLOAT
 
 	texture voxelDummy 128 128 DXGI_FORMAT_R8G8B8A8_UNORM
 
@@ -33,28 +39,39 @@ compositor SceneCompositor
 
 	ref SSAO:SSAO
 
+	pass SceneDownscale
+	{
+		material PassThrough
+		input sceneTexture 0
+		target sceneDownscale2
+	}
+	pass SceneDownscale
+	{
+		material PassThrough
+		input sceneDownscale2
+		target sceneDownscale4
+	}
+	pass DepthDownscale
+	{
+		material LoadThrough
+		input sceneTexture Depth
+		target depthDownsample8
+	}
+
 	task SceneTransparent
 	{
-		//input sceneTexture depth_buffer
-		target sceneTexture 0
+		input sceneTexture 2
+		input sceneDownscale4
+		input depthDownsample8
+		target sceneTexture 0 Depth (depth_read)
 	}
+
+	ref Exposure:*
 
 	pass BloomDownscale
 	{
 		material PassThrough
-		input sceneTexture 1
-		target bloomTexture
-	}
-	pass BloomDownscale
-	{
-		material PassThrough
-		input bloomTexture
-		target bloomTexture2
-	}
-	pass BloomDownscale
-	{
-		material PassThrough
-		input bloomTexture2
+		input sceneDownscale4
 		target bloomTexture3
 	}
 	pass BloomDownscale
@@ -65,14 +82,30 @@ compositor SceneCompositor
 	}
 	pass BloomBlurX
 	{
-		material BlurX
+		material BloomBlurX
 		input bloomTexture4
+		input exposure
 		target bloomTexture5
 	}
 	pass BloomBlurY
 	{
-		material BlurY
+		material BloomBlurY
 		input bloomTexture5
+		input exposure
+		target bloomTexture4
+	}
+	pass BloomBlurX
+	{
+		material BloomBlurX
+		input bloomTexture4
+		input exposure
+		target bloomTexture5
+	}
+	pass BloomBlurY
+	{
+		material BloomBlurY
+		input bloomTexture5
+		input exposure
 		target bloomTexture4
 	}
 	pass BloomUpscale
@@ -107,6 +140,7 @@ compositor SceneCompositor
 		material AddThrough
 		input sceneTexture2
 		input bloomTexture
+		input exposure
 		target sceneTexture3
 	}
 

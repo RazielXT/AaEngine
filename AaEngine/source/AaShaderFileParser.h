@@ -3,6 +3,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "ConfigParser.h"
 
 enum ShaderType
 {
@@ -34,5 +35,8 @@ struct shaderRefMaps
 
 namespace AaShaderFileParser
 {
+	void ParseShaderParams(ShaderRef& ref, const Config::Object& obj);
+	ShaderType ParseShaderType(const std::string& type);
+
 	shaderRefMaps parseAllShaderFiles(std::string directory, bool subFolders = false);
 };

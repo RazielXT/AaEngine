@@ -4,7 +4,7 @@
 
 static AaShaderLibrary* instance = nullptr;
 
-AaShaderLibrary::AaShaderLibrary(AaRenderSystem* mRS)
+AaShaderLibrary::AaShaderLibrary(RenderSystem* mRS)
 {
 	if (instance)
 		throw std::exception("duplicate AaShaderResources");
@@ -25,22 +25,27 @@ AaShaderLibrary& AaShaderLibrary::get()
 
 void AaShaderLibrary::loadShaderReferences(std::string directory, bool subDirectories /*= false*/)
 {
-	shaderRefMaps maps = AaShaderFileParser::parseAllShaderFiles(directory, subDirectories);
+	auto maps = AaShaderFileParser::parseAllShaderFiles(directory, subDirectories);
 	
+	addShaderReferences(maps);
+}
+
+void AaShaderLibrary::addShaderReferences(const shaderRefMaps& maps)
+{
 	for (int type = 0; type < ShaderType_COUNT; type++)
 	{
 		auto& map = maps.shaderRefs[type];
 
-		for (const auto& it : map)
+		for (const auto& [name, ref] : map)
 		{
-			auto& info = loadedShaders[type][it.first];
+			auto& info = loadedShaders[type][name];
 			if (info == nullptr)
 			{
 				info = std::make_unique<LoadedShader>();
-				info->ref = it.second;
+				info->ref = ref;
 			}
 			else
-				AaLogger::logWarning("Duplicate shader ref " + it.first);
+				AaLogger::logWarning("Duplicate shader ref " + name);
 		}
 	}
 }

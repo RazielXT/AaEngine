@@ -47,7 +47,7 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 
 	computeMips.init(provider.renderSystem->device, "generateMipmaps");
 
-	sceneQueue = sceneMgr.createQueue(pass.target.texture->formats, MaterialTechnique::Voxelize);
+	sceneQueue = sceneMgr.createQueue({ pass.target.texture->format }, MaterialTechnique::Voxelize);
 
 	AsyncTasksInfo tasks;
 	eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -88,7 +88,7 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 				static RenderObjectsVisibilityData sceneInfo;
 				auto& renderables = *sceneMgr.getRenderables(Order::Normal);
 
-				pass.target.texture->PrepareAsTarget(commands.commandList, pass.target.previousState, true, false, false);
+				pass.target.texture->PrepareAsTarget(commands.commandList, pass.target.previousState, true);
 
 				TextureResource::TransitionState(commands.commandList, voxelPreviousSceneTexture, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 				TextureResource::TransitionState(commands.commandList, voxelSceneTexture, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);

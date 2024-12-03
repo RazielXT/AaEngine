@@ -94,7 +94,7 @@ void SceneRenderTask::renderScene(CompositorPass& pass)
 	if (earlyZ.eventBegin)
 		SetEvent(earlyZ.eventBegin);
 
-	provider.renderSystem->StartCommandList(scene.commands);
+	auto marker = provider.renderSystem->StartCommandList(scene.commands);
 
 	pass.target.textureSet->PrepareAsTarget(scene.commands.commandList, true, TransitionFlags::DepthPrepareRead | TransitionFlags::SkipTransitionDepth);
 
@@ -104,7 +104,7 @@ void SceneRenderTask::renderScene(CompositorPass& pass)
 
 void SceneRenderTask::renderEarlyZ(CompositorPass& pass)
 {
-	provider.renderSystem->StartCommandList(earlyZ.commands);
+	auto marker = provider.renderSystem->StartCommandList(earlyZ.commands);
 
 	auto depthState = pass.target.textureSet->depthState;
 	depthState.texture->PrepareAsDepthTarget(earlyZ.commands.commandList, depthState.previousState);
@@ -163,7 +163,7 @@ void SceneRenderTransparentTask::renderTransparentScene(CompositorPass& pass)
 {
 	renderables->updateVisibility(*ctx.camera, sceneInfo);
 
-	provider.renderSystem->StartCommandList(transparent.commands);
+	auto marker = provider.renderSystem->StartCommandList(transparent.commands);
 
 	for (auto& i : pass.inputs)
 	{

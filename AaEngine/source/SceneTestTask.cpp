@@ -48,7 +48,7 @@ void SceneTestTask::run(RenderContext& ctx, CommandsData& c, CompositorPass&)
 	static RenderObjectsVisibilityData sceneInfo;
 	sceneMgr.getRenderables(Order::Normal)->updateVisibility(tmpCamera, sceneInfo);
 
-	provider.renderSystem->StartCommandList(commands);
+	auto marker = provider.renderSystem->StartCommandList(commands);
 
 	tmp.PrepareAsTarget(commands.commandList, D3D12_RESOURCE_STATE_COMMON);
 

@@ -46,7 +46,7 @@ AsyncTasksInfo ShadowsRenderTask::initialize(CompositorPass&)
 
 				while (WaitForSingleObject(shadow.eventBegin, INFINITE) == WAIT_OBJECT_0 && running)
 				{
-					provider.renderSystem->StartCommandList(shadow.commands);
+					auto marker = provider.renderSystem->StartCommandList(shadow.commands);
 
 					auto& sceneInfo = shadow.renderablesData;
 
@@ -59,6 +59,7 @@ AsyncTasksInfo ShadowsRenderTask::initialize(CompositorPass&)
 
 					shadowMaps.texture[idx].PrepareAsView(shadow.commands.commandList, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
+					marker.close();
 					SetEvent(shadow.eventFinish);
 				}
 			});

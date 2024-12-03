@@ -67,7 +67,7 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 				XMFLOAT3 corner(center.x - orthoHalfSize.x, center.y - orthoHalfSize.y, center.z - orthoHalfSize.z);
 				updateCBuffer(orthoHalfSize, corner, provider.renderSystem->frameIndex);
 
-				provider.renderSystem->StartCommandList(commands);
+				auto marker = provider.renderSystem->StartCommandList(commands);
 				if (imgui::DebugWindow::state.stopUpdatingVoxel)
 				{
 					SetEvent(eventFinish);
@@ -115,8 +115,11 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 				renderables.updateVisibility(camera, sceneInfo);
 				sceneQueue->renderObjects(constants, commands.commandList);
 
+				marker.move("VoxelMipMaps");
+
 				computeMips.dispatch(commands.commandList, voxelSceneTexture, DescriptorManager::get());
 
+				marker.close();
 				SetEvent(eventFinish);
 			}
 		});

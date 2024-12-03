@@ -17,8 +17,24 @@ struct CommandsData
 {
 	ID3D12GraphicsCommandList* commandList{};
 	ID3D12CommandAllocator* commandAllocators[2];
+	std::string name;
 
 	void deinit();
+};
+
+struct CommandsMarker
+{
+	CommandsMarker(CommandsData&);
+	CommandsMarker(ID3D12GraphicsCommandList* c, const char* name);
+	~CommandsMarker();
+
+	void move(const char* text);
+	void mark(const char* text);
+	void close();
+
+private:
+	bool done = false;
+	ID3D12GraphicsCommandList* commandList{};
 };
 
 class RenderSystem : public ScreenListener
@@ -45,8 +61,8 @@ public:
 	UINT64 fenceValues[2];
 
 	CommandsData CreateCommandList(const wchar_t* name = nullptr);
-	void StartCommandList(CommandsData commands);
-	void ExecuteCommandList(CommandsData commands);
+	CommandsMarker StartCommandList(CommandsData& commands);
+	void ExecuteCommandList(CommandsData& commands);
 	void Present();
 	void EndFrame();
 

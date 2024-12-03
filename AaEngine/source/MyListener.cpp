@@ -171,23 +171,24 @@ void MyListener::loadScene(const char* scene)
 	auto result = SceneParser::load(scene, sceneMgr, renderSystem);
 
 	auto commands = renderSystem->CreateCommandList(L"initCmd");
-	renderSystem->StartCommandList(commands);
-
-	//initialize gpu resources
 	{
-		shadowMap->clear(commands.commandList);
-	}
+		auto marker = renderSystem->StartCommandList(commands);
 
-	for (const auto& i : result.instanceDescriptions)
-	{
-		instancing.build(sceneMgr, i.second);
-	}
+		//initialize gpu resources
+		{
+			shadowMap->clear(commands.commandList);
+		}
 
-	for (const auto& g : result.grassTasks)
-	{
-		grass->scheduleGrassCreation(g, commands.commandList, params, sceneMgr);
-	}
+		for (const auto& i : result.instanceDescriptions)
+		{
+			instancing.build(sceneMgr, i.second);
+		}
 
+		for (const auto& g : result.grassTasks)
+		{
+			grass->scheduleGrassCreation(g, commands.commandList, params, sceneMgr);
+		}
+	}
 	renderSystem->ExecuteCommandList(commands);
 	renderSystem->WaitForCurrentFrame();
 	commands.deinit();

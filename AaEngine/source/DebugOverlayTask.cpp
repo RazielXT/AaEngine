@@ -31,6 +31,8 @@ void DebugOverlayTask::run(RenderContext& ctx, CommandsData& syncCommands, Compo
 
 	if (idx >= 0)
 	{
+		CommandsMarker marker(syncCommands.commandList, "DebugOverlay");
+
 		quad.data.textureIndex = UINT(idx);
 
 		quad.Render(material, *pass.target.texture, provider, ctx, syncCommands.commandList);

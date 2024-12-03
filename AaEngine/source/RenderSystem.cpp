@@ -6,6 +6,8 @@
 #include "OgreMeshFileParser.h"
 #include "SceneManager.h"
 #include "AaMaterialResources.h"
+#include <codecvt>
+#include <pix_win.h>
 
 RenderSystem::RenderSystem(AaWindow* mWindow)
 {
@@ -142,12 +144,15 @@ CommandsData RenderSystem::CreateCommandList(const wchar_t* name)
 	data.commandList->Close();
 
 	if (name)
+	{
 		data.commandList->SetName(name);
+		data.name = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>().to_bytes(name);
+	}
 
 	return data;
 }
 
-void RenderSystem::StartCommandList(CommandsData commands)
+CommandsMarker RenderSystem::StartCommandList(CommandsData& commands)
 {
 	// Reset command allocator and command list
 	commands.commandAllocators[frameIndex]->Reset();
@@ -155,9 +160,11 @@ void RenderSystem::StartCommandList(CommandsData commands)
 
 	ID3D12DescriptorHeap* descriptorHeaps[] = { DescriptorManager::get().mainDescriptorHeap };
 	commands.commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+
+	return { commands };
 }
 
-void RenderSystem::ExecuteCommandList(CommandsData commands)
+void RenderSystem::ExecuteCommandList(CommandsData& commands)
 {
 	// Close the command list and execute it
 	commands.commandList->Close();
@@ -224,5 +231,47 @@ void CommandsData::deinit()
 		{
 			a->Release();
 		}
+		commandList = nullptr;
+	}
+}
+
+CommandsMarker::CommandsMarker(CommandsData& c)
+{
+	if (!c.name.empty())
+	{
+		commandList = c.commandList;
+		PIXBeginEvent(commandList, 0, c.name.c_str());
+	}
+}
+
+CommandsMarker::CommandsMarker(ID3D12GraphicsCommandList* c, const char* text) : commandList(c)
+{
+	PIXBeginEvent(commandList, 0, text);
+}
+
+CommandsMarker::~CommandsMarker()
+{
+	close();
+}
+
+void CommandsMarker::move(const char* text)
+{
+	close();
+	done = false;
+	PIXBeginEvent(commandList, 0, text);
+}
+
+void CommandsMarker::mark(const char* text)
+{
+	if (!done && commandList)
+		PIXSetMarker(commandList, 0, text);
+}
+
+void CommandsMarker::close()
+{
+	if (!done && commandList)
+	{
+		done = true;
+		PIXEndEvent(commandList);
 	}
 }

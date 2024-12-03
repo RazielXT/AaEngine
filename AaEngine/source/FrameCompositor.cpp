@@ -238,6 +238,7 @@ void FrameCompositor::render(RenderContext& ctx)
 
 		if (pass.material)
 		{
+			CommandsMarker marker(syncCommands.commandList, pass.info.name.c_str());
  			renderQuad(pass, ctx, syncCommands.commandList);
 		}
 		else if (pass.task)

@@ -39,7 +39,7 @@ AsyncTasksInfo SsaoComputeTask::initialize(CompositorPass& pass)
 		{
 			while (WaitForSingleObject(eventBegin, INFINITE) == WAIT_OBJECT_0 && running)
 			{
-				provider.renderSystem->StartCommandList(commands);
+				auto marker = provider.renderSystem->StartCommandList(commands);
 
 				RenderTargetTransitions<11> tr;
 
@@ -132,6 +132,7 @@ AsyncTasksInfo SsaoComputeTask::initialize(CompositorPass& pass)
 				tr.add(textures.aoSmooth4, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 				tr.addAndPush(textures.aoSmooth2, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, commands.commandList);
 
+				marker.close();
 				SetEvent(eventFinish);
 			}
 		});

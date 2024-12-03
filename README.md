@@ -1,5 +1,5 @@
 # AaEngine
-Experimental Dx11 engine
+Experimental Dx12 engine
 Voxel cone tracing for realtime GI
 
 [Example binaries](https://docs.google.com/uc?export=download&id=18P3QjMPLg3Bv59TYh5myqkBBHDw0MOK-)

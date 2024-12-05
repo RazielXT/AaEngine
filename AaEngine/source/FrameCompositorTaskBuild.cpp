@@ -109,6 +109,13 @@ void FrameCompositor::initializeTextureStates()
 
 void FrameCompositor::initializeCommands()
 {
+	tasks.clear();
+	for (auto& c : generalCommandsArray)
+	{
+		c.deinit();
+	}
+	generalCommandsArray.clear();
+
 	CommandsData syncCommands{};
 	std::vector<CompositorPassInfo*> syncPasses;
 	AsyncTasksInfo asyncTasks;

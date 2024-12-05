@@ -31,14 +31,14 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 	voxelSceneTexture.create3D(provider.renderSystem->device, VoxelSize, VoxelSize, VoxelSize, DXGI_FORMAT_R16G16B16A16_FLOAT);
 	voxelSceneTexture.setName(L"SceneVoxel");
 	DescriptorManager::get().createUAVView(voxelSceneTexture);
-	AaTextureResources::get().setNamedUAV("SceneVoxel", &voxelSceneTexture.uav.front());
+	AaTextureResources::get().setNamedUAV("SceneVoxel", voxelSceneTexture.uav.front());
 	DescriptorManager::get().createTextureView(voxelSceneTexture);
-	AaTextureResources::get().setNamedTexture("SceneVoxel", &voxelSceneTexture.textureView);
+	AaTextureResources::get().setNamedTexture("SceneVoxel", voxelSceneTexture.textureView);
 
 	voxelPreviousSceneTexture.create3D(provider.renderSystem->device, VoxelSize, VoxelSize, VoxelSize, DXGI_FORMAT_R16G16B16A16_FLOAT);
 	voxelPreviousSceneTexture.setName(L"SceneVoxelBounces");
 	DescriptorManager::get().createTextureView(voxelPreviousSceneTexture);
-	AaTextureResources::get().setNamedTexture("SceneVoxelBounces", &voxelPreviousSceneTexture.textureView);
+	AaTextureResources::get().setNamedTexture("SceneVoxelBounces", voxelPreviousSceneTexture.textureView);
 
 	clearSceneTexture.create3D(provider.renderSystem->device, VoxelSize, VoxelSize, VoxelSize, DXGI_FORMAT_R16G16B16A16_FLOAT);
 	clearSceneTexture.setName(L"VoxelClear");

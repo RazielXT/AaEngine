@@ -1,6 +1,6 @@
 compositor SSAO
 {
-	rwtexture linearDepth target_width target_height DXGI_FORMAT_R16_UNORM
+	rwtexture linearDepth target_size DXGI_FORMAT_R16_UNORM
 	rwtexture linearDepthDownsample2 target_size_div 2 DXGI_FORMAT_R32_FLOAT
 	rwtexture linearDepthDownsampleAtlas2 target_size_div 2 DXGI_FORMAT_R16_FLOAT [16]
 	rwtexture linearDepthDownsample4 target_size_div 4 DXGI_FORMAT_R32_FLOAT
@@ -19,7 +19,7 @@ compositor SSAO
 
 	rwtexture aoSmooth4 target_size_div 4 DXGI_FORMAT_R8_UNORM
 	rwtexture aoSmooth2 target_size_div 2 DXGI_FORMAT_R8_UNORM
-	rwtexture aoSmooth target_width target_height DXGI_FORMAT_R8_UNORM
+	rwtexture aoSmooth target_size DXGI_FORMAT_R8_UNORM
 
 	task SSAO (compute_shader)
 	{

@@ -7,7 +7,6 @@
 #include "AoBlurAndUpsampleCS.h"
 
 class AaShadowMap;
-class SceneManager;
 
 class SsaoComputeTask : public CompositorTask
 {

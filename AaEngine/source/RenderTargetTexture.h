@@ -49,6 +49,7 @@ public:
 class RenderTargetTexture : public RenderTextureInfo
 {
 public:
+	~RenderTargetTexture();
 
 	enum Flags { AllowRenderTarget = 1, AllowUAV = 2 };
 	void Init(ID3D12Device* device, UINT width, UINT height, RenderTargetHeap& heap, DXGI_FORMAT format, D3D12_RESOURCE_STATES state, Flags flags = AllowRenderTarget);
@@ -85,9 +86,10 @@ namespace TransitionFlags
 		UseDepth = 1,
 		ClearDepth = 2,
 		ReadOnlyDepth = 4,
-		SkipTransitionDepth = 8,
+		DepthSkipTransition = 8,
 		DepthPrepareClearWrite = TransitionFlags::UseDepth | TransitionFlags::ClearDepth,
 		DepthPrepareRead = TransitionFlags::UseDepth | TransitionFlags::ReadOnlyDepth,
+		DepthContinue = TransitionFlags::UseDepth | TransitionFlags::DepthSkipTransition,
 	};
 }
 

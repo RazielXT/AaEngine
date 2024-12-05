@@ -1,5 +1,12 @@
 #include "TextureResource.h"
 #include "directx\d3dx12.h"
+#include "DescriptorManager.h"
+
+TextureResource::~TextureResource()
+{
+	DescriptorManager::get().removeTextureView(*this);
+	DescriptorManager::get().removeUAVView(*this);
+}
 
 void TextureResource::create3D(ID3D12Device* device, UINT w, UINT h, UINT d, DXGI_FORMAT f)
 {

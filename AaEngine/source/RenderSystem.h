@@ -7,6 +7,7 @@
 #include "AaWindow.h"
 #include <map>
 #include "RenderTargetTexture.h"
+#include "DLSS.h"
 
 using namespace DirectX;
 
@@ -44,9 +45,14 @@ public:
 	RenderSystem(AaWindow* mWindow);
 	~RenderSystem();
 
+	void init();
+
 	static const UINT FrameCount = 2;
 
- 	AaWindow* getWindow() { return mWindow; }
+	XMUINT2 getRenderSize() const;
+	XMUINT2 getOutputSize() const;
+
+ 	AaWindow* getWindow() { return window; }
 
 	ID3D12Device* device;
 	ID3D12CommandQueue* commandQueue;
@@ -71,6 +77,8 @@ public:
 
 	RenderTargetTexture backbuffer[FrameCount];
 
+	DLSS dlss;
+
 private:
 
 	RenderTargetHeap backbufferHeap;
@@ -79,5 +87,5 @@ private:
 
 	void onScreenResize() override;
 
-	AaWindow* mWindow;
+	AaWindow* window;
 };

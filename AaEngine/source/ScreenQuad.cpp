@@ -10,7 +10,7 @@ void ScreenQuad::Render(AaMaterial* material, const RenderTargetTexture& target,
 	material->GetBase()->BindSignature(commandList);
 
 	material->LoadMaterialConstants(storage);
-	memcpy(storage.rootParams.data(), &data, sizeof(data));
+	memcpy(storage.rootParams.data(), &data, storage.rootParams.size() * sizeof(float));
 
 	material->UpdatePerFrame(storage, constants);
 	material->BindPipeline(commandList);

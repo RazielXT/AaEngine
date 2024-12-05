@@ -7,7 +7,6 @@
 #include <thread>
 
 struct RenderQueue;
-class SceneManager;
 
 class SceneRenderTask : public CompositorTask
 {

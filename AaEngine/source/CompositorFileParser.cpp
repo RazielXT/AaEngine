@@ -97,6 +97,9 @@ static std::vector<CompositorTextureSlot> parseCompositorTextureSlot(const Confi
 				textures.push_back({ t.first, Compositor::UsageFlags(flags) });
 		}
 
+		if (textures.empty())
+			return { { param.value, Compositor::UsageFlags(flags) } };
+
 		return textures;
 	}
 
@@ -112,6 +115,7 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 {
 	auto objects = Config::Parse(directory + path);
 	std::map<std::string, CompositorInfo> imports;
+	std::optional<CompositorPassCondition> currentCondition;
 
 	for (auto& obj : objects)
 	{
@@ -133,53 +137,37 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 					tex.name = member.value;
 					tex.uav = member.type == "rwtexture";
 
-					if (member.params.size() >= 3)
+					if (member.params.size() >= 2)
 					{
 						size_t idx = 0;
-
-						if (member.params[idx].starts_with("target_size_div"))
-						{
-							tex.width = tex.height = 1 / std::stof(member.params[idx + 1]);
+						std::string_view sizeParam = member.params[idx];
+						if (sizeParam.starts_with("target_"))
 							tex.targetScale = true;
-							idx += 2;
+						if (sizeParam.starts_with("output_"))
+							tex.outputScale = true;
+
+						if (tex.targetScale || tex.outputScale)
+						{
+							sizeParam = sizeParam.substr(7);
+
+							if (sizeParam == "size")
+							{
+								tex.width = tex.height = 1;
+								idx++;
+							}
+							else if (sizeParam == "size_div")
+							{
+								tex.width = tex.height = 1 / std::stof(member.params[++idx]);
+							}
+							else if (sizeParam == "size_scaled")
+							{
+								tex.width = tex.height = std::stof(member.params[++idx]);
+							}
 						}
 						else
 						{
-							if (member.params[idx].starts_with("target_width_scaled"))
-							{
-								tex.width = std::stof(member.params[idx + 1]);
-								tex.targetScale = true;
-								idx += 2;
-							}
-							else if (member.params[idx].starts_with("target_width"))
-							{
-								tex.width = 1.f;
-								tex.targetScale = true;
-								idx += 1;
-							}
-							else
-							{
-								tex.width = std::stof(member.params[idx]);
-								idx += 1;
-							}
-
-							if (member.params[idx].starts_with("target_height_scaled"))
-							{
-								tex.height = std::stof(member.params[idx + 1]);
-								tex.targetScale = true;
-								idx += 2;
-							}
-							else if (member.params[idx].starts_with("target_height"))
-							{
-								tex.height = 1.f;
-								tex.targetScale = true;
-								idx += 1;
-							}
-							else
-							{
-								tex.height = std::stof(member.params[idx]);
-								idx += 1;
-							}
+							tex.width = std::stof(member.params[idx++]);
+							tex.height = std::stof(member.params[idx++]);
 						}
 
 						std::vector<DXGI_FORMAT> formats;
@@ -209,6 +197,7 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 				{
 					CompositorPassInfo pass;
 					pass.name = member.value;
+					pass.condition = currentCondition;
 
 					for (auto& param : member.children)
 					{
@@ -232,6 +221,7 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 				{
 					CompositorPassInfo pass;
 					pass.task = pass.name = member.value;
+					pass.condition = currentCondition;
 
 					UINT flags = parseFlags(member);
 
@@ -268,12 +258,29 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 					{
 						if (pass.name == what || what == "*")
 						{
-							info.passes.push_back(pass);
+							auto& added = info.passes.emplace_back(pass);
+							added.condition = currentCondition;
 						}
 					}
 
 					info.textures.insert(ref.textures.begin(), ref.textures.end());
 					ref.textures.clear();
+				}
+				else if (member.type.starts_with('#'))
+				{
+					if (member.type == "#if")
+					{
+						currentCondition = { true, member.value };
+					}
+					else if (member.type == "#else")
+					{
+						if (currentCondition)
+							currentCondition->accept = false;
+					}
+					else if (member.type == "#endif")
+					{
+						currentCondition.reset();
+					}
 				}
 			}
 

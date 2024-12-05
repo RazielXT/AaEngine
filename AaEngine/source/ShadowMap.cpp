@@ -17,7 +17,7 @@ void AaShadowMap::init(RenderSystem* renderSystem)
 		texture[i].SetName(L"ShadowMap");
 
 		DescriptorManager::get().createTextureView(texture[i]);
-		AaTextureResources::get().setNamedTexture("ShadowMap" + std::to_string(i), &texture[i].view);
+		AaTextureResources::get().setNamedTexture("ShadowMap" + std::to_string(i), texture[i].view);
 
 		camera[i].setOrthographicCamera(400 + i * 400, 400 + i * 400, 1, 1000);
 	}

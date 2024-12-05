@@ -235,6 +235,12 @@
     <ClCompile Include="source\AoBlurAndUpsampleCS.cpp">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClCompile>
+    <ClCompile Include="source\UpscaleTask.cpp">
+      <Filter>Source Files\FrameCompositor\Tasks</Filter>
+    </ClCompile>
+    <ClCompile Include="source\DLSS.cpp">
+      <Filter>Source Files\Render</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\AaApplication.h">
@@ -434,6 +440,12 @@
     </ClInclude>
     <ClInclude Include="source\AoBlurAndUpsampleCS.h">
       <Filter>Source Files\Resources\Compute</Filter>
+    </ClInclude>
+    <ClInclude Include="source\UpscaleTask.h">
+      <Filter>Source Files\FrameCompositor\Tasks</Filter>
+    </ClInclude>
+    <ClInclude Include="source\DLSS.h">
+      <Filter>Source Files\Render</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

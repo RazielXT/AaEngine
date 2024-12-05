@@ -4,9 +4,6 @@
 #include "SceneManager.h"
 #include <thread>
 
-struct RenderQueue;
-class SceneManager;
-
 class SceneTestTask : public CompositorTask
 {
 public:

@@ -12,6 +12,7 @@
 #include "ImguiDebugWindowTask.h"
 #include "Directories.h"
 #include "SsaoComputeTask.h"
+#include "UpscaleTask.h"
 
 FrameCompositor::FrameCompositor(RenderProvider p, SceneManager& scene, AaShadowMap& shadows) : provider(p), sceneMgr(scene), shadowMaps(shadows)
 {
@@ -21,8 +22,6 @@ FrameCompositor::~FrameCompositor()
 {
 	for (auto c : generalCommandsArray)
 		c.deinit();
-
-	info.passes.clear();
 }
 
 void FrameCompositor::load(std::string path)
@@ -33,9 +32,22 @@ void FrameCompositor::load(std::string path)
 void FrameCompositor::load(CompositorInfo i)
 {
 	info = i;
+	std::vector<CompositorPassCondition> conditions;
+	conditions.push_back({ provider.renderSystem->dlss.enabled() , "DLSS"});
 
+	passes.clear();
 	for (auto& p : info.passes)
 	{
+		if (p.condition)
+		{
+			bool pass = false;
+			for (auto& c : conditions)
+				pass = pass || c == p.condition;
+
+			if (!pass)
+				continue;
+		}
+
 		auto& pass = passes.emplace_back(p);
 
 		if (pass.info.task == "Scene")
@@ -66,6 +78,10 @@ void FrameCompositor::load(CompositorInfo i)
 		{
 			pass.task = std::make_unique<SsaoComputeTask>(provider, sceneMgr);
 		}
+		else if (pass.info.task == "Upscale")
+		{
+			pass.task = std::make_unique<UpscaleTask>(provider, sceneMgr);
+		}
 		else if (pass.info.task == "Test")
 		{
 			pass.task = std::make_unique<SceneTestTask>(provider, sceneMgr);
@@ -74,45 +90,39 @@ void FrameCompositor::load(CompositorInfo i)
 
 	initializeTextureStates();
 
-	UINT textureCount = 0;
-	UINT depthCount = 0;
-	for (auto& [name, t] : info.textures)
-		if (name.ends_with(":Depth"))
-			depthCount++;
-		else
-			textureCount++;
-
-	rtvHeap.InitRtv(provider.renderSystem->device, textureCount, L"CompositorRTV");
-	rtvHeap.InitDsv(provider.renderSystem->device, depthCount, L"CompositorDSV");
 	reloadTextures();
 
-	for (size_t i = 0; i < passes.size(); i++)
+	for (auto& pass : passes)
 	{
-		const auto& passInfo = info.passes[i];
-		auto& pass = passes[i];
-
-		if (!passInfo.material.empty() && pass.target.texture)
-			pass.material = AaMaterialResources::get().getMaterial(passInfo.material)->Assign({}, { pass.target.texture->format });
+		if (!pass.info.material.empty() && pass.target.texture)
+			pass.material = AaMaterialResources::get().getMaterial(pass.info.material)->Assign({}, { pass.target.texture->format });
 	}
 
 	initializeCommands();
 }
 
+void FrameCompositor::reloadPasses()
+{
+	load(info);
+}
+
 void FrameCompositor::reloadTextures()
 {
-	rtvHeap.Reset();
-
-	const UINT DescriptorMax = 10000;
-	UINT descriptorOffset = DescriptorMax;
-	if (!textures.empty())
+	if (textures.empty())
 	{
+		UINT textureCount = 0;
+		UINT depthCount = 0;
 		for (auto& [name, t] : info.textures)
-		{
-			auto& tex = textures[name];
-			descriptorOffset = min(descriptorOffset, tex.view.srvHeapIndex);
-			tex = {};
-		}
+			if (name.ends_with(":Depth"))
+				depthCount++;
+			else
+				textureCount++;
+
+		rtvHeap.InitRtv(provider.renderSystem->device, textureCount, L"CompositorRTV");
+		rtvHeap.InitDsv(provider.renderSystem->device, depthCount, L"CompositorDSV");
 	}
+	rtvHeap.Reset();
+	textures.clear();
 
 	for (auto& [name,t] : info.textures)
 	{
@@ -121,8 +131,15 @@ void FrameCompositor::reloadTextures()
 
 		if (t.targetScale)
 		{
-			w = provider.renderSystem->getWindow()->getWidth() * t.width;
-			h = provider.renderSystem->getWindow()->getHeight() * t.height;
+			auto sz = provider.renderSystem->getRenderSize();
+			w = sz.x * t.width;
+			h = sz.y * t.height;
+		}
+		else if (t.outputScale)
+		{
+			auto sz = provider.renderSystem->getOutputSize();
+			w = sz.x * t.width;
+			h = sz.y * t.height;
 		}
 		if (t.arraySize > 1)
 		{
@@ -144,15 +161,8 @@ void FrameCompositor::reloadTextures()
 	
 			tex.SetName(std::wstring(name.begin(), name.end()).c_str());
 
-			if (descriptorOffset == DescriptorMax)
-			{
-				DescriptorManager::get().createTextureView(tex);
-				AaTextureResources::get().setNamedTexture("c_" + name, &tex.view);
-			}
-			else
-			{
-				DescriptorManager::get().createTextureView(tex, descriptorOffset++);
-			}
+			DescriptorManager::get().createTextureView(tex);
+			AaTextureResources::get().setNamedTexture("c_" + name, tex.view);
 		}
 	}
 

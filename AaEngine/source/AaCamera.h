@@ -17,9 +17,9 @@ public:
 
 	bool isOrthographic() const;
 
-	const XMMATRIX& getProjectionMatrix() const;
+	XMMATRIX getProjectionMatrix() const;
 	const XMMATRIX& getViewMatrix() const;
-	const XMMATRIX& getViewProjectionMatrix() const;
+	XMMATRIX getViewProjectionMatrix() const;
 
 	void updateMatrix();
 
@@ -44,6 +44,9 @@ public:
 	float getCameraZ() const;
 	float getTanHalfFovH() const;
 
+	void setPixelOffset(XMFLOAT2 offset, XMUINT2 viewportSize);
+	void clearPixelOffset();
+
 private:
 
 	float width{}, height{}, nearZ{}, farZ{};
@@ -62,4 +65,9 @@ private:
 	Vector3 upVector;
 
 	Quaternion rotation;
+
+	bool hasOffset = false;
+	XMFLOAT2 m_PixelOffset;
+	XMMATRIX m_PixelOffsetMatrix;
+	XMMATRIX m_PixelOffsetMatrixInv;
 };

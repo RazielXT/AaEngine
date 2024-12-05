@@ -89,6 +89,10 @@ void SceneRenderTask::run(RenderContext& renderCtx, CommandsData&, CompositorPas
 
 void SceneRenderTask::renderScene(CompositorPass& pass)
 {
+	auto& dlss = provider.renderSystem->dlss;
+	if (dlss.enabled())
+		ctx.camera->setPixelOffset(dlss.getJitter(), dlss.getRenderSize());
+
 	renderables->updateVisibility(*ctx.camera, sceneInfo);
 
 	if (earlyZ.eventBegin)
@@ -96,7 +100,7 @@ void SceneRenderTask::renderScene(CompositorPass& pass)
 
 	auto marker = provider.renderSystem->StartCommandList(scene.commands);
 
-	pass.target.textureSet->PrepareAsTarget(scene.commands.commandList, true, TransitionFlags::DepthPrepareRead | TransitionFlags::SkipTransitionDepth);
+	pass.target.textureSet->PrepareAsTarget(scene.commands.commandList, true, TransitionFlags::DepthContinue);
 
 	ShaderConstantsProvider constants(provider.params, sceneInfo, *ctx.camera, *pass.target.texture);
 	sceneQueue->renderObjects(constants, scene.commands.commandList);

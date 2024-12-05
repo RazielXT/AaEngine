@@ -32,6 +32,16 @@ namespace imgui
 		ssao;
 
 		size_t vramUsage{};
+
+		int DlssMode{};
+		const char* DlssModeNames[6] = {
+			"UltraPerformance",
+			"Performance",
+			"Balanced",
+			"Quality",
+			"DLAA",
+			"Off"
+		};
 	};
 
 	struct DebugWindow

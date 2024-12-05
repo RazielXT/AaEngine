@@ -11,7 +11,7 @@
 
 RenderSystem::RenderSystem(AaWindow* mWindow)
 {
-	this->mWindow = mWindow;
+	this->window = mWindow;
 	mWindow->listeners.push_back(this);
 
 	HWND hwnd = mWindow->getHwnd();
@@ -77,11 +77,30 @@ RenderSystem::~RenderSystem()
 {
 	fence->Release();
 
+	dlss.shutdown();
 	swapChain->Release();
 	commandQueue->Release();
 	device->Release();
 
 	CloseHandle(fenceEvent);
+}
+
+void RenderSystem::init()
+{
+	dlss.init(this);
+}
+
+DirectX::XMUINT2 RenderSystem::getRenderSize() const
+{
+	if (dlss.enabled())
+		return dlss.getRenderSize();
+
+	return getOutputSize();
+}
+
+DirectX::XMUINT2 RenderSystem::getOutputSize() const
+{
+	return { window->getWidth(), window->getHeight() };
 }
 
 void RenderSystem::onScreenResize()
@@ -93,8 +112,8 @@ void RenderSystem::onScreenResize()
 		b = {};
 	}
 
-	auto width = mWindow->getWidth();
-	auto height = mWindow->getHeight();
+	auto width = window->getWidth();
+	auto height = window->getHeight();
 
 	// Resize the swap chain
 	DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
@@ -113,6 +132,8 @@ void RenderSystem::onScreenResize()
 		b.InitExisting(swapChainTextures[i++], device, width, height, backbufferHeap, DXGI_FORMAT_R8G8B8A8_UNORM);
 		b.SetName(L"Backbuffer");
 	}
+
+	dlss.onScreenResize();
 
 	MoveToNextFrame();
 }

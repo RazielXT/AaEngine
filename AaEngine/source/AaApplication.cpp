@@ -17,6 +17,7 @@ AaApplication::AaApplication(HINSTANCE hInstance)
 	mShaders = new AaShaderLibrary(mRenderSystem);
 	mMaterials = new AaMaterialResources(mRenderSystem);
 	mModels = new AaModelResources(mRenderSystem);
+	mRenderSystem->init();
 
 	AaLogger::log("Application created");
 }

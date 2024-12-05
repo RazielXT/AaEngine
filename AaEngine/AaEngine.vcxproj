@@ -36,7 +36,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\dependencies\imgui;..\dependencies\DirectXTK12\Inc;..\dependencies\DirectX-Headers\include;..\dependencies\pugixml\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\dependencies\imgui;..\dependencies\DirectXTK12\Inc;..\dependencies\DirectX-Headers\include;..\dependencies\pugixml\src;..\dependencies\DLSS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_SECURE_SCL=0;_ITERATOR_DEBUG_LEVEL=0;NDEBUG</PreprocessorDefinitions>
@@ -50,8 +50,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>..\dependencies\DirectXTK12\Bin\Desktop_2022_Win10\x64\Release\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>d3d12.lib;dxgi.lib;dxcompiler.lib;dxguid.lib;DirectXTK12.lib;Shcore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\dependencies\DirectXTK12\Bin\Desktop_2022_Win10\x64\Release\;..\dependencies\DLSS\lib\Windows_x86_64\x86_64\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>d3d12.lib;dxgi.lib;dxcompiler.lib;dxguid.lib;DirectXTK12.lib;Shcore.lib;nvsdk_ngx_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
       <ImportLibrary>$(OutDir)$(TargetName).lib</ImportLibrary>
@@ -60,7 +60,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\dependencies\imgui;..\dependencies\DirectXTK12\Inc;..\dependencies\DirectX-Headers\include;..\dependencies\tinyxml2;..\dependencies\pugixml\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\dependencies\imgui;..\dependencies\DirectXTK12\Inc;..\dependencies\DirectX-Headers\include;..\dependencies\tinyxml2;..\dependencies\pugixml\src;..\dependencies\DLSS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -73,8 +73,8 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>d3d12.lib;dxgi.lib;dxcompiler.lib;dxguid.lib;DirectXTK12.lib;Shcore.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\dependencies\DirectXTK12\Bin\Desktop_2022_Win10\x64\Debug\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>d3d12.lib;dxgi.lib;dxcompiler.lib;dxguid.lib;DirectXTK12.lib;Shcore.lib;nvsdk_ngx_d_dbg.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\dependencies\DirectXTK12\Bin\Desktop_2022_Win10\x64\Debug\;..\dependencies\DLSS\lib\Windows_x86_64\x86_64\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
@@ -107,6 +107,7 @@
     <ClCompile Include="source\AoBlurAndUpsampleCS.cpp" />
     <ClCompile Include="source\AoRenderCS.cpp" />
     <ClCompile Include="source\AoPrepareDepthBuffersCS.cpp" />
+    <ClCompile Include="source\DLSS.cpp" />
     <ClCompile Include="source\RenderObject.cpp" />
     <ClCompile Include="source\RenderSystem.cpp" />
     <ClCompile Include="source\SceneManager.cpp" />
@@ -150,6 +151,7 @@
     <ClCompile Include="source\SsaoComputeTask.cpp" />
     <ClCompile Include="source\TextureData.cpp" />
     <ClCompile Include="source\TextureResource.cpp" />
+    <ClCompile Include="source\UpscaleTask.cpp" />
     <ClCompile Include="source\VoxelizeSceneTask.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -166,6 +168,7 @@
     <ClInclude Include="source\AoRenderCS.h" />
     <ClInclude Include="source\CompositorTask.h" />
     <ClInclude Include="source\DebugOverlayTask.h" />
+    <ClInclude Include="source\DLSS.h" />
     <ClInclude Include="source\EntityGeometry.h" />
     <ClInclude Include="source\GenerateMipsComputeShader.h" />
     <ClInclude Include="source\GrassArea.h" />
@@ -218,6 +221,7 @@
     <ClInclude Include="source\SsaoComputeTask.h" />
     <ClInclude Include="source\TextureData.h" />
     <ClInclude Include="source\TextureResource.h" />
+    <ClInclude Include="source\UpscaleTask.h" />
     <ClInclude Include="source\VoxelizeSceneTask.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

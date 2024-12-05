@@ -76,7 +76,7 @@ FileTexture* AaTextureResources::loadFile(ID3D12Device* device, ResourceUploadBa
 	return t.get();
 }
 
-void AaTextureResources::setNamedTexture(std::string name, ShaderTextureView* texture)
+void AaTextureResources::setNamedTexture(std::string name, const ShaderTextureView& texture)
 {
 	namedTextures[name] = texture;
 }
@@ -85,10 +85,10 @@ ShaderTextureView* AaTextureResources::getNamedTexture(std::string name)
 {
 	auto it = namedTextures.find(name);
 
-	return it == namedTextures.end() ? nullptr : it->second;
+	return it == namedTextures.end() ? nullptr : &it->second;
 }
 
-void AaTextureResources::setNamedUAV(std::string name, ShaderUAV* texture)
+void AaTextureResources::setNamedUAV(std::string name, const ShaderUAV& texture)
 {
 	namedUAV[name] = texture;
 }
@@ -97,7 +97,7 @@ ShaderUAV* AaTextureResources::getNamedUAV(std::string name)
 {
 	auto it = namedUAV.find(name);
 
-	return it == namedUAV.end() ? nullptr : it->second;
+	return it == namedUAV.end() ? nullptr : &it->second;
 }
 
 ShaderTextureView::ShaderTextureView(D3D12_GPU_DESCRIPTOR_HANDLE* handles)

@@ -14,6 +14,7 @@ public:
 	~FrameCompositor();
 
 	void load(std::string path);
+	void reloadPasses();
 	void reloadTextures();
 
 	void render(RenderContext& ctx);

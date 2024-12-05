@@ -5,7 +5,6 @@
 #include <thread>
 
 class AaShadowMap;
-class SceneManager;
 
 class ShadowsRenderTask : public CompositorTask
 {

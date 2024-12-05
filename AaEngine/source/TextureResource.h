@@ -6,6 +6,8 @@
 
 struct TextureResource
 {
+	~TextureResource();
+
 	void create3D(ID3D12Device* device, UINT width, UINT height, UINT depth, DXGI_FORMAT format);
 	void setName(const wchar_t* name);
 

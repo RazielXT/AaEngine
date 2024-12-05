@@ -40,6 +40,7 @@ MyListener::MyListener(RenderSystem* render)
 	grass->initializeGpuResources(renderSystem, sceneMgr->getQueueTargetFormats());
 
 	debugWindow.init(renderSystem);
+	debugWindow.state.DlssMode = (int)renderSystem->dlss.selectedMode();
 
 	loadScene("test");
 }
@@ -93,6 +94,12 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 		renderSystem->WaitForAllFrames();
 		AaMaterialResources::get().ReloadShaders();
 		debugWindow.state.reloadShaders = false;
+	}
+	if (debugWindow.state.DlssMode != (int)renderSystem->dlss.selectedMode())
+	{
+		renderSystem->WaitForAllFrames();
+		renderSystem->dlss.selectMode((DLSS::Mode)debugWindow.state.DlssMode);
+		compositor->reloadPasses();
 	}
 	{
 		debugWindow.state.vramUsage = GetGpuMemoryUsage();

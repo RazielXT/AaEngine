@@ -1,0 +1,67 @@
+compositor Bloom
+{
+	texture bloomTexture target_size_scaled 0.5 DXGI_FORMAT_R10G10B10A2_UNORM
+	texture bloomTexture2 target_size_scaled 0.25 DXGI_FORMAT_R10G10B10A2_UNORM
+	texture bloomTexture3 target_size_scaled 0.125 DXGI_FORMAT_R10G10B10A2_UNORM
+	texture bloomTexture4 target_size_scaled 0.0625 DXGI_FORMAT_R10G10B10A2_UNORM
+	texture bloomTexture5 target_size_scaled 0.0625 DXGI_FORMAT_R10G10B10A2_UNORM
+
+	pass BloomDownscale
+	{
+		material PassThrough
+		input sceneDownscale4
+		target bloomTexture3
+	}
+	pass BloomDownscale
+	{
+		material PassThrough
+		input bloomTexture3
+		target bloomTexture4
+	}
+	pass BloomBlurX
+	{
+		material BloomBlurX
+		input bloomTexture4
+		input exposure
+		target bloomTexture5
+	}
+	pass BloomBlurY
+	{
+		material BloomBlurY
+		input bloomTexture5
+		input exposure
+		target bloomTexture4
+	}
+	pass BloomBlurX
+	{
+		material BloomBlurX
+		input bloomTexture4
+		input exposure
+		target bloomTexture5
+	}
+	pass BloomBlurY
+	{
+		material BloomBlurY
+		input bloomTexture5
+		input exposure
+		target bloomTexture4
+	}
+	pass BloomUpscale
+	{
+		material PutBlurThrough
+		input bloomTexture4
+		target bloomTexture3
+	}
+	pass BloomUpscale
+	{
+		material PutBlurThrough
+		input bloomTexture3
+		target bloomTexture2
+	}
+	pass BloomUpscale
+	{
+		material PutBlurThrough
+		input bloomTexture2
+		target bloomTexture
+	}
+}

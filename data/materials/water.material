@@ -24,7 +24,7 @@ material WaterLake
 	}
 	texture Depth
 	{
-		compositor depthDownsample8
+		compositor depthDownsample4
 	}
 	texture SceneColor
 	{

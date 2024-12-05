@@ -17,7 +17,8 @@ bool ImguiUsesInput()
 
 	return false;
 }
-
+extern float jitterScaleX;
+extern float jitterScaleY;
 namespace imgui
 {
 	static ID3D12DescriptorHeap* g_pd3dSrvDescHeap = nullptr;
@@ -79,6 +80,9 @@ namespace imgui
 
 		ImGui::Text("VRAM used %uMB", state.vramUsage);
 
+// 		ImGui::SliderFloat("jitterScaleX", &jitterScaleX, -3.0f, 3.f);
+// 		ImGui::SliderFloat("jitterScaleY", &jitterScaleY, -3.0f, 3.f);
+
 		int next = state.TexturePreviewIndex;
 		if (ImGui::InputInt("Texture preview", &next))
 		{
@@ -92,23 +96,26 @@ namespace imgui
 				state.TexturePreviewIndex = DescriptorManager::get().previousDescriptor(state.TexturePreviewIndex, D3D12_SRV_DIMENSION_TEXTURE2D);
 		}
 
-		if (ImGui::Button(state.stopUpdatingVoxel ? "startUpdatingVoxel" : "stopUpdatingVoxel"))
-			state.stopUpdatingVoxel = !state.stopUpdatingVoxel;
-		
-		ImGui::SliderFloat("GI weight", &state.voxelSteppingBounces, 0.0f, 0.15f);
-		ImGui::SliderFloat("Diffuse weight", &state.voxelSteppingDiffuse, 0.0f, 0.5f);
-
-		static float voxelLightPower = []{ float f; AaMaterialResources::get().getMaterial("WhiteVCTLight")->GetParameter(FastParam::Emission, &f); return f; }();
-
-		if (ImGui::SliderFloat("Light power", &voxelLightPower, 0.0f, 10.f))
+		if (ImGui::CollapsingHeader("GI"))
 		{
-			AaMaterialResources::get().getMaterial("WhiteVCTLight")->SetParameter(FastParam::Emission, &voxelLightPower);
-		}
+			if (ImGui::Button(state.stopUpdatingVoxel ? "startUpdatingVoxel" : "stopUpdatingVoxel"))
+				state.stopUpdatingVoxel = !state.stopUpdatingVoxel;
 
-		ImGui::SliderFloat("middleConeRatio", &state.middleConeRatioDistance.x, 0.0f, 5.f);
-		ImGui::SliderFloat("middleConeDistance", &state.middleConeRatioDistance.y, 0.0f, 5.f);
-		ImGui::SliderFloat("sideConeRatio", &state.sideConeRatioDistance.x, 0.0f, 5.f);
-		ImGui::SliderFloat("sideConeDistance", &state.sideConeRatioDistance.y, 0.0f, 5.f);
+			ImGui::SliderFloat("GI weight", &state.voxelSteppingBounces, 0.0f, 0.15f);
+			ImGui::SliderFloat("Diffuse weight", &state.voxelSteppingDiffuse, 0.0f, 0.5f);
+
+			static float voxelLightPower = [] { float f; AaMaterialResources::get().getMaterial("WhiteVCTLight")->GetParameter(FastParam::Emission, &f); return f; }();
+
+			if (ImGui::SliderFloat("Light power", &voxelLightPower, 0.0f, 10.f))
+			{
+				AaMaterialResources::get().getMaterial("WhiteVCTLight")->SetParameter(FastParam::Emission, &voxelLightPower);
+			}
+
+// 			ImGui::SliderFloat("middleConeRatio", &state.middleConeRatioDistance.x, 0.0f, 5.f);
+// 			ImGui::SliderFloat("middleConeDistance", &state.middleConeRatioDistance.y, 0.0f, 5.f);
+// 			ImGui::SliderFloat("sideConeRatio", &state.sideConeRatioDistance.x, 0.0f, 5.f);
+// 			ImGui::SliderFloat("sideConeDistance", &state.sideConeRatioDistance.y, 0.0f, 5.f);
+		}
 
 		if (ImGui::CollapsingHeader("SSAO"))
 		{
@@ -118,6 +125,8 @@ namespace imgui
 			ImGui::SliderFloat("NoiseFilterTolerance", &state.ssao.NoiseFilterTolerance, -8.0f, 0.f);
 			ImGui::SliderFloat("UpsampleTolerance", &state.ssao.UpsampleTolerance, -12.0f, -1.f);
 		}
+
+		ImGui::Combo("DLSS", &state.DlssMode, state.DlssModeNames, std::size(state.DlssModeNames));
 
 		const char* scenes[] = {
 			"test",

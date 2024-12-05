@@ -1,4 +1,5 @@
 #include "RenderTargetTexture.h"
+#include "DescriptorManager.h"
 
 static const float DepthClearValue = 0.f;
 static const DirectX::XMFLOAT4 clearColor = { 0.55f, 0.75f, 0.9f, 1.0f };
@@ -42,6 +43,12 @@ void RenderTargetHeap::CreateDepthTargetHandle(ID3D12Device* device, ComPtr<ID3D
 	dsvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(dsvHeap->GetCPUDescriptorHandleForHeapStart(), dsvHandlesCount, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV));
 	device->CreateDepthStencilView(texture.Get(), nullptr, dsvHandle);
 	dsvHandlesCount++;
+}
+
+RenderTargetTexture::~RenderTargetTexture()
+{
+	DescriptorManager::get().removeTextureView(*this);
+	DescriptorManager::get().removeUAVView(*this);
 }
 
 void RenderTargetTexture::Init(ID3D12Device* device, UINT w, UINT h, RenderTargetHeap& heap, DXGI_FORMAT f, D3D12_RESOURCE_STATES state, Flags flags)
@@ -293,11 +300,12 @@ void RenderTargetTexturesView::PrepareAsTarget(ID3D12GraphicsCommandList* comman
 				}
 			}
 			auto depthNextState = (flags & TransitionFlags::ReadOnlyDepth) ? D3D12_RESOURCE_STATE_DEPTH_READ : D3D12_RESOURCE_STATE_DEPTH_WRITE;
-			if ((flags & TransitionFlags::UseDepth) && depthState.previousState != depthNextState)
+			auto depthLastState = depthState.previousState;
+			if ((flags & TransitionFlags::UseDepth) && !(flags & TransitionFlags::DepthSkipTransition) && depthLastState != depthNextState)
 			{
 				barriers[i++] = CD3DX12_RESOURCE_BARRIER::Transition(
 					depthState.texture->texture.Get(),
-					depthState.previousState,
+					depthLastState,
 					depthNextState);
 			}
 		}

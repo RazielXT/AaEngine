@@ -71,9 +71,14 @@ bool AaCamera::isOrthographic() const
 	return orthographic;
 }
 
-const XMMATRIX& AaCamera::getProjectionMatrix() const
+XMMATRIX AaCamera::getProjectionMatrix() const
 {
-	return reversedProjection_m;
+	XMMATRIX proj = reversedProjection_m;
+
+	if (hasOffset)
+		proj = XMMatrixMultiply(proj, m_PixelOffsetMatrix);
+
+	return proj;
 }
 
 const XMMATRIX& AaCamera::getViewMatrix() const
@@ -81,7 +86,7 @@ const XMMATRIX& AaCamera::getViewMatrix() const
 	return view_m;
 }
 
-const XMMATRIX& AaCamera::getViewProjectionMatrix() const
+XMMATRIX AaCamera::getViewProjectionMatrix() const
 {
 	return view_projection_m;
 }
@@ -96,8 +101,10 @@ void AaCamera::updateMatrix()
 
 // 		auto quatMatrix = XMMatrixRotationQuaternion(XMLoadFloat4(&rotation));
 // 		view_m = XMMatrixMultiply(XMMatrixLookToLH(XMLoadFloat3(&position), XMLoadFloat3(&direction), XMLoadFloat3(&upVector)), quatMatrix);
-
-		view_projection_m = XMMatrixMultiply(view_m, reversedProjection_m);
+	}
+	if (dirty || hasOffset)
+	{
+		view_projection_m = XMMatrixMultiply(view_m, getProjectionMatrix());
 		dirty = false;
 	}
 }
@@ -226,4 +233,28 @@ float AaCamera::getTanHalfFovH() const
 	XMFLOAT4X4 proj;
 	XMStoreFloat4x4(&proj, reversedProjection_m);
 	return proj._11;
+}
+
+float jitterScaleX = -2.f;
+float jitterScaleY = 2.f;
+
+void AaCamera::setPixelOffset(XMFLOAT2 offset, XMUINT2 viewportSize)
+{
+	hasOffset = true;
+	m_PixelOffset = offset;
+
+	// Calculate the translation based on the viewport and offset
+	float translateX = jitterScaleX * offset.x / float(viewportSize.x);
+	float translateY = jitterScaleY * offset.y / float(viewportSize.y);
+
+	// Create the translation matrix
+	m_PixelOffsetMatrix = XMMatrixTranslation(translateX, translateY, 0.f);
+
+	// Calculate the inverse of the translation matrix
+	m_PixelOffsetMatrixInv = XMMatrixInverse(nullptr, m_PixelOffsetMatrix);
+}
+
+void AaCamera::clearPixelOffset()
+{
+	hasOffset = false;
 }

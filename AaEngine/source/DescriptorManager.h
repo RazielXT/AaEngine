@@ -15,9 +15,11 @@ public:
 
 	static DescriptorManager& get();
 
-	ID3D12DescriptorHeap* mainDescriptorHeap;
+	ID3D12DescriptorHeap* mainDescriptorHeap{};
+	ID3D12DescriptorHeap* samplerHeap{};
 
 	void init(UINT maxDescriptors);
+	void initializeSamplers(float MipLODBias);
 
 	void createTextureView(TextureResource& texture, UINT mipLevel = -1);
 	void createTextureView(FileTexture& texture);

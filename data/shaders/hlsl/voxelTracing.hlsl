@@ -184,8 +184,7 @@ struct PSOutput
     float4 target2 : SV_Target2;
 };
 
-SamplerState g_sampler : register(s0);
-SamplerState diffuse_sampler : register(s1);
+SamplerState voxelSampler : register(s0);
 
 PSOutput PS_Main(PS_Input pin)
 {
@@ -198,20 +197,21 @@ PSOutput PS_Main(PS_Input pin)
 
     float3 voxelUV = (pin.wp.xyz-sceneCorner)/voxelSceneSize;
 	Texture3D voxelmap = GetTexture3D(TexIdSceneVoxel);
-    float4 fullTraceSample = coneTrace(voxelUV, geometryNormal, middleCone.x, middleCone.y, voxelmap, g_sampler, 0) * 1;
-    fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal + geometryT), sideCone.x, sideCone.y, voxelmap, g_sampler, 0) * 1.0;
-    fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal - geometryT), sideCone.x, sideCone.y, voxelmap, g_sampler, 0) * 1.0;
-    fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal + geometryB), sideCone.x, sideCone.y, voxelmap, g_sampler, 0) * 1.0;
-    fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal - geometryB), sideCone.x, sideCone.y, voxelmap, g_sampler, 0) * 1.0;
+    float4 fullTraceSample = coneTrace(voxelUV, geometryNormal, middleCone.x, middleCone.y, voxelmap, voxelSampler, 0) * 1;
+    fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal + geometryT), sideCone.x, sideCone.y, voxelmap, voxelSampler, 0) * 1.0;
+    fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal - geometryT), sideCone.x, sideCone.y, voxelmap, voxelSampler, 0) * 1.0;
+    fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal + geometryB), sideCone.x, sideCone.y, voxelmap, voxelSampler, 0) * 1.0;
+    fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal - geometryB), sideCone.x, sideCone.y, voxelmap, voxelSampler, 0) * 1.0;
     float3 traceColor = fullTraceSample.rgb / 5;
 
-    float occlusionSample = sampleVox(voxelmap, g_sampler, voxelUV + geometryNormal / 128, geometryNormal, 2).w;
-    occlusionSample += sampleVox(voxelmap, g_sampler, voxelUV + normalize(geometryNormal + geometryT) / 128, normalize(geometryNormal + geometryT), 2).w;
-    occlusionSample += sampleVox(voxelmap, g_sampler, voxelUV + normalize(geometryNormal - geometryT) / 128, normalize(geometryNormal - geometryT), 2).w;
-    occlusionSample += sampleVox(voxelmap, g_sampler, voxelUV + (geometryNormal + geometryB) / 128, (geometryNormal + geometryB), 2).w;
-    occlusionSample += sampleVox(voxelmap, g_sampler, voxelUV + (geometryNormal - geometryB) / 128, (geometryNormal - geometryB), 2).w;
+    float occlusionSample = sampleVox(voxelmap, voxelSampler, voxelUV + geometryNormal / 128, geometryNormal, 2).w;
+    occlusionSample += sampleVox(voxelmap, voxelSampler, voxelUV + normalize(geometryNormal + geometryT) / 128, normalize(geometryNormal + geometryT), 2).w;
+    occlusionSample += sampleVox(voxelmap, voxelSampler, voxelUV + normalize(geometryNormal - geometryT) / 128, normalize(geometryNormal - geometryT), 2).w;
+    occlusionSample += sampleVox(voxelmap, voxelSampler, voxelUV + (geometryNormal + geometryB) / 128, (geometryNormal + geometryB), 2).w;
+    occlusionSample += sampleVox(voxelmap, voxelSampler, voxelUV + (geometryNormal - geometryB) / 128, (geometryNormal - geometryB), 2).w;
     occlusionSample = 1 - saturate(occlusionSample / 5);
 
+	SamplerState diffuse_sampler = SamplerDescriptorHeap[0];
     float3 albedo = GetTexture(TexIdDiffuse).Sample(diffuse_sampler, pin.uv).rgb;
 	albedo *= MaterialColor;
 
@@ -222,7 +222,7 @@ PSOutput PS_Main(PS_Input pin)
     float4 color1 = float4(saturate(albedo * lighting), 1);
 	color1.rgb += albedo * Emission;
 	color1.a = (lighting.r + lighting.g + lighting.b) / 3;
-	//color1.rgb = voxelmap.SampleLevel(g_sampler, voxelUV, 0).rgb;
+	//color1.rgb = voxelmap.SampleLevel(voxelSampler, voxelUV, 0).rgb;
 
 	PSOutput output;
     output.target0 = color1;

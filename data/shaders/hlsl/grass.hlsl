@@ -78,8 +78,7 @@ Texture2D<float4> GetTexture(uint index)
     return ResourceDescriptorHeap[index];
 }
 
-SamplerState g_sampler : register(s0);
-SamplerState DepthSampler : register(s1);
+SamplerState DepthSampler : register(s0);
 
 float readShadowmap(Texture2D shadowmap, float2 shadowCoord)
 {
@@ -150,6 +149,7 @@ struct PSOutput
 
 PSOutput PSMain(PSInput input)
 {
+	SamplerState g_sampler = SamplerDescriptorHeap[0];
 	float4 albedo = GetTexture(TexIdDiffuse).Sample(g_sampler, input.uv);
 
 	float distanceFade = saturate(2000 * input.worldPosition.z / input.position.w);
@@ -174,6 +174,7 @@ PSOutput PSMain(PSInput input)
 
 void PSMainDepth(PSInput input)
 {
+	SamplerState g_sampler = SamplerDescriptorHeap[0];
 	float4 albedo = GetTexture(TexIdDiffuse).Sample(g_sampler, input.uv);
 
 	float distanceFade = saturate(2000 * input.worldPosition.z / input.position.w);

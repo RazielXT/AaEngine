@@ -15,6 +15,7 @@ DescriptorManager::DescriptorManager(ID3D12Device* d) : device(d)
 
 DescriptorManager::~DescriptorManager()
 {
+	samplerHeap->Release();
 	mainDescriptorHeap->Release();
 
 	instance = nullptr;
@@ -33,10 +34,7 @@ void DescriptorManager::init(UINT maxDescriptors)
 	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	HRESULT hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&mainDescriptorHeap));
 	if (FAILED(hr))
-	{
-		// Handle error
 		return;
-	}
 
 	mainDescriptorHeap->SetName(L"CBV_SRV_UAV");
 }
@@ -289,4 +287,53 @@ UINT DescriptorManager::createDescriptorIndex(D3D12_SRV_DIMENSION type)
 	}
 
 	return r;
+}
+
+void DescriptorManager::initializeSamplers(float MipLODBias)
+{
+	if (!samplerHeap)
+	{
+		D3D12_DESCRIPTOR_HEAP_DESC samplerHeapDesc = {};
+		samplerHeapDesc.NumDescriptors = 2;
+		samplerHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		samplerHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
+		auto hr = device->CreateDescriptorHeap(&samplerHeapDesc, IID_PPV_ARGS(&samplerHeap));
+		if (FAILED(hr))
+			return;
+
+		samplerHeap->SetName(L"SAMPLERS");
+	}
+
+	int index = 0;
+	//Anisotropic
+	{
+		D3D12_SAMPLER_DESC samplerDesc = {};
+		samplerDesc.Filter = D3D12_FILTER_ANISOTROPIC;
+		samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		samplerDesc.MipLODBias = MipLODBias;
+		samplerDesc.MaxAnisotropy = 8;
+		samplerDesc.MinLOD = 0.0f;
+		samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
+
+		auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(samplerHeap->GetCPUDescriptorHandleForHeapStart(), index++, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER));
+
+		device->CreateSampler(&samplerDesc, handle);
+	}
+	//Linear
+	{
+		D3D12_SAMPLER_DESC samplerDesc = {};
+		samplerDesc.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
+		samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		samplerDesc.MipLODBias = MipLODBias;
+		samplerDesc.MinLOD = 0.0f;
+		samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
+
+		auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(samplerHeap->GetCPUDescriptorHandleForHeapStart(), index++, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER));
+
+		device->CreateSampler(&samplerDesc, handle);
+	}
 }

@@ -100,6 +100,7 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 		renderSystem->WaitForAllFrames();
 		renderSystem->dlss.selectMode((DLSS::Mode)debugWindow.state.DlssMode);
 		compositor->reloadPasses();
+		DescriptorManager::get().initializeSamplers(renderSystem->getMipLodBias());
 	}
 	{
 		debugWindow.state.vramUsage = GetGpuMemoryUsage();
@@ -158,7 +159,6 @@ bool MyListener::keyPressed(int key)
 	case VK_ESCAPE:
 		continueRendering = false;
 		break;
-
 	default:
 		break;
 	}

@@ -152,6 +152,15 @@ void RenderSystem::WaitForCurrentFrame()
 	fenceValues[frameIndex]++;
 }
 
+float RenderSystem::getMipLodBias() const
+{
+	float bias = 0;
+	if (dlss.enabled())
+		bias = std::log2f(getRenderSize().x / float(getOutputSize().x)) - 1.0f;
+
+	return bias;
+}
+
 CommandsData RenderSystem::CreateCommandList(const wchar_t* name)
 {
 	CommandsData data;
@@ -179,7 +188,8 @@ CommandsMarker RenderSystem::StartCommandList(CommandsData& commands)
 	commands.commandAllocators[frameIndex]->Reset();
 	commands.commandList->Reset(commands.commandAllocators[frameIndex], nullptr);
 
-	ID3D12DescriptorHeap* descriptorHeaps[] = { DescriptorManager::get().mainDescriptorHeap };
+	auto& descriptors = DescriptorManager::get();
+	ID3D12DescriptorHeap* descriptorHeaps[] = { descriptors.mainDescriptorHeap, descriptors.samplerHeap };
 	commands.commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
 	return { commands };

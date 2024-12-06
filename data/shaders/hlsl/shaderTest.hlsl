@@ -70,8 +70,7 @@ Texture2D<float4> GetTexture(uint index)
     return ResourceDescriptorHeap[index];
 }
 
-SamplerState g_sampler : register(s0);
-SamplerState DepthSampler : register(s1);
+SamplerState DepthSampler : register(s0);
 
 float readShadowmap(Texture2D shadowmap, float2 shadowCoord)
 {
@@ -185,7 +184,8 @@ PSOutput PSMain(PSInput input)
 	float3 ambientColor = float3(0.2,0.2,0.2);
 #endif
 
-	float4 albedo = GetTexture(TexIdDiffuse).Sample(g_sampler, input.uv);
+	SamplerState sampler = SamplerDescriptorHeap[0];
+	float4 albedo = GetTexture(TexIdDiffuse).Sample(sampler, input.uv);
 	albedo.rgb *= MaterialColor;
 
 	float3 lighting = (ambientColor + getShadow(input.worldPosition) * diffuse);

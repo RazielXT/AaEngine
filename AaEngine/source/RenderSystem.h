@@ -78,6 +78,7 @@ public:
 	RenderTargetTexture backbuffer[FrameCount];
 
 	DLSS dlss;
+	float getMipLodBias() const;
 
 private:
 

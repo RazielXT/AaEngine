@@ -95,3 +95,13 @@ material BloomBlurY : PostProcess
 		profile ps_6_6
 	}
 }
+
+material MotionVectors : PostProcess
+{
+	pixel_shader
+	{
+		file motionVectors.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
+}

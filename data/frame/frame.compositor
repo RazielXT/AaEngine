@@ -76,6 +76,13 @@ compositor SceneCompositor
 	}
 
 #if DLSS
+	pass MotionVectors
+	{
+		material MotionVectors
+		input sceneTexture Depth
+		target motionVectors
+	}
+
 	task Upscale (compute_shader)
 	{
 		input sceneTexture2

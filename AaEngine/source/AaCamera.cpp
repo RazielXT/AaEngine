@@ -81,6 +81,11 @@ XMMATRIX AaCamera::getProjectionMatrix() const
 	return proj;
 }
 
+XMMATRIX AaCamera::getProjectionMatrixNoOffset() const
+{
+	return reversedProjection_m;
+}
+
 const XMMATRIX& AaCamera::getViewMatrix() const
 {
 	return view_m;

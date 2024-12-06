@@ -121,6 +121,28 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 	cameraMan->camera.updateMatrix();
 	shadowMap->update(renderSystem->frameIndex);
 
+	if (renderSystem->dlss.enabled())
+	{
+		// Assuming view and viewPrevious are pointers to View instances
+		XMMATRIX viewMatrixCurrent = cameraMan->camera.getViewMatrix();
+		static XMMATRIX viewMatrixPrevious = viewMatrixCurrent;
+		XMMATRIX projMatrixCurrent = cameraMan->camera.getProjectionMatrixNoOffset();
+		static XMMATRIX projMatrixPrevious = projMatrixCurrent;
+
+		// Calculate the view reprojection matrix
+		XMMATRIX viewReprojectionMatrix = XMMatrixMultiply(XMMatrixInverse(nullptr, viewMatrixCurrent), viewMatrixPrevious);
+
+		// Calculate the reprojection matrix for TAA
+		XMMATRIX reprojectionMatrix = XMMatrixMultiply(XMMatrixMultiply(XMMatrixInverse(nullptr, projMatrixCurrent), viewReprojectionMatrix), projMatrixPrevious);
+
+		viewMatrixPrevious = viewMatrixCurrent;
+		projMatrixPrevious = projMatrixCurrent;
+
+		XMFLOAT4X4 reprojectionData;
+		XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&reprojectionData, XMMatrixTranspose(reprojectionMatrix));
+		AaMaterialResources::get().getMaterial("MotionVectors")->SetParameter("reprojectionMatrix", &reprojectionData._11, 16);
+	}
+
 	RenderContext ctx = { &cameraMan->camera };
 	compositor->render(ctx);
 

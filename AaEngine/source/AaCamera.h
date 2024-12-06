@@ -18,6 +18,7 @@ public:
 	bool isOrthographic() const;
 
 	XMMATRIX getProjectionMatrix() const;
+	XMMATRIX getProjectionMatrixNoOffset() const;
 	const XMMATRIX& getViewMatrix() const;
 	XMMATRIX getViewProjectionMatrix() const;
 

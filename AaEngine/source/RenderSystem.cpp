@@ -7,7 +7,7 @@
 #include "SceneManager.h"
 #include "AaMaterialResources.h"
 #include <codecvt>
-#include <pix_win.h>
+#include <pix3.h>
 
 RenderSystem::RenderSystem(AaWindow* mWindow)
 {

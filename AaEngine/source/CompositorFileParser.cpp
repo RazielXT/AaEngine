@@ -180,9 +180,9 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 							{
 								auto aliasEnd = param.find(':');
 								if (aliasEnd == std::string::npos)
-									formats.push_back({ StringToFormat(param), {} });
+									formats.emplace_back(StringToFormat(param), std::string{});
 								else
-									formats.push_back({ StringToFormat(param.substr(aliasEnd + 1)), param.substr(0, aliasEnd) });
+									formats.emplace_back(StringToFormat(param.substr(aliasEnd + 1)), param.substr(0, aliasEnd));
 							}
 							else if (param == "Depth")
 								formats.push_back({ {}, "Depth" });

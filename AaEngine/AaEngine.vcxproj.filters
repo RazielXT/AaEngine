@@ -448,4 +448,7 @@
       <Filter>Source Files\Render</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
 </Project>

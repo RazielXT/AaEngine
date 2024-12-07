@@ -116,6 +116,10 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 		ent->yaw(timeSinceLastFrame);
 		ent->setPosition({ cos(params.time / 2.f) * 5, ent->getPosition().y, ent->getPosition().z });
 	}
+	if (auto ent = sceneMgr->getEntity("MovingCube"))
+	{
+		ent->setPosition({ ent->getPosition().x, ent->getPosition().y, -130.f - cos(params.time * 3) * 20 });
+	}
 	//Vector3(cos(params.time), -1, sin(params.time)).Normalize(lights.directionalLight.direction);
 
 	sceneMgr->update();

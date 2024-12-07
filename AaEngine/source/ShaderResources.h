@@ -69,6 +69,7 @@ struct ResourcesInfo
 		INV_VIEW_MATRIX,
 		INV_PROJ_MATRIX,
 		WORLD_MATRIX,
+		PREV_WORLD_MATRIX,
 		Z_MAGIC,
 		TEXID,
 

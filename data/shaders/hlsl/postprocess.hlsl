@@ -84,7 +84,7 @@ float4 PSAddThrough(VS_OUTPUT input) : SV_TARGET
 
 	float3 bloom = colorMap2.Sample(colorSampler, input.TexCoord).rgb;
 	bloom *= bloom;
-	bloom *= exposure;
+	bloom *= exposure * exposure;
 
 	float luma = dot(original.rgb, float3(0.299, 0.587, 0.114));
 	original.w = luma;

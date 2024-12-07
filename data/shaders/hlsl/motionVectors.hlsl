@@ -5,6 +5,7 @@ cbuffer TemporalAA : register(b0)
 };
 
 Texture2D<float> DepthBuffer : register(t0);
+Texture2D<float2> MotionBuffer : register(t1);
 
 struct VS_OUTPUT
 {
@@ -36,6 +37,7 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 
 	float4 output = 0;
     output.xy = prevWindowPos.xy - input.Position.xy;
-	
+	output.xy += MotionBuffer[input.Position.xy].xy;
+
 	return output;
 }

@@ -25,6 +25,7 @@ public:
 
 	XMFLOAT4X4 getWvpMatrix() const;
 	XMMATRIX getWorldMatrix() const;
+	XMMATRIX getPreviousWorldMatrix() const;
 	XMMATRIX getViewProjectionMatrix() const;
 	XMMATRIX getViewMatrix() const;
 	XMMATRIX getInverseViewProjectionMatrix() const;

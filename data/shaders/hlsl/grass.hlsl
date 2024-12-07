@@ -1,6 +1,8 @@
 float4x4 ViewProjectionMatrix;
+uint2 ViewportSize;
 uint TexIdDiffuse;
 float Time;
+float DeltaTime;
 
 cbuffer PSSMShadows : register(b1)
 {
@@ -23,6 +25,8 @@ struct PSInput
 	float3 color : TEXCOORD1;
 	float4 worldPosition : TEXCOORD2;
 	float3 normal : TEXCOORD3;
+	float4 currentPosition : TEXCOORD4;
+	float4 previousPosition : TEXCOORD5;
 };
 
 static const float2 coords[4] = {
@@ -56,13 +60,21 @@ PSInput VSMain(uint vertexIdx : SV_VertexId)
 	float frequency = 1;
 	float scale = 1;
 	float3 windEffect = top * windDirection * sin(Time * frequency + (pos.x + pos.z + pos.y) * scale);
+
+	float3 previousPos = pos;
 	pos.xyz += windEffect;
+	
+	float3 previousWindEffect = top * windDirection * sin((Time - DeltaTime) * frequency + (previousPos.x + previousPos.z + previousPos.y) * scale);
+	previousPos.xyz += previousWindEffect;
 
     // Output position and UV
 	output.worldPosition = float4(pos,1);
     output.position = mul(output.worldPosition, ViewProjectionMatrix);
     output.uv = uv;
 	output.color = v.color;
+	
+	output.currentPosition = output.position;
+	output.previousPosition = mul(float4(previousPos,1), ViewProjectionMatrix);
 
     // Calculate the normal
     float3 up = float3(0, grassHeight, 0) + windEffect;
@@ -141,9 +153,10 @@ float getShadow(float4 wp)
 
 struct PSOutput
 {
-    float4 target0 : SV_Target0;
-    float4 target1 : SV_Target1;
-    float4 target2 : SV_Target2;
+    float4 color : SV_Target0;
+    float4 normals : SV_Target1;
+    float4 camDistance : SV_Target2;
+    float4 motionVectors : SV_Target3;
 };
 
 
@@ -165,9 +178,13 @@ PSOutput PSMain(PSInput input)
 	shading *= lerp(0.5, 1, shadowing);
 	
 	PSOutput output;
-    output.target0 = albedo * shading;
-	output.target1 = albedo;
-	output.target2 = float4(input.normal, 1);
+    output.color = albedo * shading;
+	output.normals = float4(input.normal, 1);
+	output.camDistance = 0;
+
+	output.motionVectors = float4((input.previousPosition.xy / input.previousPosition.w - input.currentPosition.xy / input.currentPosition.w) * ViewportSize, 0, 0);
+	output.motionVectors.xy *= 0.5;
+	output.motionVectors.y *= -1;
 
 	return output;
 }

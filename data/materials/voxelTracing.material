@@ -9,7 +9,6 @@ material ColorVCT abstract
 	}
 	
 	texture SceneVoxel
-	texture ShadowMap0
 
 	default_params
 	{

@@ -36,6 +36,7 @@ public:
 
 	void updateTransformation();
 	void updateTransformation(UINT id, ObjectTransformation& transformation);
+	void initializeTransformation(UINT id, ObjectTransformation& transformation);
 
 	void updateVisibility(const AaCamera& camera, RenderObjectsVisibilityData&) const;
 	void updateVisibility(const AaCamera& camera, RenderObjectsVisibilityData&, const RenderObjectsFilter&) const;
@@ -44,6 +45,7 @@ public:
 	{
 		std::vector<ObjectTransformation> transformation;
 		std::vector<XMMATRIX> worldMatrix;
+		std::vector<XMMATRIX> prevWorldMatrix;
 		std::vector<BoundingBox> worldBbox;
 		std::vector<BoundingBox> bbox;
 	}
@@ -85,12 +87,13 @@ public:
 	void roll(float roll);
 	void resetRotation();
 
-	void setTransformation(const ObjectTransformation& transformation, bool forceUpdate);
+	void setTransformation(const ObjectTransformation& transformation, bool initialize);
 	const ObjectTransformation& getTransformation() const;
 
 	bool isVisible(const RenderObjectsVisibilityState&) const;
 
 	XMMATRIX getWorldMatrix() const;
+	XMMATRIX getPreviousWorldMatrix() const;
 	XMFLOAT4X4 getWvpMatrix(const std::vector<XMFLOAT4X4>&) const;
 
 	void setBoundingBox(BoundingBox bbox);

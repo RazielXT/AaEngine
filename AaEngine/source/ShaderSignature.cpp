@@ -354,6 +354,8 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData() const
 					type = ResourcesInfo::AutoParam::INV_PROJ_MATRIX;
 				else if (p.Name == "WorldMatrix")
 					type = ResourcesInfo::AutoParam::WORLD_MATRIX;
+				else if (p.Name == "PreviousWorldMatrix")
+					type = ResourcesInfo::AutoParam::PREV_WORLD_MATRIX;
 				else if (p.Name == "ShadowMatrix")
 					type = ResourcesInfo::AutoParam::SHADOW_MATRIX;
 				else if (p.Name == "ShadowMapSize")

@@ -20,6 +20,7 @@ UINT RenderObjectsStorage::createId(RenderObject* obj)
 		objectsData.bbox[id] = {};
 		objectsData.worldBbox[id] = {};
 		objectsData.worldMatrix[id] = {};
+		objectsData.prevWorldMatrix[id] = {};
 
 		auto pos = std::lower_bound(ids.begin(), ids.end(), id);
 		ids.insert(pos, id);
@@ -33,6 +34,7 @@ UINT RenderObjectsStorage::createId(RenderObject* obj)
 	objectsData.bbox.emplace_back();
 	objectsData.worldBbox.emplace_back();
 	objectsData.worldMatrix.emplace_back();
+	objectsData.prevWorldMatrix.emplace_back();
 
 	ids.push_back(id);
 
@@ -64,8 +66,15 @@ void RenderObjectsStorage::updateTransformation()
 void RenderObjectsStorage::updateTransformation(UINT id, ObjectTransformation& transformation)
 {
 	transformation.dirty = false;
+	objectsData.prevWorldMatrix[id] = objectsData.worldMatrix[id];
 	objectsData.worldMatrix[id] = transformation.createWorldMatrix();
 	objectsData.bbox[id].Transform(objectsData.worldBbox[id], objectsData.worldMatrix[id]);
+}
+
+void RenderObjectsStorage::initializeTransformation(UINT id, ObjectTransformation& transformation)
+{
+	updateTransformation(id, transformation);
+	objectsData.prevWorldMatrix[id] = objectsData.worldMatrix[id];
 }
 
 void RenderObjectsStorage::updateWVPMatrix(const XMMATRIX& viewProjection, RenderObjectsVisibilityData& info) const
@@ -253,13 +262,13 @@ void RenderObject::resetRotation()
 	coords.orientation = XMQuaternionIdentity();
 }
 
-void RenderObject::setTransformation(const ObjectTransformation& transformation, bool forceUpdate)
+void RenderObject::setTransformation(const ObjectTransformation& transformation, bool initialize)
 {
 	auto& t = source.objectsData.transformation[id];
 	t = transformation;
 
-	if (forceUpdate)
-		source.updateTransformation(id, t);
+	if (initialize)
+		source.initializeTransformation(id, t);
 }
 
 const ObjectTransformation& RenderObject::getTransformation() const
@@ -275,6 +284,11 @@ bool RenderObject::isVisible(const RenderObjectsVisibilityState& visible) const
 XMMATRIX RenderObject::getWorldMatrix() const
 {
 	return source.objectsData.worldMatrix[id];
+}
+
+XMMATRIX RenderObject::getPreviousWorldMatrix() const
+{
+	return source.objectsData.prevWorldMatrix[id];
 }
 
 DirectX::XMFLOAT4X4 RenderObject::getWvpMatrix(const std::vector<XMFLOAT4X4>& wvpMatrix) const

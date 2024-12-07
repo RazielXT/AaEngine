@@ -1,8 +1,10 @@
-float4x4 WorldViewProjectionMatrix;
 float4x4 ViewProjectionMatrix;
+float4x4 PreviousWorldMatrix;
 float4x4 WorldMatrix;
 float3 MaterialColor;
 uint TexIdDiffuse;
+float3 CameraPosition;
+uint2 ViewportSize;
 
 cbuffer PSSMShadows : register(b1)
 {
@@ -40,6 +42,8 @@ struct PSInput
 #endif
 	float2 uv : TEXCOORD1;
 	float4 worldPosition : TEXCOORD2;
+	float4 previousPosition : TEXCOORD3;
+	float4 currentPosition : TEXCOORD4;
 };
 
 PSInput VSMain(VSInput input)
@@ -50,10 +54,15 @@ PSInput VSMain(VSInput input)
 	result.worldPosition = mul(input.position, InstancingBuffer[input.instanceID]);
     result.position = mul(result.worldPosition, ViewProjectionMatrix);
 	result.normal = mul(input.normal, (float3x3)InstancingBuffer[input.instanceID]);
+	result.previousPosition = result.position; // no support
+	result.currentPosition = result.position;
 #else
 	result.worldPosition = mul(input.position, WorldMatrix);
-    result.position = mul(input.position, WorldViewProjectionMatrix);
+    result.position = mul(result.worldPosition, ViewProjectionMatrix);
 	result.normal = mul(input.normal, (float3x3)WorldMatrix);
+	float4 previousWorldPosition = mul(input.position, PreviousWorldMatrix);
+	result.previousPosition = mul(previousWorldPosition, ViewProjectionMatrix);
+	result.currentPosition = result.position;
 #endif
 
 #ifdef USE_VC
@@ -167,9 +176,10 @@ float getShadow(float4 wp)
 
 struct PSOutput
 {
-    float4 target0 : SV_Target0;
-    float4 target1 : SV_Target1;
-    float4 target2 : SV_Target2;
+    float4 color : SV_Target0;
+    float4 normals : SV_Target1;
+    float4 camDistance : SV_Target2;
+    float4 motionVectors : SV_Target3;
 };
 
 PSOutput PSMain(PSInput input)
@@ -194,9 +204,12 @@ PSOutput PSMain(PSInput input)
 	
 	
 	PSOutput output;
-    output.target0 = outColor;
-	output.target1 = outColor * float4(albedo.rgb, 1);
-	output.target2 = float4(normal, 1);
-
+    output.color = outColor;
+	output.normals = float4(normal, 1);
+	float camDistance = length(CameraPosition - input.worldPosition.xyz) / 10000;
+	output.camDistance = float4(camDistance, 0, 0, 0);
+	output.motionVectors = float4((input.previousPosition.xy / input.previousPosition.w - input.currentPosition.xy / input.currentPosition.w) * ViewportSize, 0, 0);
+	output.motionVectors.xy *= 0.5;
+	output.motionVectors.y *= -1;
 	return output;
 }

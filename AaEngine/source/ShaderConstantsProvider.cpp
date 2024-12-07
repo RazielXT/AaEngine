@@ -23,6 +23,11 @@ XMMATRIX ShaderConstantsProvider::getWorldMatrix() const
 	return entity->getWorldMatrix();
 }
 
+XMMATRIX ShaderConstantsProvider::getPreviousWorldMatrix() const
+{
+	return entity->getPreviousWorldMatrix();
+}
+
 XMMATRIX ShaderConstantsProvider::getViewProjectionMatrix() const
 {
 	return camera.getViewProjectionMatrix();

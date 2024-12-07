@@ -1,4 +1,4 @@
-float4x4 WorldViewProjectionMatrix;
+float4x4 WorldMatrix;
 float4x4 ViewProjectionMatrix;
 
 #ifdef INSTANCED
@@ -27,7 +27,7 @@ VS_OUTPUT VSMain(VS_INPUT Input)
 	float4 worldPosition = mul(Input.position, InstancingBuffer[Input.instanceID]);
     Output.position = mul(worldPosition, ViewProjectionMatrix);
 #else
-	Output.position = mul(Input.position, WorldViewProjectionMatrix);
+	Output.position = mul(mul(Input.position, WorldMatrix), ViewProjectionMatrix);
 #endif
 
     return Output;

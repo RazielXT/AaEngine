@@ -678,11 +678,11 @@
                 </subentities>
             </entity>
         </node>
-		<node name="TestVCObj">
-            <position x="0" y="20" z="0" />
+		<node name="MovingCube">
+            <position x="81.9341" y="-66.0568" z="-112.5817" />
             <scale x="20" y="20" z="20" />
             <rotation qx="-0.00126299" qy="0" qz="0" qw="0.999999" />
-            <entity name="TestVCObj" castShadows="true" receiveShadows="true" meshFile="box.mesh">
+            <entity name="MovingCube" castShadows="true" receiveShadows="true" meshFile="box.mesh">
                 <subentities>
                     <subentity index="0" materialName="terrainGrass" />
                 </subentities>

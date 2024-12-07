@@ -1,18 +1,25 @@
-float4x4 WorldViewProjectionMatrix;
+float4x4 ViewProjectionMatrix;
 float4x4 WorldMatrix;
-float4x4 ShadowMatrix;
+float4x4 PreviousWorldMatrix;
 
 float3 CameraPosition;
 float Emission;
-
 float3 MaterialColor;
 uint TexIdDiffuse;
-float3 SunDirection;
-
 uint TexIdSceneVoxel;
-uint TexIdShadowOffset;
+uint2 ViewportSize;
 
-cbuffer SceneVoxelInfo : register(b1)
+cbuffer PSSMShadows : register(b1)
+{
+	float4x4 ShadowMatrix[2];
+	float3 SunDirection;
+	uint TexIdShadowOffset;
+	float3 LightColor;
+	float ShadowMapSize;
+	float ShadowMapSizeInv;
+}
+
+cbuffer SceneVoxelInfo : register(b2)
 {
 	float3 sceneCorner : packoffset(c0);
 	float voxelDensity : packoffset(c0.w);
@@ -36,17 +43,23 @@ struct PS_Input
     float3 tangent : TANGENT;
     float2 uv : TEXCOORD0;
     float4 wp : TEXCOORD1;
+	float4 currentPosition : TEXCOORD2;
+	float4 previousPosition : TEXCOORD3;
 };
 
 PS_Input VS_Main(VS_Input vin)
 {
     PS_Input vsOut;
 
-    vsOut.pos = mul(vin.p, WorldViewProjectionMatrix);
+    vsOut.wp = mul(vin.p, WorldMatrix);
+    vsOut.pos = mul(vsOut.wp, ViewProjectionMatrix);
     vsOut.uv = vin.uv;
     vsOut.normal = vin.n;
     vsOut.tangent = vin.t;
-    vsOut.wp = mul(vin.p, WorldMatrix);
+	
+	float4 previousWorldPosition = mul(vin.p, PreviousWorldMatrix);
+	vsOut.previousPosition = mul(previousWorldPosition, ViewProjectionMatrix);
+	vsOut.currentPosition = vsOut.pos;
 
     return vsOut;
 }
@@ -167,7 +180,7 @@ float CalcShadowTermSoftPCF(Texture2D shadowmap, float fLightDepth, float2 vShad
 float getShadow(float4 wp)
 {
 	Texture2D shadowmap = GetTexture(TexIdShadowOffset);
-    float4 sunLookPos = mul(wp, ShadowMatrix);
+    float4 sunLookPos = mul(wp, ShadowMatrix[0]);
     sunLookPos.xy = sunLookPos.xy / sunLookPos.w;
 	sunLookPos.xy /= float2(2, -2);
     sunLookPos.xy += 0.5;
@@ -179,9 +192,10 @@ float getShadow(float4 wp)
 
 struct PSOutput
 {
-    float4 target0 : SV_Target0;
-    float4 target1 : SV_Target1;
-    float4 target2 : SV_Target2;
+    float4 color : SV_Target0;
+    float4 normals : SV_Target1;
+    float4 camDistance : SV_Target2;
+    float4 motionVectors : SV_Target3;
 };
 
 SamplerState voxelSampler : register(s0);
@@ -225,11 +239,15 @@ PSOutput PS_Main(PS_Input pin)
 	//color1.rgb = voxelmap.SampleLevel(voxelSampler, voxelUV, 0).rgb;
 
 	PSOutput output;
-    output.target0 = color1;
-	output.target1 = float4(normal, 1);
+    output.color = color1;
+	output.normals = float4(normal, 1);
 	
 	float camDistance = length(CameraPosition - pin.wp.xyz) / 10000;
-	output.target2 = float4(camDistance, 0, 0, 0);
+	output.camDistance = float4(camDistance, 0, 0, 0);
+
+	output.motionVectors = float4((pin.previousPosition.xy / pin.previousPosition.w - pin.currentPosition.xy / pin.currentPosition.w) * ViewportSize, 0, 0);
+	output.motionVectors.xy *= 0.5;
+	output.motionVectors.y *= -1;
 
 	return output;
 }

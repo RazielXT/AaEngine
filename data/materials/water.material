@@ -20,7 +20,7 @@ material WaterLake
 	}
 	texture CamDistance
 	{
-		compositor sceneTexture:2
+		compositor sceneTexture:Distance
 	}
 	texture Depth
 	{

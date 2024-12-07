@@ -57,6 +57,7 @@ struct CompositorInfo
 	std::string name;
 	std::map<std::string, CompositorTextureInfo> textures;
 	std::vector<CompositorPassInfo> passes;
+	std::map<std::string, std::vector<std::string>> mrt;
 };
 
 namespace CompositorFileParser

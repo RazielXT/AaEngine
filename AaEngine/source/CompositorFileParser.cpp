@@ -90,11 +90,13 @@ static std::vector<CompositorTextureSlot> parseCompositorTextureSlot(const Confi
 		if (info.textures.contains(param.value) || param.value == "Backbuffer")
 			return { { param.value, Compositor::UsageFlags(flags) } };
 		
-		auto findStr = param.value + ":";
-		for (const auto& t : info.textures)
+		auto mrt = info.mrt.find(param.value);
+		if (mrt != info.mrt.end())
 		{
-			if (t.first.starts_with(findStr))
-				textures.push_back({ t.first, Compositor::UsageFlags(flags) });
+			for (auto& t : mrt->second)
+			{
+				textures.push_back({ t, Compositor::UsageFlags(flags) });
+			}
 		}
 
 		if (textures.empty())
@@ -170,28 +172,44 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 							tex.height = std::stof(member.params[idx++]);
 						}
 
-						std::vector<DXGI_FORMAT> formats;
+						std::vector<std::pair<DXGI_FORMAT, std::string>> formats;
 						for (; idx < member.params.size(); idx++)
 						{
-							if (member.params[idx].starts_with("DXGI_FORMAT"))
-								formats.push_back(StringToFormat(member.params[idx]));
-							else if (member.params[idx] == "Depth")
-								info.textures.emplace(tex.name + ":Depth", tex);
-							else if (member.params[idx].starts_with('[') && member.params[idx].ends_with(']'))
-								tex.arraySize = std::stoul(member.params[idx].c_str() + 1);
+							auto& param = member.params[idx];
+							if (param.find("DXGI_FORMAT") != std::string::npos)
+							{
+								auto aliasEnd = param.find(':');
+								if (aliasEnd == std::string::npos)
+									formats.push_back({ StringToFormat(param), {} });
+								else
+									formats.push_back({ StringToFormat(param.substr(aliasEnd + 1)), param.substr(0, aliasEnd) });
+							}
+							else if (param == "Depth")
+								formats.push_back({ {}, "Depth" });
+							else if (param.starts_with('[') && param.ends_with(']'))
+								tex.arraySize = std::stoul(param.c_str() + 1);
 						}
 
-						for (int i = 0; auto f : formats)
+						if (formats.size() == 1)
 						{
-							auto name = tex.name;
-							if (formats.size() > 1)
-								name += ":" + std::to_string(i++);
+							tex.format = formats.front().first;
+							info.textures.emplace(tex.name, tex);
+						}
+						else
+						{
+							std::vector<std::string> mrtOrder;
 
-							tex.format = f;
-							info.textures.emplace(name , tex);
+							for (int i = 0; auto & f : formats)
+							{
+								auto name = tex.name + ":" + (f.second.empty() ? std::to_string(i++) : f.second);
+								mrtOrder.push_back(name);
+								tex.format = f.first;
+								info.textures.emplace(name, tex);
+							}
+
+							info.mrt[tex.name] = mrtOrder;
 						}
 					}
-
 				}
 				else if (member.type == "pass")
 				{

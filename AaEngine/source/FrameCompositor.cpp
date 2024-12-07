@@ -124,46 +124,63 @@ void FrameCompositor::reloadTextures()
 	rtvHeap.Reset();
 	textures.clear();
 
+	auto initializeTexture = [this](const std::string& name, const CompositorTextureInfo& t)
+		{
+			if (textures.contains(name))
+				return;
+
+			UINT w = t.width;
+			UINT h = t.height;
+
+			if (t.targetScale)
+			{
+				auto sz = provider.renderSystem->getRenderSize();
+				w = sz.x * t.width;
+				h = sz.y * t.height;
+			}
+			else if (t.outputScale)
+			{
+				auto sz = provider.renderSystem->getOutputSize();
+				w = sz.x * t.width;
+				h = sz.y * t.height;
+			}
+			if (t.arraySize > 1)
+			{
+				auto sqr = sqrt(t.arraySize);
+				w /= sqr;
+				h /= sqr;
+			}
+
+			{
+				auto lastState = lastTextureStates[name];
+
+				RenderTargetTexture& tex = textures[name];
+				tex.arraySize = t.arraySize;
+
+				if (name.ends_with(":Depth"))
+					tex.InitDepth(provider.renderSystem->device, w, h, rtvHeap, lastState);
+				else
+					tex.Init(provider.renderSystem->device, w, h, rtvHeap, t.format, lastState, t.uav ? RenderTargetTexture::AllowUAV : RenderTargetTexture::AllowRenderTarget);
+
+				tex.SetName(std::wstring(name.begin(), name.end()).c_str());
+
+				DescriptorManager::get().createTextureView(tex);
+				AaTextureResources::get().setNamedTexture("c_" + name, tex.view);
+			}
+		};
+
+	//ensure mrt handles are ordered
+	for (auto& [_, names] : info.mrt)
+	{
+		for (auto& name : names)
+		{
+			initializeTexture(name, info.textures[name]);
+		}
+	}
+
 	for (auto& [name,t] : info.textures)
 	{
-		UINT w = t.width;
-		UINT h = t.height;
-
-		if (t.targetScale)
-		{
-			auto sz = provider.renderSystem->getRenderSize();
-			w = sz.x * t.width;
-			h = sz.y * t.height;
-		}
-		else if (t.outputScale)
-		{
-			auto sz = provider.renderSystem->getOutputSize();
-			w = sz.x * t.width;
-			h = sz.y * t.height;
-		}
-		if (t.arraySize > 1)
-		{
-			auto sqr = sqrt(t.arraySize);
-			w /= sqr;
-			h /= sqr;
-		}
-
-		{
-			auto lastState = lastTextureStates[name];
-
-			RenderTargetTexture& tex = textures[name];
-			tex.arraySize = t.arraySize;
-
-			if (name.ends_with(":Depth"))
-				tex.InitDepth(provider.renderSystem->device, w, h, rtvHeap, lastState);
-			else
-				tex.Init(provider.renderSystem->device, w, h, rtvHeap, t.format, lastState, t.uav ? RenderTargetTexture::AllowUAV : RenderTargetTexture::AllowRenderTarget);
-	
-			tex.SetName(std::wstring(name.begin(), name.end()).c_str());
-
-			DescriptorManager::get().createTextureView(tex);
-			AaTextureResources::get().setNamedTexture("c_" + name, tex.view);
-		}
+		initializeTexture(name, t);
 	}
 
 	for (auto& p : passes)

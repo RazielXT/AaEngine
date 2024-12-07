@@ -4,7 +4,7 @@ import bloom
 
 compositor SceneCompositor
 {
-	texture sceneTexture target_size DXGI_FORMAT_R8G8B8A8_UNORM DXGI_FORMAT_R10G10B10A2_UNORM DXGI_FORMAT_R16G16_UNORM Depth
+	texture sceneTexture target_size Color:DXGI_FORMAT_R8G8B8A8_UNORM Normal:DXGI_FORMAT_R10G10B10A2_UNORM Distance:DXGI_FORMAT_R16G16_UNORM Depth
 	texture sceneTexture2 target_size DXGI_FORMAT_R8G8B8A8_UNORM
 	texture motionVectors target_size DXGI_FORMAT_R16G16_FLOAT
 	rwtexture sceneTexture2_upscaled output_size DXGI_FORMAT_R8G8B8A8_UNORM
@@ -39,7 +39,7 @@ compositor SceneCompositor
 	pass SceneDownscale
 	{
 		material PassThrough
-		input sceneTexture 0
+		input sceneTexture Color
 		target sceneDownscale2
 	}
 	pass SceneDownscale
@@ -57,10 +57,10 @@ compositor SceneCompositor
 
 	task SceneTransparent
 	{
-		input sceneTexture 2
+		input sceneTexture Distance
 		input sceneDownscale4
 		input depthDownsample4
-		target sceneTexture 0 Depth (depth_read)
+		target sceneTexture Color Depth (depth_read)
 	}
 
 	ref Exposure:*
@@ -70,7 +70,7 @@ compositor SceneCompositor
 	pass SSAODarken
 	{
 		material Darken
-		input sceneTexture 0
+		input sceneTexture Color
 		input aoSmooth
 		target sceneTexture2
 	}

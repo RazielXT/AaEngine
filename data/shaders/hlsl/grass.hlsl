@@ -171,7 +171,7 @@ PSOutput PSMain(PSInput input)
 
 	if (albedo.a <0.5) discard;
 
-	albedo.rgb *= input.color * 2;
+	albedo.rgb *= input.color * 1.5;
 
 	float shadowing = getShadow(input.worldPosition);
 	float shading = saturate(1.2 - input.uv.y + shadowing);

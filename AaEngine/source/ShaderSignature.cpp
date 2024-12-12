@@ -176,6 +176,8 @@ void SignatureInfo::finish()
 		{
 			if (b.info.Size <= rootParamsSizeMax && (!rootBuffer || b.info.Name == "$Globals"))
 				rootBuffer = &b;
+			else if (b.info.Name == "$Globals")
+				__debugbreak();
 
 			for (auto& p : b.info.Params)
 			{

@@ -23,6 +23,7 @@ public:
 	static AaModelResources& get();
 
 	AaModel* getModel(const std::string& name, ModelLoadContext& ctx);
+	AaModel* getLoadedModel(const std::string& name);
 
 	void clear();
 

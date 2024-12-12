@@ -1,0 +1,24 @@
+material Skybox
+{
+	vertex_shader
+	{
+		file skybox.hlsl
+		entry VSMain
+		profile vs_6_6
+	}
+
+	pixel_shader
+	{
+		file skybox.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
+
+	culling none
+	depth_write off
+
+	texture skybox
+	{
+		file tceCubemap.dds
+	}
+}

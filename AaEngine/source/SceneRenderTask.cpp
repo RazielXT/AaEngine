@@ -1,6 +1,8 @@
 #include "SceneRenderTask.h"
 #include "RenderObject.h"
 #include "SceneManager.h"
+#include "AaMaterialResources.h"
+#include "AaModelResources.h"
 
 SceneRenderTask::SceneRenderTask(RenderProvider p, SceneManager& s) : CompositorTask(p, s)
 {
@@ -103,6 +105,28 @@ void SceneRenderTask::renderScene(CompositorPass& pass)
 	pass.target.textureSet->PrepareAsTarget(scene.commands.commandList, true, TransitionFlags::DepthContinue);
 
 	ShaderConstantsProvider constants(provider.params, sceneInfo, *ctx.camera, *pass.target.texture);
+
+	{
+		auto model = AaModelResources::get().getLoadedModel("box.mesh");
+		auto material = AaMaterialResources::get().getMaterial("Skybox")->Assign(model->vertexLayout, sceneQueue->targets);
+
+		auto commandList = scene.commands.commandList;
+		material->GetBase()->BindSignature(commandList);
+
+		MaterialDataStorage storage;
+		material->LoadMaterialConstants(storage);
+		material->UpdatePerFrame(storage, constants);
+		material->BindPipeline(commandList);
+		material->BindTextures(commandList);
+		material->UpdatePerObject(storage, constants);
+		material->BindConstants(commandList, storage, constants);
+
+		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+		commandList->IASetVertexBuffers(0, 1, &model->vertexBufferView);
+		commandList->IASetIndexBuffer(&model->indexBufferView);
+		commandList->DrawIndexedInstanced(model->indexCount, 1, 0, 0, 0);
+	}
 	sceneQueue->renderObjects(constants, scene.commands.commandList);
 }
 

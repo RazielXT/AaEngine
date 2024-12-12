@@ -47,6 +47,13 @@ AaModel* AaModelResources::getModel(const std::string& filename, ModelLoadContex
 	return it->second;
 }
 
+AaModel* AaModelResources::getLoadedModel(const std::string& filename)
+{
+	auto it = loadedModels.find(filename);
+
+	return it == loadedModels.end() ? nullptr : it->second;
+}
+
 void AaModelResources::clear()
 {
 	for (auto& it : loadedModels)

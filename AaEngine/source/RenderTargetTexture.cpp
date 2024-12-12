@@ -2,7 +2,7 @@
 #include "DescriptorManager.h"
 
 static const float DepthClearValue = 0.f;
-static const DirectX::XMFLOAT4 clearColor = { 0.55f, 0.75f, 0.9f, 1.0f };
+static const DirectX::XMFLOAT4 clearColor = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 void RenderTargetHeap::InitRtv(ID3D12Device* device, UINT count, const wchar_t* name)
 {

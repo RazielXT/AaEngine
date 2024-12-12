@@ -52,7 +52,7 @@ public:
 	~RenderTargetTexture();
 
 	enum Flags { AllowRenderTarget = 1, AllowUAV = 2 };
-	void Init(ID3D12Device* device, UINT width, UINT height, RenderTargetHeap& heap, DXGI_FORMAT format, D3D12_RESOURCE_STATES state, Flags flags = AllowRenderTarget);
+	void Init(ID3D12Device* device, UINT width, UINT height, RenderTargetHeap& heap, DXGI_FORMAT format, D3D12_RESOURCE_STATES state, UINT flags = AllowRenderTarget);
 	void InitDepth(ID3D12Device* device, UINT width, UINT height, RenderTargetHeap& heap, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_DEPTH_WRITE);
 	void InitExisting(ID3D12Resource*, ID3D12Device* device, UINT width, UINT height, RenderTargetHeap& heap, DXGI_FORMAT format);
 
@@ -69,7 +69,7 @@ public:
 
 private:
 
-	void CreateTextureBuffer(ID3D12Device* device, UINT width, UINT height, DXGI_FORMAT, D3D12_RESOURCE_STATES, Flags flags);
+	void CreateTextureBuffer(ID3D12Device* device, UINT width, UINT height, DXGI_FORMAT, D3D12_RESOURCE_STATES, UINT flags);
 	void CreateDepthBuffer(ID3D12Device* device, RenderTargetHeap& heap, D3D12_RESOURCE_STATES initialState);
 };
 

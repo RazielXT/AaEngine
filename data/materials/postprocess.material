@@ -76,6 +76,36 @@ material Downsample3x3Exposure : PostProcess
 	}
 }
 
+material WaterPostProcessX : PostProcess
+{
+	pixel_shader
+	{
+		file waterPost.hlsl
+		entry PSWaterPostX
+		profile ps_6_6
+	}
+}
+
+material WaterPostProcessY : PostProcess
+{
+	pixel_shader
+	{
+		file waterPost.hlsl
+		entry PSWaterPostY
+		profile ps_6_6
+	}
+}
+
+material ApplySceneWater : PostProcess
+{
+	pixel_shader
+	{
+		file waterPost.hlsl
+		entry PSWaterApply
+		profile ps_6_6
+	}
+}
+
 material BloomBlurX : PostProcess
 {
 	pixel_shader

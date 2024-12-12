@@ -23,7 +23,7 @@ compositor SSAO
 
 	task SSAO (compute_shader)
 	{
-		input sceneTexture Depth
+		input sceneTexture:Depth
 		input linearDepth
 		input linearDepthDownsample2
 		input linearDepthDownsampleAtlas2

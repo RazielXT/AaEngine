@@ -170,7 +170,7 @@ void SignatureInfo::finish()
 	if (!cbuffers.empty())
 	{
 		// +1 for potential move to root constants
-		const auto rootParamsSizeMax = (64 - hasVertexInput - (!bindlessTextures && !textures.empty()) - cbuffers.size() - structuredBuffers.size() - rwStructuredBuffers.size() + 1) * sizeof(DWORD);
+		const auto rootParamsSizeMax = (64 - (!bindlessTextures && !textures.empty()) - cbuffers.size() - structuredBuffers.size() - rwStructuredBuffers.size() + 1) * sizeof(DWORD);
 
 		for (auto& b : cbuffers)
 		{
@@ -292,6 +292,13 @@ ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device* device, co
 			sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 			sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 			sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		}
+		else if (samplers[i].info.Name == "LinearWrapSampler")
+		{
+			sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+			sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+			sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+			sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 		}
 		else if (samplers[i].info.Name == "LinearBorderSampler")
 		{

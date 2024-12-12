@@ -5,7 +5,11 @@ import bloom
 compositor SceneCompositor
 {
 	texture sceneTexture target_size Color:DXGI_FORMAT_R8G8B8A8_UNORM Normal:DXGI_FORMAT_R10G10B10A2_UNORM Distance:DXGI_FORMAT_R16G16_UNORM MotionVectors:DXGI_FORMAT_R16G16_FLOAT Depth
+	texture sceneTransparentTexture target_size Color:DXGI_FORMAT_R8G8B8A8_UNORM Fill:DXGI_FORMAT_R8G8B8A8_UNORM
 	texture sceneTexture2 target_size DXGI_FORMAT_R8G8B8A8_UNORM
+	texture sceneTransparentTextureDownscale4 target_size_div 4 DXGI_FORMAT_R8G8B8A8_UNORM
+	texture sceneTransparentTexture2 target_size DXGI_FORMAT_R8G8B8A8_UNORM
+	texture sceneColors target_size DXGI_FORMAT_R8G8B8A8_UNORM
 	texture motionVectors target_size DXGI_FORMAT_R16G16_FLOAT
 	rwtexture sceneTexture2_upscaled output_size DXGI_FORMAT_R8G8B8A8_UNORM
 	texture sceneTexture3 output_size DXGI_FORMAT_R8G8B8A8_UNORM
@@ -13,7 +17,8 @@ compositor SceneCompositor
 	texture sceneDownscale2 target_size_div 2 DXGI_FORMAT_R8G8B8A8_UNORM
 	texture sceneDownscale4 target_size_div 8 DXGI_FORMAT_R8G8B8A8_UNORM
 
-	texture depthDownsample4 target_size_div 4 DXGI_FORMAT_R32_FLOAT
+	texture depthDownsample2 output_size_div 2 DXGI_FORMAT_R32_FLOAT
+	texture depthDownsample4 output_size_div 4 DXGI_FORMAT_R32_FLOAT
 
 	texture voxelDummy 128 128 DXGI_FORMAT_R8G8B8A8_UNORM
 
@@ -39,7 +44,7 @@ compositor SceneCompositor
 	pass SceneDownscale
 	{
 		material PassThrough
-		input sceneTexture Color
+		input sceneTexture:Color
 		target sceneDownscale2
 	}
 	pass SceneDownscale
@@ -51,44 +56,59 @@ compositor SceneCompositor
 	pass DepthDownscale
 	{
 		material LoadThrough
-		input sceneTexture Depth
+		input sceneTexture:Depth
+		target depthDownsample2
+	}
+	pass DepthDownscale
+	{
+		material LoadThrough
+		input depthDownsample2
 		target depthDownsample4
+	}
+
+	pass SSAODarken
+	{
+		material Darken
+		input sceneTexture:Color
+		input aoSmooth
+		target sceneTexture2
 	}
 
 	task SceneTransparent
 	{
-		input sceneTexture Distance
-		input sceneDownscale4
+		input sceneTexture:Distance
+		input sceneTexture2
+		input depthDownsample2
 		input depthDownsample4
-		target sceneTexture Color Depth (depth_read)
+		target sceneTransparentTexture sceneTexture:Depth (depth_read)
+	}
+
+	pass ApplySceneWater
+	{
+		material ApplySceneWater
+		input sceneTexture2
+		input sceneTransparentTexture
+		target sceneColors
 	}
 
 	ref Exposure:*
 
 	ref Bloom:*
 
-	pass SSAODarken
-	{
-		material Darken
-		input sceneTexture Color
-		input aoSmooth
-		target sceneTexture2
-	}
-
 #if DLSS
 	pass MotionVectors
 	{
 		material MotionVectors
-		input sceneTexture Depth
-		input sceneTexture MotionVectors
+		input sceneTexture:Depth
+		input sceneTexture:MotionVectors
 		target motionVectors
 	}
 
 	task Upscale (compute_shader)
 	{
-		input sceneTexture2
+		input sceneColors
 		input motionVectors
-		input sceneTexture Depth
+		input sceneTexture:Depth
 		input sceneTexture2_upscaled
 	}
 
@@ -104,7 +124,7 @@ compositor SceneCompositor
 	pass Combine
 	{
 		material AddThrough
-		input sceneTexture2
+		input sceneColors
 		input bloomTexture
 		input exposure
 		target sceneTexture3

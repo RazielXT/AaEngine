@@ -160,9 +160,13 @@ void FrameCompositor::reloadTextures()
 				if (name.ends_with(":Depth"))
 					tex.InitDepth(provider.renderSystem->device, w, h, rtvHeap, lastState);
 				else
-					tex.Init(provider.renderSystem->device, w, h, rtvHeap, t.format, lastState, t.uav ? RenderTargetTexture::AllowUAV : RenderTargetTexture::AllowRenderTarget);
+				{
 
-				tex.SetName(std::wstring(name.begin(), name.end()).c_str());
+					UINT flags = t.uav ? RenderTargetTexture::AllowUAV : RenderTargetTexture::AllowRenderTarget;
+					tex.Init(provider.renderSystem->device, w, h, rtvHeap, t.format, lastState, flags);
+				}
+
+				tex.SetName(name);
 
 				DescriptorManager::get().createTextureView(tex);
 				AaTextureResources::get().setNamedTexture("c_" + name, tex.view);

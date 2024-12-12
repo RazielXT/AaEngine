@@ -4,7 +4,7 @@ material WaterLake
 	pixel_shader psWaterLake
 
 	culling none
-	blend alpha
+	depth_write off
 
 	texture Diffuse
 	{
@@ -24,13 +24,21 @@ material WaterLake
 	}
 	texture Depth
 	{
+		compositor depthDownsample2
+	}
+	texture DepthDownsample
+	{
 		compositor depthDownsample4
 	}
 	texture SceneColor
 	{
-		compositor sceneDownscale4
+		compositor sceneTexture2
 	}
 	texture SceneVoxel
+	texture skybox
+	{
+		file tceCubemap.dds
+	}
 
 	technique Depth skip
 	technique Voxelize skip

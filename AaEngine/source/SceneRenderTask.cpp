@@ -174,7 +174,7 @@ void SceneRenderTransparentTask::renderTransparentScene(CompositorPass& pass)
 		i.texture->PrepareAsView(transparent.commands.commandList, i.previousState);
 	}
 
-	pass.target.textureSet->PrepareAsTarget(transparent.commands.commandList, false, TransitionFlags::DepthPrepareRead);
+	pass.target.textureSet->PrepareAsTarget(transparent.commands.commandList, true, TransitionFlags::DepthPrepareRead);
 
 	ShaderConstantsProvider constants(provider.params, sceneInfo, *ctx.camera, *pass.target.texture);
 	transparentQueue->renderObjects(constants, transparent.commands.commandList);

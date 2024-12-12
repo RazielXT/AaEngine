@@ -51,7 +51,7 @@ RenderTargetTexture::~RenderTargetTexture()
 	DescriptorManager::get().removeUAVView(*this);
 }
 
-void RenderTargetTexture::Init(ID3D12Device* device, UINT w, UINT h, RenderTargetHeap& heap, DXGI_FORMAT f, D3D12_RESOURCE_STATES state, Flags flags)
+void RenderTargetTexture::Init(ID3D12Device* device, UINT w, UINT h, RenderTargetHeap& heap, DXGI_FORMAT f, D3D12_RESOURCE_STATES state, UINT flags)
 {
 	width = w;
 	height = h;
@@ -159,7 +159,7 @@ void RenderTargetTexture::CreateDepthBuffer(ID3D12Device* device, RenderTargetHe
 	}
 }
 
-void RenderTargetTexture::CreateTextureBuffer(ID3D12Device* device, UINT width, UINT height, DXGI_FORMAT format, D3D12_RESOURCE_STATES state, Flags flags)
+void RenderTargetTexture::CreateTextureBuffer(ID3D12Device* device, UINT width, UINT height, DXGI_FORMAT format, D3D12_RESOURCE_STATES state, UINT flags)
 {
 	D3D12_RESOURCE_DESC textureDesc = {};
 	textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;

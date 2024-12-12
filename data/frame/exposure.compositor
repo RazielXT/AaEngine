@@ -10,7 +10,7 @@ compositor Exposure
 	pass ExposureDownsample
 	{
 		material PassThroughAvg
-		input sceneTexture Color
+		input sceneTexture:Color
 		target exposureDs
 	}
 	pass ExposureDownsample2

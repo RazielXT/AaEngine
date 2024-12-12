@@ -100,6 +100,9 @@ Order ParseRenderQueue(std::string_view renderQueue)
 	if (renderQueue == "skiesEarly")
 		return Order(5);
 
+	if (renderQueue == "Water")
+		return Order::Transparent;
+
 	if (auto q = strtoul(renderQueue.data(), 0, 10))
 	{
 		if (q <= 100)

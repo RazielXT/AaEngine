@@ -85,31 +85,28 @@ static std::vector<CompositorTextureSlot> parseCompositorTextureSlot(const Confi
 
 	std::vector<CompositorTextureSlot> textures;
 
-	if (param.params.empty())
-	{
-		if (info.textures.contains(param.value) || param.value == "Backbuffer")
-			return { { param.value, Compositor::UsageFlags(flags) } };
-		
-		auto mrt = info.mrt.find(param.value);
-		if (mrt != info.mrt.end())
+	auto appendTexture = [&](const std::string& value)
 		{
-			for (auto& t : mrt->second)
+			if (value.starts_with('('))
+				return;
+
+			auto mrt = info.mrt.find(value);
+			if (mrt != info.mrt.end())
 			{
-				textures.push_back({ t, Compositor::UsageFlags(flags) });
+				for (auto& t : mrt->second)
+				{
+					textures.emplace_back(t, Compositor::UsageFlags(flags));
+				}
 			}
-		}
+			else
+				textures.emplace_back(value, Compositor::UsageFlags(flags));
+		};
 
-		if (textures.empty())
-			return { { param.value, Compositor::UsageFlags(flags) } };
-
-		return textures;
-	}
+	appendTexture(param.value);
 
 	for (auto& p : param.params)
-	{
-		if (!p.starts_with('('))
-			textures.push_back({ param.value + ":" + p, Compositor::UsageFlags(flags) });
-	}
+		appendTexture(p);
+
 	return textures;
 }
 

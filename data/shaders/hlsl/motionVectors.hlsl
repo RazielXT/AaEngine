@@ -15,7 +15,7 @@ struct VS_OUTPUT
 
 float4 PSMain(VS_OUTPUT input) : SV_TARGET
 {
-    float depth = DepthBuffer[input.Position.xy].x;
+    float depth = DepthBuffer.Load(int3(input.Position.xy,0)).x;
     
     float4 clipPos;
     clipPos.x = input.TexCoord.x * 2 - 1;
@@ -37,7 +37,7 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 
 	float4 output = 0;
     output.xy = prevWindowPos.xy - input.Position.xy;
-	output.xy += MotionBuffer[input.Position.xy].xy;
+	output.xy += MotionBuffer.Load(int3(input.Position.xy,0)).xy;
 
 	return output;
 }

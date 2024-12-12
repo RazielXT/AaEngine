@@ -62,7 +62,7 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 				{
 					if (member.value.empty() && !member.children.empty())
 					{
-						auto generatedName = mat.pipeline.ps_ref = mat.name + "_" + member.type;
+						auto generatedName = *refNamePtr = mat.name + "_" + member.type;
 						auto shaderType = AaShaderFileParser::ParseShaderType(member.type);
 
 						auto& ref = shaders.shaderRefs[shaderType][generatedName];

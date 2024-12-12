@@ -386,10 +386,12 @@ void RenderTargetTexturesView::PrepareToPresent(ID3D12GraphicsCommandList* comma
 	commandList->ResourceBarrier(1, &barrier);
 }
 
-void RenderTargetTexture::SetName(const wchar_t* name)
+void RenderTargetTexture::SetName(const std::string& n)
 {
+	name = n;
+
 	if (texture)
-		texture->SetName(name);
+		texture->SetName(std::wstring(name.begin(), name.end()).c_str());
 }
 
 void RenderTargetTextures::Init(ID3D12Device* device, UINT w, UINT h, RenderTargetHeap& heap, const std::vector<DXGI_FORMAT>& formats, D3D12_RESOURCE_STATES initialState, bool depthBuffer, D3D12_RESOURCE_STATES initialDepthState)
@@ -411,12 +413,12 @@ void RenderTargetTextures::Init(ID3D12Device* device, UINT w, UINT h, RenderTarg
 	RenderTargetTexturesView::Init();
 }
 
-void RenderTargetTextures::SetName(const wchar_t* name)
+void RenderTargetTextures::SetName(const std::string& name)
 {
 	for (auto& t : textures)
 	{
 		t.SetName(name);
 	}
 
-	depth.SetName((std::wstring(name) + L" Depth").c_str());
+	depth.SetName(name + " Depth");
 }

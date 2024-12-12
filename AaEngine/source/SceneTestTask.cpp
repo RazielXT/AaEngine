@@ -19,7 +19,7 @@ AsyncTasksInfo SceneTestTask::initialize(CompositorPass& pass)
 
 	heap.InitRtv(provider.renderSystem->device, tmpQueue.targets.size(), L"tempHeap");
 	tmp.Init(provider.renderSystem->device, 512, 512, heap, pass.target.texture->format, D3D12_RESOURCE_STATE_RENDER_TARGET);
-	tmp.SetName(L"tmpTex");
+	tmp.SetName("tmpTex");
 
 	DescriptorManager::get().createTextureView(tmp);
 

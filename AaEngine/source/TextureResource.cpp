@@ -38,9 +38,10 @@ void TextureResource::create3D(ID3D12Device* device, UINT w, UINT h, UINT d, DXG
 		IID_PPV_ARGS(&texture));
 }
 
-void TextureResource::setName(const wchar_t* name)
+void TextureResource::setName(const char* n)
 {
-	texture->SetName(name);
+	name = n;
+	texture->SetName(std::wstring(name.begin(), name.end()).c_str());
 }
 
 void TextureResource::TransitionState(ID3D12GraphicsCommandList* commandList, TextureResource& t, D3D12_RESOURCE_STATES targetState)

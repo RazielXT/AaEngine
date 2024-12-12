@@ -66,7 +66,7 @@ RenderSystem::RenderSystem(AaWindow* mWindow)
 	for (int i = 0; auto& b : backbuffer)
 	{
 		b.InitExisting(swapChainTextures[i++], device, width, height, backbufferHeap, DXGI_FORMAT_R8G8B8A8_UNORM);
-		b.SetName(L"Backbuffer");
+		b.SetName("Backbuffer");
 	}
 
 	device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
@@ -130,7 +130,7 @@ void RenderSystem::onScreenResize()
 	for (int i = 0; auto& b : backbuffer)
 	{
 		b.InitExisting(swapChainTextures[i++], device, width, height, backbufferHeap, DXGI_FORMAT_R8G8B8A8_UNORM);
-		b.SetName(L"Backbuffer");
+		b.SetName("Backbuffer");
 	}
 
 	dlss.onScreenResize();

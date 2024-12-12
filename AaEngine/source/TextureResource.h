@@ -9,7 +9,8 @@ struct TextureResource
 	~TextureResource();
 
 	void create3D(ID3D12Device* device, UINT width, UINT height, UINT depth, DXGI_FORMAT format);
-	void setName(const wchar_t* name);
+	void setName(const char* name);
+	std::string name;
 
 	static void TransitionState(ID3D12GraphicsCommandList* commandList, TextureResource&, D3D12_RESOURCE_STATES);
 

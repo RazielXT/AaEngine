@@ -31,7 +31,7 @@ void GrassAreaGenerator::initializeGpuResources(RenderSystem* renderSystem, cons
 	heap.InitRtv(renderSystem->device, formats.size(), L"GrassGeneratorRtv");
 	heap.InitDsv(renderSystem->device, 1, L"GrassGeneratorDsv");
 	rtt.Init(renderSystem->device, 512, 512, heap, formats, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, true, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-	rtt.SetName(L"GrassGeneratorRttTex");
+	rtt.SetName("GrassGeneratorRttTex");
 
 	DescriptorManager::get().createTextureView(rtt);
 }

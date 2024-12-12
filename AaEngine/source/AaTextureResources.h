@@ -42,6 +42,9 @@ class FileTexture : public ShaderTextureView
 public:
 
 	ComPtr<ID3D12Resource> texture;
+
+	void SetName(const std::string& name);
+	std::string name;
 };
 
 class AaTextureResources

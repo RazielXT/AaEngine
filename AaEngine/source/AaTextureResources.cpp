@@ -16,7 +16,7 @@ HRESULT LoadTextureFromFile(ResourceUploadBatch& resourceUpload, ID3D12Device* d
 		hr = DirectX::CreateDDSTextureFromFileEx(
 			device,
 			resourceUpload,
-			std::wstring(filename.begin(), filename.end()).c_str(), -1, D3D12_RESOURCE_FLAG_NONE, DX12::DDS_LOADER_FORCE_SRGB,
+			std::wstring(filename.begin(), filename.end()).c_str(), -1, D3D12_RESOURCE_FLAG_NONE, DX12::DDS_LOADER_DEFAULT,
 			texture);
 	}
 	else
@@ -69,6 +69,7 @@ FileTexture* AaTextureResources::loadFile(ID3D12Device* device, ResourceUploadBa
 		{
 			t = std::make_unique<FileTexture>();
 			t->texture = resultTex;
+			t->SetName(file);
 			resultTex->Release();
 		}
 	}
@@ -108,4 +109,12 @@ ShaderTextureView::ShaderTextureView(D3D12_GPU_DESCRIPTOR_HANDLE* handles)
 ShaderUAV::ShaderUAV(D3D12_GPU_DESCRIPTOR_HANDLE* handles)
 {
 	uavHandles = *handles;
+}
+
+void FileTexture::SetName(const std::string& n)
+{
+	name = n;
+
+	if (texture)
+		texture->SetName(std::wstring(name.begin(), name.end()).c_str());
 }

@@ -56,7 +56,8 @@ public:
 	void InitDepth(ID3D12Device* device, UINT width, UINT height, RenderTargetHeap& heap, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_DEPTH_WRITE);
 	void InitExisting(ID3D12Resource*, ID3D12Device* device, UINT width, UINT height, RenderTargetHeap& heap, DXGI_FORMAT format);
 
-	void SetName(const wchar_t* name);
+	void SetName(const std::string& name);
+	std::string name;
 
  	void PrepareAsTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from, bool clear = false);
  	void PrepareAsView(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from);
@@ -124,7 +125,7 @@ class RenderTargetTextures : public RenderTargetTexturesView
 public:
 
 	void Init(ID3D12Device* device, UINT width, UINT height, RenderTargetHeap& heap, const std::vector<DXGI_FORMAT>& format, D3D12_RESOURCE_STATES state, bool depthBuffer = true, D3D12_RESOURCE_STATES initialDepthState = D3D12_RESOURCE_STATE_DEPTH_WRITE);
-	void SetName(const wchar_t* name);
+	void SetName(const std::string& name);
 
 	std::vector<RenderTargetTexture> textures;
 	RenderTargetTexture depth;

@@ -30,6 +30,7 @@ public:
 
 	UINT nextDescriptor(UINT offset, D3D12_SRV_DIMENSION) const;
 	UINT previousDescriptor(UINT offset, D3D12_SRV_DIMENSION) const;
+	const char* getDescriptorName(UINT idx) const;
 
 	void removeDescriptorIndex(UINT idx);
 	void removeTextureView(RenderTargetTextures& textures);
@@ -39,11 +40,16 @@ public:
 	void removeUAVView(TextureResource& texture);
 private:
 
-	std::vector<D3D12_SRV_DIMENSION> descriptorTypes;
+	struct DescriptorInfo
+	{
+		D3D12_SRV_DIMENSION dimension = D3D12_SRV_DIMENSION_UNKNOWN;
+		const char* name{};
+	};
+	std::vector<DescriptorInfo> descriptorsInfo;
 
 	ID3D12Device* device{};
 
-	UINT createDescriptorIndex(D3D12_SRV_DIMENSION);
+	UINT createDescriptorIndex(const DescriptorInfo&);
 	UINT firstFreeDescriptor = 0;
 	UINT currentDescriptorCount = 0;
 };

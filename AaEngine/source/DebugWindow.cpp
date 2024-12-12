@@ -95,6 +95,8 @@ namespace imgui
 			else
 				state.TexturePreviewIndex = DescriptorManager::get().previousDescriptor(state.TexturePreviewIndex, D3D12_SRV_DIMENSION_TEXTURE2D);
 		}
+		if (state.TexturePreviewIndex >= 0)
+			ImGui::Text("Texture: %s", DescriptorManager::get().getDescriptorName(state.TexturePreviewIndex));
 
 		if (ImGui::CollapsingHeader("GI"))
 		{

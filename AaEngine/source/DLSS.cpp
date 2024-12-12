@@ -12,12 +12,18 @@ static const char* DlssProjectId = "75C7DC62-22B9-49E9-A4B0-4311100B6F76"; //ran
 void DLSS::init(RenderSystem* rs)
 {
 	renderSystem = rs;
+}
 
-	NVSDK_NGX_Result Result = NVSDK_NGX_D3D12_Init_with_ProjectID(DlssProjectId, NVSDK_NGX_ENGINE_TYPE_CUSTOM, "1.0", L".", rs->device);
+bool DLSS::initLibrary()
+{
+	if (m_ngxParameters)
+		return true;
+
+	NVSDK_NGX_Result Result = NVSDK_NGX_D3D12_Init_with_ProjectID(DlssProjectId, NVSDK_NGX_ENGINE_TYPE_CUSTOM, "1.0", L".", renderSystem->device);
 	if (NVSDK_NGX_FAILED(Result))
 	{
 		AaLogger::logWarning(std::format("NVSDK_NGX_D3D12_Init_with_ProjectID failed, code = {}", (int)Result));
-		return;
+		return false;
 	}
 
 	Result = NVSDK_NGX_D3D12_GetCapabilityParameters(&m_ngxParameters);
@@ -25,7 +31,7 @@ void DLSS::init(RenderSystem* rs)
 	{
 		AaLogger::logWarning(std::format("NVSDK_NGX_GetCapabilityParameters failed, code = {}", (int)Result));
 		shutdown();
-		return;
+		return false;
 	}
 
 	int dlssAvailable = 0;
@@ -36,12 +42,12 @@ void DLSS::init(RenderSystem* rs)
 		NVSDK_NGX_Parameter_GetI(m_ngxParameters, NVSDK_NGX_Parameter_SuperSampling_FeatureInitResult, (int*)&FeatureInitResult);
 		AaLogger::logWarning(std::format("NVIDIA DLSS not available on this hardward/platform., FeatureInitResult = {}", (int)FeatureInitResult));
 		shutdown();
-		return;
+		return false;
 	}
 
 	updateRenderSizeInfo();
 
-	selectMode(Mode::Off);
+	return true;
 }
 
 void DLSS::updateRenderSizeInfo()
@@ -102,19 +108,21 @@ void DLSS::shutdown()
 
 void DLSS::selectMode(Mode m)
 {
-	selectedUpscale = m;
-
 	if (m_dlssFeature)
 	{
 		NVSDK_NGX_D3D12_ReleaseFeature(m_dlssFeature);
 		m_dlssFeature = nullptr;
 	}
 
-	if (selectedUpscale == Mode::Off)
-	{
+	if (m != Mode::Off && !initLibrary())
 		return;
-	}
 
+	selectedUpscale = m;
+
+	if (selectedUpscale == Mode::Off)
+		return;
+
+	reset = true;
 	unsigned int CreationNodeMask = 1;
 	unsigned int VisibilityNodeMask = 1;
 	NVSDK_NGX_Result ResultDLSS = NVSDK_NGX_Result_Fail;
@@ -215,7 +223,6 @@ bool DLSS::upscale(ID3D12GraphicsCommandList* commandList, const UpscaleInput& i
 	D3D12DlssEvalParams.InJitterOffsetX = jitter.x * 0.5f;
 	D3D12DlssEvalParams.InJitterOffsetY = jitter.y * 0.5f;
 
-	static bool reset = true;
 	D3D12DlssEvalParams.InReset = reset;
 	reset = false;
 

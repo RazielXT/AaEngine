@@ -46,6 +46,8 @@ public:
 
 private:
 
+	bool initLibrary();
+
 	NVSDK_NGX_Parameter* m_ngxParameters = nullptr;
 	NVSDK_NGX_Handle* m_dlssFeature = nullptr;
 
@@ -79,4 +81,5 @@ private:
 	RenderSystem* renderSystem{};
 
 	UINT frameIndex = 0;
+	bool reset = true;
 };

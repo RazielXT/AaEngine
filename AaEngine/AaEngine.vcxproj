@@ -108,6 +108,7 @@
     <ClCompile Include="source\AoRenderCS.cpp" />
     <ClCompile Include="source\AoPrepareDepthBuffersCS.cpp" />
     <ClCompile Include="source\DLSS.cpp" />
+    <ClCompile Include="source\DownsampleTask.cpp" />
     <ClCompile Include="source\RenderObject.cpp" />
     <ClCompile Include="source\RenderSystem.cpp" />
     <ClCompile Include="source\SceneManager.cpp" />
@@ -169,6 +170,7 @@
     <ClInclude Include="source\CompositorTask.h" />
     <ClInclude Include="source\DebugOverlayTask.h" />
     <ClInclude Include="source\DLSS.h" />
+    <ClInclude Include="source\DownsampleTask.h" />
     <ClInclude Include="source\EntityGeometry.h" />
     <ClInclude Include="source\GenerateMipsComputeShader.h" />
     <ClInclude Include="source\GrassArea.h" />

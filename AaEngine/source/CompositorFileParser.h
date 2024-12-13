@@ -8,7 +8,7 @@
 
 namespace Compositor
 {
-	enum UsageFlags { PixelShader = 1, ComputeShader = 2, DepthRead = 4 };
+	enum UsageFlags { PixelShader = 1, ComputeShader = 2, DepthRead = 4, Read = 8 };
 };
 
 struct CompositorTextureInfo

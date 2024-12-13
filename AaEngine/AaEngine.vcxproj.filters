@@ -241,6 +241,9 @@
     <ClCompile Include="source\DLSS.cpp">
       <Filter>Source Files\Render</Filter>
     </ClCompile>
+    <ClCompile Include="source\DownsampleTask.cpp">
+      <Filter>Source Files\FrameCompositor\Tasks</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\AaApplication.h">
@@ -446,6 +449,9 @@
     </ClInclude>
     <ClInclude Include="source\DLSS.h">
       <Filter>Source Files\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="source\DownsampleTask.h">
+      <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

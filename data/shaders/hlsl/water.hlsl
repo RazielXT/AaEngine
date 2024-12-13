@@ -13,6 +13,7 @@ uint TexIdHeight;
 uint TexIdDistance;
 uint TexIdSceneDepthHigh;
 uint TexIdSceneDepthLow;
+uint TexIdSceneDepthVeryLow;
 uint TexIdSceneColor;
 uint TexIdSceneVoxel;
 uint TexIdSkybox;
@@ -131,23 +132,22 @@ static const int NUM_BINARY_SEARCH_SAMPLES = 8;
 float4 GetReflection(
 	float3 ScreenSpaceReflectionVec, 
 	float3 ScreenSpacePos,
-	float dotView,
 	float3 reflection)
 {
-	Texture2D DepthBuffer = GetTexture(TexIdSceneDepthLow);
+	Texture2D DepthBufferVeryLow = GetTexture(TexIdSceneDepthVeryLow);
+	Texture2D DepthBufferLow = GetTexture(TexIdSceneDepthLow);
+	Texture2D DepthBufferHigh = GetTexture(TexIdSceneDepthHigh);
 	float3 PrevRaySample = ScreenSpacePos;
-	float offset = 0.0015f * saturate(dotView);
+	float MaxOffset = 0.00005f;
 
 	// Raymarch in the direction of the ScreenSpaceReflectionVec until you get an intersection with your z buffer
+	if (ScreenSpaceReflectionVec.z > 0)
 	for (int RayStepIdx = 0; RayStepIdx<NUM_RAY_MARCH_SAMPLES; RayStepIdx++)
 	{
 		float3 RaySample = (RayStepIdx * MAX_REFLECTION_RAY_MARCH_STEP) * ScreenSpaceReflectionVec + ScreenSpacePos;
-		float ZBufferVal = DepthBuffer.Sample(DepthSampler, RaySample.xy).r;
+		float ZBufferVal = DepthBufferVeryLow.Sample(DepthSampler, RaySample.xy).r;
 
-		//skip something too far in front
-		float diff = ZBufferVal - RaySample.z;
-
-		if (RaySample.z < ZBufferVal)
+		if (RaySample.z > ZBufferVal)
 		{
 			float3 MinRaySample = PrevRaySample;
 			float3 MaxRaySample = RaySample;
@@ -158,9 +158,9 @@ float4 GetReflection(
 			for (int i = 0; i < NUM_BINARY_SEARCH_SAMPLES; i++)
 			{
 				MidRaySample = lerp(MinRaySample, MaxRaySample, 0.5);
-				float ZBufferVal = DepthBuffer.Sample(DepthSampler, MidRaySample.xy).r;
+				ZBufferVal = DepthBufferHigh.Sample(DepthSampler, MidRaySample.xy).r;
 
-				if (MidRaySample.z > ZBufferVal)
+				if (MidRaySample.z < ZBufferVal)
 				{
 					MinRaySample = MidRaySample;
 					MinDistance += DistanceWeight;
@@ -181,10 +181,10 @@ float4 GetReflection(
 				const float TotalDistance = MaxDistance - MinDistance;
 				const float3 RefinedMidRaySample = lerp(MinRaySample, MaxRaySample, MinDistance / TotalDistance);
 				
-				float ZBufferVal = GetTexture(TexIdSceneDepthHigh).Sample(DepthSampler, RefinedMidRaySample.xy).r;
+				ZBufferVal = DepthBufferHigh.Sample(DepthSampler, RefinedMidRaySample.xy).r;
 				float refinedDiff = abs(ZBufferVal - RefinedMidRaySample.z);
 				
-				if (refinedDiff < ZDiff)
+				if (refinedDiff < ZDiff && MaxRaySample.z > ZBufferVal)
 				{
 					ZDiff = refinedDiff;
 					MidRaySample = RefinedMidRaySample;
@@ -196,7 +196,7 @@ float4 GetReflection(
 				break;		
 				
 			//skip something too far in front, this allows marching behind objects
-			if (ZDiff > offset * RayStepIdx)
+			if (ZDiff > MaxOffset * RayStepIdx || MidRaySample.z + MaxOffset < ZBufferVal)
 			{
 				continue;
 			}
@@ -228,6 +228,11 @@ struct PSOutput
     float4 color : SV_Target0;
     float4 fill : SV_Target1;
 };
+
+float LinearizeDepth(float depth)
+{
+	return 1.0 / (ZMagic * depth + 1.0);
+}
 
 PSOutput PSMain(PSInput input)
 {
@@ -262,34 +267,31 @@ PSOutput PSMain(PSInput input)
 	float4 WorldNormal = float4(normal,1);
 	float3 WorldPosition = input.worldPosition.xyz;
 
-	float DeviceZ = input.position.z;
+	float DeviceZ = LinearizeDepth(input.position.z);
 	float2 ScreenUV = input.position.xy * ViewportSizeInverse;
 	float2 SsrPixelUV = ScreenUV;
 
 	float4 ScreenSpacePos = float4(SsrPixelUV, DeviceZ, 1.f);
 	float3 ReflectionVector = reflect(cameraVector, WorldNormal.xyz);
 
-	float4 PointAlongReflectionVec = float4(10.f*ReflectionVector + WorldPosition, 1.f);
+	float4 PointAlongReflectionVec = float4(40.f*ReflectionVector + WorldPosition, 1.f);
 	float4 ScreenSpaceReflectionPoint = mul(PointAlongReflectionVec, ViewProjectionMatrix);
 	ScreenSpaceReflectionPoint /= ScreenSpaceReflectionPoint.w;
 	ScreenSpaceReflectionPoint.xy = ScreenSpaceReflectionPoint.xy * float2(0.5, -0.5) + float2(0.5, 0.5);
-
+	ScreenSpaceReflectionPoint.z = LinearizeDepth(ScreenSpaceReflectionPoint.z);
+	
 // Compute the sreen space reflection vector as the difference of the two screen space points
 	float3 ScreenSpaceReflectionVec = normalize(ScreenSpaceReflectionPoint.xyz - ScreenSpacePos.xyz);
-	float dotView = dot(ScreenSpaceReflectionPoint.xyz, ScreenSpacePos.xyz);
-	ScreenSpaceReflectionVec.xy += getJitter(ScreenUV, 0.02);
+	ScreenSpaceReflectionVec.xy += getJitter(ScreenUV, 0.01);
 
-//	int x = (int)input.position.x;
-//  int y = (int)input.position.y;
-    // Determine checkerboard color
-//    bool isWhite = ((x / 10) % 2 == (y / 10) % 2);
-
-	float4 reflection = GetReflection(ScreenSpaceReflectionVec, ScreenSpacePos.xyz, dotView, -ReflectionVector);
-
+	float4 reflection = GetReflection(ScreenSpaceReflectionVec, ScreenSpacePos.xyz, -ReflectionVector);
+	//reflection *= fade;
 	//float currentDepthLinear = 1.0 / (ZMagic * depth + 1.0);
 /* 	albedo.rgb += traceReflection(input.worldPosition.xyz, input.normal.xyz, cameraVector / waterDistance, input.position.xy * ViewportSizeInverse, currentDepthLinear); */
 
 	float fresnel = saturate((1 - abs(dot(cameraVector, normal))));
+	fresnel *= fresnel;
+
 	albedo.rgb = lerp(albedo.rgb, reflection.rgb, fresnel);
 	//albedo.rgb = reflection.rgb;
 	float3 sceneColor = GetTexture(TexIdSceneColor).Sample(LinearWrapSampler, ScreenUV).rgb;

@@ -48,7 +48,8 @@ AsyncTasksInfo SsaoComputeTask::initialize(CompositorPass& pass)
 				//downsample depth
 				{
 					auto& input = textures.sceneDepth;
-					//tr.add(textures.linearDepth, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+					tr.add(textures.linearDepth, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+					tr.add(textures.linearDepthDownsample2, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 					tr.addAndPush(input, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, commands.commandList);
 					prepareDepthBuffersCS.dispatch(input.texture->width, input.texture->height, input.texture->view, commands.commandList);
 				}

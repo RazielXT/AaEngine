@@ -137,15 +137,23 @@ struct RenderTargetTransitions
 	UINT c = 0;
 	CD3DX12_RESOURCE_BARRIER barriers[MAX];
 
-	void add(RenderTargetTextureState& state, D3D12_RESOURCE_STATES to)
+	void addConst(const RenderTargetTextureState& state, D3D12_RESOURCE_STATES to)
 	{
+		if (state.previousState == to)
+			return;
+
 		barriers[c] = CD3DX12_RESOURCE_BARRIER::Transition(
 			state.texture->texture.Get(),
 			state.previousState,
 			to);
 
-		state.previousState = to;
 		c++;
+	}
+	void add(RenderTargetTextureState& state, D3D12_RESOURCE_STATES to)
+	{
+		addConst(state, to);
+
+		state.previousState = to;
 	}
 	void addAndPush(RenderTargetTextureState& state, D3D12_RESOURCE_STATES to, ID3D12GraphicsCommandList* commandList)
 	{
@@ -154,7 +162,8 @@ struct RenderTargetTransitions
 	}
 	void push(ID3D12GraphicsCommandList* commandList)
 	{
-		commandList->ResourceBarrier(c, barriers);
+		if (c)
+			commandList->ResourceBarrier(c, barriers);
 		c = 0;
 	}
 };

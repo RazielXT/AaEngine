@@ -13,6 +13,7 @@
 #include "Directories.h"
 #include "SsaoComputeTask.h"
 #include "UpscaleTask.h"
+#include "DownsampleTask.h"
 
 FrameCompositor::FrameCompositor(RenderProvider p, SceneManager& scene, AaShadowMap& shadows) : provider(p), sceneMgr(scene), shadowMaps(shadows)
 {
@@ -85,6 +86,10 @@ void FrameCompositor::load(CompositorInfo i)
 		else if (pass.info.task == "Test")
 		{
 			pass.task = std::make_unique<SceneTestTask>(provider, sceneMgr);
+		}
+		else if (pass.info.task == "HiZDepthDownscale")
+		{
+			pass.task = std::make_unique<DownsampleDepthTask>(provider, sceneMgr);
 		}
 	}
 
@@ -169,6 +174,9 @@ void FrameCompositor::reloadTextures()
 				tex.SetName(name);
 
 				DescriptorManager::get().createTextureView(tex);
+				if (t.uav)
+					DescriptorManager::get().createUAVView(tex);
+
 				AaTextureResources::get().setNamedTexture("c_" + name, tex.view);
 			}
 		};

@@ -22,7 +22,7 @@ void FrameCompositor::initializeTextureStates()
 			auto& state = lastTextureStates[name];
 			if (flags & Compositor::PixelShader)
 				state = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-			else if (flags & Compositor::ComputeShader && info.textures[name].uav)
+			else if (flags & Compositor::ComputeShader && info.textures[name].uav && !(flags & Compositor::Read))
 				state = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 			else
 				state = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
@@ -54,7 +54,7 @@ void FrameCompositor::initializeTextureStates()
 
 			if (flags & Compositor::PixelShader)
 				tState = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-			else if (flags & Compositor::ComputeShader && info.textures[name].uav)
+			else if (flags & Compositor::ComputeShader && info.textures[name].uav && !(flags & Compositor::Read))
 				tState = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 			else
 				tState = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;

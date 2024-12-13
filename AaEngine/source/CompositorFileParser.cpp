@@ -72,6 +72,8 @@ static UINT parseFlags(const Config::Object& member)
 				flags |= Compositor::ComputeShader;
 			else if (p == "(depth_read)")
 				flags |= Compositor::DepthRead;
+			else if (p == "(read)")
+				flags |= Compositor::Read;
 		}
 	}
 	return flags;
@@ -114,6 +116,8 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 {
 	auto objects = Config::Parse(directory + path);
 	std::map<std::string, CompositorInfo> imports;
+
+	std::optional<CompositorPassCondition> prevCondition;
 	std::optional<CompositorPassCondition> currentCondition;
 
 	for (auto& obj : objects)
@@ -285,6 +289,11 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 				{
 					if (member.type == "#if")
 					{
+						prevCondition = currentCondition;
+						currentCondition = { true, member.value };
+					}
+					else if (member.type == "#elif")
+					{
 						currentCondition = { true, member.value };
 					}
 					else if (member.type == "#else")
@@ -294,7 +303,8 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 					}
 					else if (member.type == "#endif")
 					{
-						currentCondition.reset();
+						currentCondition = prevCondition;
+						prevCondition.reset();
 					}
 				}
 			}

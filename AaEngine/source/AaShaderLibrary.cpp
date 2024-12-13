@@ -66,6 +66,18 @@ LoadedShader* AaShaderLibrary::getShader(const std::string& name, ShaderType typ
 	return it->second.get();
 }
 
+LoadedShader* AaShaderLibrary::getShader(const std::string& name, ShaderType type, const ShaderRef& ref)
+{
+	auto& info = loadedShaders[type][name];
+	if (info == nullptr)
+	{
+		info = std::make_unique<LoadedShader>();
+		info->ref = ref;
+	}
+
+	return getShader(name, type);
+}
+
 std::vector<LoadedShader*> AaShaderLibrary::reloadShaders()
 {
 	std::vector<LoadedShader*> changed;

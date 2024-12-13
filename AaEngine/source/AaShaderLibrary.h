@@ -27,6 +27,7 @@ public:
 	void addShaderReferences(const shaderRefMaps& maps);
 
 	LoadedShader* getShader(const std::string& name, ShaderType);
+	LoadedShader* getShader(const std::string& name, ShaderType, const ShaderRef& ref);
 
 	std::vector<LoadedShader*> reloadShaders();
 

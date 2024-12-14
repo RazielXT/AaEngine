@@ -13,3 +13,6 @@
 [submodule "dependencies/DLSS"]
 	path = dependencies/DLSS
 	url = https://github.com/NVIDIA/DLSS.git
+[submodule "dependencies/FidelityFX-SDK"]
+	path = dependencies/FidelityFX-SDK
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/FidelityFX-SDK.git

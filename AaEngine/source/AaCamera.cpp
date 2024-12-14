@@ -35,13 +35,17 @@ void AaCamera::setOrthographicCamera(float width, float height, float nearZ, flo
 			0.0f, 0.0f, -farZ * rcpDepth, 1.0f
 		);
 	}
-	this->width = width;
-	this->height = height;
-	this->nearZ = nearZ;
-	this->farZ = farZ;
+
 	dirty = true;
 	orthographic = true;
 	zProjection = (farZ - nearZ) / nearZ;
+
+	params = {};
+	params.nearZ = nearZ;
+	params.farZ = farZ;
+	params.aspectRatio = width / height;
+	params.height = height;
+	params.width = width;
 }
 
 void AaCamera::setPerspectiveCamera(float fov, float aspectRatio, float nearZ, float farZ)
@@ -64,6 +68,12 @@ void AaCamera::setPerspectiveCamera(float fov, float aspectRatio, float nearZ, f
 	dirty = true;
 	orthographic = false;
 	zProjection = (farZ - nearZ) / nearZ;
+
+	params = {};
+	params.nearZ = nearZ;
+	params.farZ = farZ;
+	params.aspectRatio = aspectRatio;
+	params.fov = fov;
 }
 
 bool AaCamera::isOrthographic() const
@@ -222,7 +232,7 @@ DirectX::BoundingFrustum AaCamera::prepareFrustum() const
 DirectX::BoundingOrientedBox AaCamera::prepareOrientedBox() const
 {
 	DirectX::BoundingOrientedBox orientedBox;
-	orientedBox.Extents = { width / 2.0f, height / 2.0f, (farZ - nearZ) / 2.0f };
+	orientedBox.Extents = { params.width / 2.0f, params.height / 2.0f, (params.farZ - params.nearZ) / 2.0f };
 	orientedBox.Transform(orientedBox, DirectX::XMMatrixInverse(nullptr, view_m));
 
 	return orientedBox;
@@ -235,9 +245,7 @@ float AaCamera::getCameraZ() const
 
 float AaCamera::getTanHalfFovH() const
 {
-	XMFLOAT4X4 proj;
-	XMStoreFloat4x4(&proj, reversedProjection_m);
-	return proj._11;
+	return reversedProjection_m.r[0].m128_f32[0];
 }
 
 float jitterScaleX = -2.f;
@@ -262,4 +270,9 @@ void AaCamera::setPixelOffset(XMFLOAT2 offset, XMUINT2 viewportSize)
 void AaCamera::clearPixelOffset()
 {
 	hasOffset = false;
+}
+
+const AaCamera::Params& AaCamera::getParams() const
+{
+	return params;
 }

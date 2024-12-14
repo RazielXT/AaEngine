@@ -7,7 +7,7 @@
 #include "AaWindow.h"
 #include <map>
 #include "RenderTargetTexture.h"
-#include "DLSS.h"
+#include "Upscaling.h"
 
 using namespace DirectX;
 
@@ -77,8 +77,7 @@ public:
 
 	RenderTargetTexture backbuffer[FrameCount];
 
-	DLSS dlss;
-	float getMipLodBias() const;
+	Upscaling upscale;
 
 private:
 

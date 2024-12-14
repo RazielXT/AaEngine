@@ -40,7 +40,8 @@ MyListener::MyListener(RenderSystem* render)
 	grass->initializeGpuResources(renderSystem, sceneMgr->getQueueTargetFormats());
 
 	debugWindow.init(renderSystem);
-	debugWindow.state.DlssMode = (int)renderSystem->dlss.selectedMode();
+	debugWindow.state.DlssMode = (int)renderSystem->upscale.dlss.selectedMode();
+	debugWindow.state.FsrMode = (int)renderSystem->upscale.fsr.selectedMode();
 
 	loadScene("test");
 }
@@ -95,12 +96,19 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 		AaMaterialResources::get().ReloadShaders();
 		debugWindow.state.reloadShaders = false;
 	}
-	if (debugWindow.state.DlssMode != (int)renderSystem->dlss.selectedMode())
+	if (debugWindow.state.DlssMode != (int)renderSystem->upscale.dlss.selectedMode())
 	{
 		renderSystem->WaitForAllFrames();
-		renderSystem->dlss.selectMode((DLSS::Mode)debugWindow.state.DlssMode);
+		renderSystem->upscale.dlss.selectMode((UpscaleMode)debugWindow.state.DlssMode);
 		compositor->reloadPasses();
-		DescriptorManager::get().initializeSamplers(renderSystem->getMipLodBias());
+		DescriptorManager::get().initializeSamplers(renderSystem->upscale.getMipLodBias());
+	}
+	if (debugWindow.state.FsrMode != (int)renderSystem->upscale.fsr.selectedMode())
+	{
+		renderSystem->WaitForAllFrames();
+		renderSystem->upscale.fsr.selectMode((UpscaleMode)debugWindow.state.FsrMode);
+		compositor->reloadPasses();
+		DescriptorManager::get().initializeSamplers(renderSystem->upscale.getMipLodBias());
 	}
 	{
 		debugWindow.state.vramUsage = GetGpuMemoryUsage();
@@ -126,7 +134,7 @@ bool MyListener::frameStarted(float timeSinceLastFrame)
 	cameraMan->camera.updateMatrix();
 	shadowMap->update(renderSystem->frameIndex);
 
-	if (renderSystem->dlss.enabled())
+	if (renderSystem->upscale.enabled())
 	{
 		// Assuming view and viewPrevious are pointers to View instances
 		XMMATRIX viewMatrixCurrent = cameraMan->camera.getViewMatrix();

@@ -9,7 +9,7 @@
 #include <codecvt>
 #include <pix3.h>
 
-RenderSystem::RenderSystem(AaWindow* mWindow)
+RenderSystem::RenderSystem(AaWindow* mWindow) : upscale{*this}
 {
 	this->window = mWindow;
 	mWindow->listeners.push_back(this);
@@ -77,7 +77,8 @@ RenderSystem::~RenderSystem()
 {
 	fence->Release();
 
-	dlss.shutdown();
+	upscale.shutdown();
+
 	swapChain->Release();
 	commandQueue->Release();
 	device->Release();
@@ -87,13 +88,13 @@ RenderSystem::~RenderSystem()
 
 void RenderSystem::init()
 {
-	dlss.init(this);
+	upscale.init();
 }
 
 DirectX::XMUINT2 RenderSystem::getRenderSize() const
 {
-	if (dlss.enabled())
-		return dlss.getRenderSize();
+	if (upscale.enabled())
+		return upscale.getRenderSize();
 
 	return getOutputSize();
 }
@@ -133,7 +134,7 @@ void RenderSystem::onScreenResize()
 		b.SetName("Backbuffer");
 	}
 
-	dlss.onScreenResize();
+	upscale.onScreenResize();
 
 	MoveToNextFrame();
 }
@@ -150,15 +151,6 @@ void RenderSystem::WaitForCurrentFrame()
 	}
 
 	fenceValues[frameIndex]++;
-}
-
-float RenderSystem::getMipLodBias() const
-{
-	float bias = 0;
-	if (dlss.enabled())
-		bias = std::log2f(getRenderSize().x / float(getOutputSize().x)) - 1.0f;
-
-	return bias;
 }
 
 CommandsData RenderSystem::CreateCommandList(const wchar_t* name)

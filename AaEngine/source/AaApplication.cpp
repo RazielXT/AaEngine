@@ -18,7 +18,7 @@ AaApplication::AaApplication(HINSTANCE hInstance)
 	mMaterials = new AaMaterialResources(mRenderSystem);
 	mModels = new AaModelResources(mRenderSystem);
 	mRenderSystem->init();
-	mResources->initializeSamplers(mRenderSystem->getMipLodBias());
+	mResources->initializeSamplers(mRenderSystem->upscale.getMipLodBias());
 
 	AaLogger::log("Application created");
 }

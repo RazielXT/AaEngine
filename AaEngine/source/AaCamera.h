@@ -48,9 +48,21 @@ public:
 	void setPixelOffset(XMFLOAT2 offset, XMUINT2 viewportSize);
 	void clearPixelOffset();
 
+	struct Params
+	{
+		float fov;
+		float width;
+		float height;
+
+		float aspectRatio;
+		float nearZ;
+		float farZ;
+	};
+	const Params& getParams() const;
+
 private:
 
-	float width{}, height{}, nearZ{}, farZ{};
+	Params params;
 
 	bool dirty = true;
 	float yaw_ = 0, pitch_ = 0, roll_ = 0;

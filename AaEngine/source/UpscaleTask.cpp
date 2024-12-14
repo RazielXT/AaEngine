@@ -36,7 +36,7 @@ void UpscaleTask::run(RenderContext& ctx, CommandsData& syncCommands, Compositor
 
 	syncCommands.commandList->ResourceBarrier(b, barriers.data());
 
-	auto& dlss = provider.renderSystem->dlss;
+	auto& dlss = provider.renderSystem->upscale.dlss;
 	if (dlss.enabled())
 	{
 		DLSS::UpscaleInput input;
@@ -44,7 +44,18 @@ void UpscaleTask::run(RenderContext& ctx, CommandsData& syncCommands, Compositor
 		input.motionVectorsResource = pass.inputs[1].texture->texture.Get();
 		input.depthResource = pass.inputs[2].texture->texture.Get();
 		input.resolvedColorResource = pass.inputs[3].texture->texture.Get();
-		input.tslf = provider.params.timeDelta * 1000;
+		input.tslf = provider.params.timeDelta;
 		dlss.upscale(syncCommands.commandList, input);
+	}
+	auto& fsr = provider.renderSystem->upscale.fsr;
+	if (fsr.enabled())
+	{
+		FSR::UpscaleInput input;
+		input.unresolvedColorResource = pass.inputs[0].texture->texture.Get();
+		input.motionVectorsResource = pass.inputs[1].texture->texture.Get();
+		input.depthResource = pass.inputs[2].texture->texture.Get();
+		input.resolvedColorResource = pass.inputs[3].texture->texture.Get();
+		input.tslf = provider.params.timeDelta;
+		fsr.upscale(syncCommands.commandList, input, *ctx.camera);
 	}
 }

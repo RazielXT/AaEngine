@@ -106,7 +106,7 @@ void DLSS::shutdown()
 	NVSDK_NGX_D3D12_Shutdown1(nullptr);
 }
 
-void DLSS::selectMode(Mode m)
+void DLSS::selectMode(UpscaleMode m)
 {
 	if (m_dlssFeature)
 	{
@@ -114,12 +114,12 @@ void DLSS::selectMode(Mode m)
 		m_dlssFeature = nullptr;
 	}
 
-	if (m != Mode::Off && !initLibrary())
+	if (m != UpscaleMode::Off && !initLibrary())
 		return;
 
 	selectedUpscale = m;
 
-	if (selectedUpscale == Mode::Off)
+	if (selectedUpscale == UpscaleMode::Off)
 		return;
 
 	reset = true;
@@ -186,10 +186,10 @@ void DLSS::onScreenResize()
 
 bool DLSS::enabled() const
 {
-	return selectedUpscale != Mode::Off;
+	return selectedUpscale != UpscaleMode::Off;
 }
 
-DLSS::Mode DLSS::selectedMode() const
+UpscaleMode DLSS::selectedMode() const
 {
 	return selectedUpscale;
 }
@@ -197,11 +197,6 @@ DLSS::Mode DLSS::selectedMode() const
 DirectX::XMUINT2 DLSS::getRenderSize() const
 {
 	return upscaleTypes[(int)selectedUpscale].settings.m_ngxRecommendedOptimalRenderSize;
-}
-
-DirectX::XMUINT2 DLSS::getOutputSize() const
-{
-	return upscaleTypes[(int)selectedUpscale].settings.m_ngxDynamicMaximumRenderSize;
 }
 
 bool DLSS::upscale(ID3D12GraphicsCommandList* commandList, const UpscaleInput& input)
@@ -226,7 +221,7 @@ bool DLSS::upscale(ID3D12GraphicsCommandList* commandList, const UpscaleInput& i
 	D3D12DlssEvalParams.InReset = reset;
 	reset = false;
 
-	D3D12DlssEvalParams.InFrameTimeDeltaInMsec = input.tslf;
+	D3D12DlssEvalParams.InFrameTimeDeltaInMsec = input.tslf * 1000.f;
 	D3D12DlssEvalParams.InMVScaleX = 1;
 	D3D12DlssEvalParams.InMVScaleY = 1;
 	NVSDK_NGX_Coordinates renderingOffset = {};

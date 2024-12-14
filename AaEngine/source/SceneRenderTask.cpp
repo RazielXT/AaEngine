@@ -91,9 +91,12 @@ void SceneRenderTask::run(RenderContext& renderCtx, CommandsData&, CompositorPas
 
 void SceneRenderTask::renderScene(CompositorPass& pass)
 {
-	auto& dlss = provider.renderSystem->dlss;
+	auto& dlss = provider.renderSystem->upscale.dlss;
 	if (dlss.enabled())
 		ctx.camera->setPixelOffset(dlss.getJitter(), dlss.getRenderSize());
+	auto& fsr = provider.renderSystem->upscale.fsr;
+	if (fsr.enabled())
+		ctx.camera->setPixelOffset(fsr.getJitter(), fsr.getRenderSize());
 
 	renderables->updateVisibility(*ctx.camera, sceneInfo);
 

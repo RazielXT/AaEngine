@@ -34,7 +34,10 @@ void FrameCompositor::load(CompositorInfo i)
 {
 	info = i;
 	std::vector<CompositorPassCondition> conditions;
-	conditions.push_back({ provider.renderSystem->dlss.enabled() , "DLSS"});
+	auto& upscale = provider.renderSystem->upscale;
+	conditions.push_back({ upscale.dlss.enabled() , "DLSS" });
+	conditions.push_back({ upscale.fsr.enabled() , "FSR" });
+	conditions.push_back({ upscale.dlss.enabled() || upscale.fsr.enabled() , "UPSCALE" });
 
 	passes.clear();
 	for (auto& p : info.passes)

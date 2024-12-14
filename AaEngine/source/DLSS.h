@@ -3,6 +3,7 @@
 #include "directx/d3d12.h"
 #include "nvsdk_ngx_params.h"
 #include "AaMath.h"
+#include "UpscaleTypes.h"
 
 class RenderSystem;
 
@@ -13,23 +14,12 @@ public:
 	void init(RenderSystem* rs);
 	void shutdown();
 
-	enum class Mode
-	{
-		UltraPerformance,
-		Performance,
-		Balanced,
-		Quality,
-		DLAA,
-		Off
-	};
-
-	void selectMode(Mode);
+	void selectMode(UpscaleMode);
 	void onScreenResize();
 
 	bool enabled() const;
-	Mode selectedMode() const;
+	UpscaleMode selectedMode() const;
 	XMUINT2 getRenderSize() const;
-	XMUINT2 getOutputSize() const;
 
 	struct UpscaleInput
 	{
@@ -74,7 +64,7 @@ private:
 		{ NVSDK_NGX_PerfQuality_Value_DLAA }
 	};
 
-	Mode selectedUpscale = Mode::Off;
+	UpscaleMode selectedUpscale = UpscaleMode::Off;
 
 	void updateRenderSizeInfo();
 

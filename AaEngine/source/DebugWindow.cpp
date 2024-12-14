@@ -128,7 +128,8 @@ namespace imgui
 			ImGui::SliderFloat("UpsampleTolerance", &state.ssao.UpsampleTolerance, -12.0f, -1.f);
 		}
 
-		ImGui::Combo("DLSS", &state.DlssMode, state.DlssModeNames, std::size(state.DlssModeNames));
+		ImGui::Combo("DLSS", &state.DlssMode, UpscaleModeNames, std::size(UpscaleModeNames));
+		ImGui::Combo("FSR", &state.FsrMode, UpscaleModeNames, std::size(UpscaleModeNames));
 
 		const char* scenes[] = {
 			"test",

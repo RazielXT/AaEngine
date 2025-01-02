@@ -1,8 +1,8 @@
 #include "ScreenQuad.h"
 #include "RenderQueue.h"
-#include "AaMaterial.h"
+#include "Material.h"
 
-void ScreenQuad::Render(AaMaterial* material, const RenderTargetTexture& target, const RenderProvider& provider, RenderContext& ctx, ID3D12GraphicsCommandList* commandList) const
+void ScreenQuad::Render(AssignedMaterial* material, const RenderTargetTexture& target, const RenderProvider& provider, RenderContext& ctx, ID3D12GraphicsCommandList* commandList) const
 {
 	ShaderConstantsProvider constants(provider.params, {}, * ctx.camera, target);
 	MaterialDataStorage storage;

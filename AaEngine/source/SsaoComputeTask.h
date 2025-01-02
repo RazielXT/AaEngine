@@ -20,14 +20,12 @@ public:
 
 	void run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
 
+	bool writesSyncCommands(CompositorPass&) const override
+	{
+		return true;
+	}
+
 private:
-
-	CommandsData commands;
-	HANDLE eventBegin{};
-	HANDLE eventFinish{};
-	std::thread worker;
-
-	bool running = true;
 
 	AoPrepareDepthBuffersCS prepareDepthBuffersCS;
 	AoPrepareDepthBuffers2CS prepareDepthBuffers2CS;

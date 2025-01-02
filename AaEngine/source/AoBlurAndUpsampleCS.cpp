@@ -24,10 +24,6 @@ void AoBlurAndUpsampleCS::dispatch(UINT fullWidth, UINT highHeight, UINT highWid
 
 	commandList->SetPipelineState(pipelineState.Get());
 	commandList->SetComputeRootSignature(signature);
-
-	ID3D12DescriptorHeap* ppHeaps[] = { DescriptorManager::get().mainDescriptorHeap };
-	commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
-
 	commandList->SetComputeRoot32BitConstants(0, sizeof(data) / sizeof(float), &data, 0);
 
 	const uint32_t bufferWidth = (highWidth + 15) / 16;

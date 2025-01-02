@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AaTextureResources.h"
+#include "TextureResources.h"
 #include "d3d12.h"
 #include "directx\d3dx12.h"
 #include <DirectXMath.h>
@@ -18,7 +18,7 @@ public:
 	void InitDsv(ID3D12Device* device, UINT count, const wchar_t* name = nullptr);
 	void Reset();
 
-	void CreateRenderTargetHandle(ID3D12Device* device, ComPtr<ID3D12Resource>& texture, D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle);
+	void CreateRenderTargetHandle(ID3D12Device* device, ComPtr<ID3D12Resource>& texture, ShaderTextureView& view);
 	void CreateDepthTargetHandle(ID3D12Device* device, ComPtr<ID3D12Resource>& texture, D3D12_CPU_DESCRIPTOR_HANDLE& dsvHandle);
 
 private:
@@ -55,6 +55,7 @@ public:
 	void Init(ID3D12Device* device, UINT width, UINT height, RenderTargetHeap& heap, DXGI_FORMAT format, D3D12_RESOURCE_STATES state, UINT flags = AllowRenderTarget);
 	void InitDepth(ID3D12Device* device, UINT width, UINT height, RenderTargetHeap& heap, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_DEPTH_WRITE);
 	void InitExisting(ID3D12Resource*, ID3D12Device* device, UINT width, UINT height, RenderTargetHeap& heap, DXGI_FORMAT format);
+	void Resize(ID3D12Device* device, UINT width, UINT height, RenderTargetHeap& heap, D3D12_RESOURCE_STATES state);
 
 	void SetName(const std::string& name);
 	std::string name;
@@ -67,8 +68,11 @@ public:
 	void PrepareAsDepthTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from, bool clear = true);
 	void ClearDepth(ID3D12GraphicsCommandList* commandList);
 
+	float DepthClearValue = 0.f;
+
 private:
 
+	void ResizeTextureBuffer(ID3D12Device* device, D3D12_RESOURCE_STATES state);
 	void CreateTextureBuffer(ID3D12Device* device, UINT width, UINT height, DXGI_FORMAT, D3D12_RESOURCE_STATES, UINT flags);
 	void CreateDepthBuffer(ID3D12Device* device, RenderTargetHeap& heap, D3D12_RESOURCE_STATES initialState);
 };

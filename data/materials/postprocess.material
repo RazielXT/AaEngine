@@ -26,6 +26,11 @@ material AddThrough : PostProcess
 	pixel_shader psAddThrough
 }
 
+material AddThroughNoLuma : PostProcess
+{
+	pixel_shader psAddThroughNoLuma
+}
+
 material BlurX : PostProcess
 {
 	pixel_shader psBlurX

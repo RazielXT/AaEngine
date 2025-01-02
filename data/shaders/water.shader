@@ -11,3 +11,14 @@ pixel_shader psWaterLake
 	entry PSMain
 	profile ps_6_6
 }
+
+vertex_shader vsWaterLakeEntityId : vsWaterLake
+{
+	defines ENTITY_ID
+}
+
+pixel_shader psWaterLakeEntityId : psWaterLake
+{
+	defines ENTITY_ID
+	entry PSMainEntityId
+}

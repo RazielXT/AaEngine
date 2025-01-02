@@ -1,22 +1,19 @@
 #include "GenerateMipsComputeShader.h"
 #include "DescriptorManager.h"
 #include "Directx.h"
-#include "../Src/d3dx12.h"
+#include "directx\d3dx12.h"
 
 GenerateMipsComputeShader::GenerateMipsComputeShader()
 {
 	volatileTextures = true;
 }
 
-void GenerateMipsComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, TextureResource& texture, DescriptorManager& mgr)
+void GenerateMipsComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, TextureResource& texture)
 {
 	auto resource = texture.texture.Get();
 
 	commandList->SetPipelineState(pipelineState.Get());
 	commandList->SetComputeRootSignature(signature);
-
-	ID3D12DescriptorHeap* ppHeaps[] = { mgr.mainDescriptorHeap };
-	commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
 	TextureResource::TransitionState(commandList, texture, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 

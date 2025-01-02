@@ -2,21 +2,22 @@
 
 #include "directx/d3d12.h"
 #include <ffx_api/dx12/ffx_api_dx12.hpp>
-#include "AaMath.h"
+#include "MathUtils.h"
 #include "UpscaleTypes.h"
 
 class RenderSystem;
-class AaCamera;
+class Camera;
 
 class FSR
 {
 public:
+	
+	FSR(RenderSystem& rs);
 
-	void init(RenderSystem* rs);
 	void shutdown();
 
 	void selectMode(UpscaleMode);
-	void onScreenResize();
+	void onResize();
 
 	bool enabled() const;
 	UpscaleMode selectedMode() const;
@@ -32,7 +33,7 @@ public:
 
 		float tslf;
 	};
-	bool upscale(ID3D12GraphicsCommandList* commandList, const UpscaleInput& input, AaCamera& camera);
+	bool upscale(ID3D12GraphicsCommandList* commandList, const UpscaleInput& input, Camera& camera);
 
 	XMFLOAT2 getJitter() const;
 
@@ -42,7 +43,7 @@ private:
 	void reloadUpscaleParams();
 
 	ffx::Context m_UpscalingContext{};
-	RenderSystem* renderSystem{};
+	RenderSystem& renderSystem;
 
 	UpscaleMode selectedUpscale = UpscaleMode::Off;
 
@@ -58,6 +59,7 @@ private:
 		{ 2.0f },
 		{ 1.7f },
 		{ 1.5f },
+		{ 1.0f },
 		{ 1.0f }
 	};
 

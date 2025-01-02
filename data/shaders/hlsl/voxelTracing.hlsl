@@ -1,7 +1,6 @@
 float4x4 ViewProjectionMatrix;
 float4x4 WorldMatrix;
 float4x4 PreviousWorldMatrix;
-
 float3 CameraPosition;
 float Emission;
 float3 MaterialColor;
@@ -47,7 +46,7 @@ struct PS_Input
 	float4 previousPosition : TEXCOORD3;
 };
 
-PS_Input VS_Main(VS_Input vin)
+PS_Input VSMain(VS_Input vin)
 {
     PS_Input vsOut;
 
@@ -132,10 +131,14 @@ Texture3D<float4> GetTexture3D(uint index)
     return ResourceDescriptorHeap[index];
 }
 
+SamplerState ShadowSampler : register(s1);
+
 float readShadowmap(Texture2D shadowmap, float2 shadowCoord)
 {
-    int2 texCoord = int2(shadowCoord * 512);
-	return shadowmap.Load(int3(texCoord, 0)).r;
+	return shadowmap.SampleLevel(ShadowSampler, shadowCoord, 0).r;
+	
+//	int2 texCoord = int2(shadowCoord * 512);
+//	return shadowmap.Load(int3(texCoord, 0)).r;
 }
 
 float CalcShadowTermSoftPCF(Texture2D shadowmap, float fLightDepth, float2 vShadowTexCoord, int iSqrtSamples)
@@ -154,7 +157,7 @@ float CalcShadowTermSoftPCF(Texture2D shadowmap, float fLightDepth, float2 vShad
 			vOffset /= 512;
 			float2 vSamplePoint = vShadowTexCoord + vOffset;
 			float fDepth = readShadowmap(shadowmap, vSamplePoint).x;
-			float fSample = (fLightDepth > fDepth);
+			float fSample = (fLightDepth < fDepth);
 
 			// Edge tap smoothing
 			float xWeight = 1;
@@ -184,7 +187,7 @@ float getShadow(float4 wp)
     sunLookPos.xy = sunLookPos.xy / sunLookPos.w;
 	sunLookPos.xy /= float2(2, -2);
     sunLookPos.xy += 0.5;
-	sunLookPos.z += 0.01;
+	sunLookPos.z -= 0.01;
 
 	//return readShadowmap(shadowmap, sunLookPos.xy) < sunLookPos.z ? 0.0 : 1.0;
 	return CalcShadowTermSoftPCF(shadowmap, sunLookPos.z, sunLookPos.xy, 5);
@@ -198,9 +201,9 @@ struct PSOutput
     float4 motionVectors : SV_Target3;
 };
 
-SamplerState voxelSampler : register(s0);
+SamplerState VoxelSampler : register(s0);
 
-PSOutput PS_Main(PS_Input pin)
+PSOutput PSMain(PS_Input pin)
 {
 	float3 binormal = cross(pin.normal, pin.tangent);
 	float3 normal = normalize(mul(pin.normal, (float3x3) WorldMatrix).xyz);
@@ -211,39 +214,47 @@ PSOutput PS_Main(PS_Input pin)
 
     float3 voxelUV = (pin.wp.xyz-sceneCorner)/voxelSceneSize;
 	Texture3D voxelmap = GetTexture3D(TexIdSceneVoxel);
-    float4 fullTraceSample = coneTrace(voxelUV, geometryNormal, middleCone.x, middleCone.y, voxelmap, voxelSampler, 0) * 1;
-    fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal + geometryT), sideCone.x, sideCone.y, voxelmap, voxelSampler, 0) * 1.0;
-    fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal - geometryT), sideCone.x, sideCone.y, voxelmap, voxelSampler, 0) * 1.0;
-    fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal + geometryB), sideCone.x, sideCone.y, voxelmap, voxelSampler, 0) * 1.0;
-    fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal - geometryB), sideCone.x, sideCone.y, voxelmap, voxelSampler, 0) * 1.0;
+    float4 fullTraceSample = coneTrace(voxelUV, geometryNormal, middleCone.x, middleCone.y, voxelmap, VoxelSampler, 0) * 1;
+    fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal + geometryT), sideCone.x, sideCone.y, voxelmap, VoxelSampler, 0) * 1.0;
+    fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal - geometryT), sideCone.x, sideCone.y, voxelmap, VoxelSampler, 0) * 1.0;
+    fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal + geometryB), sideCone.x, sideCone.y, voxelmap, VoxelSampler, 0) * 1.0;
+    fullTraceSample += coneTrace(voxelUV, normalize(geometryNormal - geometryB), sideCone.x, sideCone.y, voxelmap, VoxelSampler, 0) * 1.0;
     float3 traceColor = fullTraceSample.rgb / 5;
 
-    float occlusionSample = sampleVox(voxelmap, voxelSampler, voxelUV + geometryNormal / 128, geometryNormal, 2).w;
-    occlusionSample += sampleVox(voxelmap, voxelSampler, voxelUV + normalize(geometryNormal + geometryT) / 128, normalize(geometryNormal + geometryT), 2).w;
-    occlusionSample += sampleVox(voxelmap, voxelSampler, voxelUV + normalize(geometryNormal - geometryT) / 128, normalize(geometryNormal - geometryT), 2).w;
-    occlusionSample += sampleVox(voxelmap, voxelSampler, voxelUV + (geometryNormal + geometryB) / 128, (geometryNormal + geometryB), 2).w;
-    occlusionSample += sampleVox(voxelmap, voxelSampler, voxelUV + (geometryNormal - geometryB) / 128, (geometryNormal - geometryB), 2).w;
+    float occlusionSample = sampleVox(voxelmap, VoxelSampler, voxelUV + geometryNormal / 128, geometryNormal, 2).w;
+    occlusionSample += sampleVox(voxelmap, VoxelSampler, voxelUV + normalize(geometryNormal + geometryT) / 128, normalize(geometryNormal + geometryT), 2).w;
+    occlusionSample += sampleVox(voxelmap, VoxelSampler, voxelUV + normalize(geometryNormal - geometryT) / 128, normalize(geometryNormal - geometryT), 2).w;
+    occlusionSample += sampleVox(voxelmap, VoxelSampler, voxelUV + (geometryNormal + geometryB) / 128, (geometryNormal + geometryB), 2).w;
+    occlusionSample += sampleVox(voxelmap, VoxelSampler, voxelUV + (geometryNormal - geometryB) / 128, (geometryNormal - geometryB), 2).w;
     occlusionSample = 1 - saturate(occlusionSample / 5);
 
+	float3 voxelAmbient = traceColor * occlusionSample;
+	
+	float camDistance = length(CameraPosition - pin.wp.xyz);
+	float3 staticAmbient = float3(0.2, 0.2, 0.2);
+
+	float voxelWeight = saturate(-0.5 + camDistance / (voxelSceneSize.x * 0.5));
+	float3 finalAmbient = lerp(voxelAmbient, staticAmbient, voxelWeight);
+	
 	SamplerState diffuse_sampler = SamplerDescriptorHeap[0];
-    float3 albedo = GetTexture(TexIdDiffuse).Sample(diffuse_sampler, pin.uv).rgb;
+    float3 albedo = GetTexture(TexIdDiffuse).Sample(diffuse_sampler, pin.uv / 40).rgb;
 	albedo *= MaterialColor;
 
 	float directShadow = getShadow(pin.wp);
 	float directLight = saturate(dot(-SunDirection,normal)) * directShadow;
-	float3 lighting = max(directLight, traceColor * occlusionSample * 0.5);
+	float3 lighting = max(directLight, finalAmbient);
 
     float4 color1 = float4(saturate(albedo * lighting), 1);
 	color1.rgb += albedo * Emission;
 	color1.a = (lighting.r + lighting.g + lighting.b) / 3;
-	//color1.rgb = voxelmap.SampleLevel(voxelSampler, voxelUV, 0).rgb;
+	//color1.rgb = voxelmap.SampleLevel(VoxelSampler, voxelUV, 0).rgb;
 
 	PSOutput output;
     output.color = color1;
 	output.normals = float4(normal, 1);
 	
-	float camDistance = length(CameraPosition - pin.wp.xyz) / 10000;
-	output.camDistance = float4(camDistance, 0, 0, 0);
+
+	output.camDistance = float4(camDistance / 10000, 0, 0, 0);
 
 	output.motionVectors = float4((pin.previousPosition.xy / pin.previousPosition.w - pin.currentPosition.xy / pin.currentPosition.w) * ViewportSize, 0, 0);
 	output.motionVectors.xy *= 0.5;

@@ -2,13 +2,20 @@
 
 #include "SceneManager.h"
 
-struct SceneParseResult
-{
-	std::vector<GrassAreaPlacementTask> grassTasks;
-	std::map<MaterialInstance*, InstanceGroupDescription> instanceDescriptions;
-};
-
 namespace SceneParser
 {
-	SceneParseResult load(std::string filename, SceneManager* mSceneMgr, RenderSystem* renderSystem);
+	struct Ctx
+	{
+		SceneManager& sceneMgr;
+		RenderSystem& renderSystem;
+		GraphicsResources& resources;
+	};
+
+	struct Result
+	{
+		std::vector<GrassAreaPlacementTask> grassTasks;
+		std::map<MaterialInstance*, InstanceGroupDescription> instanceDescriptions;
+	};
+
+	Result load(std::string filename, Ctx ctx);
 }

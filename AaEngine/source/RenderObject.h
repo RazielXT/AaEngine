@@ -1,6 +1,7 @@
 #pragma once
 
-#include "AaMath.h"
+#include "MathUtils.h"
+#include "ObjectId.h"
 
 struct ObjectTransformation
 {
@@ -10,6 +11,15 @@ struct ObjectTransformation
 	bool dirty = true;
 
 	XMMATRIX createWorldMatrix() const;
+	ObjectTransformation operator+(const ObjectTransformation& rhs) const
+	{
+		ObjectTransformation obj{};
+		obj.position = position + rhs.position;
+		obj.orientation = orientation * rhs.orientation;
+		obj.scale = scale * rhs.scale;
+
+		return obj;
+	}
 };
 
 using RenderObjectsVisibilityState = std::vector<bool>;
@@ -18,17 +28,16 @@ using RenderObjectsFilter = std::vector<UINT>;
 struct RenderObjectsVisibilityData
 {
 	std::vector<bool> visibility;
-	std::vector<XMFLOAT4X4> wvpMatrix;
 };
 
 class RenderObject;
-class AaCamera;
+class Camera;
 
 class RenderObjectsStorage
 {
 public:
 
-	RenderObjectsStorage();
+	RenderObjectsStorage(Order o = Order::Normal);
 	~RenderObjectsStorage();
 
 	UINT createId(RenderObject*);
@@ -38,8 +47,8 @@ public:
 	void updateTransformation(UINT id, ObjectTransformation& transformation);
 	void initializeTransformation(UINT id, ObjectTransformation& transformation);
 
-	void updateVisibility(const AaCamera& camera, RenderObjectsVisibilityData&) const;
-	void updateVisibility(const AaCamera& camera, RenderObjectsVisibilityData&, const RenderObjectsFilter&) const;
+	void updateVisibility(const Camera& camera, RenderObjectsVisibilityData&) const;
+	void updateVisibility(const Camera& camera, RenderObjectsVisibilityData&, const RenderObjectsFilter&) const;
 
 	struct
 	{
@@ -48,13 +57,16 @@ public:
 		std::vector<XMMATRIX> prevWorldMatrix;
 		std::vector<BoundingBox> worldBbox;
 		std::vector<BoundingBox> bbox;
+		std::vector<RenderObject*> objects;
 	}
 	objectsData;
 
-private:
+	RenderObject* getObject(UINT id) const;
+	void iterateObjects(std::function<void(RenderObject&)>) const;
 
-	void updateWVPMatrix(const XMMATRIX& viewProjection, RenderObjectsVisibilityData&) const;
-	void updateWVPMatrix(const XMMATRIX& viewProjection, RenderObjectsVisibilityData&, const RenderObjectsFilter&) const;
+	Order order;
+
+private:
 
 	void updateVisibility(const BoundingFrustum&, RenderObjectsVisibilityState&) const;
 	void updateVisibility(const BoundingFrustum&, RenderObjectsVisibilityState&, const RenderObjectsFilter&) const;
@@ -94,13 +106,15 @@ public:
 
 	XMMATRIX getWorldMatrix() const;
 	XMMATRIX getPreviousWorldMatrix() const;
-	XMFLOAT4X4 getWvpMatrix(const std::vector<XMFLOAT4X4>&) const;
 
-	void setBoundingBox(BoundingBox bbox);
-	BoundingBox getBoundingBox() const;
-	BoundingBox getWorldBoundingBox() const;
+	void setBoundingBox(const BoundingBox& bbox);
+	const BoundingBox& getBoundingBox() const;
+	const BoundingBox& getWorldBoundingBox() const;
 
 	UINT getId() const;
+	ObjectId getGlobalId() const;
+
+	RenderObjectsStorage& getStorage() const;
 
 private:
 

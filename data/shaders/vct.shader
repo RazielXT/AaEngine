@@ -1,13 +1,13 @@
 vertex_shader vsVoxelTracing
 {
 	file voxelTracing.hlsl
-	entry VS_Main
+	entry VSMain
 	profile vs_6_6
 }
 
 pixel_shader psVoxelTracing
 {
 	file voxelTracing.hlsl
-	entry PS_Main
+	entry PSMain
 	profile ps_6_6
 }

@@ -1,8 +1,9 @@
 #include "GrassArea.h"
-#include "AaMath.h"
-#include "AaEntity.h"
+#include "MathUtils.h"
+#include "SceneEntity.h"
 #include "SceneManager.h"
-#include "AaMaterialResources.h"
+#include "MaterialResources.h"
+#include "GraphicsResources.h"
 
 void GrassAreaDescription::initialize(BoundingBoxVolume extends)
 {
@@ -24,13 +25,13 @@ GrassAreaGenerator::~GrassAreaGenerator()
 	clear();
 }
 
-void GrassAreaGenerator::initializeGpuResources(RenderSystem* renderSystem, const std::vector<DXGI_FORMAT>& formats)
+void GrassAreaGenerator::initializeGpuResources(RenderSystem& renderSystem, GraphicsResources& resources, const std::vector<DXGI_FORMAT>& formats)
 {
-	grassCS.init(renderSystem->device, "grassInit");
+	grassCS.init(*renderSystem.core.device, "grassInit", resources.shaders);
 
-	heap.InitRtv(renderSystem->device, formats.size(), L"GrassGeneratorRtv");
-	heap.InitDsv(renderSystem->device, 1, L"GrassGeneratorDsv");
-	rtt.Init(renderSystem->device, 512, 512, heap, formats, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, true, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	heap.InitRtv(renderSystem.core.device, formats.size(), L"GrassGeneratorRtv");
+	heap.InitDsv(renderSystem.core.device, 1, L"GrassGeneratorDsv");
+	rtt.Init(renderSystem.core.device, 512, 512, heap, formats, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, true, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 	rtt.SetName("GrassGeneratorRttTex");
 
 	DescriptorManager::get().createTextureView(rtt);
@@ -45,9 +46,9 @@ void GrassAreaGenerator::clear()
 	grasses.clear();
 }
 
-void GrassAreaGenerator::scheduleGrassCreation(GrassAreaPlacementTask grassTask, ID3D12GraphicsCommandList* commandList, const FrameParameters& frame, SceneManager* sceneMgr)
+void GrassAreaGenerator::scheduleGrassCreation(GrassAreaPlacementTask grassTask, ID3D12GraphicsCommandList* commandList, const FrameParameters& frame, GraphicsResources& resources, SceneManager& sceneMgr)
 {
-	AaCamera tmpCamera;
+	Camera tmpCamera;
 	const UINT NearClipDistance = 1;
 	auto bbox = grassTask.bbox;
 	tmpCamera.setOrthographicCamera(bbox.Extents.x * 2, bbox.Extents.z * 2, 1, bbox.Extents.y * 2 + NearClipDistance);
@@ -56,7 +57,7 @@ void GrassAreaGenerator::scheduleGrassCreation(GrassAreaPlacementTask grassTask,
 	tmpCamera.updateMatrix();
 
 	RenderObjectsStorage tmpStorage;
-	AaEntity entity(tmpStorage, *grassTask.terrain);
+	SceneEntity entity(tmpStorage, *grassTask.terrain);
 
 	RenderObjectsVisibilityData visibility;
 	tmpStorage.updateVisibility(tmpCamera, visibility);
@@ -65,8 +66,8 @@ void GrassAreaGenerator::scheduleGrassCreation(GrassAreaPlacementTask grassTask,
 
 	ShaderConstantsProvider constants(frame, visibility, tmpCamera, rtt);
 
-	auto queue = sceneMgr->createManualQueue();
-	queue.update({ { EntityChange::Add, Order::Normal, &entity } });
+	auto queue = sceneMgr.createManualQueue();
+	queue.update({ EntityChange::Add, Order::Normal, &entity }, resources);
 	queue.renderObjects(constants, commandList);
 	//queue.update({ { EntityChange::DeleteAll } });
 
@@ -75,8 +76,8 @@ void GrassAreaGenerator::scheduleGrassCreation(GrassAreaPlacementTask grassTask,
 	GrassAreaDescription desc;
 	desc.initialize(grassTask.bbox);
 
-	auto grassEntity = createGrassEntity("grass_" + std::string(entity.name), desc, sceneMgr);
-	auto grassArea = createGrassArea(desc);
+	auto grassEntity = createGrassEntity("grass_" + std::string(entity.name), desc, resources, sceneMgr);
+	auto grassArea = createGrassArea(desc, resources);
 
 	{
 		auto colorTex = rtt.textures[0].view.srvHeapIndex;
@@ -92,7 +93,7 @@ void GrassAreaGenerator::scheduleGrassCreation(GrassAreaPlacementTask grassTask,
 	scheduled.emplace_back(grassEntity, grassArea);
 }
 
-std::vector<std::pair<AaEntity*, GrassArea*>> GrassAreaGenerator::finishGrassCreation()
+std::vector<std::pair<SceneEntity*, GrassArea*>> GrassAreaGenerator::finishGrassCreation()
 {
 	for (auto [entity, grass] : scheduled)
 	{
@@ -112,22 +113,22 @@ std::vector<std::pair<AaEntity*, GrassArea*>> GrassAreaGenerator::finishGrassCre
 	return std::move(scheduled);
 }
 
-AaEntity* GrassAreaGenerator::createGrassEntity(const std::string& name, const GrassAreaDescription& desc, SceneManager* sceneMgr)
+SceneEntity* GrassAreaGenerator::createGrassEntity(const std::string& name, const GrassAreaDescription& desc, GraphicsResources& resources, SceneManager& sceneMgr)
 {
-	auto material = AaMaterialResources::get().getMaterial("GrassLeaves");
+	auto material = resources.materials.getMaterial("GrassLeaves");
 
 	Order renderQueue = Order::Normal;
 	if (material->IsTransparent())
 		renderQueue = Order::Transparent;
 
-	auto grassEntity = sceneMgr->createEntity(name, renderQueue);
+	auto grassEntity = sceneMgr.createEntity(name, renderQueue);
 	grassEntity->setBoundingBox(desc.bbox);
 	grassEntity->material = material;
 
 	return grassEntity;
 }
 
-GrassArea* GrassAreaGenerator::createGrassArea(const GrassAreaDescription& desc)
+GrassArea* GrassAreaGenerator::createGrassArea(const GrassAreaDescription& desc, GraphicsResources& resources)
 {
 	auto grass = new GrassArea();
 
@@ -137,12 +138,12 @@ GrassArea* GrassAreaGenerator::createGrassArea(const GrassAreaDescription& desc)
 		Vector3 color;
 	};
 
-	grass->gpuBuffer = ShaderConstantBuffers::get().CreateStructuredBuffer(sizeof(Vertex) * desc.count * 2);
+	grass->gpuBuffer = resources.shaderBuffers.CreateStructuredBuffer(sizeof(Vertex) * desc.count * 2);
 	grass->gpuBuffer->SetName(L"GrassArea");
 
-	grass->vertexCounter = ShaderConstantBuffers::get().CreateStructuredBuffer(sizeof(UINT));
+	grass->vertexCounter = resources.shaderBuffers.CreateStructuredBuffer(sizeof(UINT));
 	grass->vertexCounter->SetName(L"GrassAreaVertexCounter");
-	grass->vertexCounterRead = ShaderConstantBuffers::get().CreateStructuredBuffer(sizeof(UINT), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_HEAP_TYPE_READBACK);
+	grass->vertexCounterRead = resources.shaderBuffers.CreateStructuredBuffer(sizeof(UINT), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_HEAP_TYPE_READBACK);
 	grass->vertexCounterRead->SetName(L"GrassAreaVertexCounterRead");
 
 	return grasses.emplace_back(grass);

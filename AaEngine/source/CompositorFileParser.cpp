@@ -250,13 +250,9 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 						{
 							pass.targets = parseCompositorTextureSlot(param, info, flags);
 						}
-						else if (param.type == "after")
+						else if (param.type == "entry")
 						{
-							pass.after = param.value;
-						}
-						else if (param.type == "params")
-						{
-							pass.params = { param.value };
+							pass.entry = param.value;
 						}
 						else if (param.type == "input")
 						{

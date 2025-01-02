@@ -2,8 +2,8 @@
 
 #include "CompositorTask.h"
 #include "TextureResource.h"
-#include "AaCamera.h"
-#include "AaMath.h"
+#include "Camera.h"
+#include "MathUtils.h"
 #include "GenerateMipsComputeShader.h"
 #include <thread>
 #include "ShadowMap.h"
@@ -40,15 +40,15 @@ private:
 
 	RenderQueue* sceneQueue{};
 
-	AaCamera camera;
+	RenderContext ctx{};
+	Camera camera;
 
 	TextureResource voxelSceneTexture;
 	TextureResource voxelPreviousSceneTexture;
 	TextureResource clearSceneTexture;
 
 	CbufferView cbuffer;
-	void updateCBuffer(Vector3 orthoHalfSize, Vector3 offset, UINT frameIndex);
-	void updateCBuffer(bool lighting, UINT frameIndex);
+	void updateCBuffer(Vector3 orthoHalfSize, Vector3 offset, Vector3 diff, UINT frameIndex);
 
 	XM_ALIGNED_STRUCT(16)
 	{
@@ -56,12 +56,13 @@ private:
 		float voxelDensity;
 		Vector3 voxelSceneSize;
 		float padding;
-		Vector2 middleConeRatioDistance = { 1, 0.9 };
-		Vector2 sideConeRatioDistance = { 2, 0.8 };
+		Vector2 middleConeRatioDistance = { 1, 0.9f };
+		Vector2 sideConeRatioDistance = { 2, 0.8f };
 		float lerpFactor = 0.01f;
 		float steppingBounces = 0.07f;
 		float steppingDiffuse = 0.03f;
 		float voxelizeLighting = 0.0f;
+		Vector3 diff;
 	}
 	cbufferData;
 

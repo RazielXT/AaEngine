@@ -1,0 +1,102 @@
+material Color abstract
+{
+	vertex_shader vsBasicShading
+	pixel_shader psBasicShading
+	
+	texture Diffuse
+	{
+		file white.png
+	}
+}
+
+material ColorVc abstract
+{
+	vertex_shader vsBasicShadingVc
+	pixel_shader psBasicShadingVc
+}
+
+material White : Color
+{
+	texture Diffuse
+	{
+		file white.png
+	}
+	
+	default_params
+	{
+		float MaterialColor 1 1 1
+	}
+}
+
+material whiteVc : White ColorVc
+
+material Yellow : Color
+{
+	default_params
+	{
+		float MaterialColor 1 1 0
+	}
+}
+
+material yellowVc : Yellow ColorVc
+
+material Blue : Color
+{
+	texture Diffuse
+	{
+		file white.png
+	}
+	
+	default_params
+	{
+		float MaterialColor 0.2 0.2 1
+	}
+}
+
+material blueVc : Blue ColorVc
+
+material Red : Color
+{
+	texture Diffuse
+	{
+		file white.png
+	}
+	
+	default_params
+	{
+		float MaterialColor 1 0.2 0.2
+	}
+}
+
+material niceRedVc : Red ColorVc
+
+material Green : Color
+{
+	texture Diffuse
+	{
+		file white.png
+	}
+	
+	default_params
+	{
+		float MaterialColor 0.2 0.8 0.2
+	}
+}
+
+material terrainGrass : Color
+{
+	texture Diffuse
+	{
+		file grass.png
+	}
+	
+	default_params
+	{
+		float MaterialColor 1 1 1
+	}
+}
+
+material terrainGrassInstanced : terrainGrass
+{
+	vertex_shader vsBasicShadingInstancing
+}

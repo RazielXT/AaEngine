@@ -1,31 +1,33 @@
 #include "RenderQueue.h"
 #include "EntityInstancing.h"
-#include "AaMaterialResources.h"
+#include "GraphicsResources.h"
 #include <algorithm>
 
-void RenderQueue::update(const EntityChanges& changes)
+void RenderQueue::update(const EntityChangeDescritpion& changeInfo, GraphicsResources& resources)
 {
-	for (auto& [change, order, entity] : changes)
+	auto& [change, order, entity] = changeInfo;
 	{
 		if (change == EntityChange::Add)
 		{
 			if (order != targetOrder)
-				continue;
+				return;
 
 			auto matInstance = entity->material;
 			if (technique != MaterialTechnique::Default)
 			{
 				std::string techniqueMaterial;
 
-				if (technique == MaterialTechnique::Depth)
+				if (technique == MaterialTechnique::Depth || technique == MaterialTechnique::DepthNonReversed)
 					techniqueMaterial = "Depth";
 				else if (technique == MaterialTechnique::Voxelize)
 					techniqueMaterial = "Voxelize";
+				else if (technique == MaterialTechnique::EntityId)
+					techniqueMaterial = "EntityId";
 
 				if (auto techniqueOverride = matInstance->GetBase()->GetTechniqueOverride(technique))
 				{
 					if (techniqueOverride[0] == '\0') //skip
-						continue;
+						return;
 
 					techniqueMaterial = techniqueOverride;
 				}
@@ -34,19 +36,40 @@ void RenderQueue::update(const EntityChanges& changes)
 					techniqueMaterial += "Instancing";
 				}
 
-				matInstance = AaMaterialResources::get().getMaterial(techniqueMaterial);
+				matInstance = resources.materials.getMaterial(techniqueMaterial);
 			}
 
-			auto entry = EntityEntry{ entity, matInstance->Assign(entity->geometry.layout ? *entity->geometry.layout : std::vector<D3D12_INPUT_ELEMENT_DESC>{}, targets) };
+			auto comparison = technique != MaterialTechnique::DepthNonReversed ? D3D12_COMPARISON_FUNC_GREATER_EQUAL : D3D12_COMPARISON_FUNC_LESS_EQUAL;
+
+			auto entry = EntityEntry{ entity, matInstance->Assign(entity->geometry.layout ? *entity->geometry.layout : std::vector<D3D12_INPUT_ELEMENT_DESC>{}, targets, comparison) };
 
 			auto it = std::lower_bound(entities.begin(), entities.end(), entry);
 			entities.insert(it, entry);
 		}
+		if (change == EntityChange::Delete)
+		{
+			if (order != targetOrder)
+				return;
+
+			for (auto it = entities.begin(); it != entities.end(); it++)
+			{
+				if (it->entity == entity)
+				{
+					entities.erase(it);
+					break;
+				}
+			}
+		}
 		if (change == EntityChange::DeleteAll)
 		{
-			entities.clear();
+			reset();
 		}
 	}
+}
+
+void RenderQueue::reset()
+{
+	entities.clear();
 }
 
 std::vector<UINT> RenderQueue::createEntityFilter() const
@@ -63,7 +86,7 @@ std::vector<UINT> RenderQueue::createEntityFilter() const
 	return out;
 }
 
-static void RenderObject(ID3D12GraphicsCommandList* commandList, AaEntity* e)
+static void RenderObject(ID3D12GraphicsCommandList* commandList, SceneEntity* e)
 {
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -108,6 +131,19 @@ void RenderQueue::renderObjects(ShaderConstantsProvider& constants, ID3D12Graphi
 			entry.entity->material->GetParameter(FastParam::MaterialColor, storage.rootParams.data() + entry.material->GetParameterOffset(FastParam::MaterialColor));
 			entry.entity->material->GetParameter(FastParam::TexIdDiffuse, storage.rootParams.data() + entry.material->GetParameterOffset(FastParam::TexIdDiffuse));
 		}
+		if (technique == MaterialTechnique::EntityId)
+		{
+			if (entry.entity->geometry.type == EntityGeometry::Type::Instancing)
+			{
+				auto group = (InstanceGroup*)entry.entity->geometry.source;
+				entry.material->SetParameter("ResIdIdsBuffer", storage.rootParams.data(), &group->gpuIdsBufferHeapIdx, 1);
+			}
+			else
+			{
+				UINT id = entry.entity->getGlobalId().value;
+				entry.material->SetParameter("EntityId", storage.rootParams.data(), &id, sizeof(id) / sizeof(float));
+			}
+		}
 
 		entry.material->UpdatePerObject(storage, constants);
 		entry.material->BindConstants(commandList, storage, constants);
@@ -124,7 +160,7 @@ void RenderQueue::renderObjects(ShaderConstantsProvider& constants, ID3D12Graphi
 	}
 }
 
-RenderQueue::EntityEntry::EntityEntry(AaEntity* e, AaMaterial* m)
+RenderQueue::EntityEntry::EntityEntry(SceneEntity* e, AssignedMaterial* m)
 {
 	entity = e;
 	material = m;

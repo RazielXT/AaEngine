@@ -1,10 +1,8 @@
 #include "Upscaling.h"
 #include "RenderSystem.h"
 
-void Upscaling::init()
+Upscaling::Upscaling(RenderSystem& rs) : dlss(rs), fsr(rs), renderSystem(rs)
 {
-	dlss.init(&renderSystem);
-	fsr.init(&renderSystem);
 }
 
 void Upscaling::shutdown()
@@ -13,10 +11,10 @@ void Upscaling::shutdown()
 	fsr.shutdown();
 }
 
-void Upscaling::onScreenResize()
+void Upscaling::onResize()
 {
-	dlss.onScreenResize();
-	fsr.onScreenResize();
+	dlss.onResize();
+	fsr.onResize();
 }
 
 bool Upscaling::enabled() const

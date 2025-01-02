@@ -7,7 +7,7 @@ void FrameCompositor::initializeTextureStates()
 	//find last backbuffer write
 	for (auto it = passes.rbegin(); it != passes.rend(); ++it)
 	{
-		if (!it->info.targets.empty() && it->info.targets.front().name == "Backbuffer")
+		if (!it->info.targets.empty() && it->info.targets.front().name == "Output")
 		{
 			it->target.present = true;
 			break;
@@ -31,7 +31,7 @@ void FrameCompositor::initializeTextureStates()
 		{
 			auto& state = lastTextureStates[name];
 			if (pass.target.present)
-				state = D3D12_RESOURCE_STATE_PRESENT;
+				state = renderToBackbuffer ? D3D12_RESOURCE_STATE_PRESENT : D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 			else if (name.ends_with(":Depth"))
 			{
 				if (flags & Compositor::DepthRead)
@@ -68,7 +68,9 @@ void FrameCompositor::initializeTextureStates()
 
 			if (pass.info.targets.size() == 1)
 			{
-				if (targetName.ends_with(":Depth"))
+				if (pass.target.present)
+					lastState = renderToBackbuffer ? D3D12_RESOURCE_STATE_PRESENT : D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+				else if (targetName.ends_with(":Depth"))
 				{
 					if (flags & Compositor::DepthRead)
 						lastState = D3D12_RESOURCE_STATE_DEPTH_READ;
@@ -168,7 +170,7 @@ void FrameCompositor::initializeCommands()
 		{
 			if (!syncCommands.commandList)
 			{
-				syncCommands = generalCommandsArray.emplace_back(provider.renderSystem->CreateCommandList(L"Compositor"));
+				syncCommands = generalCommandsArray.emplace_back(provider.renderSystem.core.CreateCommandList(L"Compositor"));
 				passData.startCommands = true;
 			}
 			passData.generalCommands = syncCommands;
@@ -178,9 +180,6 @@ void FrameCompositor::initializeCommands()
 		{
 			for (auto& target : passes)
 			{
-				if (pass.after == target->name)
-					return true;
-
 				for (auto& input : target->inputs)
 				{
 					for (auto& myInput : pass.inputs)
@@ -217,11 +216,11 @@ void FrameCompositor::initializeCommands()
 
 	for (auto& pass : passes)
 	{
-		auto isSync = !pass.task || pass.task->writesSyncCommands();
+		auto isSync = !pass.task || pass.task->writesSyncCommands(pass);
 
 		if (dependsOnPreviousPass(pass.info, asyncPasses, true))
 			buildAsyncCommands();
-		if (dependsOnPreviousPass(pass.info, syncPasses, !isSync))
+		if (!isSync && dependsOnPreviousPass(pass.info, syncPasses, !isSync))
 			buildSyncCommands();
 
 		if (pass.task)

@@ -11,5 +11,5 @@ public:
 
 	GenerateMipsComputeShader();
 
-	void dispatch(ID3D12GraphicsCommandList* commandList, TextureResource& texture, DescriptorManager& mgr);
+	void dispatch(ID3D12GraphicsCommandList* commandList, TextureResource& texture);
 };

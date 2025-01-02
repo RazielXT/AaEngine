@@ -16,3 +16,6 @@
 [submodule "dependencies/FidelityFX-SDK"]
 	path = dependencies/FidelityFX-SDK
 	url = https://github.com/GPUOpen-LibrariesAndSDKs/FidelityFX-SDK.git
+[submodule "dependencies/ImGuizmo"]
+	path = dependencies/ImGuizmo
+	url = https://github.com/CedricGuillemet/ImGuizmo.git

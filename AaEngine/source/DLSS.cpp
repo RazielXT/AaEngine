@@ -1,17 +1,15 @@
 #include "DLSS.h"
 #include "nvsdk_ngx.h"
 #include "nvsdk_ngx_helpers.h"
-#include "AaLogger.h"
+#include "FileLogger.h"
 #include <format>
 #include <vector>
 #include "RenderSystem.h"
-#include "AaWindow.h"
 
 static const char* DlssProjectId = "75C7DC62-22B9-49E9-A4B0-4311100B6F76"; //random
 
-void DLSS::init(RenderSystem* rs)
+DLSS::DLSS(RenderSystem& rs) : renderSystem(rs)
 {
-	renderSystem = rs;
 }
 
 bool DLSS::initLibrary()
@@ -19,17 +17,17 @@ bool DLSS::initLibrary()
 	if (m_ngxParameters)
 		return true;
 
-	NVSDK_NGX_Result Result = NVSDK_NGX_D3D12_Init_with_ProjectID(DlssProjectId, NVSDK_NGX_ENGINE_TYPE_CUSTOM, "1.0", L".", renderSystem->device);
+	NVSDK_NGX_Result Result = NVSDK_NGX_D3D12_Init_with_ProjectID(DlssProjectId, NVSDK_NGX_ENGINE_TYPE_CUSTOM, "1.0", L".", renderSystem.core.device);
 	if (NVSDK_NGX_FAILED(Result))
 	{
-		AaLogger::logWarning(std::format("NVSDK_NGX_D3D12_Init_with_ProjectID failed, code = {}", (int)Result));
+		FileLogger::logWarning(std::format("NVSDK_NGX_D3D12_Init_with_ProjectID failed, code = {}", (int)Result));
 		return false;
 	}
 
 	Result = NVSDK_NGX_D3D12_GetCapabilityParameters(&m_ngxParameters);
 	if (NVSDK_NGX_FAILED(Result))
 	{
-		AaLogger::logWarning(std::format("NVSDK_NGX_GetCapabilityParameters failed, code = {}", (int)Result));
+		FileLogger::logWarning(std::format("NVSDK_NGX_GetCapabilityParameters failed, code = {}", (int)Result));
 		shutdown();
 		return false;
 	}
@@ -40,7 +38,7 @@ bool DLSS::initLibrary()
 	{
 		NVSDK_NGX_Result FeatureInitResult = NVSDK_NGX_Result_Fail;
 		NVSDK_NGX_Parameter_GetI(m_ngxParameters, NVSDK_NGX_Parameter_SuperSampling_FeatureInitResult, (int*)&FeatureInitResult);
-		AaLogger::logWarning(std::format("NVIDIA DLSS not available on this hardward/platform., FeatureInitResult = {}", (int)FeatureInitResult));
+		FileLogger::logWarning(std::format("NVIDIA DLSS not available on this hardward/platform., FeatureInitResult = {}", (int)FeatureInitResult));
 		shutdown();
 		return false;
 	}
@@ -52,7 +50,7 @@ bool DLSS::initLibrary()
 
 void DLSS::updateRenderSizeInfo()
 {
-	XMUINT2 windowSize = { renderSystem->getWindow()->getWidth(), renderSystem->getWindow()->getHeight() };
+	XMUINT2 windowSize = { renderSystem.viewport.getWidth(), renderSystem.viewport.getHeight() };
 
 	for (auto& upscaleInfo : upscaleTypes)
 	{
@@ -65,6 +63,14 @@ void DLSS::updateRenderSizeInfo()
 
 		upscaleInfo.lodBias = std::log2f(float(upscaleInfo.settings.m_ngxRecommendedOptimalRenderSize.x) / windowSize.x) - 1.0f;
 	}
+
+	//off
+	upscaleTypes.back().lodBias = 0;
+}
+
+float DLSS::getMipLodBias() const
+{
+	return std::log2f(getRenderSize().x / float(renderSystem.getOutputSize().x)) - 1.0f;
 }
 
 DirectX::XMFLOAT2 DLSS::getJitter() const
@@ -96,7 +102,7 @@ DirectX::XMFLOAT2 DLSS::getJitter() const
 
 	Result.x -= 0.5f;
 	Result.y -= 0.5f;
-	//OutputDebugString(std::format("Jitter {} {}\n", Result.x, Result.y).c_str());
+
 	return Result;
 }
 
@@ -106,21 +112,28 @@ void DLSS::shutdown()
 	NVSDK_NGX_D3D12_Shutdown1(nullptr);
 }
 
-void DLSS::selectMode(UpscaleMode m)
+bool DLSS::selectMode(UpscaleMode m)
 {
+	renderSystem.core.WaitForAllFrames();
+
 	if (m_dlssFeature)
 	{
 		NVSDK_NGX_D3D12_ReleaseFeature(m_dlssFeature);
 		m_dlssFeature = nullptr;
 	}
 
-	if (m != UpscaleMode::Off && !initLibrary())
-		return;
+	if (m != UpscaleMode::Off && compatible && !initLibrary())
+	{
+		compatible = false;
+		return false;
+	}
 
 	selectedUpscale = m;
 
+	DescriptorManager::get().initializeSamplers(getMipLodBias());
+
 	if (selectedUpscale == UpscaleMode::Off)
-		return;
+		return true;
 
 	reset = true;
 	unsigned int CreationNodeMask = 1;
@@ -138,7 +151,7 @@ void DLSS::selectMode(UpscaleMode m)
 
 	NVSDK_NGX_DLSS_Create_Params DlssCreateParams{};
 
-	XMUINT2 windowSize = { renderSystem->getWindow()->getWidth(), renderSystem->getWindow()->getHeight() };
+	XMUINT2 windowSize = renderSystem.getOutputSize();
 
 	auto& selectedInfo = upscaleTypes[(int)selectedUpscale];
 	DlssCreateParams.Feature.InWidth = selectedInfo.settings.m_ngxRecommendedOptimalRenderSize.x;
@@ -157,24 +170,27 @@ void DLSS::selectMode(UpscaleMode m)
 	NVSDK_NGX_Parameter_SetUI(m_ngxParameters, NVSDK_NGX_Parameter_DLSS_Hint_Render_Preset_UltraPerformance, renderPreset);  // ^
 
 	{
-		auto commands = renderSystem->CreateCommandList(L"DLSS");
-		renderSystem->StartCommandList(commands);
+		auto commands = renderSystem.core.CreateCommandList(L"DLSS");
+		renderSystem.core.StartCommandList(commands);
 
 		ResultDLSS = NGX_D3D12_CREATE_DLSS_EXT(commands.commandList, CreationNodeMask, VisibilityNodeMask, &m_dlssFeature, m_ngxParameters, &DlssCreateParams);
 
 		if (NVSDK_NGX_FAILED(ResultDLSS))
 		{
-			AaLogger::logError(std::format("Failed to create DLSS Features = {}", (int)ResultDLSS));
-			return;
+			FileLogger::logError(std::format("Failed to create DLSS Features = {}", (int)ResultDLSS));
+			compatible = false;
+			return false;
 		}
 
-		renderSystem->ExecuteCommandList(commands);
-		renderSystem->WaitForCurrentFrame();
+		renderSystem.core.ExecuteCommandList(commands);
+		renderSystem.core.WaitForCurrentFrame();
 		commands.deinit();
 	}
+
+	return true;
 }
 
-void DLSS::onScreenResize()
+void DLSS::onResize()
 {
 	if (enabled())
 	{

@@ -5,6 +5,7 @@
 #include "CompositorTask.h"
 #include "RenderObject.h"
 #include <thread>
+#include "EntityPicker.h"
 
 struct RenderQueue;
 
@@ -16,12 +17,17 @@ public:
 	~SceneRenderTask();
 
 	AsyncTasksInfo initialize(CompositorPass& pass) override;
-	AsyncTasksInfo initializeEarlyZ(CompositorPass& pass);
 	void run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
 
 	bool forceTaskOrder() const override { return true; }
 
+	void resize(CompositorPass& pass) override;
+
+	bool writesSyncCommands(CompositorPass&) const override;
+
 private:
+
+	AsyncTasksInfo initializeEarlyZ(CompositorPass& pass);
 
 	struct Work
 	{
@@ -36,7 +42,7 @@ private:
 	bool running = true;
 
 	RenderContext ctx;
-	RenderObjectsVisibilityData sceneInfo;
+	RenderObjectsVisibilityData sceneVisibility;
 	RenderObjectsStorage* renderables;
 
 	void renderScene(CompositorPass& pass);
@@ -44,36 +50,19 @@ private:
 
 	RenderQueue* depthQueue{};
 	RenderQueue* sceneQueue{};
-};
 
-class SceneRenderTransparentTask : public CompositorTask
-{
-public:
-
-	SceneRenderTransparentTask(RenderProvider provider, SceneManager&);
-	~SceneRenderTransparentTask();
-
-	AsyncTasksInfo initialize(CompositorPass& pass) override;
-	void run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
-
-private:
-
-	struct Work
+	struct 
 	{
-		CommandsData commands;
-		HANDLE eventBegin{};
-		HANDLE eventFinish{};
-		std::thread worker;
-	};
-	Work transparent;
+		RenderObjectsVisibilityData sceneVisibility;
+		RenderObjectsStorage* renderables;
+		RenderQueue* transparentQueue{};
 
-	bool running = true;
-
-	RenderContext ctx;
-	RenderObjectsVisibilityData sceneInfo;
-	RenderObjectsStorage* renderables;
+		Work work;
+	}
+	transparent;
 
 	void renderTransparentScene(CompositorPass& pass);
 
-	RenderQueue* transparentQueue{};
+	EntityPicker picker;
+	void renderEditor(CompositorPass& pass, CommandsData& cmd);
 };

@@ -2,7 +2,7 @@
 
 #include "CompositorTask.h"
 
-class AaMaterial;
+class AssignedMaterial;
 
 class ImguiDebugWindowTask : public CompositorTask
 {
@@ -14,5 +14,5 @@ public:
 	AsyncTasksInfo initialize(CompositorPass& pass) override;
 	void run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
 
-	bool writesSyncCommands() const override;
+	bool writesSyncCommands(CompositorPass&) const override;
 };

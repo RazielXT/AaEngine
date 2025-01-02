@@ -1,13 +1,13 @@
 #pragma once
 
-#include "AaMath.h"
+#include "MathUtils.h"
 #include "RenderContext.h"
 
-class AaMaterial;
+class AssignedMaterial;
 
 struct ScreenQuad
 {
-	void Render(AaMaterial* material, const RenderTargetTexture& target, const RenderProvider& provider, RenderContext& ctx, ID3D12GraphicsCommandList* commandList) const;
+	void Render(AssignedMaterial* material, const RenderTargetTexture& target, const RenderProvider& provider, RenderContext& ctx, ID3D12GraphicsCommandList* commandList) const;
 
 	enum RelativePosition { BottomLeft = 0, Top = 1, Right = 2, TopRight = Top | Right };
 	void SetPosition(Vector2 offset, float size, RelativePosition relative, float aspectRatio);

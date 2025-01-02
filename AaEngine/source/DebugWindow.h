@@ -1,17 +1,16 @@
 #pragma once
 
-#include "AaMath.h"
+#include "MathUtils.h"
 
 class RenderSystem;
+class MaterialResources;
 struct ID3D12GraphicsCommandList;
-struct ID3D12DescriptorHeap;
 
 namespace imgui
 {
 	struct DebugState
 	{
 		bool reloadShaders = false;
-		int TexturePreviewIndex = -1;
 
 		const char* changeScene{};
 
@@ -31,8 +30,6 @@ namespace imgui
 		}
 		ssao;
 
-		size_t vramUsage{};
-
 		int DlssMode{};
 		int FsrMode{};
 	};
@@ -41,10 +38,10 @@ namespace imgui
 	{
 		static DebugWindow& Get();
 
-		void init(RenderSystem* renderer);
-		void deinit();
+		DebugWindow(RenderSystem& renderer);
+		~DebugWindow();
 
-		void draw(ID3D12GraphicsCommandList* list);
+		void draw(ID3D12GraphicsCommandList* list, MaterialResources& materials);
 
 		static DebugState state;
 	};

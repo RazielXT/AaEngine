@@ -2,44 +2,38 @@
 
 SceneTestTask::SceneTestTask(RenderProvider p, SceneManager& s) : CompositorTask(p, s)
 {
-
 }
 
 SceneTestTask::~SceneTestTask()
 {
-
 }
-
-CommandsData commands;
 
 AsyncTasksInfo SceneTestTask::initialize(CompositorPass& pass)
 {
 	tmpQueue = sceneMgr.createManualQueue();
-	tmpQueue.targets = { pass.target.texture->format };
+	tmpQueue.targets = pass.target.textureSet->formats;
 
-	heap.InitRtv(provider.renderSystem->device, tmpQueue.targets.size(), L"tempHeap");
-	tmp.Init(provider.renderSystem->device, 512, 512, heap, pass.target.texture->format, D3D12_RESOURCE_STATE_RENDER_TARGET);
-	tmp.SetName("tmpTex");
+	heap.InitRtv(provider.renderSystem.core.device, tmpQueue.targets.size(), L"testRttHeap");
+	textures.Init(provider.renderSystem.core.device, 512, 512, heap, tmpQueue.targets, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	textures.SetName("testRtt");
 
-	DescriptorManager::get().createTextureView(tmp);
-
-	commands = provider.renderSystem->CreateCommandList(L"tempCmd");
+	DescriptorManager::get().createTextureView(textures);
 
 	return {};
 }
 
-void SceneTestTask::run(RenderContext& ctx, CommandsData& c, CompositorPass&)
+void SceneTestTask::run(RenderContext& ctx, CommandsData& commands, CompositorPass&)
 {
-	static bool initialize = false;
-	if (!initialize)
+	static bool initialized = false;
+	if (!initialized)
 	{
-		initialize = true;
+		initialized = true;
 
-		tmpQueue.update({ { EntityChange::Add, Order::Normal, sceneMgr.getEntity("Plane001") } });
-		tmpQueue.update({ { EntityChange::Add, Order::Normal, sceneMgr.getEntity("Torus001") } });
+		tmpQueue.update({ EntityChange::Add, Order::Normal, sceneMgr.getEntity("Plane001") }, provider.resources);
+		tmpQueue.update({ EntityChange::Add, Order::Normal, sceneMgr.getEntity("Torus001") }, provider.resources);
 	}
 
-	AaCamera tmpCamera;
+	Camera tmpCamera;
 	tmpCamera.setOrthographicCamera(100, 100, 1, 300);
 	tmpCamera.setPosition({ 81, 100, -72 });
 	tmpCamera.pitch(-90);
@@ -48,18 +42,17 @@ void SceneTestTask::run(RenderContext& ctx, CommandsData& c, CompositorPass&)
 	static RenderObjectsVisibilityData sceneInfo;
 	sceneMgr.getRenderables(Order::Normal)->updateVisibility(tmpCamera, sceneInfo);
 
-	auto marker = provider.renderSystem->StartCommandList(commands);
+	CommandsMarker marker(commands.commandList, "Test");
 
-	tmp.PrepareAsTarget(commands.commandList, D3D12_RESOURCE_STATE_COMMON);
+	textures.PrepareAsTarget(commands.commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-// 	ShaderConstantsProvider constants(provider.params, sceneInfo, tmpCamera, tmp);
-// 	tmpQueue.renderObjects(constants, commands.commandList);
-// 
-// 	tmp.PrepareAsView(commands.commandList, D3D12_RESOURCE_STATE_COMMON);
-// 	provider.renderSystem->ExecuteCommandList(commands);
+	ShaderConstantsProvider constants(provider.params, sceneInfo, tmpCamera, textures);
+	tmpQueue.renderObjects(constants, commands.commandList);
+
+	//textures.PrepareAsView(commands.commandList, D3D12_RESOURCE_STATE_COMMON);
 }
 
-bool SceneTestTask::writesSyncCommands() const
+bool SceneTestTask::writesSyncCommands(CompositorPass&) const
 {
 	return true;
 }

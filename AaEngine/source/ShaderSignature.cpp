@@ -1,6 +1,7 @@
 #include "ShaderSignature.h"
-#include "AaShaderLibrary.h"
-#include "AaLogger.h"
+#include "ShaderLibrary.h"
+#include "FileLogger.h"
+#include "GraphicsResources.h"
 
 D3D12_SHADER_VISIBILITY SignatureInfo::getVisibility(ShaderType t)
 {
@@ -20,11 +21,11 @@ void SignatureInfo::addVisibility(D3D12_SHADER_VISIBILITY& v, ShaderType t)
 		v = D3D12_SHADER_VISIBILITY_ALL;
 }
 
-void SignatureInfo::add(LoadedShader* shader, ShaderType type)
+void SignatureInfo::add(const LoadedShader& shader, ShaderType type)
 {
 	if (type == ShaderTypeVertex)
 	{
-		hasVertexInput = !shader->desc.inputLayout.empty();
+		hasVertexInput = !shader.desc.inputLayout.empty();
 
 		if (hasVertexInput)
 			flags |= D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
@@ -34,11 +35,11 @@ void SignatureInfo::add(LoadedShader* shader, ShaderType type)
 
 	if (type == ShaderTypePixel)
 	{
-		textureTargets = shader->desc.outputTargets;
+		textureTargets = shader.desc.outputTargets;
 		flags &= ~D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
 	}
 
-	for (auto& b : shader->desc.cbuffers)
+	for (auto& b : shader.desc.cbuffers)
 	{
 		CBuffer* buffer = nullptr;
 		for (auto& cb : cbuffers)
@@ -57,7 +58,7 @@ void SignatureInfo::add(LoadedShader* shader, ShaderType type)
 		addVisibility(buffer->visibility, type);
 	}
 
-	for (auto& b : shader->desc.structuredBuffers)
+	for (auto& b : shader.desc.structuredBuffers)
 	{
 		StructuredBuffer* buffer = nullptr;
 		for (auto& sb : structuredBuffers)
@@ -76,7 +77,7 @@ void SignatureInfo::add(LoadedShader* shader, ShaderType type)
 		addVisibility(buffer->visibility, type);
 	}
 
-	for (auto& b : shader->desc.rwStructuredBuffers)
+	for (auto& b : shader.desc.rwStructuredBuffers)
 	{
 		StructuredBuffer* buffer = nullptr;
 		for (auto& sb : rwStructuredBuffers)
@@ -95,7 +96,7 @@ void SignatureInfo::add(LoadedShader* shader, ShaderType type)
 		addVisibility(buffer->visibility, type);
 	}
 
-	for (auto& t : shader->desc.textures)
+	for (auto& t : shader.desc.textures)
 	{
 		Texture* texture = nullptr;
 		for (auto& tb : textures)
@@ -114,7 +115,7 @@ void SignatureInfo::add(LoadedShader* shader, ShaderType type)
 		addVisibility(texture->visibility, type);
 	}
 
-	for (auto& s : shader->desc.samplers)
+	for (auto& s : shader.desc.samplers)
 	{
 		Sampler* sampler = nullptr;
 		for (auto& sb : samplers)
@@ -133,7 +134,7 @@ void SignatureInfo::add(LoadedShader* shader, ShaderType type)
 		addVisibility(sampler->visibility, type);
 	}
 
-	for (auto& uav : shader->desc.uavs)
+	for (auto& uav : shader.desc.uavs)
 	{
 		UAV* found = nullptr;
 		for (auto& u : uavs)
@@ -152,7 +153,7 @@ void SignatureInfo::add(LoadedShader* shader, ShaderType type)
 		addVisibility(found->visibility, type);
 	}
 
-	bindlessTextures |= shader->desc.bindlessTextures;
+	bindlessTextures |= shader.desc.bindlessTextures;
 }
 
 void SignatureInfo::setTexturesVolatile()
@@ -197,7 +198,7 @@ void SignatureInfo::finish()
 		flags |= D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED | D3D12_ROOT_SIGNATURE_FLAG_SAMPLER_HEAP_DIRECTLY_INDEXED;
 }
 
-ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device* device, const wchar_t* name, const std::vector<SamplerInfo>& staticSamplers)
+ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device& device, const wchar_t* name, const std::vector<SamplerInfo>& staticSamplers)
 {
 	std::vector<CD3DX12_ROOT_PARAMETER1> params;
 	params.resize(cbuffers.size() + textures.size() + uavs.size() + structuredBuffers.size() + rwStructuredBuffers.size());
@@ -288,6 +289,14 @@ ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device* device, co
 			sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
 			sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
 		}
+		else if (samplers[i].info.Name == "ShadowSampler")
+		{
+			sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+			sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+			sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+			sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+			sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;
+		}
 		else if (samplers[i].info.Name == "LinearSampler")
 		{
 			sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
@@ -310,6 +319,14 @@ ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device* device, co
 			sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
 			sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
 		}
+		else if (samplers[i].info.Name == "VoxelSampler")
+		{
+			sampler.Filter = D3D12_FILTER_ANISOTROPIC;
+			sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+			sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+			sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+			sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
+		}
 	}
 
 	// create the root signature
@@ -322,22 +339,22 @@ ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device* device, co
 	if (error && error->GetBufferSize() > 0)
 	{
 		OutputDebugStringA((const char*)error->GetBufferPointer());
-		AaLogger::logError((const char*)error->GetBufferPointer());
+		FileLogger::logError((const char*)error->GetBufferPointer());
 		return nullptr;
 	}
 
 	ID3D12RootSignature* rootSignature{};
-	device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
+	device.CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
 	rootSignature->SetName(name);
 
 	return rootSignature;
 }
 
-std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData() const
+std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData(GraphicsResources& graphicsResources) const
 {
 	auto resources = std::make_shared<ResourcesInfo>();
 	UINT rootIndex = 0;
-	UINT bindlessTextures = 0;
+	std::vector<UINT> bindlessTextures;
 
 	for (auto& cb : cbuffers)
 	{
@@ -349,9 +366,7 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData() const
 			for (const auto& p : cb.info.Params)
 			{
 				ResourcesInfo::AutoParam type = ResourcesInfo::AutoParam::None;
-				if (p.Name == "WorldViewProjectionMatrix")
-					type = ResourcesInfo::AutoParam::WVP_MATRIX;
-				else if (p.Name == "ViewProjectionMatrix")
+				if (p.Name == "ViewProjectionMatrix")
 					type = ResourcesInfo::AutoParam::VP_MATRIX;
 				else if (p.Name == "ViewMatrix")
 					type = ResourcesInfo::AutoParam::VIEW_MATRIX;
@@ -374,7 +389,7 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData() const
 				else if (p.Name.starts_with("TexId"))
 				{
 					type = ResourcesInfo::AutoParam::TEXID;
-					bindlessTextures++;
+					bindlessTextures.push_back((UINT)resources->autoParams.size());
 				}
 				else if (p.Name == "Time")
 					type = ResourcesInfo::AutoParam::TIME;
@@ -402,7 +417,7 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData() const
 		else
 		{
 			ResourcesInfo::GpuBuffer r;
-			r.globalCBuffer = ShaderConstantBuffers::get().GetCbufferResource(cb.info.Name);
+			r.globalCBuffer = graphicsResources.shaderBuffers.GetCbufferResource(cb.info.Name);
 			r.type = GpuBufferType::Global;
 			r.rootIndex = rootIndex++;
 
@@ -431,10 +446,16 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData() const
 		resources->buffers.push_back(r);
 	}
 
-	resources->textures.resize(textures.size() + bindlessTextures);
+	resources->textures.resize(textures.size() + bindlessTextures.size());
 	for (size_t i = 0; i < textures.size(); i++)
 	{
-		resources->textures[i].rootIndex = rootIndex++;
+		auto& t = resources->textures[i];
+		t.rootIndex = rootIndex++;
+	}
+	for (size_t i = 0; i < bindlessTextures.size(); i++)
+	{
+		auto& t = resources->textures[i + textures.size()];
+		t.autoParamIdx = bindlessTextures[i];
 	}
 
 	resources->uavs.resize(uavs.size());
@@ -442,7 +463,7 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData() const
 	{
 		auto& uav = resources->uavs[i];
 		uav.rootIndex = rootIndex++;
-		uav.uav = AaTextureResources::get().getNamedUAV(uavs[i].info.Name);
+		uav.uav = graphicsResources.textures.getNamedUAV(uavs[i].info.Name);
 	}
 
 	return resources;

@@ -1,29 +1,27 @@
 #pragma once
 
-#include "ShaderConstantBuffers.h"
-#include "AaMath.h"
-#include <vector>
+#include "ShaderDataBuffers.h"
+#include "MathUtils.h"
 
 struct RenderObjectsVisibilityData;
-class AaEntity;
-class AaCamera;
+class SceneEntity;
+class Camera;
 class RenderTargetTexture;
 class RenderTargetTextures;
-class FrameParameters;
+struct FrameParameters;
 
 class ShaderConstantsProvider
 {
 public:
 
-	ShaderConstantsProvider(const FrameParameters& params, const RenderObjectsVisibilityData& info, const AaCamera& camera, const RenderTargetTexture& target);
-	ShaderConstantsProvider(const FrameParameters& params, const RenderObjectsVisibilityData& info, const AaCamera& camera, const RenderTargetTextures& targets);
+	ShaderConstantsProvider(const FrameParameters& params, const RenderObjectsVisibilityData& info, const Camera& camera, const RenderTargetTexture& target);
+	ShaderConstantsProvider(const FrameParameters& params, const RenderObjectsVisibilityData& info, const Camera& camera, const RenderTargetTextures& targets);
 
 	XMFLOAT2 inverseViewportSize;
 	XMUINT2 viewportSize;
 
-	AaEntity* entity{};
+	SceneEntity* entity{};
 
-	XMFLOAT4X4 getWvpMatrix() const;
 	XMMATRIX getWorldMatrix() const;
 	XMMATRIX getPreviousWorldMatrix() const;
 	XMMATRIX getViewProjectionMatrix() const;
@@ -39,7 +37,7 @@ public:
 
 	const RenderObjectsVisibilityData& info;
 
-	const AaCamera& camera;
+	const Camera& camera;
 
 	const FrameParameters& params;
 };

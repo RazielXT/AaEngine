@@ -4,9 +4,8 @@
 #include "backends/imgui_impl_dx12.h"
 #include "RenderSystem.h"
 #include "SceneManager.h"
-#include "AaMaterialResources.h"
-
-XMFLOAT3 currentCamPos{};
+#include "MaterialResources.h"
+#include "DebugOverlayTask.h"
 
 imgui::DebugWindow* instance{};
 
@@ -19,9 +18,56 @@ bool ImguiUsesInput()
 }
 extern float jitterScaleX;
 extern float jitterScaleY;
+
 namespace imgui
 {
-	static ID3D12DescriptorHeap* g_pd3dSrvDescHeap = nullptr;
+	struct ExampleDescriptorHeapAllocator
+	{
+		ID3D12DescriptorHeap* Heap = nullptr;
+		D3D12_DESCRIPTOR_HEAP_TYPE  HeapType = D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES;
+		D3D12_CPU_DESCRIPTOR_HANDLE HeapStartCpu;
+		D3D12_GPU_DESCRIPTOR_HANDLE HeapStartGpu;
+		UINT                        HeapHandleIncrement;
+		ImVector<int>               FreeIndices;
+
+		void Create(ID3D12Device* device, ID3D12DescriptorHeap* heap)
+		{
+			IM_ASSERT(Heap == nullptr && FreeIndices.empty());
+			Heap = heap;
+			D3D12_DESCRIPTOR_HEAP_DESC desc = heap->GetDesc();
+			HeapType = desc.Type;
+			HeapStartCpu = Heap->GetCPUDescriptorHandleForHeapStart();
+			HeapStartGpu = Heap->GetGPUDescriptorHandleForHeapStart();
+			HeapHandleIncrement = device->GetDescriptorHandleIncrementSize(HeapType);
+			FreeIndices.reserve((int)desc.NumDescriptors);
+			for (int n = desc.NumDescriptors; n > 0; n--)
+				FreeIndices.push_back(n);
+		}
+		void Destroy()
+		{
+			Heap = nullptr;
+			FreeIndices.clear();
+		}
+		void Alloc(D3D12_CPU_DESCRIPTOR_HANDLE* out_cpu_desc_handle, D3D12_GPU_DESCRIPTOR_HANDLE* out_gpu_desc_handle)
+		{
+			IM_ASSERT(FreeIndices.Size > 0);
+			int idx = FreeIndices.back();
+			FreeIndices.pop_back();
+			out_cpu_desc_handle->ptr = HeapStartCpu.ptr + (idx * HeapHandleIncrement);
+			out_gpu_desc_handle->ptr = HeapStartGpu.ptr + (idx * HeapHandleIncrement);
+		}
+		void Free(D3D12_CPU_DESCRIPTOR_HANDLE out_cpu_desc_handle, D3D12_GPU_DESCRIPTOR_HANDLE out_gpu_desc_handle)
+		{
+			int cpu_idx = (int)((out_cpu_desc_handle.ptr - HeapStartCpu.ptr) / HeapHandleIncrement);
+			int gpu_idx = (int)((out_gpu_desc_handle.ptr - HeapStartGpu.ptr) / HeapHandleIncrement);
+			IM_ASSERT(cpu_idx == gpu_idx);
+			FreeIndices.push_back(cpu_idx);
+		}
+	};
+
+	static ExampleDescriptorHeapAllocator srvDescHeapAlloc;
+	static ID3D12DescriptorHeap* srvDescHeap = nullptr;
+
 	DebugState DebugWindow::state;
 
 	imgui::DebugWindow& DebugWindow::Get()
@@ -29,7 +75,7 @@ namespace imgui
 		return *instance;
 	}
 
-	void DebugWindow::init(RenderSystem* renderer)
+	DebugWindow::DebugWindow(RenderSystem& renderer)
 	{
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
@@ -38,35 +84,59 @@ namespace imgui
 		{
 			D3D12_DESCRIPTOR_HEAP_DESC desc = {};
 			desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-			desc.NumDescriptors = 1;
+			desc.NumDescriptors = 64;
 			desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-			if (renderer->device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&g_pd3dSrvDescHeap)) != S_OK)
+			if (renderer.core.device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&srvDescHeap)) != S_OK)
 				return;
 
-			g_pd3dSrvDescHeap->SetName(L"ImguiDescriptors");
+			srvDescHeap->SetName(L"ImguiDescriptors");
+			srvDescHeapAlloc.Create(renderer.core.device, srvDescHeap);
 		}
 
-		ImGui_ImplWin32_Init(renderer->getWindow()->getHwnd());
-		ImGui_ImplDX12_Init(renderer->device, renderer->FrameCount,
-			DXGI_FORMAT_R8G8B8A8_UNORM, g_pd3dSrvDescHeap,
-			g_pd3dSrvDescHeap->GetCPUDescriptorHandleForHeapStart(),
-			g_pd3dSrvDescHeap->GetGPUDescriptorHandleForHeapStart());
+		ImGui_ImplWin32_Init(renderer.viewport.getHwnd());
+		
+		ImGui_ImplDX12_InitInfo init_info = {};
+		init_info.Device = renderer.core.device;
+		init_info.CommandQueue = renderer.core.commandQueue;
+		init_info.NumFramesInFlight = FrameCount;
+		init_info.RTVFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+		init_info.DSVFormat = DXGI_FORMAT_UNKNOWN;
+		init_info.SrvDescriptorHeap = srvDescHeap;
+		init_info.SrvDescriptorAllocFn = [](ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE* out_cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE* out_gpu_handle) { return srvDescHeapAlloc.Alloc(out_cpu_handle, out_gpu_handle); };
+		init_info.SrvDescriptorFreeFn = [](ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle) { return srvDescHeapAlloc.Free(cpu_handle, gpu_handle); };
+		ImGui_ImplDX12_Init(&init_info);
 
 		instance = this;
 	}
 
-	void DebugWindow::deinit()
+	DebugWindow::~DebugWindow()
 	{
 		ImGui_ImplDX12_Shutdown();
 		ImGui_ImplWin32_Shutdown();
 		ImGui::DestroyContext();
 
-		g_pd3dSrvDescHeap->Release();
+		srvDescHeap->Release();
 
 		instance = nullptr;
 	}
 
-	void DebugWindow::draw(ID3D12GraphicsCommandList* commandList)
+	size_t GetGpuMemoryUsage()
+	{
+		static IDXGIFactory4* pFactory{};
+		if (!pFactory)
+			CreateDXGIFactory1(__uuidof(IDXGIFactory4), (void**)&pFactory);
+
+		static IDXGIAdapter3* adapter{};
+		if (!adapter)
+			pFactory->EnumAdapters(0, reinterpret_cast<IDXGIAdapter**>(&adapter));
+
+		DXGI_QUERY_VIDEO_MEMORY_INFO videoMemoryInfo;
+		adapter->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &videoMemoryInfo);
+
+		return videoMemoryInfo.CurrentUsage / 1024 / 1024;
+	}
+
+	void DebugWindow::draw(ID3D12GraphicsCommandList* commandList, MaterialResources& materials)
 	{
 		ImGui_ImplDX12_NewFrame();
 		ImGui_ImplWin32_NewFrame();
@@ -78,25 +148,21 @@ namespace imgui
 		if (ImGui::Button("Reload shaders"))
 			state.reloadShaders = true;
 
-		ImGui::Text("VRAM used %uMB", state.vramUsage);
+		ImGui::Text("VRAM used %uMB", GetGpuMemoryUsage());
 
 // 		ImGui::SliderFloat("jitterScaleX", &jitterScaleX, -3.0f, 3.f);
 // 		ImGui::SliderFloat("jitterScaleY", &jitterScaleY, -3.0f, 3.f);
 
-		int next = state.TexturePreviewIndex;
-		if (ImGui::InputInt("Texture preview", &next))
 		{
-			if (next < 0)
-				state.TexturePreviewIndex = -1;
-			else if (next == 0)
-				state.TexturePreviewIndex = 0;
-			else if (next > state.TexturePreviewIndex)
-				state.TexturePreviewIndex =	DescriptorManager::get().nextDescriptor(state.TexturePreviewIndex, D3D12_SRV_DIMENSION_TEXTURE2D);
-			else
-				state.TexturePreviewIndex = DescriptorManager::get().previousDescriptor(state.TexturePreviewIndex, D3D12_SRV_DIMENSION_TEXTURE2D);
+			auto& overlayTask = DebugOverlayTask::Get();
+
+			int next = overlayTask.currentIdx();
+			if (ImGui::InputInt("Texture preview", &next))
+				overlayTask.changeIdx(next);
+
+			if (auto name = overlayTask.getCurrentIdxName())
+				ImGui::Text("Texture: %s", name);
 		}
-		if (state.TexturePreviewIndex >= 0)
-			ImGui::Text("Texture: %s", DescriptorManager::get().getDescriptorName(state.TexturePreviewIndex));
 
 		if (ImGui::CollapsingHeader("GI"))
 		{
@@ -106,11 +172,11 @@ namespace imgui
 			ImGui::SliderFloat("GI weight", &state.voxelSteppingBounces, 0.0f, 0.15f);
 			ImGui::SliderFloat("Diffuse weight", &state.voxelSteppingDiffuse, 0.0f, 0.5f);
 
-			static float voxelLightPower = [] { float f; AaMaterialResources::get().getMaterial("WhiteVCTLight")->GetParameter(FastParam::Emission, &f); return f; }();
+			static float voxelLightPower = [&] { float f; materials.getMaterial("WhiteVCTLight")->GetParameter(FastParam::Emission, &f); return f; }();
 
 			if (ImGui::SliderFloat("Light power", &voxelLightPower, 0.0f, 10.f))
 			{
-				AaMaterialResources::get().getMaterial("WhiteVCTLight")->SetParameter(FastParam::Emission, &voxelLightPower);
+				materials.getMaterial("WhiteVCTLight")->SetParameter(FastParam::Emission, &voxelLightPower);
 			}
 
 // 			ImGui::SliderFloat("middleConeRatio", &state.middleConeRatioDistance.x, 0.0f, 5.f);
@@ -145,7 +211,7 @@ namespace imgui
 
 		ImGui::Render();
 
-		ID3D12DescriptorHeap* descriptorHeaps[] = { g_pd3dSrvDescHeap };
+		ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescHeap };
 		commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
 		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);

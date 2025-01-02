@@ -42,13 +42,12 @@ struct CompositorPassInfo
 {
 	std::string name;
 	std::string task;
-	std::string after;
 
 	std::vector<CompositorTextureSlot> inputs;
 	std::vector<CompositorTextureSlot> targets;
 
 	std::string material;
-	std::vector<std::string> params;
+	std::string entry;
 	std::optional<CompositorPassCondition> condition;
 };
 

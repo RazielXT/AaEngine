@@ -2,19 +2,21 @@
 
 #include "RenderSystem.h"
 #include "ShaderResources.h"
+#include "GraphicsResources.h"
 
-class AaCamera;
+class Camera;
 class RenderObjectsStorage;
 
 struct RenderProvider
 {
 	const FrameParameters& params;
-	RenderSystem* renderSystem;
+	RenderSystem& renderSystem;
+	GraphicsResources& resources;
 };
 
 struct RenderContext
 {
-	AaCamera* camera;
+	Camera* camera;
 };
 
 struct AsyncTaskInfo

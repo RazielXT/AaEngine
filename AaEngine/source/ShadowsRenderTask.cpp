@@ -30,7 +30,7 @@ ShadowsRenderTask::~ShadowsRenderTask()
 
 AsyncTasksInfo ShadowsRenderTask::initialize(CompositorPass&)
 {
-	depthQueue = sceneMgr.createQueue({}, MaterialTechnique::Depth);
+	depthQueue = sceneMgr.createQueue({}, MaterialTechnique::DepthNonReversed);
 
 	AsyncTasksInfo tasks;
 
@@ -38,7 +38,7 @@ AsyncTasksInfo ShadowsRenderTask::initialize(CompositorPass&)
 	{
 		shadow.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
 		shadow.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
-		shadow.commands = provider.renderSystem->CreateCommandList(L"Shadows");
+		shadow.commands = provider.renderSystem.core.CreateCommandList(L"Shadows");
 
 		shadow.worker = std::thread([this, idx = tasks.size()]
 			{
@@ -46,7 +46,7 @@ AsyncTasksInfo ShadowsRenderTask::initialize(CompositorPass&)
 
 				while (WaitForSingleObject(shadow.eventBegin, INFINITE) == WAIT_OBJECT_0 && running)
 				{
-					auto marker = provider.renderSystem->StartCommandList(shadow.commands);
+					auto marker = provider.renderSystem.core.StartCommandList(shadow.commands);
 
 					auto& sceneInfo = shadow.renderablesData;
 

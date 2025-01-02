@@ -1,23 +1,19 @@
 #pragma once
 
-#include <windows.h>
 #include <d3d12.h>
 #include <dxgi1_4.h>
 #include <DirectXMath.h>
-#include "AaWindow.h"
-#include <map>
+#include "TargetWindow.h"
 #include "RenderTargetTexture.h"
 #include "Upscaling.h"
+#include "DescriptorManager.h"
 
 using namespace DirectX;
-
-class SceneManager;
-class AaCamera;
 
 struct CommandsData
 {
 	ID3D12GraphicsCommandList* commandList{};
-	ID3D12CommandAllocator* commandAllocators[2];
+	ID3D12CommandAllocator* commandAllocators[FrameCount];
 	std::string name;
 
 	void deinit();
@@ -34,58 +30,70 @@ struct CommandsMarker
 	void close();
 
 private:
-	bool done = false;
+	bool closed = false;
 	ID3D12GraphicsCommandList* commandList{};
 };
 
-class RenderSystem : public ScreenListener
+class RenderCore
 {
 public:
 
-	RenderSystem(AaWindow* mWindow);
-	~RenderSystem();
+	RenderCore();
+	~RenderCore();
 
-	void init();
-
-	static const UINT FrameCount = 2;
-
-	XMUINT2 getRenderSize() const;
-	XMUINT2 getOutputSize() const;
-
- 	AaWindow* getWindow() { return window; }
+	UINT frameIndex;
 
 	ID3D12Device* device;
 	ID3D12CommandQueue* commandQueue;
-	IDXGISwapChain3* swapChain;
-
-	UINT rtvDescriptorSize = 0;
-	UINT dsvDescriptorSize = 0;
-
-	UINT frameIndex;
-	HANDLE fenceEvent;
-	ID3D12Fence* fence;
-	UINT64 fenceValues[2];
 
 	CommandsData CreateCommandList(const wchar_t* name = nullptr);
 	CommandsMarker StartCommandList(CommandsData& commands);
+	void StartCommandListNoMarker(CommandsData& commands);
+	CommandsMarker StartCommandList(CommandsData& commands, ID3D12DescriptorHeap* heap);
+
 	void ExecuteCommandList(CommandsData& commands);
-	void Present();
+	HRESULT Present(bool vsync = true);
 	void EndFrame();
 
 	void WaitForAllFrames();
 	void WaitForCurrentFrame();
 
+	RenderTargetHeap rtvHeap;
 	RenderTargetTexture backbuffer[FrameCount];
 
-	Upscaling upscale;
+	void initializeSwapChain(const TargetWindow& window);
+
+	void resize(UINT width, UINT height);
 
 private:
 
-	RenderTargetHeap backbufferHeap;
+	IDXGISwapChain3* swapChain;
 
 	void MoveToNextFrame();
 
-	void onScreenResize() override;
+	HANDLE fenceEvent;
+	ID3D12Fence* fence;
+	UINT64 fenceValues[FrameCount];
+};
 
-	AaWindow* window;
+class RenderSystem : public ViewportListener
+{
+public:
+
+	RenderSystem(TargetViewport& viewport);
+	~RenderSystem();
+
+	XMUINT2 getRenderSize() const;
+	XMUINT2 getOutputSize() const;
+
+	RenderCore core;
+
+	Upscaling upscale;
+
+	TargetViewport& viewport;
+
+private:
+
+	void onViewportResize(UINT, UINT) override;
+	void onScreenResize(UINT, UINT) override;
 };

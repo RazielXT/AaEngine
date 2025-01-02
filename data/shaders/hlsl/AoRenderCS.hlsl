@@ -13,7 +13,7 @@ Texture2D<float> DepthTex : register(t0);
 #endif
 
 RWTexture2D<float> Occlusion : register(u0);
-SamplerState LinearBorderSampler : register(s0);
+SamplerState LinearSampler : register(s0);
 
 cbuffer CB1 : register(b0)
 {
@@ -105,9 +105,9 @@ void main( uint3 Gid : SV_GroupID, uint GI : SV_GroupIndex, uint3 GTid : SV_Grou
 
     // Fetch four depths and store them in LDS
 #ifdef INTERLEAVE_RESULT
-    float4 depths = DepthTex.Gather(LinearBorderSampler, float3(QuadCenterUV, DTid.z));
+    float4 depths = DepthTex.Gather(LinearSampler, float3(QuadCenterUV, DTid.z));
 #else
-    float4 depths = DepthTex.Gather(LinearBorderSampler, QuadCenterUV);
+    float4 depths = DepthTex.Gather(LinearSampler, QuadCenterUV);
 #endif
     int destIdx = GTid.x * 2 + GTid.y * 2 * TILE_DIM;
     DepthSamples[destIdx] = depths.w;

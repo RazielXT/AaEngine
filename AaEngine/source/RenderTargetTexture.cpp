@@ -1,7 +1,7 @@
 #include "RenderTargetTexture.h"
 #include "DescriptorManager.h"
+#include "StringUtils.h"
 
-static const float DepthClearValue = 0.f;
 static const DirectX::XMFLOAT4 clearColor = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 void RenderTargetHeap::InitRtv(ID3D12Device* device, UINT count, const wchar_t* name)
@@ -13,6 +13,7 @@ void RenderTargetHeap::InitRtv(ID3D12Device* device, UINT count, const wchar_t* 
 	device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvHeap));
 
 	rtvHeap->SetName(name ? name : L"RTV");
+	Reset();
 }
 
 void RenderTargetHeap::InitDsv(ID3D12Device* device, UINT count, const wchar_t* name)
@@ -24,6 +25,7 @@ void RenderTargetHeap::InitDsv(ID3D12Device* device, UINT count, const wchar_t* 
 	device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&dsvHeap));
 
 	dsvHeap->SetName(name ? name : L"DSV");
+	Reset();
 }
 
 void RenderTargetHeap::Reset()
@@ -31,11 +33,20 @@ void RenderTargetHeap::Reset()
 	rtvHandlesCount = dsvHandlesCount = 0;
 }
 
-void RenderTargetHeap::CreateRenderTargetHandle(ID3D12Device* device, ComPtr<ID3D12Resource>& texture, D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle)
+void RenderTargetHeap::CreateRenderTargetHandle(ID3D12Device* device, ComPtr<ID3D12Resource>& texture, ShaderTextureView& view)
 {
-	rtvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(rtvHeap->GetCPUDescriptorHandleForHeapStart(), rtvHandlesCount, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
-	device->CreateRenderTargetView(texture.Get(), nullptr, rtvHandle);
-	rtvHandlesCount++;
+	if (view.handle.ptr)
+	{
+		view.handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(rtvHeap->GetCPUDescriptorHandleForHeapStart(), view.rtvHeapIndex, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
+	}
+	else
+	{
+		view.handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(rtvHeap->GetCPUDescriptorHandleForHeapStart(), rtvHandlesCount, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
+		view.rtvHeapIndex = rtvHandlesCount;
+		rtvHandlesCount++;
+	}
+
+	device->CreateRenderTargetView(texture.Get(), nullptr, view.handle);
 }
 
 void RenderTargetHeap::CreateDepthTargetHandle(ID3D12Device* device, ComPtr<ID3D12Resource>& texture, D3D12_CPU_DESCRIPTOR_HANDLE& dsvHandle)
@@ -60,7 +71,7 @@ void RenderTargetTexture::Init(ID3D12Device* device, UINT w, UINT h, RenderTarge
 	CreateTextureBuffer(device, width, height, format, state, flags);
 
 	if (flags & AllowRenderTarget)
-		heap.CreateRenderTargetHandle(device, texture, view.handle);
+		heap.CreateRenderTargetHandle(device, texture, view);
 }
 
 void RenderTargetTexture::InitDepth(ID3D12Device* device, UINT w, UINT h, RenderTargetHeap& heap, D3D12_RESOURCE_STATES initialState)
@@ -78,7 +89,28 @@ void RenderTargetTexture::InitExisting(ID3D12Resource* textureSource, ID3D12Devi
 	format = f;
 
 	texture.Attach(textureSource);
-	heap.CreateRenderTargetHandle(device, texture, view.handle);
+	heap.CreateRenderTargetHandle(device, texture, view);
+}
+
+void RenderTargetTexture::Resize(ID3D12Device* device, UINT w, UINT h, RenderTargetHeap& heap, D3D12_RESOURCE_STATES state)
+{
+	width = w;
+	height = h;
+
+	ResizeTextureBuffer(device, state);
+
+	heap.CreateRenderTargetHandle(device, texture, view);
+
+	if (view.srvHandles.ptr)
+	{
+		DescriptorManager::get().removeTextureView(*this);
+		DescriptorManager::get().createTextureView(*this);
+	}
+	if (view.uavHandles.ptr)
+	{
+		DescriptorManager::get().removeUAVView(*this);
+		DescriptorManager::get().createUAVView(*this);
+	}
 }
 
 void RenderTargetTexture::PrepareAsTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from, bool clear)
@@ -157,6 +189,34 @@ void RenderTargetTexture::CreateDepthBuffer(ID3D12Device* device, RenderTargetHe
 
 		heap.CreateDepthTargetHandle(device, texture, view.handle);
 	}
+}
+
+void RenderTargetTexture::ResizeTextureBuffer(ID3D12Device* device, D3D12_RESOURCE_STATES state)
+{
+	auto textureDesc = texture->GetDesc();
+	textureDesc.Width = width;
+	textureDesc.Height = height;
+
+	D3D12_CLEAR_VALUE clearValue = {};
+	clearValue.Format = format;
+	memcpy(clearValue.Color, &clearColor, sizeof(clearColor));
+	auto clearValuePtr = &clearValue;
+
+	if (textureDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS)
+		clearValuePtr = nullptr;
+
+	auto heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+
+	device->CreateCommittedResource(
+		&heapProps,
+		D3D12_HEAP_FLAG_NONE,
+		&textureDesc,
+		state,
+		clearValuePtr,
+		IID_PPV_ARGS(&texture));
+
+	if (!name.empty())
+		texture->SetName(as_wstring(name).c_str());
 }
 
 void RenderTargetTexture::CreateTextureBuffer(ID3D12Device* device, UINT width, UINT height, DXGI_FORMAT format, D3D12_RESOURCE_STATES state, UINT flags)
@@ -245,30 +305,33 @@ void RenderTargetTexturesView::PrepareAsTarget(ID3D12GraphicsCommandList* comman
 	auto rect = CD3DX12_RECT(0, 0, width, height);
 	commandList->RSSetScissorRects(1, &rect);
 
-	CD3DX12_RESOURCE_BARRIER barriers[5];
-	size_t i = 0;
+	if (from != D3D12_RESOURCE_STATE_RENDER_TARGET)
 	{
-		for (; i < texturesState.size(); i++)
+		CD3DX12_RESOURCE_BARRIER barriers[5];
+		size_t i = 0;
 		{
-			barriers[i] = CD3DX12_RESOURCE_BARRIER::Transition(
-				texturesState[i].texture->texture.Get(),
-				from,
-				D3D12_RESOURCE_STATE_RENDER_TARGET);
+			for (; i < texturesState.size(); i++)
+			{
+				barriers[i] = CD3DX12_RESOURCE_BARRIER::Transition(
+					texturesState[i].texture->texture.Get(),
+					from,
+					D3D12_RESOURCE_STATE_RENDER_TARGET);
+			}
+			if (flags & TransitionFlags::UseDepth)
+			{
+				barriers[i++] = CD3DX12_RESOURCE_BARRIER::Transition(
+					depthState.texture->texture.Get(),
+					from,
+					D3D12_RESOURCE_STATE_DEPTH_WRITE);
+			}
 		}
-		if (flags & TransitionFlags::UseDepth)
-		{
-			barriers[i++] = CD3DX12_RESOURCE_BARRIER::Transition(
-				depthState.texture->texture.Get(),
-				from,
-				D3D12_RESOURCE_STATE_DEPTH_WRITE);
-		}
+		commandList->ResourceBarrier(i, barriers);
 	}
-	commandList->ResourceBarrier(i, barriers);
 
 	commandList->OMSetRenderTargets(rtvHandles.size(), rtvHandles.data(), TRUE, (flags & TransitionFlags::UseDepth) ? &depthState.texture->view.handle : nullptr);
 
 	if (flags & TransitionFlags::UseDepth && flags & TransitionFlags::ClearDepth)
-		commandList->ClearDepthStencilView(depthState.texture->view.handle, D3D12_CLEAR_FLAG_DEPTH, DepthClearValue, 0, 0, nullptr);
+		commandList->ClearDepthStencilView(depthState.texture->view.handle, D3D12_CLEAR_FLAG_DEPTH, depthState.texture->DepthClearValue, 0, 0, nullptr);
 
 	if (clear)
 	{
@@ -316,7 +379,7 @@ void RenderTargetTexturesView::PrepareAsTarget(ID3D12GraphicsCommandList* comman
 	commandList->OMSetRenderTargets(rtvHandles.size(), rtvHandles.data(), TRUE, (flags & TransitionFlags::UseDepth) ? &depthState.texture->view.handle : nullptr);
 
 	if ((flags & TransitionFlags::UseDepth) && (flags & TransitionFlags::ClearDepth))
-		commandList->ClearDepthStencilView(depthState.texture->view.handle, D3D12_CLEAR_FLAG_DEPTH, DepthClearValue, 0, 0, nullptr);
+		commandList->ClearDepthStencilView(depthState.texture->view.handle, D3D12_CLEAR_FLAG_DEPTH, depthState.texture->DepthClearValue, 0, 0, nullptr);
 
 	if (clear)
 	{
@@ -391,7 +454,7 @@ void RenderTargetTexture::SetName(const std::string& n)
 	name = n;
 
 	if (texture)
-		texture->SetName(std::wstring(name.begin(), name.end()).c_str());
+		texture->SetName(as_wstring(name).c_str());
 }
 
 void RenderTargetTextures::Init(ID3D12Device* device, UINT w, UINT h, RenderTargetHeap& heap, const std::vector<DXGI_FORMAT>& formats, D3D12_RESOURCE_STATES initialState, bool depthBuffer, D3D12_RESOURCE_STATES initialDepthState)

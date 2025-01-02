@@ -1,12 +1,13 @@
 #pragma once
 
-#include "AaEntity.h"
-#include "AaCamera.h"
+#include "SceneEntity.h"
+#include "Camera.h"
 #include "RenderObject.h"
 
 enum class EntityChange
 {
 	Add,
+	Delete,
 	DeleteAll,
 };
 
@@ -14,7 +15,7 @@ struct EntityChangeDescritpion
 {
 	EntityChange type;
 	Order order;
-	AaEntity* entity{};
+	SceneEntity* entity{};
 };
 
 using EntityChanges = std::vector<EntityChangeDescritpion>;
@@ -24,11 +25,11 @@ struct RenderQueue
 	struct EntityEntry
 	{
 		const MaterialBase* base{};
-		AaMaterial* material{};
-		AaEntity* entity{};
+		AssignedMaterial* material{};
+		SceneEntity* entity{};
 
 		EntityEntry() = default;
-		EntityEntry(AaEntity*, AaMaterial*);
+		EntityEntry(SceneEntity*, AssignedMaterial*);
 
 		bool operator<(const EntityEntry& other) const
 		{
@@ -42,7 +43,9 @@ struct RenderQueue
 	Order targetOrder = Order::Normal;
 	std::vector<EntityEntry> entities;
 
-	void update(const EntityChanges&);
+	void update(const EntityChangeDescritpion&, GraphicsResources& resources);
+	void reset();
+
 	std::vector<UINT> createEntityFilter() const;
 	void renderObjects(ShaderConstantsProvider& info, ID3D12GraphicsCommandList* commandList);
 };

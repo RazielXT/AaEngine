@@ -1,6 +1,7 @@
 #include "ComputeShader.h"
-#include "AaShaderLibrary.h"
+#include "ShaderLibrary.h"
 #include "ShaderSignature.h"
+#include "StringUtils.h"
 
 ComputeShader::~ComputeShader()
 {
@@ -8,23 +9,12 @@ ComputeShader::~ComputeShader()
 		signature->Release();
 }
 
-void ComputeShader::init(ID3D12Device* device, const std::string& name)
+void ComputeShader::init(ID3D12Device& device, const std::string& name, ShaderLibrary& shaders)
 {
-	auto shader = AaShaderLibrary::get().getShader(name, ShaderTypeCompute);
-
-	if (shader)
-		init(device, name, shader);
+	return init(device, name, *shaders.getShader(name, ShaderType::ShaderTypeCompute));
 }
 
-void ComputeShader::init(ID3D12Device* device, const std::string& name, const ShaderRef& ref)
-{
-	auto shader = AaShaderLibrary::get().getShader(name, ShaderTypeCompute, ref);
-
-	if (shader)
-		init(device, name, shader);
-}
-
-void ComputeShader::init(ID3D12Device* device, const std::string& name, LoadedShader* shader)
+void ComputeShader::init(ID3D12Device& device, const std::string& name, const LoadedShader& shader)
 {
 	SignatureInfo info;
 	info.add(shader, ShaderTypeCompute);
@@ -33,11 +23,11 @@ void ComputeShader::init(ID3D12Device* device, const std::string& name, LoadedSh
 	if (volatileTextures)
 		info.setTexturesVolatile();
 
-	signature = info.createRootSignature(device, std::wstring(name.begin(), name.end()).data(), { {.bordering = D3D12_TEXTURE_ADDRESS_MODE_BORDER} });
+	signature = info.createRootSignature(device, as_wstring(name).c_str(), { {.bordering = D3D12_TEXTURE_ADDRESS_MODE_BORDER} });
 
 	D3D12_COMPUTE_PIPELINE_STATE_DESC computePsoDesc = {};
 	computePsoDesc.pRootSignature = signature;
-	computePsoDesc.CS = { shader->blob->GetBufferPointer(), shader->blob->GetBufferSize() };
+	computePsoDesc.CS = { shader.blob->GetBufferPointer(), shader.blob->GetBufferSize() };
 
-	device->CreateComputePipelineState(&computePsoDesc, IID_PPV_ARGS(&pipelineState));
+	device.CreateComputePipelineState(&computePsoDesc, IID_PPV_ARGS(&pipelineState));
 }

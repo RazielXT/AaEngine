@@ -3,7 +3,7 @@
 #include "CompositorTask.h"
 #include "ScreenQuad.h"
 
-class AaMaterial;
+class AssignedMaterial;
 
 class DebugOverlayTask : public CompositorTask
 {
@@ -16,10 +16,17 @@ public:
 	void resize(CompositorPass& pass) override;
 	void run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
 
-	bool writesSyncCommands() const override;
+	bool writesSyncCommands(CompositorPass&) const override;
+
+	static DebugOverlayTask& Get();
+	void changeIdx(int idx);
+	int currentIdx() const;
+	const char* getCurrentIdxName() const;
 
 private:
 
-	AaMaterial* material{};
+	AssignedMaterial* material{};
 	ScreenQuad quad;
+
+	int current = -1;
 };

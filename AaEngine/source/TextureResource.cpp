@@ -1,6 +1,7 @@
 #include "TextureResource.h"
 #include "directx\d3dx12.h"
 #include "DescriptorManager.h"
+#include "StringUtils.h"
 
 TextureResource::~TextureResource()
 {
@@ -41,7 +42,7 @@ void TextureResource::create3D(ID3D12Device* device, UINT w, UINT h, UINT d, DXG
 void TextureResource::setName(const char* n)
 {
 	name = n;
-	texture->SetName(std::wstring(name.begin(), name.end()).c_str());
+	texture->SetName(as_wstring(name).c_str());
 }
 
 void TextureResource::TransitionState(ID3D12GraphicsCommandList* commandList, TextureResource& t, D3D12_RESOURCE_STATES targetState)

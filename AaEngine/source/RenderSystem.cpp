@@ -1,41 +1,168 @@
 #include "RenderSystem.h"
-#include "..\..\DirectX-Headers\include\directx\d3dx12.h"
+#include "directx\d3dx12.h"
 #include <wrl.h>
-#include "AaMaterial.h"
+#include "Material.h"
 #include "Model.h"
 #include "OgreMeshFileParser.h"
 #include "SceneManager.h"
-#include "AaMaterialResources.h"
+#include "MaterialResources.h"
 #include <codecvt>
 #include <pix3.h>
+#include "FileLogger.h"
 
-RenderSystem::RenderSystem(AaWindow* mWindow) : upscale{*this}
+ComPtr<IDXGIAdapter1> GetHardwareAdapter(IDXGIFactory4* pFactory)
 {
-	this->window = mWindow;
-	mWindow->listeners.push_back(this);
+	ComPtr<IDXGIAdapter1> bestAdapter;
+	ComPtr<IDXGIAdapter1> fallbackAdapter;
 
-	HWND hwnd = mWindow->getHwnd();
+	for (UINT adapterIndex = 0; ; ++adapterIndex)
+	{
+		ComPtr<IDXGIAdapter1> pAdapter;
+		if (DXGI_ERROR_NOT_FOUND == pFactory->EnumAdapters1(adapterIndex, &pAdapter))
+		{
+			break;
+		}
 
-	auto width = mWindow->getWidth();
-	auto height = mWindow->getHeight();
+		DXGI_ADAPTER_DESC1 desc;
+		pAdapter->GetDesc1(&desc);
+
+		if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
+			continue;
+
+		// Check to see if the adapter supports Direct3D 12, but don't create the actual device yet.
+		if (SUCCEEDED(D3D12CreateDevice(pAdapter.Get(), D3D_FEATURE_LEVEL_12_1, _uuidof(ID3D12Device), nullptr)))
+		{
+			// Prefer dedicated GPUs
+			if (desc.DedicatedVideoMemory > 0)
+			{
+				bestAdapter = pAdapter;
+				break;
+			}
+			else if (!fallbackAdapter)
+			{
+				fallbackAdapter = pAdapter;
+			}
+		}
+	}
+
+	if (bestAdapter)
+	{
+		return bestAdapter;
+	}
+	else
+	{
+		return fallbackAdapter;
+	}
+}
+
+
+RenderCore::RenderCore()
+{
+	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+	if (FAILED(hr))
+	{
+		FileLogger::logError("Failed to initialize COM");
+		return;
+	}
 
 	ComPtr<IDXGIFactory4> factory;
 	CreateDXGIFactory1(IID_PPV_ARGS(&factory));
 
 	{
-		IDXGIAdapter1* hardwareAdapter;
-		factory->EnumAdapters1(0, &hardwareAdapter);
-		D3D12CreateDevice(hardwareAdapter, D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(&device));
+		auto hardwareAdapter = GetHardwareAdapter(factory.Get());
+		auto hr = D3D12CreateDevice(hardwareAdapter.Get(), D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(&device));
+
+		if (FAILED(hr))
+		{
+			FileLogger::logErrorD3D("D3D12CreateDevice failed", hr);
+			return;
+		}
+
+#ifndef NDEBUG
+		ComPtr<ID3D12InfoQueue> pInfoQueue;
+		device->QueryInterface(IID_PPV_ARGS(&pInfoQueue));
+		if (pInfoQueue)
+		{
+			pInfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
+			pInfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
+			//pInfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
+		}
+#endif
 	}
 
-	// Describe and create the command queue.
 	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
 	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 
 	device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&commandQueue));
 
-	// Describe and create the swap chain.
+	device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
+	fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+}
+
+RenderCore::~RenderCore()
+{
+	fence->Release();
+
+	swapChain->Release();
+	commandQueue->Release();
+	device->Release();
+
+	CloseHandle(fenceEvent);
+}
+
+RenderSystem::RenderSystem(TargetViewport& v) : viewport(v), upscale(*this)
+{
+	viewport.listeners.push_back(this);
+}
+
+RenderSystem::~RenderSystem()
+{
+	upscale.shutdown();
+}
+
+DirectX::XMUINT2 RenderSystem::getRenderSize() const
+{
+	if (upscale.enabled())
+		return upscale.getRenderSize();
+
+	return getOutputSize();
+}
+
+DirectX::XMUINT2 RenderSystem::getOutputSize() const
+{
+	return { viewport.getWidth(), viewport.getHeight() };
+}
+
+void RenderSystem::onViewportResize(UINT width, UINT height)
+{
+	core.WaitForAllFrames();
+
+	upscale.onResize();
+
+// 	if (!outputIsBackbuffer)
+// 	{
+// 		for (int i = 0; auto & b : output.texture)
+// 		{
+// 			b.Resize(core.device, width, height, output.heap, D3D12_RESOURCE_STATE_COMMON);
+// 		}
+// 	}
+}
+
+void RenderSystem::onScreenResize(UINT width, UINT height)
+{
+	core.WaitForAllFrames();
+
+	core.resize(width, height);
+
+//	core.MoveToNextFrame();
+}
+
+void RenderCore::initializeSwapChain(const TargetWindow& window)
+{
+	auto width = window.getWidth();
+	auto height = window.getHeight();
+
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
 	swapChainDesc.BufferCount = FrameCount;
 	swapChainDesc.Width = width;
@@ -45,9 +172,12 @@ RenderSystem::RenderSystem(AaWindow* mWindow) : upscale{*this}
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	swapChainDesc.SampleDesc.Count = 1;
 
+	ComPtr<IDXGIFactory4> factory;
+	CreateDXGIFactory1(IID_PPV_ARGS(&factory));
+
 	factory->CreateSwapChainForHwnd(
-		commandQueue,        // Swap chain needs the queue so that it can force a flush on it.
-		hwnd,
+		commandQueue,
+		window.getHwnd(),
 		&swapChainDesc,
 		nullptr,
 		nullptr,
@@ -61,60 +191,21 @@ RenderSystem::RenderSystem(AaWindow* mWindow) : upscale{*this}
 	{
 		swapChain->GetBuffer(n, IID_PPV_ARGS(&swapChainTextures[n]));
 	}
-	backbufferHeap.InitRtv(device, FrameCount, L"BackbufferRTV");
+	rtvHeap.InitRtv(device, FrameCount, L"BackbufferRTV");
 
-	for (int i = 0; auto& b : backbuffer)
+	for (int i = 0; auto & b : backbuffer)
 	{
-		b.InitExisting(swapChainTextures[i++], device, width, height, backbufferHeap, DXGI_FORMAT_R8G8B8A8_UNORM);
+		b.InitExisting(swapChainTextures[i++], device, width, height, rtvHeap, DXGI_FORMAT_R8G8B8A8_UNORM);
 		b.SetName("Backbuffer");
 	}
-
-	device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
-	fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 }
 
-RenderSystem::~RenderSystem()
+void RenderCore::resize(UINT width, UINT height)
 {
-	fence->Release();
-
-	upscale.shutdown();
-
-	swapChain->Release();
-	commandQueue->Release();
-	device->Release();
-
-	CloseHandle(fenceEvent);
-}
-
-void RenderSystem::init()
-{
-	upscale.init();
-}
-
-DirectX::XMUINT2 RenderSystem::getRenderSize() const
-{
-	if (upscale.enabled())
-		return upscale.getRenderSize();
-
-	return getOutputSize();
-}
-
-DirectX::XMUINT2 RenderSystem::getOutputSize() const
-{
-	return { window->getWidth(), window->getHeight() };
-}
-
-void RenderSystem::onScreenResize()
-{
-	WaitForAllFrames();
-
-	for (auto& b : backbuffer)
+	for (auto & b : backbuffer)
 	{
 		b = {};
 	}
-
-	auto width = window->getWidth();
-	auto height = window->getHeight();
 
 	// Resize the swap chain
 	DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
@@ -126,20 +217,21 @@ void RenderSystem::onScreenResize()
 	{
 		swapChain->GetBuffer(n, IID_PPV_ARGS(&swapChainTextures[n]));
 	}
-	backbufferHeap.Reset();
+	rtvHeap.Reset();
 
 	for (int i = 0; auto& b : backbuffer)
 	{
-		b.InitExisting(swapChainTextures[i++], device, width, height, backbufferHeap, DXGI_FORMAT_R8G8B8A8_UNORM);
+		b.InitExisting(swapChainTextures[i++], device, width, height, rtvHeap, DXGI_FORMAT_R8G8B8A8_UNORM);
 		b.SetName("Backbuffer");
 	}
 
-	upscale.onScreenResize();
+	frameIndex = swapChain->GetCurrentBackBufferIndex();
 
-	MoveToNextFrame();
+	for (auto& f : fenceValues)
+		f = 0;
 }
 
-void RenderSystem::WaitForCurrentFrame()
+void RenderCore::WaitForCurrentFrame()
 {
 	const UINT64 currentFenceValue = fenceValues[frameIndex];
 	commandQueue->Signal(fence, currentFenceValue);
@@ -153,7 +245,7 @@ void RenderSystem::WaitForCurrentFrame()
 	fenceValues[frameIndex]++;
 }
 
-CommandsData RenderSystem::CreateCommandList(const wchar_t* name)
+CommandsData RenderCore::CreateCommandList(const wchar_t* name)
 {
 	CommandsData data;
 
@@ -174,7 +266,14 @@ CommandsData RenderSystem::CreateCommandList(const wchar_t* name)
 	return data;
 }
 
-CommandsMarker RenderSystem::StartCommandList(CommandsData& commands)
+CommandsMarker RenderCore::StartCommandList(CommandsData& commands)
+{
+	StartCommandListNoMarker(commands);
+
+	return { commands };
+}
+
+void RenderCore::StartCommandListNoMarker(CommandsData& commands)
 {
 	// Reset command allocator and command list
 	commands.commandAllocators[frameIndex]->Reset();
@@ -183,11 +282,21 @@ CommandsMarker RenderSystem::StartCommandList(CommandsData& commands)
 	auto& descriptors = DescriptorManager::get();
 	ID3D12DescriptorHeap* descriptorHeaps[] = { descriptors.mainDescriptorHeap, descriptors.samplerHeap };
 	commands.commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+}
+
+CommandsMarker RenderCore::StartCommandList(CommandsData& commands, ID3D12DescriptorHeap* heap)
+{
+	// Reset command allocator and command list
+	commands.commandAllocators[frameIndex]->Reset();
+	commands.commandList->Reset(commands.commandAllocators[frameIndex], nullptr);
+
+	ID3D12DescriptorHeap* descriptorHeaps[] = { heap };
+	commands.commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
 	return { commands };
 }
 
-void RenderSystem::ExecuteCommandList(CommandsData& commands)
+void RenderCore::ExecuteCommandList(CommandsData& commands)
 {
 	// Close the command list and execute it
 	commands.commandList->Close();
@@ -196,17 +305,17 @@ void RenderSystem::ExecuteCommandList(CommandsData& commands)
 	commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
 }
 
-void RenderSystem::Present()
+HRESULT RenderCore::Present(bool vsync)
 {
-	swapChain->Present(1, 0);
+	return swapChain->Present(vsync, 0);
 }
 
-void RenderSystem::EndFrame()
+void RenderCore::EndFrame()
 {
 	MoveToNextFrame();
 }
 
-void RenderSystem::WaitForAllFrames()
+void RenderCore::WaitForAllFrames()
 {
 	for (int i = 0; i < FrameCount; i++)
 	{
@@ -224,7 +333,7 @@ void RenderSystem::WaitForAllFrames()
 }
 
 // Prepare to render the next frame.
-void RenderSystem::MoveToNextFrame()
+void RenderCore::MoveToNextFrame()
 {
 	// Schedule a Signal command in the queue.
 	const UINT64 currentFenceValue = fenceValues[frameIndex];
@@ -280,21 +389,21 @@ CommandsMarker::~CommandsMarker()
 void CommandsMarker::move(const char* text)
 {
 	close();
-	done = false;
+	closed = false;
 	PIXBeginEvent(commandList, 0, text);
 }
 
 void CommandsMarker::mark(const char* text)
 {
-	if (!done && commandList)
+	if (!closed && commandList)
 		PIXSetMarker(commandList, 0, text);
 }
 
 void CommandsMarker::close()
 {
-	if (!done && commandList)
+	if (!closed && commandList)
 	{
-		done = true;
+		closed = true;
 		PIXEndEvent(commandList);
 	}
 }

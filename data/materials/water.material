@@ -20,23 +20,23 @@ material WaterLake
 	}
 	texture CamDistance
 	{
-		compositor sceneTexture:Distance
+		compositor Frame:sceneTexture:Distance
 	}
 	texture Depth
 	{
-		compositor linearDepthDownsample2
+		compositor Frame:linearDepthDownsample2
 	}
 	texture DepthDownsample
 	{
-		compositor depthHiZDownsample4
+		compositor Frame:depthHiZDownsample4
 	}
 	texture DepthDownsample2
 	{
-		compositor depthHiZDownsample32
+		compositor Frame:depthHiZDownsample32
 	}
 	texture SceneColor
 	{
-		compositor sceneTexture2
+		compositor Frame:sceneTexture2
 	}
 	texture SceneVoxel
 	texture skybox
@@ -46,4 +46,11 @@ material WaterLake
 
 	technique Depth skip
 	technique Voxelize skip
+	technique EntityId WaterLakeEntityId
+}
+
+material WaterLakeEntityId : WaterLake
+{
+	vertex_shader vsWaterLakeEntityId
+	pixel_shader psWaterLakeEntityId
 }

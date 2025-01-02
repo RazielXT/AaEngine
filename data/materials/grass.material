@@ -13,10 +13,18 @@ material GrassLeaves
 	
 	technique Depth GrassLeavesDepth
 	technique Voxelize skip
+	technique EntityId GrassLeavesEntityId
 }
 
 material GrassLeavesDepth : GrassLeaves
 {
 	pixel_shader psGrassLeavesDepth
+	blend none
+}
+
+material GrassLeavesEntityId : GrassLeaves
+{
+	vertex_shader vsGrassLeavesEntityId
+	pixel_shader psGrassLeavesEntityId
 	blend none
 }

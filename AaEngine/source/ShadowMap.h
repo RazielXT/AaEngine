@@ -1,24 +1,26 @@
 #pragma once
 
 #include "RenderSystem.h"
-#include "AaCamera.h"
+#include "Camera.h"
 #include "SceneLights.h"
-#include "ShaderConstantBuffers.h"
+#include "ShaderDataBuffers.h"
 #include "ShaderResources.h"
+#include "GraphicsResources.h"
 
 class AaShadowMap
 {
 public:
 
-	AaShadowMap(aa::SceneLights::Light&, PssmParameters&);
+	AaShadowMap(SceneLights::Light&, PssmParameters&);
 
-	void init(RenderSystem* renderSystem);
+	void init(RenderSystem& renderSystem, GraphicsResources& resources);
 
 	RenderTargetTexture texture[2];
-	AaCamera camera[2];
+	Camera camera[2];
 
-	aa::SceneLights::Light& sun;
-	void update(UINT frameIndex);
+	SceneLights::Light& sun;
+	void update(UINT frameIndex, Camera& camera);
+	void update(UINT frameIndex, Vector3 center);
 	void clear(ID3D12GraphicsCommandList* commandList);
 
 private:

@@ -1,4 +1,4 @@
-float4x4 WorldViewProjectionMatrix;
+float4x4 ViewProjectionMatrix;
 float4x4 WorldMatrix;
 float3 WorldPosition;
 float3 CameraPosition;
@@ -6,16 +6,16 @@ float3 CameraPosition;
 struct VSInput
 {
     float4 position : POSITION;
-	float4 color : COLOR;
+	float4 normal : NORMAL;
 	float2 uv : TEXCOORD0;
 };
 
 struct PSInput
 {
     float4 position : SV_POSITION;
-    float4 color : COLOR;
+    float4 normal : NORMAL;
 	float2 uv : TEXCOORD0;
-	float thickness : TEXCOORD1;
+	float3 scale : TEXCOORD1;
 };
 
 float3 GetScaleFromWorldMatrix(float4x4 worldMatrix)
@@ -31,11 +31,12 @@ PSInput VSMain(VSInput input)
 {
     PSInput result;
 
-    result.position = mul(input.position, WorldViewProjectionMatrix);
-    result.color = input.color;
+	float4 wp = mul(input.position, WorldMatrix);
+    result.position = mul(wp, ViewProjectionMatrix);
+    result.normal = input.normal;
 	result.uv = input.uv;
 
-	result.thickness = GetScaleFromWorldMatrix(WorldMatrix).x;
+	result.scale = GetScaleFromWorldMatrix(WorldMatrix);
 
     return result;
 }
@@ -46,28 +47,48 @@ struct PSOutput
     float4 target1 : SV_Target1;
 };
 
-float getLimit(float thickness)
+float2 getLimit(float2 scale)
 {
-	float distScale = length(WorldPosition - CameraPosition) / 5;
+	float distScale = length(WorldPosition - CameraPosition) / 10;
 
-	float limit = 0.1 * min(0.8,  thickness / distScale);
-	limit += 0.4;
+	float2 limit = 1 - distScale * 0.1 / scale;
 
 	return limit;
 }
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-	input.uv.x = abs(input.uv.x - 0.5);
-	input.uv.y = abs(input.uv.y - 0.5);
+	input.uv.x = abs(input.uv.x - 0.5) * 2;
+	input.uv.y = abs(input.uv.y - 0.5) * 2;
 
-	float limit = getLimit(input.thickness);
+	float2 scale = float2(1,1);
 
-	if (input.uv.x < limit && input.uv.y < limit)
+	if (abs(input.normal.x) > 0.5)
+	{
+		scale = input.scale.zy;
+	}
+	else if (abs(input.normal.y) > 0.5)
+	{
+		scale = input.scale.xz;
+	}
+	else //if (abs(input.normal.z) > 0.5)
+	{
+		scale = input.scale.xy;
+	}
+
+	float2 limit = getLimit(scale);
+
+	if (input.uv.x < limit.x && input.uv.y < limit.y)
 		discard;
 
-	float shade = 1 - input.uv.x * input.uv.y * 2;
-	float4 outColor = float4(1,1,1,1) * shade;
+	float shade = 1.5 - input.uv.x * input.uv.y * 0.9;
+	
+	if (shade > 1)
+		discard;
 
-	return outColor;
+	float4 color = float4(1,1,1,1) * (1.7 - shade);
+
+
+	//color.rgb = input.normal.xyz;
+    return color;
 }

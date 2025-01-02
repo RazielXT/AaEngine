@@ -5,6 +5,7 @@
 
 struct ShaderRef;
 struct LoadedShader;
+class ShaderLibrary;
 
 class ComputeShader
 {
@@ -13,9 +14,8 @@ public:
 	ComputeShader() = default;
 	~ComputeShader();
 
-	void init(ID3D12Device* device, const std::string& name);
-	void init(ID3D12Device* device, const std::string& name, const ShaderRef& ref);
-	void init(ID3D12Device* device, const std::string& name, LoadedShader* shader);
+	void init(ID3D12Device& device, const std::string& name, ShaderLibrary& shaders);
+	void init(ID3D12Device& device, const std::string& name, const LoadedShader& shader);
 
 protected:
 

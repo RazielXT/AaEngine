@@ -49,6 +49,7 @@ struct ResourcesInfo
 	{
 		ShaderTextureView* texture{};
 		UINT rootIndex = BindlessTextureIndex;
+		UINT autoParamIdx = {};
 	};
 	std::vector<Texture> textures;
 
@@ -62,7 +63,6 @@ struct ResourcesInfo
 	enum class AutoParam
 	{
 		None,
-		WVP_MATRIX,
 		VP_MATRIX,
 		VIEW_MATRIX,
 		INV_VP_MATRIX,

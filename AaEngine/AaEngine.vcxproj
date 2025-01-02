@@ -18,12 +18,12 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -39,7 +39,7 @@
       <AdditionalIncludeDirectories>..\dependencies\imgui;..\dependencies\DirectXTK12\Inc;..\dependencies\DirectX-Headers\include;..\dependencies\pugixml\src;..\dependencies\DLSS\include;..\dependencies\FidelityFX-SDK\ffx-api\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
-      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_SECURE_SCL=0;_ITERATOR_DEBUG_LEVEL=0;NDEBUG</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG</PreprocessorDefinitions>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -62,7 +62,7 @@
     <ClCompile>
       <AdditionalIncludeDirectories>..\dependencies\imgui;..\dependencies\DirectXTK12\Inc;..\dependencies\DirectX-Headers\include;..\dependencies\tinyxml2;..\dependencies\pugixml\src;..\dependencies\DLSS\include;..\dependencies\FidelityFX-SDK\ffx-api\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <StringPooling>true</StringPooling>
@@ -95,29 +95,34 @@
     <ClCompile Include="..\dependencies\imgui\imgui_draw.cpp" />
     <ClCompile Include="..\dependencies\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\dependencies\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="source\AaApplication.cpp" />
-    <ClCompile Include="source\AaCamera.cpp" />
-    <ClCompile Include="source\AaEntity.cpp" />
-    <ClCompile Include="source\AaMaterial.cpp" />
-    <ClCompile Include="source\AaMaterialFileParser.cpp" />
-    <ClCompile Include="source\AaMaterialResources.cpp" />
-    <ClCompile Include="source\AaMath.cpp" />
-    <ClCompile Include="source\AaModel.cpp" />
-    <ClCompile Include="source\AaModelResources.cpp" />
+    <ClCompile Include="source\Camera.cpp" />
+    <ClCompile Include="source\CascadedShadowMaps.cpp" />
+    <ClCompile Include="source\DrawPrimitives.cpp" />
+    <ClCompile Include="source\EntityPicker.cpp" />
+    <ClCompile Include="source\ObjectId.cpp" />
+    <ClCompile Include="source\SceneEntity.cpp" />
+    <ClCompile Include="source\Material.cpp" />
+    <ClCompile Include="source\MaterialFileParser.cpp" />
+    <ClCompile Include="source\MaterialResources.cpp" />
+    <ClCompile Include="source\MathUtils.cpp" />
+    <ClCompile Include="source\SceneSkybox.cpp" />
+    <ClCompile Include="source\VertexBufferModel.cpp" />
+    <ClCompile Include="source\ModelResources.cpp" />
     <ClCompile Include="source\AoBlurAndUpsampleCS.cpp" />
     <ClCompile Include="source\AoRenderCS.cpp" />
     <ClCompile Include="source\AoPrepareDepthBuffersCS.cpp" />
     <ClCompile Include="source\DLSS.cpp" />
     <ClCompile Include="source\DownsampleTask.cpp" />
     <ClCompile Include="source\FSR.cpp" />
+    <ClCompile Include="source\GraphicsResources.cpp" />
     <ClCompile Include="source\RenderObject.cpp" />
     <ClCompile Include="source\RenderSystem.cpp" />
     <ClCompile Include="source\SceneManager.cpp" />
-    <ClCompile Include="source\AaShaderCompiler.cpp" />
-    <ClCompile Include="source\AaShaderFileParser.cpp" />
-    <ClCompile Include="source\AaShaderLibrary.cpp" />
-    <ClCompile Include="source\AaTextureResources.cpp" />
-    <ClCompile Include="source\AaWindow.cpp" />
+    <ClCompile Include="source\ShaderCompiler.cpp" />
+    <ClCompile Include="source\ShaderFileParser.cpp" />
+    <ClCompile Include="source\ShaderLibrary.cpp" />
+    <ClCompile Include="source\TextureResources.cpp" />
+    <ClCompile Include="source\TargetWindow.cpp" />
     <ClCompile Include="source\BinaryModelLoader.cpp" />
     <ClCompile Include="source\BinaryModelSerialization.cpp" />
     <ClCompile Include="source\ComputeShader.cpp" />
@@ -129,14 +134,10 @@
     <ClCompile Include="source\ConfigParser.cpp" />
     <ClCompile Include="source\DebugWindow.cpp" />
     <ClCompile Include="source\FrameCompositorTaskBuild.cpp" />
-    <ClCompile Include="source\FreeCamera.cpp" />
     <ClCompile Include="source\GenerateMipsComputeShader.cpp" />
     <ClCompile Include="source\GrassArea.cpp" />
     <ClCompile Include="source\GrassInitComputeShader.cpp" />
     <ClCompile Include="source\ImguiDebugWindowTask.cpp" />
-    <ClCompile Include="source\InputHandler.cpp" />
-    <ClCompile Include="source\main.cpp" />
-    <ClCompile Include="source\MyListener.cpp" />
     <ClCompile Include="source\OgreMeshFileParser.cpp" />
     <ClCompile Include="source\RenderQueue.cpp" />
     <ClCompile Include="source\RenderTargetTexture.cpp" />
@@ -145,12 +146,13 @@
     <ClCompile Include="source\SceneRenderTask.cpp" />
     <ClCompile Include="source\SceneTestTask.cpp" />
     <ClCompile Include="source\ScreenQuad.cpp" />
-    <ClCompile Include="source\ShaderConstantBuffers.cpp" />
+    <ClCompile Include="source\ShaderDataBuffers.cpp" />
     <ClCompile Include="source\ShaderConstantsProvider.cpp" />
     <ClCompile Include="source\ShaderSignature.cpp" />
     <ClCompile Include="source\ShadowMap.cpp" />
     <ClCompile Include="source\ShadowsRenderTask.cpp" />
     <ClCompile Include="source\SsaoComputeTask.cpp" />
+    <ClCompile Include="source\StringUtils.cpp" />
     <ClCompile Include="source\TextureData.cpp" />
     <ClCompile Include="source\TextureResource.cpp" />
     <ClCompile Include="source\UpscaleTask.cpp" />
@@ -161,12 +163,15 @@
     <ClInclude Include="..\dependencies\imgui\backends\imgui_impl_dx12.h" />
     <ClInclude Include="..\dependencies\imgui\backends\imgui_impl_win32.h" />
     <ClInclude Include="..\dependencies\imgui\imgui.h" />
-    <ClInclude Include="source\AaApplication.h" />
-    <ClInclude Include="source\AaCamera.h" />
-    <ClInclude Include="source\AaEntity.h" />
-    <ClInclude Include="source\AaFrameListener.h" />
-    <ClInclude Include="source\AaLogger.h" />
-    <ClInclude Include="source\AaMaterial.h" />
+    <ClInclude Include="source\Camera.h" />
+    <ClInclude Include="source\CascadedShadowMaps.h" />
+    <ClInclude Include="source\DrawPrimitives.h" />
+    <ClInclude Include="source\EntityPicker.h" />
+    <ClInclude Include="source\ObjectId.h" />
+    <ClInclude Include="source\ResourceGroup.h" />
+    <ClInclude Include="source\SceneEntity.h" />
+    <ClInclude Include="source\FileLogger.h" />
+    <ClInclude Include="source\Material.h" />
     <ClInclude Include="source\AoBlurAndUpsampleCS.h" />
     <ClInclude Include="source\AoRenderCS.h" />
     <ClInclude Include="source\CompositorTask.h" />
@@ -176,25 +181,28 @@
     <ClInclude Include="source\EntityGeometry.h" />
     <ClInclude Include="source\FSR.h" />
     <ClInclude Include="source\GenerateMipsComputeShader.h" />
+    <ClInclude Include="source\GraphicsResources.h" />
     <ClInclude Include="source\GrassArea.h" />
     <ClInclude Include="source\GrassInitComputeShader.h" />
+    <ClInclude Include="source\SceneSkybox.h" />
+    <ClInclude Include="source\StringUtils.h" />
     <ClInclude Include="source\ImguiDebugWindowTask.h" />
     <ClInclude Include="source\AoPrepareDepthBuffersCS.h" />
     <ClInclude Include="source\SceneTestTask.h" />
     <ClInclude Include="source\ScreenQuad.h" />
     <ClInclude Include="source\ShaderConstantsProvider.h" />
-    <ClInclude Include="source\AaMaterialFileParser.h" />
-    <ClInclude Include="source\AaMaterialResources.h" />
-    <ClInclude Include="source\AaModel.h" />
-    <ClInclude Include="source\AaModelResources.h" />
+    <ClInclude Include="source\MaterialFileParser.h" />
+    <ClInclude Include="source\MaterialResources.h" />
+    <ClInclude Include="source\VertexBufferModel.h" />
+    <ClInclude Include="source\ModelResources.h" />
     <ClInclude Include="source\RenderObject.h" />
     <ClInclude Include="source\RenderSystem.h" />
     <ClInclude Include="source\SceneManager.h" />
-    <ClInclude Include="source\AaShaderCompiler.h" />
-    <ClInclude Include="source\AaShaderFileParser.h" />
-    <ClInclude Include="source\AaShaderLibrary.h" />
-    <ClInclude Include="source\AaTextureResources.h" />
-    <ClInclude Include="source\AaWindow.h" />
+    <ClInclude Include="source\ShaderCompiler.h" />
+    <ClInclude Include="source\ShaderFileParser.h" />
+    <ClInclude Include="source\ShaderLibrary.h" />
+    <ClInclude Include="source\TextureResources.h" />
+    <ClInclude Include="source\TargetWindow.h" />
     <ClInclude Include="source\BinaryModelLoader.h" />
     <ClInclude Include="source\BinaryModelSerialization.h" />
     <ClInclude Include="source\ComputeShader.h" />
@@ -207,11 +215,8 @@
     <ClInclude Include="source\DebugWindow.h" />
     <ClInclude Include="source\Directories.h" />
     <ClInclude Include="source\Directx.h" />
-    <ClInclude Include="source\FreeCamera.h" />
-    <ClInclude Include="source\InputHandler.h" />
     <ClInclude Include="source\ShaderResources.h" />
-    <ClInclude Include="source\AaMath.h" />
-    <ClInclude Include="source\MyListener.h" />
+    <ClInclude Include="source\MathUtils.h" />
     <ClInclude Include="source\OgreMeshFileParser.h" />
     <ClInclude Include="source\RenderQueue.h" />
     <ClInclude Include="source\RenderTargetTexture.h" />
@@ -219,7 +224,7 @@
     <ClInclude Include="source\SceneLights.h" />
     <ClInclude Include="source\SceneParser.h" />
     <ClInclude Include="source\SceneRenderTask.h" />
-    <ClInclude Include="source\ShaderConstantBuffers.h" />
+    <ClInclude Include="source\ShaderDataBuffers.h" />
     <ClInclude Include="source\ShaderSignature.h" />
     <ClInclude Include="source\ShadowMap.h" />
     <ClInclude Include="source\ShadowsRenderTask.h" />

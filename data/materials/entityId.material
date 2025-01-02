@@ -1,0 +1,34 @@
+material EntityId
+{
+	vertex_shader
+	{
+		file entityId.hlsl
+		entry VSMain
+		profile vs_6_6
+	}
+
+	pixel_shader
+	{
+		file entityId.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
+}
+
+material EntityIdInstancing : EntityId
+{
+	vertex_shader
+	{
+		file entityId.hlsl
+		entry VSMain
+		profile vs_6_6
+		defines INSTANCED
+	}
+	pixel_shader
+	{
+		file entityId.hlsl
+		entry PSMain
+		profile ps_6_6
+		defines INSTANCED
+	}
+}

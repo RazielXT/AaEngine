@@ -1,24 +1,23 @@
 #pragma once
 
-#include "AaShaderCompiler.h"
-#include "DescriptorManager.h"
-#include "ShaderConstantBuffers.h"
+#include "ShaderCompiler.h"
 #include "ShaderResources.h"
 
 struct LoadedShader;
+struct GraphicsResources;
 
 struct SignatureInfo
 {
 	struct CBuffer
 	{
-		ShaderReflection::CBuffer& info;
+		const ShaderReflection::CBuffer& info;
 		D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY(-1);
 	};
 	std::vector<CBuffer> cbuffers;
 
 	struct Texture
 	{
-		ShaderReflection::Texture& info;
+		const ShaderReflection::Texture& info;
 		D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY(-1);
 		bool staticWhileExecute = true;
 	};
@@ -26,21 +25,21 @@ struct SignatureInfo
 
 	struct Sampler
 	{
-		ShaderReflection::Sampler& info;
+		const ShaderReflection::Sampler& info;
 		D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY(-1);
 	};
 	std::vector<Sampler> samplers;
 
 	struct UAV
 	{
-		ShaderReflection::UAV& info;
+		const ShaderReflection::UAV& info;
 		D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY(-1);
 	};
 	std::vector<UAV> uavs;
 
 	struct StructuredBuffer
 	{
-		ShaderReflection::StructuredBuffer& info;
+		const ShaderReflection::StructuredBuffer& info;
 		D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY(-1);
 	};
 	std::vector<StructuredBuffer> structuredBuffers;
@@ -61,12 +60,12 @@ struct SignatureInfo
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS;
 
-	void add(LoadedShader* shader, ShaderType type);
+	void add(const LoadedShader& shader, ShaderType type);
 	void setTexturesVolatile();
 	void finish();
 
-	ID3D12RootSignature* createRootSignature(ID3D12Device* device, const wchar_t* name, const std::vector<SamplerInfo>& staticSamplers = {});
-	std::shared_ptr<ResourcesInfo> createResourcesData() const;
+	ID3D12RootSignature* createRootSignature(ID3D12Device& device, const wchar_t* name, const std::vector<SamplerInfo>& staticSamplers = {});
+	std::shared_ptr<ResourcesInfo> createResourcesData(GraphicsResources& resources) const;
 
 private:
 

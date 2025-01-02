@@ -1,20 +1,20 @@
 #pragma once
 
 #include "SceneParser.h"
-#include <algorithm>
 #include "Directories.h"
-#include "AaLogger.h"
+#include "FileLogger.h"
+#include "GraphicsResources.h"
 #include <filesystem>
+#include <algorithm>
 
 #define PUGIXML_HEADER_ONLY
 #include "pugixml.hpp"
-#include "AaModelResources.h"
-#include "AaMaterialResources.h"
 
 using namespace pugi;
 
-static SceneParseResult* parseResult{};
-static ModelLoadContext* ctx{};
+static SceneParser::Ctx* ctx{};
+static SceneParser::Result* parseResult{};
+static ModelLoadContext* loadCtx{};
 
 struct SceneNode
 {
@@ -182,7 +182,7 @@ std::vector<ExtensionFunction> parseExtensionFunctions(const std::string& input)
 	return functions;
 }
 
-void loadExtensions(const xml_node& element, AaEntity* ent, SceneNode* node, SceneManager* sceneMgr)
+void loadExtensions(const xml_node& element, SceneEntity* ent, SceneNode* node)
 {
 	auto extensions = parseExtensionFunctions(element.text().get());
 
@@ -195,7 +195,7 @@ void loadExtensions(const xml_node& element, AaEntity* ent, SceneNode* node, Sce
 	}
 }
 
-void loadEntityUserData(const xml_node& element, AaEntity* ent, SceneNode* node, SceneManager* sceneMgr)
+void loadEntityUserData(const xml_node& element, SceneEntity* ent, SceneNode* node)
 {
 	pugi::xml_document subdoc;
 	if (subdoc.load_string(element.text().get()))
@@ -203,25 +203,25 @@ void loadEntityUserData(const xml_node& element, AaEntity* ent, SceneNode* node,
 		if (auto physicalElement = subdoc.child("PhysicalBody"))
 		{
 			if (auto extensionElement = physicalElement.child("Extension"))
-				loadExtensions(extensionElement, ent, node, sceneMgr);
+				loadExtensions(extensionElement, ent, node);
 		}
 	}
 }
 
-void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible, SceneManager* sceneMgr)
+void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible)
 {
 	auto name = GetStringAttribute(entityElement, "name");
 	auto mesh = GetStringAttribute(entityElement, "meshFile");
 	auto renderQueue = ParseRenderQueue(entityElement.attribute("renderQueue").value());
 
-	AaLogger::log("Loading entity " + name + " with mesh file " + mesh);
-	AaEntity* ent{};
+	FileLogger::log("Loading entity " + name + " with mesh file " + mesh);
+	SceneEntity* ent{};
 
 	for (const auto& element : entityElement.child("subentities").children())
 	{
 		auto materialName = GetStringAttribute(element, "materialName");
-		auto material = AaMaterialResources::get().getMaterial(materialName, ctx->batch);
-		auto model = AaModelResources::get().getModel(mesh, *ctx);
+		auto material = ctx->resources.materials.getMaterial(materialName, loadCtx->batch);
+		auto model = ctx->resources.models.getModel(mesh, *loadCtx);
 
 		if (material->HasInstancing())
 		{
@@ -236,7 +236,7 @@ void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible, Sc
 		if (material->IsTransparent() && renderQueue < Order::Transparent)
 			renderQueue = Order::Transparent;
 
-		ent = sceneMgr->createEntity(name, node->transformation, model->bbox, renderQueue);
+		ent = ctx->sceneMgr.createEntity(name, node->transformation, model->bbox, renderQueue);
 		ent->material = material;
 		ent->geometry.fromModel(*model);
 		//ent->setVisible(visible);
@@ -246,11 +246,11 @@ void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible, Sc
 
 	if (const auto& element = entityElement.child("userData"))
 	{
-		loadEntityUserData(element, ent, node, sceneMgr);
+		loadEntityUserData(element, ent, node);
 	}
 }
 
-void loadNode(const xml_node& nodeElement, SceneManager* sceneMgr)
+void loadNode(const xml_node& nodeElement)
 {
 	SceneNode node;
 	node.transformation.position = LoadXYZ(nodeElement.child("position"));
@@ -265,7 +265,7 @@ void loadNode(const xml_node& nodeElement, SceneManager* sceneMgr)
 		std::string elementName = element.name();
 
 		if (elementName == "entity")
-			loadEntity(element, &node, visible, sceneMgr);
+			loadEntity(element, &node, visible);
 // 		else if (elementName == "light")
 // 			loadLight(childElement, &node, sceneMgr);
 	}
@@ -284,10 +284,11 @@ static std::string findFileWithExtension(const std::string& directoryPath, const
 	return {};
 }
 
-SceneParseResult SceneParser::load(std::string name, SceneManager* sceneMgr, RenderSystem* renderSystem)
+SceneParser::Result SceneParser::load(std::string name, Ctx parseCtx)
 {
-	SceneParseResult result;
+	SceneParser::Result result;
 	parseResult = &result;
+	ctx = &parseCtx;
 
 	auto folder = SCENE_DIRECTORY + name + "/";
 	auto filename = findFileWithExtension(folder, ".scene");
@@ -297,21 +298,24 @@ SceneParseResult SceneParser::load(std::string name, SceneManager* sceneMgr, Ren
 
 	if (xml_document doc; doc.load_file(filename.c_str()))
 	{
-		ModelLoadContext loadCtx(renderSystem);
-		ctx = &loadCtx;
-		loadCtx.folder = folder;
-		loadCtx.batch.Begin();
+		ModelLoadContext loaderCtx(parseCtx.renderSystem);
+		loaderCtx.folder = folder;
+		loaderCtx.batch.Begin();
+
+		loadCtx = &loaderCtx;
 
 		const auto& scene = doc.child("scene");
 
 		for (const auto& node : scene.child("nodes").children())
 		{
-			loadNode(node, sceneMgr);
+			loadNode(node);
 		}
 
-		auto uploadResourcesFinished = loadCtx.batch.End(renderSystem->commandQueue);
+		auto uploadResourcesFinished = loaderCtx.batch.End(parseCtx.renderSystem.core.commandQueue);
 		uploadResourcesFinished.wait();
 	}
+
+	parseCtx.sceneMgr.skybox.setMaterial("Skybox", parseCtx.sceneMgr.getQueueTargetFormats());
 
 	return result;
 }

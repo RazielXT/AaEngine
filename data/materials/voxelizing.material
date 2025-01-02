@@ -10,7 +10,7 @@ material Voxelize
 	{
 		file white.png
 	}
-	texture ShadowMap0
+	texture ShadowMap1
 	texture SceneVoxelBounces
 }
 

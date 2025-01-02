@@ -2,11 +2,11 @@
 
 #include "Directx.h"
 #include <vector>
-#include "ShaderConstantBuffers.h"
+#include "ShaderDataBuffers.h"
 
-class AaModel;
+class VertexBufferModel;
 struct InstanceGroup;
-class GrassArea;
+struct GrassArea;
 
 struct EntityGeometry
 {
@@ -30,7 +30,9 @@ struct EntityGeometry
 
 	D3D12_GPU_VIRTUAL_ADDRESS geometryCustomBuffer{};
 
-	void fromModel(const AaModel& model);
-	void fromInstancedModel(const AaModel& model, InstanceGroup& group);
+	void* source{};
+
+	void fromModel(const VertexBufferModel& model);
+	void fromInstancedModel(const VertexBufferModel& model, InstanceGroup& group);
 	void fromGrass(GrassArea& grass);
 };

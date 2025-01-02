@@ -994,5 +994,5 @@ float4 PS_FXAA(
 	texInfo.tex = colorMap;
 	texInfo.smpl = colorSampler;
 
-	return FxaaPixelShader(input.TexCoord,texInfo,ViewportSizeInverse,0.95,0.125,0.0425);
+	return float4(FxaaPixelShader(input.TexCoord,texInfo,ViewportSizeInverse,0.95,0.125,0.0425).rgb, 1);
 }

@@ -33,6 +33,11 @@ pixel_shader psAddThrough
 	profile ps_6_6
 }
 
+pixel_shader psAddThroughNoLuma : psAddThrough
+{
+	defines NO_LUMA
+}
+
 pixel_shader psBlurX
 {
 	file postprocess.hlsl

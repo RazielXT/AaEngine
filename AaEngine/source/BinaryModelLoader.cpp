@@ -1,19 +1,19 @@
 #include "BinaryModelLoader.h"
 #include "BinaryModelSerialization.h"
-#include "AaLogger.h"
+#include "FileLogger.h"
 #include "Math.h"
 
-AaModel* BinaryModelLoader::load(std::string filename, ModelParseOptions options)
+VertexBufferModel* BinaryModelLoader::load(std::string filename, ModelParseOptions options)
 {
 	ModelInfo info;
 
 	if (!BinaryModelSerialization::ReadModel(filename, info))
 	{
-		AaLogger::logError("Failed to load model " + filename);
+		FileLogger::logError("Failed to load model " + filename);
 		return nullptr;
 	}
 
-	auto model = new AaModel();
+	auto model = new VertexBufferModel();
 
 	model->calculateBounds(info.positions);
 

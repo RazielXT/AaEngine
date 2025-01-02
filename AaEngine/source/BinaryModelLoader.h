@@ -1,10 +1,10 @@
 #pragma once
 
 #include <SimpleMath.h>
-#include "AaModel.h"
+#include "VertexBufferModel.h"
 #include "ModelParseOptions.h"
 
 namespace BinaryModelLoader
 {
-	AaModel* load(std::string filename, ModelParseOptions);
+	VertexBufferModel* load(std::string filename, ModelParseOptions);
 };

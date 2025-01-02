@@ -1,7 +1,7 @@
 #include "RenderObject.h"
-#include "AaCamera.h"
+#include "Camera.h"
 
-RenderObjectsStorage::RenderObjectsStorage()
+RenderObjectsStorage::RenderObjectsStorage(Order o) : order(o)
 {
 }
 
@@ -21,6 +21,7 @@ UINT RenderObjectsStorage::createId(RenderObject* obj)
 		objectsData.worldBbox[id] = {};
 		objectsData.worldMatrix[id] = {};
 		objectsData.prevWorldMatrix[id] = {};
+		objectsData.objects[id] = obj;
 
 		auto pos = std::lower_bound(ids.begin(), ids.end(), id);
 		ids.insert(pos, id);
@@ -35,6 +36,7 @@ UINT RenderObjectsStorage::createId(RenderObject* obj)
 	objectsData.worldBbox.emplace_back();
 	objectsData.worldMatrix.emplace_back();
 	objectsData.prevWorldMatrix.emplace_back();
+	objectsData.objects.push_back(obj);
 
 	ids.push_back(id);
 
@@ -77,32 +79,6 @@ void RenderObjectsStorage::initializeTransformation(UINT id, ObjectTransformatio
 	objectsData.prevWorldMatrix[id] = objectsData.worldMatrix[id];
 }
 
-void RenderObjectsStorage::updateWVPMatrix(const XMMATRIX& viewProjection, RenderObjectsVisibilityData& info) const
-{
-	info.wvpMatrix.resize(ids.size());
-
-	for (auto id : ids)
-	{
-		if (info.visibility[id])
-		{
-			XMStoreFloat4x4(&info.wvpMatrix[id], XMMatrixMultiplyTranspose(objectsData.worldMatrix[id], viewProjection));
-		}
-	}
-}
-
-void RenderObjectsStorage::updateWVPMatrix(const XMMATRIX& viewProjection, RenderObjectsVisibilityData& info, const RenderObjectsFilter& filter) const
-{
-	info.wvpMatrix.resize(ids.size());
-
-	for (auto id : filter)
-	{
-		if (info.visibility[id])
-		{
-			XMStoreFloat4x4(&info.wvpMatrix[id], XMMatrixMultiplyTranspose(objectsData.worldMatrix[id], viewProjection));
-		}
-	}
-}
-
 void RenderObjectsStorage::updateVisibility(const BoundingFrustum& frustum, RenderObjectsVisibilityState& visible) const
 {
 	visible.resize(ids.size());
@@ -143,24 +119,33 @@ void RenderObjectsStorage::updateVisibility(const BoundingOrientedBox& box, Rend
 	}
 }
 
-void RenderObjectsStorage::updateVisibility(const AaCamera& camera, RenderObjectsVisibilityData& info) const
+void RenderObjectsStorage::updateVisibility(const Camera& camera, RenderObjectsVisibilityData& info) const
 {
 	if (camera.isOrthographic())
 		updateVisibility(camera.prepareOrientedBox(), info.visibility);
 	else
 		updateVisibility(camera.prepareFrustum(), info.visibility);
-
-	updateWVPMatrix(camera.getViewProjectionMatrix(), info);
 }
 
-void RenderObjectsStorage::updateVisibility(const AaCamera& camera, RenderObjectsVisibilityData& info, const RenderObjectsFilter& filter) const
+void RenderObjectsStorage::updateVisibility(const Camera& camera, RenderObjectsVisibilityData& info, const RenderObjectsFilter& filter) const
 {
 	if (camera.isOrthographic())
 		updateVisibility(camera.prepareOrientedBox(), info.visibility, filter);
 	else
 		updateVisibility(camera.prepareFrustum(), info.visibility, filter);
+}
 
-	updateWVPMatrix(camera.getViewProjectionMatrix(), info, filter);
+RenderObject* RenderObjectsStorage::getObject(UINT id) const
+{
+	return objectsData.objects.size() > id ? objectsData.objects[id] : nullptr;
+}
+
+void RenderObjectsStorage::iterateObjects(std::function<void(RenderObject&)> func) const
+{
+	for (auto id : ids)
+	{
+		func(*objectsData.objects[id]);
+	}
 }
 
 void RenderObjectsStorage::reset()
@@ -291,22 +276,17 @@ XMMATRIX RenderObject::getPreviousWorldMatrix() const
 	return source.objectsData.prevWorldMatrix[id];
 }
 
-DirectX::XMFLOAT4X4 RenderObject::getWvpMatrix(const std::vector<XMFLOAT4X4>& wvpMatrix) const
-{
-	return wvpMatrix[id];
-}
-
-void RenderObject::setBoundingBox(BoundingBox bbox)
+void RenderObject::setBoundingBox(const BoundingBox& bbox)
 {
 	source.objectsData.bbox[id] = bbox;
 }
 
-DirectX::BoundingBox RenderObject::getBoundingBox() const
+const BoundingBox& RenderObject::getBoundingBox() const
 {
 	return source.objectsData.bbox[id];
 }
 
-DirectX::BoundingBox RenderObject::getWorldBoundingBox() const
+const BoundingBox& RenderObject::getWorldBoundingBox() const
 {
 	return source.objectsData.worldBbox[id];
 }
@@ -314,4 +294,14 @@ DirectX::BoundingBox RenderObject::getWorldBoundingBox() const
 UINT RenderObject::getId() const
 {
 	return id;
+}
+
+ObjectId RenderObject::getGlobalId() const
+{
+	return ObjectId(id, source.order);
+}
+
+RenderObjectsStorage& RenderObject::getStorage() const
+{
+	return source;
 }

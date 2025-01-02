@@ -2,7 +2,7 @@
 
 #include "ComputeShader.h"
 #include "DirectXMath.h"
-#include "AaMath.h"
+#include "MathUtils.h"
 
 struct GrassAreaDescription;
 

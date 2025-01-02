@@ -1,5 +1,5 @@
 #include "EntityGeometry.h"
-#include "AaModel.h"
+#include "VertexBufferModel.h"
 #include "EntityInstancing.h"
 #include "GrassArea.h"
 
@@ -8,7 +8,7 @@ bool EntityGeometry::usesInstancing() const
 	return type == Type::Instancing;
 }
 
-void EntityGeometry::fromModel(const AaModel& model)
+void EntityGeometry::fromModel(const VertexBufferModel& model)
 {
 	vertexCount = model.vertexCount;
 	indexCount = model.indexCount;
@@ -19,12 +19,13 @@ void EntityGeometry::fromModel(const AaModel& model)
 	type = Type::Model;
 }
 
-void EntityGeometry::fromInstancedModel(const AaModel& model, InstanceGroup& group)
+void EntityGeometry::fromInstancedModel(const VertexBufferModel& model, InstanceGroup& group)
 {
 	fromModel(model);
 	instanceCount = group.count;
 	geometryCustomBuffer = group.gpuBuffer->GetGPUVirtualAddress();
 	type = Type::Instancing;
+	source = &group;
 }
 
 void EntityGeometry::fromGrass(GrassArea& grass)
@@ -33,4 +34,5 @@ void EntityGeometry::fromGrass(GrassArea& grass)
 	vertexCount = grass.vertexCount;
 	instanceCount = 1;
 	type = Type::Manual;
+	source = &grass;
 }

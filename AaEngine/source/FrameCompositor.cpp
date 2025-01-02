@@ -1,6 +1,6 @@
 #include "FrameCompositor.h"
 #include "CompositorFileParser.h"
-#include "AaMaterialResources.h"
+#include "MaterialResources.h"
 #include "SceneManager.h"
 #include "ShadowMap.h"
 #include "DebugWindow.h"
@@ -25,74 +25,99 @@ FrameCompositor::~FrameCompositor()
 		c.deinit();
 }
 
-void FrameCompositor::load(std::string path)
+void FrameCompositor::load(std::string path, const InitParams& params)
 {
-	load(CompositorFileParser::parseFile(FRAME_DIRECTORY, path));
+	renderToBackbuffer = params.renderToBackbuffer;
+	info = CompositorFileParser::parseFile(FRAME_DIRECTORY, path + ".compositor");
+
+	if (!renderToBackbuffer)
+	{
+		auto& outputTexture = info.textures["Output"];
+		outputTexture.name = "Output";
+		outputTexture.outputScale = true;
+		outputTexture.height = outputTexture.width = 1.0f;
+		outputTexture.format = params.outputFormat;
+	}
+
+	load(info);
 }
 
 void FrameCompositor::load(CompositorInfo i)
 {
-	info = i;
 	std::vector<CompositorPassCondition> conditions;
-	auto& upscale = provider.renderSystem->upscale;
+	auto& upscale = provider.renderSystem.upscale;
 	conditions.push_back({ upscale.dlss.enabled() , "DLSS" });
 	conditions.push_back({ upscale.fsr.enabled() , "FSR" });
 	conditions.push_back({ upscale.dlss.enabled() || upscale.fsr.enabled() , "UPSCALE" });
 
 	passes.clear();
+
+	std::map<std::string, std::shared_ptr<CompositorTask>> tasks;
+
 	for (auto& p : info.passes)
 	{
 		if (p.condition)
 		{
-			bool pass = false;
+			bool pass = !p.condition->accept;
 			for (auto& c : conditions)
-				pass = pass || c == p.condition;
+				if (c.param == p.condition->param)
+					pass = c == p.condition;
 
 			if (!pass)
 				continue;
 		}
 
 		auto& pass = passes.emplace_back(p);
+		auto& task = tasks[pass.info.task];
 
-		if (pass.info.task == "Scene")
+		if (!task)
 		{
-			pass.task = std::make_unique<SceneRenderTask>(provider, sceneMgr);
+			if (pass.info.task == "SceneRender")
+			{
+				pass.task = std::make_shared<SceneRenderTask>(provider, sceneMgr);
+			}
+			else if (pass.info.task == "Shadows")
+			{
+				pass.task = std::make_shared<ShadowsRenderTask>(provider, sceneMgr, shadowMaps);
+			}
+			else if (pass.info.task == "VoxelScene")
+			{
+				pass.task = std::make_shared<VoxelizeSceneTask>(provider, sceneMgr, shadowMaps);
+			}
+			else if (pass.info.task == "DebugOverlay")
+			{
+				pass.task = std::make_shared<DebugOverlayTask>(provider, sceneMgr);
+			}
+			else if (pass.info.task == "Imgui")
+			{
+				pass.task = std::make_shared<ImguiDebugWindowTask>(provider, sceneMgr);
+			}
+			else if (pass.info.task == "SSAO")
+			{
+				pass.task = std::make_shared<SsaoComputeTask>(provider, sceneMgr);
+			}
+			else if (pass.info.task == "Upscale")
+			{
+				pass.task = std::make_shared<UpscaleTask>(provider, sceneMgr);
+			}
+			else if (pass.info.task == "UpscalePrepare")
+			{
+				pass.task = std::make_shared<UpscalePrepareTask>(provider, sceneMgr);
+			}
+			else if (pass.info.task == "Test")
+			{
+				pass.task = std::make_shared<SceneTestTask>(provider, sceneMgr);
+			}
+			else if (pass.info.task == "HiZDepthDownsample")
+			{
+				pass.task = std::make_shared<DownsampleDepthTask>(provider, sceneMgr);
+			}
+
+			task = pass.task;
 		}
-		else if (pass.info.task == "SceneTransparent")
+		else
 		{
-			pass.task = std::make_unique<SceneRenderTransparentTask>(provider, sceneMgr);
-		}
-		else if (pass.info.task == "Shadows")
-		{
-			pass.task = std::make_unique<ShadowsRenderTask>(provider, sceneMgr, shadowMaps);
-		}
-		else if (pass.info.task == "VoxelScene")
-		{
-			pass.task = std::make_unique<VoxelizeSceneTask>(provider, sceneMgr, shadowMaps);
-		}
-		else if (pass.info.task == "DebugOverlay")
-		{
-			pass.task = std::make_unique<DebugOverlayTask>(provider, sceneMgr);
-		}
-		else if (pass.info.task == "Imgui")
-		{
-			pass.task = std::make_unique<ImguiDebugWindowTask>(provider, sceneMgr);
-		}
-		else if (pass.info.task == "SSAO")
-		{
-			pass.task = std::make_unique<SsaoComputeTask>(provider, sceneMgr);
-		}
-		else if (pass.info.task == "Upscale")
-		{
-			pass.task = std::make_unique<UpscaleTask>(provider, sceneMgr);
-		}
-		else if (pass.info.task == "Test")
-		{
-			pass.task = std::make_unique<SceneTestTask>(provider, sceneMgr);
-		}
-		else if (pass.info.task == "HiZDepthDownscale")
-		{
-			pass.task = std::make_unique<DownsampleDepthTask>(provider, sceneMgr);
+			pass.task = task;
 		}
 	}
 
@@ -103,7 +128,7 @@ void FrameCompositor::load(CompositorInfo i)
 	for (auto& pass : passes)
 	{
 		if (!pass.info.material.empty() && pass.target.texture)
-			pass.material = AaMaterialResources::get().getMaterial(pass.info.material)->Assign({}, { pass.target.texture->format });
+			pass.material = provider.resources.materials.getMaterial(pass.info.material)->Assign({}, { pass.target.texture->format });
 	}
 
 	initializeCommands();
@@ -126,8 +151,8 @@ void FrameCompositor::reloadTextures()
 			else
 				textureCount++;
 
-		rtvHeap.InitRtv(provider.renderSystem->device, textureCount, L"CompositorRTV");
-		rtvHeap.InitDsv(provider.renderSystem->device, depthCount, L"CompositorDSV");
+		rtvHeap.InitRtv(provider.renderSystem.core.device, textureCount, L"CompositorRTV");
+		rtvHeap.InitDsv(provider.renderSystem.core.device, depthCount, L"CompositorDSV");
 	}
 	rtvHeap.Reset();
 	textures.clear();
@@ -142,22 +167,25 @@ void FrameCompositor::reloadTextures()
 
 			if (t.targetScale)
 			{
-				auto sz = provider.renderSystem->getRenderSize();
+				auto sz = provider.renderSystem.getRenderSize();
 				w = sz.x * t.width;
 				h = sz.y * t.height;
 			}
 			else if (t.outputScale)
 			{
-				auto sz = provider.renderSystem->getOutputSize();
+				auto sz = provider.renderSystem.getOutputSize();
 				w = sz.x * t.width;
 				h = sz.y * t.height;
 			}
 			if (t.arraySize > 1)
 			{
 				auto sqr = sqrt(t.arraySize);
-				w /= sqr;
-				h /= sqr;
+				w = std::ceil(w / sqr);
+				h = std::ceil(h / sqr);
 			}
+			w = max(w, 1);
+			h = max(h, 1);
+
 
 			{
 				auto lastState = lastTextureStates[name];
@@ -166,12 +194,12 @@ void FrameCompositor::reloadTextures()
 				tex.arraySize = t.arraySize;
 
 				if (name.ends_with(":Depth"))
-					tex.InitDepth(provider.renderSystem->device, w, h, rtvHeap, lastState);
+					tex.InitDepth(provider.renderSystem.core.device, w, h, rtvHeap, lastState);
 				else
 				{
 
 					UINT flags = t.uav ? RenderTargetTexture::AllowUAV : RenderTargetTexture::AllowRenderTarget;
-					tex.Init(provider.renderSystem->device, w, h, rtvHeap, t.format, lastState, flags);
+					tex.Init(provider.renderSystem.core.device, w, h, rtvHeap, t.format, lastState, flags);
 				}
 
 				tex.SetName(name);
@@ -180,7 +208,7 @@ void FrameCompositor::reloadTextures()
 				if (t.uav)
 					DescriptorManager::get().createUAVView(tex);
 
-				AaTextureResources::get().setNamedTexture("c_" + name, tex.view);
+				provider.resources.textures.setNamedTexture(info.name + ":" + name, tex.view);
 			}
 		};
 
@@ -193,7 +221,7 @@ void FrameCompositor::reloadTextures()
 		}
 	}
 
-	for (auto& [name,t] : info.textures)
+	for (auto& [name, t] : info.textures)
 	{
 		initializeTexture(name, t);
 	}
@@ -207,9 +235,9 @@ void FrameCompositor::reloadTextures()
 
 		if (!p.info.targets.empty())
 		{
-			if (p.info.targets.front().name == "Backbuffer")
+			if (renderToBackbuffer && p.info.targets.front().name == "Output")
 			{
-				p.target.texture = &provider.renderSystem->backbuffer[0];
+				p.target.texture = &provider.renderSystem.core.backbuffer[0];
 				p.target.backbuffer = true;
 			}
 			else
@@ -274,9 +302,9 @@ void FrameCompositor::render(RenderContext& ctx)
 	{
 		auto& syncCommands = pass.generalCommands;
 		if (pass.startCommands)
-			provider.renderSystem->StartCommandList(syncCommands);
+			provider.renderSystem.core.StartCommandListNoMarker(syncCommands);
 		if (pass.target.backbuffer)
-			pass.target.texture = &provider.renderSystem->backbuffer[provider.renderSystem->frameIndex];
+			pass.target.texture = &provider.renderSystem.core.backbuffer[provider.renderSystem.core.frameIndex];
 
 		if (pass.material)
 		{
@@ -289,12 +317,23 @@ void FrameCompositor::render(RenderContext& ctx)
 		}
 
 		if (pass.target.present)
-			pass.target.texture->PrepareToPresent(syncCommands.commandList, pass.target.previousState);
+		{
+			if (renderToBackbuffer)
+				pass.target.texture->PrepareToPresent(syncCommands.commandList, pass.target.previousState);
+			else
+				pass.target.texture->PrepareAsView(syncCommands.commandList, pass.target.previousState);
+		}
 	}
 	executeCommands();
+}
 
-	provider.renderSystem->Present();
-	provider.renderSystem->EndFrame();
+const RenderTargetTexture* FrameCompositor::getTexture(const std::string& name) const
+{
+	auto it = textures.find(name);
+	if (it == textures.end())
+		return nullptr;
+
+	return &it->second;
 }
 
 void FrameCompositor::executeCommands()
@@ -305,7 +344,7 @@ void FrameCompositor::executeCommands()
 		{
 			for (auto& c : t.data)
 			{
-				provider.renderSystem->ExecuteCommandList(c);
+				provider.renderSystem.core.ExecuteCommandList(c);
 			}
 		}
 		else
@@ -316,7 +355,7 @@ void FrameCompositor::executeCommands()
 				if (dwWaitResult >= WAIT_OBJECT_0 && dwWaitResult < WAIT_OBJECT_0 + t.finishEvents.size())
 				{
 					int index = dwWaitResult - WAIT_OBJECT_0;
-					provider.renderSystem->ExecuteCommandList(t.data[index]);
+					provider.renderSystem.core.ExecuteCommandList(t.data[index]);
 				}
 			}
 		}

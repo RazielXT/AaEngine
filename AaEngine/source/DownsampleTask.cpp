@@ -10,7 +10,9 @@ DownsampleDepthTask::~DownsampleDepthTask()
 
 AsyncTasksInfo DownsampleDepthTask::initialize(CompositorPass& pass)
 {
-	cs.init(provider.renderSystem->device, pass.info.name, ShaderRef{ "DepthDownsampleCS.hlsl", "main", "cs_6_6" });
+	auto shader = provider.resources.shaders.getShader(pass.info.name, ShaderTypeCompute, ShaderRef{ "DepthDownsampleCS.hlsl", "main", "cs_6_6" });
+
+	cs.init(*provider.renderSystem.core.device, pass.info.name, *shader);
 
 	return {};
 }
@@ -27,6 +29,8 @@ void DownsampleDepthTask::resize(CompositorPass& pass)
 
 void DownsampleDepthTask::run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass)
 {
+	CommandsMarker marker(syncCommands.commandList, "DownsampleDepthHiZ");
+
 	RenderTargetTransitions<3> tr;
 	tr.addConst(inputs[0], D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 	tr.addConst(inputs[1], D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
@@ -40,9 +44,6 @@ void DownsampleDepthCS::dispatch(ID3D12GraphicsCommandList* commandList)
 {
 	commandList->SetPipelineState(pipelineState.Get());
 	commandList->SetComputeRootSignature(signature);
-
-	ID3D12DescriptorHeap* ppHeaps[] = { DescriptorManager::get().mainDescriptorHeap };
-	commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
 	commandList->SetComputeRoot32BitConstants(0, sizeof(data) / sizeof(float), &data, 0);
 

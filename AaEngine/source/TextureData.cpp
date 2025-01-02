@@ -1,36 +1,14 @@
-#include <algorithm>
-#include <cassert>
-#include <cstddef>
-#include <cstdint>
-#include <cstring>
-#include <memory>
-#include <new>
-#include <tuple>
-
-#ifdef _WIN32
-#include <wincodec.h>
-#include <wrl\client.h>
-#else
-#include <fstream>
-#include <filesystem>
-#include <thread>
-#endif
-
 #include "Directx.h"
-#include "..\Src\d3dx12.h"
+#include "directx\d3dx12.h"
+#include <vector>
+#include <fstream>
 
-using Microsoft::WRL::ComPtr;
-
-//--------------------------------------------------------------------------------------
-inline void TransitionResource(
+static void TransitionResource(
 	_In_ ID3D12GraphicsCommandList* commandList,
 	_In_ ID3D12Resource* resource,
 	_In_ D3D12_RESOURCE_STATES stateBefore,
 	_In_ D3D12_RESOURCE_STATES stateAfter) noexcept
 {
-	assert(commandList != nullptr);
-	assert(resource != nullptr);
-
 	if (stateBefore == stateAfter)
 		return;
 
@@ -44,16 +22,14 @@ inline void TransitionResource(
 	commandList->ResourceBarrier(1, &desc);
 }
 
-
-//--------------------------------------------------------------------------------------
-bool CaptureTexture(_In_ ID3D12Device* device,
-	_In_ ID3D12CommandQueue* pCommandQ,
-	_In_ ID3D12Resource* pSource,
+static bool CaptureTexture(ID3D12Device* device,
+	ID3D12CommandQueue* pCommandQ,
+	ID3D12Resource* pSource,
 	UINT64 srcPitch,
 	const D3D12_RESOURCE_DESC& desc,
-	_COM_Outptr_ ID3D12Resource** pStaging,
+	ID3D12Resource** pStaging,
 	D3D12_RESOURCE_STATES beforeState,
-	D3D12_RESOURCE_STATES afterState) noexcept
+	D3D12_RESOURCE_STATES afterState)
 {
 	if (pStaging)
 	{
@@ -101,8 +77,6 @@ bool CaptureTexture(_In_ ID3D12Device* device,
 	if (FAILED(hr))
 		return false;
 
-	assert((srcPitch & 0xFF) == 0);
-
 	const CD3DX12_HEAP_PROPERTIES defaultHeapProperties(D3D12_HEAP_TYPE_DEFAULT);
 	const CD3DX12_HEAP_PROPERTIES readBackHeapProperties(D3D12_HEAP_TYPE_READBACK);
 
@@ -140,16 +114,14 @@ bool CaptureTexture(_In_ ID3D12Device* device,
 			IID_ID3D12Resource,
 			reinterpret_cast<void**>(pTemp.GetAddressOf()));
 		if (FAILED(hr))
-			return hr;
-
-		assert(pTemp);
+			return false;
 
 		const DXGI_FORMAT fmt = desc.Format;
 
 		D3D12_FEATURE_DATA_FORMAT_SUPPORT formatInfo = { fmt, D3D12_FORMAT_SUPPORT1_NONE, D3D12_FORMAT_SUPPORT2_NONE };
 		hr = device->CheckFeatureSupport(D3D12_FEATURE_FORMAT_SUPPORT, &formatInfo, sizeof(formatInfo));
 		if (FAILED(hr))
-			return hr;
+			return false;
 
 		if (!(formatInfo.Support1 & D3D12_FORMAT_SUPPORT1_TEXTURE2D))
 			return false;
@@ -270,8 +242,7 @@ bool SaveTextureToMemory(
 		return false;
 
 	ComPtr<ID3D12Resource> pStaging;
-	HRESULT hr = CaptureTexture(device.Get(), pCommandQ, pSource, dstRowPitch, desc, pStaging.GetAddressOf(), beforeState, afterState);
-	if (FAILED(hr))
+	if (!CaptureTexture(device.Get(), pCommandQ, pSource, dstRowPitch, desc, pStaging.GetAddressOf(), beforeState, afterState))
 		return false;
 
 	const UINT64 imageSize = dstRowPitch * UINT64(desc.Height);
@@ -281,7 +252,7 @@ bool SaveTextureToMemory(
 	void* pMappedMemory = nullptr;
 	D3D12_RANGE readRange = { 0, static_cast<SIZE_T>(imageSize) };
 	D3D12_RANGE writeRange = { 0, 0 };
-	hr = pStaging->Map(0, &readRange, &pMappedMemory);
+	auto hr = pStaging->Map(0, &readRange, &pMappedMemory);
 	if (FAILED(hr))
 		return false;
 
@@ -290,15 +261,8 @@ bool SaveTextureToMemory(
 
 	pStaging->Unmap(0, &writeRange);
 
-	if (FAILED(hr))
-		return false;
-
 	return true;
 }
-
-#include <vector>
-#include <fstream>
-#include <cstdint>
 
 #pragma pack(push, 1)
 struct BMPHeader {

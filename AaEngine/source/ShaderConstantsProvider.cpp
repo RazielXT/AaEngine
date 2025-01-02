@@ -2,20 +2,15 @@
 #include "RenderQueue.h"
 #include "RenderObject.h"
 
-ShaderConstantsProvider::ShaderConstantsProvider(const FrameParameters& p, const RenderObjectsVisibilityData& i, const AaCamera& c, const RenderTargetTexture& target) : info(i), camera(c), params(p)
+ShaderConstantsProvider::ShaderConstantsProvider(const FrameParameters& p, const RenderObjectsVisibilityData& i, const Camera& c, const RenderTargetTexture& target) : info(i), camera(c), params(p)
 {
 	inverseViewportSize = { 1.f / target.width, 1.f / target.height };
 	viewportSize = { target.width, target.height };
 }
 
-ShaderConstantsProvider::ShaderConstantsProvider(const FrameParameters& params, const RenderObjectsVisibilityData& info, const AaCamera& camera, const RenderTargetTextures& targets) :
+ShaderConstantsProvider::ShaderConstantsProvider(const FrameParameters& params, const RenderObjectsVisibilityData& info, const Camera& camera, const RenderTargetTextures& targets) :
 	ShaderConstantsProvider(params, info, camera, targets.textures.front())
 {
-}
-
-XMFLOAT4X4 ShaderConstantsProvider::getWvpMatrix() const
-{
-	return entity->getWvpMatrix(info.wvpMatrix);
 }
 
 XMMATRIX ShaderConstantsProvider::getWorldMatrix() const

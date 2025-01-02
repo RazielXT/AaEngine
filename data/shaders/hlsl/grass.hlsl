@@ -4,6 +4,10 @@ uint TexIdDiffuse;
 float Time;
 float DeltaTime;
 
+#ifdef ENTITY_ID
+uint EntityId;
+#endif
+
 cbuffer PSSMShadows : register(b1)
 {
 	float4x4 ShadowMatrix[2];
@@ -90,11 +94,11 @@ Texture2D<float4> GetTexture(uint index)
     return ResourceDescriptorHeap[index];
 }
 
-SamplerState DepthSampler : register(s0);
+SamplerState ShadowSampler : register(s0);
 
 float readShadowmap(Texture2D shadowmap, float2 shadowCoord)
 {
-	return shadowmap.SampleLevel(DepthSampler, shadowCoord, 0).r;
+	return shadowmap.SampleLevel(ShadowSampler, shadowCoord, 0).r;
 }
 
 float CalcShadowTermSoftPCF(Texture2D shadowmap, float fLightDepth, float2 vShadowTexCoord, int iSqrtSamples)
@@ -113,7 +117,7 @@ float CalcShadowTermSoftPCF(Texture2D shadowmap, float fLightDepth, float2 vShad
 			vOffset *= ShadowMapSizeInv;
 			float2 vSamplePoint = vShadowTexCoord + vOffset;
 			float fDepth = readShadowmap(shadowmap, vSamplePoint).x;
-			float fSample = (fLightDepth > fDepth);
+			float fSample = (fLightDepth < fDepth);
 
 			// Edge tap smoothing
 			float xWeight = 1;
@@ -146,7 +150,7 @@ float getShadow(float4 wp)
 	sunLookPos.xy /= float2(2, -2);
     sunLookPos.xy += 0.5;
 
-	sunLookPos.z += 0.01;
+	sunLookPos.z -= 0.01;
 
 	return CalcShadowTermSoftPCF(shadowmap, sunLookPos.z, sunLookPos.xy, 3);
 }
@@ -198,3 +202,19 @@ void PSMainDepth(PSInput input)
 
 	if (albedo.a <0.5) discard;
 }
+
+#ifdef ENTITY_ID
+
+uint PSMainEntityId(PSInput input) : SV_TARGET
+{
+	SamplerState g_sampler = SamplerDescriptorHeap[0];
+	float4 albedo = GetTexture(TexIdDiffuse).Sample(g_sampler, input.uv);
+
+	float distanceFade = saturate(2000 * input.worldPosition.z / input.position.w);
+
+	if (albedo.a <0.5) discard;
+	
+	return EntityId;
+}
+
+#endif

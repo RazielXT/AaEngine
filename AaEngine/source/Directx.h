@@ -4,3 +4,5 @@
 #include <wrl.h>
 
 using namespace Microsoft::WRL;
+
+static const UINT FrameCount = 2;

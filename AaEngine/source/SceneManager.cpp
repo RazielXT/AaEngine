@@ -1,9 +1,9 @@
 #include "SceneManager.h"
-#include "AaMaterialResources.h"
+#include "MaterialResources.h"
 
-SceneManager::SceneManager(RenderSystem* rs)
+SceneManager::SceneManager(GraphicsResources& r) : resources(r), skybox(r)
 {
-	renderSystem = rs;
+	renderables.reserve(10); //need to be enough! distributed by ptr
 }
 
 SceneManager::~SceneManager()
@@ -14,23 +14,28 @@ SceneManager::~SceneManager()
 	}
 }
 
+void SceneManager::initialize(RenderSystem& renderSystem)
+{
+	grass.initializeGpuResources(renderSystem, resources, getQueueTargetFormats());
+}
+
 void SceneManager::update()
 {
 	updateQueues();
 	updateTransformations();
 }
 
-AaEntity* SceneManager::createEntity(const std::string& name, Order order)
+SceneEntity* SceneManager::createEntity(const std::string& name, Order order)
 {
 	auto nameIt = entityMap.try_emplace(name, nullptr).first;
-	auto ent = nameIt->second = new AaEntity(renderables[order], nameIt->first);
+	auto ent = nameIt->second = new SceneEntity(*getRenderables(order), nameIt->first);
 
 	changes.emplace_back(EntityChange::Add, order, ent);
 
 	return ent;
 }
 
-AaEntity* SceneManager::createEntity(const std::string& name, const ObjectTransformation& transformation, BoundingBox bbox, Order order)
+SceneEntity* SceneManager::createEntity(const std::string& name, const ObjectTransformation& transformation, BoundingBox bbox, Order order)
 {
 	auto entity = createEntity(name, order);
 	entity->setBoundingBox(bbox);
@@ -39,13 +44,74 @@ AaEntity* SceneManager::createEntity(const std::string& name, const ObjectTransf
 	return entity;
 }
 
-AaEntity* SceneManager::getEntity(const std::string& name) const
+void SceneManager::removeEntity(SceneEntity* entity)
+{
+	entityMap.erase(entity->name);
+	changes.emplace_back(EntityChange::Delete, getOrder(entity), entity);
+
+	delete entity;
+}
+
+SceneEntity* SceneManager::getEntity(const std::string& name) const
 {
 	auto it = entityMap.find(name);
 	if (it != entityMap.end())
 		return it->second;
 
 	return nullptr;
+}
+
+SceneEntity* SceneManager::getEntity(ObjectId globalId) const
+{
+	auto type = globalId.getObjectType();
+
+	if (type == ObjectType::Entity)
+	{
+		auto o = globalId.getOrder();
+		for (auto& r : renderables)
+		{
+			if (r.order == o)
+			{
+				auto id = globalId.getLocalIdx();
+				return (SceneEntity*)r.getObject(id);
+			}
+		}
+	}
+	else if (type == ObjectType::Instanced)
+	{
+		auto group = instancing.getGroup(globalId.getGroupId());
+
+		return group->entity;
+	}
+
+	return nullptr;
+}
+
+SceneObject SceneManager::getObject(ObjectId globalId)
+{
+	auto type = globalId.getObjectType();
+
+	if (type == ObjectType::Entity)
+	{
+		auto o = globalId.getOrder();
+		for (auto& r : renderables)
+		{
+			if (r.order == o)
+			{
+				auto id = globalId.getLocalIdx();
+				return { globalId, type, (SceneEntity*)r.getObject(id), this };
+			}
+		}
+	}
+	else if (type == ObjectType::Instanced)
+	{
+		auto group = instancing.getGroup(globalId.getGroupId());
+		auto& item = group->entities[globalId.getLocalIdx()];
+
+		return { globalId, type, group->entity, &instancing, &item };
+	}
+
+	return {};
 }
 
 RenderQueue* SceneManager::createQueue(const std::vector<DXGI_FORMAT>& targets, MaterialTechnique technique, Order order)
@@ -97,7 +163,10 @@ void SceneManager::updateQueues()
 {
 	for (auto& queue : queues)
 	{
-		queue->update(changes);
+		for (auto& c : changes)
+		{
+			queue->update(c, resources);
+		}
 	}
 
 	changes.clear();
@@ -107,13 +176,26 @@ void SceneManager::updateTransformations()
 {
 	for (auto& r : renderables)
 	{
-		r.second.updateTransformation();
+		r.updateTransformation();
 	}
+
+	instancing.update();
+}
+
+Order SceneManager::getOrder(SceneEntity* entity)
+{
+	return entity->getStorage().order;
 }
 
 RenderObjectsStorage* SceneManager::getRenderables(Order order)
 {
-	return &renderables[order];
+	for (auto& r : renderables)
+	{
+		if (r.order == order)
+			return &r;
+	}
+
+	return &renderables.emplace_back(order);
 }
 
 void SceneManager::clear()
@@ -126,4 +208,49 @@ void SceneManager::clear()
 	}
 
 	entityMap.clear();
+
+	instancing.clear();
+
+	grass.clear();
+}
+
+ObjectTransformation SceneObject::getTransformation() const
+{
+	if (type == ObjectType::Entity)
+		return entity->getTransformation();
+	if (type == ObjectType::Instanced)
+		return ((InstancedEntity*)item)->transformation;
+
+	return {};
+}
+
+void SceneObject::setTransformation(const ObjectTransformation& transformation)
+{
+	if (type == ObjectType::Entity)
+		entity->setTransformation(transformation, true);
+	if (type == ObjectType::Instanced)
+	{
+		((InstancingManager*)owner)->updateEntity(id, transformation);
+		((InstancedEntity*)item)->transformation = transformation;
+	}
+}
+
+Vector3 SceneObject::getCenterPosition() const
+{
+	if (type == ObjectType::Entity)
+		return entity->getWorldBoundingBox().Center;
+	if (type == ObjectType::Instanced)
+		return ((InstancedEntity*)item)->transformation.position;
+
+	return {};
+}
+
+const char* SceneObject::getName() const
+{
+	if (type == ObjectType::Entity)
+		return entity->name;
+	if (type == ObjectType::Instanced)
+		return entity->name;
+
+	return "";
 }

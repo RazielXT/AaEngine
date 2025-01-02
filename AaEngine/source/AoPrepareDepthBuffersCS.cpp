@@ -6,9 +6,6 @@ void AoPrepareDepthBuffersCS::dispatch(UINT width, UINT height, const ShaderText
 	commandList->SetPipelineState(pipelineState.Get());
 	commandList->SetComputeRootSignature(signature);
 
-	ID3D12DescriptorHeap* ppHeaps[] = { DescriptorManager::get().mainDescriptorHeap };
-	commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
-
  	commandList->SetComputeRoot32BitConstants(0, sizeof(data) / sizeof(float), &data, 0);
  	commandList->SetComputeRootDescriptorTable(1, input.srvHandles);
 
@@ -22,9 +19,6 @@ void AoPrepareDepthBuffers2CS::dispatch(UINT width, UINT height, const ShaderTex
 {
 	commandList->SetPipelineState(pipelineState.Get());
 	commandList->SetComputeRootSignature(signature);
-
-	ID3D12DescriptorHeap* ppHeaps[] = { DescriptorManager::get().mainDescriptorHeap };
-	commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
 	commandList->SetComputeRoot32BitConstants(0, sizeof(data) / sizeof(float), &data, 0);
 	commandList->SetComputeRootDescriptorTable(1, input.srvHandles);

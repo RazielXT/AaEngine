@@ -1,16 +1,17 @@
 #pragma once
 
-#include "ShaderConstantBuffers.h"
+#include "ShaderDataBuffers.h"
 #include "GrassInitComputeShader.h"
 #include "RenderQueue.h"
-#include "AaMath.h"
+#include "MathUtils.h"
 #include <vector>
 
-class AaEntity;
+class SceneEntity;
+class SceneManager;
 
 struct GrassAreaPlacementTask
 {
-	AaEntity* terrain{};
+	SceneEntity* terrain{};
 	BoundingBox bbox;
 };
 
@@ -42,24 +43,23 @@ public:
 	GrassAreaGenerator();
 	~GrassAreaGenerator();
 
-	void initializeGpuResources(RenderSystem* renderSystem, const std::vector<DXGI_FORMAT>& formats);
+	void initializeGpuResources(RenderSystem& renderSystem, GraphicsResources& resources, const std::vector<DXGI_FORMAT>& formats);
 	void clear();
 
-	void scheduleGrassCreation(GrassAreaPlacementTask grassTask, ID3D12GraphicsCommandList* commandList, const FrameParameters& frame, SceneManager* sceneMgr);
-	std::vector<std::pair<AaEntity*, GrassArea*>> finishGrassCreation();
+	void scheduleGrassCreation(GrassAreaPlacementTask grassTask, ID3D12GraphicsCommandList* commandList, const FrameParameters& frame, GraphicsResources& resources, SceneManager& sceneMgr);
+	std::vector<std::pair<SceneEntity*, GrassArea*>> finishGrassCreation();
 
 private:
 
-
-	AaEntity* createGrassEntity(const std::string& name, const GrassAreaDescription& desc, SceneManager* sceneMgr);
-	GrassArea* createGrassArea(const GrassAreaDescription& desc);
+	SceneEntity* createGrassEntity(const std::string& name, const GrassAreaDescription& desc, GraphicsResources& resources, SceneManager& sceneMgr);
+	GrassArea* createGrassArea(const GrassAreaDescription& desc, GraphicsResources& resources);
 
 	GrassInitComputeShader grassCS;
 
 	RenderTargetHeap heap;
 	RenderTargetTextures rtt;
 
-	std::vector<std::pair<AaEntity*, GrassArea*>> scheduled;
+	std::vector<std::pair<SceneEntity*, GrassArea*>> scheduled;
 
 	std::vector<GrassArea*> grasses;
 };

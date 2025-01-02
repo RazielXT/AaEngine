@@ -19,6 +19,10 @@ uint TexIdSceneVoxel;
 uint TexIdSkybox;
 float ZMagic;
 
+#ifdef ENTITY_ID
+uint EntityId;
+#endif
+
 cbuffer SceneVoxelInfo : register(b1)
 {
 	float3 sceneCorner : packoffset(c0);
@@ -305,3 +309,12 @@ PSOutput PSMain(PSInput input)
 
 	return output;
 }
+
+#ifdef ENTITY_ID
+
+uint PSMainEntityId(PSInput input) : SV_TARGET
+{
+	return EntityId;
+}
+
+#endif

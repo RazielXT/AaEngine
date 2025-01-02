@@ -7,15 +7,17 @@ class RenderSystem;
 
 struct Upscaling
 {
-	RenderSystem& renderSystem;
+	Upscaling(RenderSystem& renderSystem);
+
 	DLSS dlss;
 	FSR fsr;
 
-	void init();
 	void shutdown();
-	void onScreenResize();
+	void onResize();
 
 	bool enabled() const;
 	XMUINT2 getRenderSize() const;
 	float getMipLodBias() const;
+
+	RenderSystem& renderSystem;
 };

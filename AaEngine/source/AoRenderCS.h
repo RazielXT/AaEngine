@@ -2,7 +2,7 @@
 
 #include "ComputeShader.h"
 
-class ShaderTextureView;
+struct ShaderTextureView;
 
 class AoRenderCS : public ComputeShader
 {

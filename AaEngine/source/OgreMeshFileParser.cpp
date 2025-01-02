@@ -1,5 +1,5 @@
 #include "OgreMeshFileParser.h"
-#include "AaLogger.h"
+#include "FileLogger.h"
 #include <map>
 
 using namespace OgreMeshFileParser;
@@ -214,7 +214,7 @@ enum OperationType
 	OT_TRIANGLE_FAN = 6,
 };
 
-void readSubMeshOperation(std::ifstream& stream, AaModel& info)
+void readSubMeshOperation(std::ifstream& stream, VertexBufferModel& info)
 {
 	// unsigned short operationType
 	unsigned short opType;
@@ -352,7 +352,7 @@ enum OgreVertexElementSemantic
 	VES_SPECULAR = VES_COLOUR2
 };
 
-void readGeometryVertexElement(std::ifstream& stream, AaModel& info)
+void readGeometryVertexElement(std::ifstream& stream, VertexBufferModel& info)
 {
 	unsigned short source, offset, index, tmp;
 	OgreVertexElementType vType;
@@ -433,7 +433,7 @@ void readGeometryVertexElement(std::ifstream& stream, AaModel& info)
 		info.addLayoutElement(source, offset, format, semantic, index);
 }
 
-void readGeometryVertexBuffer(std::ifstream& stream, AaModel& info, ModelParseOptions o)
+void readGeometryVertexBuffer(std::ifstream& stream, VertexBufferModel& info, ModelParseOptions o)
 {
 	unsigned short bindIndex, vertexSize;
 	// unsigned short bindIndex;    // Index to bind this buffer to
@@ -464,7 +464,7 @@ void readGeometryVertexBuffer(std::ifstream& stream, AaModel& info, ModelParseOp
 	}
 }
 
-void readGeometryVertexDeclaration(std::ifstream& stream, AaModel& info)
+void readGeometryVertexDeclaration(std::ifstream& stream, VertexBufferModel& info)
 {
 	// Find optional geometry streams
 	if (stream)
@@ -493,7 +493,7 @@ void readGeometryVertexDeclaration(std::ifstream& stream, AaModel& info)
 	}
 }
 
-void readGeometry(std::ifstream& stream, AaModel& info, ModelParseOptions o)
+void readGeometry(std::ifstream& stream, VertexBufferModel& info, ModelParseOptions o)
 {
 	readData(stream, &info.vertexCount, 1);
 
@@ -530,7 +530,7 @@ void readGeometry(std::ifstream& stream, AaModel& info, ModelParseOptions o)
 void readSubMesh(std::ifstream& stream, MeshInfo& info, ModelParseOptions o)
 {
 	SubmeshInfo submesh{};
-	submesh.model = new AaModel();
+	submesh.model = new VertexBufferModel();
 
 	submesh.materialName = readString(stream);
 
@@ -718,7 +718,7 @@ MeshInfo OgreMeshFileParser::load(std::string filename, ModelParseOptions o)
 
 	if (!parseOgreMeshFile(filename, out, o))
 	{
-		AaLogger::logError("failed to load model file " + filename);
+		FileLogger::logError("failed to load model file " + filename);
 		return {};
 	}
 

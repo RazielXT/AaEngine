@@ -86,8 +86,12 @@ float4 PSAddThrough(VS_OUTPUT input) : SV_TARGET
 	bloom *= bloom;
 	bloom *= exposure * exposure;
 
+#ifdef NO_LUMA
+	original.w = 1;
+#else
 	float luma = dot(original.rgb, float3(0.299, 0.587, 0.114));
 	original.w = luma;
+#endif
 
 	original.rgb += bloom;
     return original;

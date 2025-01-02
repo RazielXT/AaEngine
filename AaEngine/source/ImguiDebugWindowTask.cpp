@@ -20,10 +20,10 @@ void ImguiDebugWindowTask::run(RenderContext& ctx, CommandsData& syncCommands, C
 
 	pass.target.texture->PrepareAsTarget(syncCommands.commandList, pass.target.previousState);
 
-	imgui::DebugWindow::Get().draw(syncCommands.commandList);
+	imgui::DebugWindow::Get().draw(syncCommands.commandList, provider.resources.materials);
 }
 
-bool ImguiDebugWindowTask::writesSyncCommands() const
+bool ImguiDebugWindowTask::writesSyncCommands(CompositorPass&) const
 {
 	return true;
 }

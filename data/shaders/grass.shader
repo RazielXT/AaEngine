@@ -19,6 +19,19 @@ pixel_shader psGrassLeavesDepth
 	profile ps_6_6
 }
 
+vertex_shader vsGrassLeavesEntityId : vsGrassLeaves
+{
+	defines ENTITY_ID
+}
+
+pixel_shader psGrassLeavesEntityId
+{
+	file grass.hlsl
+	entry PSMainEntityId
+	profile ps_6_6
+	defines ENTITY_ID
+}
+
 compute_shader grassInit
 {
 	file grassInitCS.hlsl

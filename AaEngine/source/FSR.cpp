@@ -1,9 +1,9 @@
 #include "FSR.h"
 #include <ffx_api/ffx_upscale.hpp>
 #include "RenderSystem.h"
-#include "AaLogger.h"
+#include "FileLogger.h"
 #include <format>
-#include "AaCamera.h"
+#include "Camera.h"
 
 static void FfxMsgCallback(uint32_t type, const wchar_t* message)
 {
@@ -15,22 +15,23 @@ static void FfxMsgCallback(uint32_t type, const wchar_t* message)
 
 	if (type == FFX_API_MESSAGE_TYPE_ERROR)
 	{
-		AaLogger::logError(buffer);
+		FileLogger::logError(buffer);
 	}
 	else if (type == FFX_API_MESSAGE_TYPE_WARNING)
 	{
-		AaLogger::logWarning(buffer);
+		FileLogger::logWarning(buffer);
 	}
 }
 
-void FSR::init(RenderSystem* rs)
+FSR::FSR(RenderSystem& rs) : renderSystem(rs)
 {
-	renderSystem = rs;
-
 	for (auto& mode : upscaleTypes)
 	{
 		mode.lodBias = std::log2f(1.f / mode.scale) - 1.f + std::numeric_limits<float>::epsilon();
 	}
+
+	//off
+	upscaleTypes.back().lodBias = 0.f;
 }
 
 void FSR::shutdown()
@@ -44,7 +45,11 @@ void FSR::shutdown()
 
 void FSR::selectMode(UpscaleMode m)
 {
+	renderSystem.core.WaitForAllFrames();
+
 	selectedUpscale = m;
+
+	DescriptorManager::get().initializeSamplers(getMipLodBias());
 
 	if (m == UpscaleMode::Off)
 	{
@@ -58,7 +63,7 @@ void FSR::selectMode(UpscaleMode m)
 		reloadUpscaleParams();
 }
 
-void FSR::onScreenResize()
+void FSR::onResize()
 {
 	if (!m_UpscalingContext)
 		return;
@@ -74,11 +79,11 @@ void FSR::initializeContext()
 
 	ffx::CreateBackendDX12Desc backendDesc{};
 	backendDesc.header.type = FFX_API_CREATE_CONTEXT_DESC_TYPE_BACKEND_DX12;
-	backendDesc.device = renderSystem->device;
+	backendDesc.device = renderSystem.core.device;
 
 	ffx::CreateContextDescUpscale createFsr{};
 
-	auto size = renderSystem->getOutputSize();
+	auto size = renderSystem.getOutputSize();
 	createFsr.maxUpscaleSize = { size.x, size.y };
 	createFsr.maxRenderSize = { size.x, size.y };
 	createFsr.flags |= FFX_UPSCALE_ENABLE_DEPTH_INVERTED;// | FFX_UPSCALE_ENABLE_DEPTH_INFINITE;
@@ -94,7 +99,7 @@ void FSR::initializeContext()
 
 		if (retCode != ffx::ReturnCode::Ok)
 		{
-			AaLogger::logError(std::format("FSR ffx::CreateContext error code {}", (int)retCode));
+			FileLogger::logError(std::format("FSR ffx::CreateContext error code {}", (int)retCode));
 			return;
 		}
 	}
@@ -113,7 +118,7 @@ void FSR::reloadUpscaleParams()
 {
 	reset = true;
 
-	auto size = renderSystem->getOutputSize();
+	auto size = renderSystem.getOutputSize();
 
 	for (auto& mode : upscaleTypes)
 	{
@@ -141,10 +146,8 @@ float FSR::getMipLodBias() const
 	return upscaleTypes[(int)selectedUpscale].lodBias;
 }
 
-bool FSR::upscale(ID3D12GraphicsCommandList* commandList, const UpscaleInput& input, AaCamera& camera)
+bool FSR::upscale(ID3D12GraphicsCommandList* commandList, const UpscaleInput& input, Camera& camera)
 {
-	// FFXAPI
-	// All cauldron resources come into a render module in a generic read state (ResourceState::NonPixelShaderResource | ResourceState::PixelShaderResource)
 	ffx::DispatchDescUpscale dispatchUpscale{};
 
 	dispatchUpscale.commandList = commandList;
@@ -175,7 +178,6 @@ bool FSR::upscale(ID3D12GraphicsCommandList* commandList, const UpscaleInput& in
 
 	auto jitter = getJitter();
 
-	// Jitter is calculated earlier in the frame using a callback from the camera update
 	dispatchUpscale.jitterOffset.x = jitter.x;
 	dispatchUpscale.jitterOffset.y = jitter.y;
 	dispatchUpscale.reset = reset;
@@ -184,7 +186,6 @@ bool FSR::upscale(ID3D12GraphicsCommandList* commandList, const UpscaleInput& in
 	dispatchUpscale.enableSharpening = true;
 	dispatchUpscale.sharpness = 0.8f;
 
-	// Cauldron keeps time in seconds, but FSR expects milliseconds
 	dispatchUpscale.frameTimeDelta = input.tslf * 1000.f;
 
 	auto renderSize = getRenderSize();
@@ -193,13 +194,11 @@ bool FSR::upscale(ID3D12GraphicsCommandList* commandList, const UpscaleInput& in
 	dispatchUpscale.renderSize.width = renderSize.x;
 	dispatchUpscale.renderSize.height = renderSize.y;
 
-	auto outputSize = renderSystem->getOutputSize();
+	auto outputSize = renderSystem.getOutputSize();
 	dispatchUpscale.upscaleSize.width = outputSize.x;
 	dispatchUpscale.upscaleSize.height = outputSize.y;
 
 	dispatchUpscale.preExposure = 1.f;
-
-	// Setup camera params as required
 
 	auto& cameraParam = camera.getParams();
 	dispatchUpscale.cameraFovAngleVertical = XM_PIDIV2 / cameraParam.aspectRatio;
@@ -215,7 +214,7 @@ bool FSR::upscale(ID3D12GraphicsCommandList* commandList, const UpscaleInput& in
 // 		dispatchUpscale.cameraNear = pCamera->GetNearPlane();
 // 	}
 
-	//dispatchUpscale.flags |= FFX_UPSCALE_FLAG_DRAW_DEBUG_VIEW;
+//	dispatchUpscale.flags |= FFX_UPSCALE_FLAG_DRAW_DEBUG_VIEW;
 
 	ffx::ReturnCode retCode = ffx::Dispatch(m_UpscalingContext, dispatchUpscale);
 
@@ -234,7 +233,7 @@ void FSR::updateJitter()
 	int32_t jitterPhaseCount{};
 
 	ffx::QueryDescUpscaleGetJitterPhaseCount getJitterPhaseDesc{};
-	getJitterPhaseDesc.displayWidth = renderSystem->getOutputSize().x;
+	getJitterPhaseDesc.displayWidth = renderSystem.getOutputSize().x;
 	getJitterPhaseDesc.renderWidth = getRenderSize().x;
 	getJitterPhaseDesc.pOutPhaseCount = &jitterPhaseCount;
 

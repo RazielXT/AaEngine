@@ -47,21 +47,15 @@
     <Filter Include="Source Files\FrameCompositor\Tasks">
       <UniqueIdentifier>{fd0882c9-9d4b-4a12-9a1c-ea1addcda019}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Editor">
+      <UniqueIdentifier>{6d99c7de-7145-41f3-9647-d81f99b60c31}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Resources\Textures">
+      <UniqueIdentifier>{0e4b961a-a3dd-4b9a-8f2e-fe85ba608ebf}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="source\AaApplication.cpp">
-      <Filter>Source Files\App</Filter>
-    </ClCompile>
-    <ClCompile Include="source\AaWindow.cpp">
-      <Filter>Source Files\App</Filter>
-    </ClCompile>
-    <ClCompile Include="source\InputHandler.cpp">
-      <Filter>Source Files\App</Filter>
-    </ClCompile>
-    <ClCompile Include="source\MyListener.cpp">
+    <ClCompile Include="source\TargetWindow.cpp">
       <Filter>Source Files\App</Filter>
     </ClCompile>
     <ClCompile Include="source\RenderSystem.cpp">
@@ -70,46 +64,40 @@
     <ClCompile Include="source\RenderTargetTexture.cpp">
       <Filter>Source Files\Render</Filter>
     </ClCompile>
-    <ClCompile Include="source\AaMaterial.cpp">
+    <ClCompile Include="source\Material.cpp">
       <Filter>Source Files\Resources\Material</Filter>
     </ClCompile>
-    <ClCompile Include="source\AaMaterialFileParser.cpp">
+    <ClCompile Include="source\MaterialFileParser.cpp">
       <Filter>Source Files\Resources\Material</Filter>
     </ClCompile>
-    <ClCompile Include="source\AaMaterialResources.cpp">
+    <ClCompile Include="source\MaterialResources.cpp">
       <Filter>Source Files\Resources\Material</Filter>
     </ClCompile>
-    <ClCompile Include="source\AaTextureResources.cpp">
-      <Filter>Source Files\Resources\Material</Filter>
-    </ClCompile>
-    <ClCompile Include="source\AaModel.cpp">
+    <ClCompile Include="source\VertexBufferModel.cpp">
       <Filter>Source Files\Resources\Model</Filter>
     </ClCompile>
-    <ClCompile Include="source\AaModelResources.cpp">
+    <ClCompile Include="source\ModelResources.cpp">
       <Filter>Source Files\Resources\Model</Filter>
     </ClCompile>
     <ClCompile Include="source\OgreMeshFileParser.cpp">
       <Filter>Source Files\Resources\Model</Filter>
     </ClCompile>
-    <ClCompile Include="source\AaShaderCompiler.cpp">
+    <ClCompile Include="source\ShaderCompiler.cpp">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClCompile>
-    <ClCompile Include="source\AaShaderFileParser.cpp">
+    <ClCompile Include="source\ShaderFileParser.cpp">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClCompile>
-    <ClCompile Include="source\AaShaderLibrary.cpp">
+    <ClCompile Include="source\ShaderLibrary.cpp">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClCompile>
     <ClCompile Include="source\DescriptorManager.cpp">
       <Filter>Source Files\Resources</Filter>
     </ClCompile>
-    <ClCompile Include="source\AaCamera.cpp">
+    <ClCompile Include="source\Camera.cpp">
       <Filter>Source Files\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="source\AaEntity.cpp">
-      <Filter>Source Files\Scene</Filter>
-    </ClCompile>
-    <ClCompile Include="source\FreeCamera.cpp">
+    <ClCompile Include="source\SceneEntity.cpp">
       <Filter>Source Files\Scene</Filter>
     </ClCompile>
     <ClCompile Include="source\SceneParser.cpp">
@@ -157,7 +145,7 @@
     <ClCompile Include="source\RenderQueue.cpp">
       <Filter>Source Files\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="source\ShaderConstantBuffers.cpp">
+    <ClCompile Include="source\ShaderDataBuffers.cpp">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClCompile>
     <ClCompile Include="source\EntityInstancing.cpp">
@@ -211,7 +199,7 @@
     <ClCompile Include="source\SceneTestTask.cpp">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClCompile>
-    <ClCompile Include="source\AaMath.cpp">
+    <ClCompile Include="source\MathUtils.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
     <ClCompile Include="source\ImguiDebugWindowTask.cpp">
@@ -250,24 +238,36 @@
     <ClCompile Include="source\DownsampleTask.cpp">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClCompile>
+    <ClCompile Include="source\GraphicsResources.cpp">
+      <Filter>Source Files\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="source\StringUtils.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EntityPicker.cpp">
+      <Filter>Source Files\Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ObjectId.cpp">
+      <Filter>Source Files\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="source\SceneSkybox.cpp">
+      <Filter>Source Files\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="source\TextureResources.cpp">
+      <Filter>Source Files\Resources\Textures</Filter>
+    </ClCompile>
+    <ClCompile Include="source\DrawPrimitives.cpp">
+      <Filter>Source Files\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="source\CascadedShadowMaps.cpp">
+      <Filter>Source Files\Render</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="source\AaApplication.h">
-      <Filter>Source Files\App</Filter>
-    </ClInclude>
-    <ClInclude Include="source\AaFrameListener.h">
-      <Filter>Source Files\App</Filter>
-    </ClInclude>
-    <ClInclude Include="source\AaWindow.h">
+    <ClInclude Include="source\TargetWindow.h">
       <Filter>Source Files\App</Filter>
     </ClInclude>
     <ClInclude Include="source\Directories.h">
-      <Filter>Source Files\App</Filter>
-    </ClInclude>
-    <ClInclude Include="source\InputHandler.h">
-      <Filter>Source Files\App</Filter>
-    </ClInclude>
-    <ClInclude Include="source\MyListener.h">
       <Filter>Source Files\App</Filter>
     </ClInclude>
     <ClInclude Include="source\RenderSystem.h">
@@ -276,55 +276,49 @@
     <ClInclude Include="source\RenderTargetTexture.h">
       <Filter>Source Files\Render</Filter>
     </ClInclude>
-    <ClInclude Include="source\AaMaterial.h">
+    <ClInclude Include="source\Material.h">
       <Filter>Source Files\Resources\Material</Filter>
     </ClInclude>
-    <ClInclude Include="source\AaMaterialFileParser.h">
+    <ClInclude Include="source\MaterialFileParser.h">
       <Filter>Source Files\Resources\Material</Filter>
     </ClInclude>
-    <ClInclude Include="source\AaMaterialResources.h">
+    <ClInclude Include="source\MaterialResources.h">
       <Filter>Source Files\Resources\Material</Filter>
     </ClInclude>
-    <ClInclude Include="source\AaTextureResources.h">
-      <Filter>Source Files\Resources\Material</Filter>
-    </ClInclude>
-    <ClInclude Include="source\AaModel.h">
+    <ClInclude Include="source\VertexBufferModel.h">
       <Filter>Source Files\Resources\Model</Filter>
     </ClInclude>
-    <ClInclude Include="source\AaModelResources.h">
+    <ClInclude Include="source\ModelResources.h">
       <Filter>Source Files\Resources\Model</Filter>
     </ClInclude>
     <ClInclude Include="source\OgreMeshFileParser.h">
       <Filter>Source Files\Resources\Model</Filter>
     </ClInclude>
-    <ClInclude Include="source\AaShaderCompiler.h">
+    <ClInclude Include="source\ShaderCompiler.h">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClInclude>
-    <ClInclude Include="source\AaShaderFileParser.h">
+    <ClInclude Include="source\ShaderFileParser.h">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClInclude>
-    <ClInclude Include="source\AaShaderLibrary.h">
+    <ClInclude Include="source\ShaderLibrary.h">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClInclude>
     <ClInclude Include="source\DescriptorManager.h">
       <Filter>Source Files\Resources</Filter>
     </ClInclude>
-    <ClInclude Include="source\AaCamera.h">
+    <ClInclude Include="source\Camera.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="source\AaEntity.h">
+    <ClInclude Include="source\SceneEntity.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
     <ClInclude Include="source\SceneManager.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="source\FreeCamera.h">
-      <Filter>Source Files\Scene</Filter>
-    </ClInclude>
     <ClInclude Include="source\SceneParser.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="source\AaLogger.h">
+    <ClInclude Include="source\FileLogger.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
     <ClInclude Include="source\ConfigParser.h">
@@ -333,7 +327,7 @@
     <ClInclude Include="source\Directx.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="source\AaMath.h">
+    <ClInclude Include="source\MathUtils.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
     <ClInclude Include="source\RenderObject.h">
@@ -369,7 +363,7 @@
     <ClInclude Include="source\RenderQueue.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="source\ShaderConstantBuffers.h">
+    <ClInclude Include="source\ShaderDataBuffers.h">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClInclude>
     <ClInclude Include="source\EntityInstancing.h">
@@ -467,6 +461,33 @@
     </ClInclude>
     <ClInclude Include="source\DownsampleTask.h">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
+    </ClInclude>
+    <ClInclude Include="source\GraphicsResources.h">
+      <Filter>Source Files\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="source\StringUtils.h">
+      <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="source\EntityPicker.h">
+      <Filter>Source Files\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ObjectId.h">
+      <Filter>Source Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="source\SceneSkybox.h">
+      <Filter>Source Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ResourceGroup.h">
+      <Filter>Source Files\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="source\TextureResources.h">
+      <Filter>Source Files\Resources\Textures</Filter>
+    </ClInclude>
+    <ClInclude Include="source\DrawPrimitives.h">
+      <Filter>Source Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="source\CascadedShadowMaps.h">
+      <Filter>Source Files\Render</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

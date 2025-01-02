@@ -3,7 +3,7 @@
 #include "RenderSystem.h"
 #include "CompositorTask.h"
 
-class AaMaterial;
+class AssignedMaterial;
 class AaShadowMap;
 
 class FrameCompositor
@@ -13,11 +13,18 @@ public:
 	FrameCompositor(RenderProvider provider, SceneManager& sceneMgr, AaShadowMap& shadows);
 	~FrameCompositor();
 
-	void load(std::string path);
+	struct InitParams
+	{
+		bool renderToBackbuffer = true;
+		DXGI_FORMAT outputFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+	};
+	void load(std::string path, const InitParams& params = InitParams{});
 	void reloadPasses();
 	void reloadTextures();
 
 	void render(RenderContext& ctx);
+
+	const RenderTargetTexture* getTexture(const std::string& name) const;
 
 protected:
 
@@ -25,6 +32,7 @@ protected:
 
 	CompositorInfo info;
 	std::map<std::string, RenderTargetTexture> textures;
+	bool renderToBackbuffer{};
 
 	RenderTargetHeap rtvHeap;
 
@@ -32,8 +40,8 @@ protected:
 	{
 		PassData(CompositorPassInfo& i) : CompositorPass{ i } {}
 
-		AaMaterial* material{};
-		std::unique_ptr<CompositorTask> task;
+		AssignedMaterial* material{};
+		std::shared_ptr<CompositorTask> task;
 
 		CommandsData generalCommands;
 		bool startCommands = false;

@@ -759,11 +759,21 @@
                 </subentities>
             </entity>
         </node>
-		<node name="MovingCube">
-            <position x="81.9341" y="-66.0568" z="-112.5817" />
-            <scale x="20" y="20" z="20" />
+		<node name="Tree">
+            <position x="11.9341" y="-3.0568" z="-60.5817" />
+            <scale x="2" y="2" z="2" />
             <rotation qx="-0.00126299" qy="0" qz="0" qw="0.999999" />
-            <entity name="MovingCube" castShadows="true" receiveShadows="true" meshFile="box.mesh">
+            <entity name="Tree" castShadows="true" receiveShadows="true" meshFile="treeBunchBigLeafs.mesh">
+                <subentities>
+                    <subentity index="0" materialName="GreenVCT" />
+                </subentities>
+            </entity>
+        </node>
+		<node name="TreeTrunk">
+            <position x="11.9341" y="-3.0568" z="-60.5817" />
+            <scale x="2" y="2" z="2" />
+            <rotation qx="-0.00126299" qy="0" qz="0" qw="0.999999" />
+            <entity name="TreeTrunk" castShadows="true" receiveShadows="true" meshFile="treeBunchBigTrunk.mesh">
                 <subentities>
                     <subentity index="0" materialName="WhiteVCT" />
                 </subentities>

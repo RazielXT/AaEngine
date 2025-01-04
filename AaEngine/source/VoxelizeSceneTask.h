@@ -11,12 +11,29 @@
 struct RenderQueue;
 class SceneManager;
 
-struct VoxelSceneSettings
+struct SceneVoxelsChunk
 {
-	Vector3 center = Vector3(0, 0, 0);
-	Vector3 extends = Vector3(150, 150, 150);
+	TextureResource voxelSceneTexture;
+	TextureResource voxelPreviousSceneTexture;
+	std::string name;
+	UINT idx{};
 
-	static VoxelSceneSettings& get();
+	void initialize(const std::string& name, ID3D12Device* device, GraphicsResources&);
+	void clear(ID3D12GraphicsCommandList* commandList, const TextureResource& clear);
+
+	void prepareForVoxelization(ID3D12GraphicsCommandList* commandList);
+	void prepareForReading(ID3D12GraphicsCommandList* commandList);
+
+	struct
+	{
+		Vector3 center = Vector3(0, 0, 0);
+		float extends = 200;
+
+		Vector3 lastCenter = center;
+	}
+	settings;
+
+	Vector3 update(const Vector3& cameraPosition);
 };
 
 class VoxelizeSceneTask : public CompositorTask
@@ -28,6 +45,10 @@ public:
 
 	AsyncTasksInfo initialize(CompositorPass& pass) override;
 	void run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
+
+	static VoxelizeSceneTask& Get();
+
+	void reset();
 
 private:
 
@@ -41,32 +62,45 @@ private:
 	RenderQueue* sceneQueue{};
 
 	RenderContext ctx{};
-	Camera camera;
 
-	TextureResource voxelSceneTexture;
-	TextureResource voxelPreviousSceneTexture;
-	TextureResource clearSceneTexture;
-
-	CbufferView cbuffer;
-	void updateCBuffer(Vector3 orthoHalfSize, Vector3 offset, Vector3 diff, UINT frameIndex);
-
-	XM_ALIGNED_STRUCT(16)
+	XM_ALIGNED_STRUCT(16) SceneVoxelChunkInfo
 	{
 		Vector3 voxelOffset;
 		float voxelDensity;
-		Vector3 voxelSceneSize;
+		Vector3 diff;
+		float voxelSceneSize;
+		float lerpFactor = 0.01f;
+		UINT texId;
+		UINT texIdBounces;
 		float padding;
+	};
+
+	XM_ALIGNED_STRUCT(16) SceneVoxelCbuffer
+	{
 		Vector2 middleConeRatioDistance = { 1, 0.9f };
 		Vector2 sideConeRatioDistance = { 2, 0.8f };
-		float lerpFactor = 0.01f;
 		float steppingBounces = 0.07f;
 		float steppingDiffuse = 0.03f;
 		float voxelizeLighting = 0.0f;
-		Vector3 diff;
+		float padding;
+
+		SceneVoxelChunkInfo nearVoxels;
+		SceneVoxelChunkInfo farVoxels;
 	}
 	cbufferData;
+
+	CbufferView cbuffer;
+	void updateCBufferChunk(SceneVoxelChunkInfo& info, Vector3 diff, SceneVoxelsChunk& chunk);
+	void updateCBuffer(Vector3 diff, Vector3 diffFar, UINT frameIndex);
+
+	void voxelizeChunk(CommandsData& commands, CommandsMarker& marker, PassTarget& viewportOutput, SceneVoxelsChunk& chunk);
 
 	GenerateMipsComputeShader computeMips;
 
 	AaShadowMap& shadowMaps;
+
+	TextureResource clearSceneTexture;
+
+	SceneVoxelsChunk nearVoxels;
+	SceneVoxelsChunk farVoxels;
 };

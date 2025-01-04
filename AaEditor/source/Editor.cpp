@@ -8,6 +8,25 @@
 #include <format>
 #include "UpscaleTypes.h"
 #include "DebugOverlayTask.h"
+#include "DebugWindow.h"
+#include "VoxelizeSceneTask.h"
+#include <algorithm>
+
+// Store frame times in a buffer
+float frameTimes[200] = { 0.0f };
+int frameChartIndex = 0;
+float maxFrameTime = 1 / 30.f;
+
+void UpdateFrameTimeBuffer()
+{
+	float frameTime = ImGui::GetIO().DeltaTime;
+
+	maxFrameTime = max(frameTime, maxFrameTime);
+	maxFrameTime = std::clamp(maxFrameTime, 1 / 30.f, 1 / 10.f);
+
+	frameTimes[frameChartIndex] = frameTime;
+	frameChartIndex = (frameChartIndex + 1) % std::size(frameTimes);
+}
 
 static ID3D12DescriptorHeap* g_pd3dSrvDescHeap = nullptr;
 static CommandsData commands;
@@ -522,6 +541,9 @@ void Editor::prepareElements(Camera& camera)
 		}
 
 		gizmoActive = ImGuizmo::IsOver();
+
+		if (ImGuizmo::IsUsing())
+			VoxelizeSceneTask::Get().reset();
 	}
 
 	ImGui::End();
@@ -569,6 +591,11 @@ void Editor::prepareElements(Camera& camera)
 			ImGui::Text("Texture: %s", name);
 	}
 
+	{
+		UpdateFrameTimeBuffer();
+
+		ImGui::PlotLines("Frame Times", frameTimes, std::size(frameTimes), frameChartIndex, NULL, 0.0f, maxFrameTime, ImVec2(0, 80));
+	}
 	ImGui::End();
 }
 

@@ -130,6 +130,7 @@ void RenderQueue::renderObjects(ShaderConstantsProvider& constants, ID3D12Graphi
 			entry.entity->material->GetParameter(FastParam::Emission, storage.rootParams.data() + entry.material->GetParameterOffset(FastParam::Emission));
 			entry.entity->material->GetParameter(FastParam::MaterialColor, storage.rootParams.data() + entry.material->GetParameterOffset(FastParam::MaterialColor));
 			entry.entity->material->GetParameter(FastParam::TexIdDiffuse, storage.rootParams.data() + entry.material->GetParameterOffset(FastParam::TexIdDiffuse));
+			memcpy(storage.rootParams.data() + entry.material->GetParameterOffset(FastParam::VoxelIdx), &constants.voxelIdx, sizeof(constants.voxelIdx));
 		}
 		if (technique == MaterialTechnique::EntityId)
 		{

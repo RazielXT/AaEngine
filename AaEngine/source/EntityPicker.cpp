@@ -35,7 +35,7 @@ void EntityPicker::initializeGpuResources(RenderSystem& renderSystem, GraphicsRe
 	rtt.Init(device, size.x, size.y, heap, formats, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
 	rtt.SetName("EntityPickerRttTex");
 
-	DescriptorManager::get().createTextureView(rtt);
+	//DescriptorManager::get().createTextureView(rtt);
 
 	if (!readbackBuffer)
 	{

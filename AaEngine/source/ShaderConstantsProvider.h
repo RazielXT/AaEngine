@@ -40,4 +40,6 @@ public:
 	const Camera& camera;
 
 	const FrameParameters& params;
+
+	UINT voxelIdx{};
 };

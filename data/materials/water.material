@@ -38,7 +38,6 @@ material WaterLake
 	{
 		compositor Frame:sceneTexture2
 	}
-	texture SceneVoxel
 	texture skybox
 	{
 		file tceCubemap.dds

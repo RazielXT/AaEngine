@@ -66,18 +66,18 @@ public:
 
 				auto presentResult = app.present();
 
-				{
-					UINT sleepTime = 10;
-
-					//locked
-					if (presentResult == DXGI_STATUS_OCCLUDED)
-						sleepTime += 1000;
-					//minimized
-					if (IsIconic(window->getHwnd()))
-						sleepTime += 100;
-
-					Sleep(sleepTime);
-				}
+// 				{
+// 					UINT sleepTime = 10;
+// 
+// 					//locked
+// 					if (presentResult == DXGI_STATUS_OCCLUDED)
+// 						sleepTime += 1000;
+// 					//minimized
+// 					if (IsIconic(window->getHwnd()))
+// 						sleepTime += 100;
+// 
+// 					Sleep(sleepTime);
+// 				}
 
 				return continueRendering;
 			});

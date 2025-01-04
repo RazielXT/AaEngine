@@ -98,6 +98,7 @@ enum class FastParam
 	MaterialColor,
 	TexIdDiffuse,
 	Emission,
+	VoxelIdx,
 	COUNT
 };
 
@@ -106,6 +107,7 @@ constexpr std::array<std::string_view, (int)FastParam::COUNT> FastParamNames =
 	"MaterialColor",
 	"TexIdDiffuse",
 	"Emission",
+	"VoxelIdx",
 };
 
 struct PssmParameters

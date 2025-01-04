@@ -51,14 +51,14 @@ void AaShadowMap::update(UINT frameIndex, Camera& mainCamera)
 	{
 		auto& cTest = camera[1];
 
-		FLOAT fWorldUnitsPerTexel = 400 / (float)512.f;
+		FLOAT fWorldUnitsPerTexel = 800 / (float)512.f;
 		auto vWorldUnitsPerTexel = XMVectorSet(fWorldUnitsPerTexel, fWorldUnitsPerTexel, 0.0f, 0.0f);
 
 		XMVECTOR myPos = mainCamera.getPosition();
 		auto myPosLightSpace = XMVector4Transform(myPos, cTest.getViewMatrix());
 
-		XMVECTOR vLightCameraOrthographicMin = { -200, -200 };
-		XMVECTOR vLightCameraOrthographicMax = { 200, 200 };
+		XMVECTOR vLightCameraOrthographicMin = { -400, -400 };
+		XMVECTOR vLightCameraOrthographicMax = { 400, 400 };
 
 		vLightCameraOrthographicMin = XMVectorAdd(vLightCameraOrthographicMin, myPosLightSpace);
 		vLightCameraOrthographicMax = XMVectorAdd(vLightCameraOrthographicMax, myPosLightSpace);

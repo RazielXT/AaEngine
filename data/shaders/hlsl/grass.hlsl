@@ -1,3 +1,5 @@
+#include "ShadowsCommon.hlsl"
+
 float4x4 ViewProjectionMatrix;
 uint2 ViewportSize;
 uint TexIdDiffuse;
@@ -10,12 +12,7 @@ uint EntityId;
 
 cbuffer PSSMShadows : register(b1)
 {
-	float4x4 ShadowMatrix[2];
-	float3 LightDirection;
-	uint TexIdShadowOffset;
-	float3 LightColor;
-	float ShadowMapSize;
-	float ShadowMapSizeInv;
+	SunParams Sun;
 }
 
 struct GrassVertex { float3 pos; float3 color; };
@@ -96,63 +93,16 @@ Texture2D<float4> GetTexture(uint index)
 
 SamplerState ShadowSampler : register(s0);
 
-float readShadowmap(Texture2D shadowmap, float2 shadowCoord)
-{
-	return shadowmap.SampleLevel(ShadowSampler, shadowCoord, 0).r;
-}
-
-float CalcShadowTermSoftPCF(Texture2D shadowmap, float fLightDepth, float2 vShadowTexCoord, int iSqrtSamples)
-{
-	float fShadowTerm = 0.0f;
-
-	float fRadius = (iSqrtSamples - 1.0f) / 2;
-	float fWeightAccum = 0.0f;
-
-	for (float y = -fRadius; y <= fRadius; y++)
-	{
-		for (float x = -fRadius; x <= fRadius; x++)
-		{
-			float2 vOffset = 0;
-			vOffset = float2(x, y);
-			vOffset *= ShadowMapSizeInv;
-			float2 vSamplePoint = vShadowTexCoord + vOffset;
-			float fDepth = readShadowmap(shadowmap, vSamplePoint).x;
-			float fSample = (fLightDepth < fDepth);
-
-			// Edge tap smoothing
-			float xWeight = 1;
-			float yWeight = 1;
-			if (x == -fRadius)
-				xWeight = 1 - frac(vShadowTexCoord.x * ShadowMapSize);
-			else if (x == fRadius)
-				xWeight = frac(vShadowTexCoord.x * ShadowMapSize);
-			if (y == -fRadius)
-				yWeight = 1 - frac(vShadowTexCoord.y * ShadowMapSize);
-			else if (y == fRadius)
-				yWeight = frac(vShadowTexCoord.y * ShadowMapSize);
-			fShadowTerm += fSample * xWeight * yWeight;
-			fWeightAccum = xWeight * yWeight;
-		}
-	}
-	fShadowTerm /= (iSqrtSamples * iSqrtSamples);
-	fShadowTerm *= 1.55f;
-
-	return fShadowTerm;
-}
-
 float getShadow(float4 wp)
 {
-	uint ShadowIndex = 0;
-
-	Texture2D shadowmap = GetTexture(TexIdShadowOffset + ShadowIndex);
-    float4 sunLookPos = mul(wp, ShadowMatrix[ShadowIndex]);
+	Texture2D shadowmap = GetTexture(Sun.TexIdShadowOffset);
+    float4 sunLookPos = mul(wp, Sun.ShadowMatrix[0]);
     sunLookPos.xy = sunLookPos.xy / sunLookPos.w;
 	sunLookPos.xy /= float2(2, -2);
     sunLookPos.xy += 0.5;
-
 	sunLookPos.z -= 0.01;
 
-	return CalcShadowTermSoftPCF(shadowmap, sunLookPos.z, sunLookPos.xy, 3);
+	return CalcShadowTermSoftPCF(shadowmap, ShadowSampler, sunLookPos.z, sunLookPos.xy, 3, Sun.ShadowMapSize, Sun.ShadowMapSizeInv);
 }
 
 struct PSOutput
@@ -162,7 +112,6 @@ struct PSOutput
     float4 camDistance : SV_Target2;
     float4 motionVectors : SV_Target3;
 };
-
 
 PSOutput PSMain(PSInput input)
 {

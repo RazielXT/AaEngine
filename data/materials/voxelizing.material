@@ -10,8 +10,6 @@ material Voxelize
 	{
 		file white.png
 	}
-	texture ShadowMap1
-	texture SceneVoxelBounces
 }
 
 material VoxelizeInstancing : Voxelize

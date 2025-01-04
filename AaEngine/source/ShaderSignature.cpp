@@ -321,7 +321,7 @@ ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device& device, co
 		}
 		else if (samplers[i].info.Name == "VoxelSampler")
 		{
-			sampler.Filter = D3D12_FILTER_ANISOTROPIC;
+			sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
 			sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
 			sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
 			sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;

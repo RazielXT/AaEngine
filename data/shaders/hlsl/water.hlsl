@@ -1,3 +1,5 @@
+#include "VoxelConeTracingCommon.hlsl"
+
 float4x4 WorldMatrix;
 float4x4 ViewProjectionMatrix;
 //float4x4 InvViewMatrix;
@@ -15,7 +17,6 @@ uint TexIdSceneDepthHigh;
 uint TexIdSceneDepthLow;
 uint TexIdSceneDepthVeryLow;
 uint TexIdSceneColor;
-uint TexIdSceneVoxel;
 uint TexIdSkybox;
 float ZMagic;
 
@@ -25,11 +26,7 @@ uint EntityId;
 
 cbuffer SceneVoxelInfo : register(b1)
 {
-	float3 sceneCorner : packoffset(c0);
-	float voxelDensity : packoffset(c0.w);
-	float3 voxelSceneSize : packoffset(c1);
-    float2 middleCone : packoffset(c2);
-    float2 sideCone : packoffset(c2.z);
+    SceneVoxelCbuffer VoxelInfo;
 };
 
 Texture2D<float4> GetTexture(uint index)
@@ -252,7 +249,7 @@ PSOutput PSMain(PSInput input)
 	float4 albedo = GetWaves(input.uv);
 	albedo.a = albedo.r * 0.2 + fade;
 	
-	float3 voxelUV = (input.worldPosition.xyz-sceneCorner)/voxelSceneSize;
+	float3 voxelUV = (input.worldPosition.xyz-VoxelInfo.NearVoxels.Offset)/VoxelInfo.NearVoxels.SceneSize;
 	
 	//albedo.rgb = length(input.worldPosition.xyz - worldPosGround);
 	//albedo.rgb = depthGround.rrr;
@@ -264,7 +261,7 @@ PSOutput PSMain(PSInput input)
 	worldPosition /= worldPosition.w;
 	albedo.rgb += worldPosition.xyz; */
 
-	Texture3D voxelmap = ResourceDescriptorHeap[TexIdSceneVoxel];
+	Texture3D voxelmap = ResourceDescriptorHeap[VoxelInfo.NearVoxels.TexId];
 	albedo.rgb *= (voxelmap.SampleLevel(LinearWrapSampler, voxelUV, 3).rgb + voxelmap.SampleLevel(LinearWrapSampler, voxelUV, 4).rgb * 2) * 10;
 
 	float3 normal = normalize(input.normal + 0.2 * GetTexture(TexIdNormal).Sample(LinearWrapSampler,input.uv * 2).rgb); 

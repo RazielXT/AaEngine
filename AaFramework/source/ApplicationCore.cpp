@@ -109,10 +109,7 @@ void ApplicationCore::onScreenResize(UINT, UINT)
 
 void ApplicationCore::loadScene(const char* scene)
 {
-	if (scene == std::string_view("voxelRoom"))
-		VoxelSceneSettings::get() = { Vector3(0, 0, 0), Vector3(30, 30, 30) };
-	else
-		VoxelSceneSettings::get() = {};
+	VoxelizeSceneTask::Get().reset();
 
 	renderSystem.core.WaitForAllFrames();
 	sceneMgr.clear();

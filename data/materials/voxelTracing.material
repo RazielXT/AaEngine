@@ -7,8 +7,6 @@ material ColorVCT abstract
 	{
 		file white.png
 	}
-	
-	texture SceneVoxel
 
 	default_params
 	{

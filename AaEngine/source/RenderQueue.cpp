@@ -119,6 +119,11 @@ void RenderQueue::renderObjects(ShaderConstantsProvider& constants, ID3D12Graphi
 
 		if (entry.material != lastEntry.material)
 		{
+			if (technique == MaterialTechnique::Voxelize)
+			{
+				entry.material->SetUAV(constants.voxelBufferUAV, 0);
+			}
+
 			entry.material->LoadMaterialConstants(storage);
 			entry.material->UpdatePerFrame(storage, constants);
 			entry.material->BindPipeline(commandList);

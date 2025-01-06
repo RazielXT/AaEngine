@@ -7,6 +7,7 @@ struct SceneVoxelChunkInfo
     float LerpFactor;
     uint TexId;
     uint TexIdBounces;
+	uint ResIdData;
 };
 
 struct SceneVoxelCbuffer
@@ -36,10 +37,13 @@ struct SceneVoxelCbufferIndexed
 
 float4 SampleVoxel(Texture3D cmap, SamplerState sampl, float3 pos, float3 dir, float lod)
 {
-	float voxDim = 128.0f;
-    float sampOff = 1;
+#ifdef GI_LOW
+	return cmap.SampleLevel(sampl, pos, lod);
+#endif
 
-    float4 sample0 = cmap.SampleLevel(sampl, pos, lod);
+	const float voxDim = 128.0f;
+    const float sampOff = 1;
+
     float4 sampleX = dir.x < 0.0 ? cmap.SampleLevel(sampl, pos - float3(sampOff, 0, 0) / voxDim, lod) : cmap.SampleLevel(sampl, pos + float3(sampOff, 0, 0) / voxDim, lod);
     float4 sampleY = dir.y < 0.0 ? cmap.SampleLevel(sampl, pos - float3(0, sampOff, 0) / voxDim, lod) : cmap.SampleLevel(sampl, pos + float3(0, sampOff, 0) / voxDim, lod);
     float4 sampleZ = dir.z < 0.0 ? cmap.SampleLevel(sampl, pos - float3(0, 0, sampOff) / voxDim, lod) : cmap.SampleLevel(sampl, pos + float3(0, 0, sampOff) / voxDim, lod);
@@ -58,12 +62,12 @@ float4 SampleVoxel(Texture3D cmap, SamplerState sampl, float3 pos, float3 dir, f
 
 float4 ConeTrace(float3 o, float3 d, float coneRatio, float maxDist, Texture3D voxelTexture, SamplerState sampl, float closeZero)
 {
-	float voxDim = 128.0f;
+	const float voxDim = 128.0f;
+    const float minDiam = 1.0 / voxDim;
+    const float startDist = minDiam * 3;
+    float dist = startDist;
     float3 samplePos = o;
     float4 accum = float4(0, 0, 0, 0);
-    float minDiam = 1.0 / voxDim;
-    float startDist = minDiam * 3;
-    float dist = startDist;
 
     closeZero *= 2;
     closeZero += 1;
@@ -92,3 +96,11 @@ float4 ConeTrace(float3 o, float3 d, float coneRatio, float maxDist, Texture3D v
 
     return accum;
 }
+
+struct VoxelSceneData
+{
+	float4 Diffuse;
+	float3 Normal;
+//	float3 Binormal;
+//	float3 Tangent;
+};

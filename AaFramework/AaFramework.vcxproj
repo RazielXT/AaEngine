@@ -136,11 +136,13 @@
     <ClCompile Include="source\FreeCamera.cpp" />
     <ClCompile Include="source\ApplicationCore.cpp" />
     <ClCompile Include="source\InputHandler.cpp" />
+    <ClCompile Include="source\SceneParser.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\FreeCamera.h" />
     <ClInclude Include="source\ApplicationCore.h" />
     <ClInclude Include="source\InputHandler.h" />
+    <ClInclude Include="source\SceneParser.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -172,6 +172,12 @@ void DescriptorManager::createUAVView(TextureResource& texture)
 			, device.GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 
 		texture.uav[mipLevel].heapIndex = index;
+
+		if (mipLevel == 0)
+		{
+			texture.textureView.uavHandles = texture.uav[mipLevel].uavHandles;
+			texture.textureView.uavHeapIndex = index;
+		}
 	}
 }
 

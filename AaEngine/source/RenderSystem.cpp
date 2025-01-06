@@ -6,9 +6,9 @@
 #include "OgreMeshFileParser.h"
 #include "SceneManager.h"
 #include "MaterialResources.h"
-#include <codecvt>
 #include <pix3.h>
 #include "FileLogger.h"
+#include "StringUtils.h"
 
 ComPtr<IDXGIAdapter1> GetHardwareAdapter(IDXGIFactory4* pFactory)
 {
@@ -38,7 +38,7 @@ ComPtr<IDXGIAdapter1> GetHardwareAdapter(IDXGIFactory4* pFactory)
 				bestAdapter = pAdapter;
 				break;
 			}
-			else if (!fallbackAdapter)
+			if (!fallbackAdapter)
 			{
 				fallbackAdapter = pAdapter;
 			}
@@ -154,8 +154,6 @@ void RenderSystem::onScreenResize(UINT width, UINT height)
 	core.WaitForAllFrames();
 
 	core.resize(width, height);
-
-//	core.MoveToNextFrame();
 }
 
 void RenderCore::initializeSwapChain(const TargetWindow& window)
@@ -229,6 +227,8 @@ void RenderCore::resize(UINT width, UINT height)
 
 	for (auto& f : fenceValues)
 		f = 0;
+
+	MoveToNextFrame();
 }
 
 void RenderCore::WaitForCurrentFrame()
@@ -249,9 +249,9 @@ CommandsData RenderCore::CreateCommandList(const wchar_t* name)
 {
 	CommandsData data;
 
-	for (UINT n = 0; n < FrameCount; n++)
+	for (auto& commandAllocator : data.commandAllocators)
 	{
-		device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&data.commandAllocators[n]));
+		device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator));
 	}
 
 	device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, data.commandAllocators[frameIndex], nullptr, IID_PPV_ARGS(&data.commandList));
@@ -260,7 +260,7 @@ CommandsData RenderCore::CreateCommandList(const wchar_t* name)
 	if (name)
 	{
 		data.commandList->SetName(name);
-		data.name = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>().to_bytes(name);
+		data.name = as_string(name);
 	}
 
 	return data;
@@ -307,7 +307,7 @@ void RenderCore::ExecuteCommandList(CommandsData& commands)
 
 HRESULT RenderCore::Present(bool vsync)
 {
-	return swapChain->Present(vsync, 0);
+	return swapChain->Present(0, 0);
 }
 
 void RenderCore::EndFrame()
@@ -328,7 +328,7 @@ void RenderCore::WaitForAllFrames()
 			WaitForSingleObjectEx(fenceEvent, INFINITE, FALSE);
 		}
 
-		fenceValues[i]++;
+		fenceValues[i] += FrameCount;
 	}
 }
 

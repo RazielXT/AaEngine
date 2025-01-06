@@ -109,8 +109,6 @@ void ApplicationCore::onScreenResize(UINT, UINT)
 
 void ApplicationCore::loadScene(const char* scene)
 {
-	VoxelizeSceneTask::Get().reset();
-
 	renderSystem.core.WaitForAllFrames();
 	sceneMgr.clear();
 	resources.models.clear();
@@ -136,6 +134,9 @@ void ApplicationCore::loadScene(const char* scene)
 			sceneMgr.grass.scheduleGrassCreation(g, commands.commandList, params, resources, sceneMgr);
 		}
 	}
+
+	VoxelizeSceneTask::Get().clear(commands.commandList);
+
 	renderSystem.core.ExecuteCommandList(commands);
 	renderSystem.core.WaitForCurrentFrame();
 	commands.deinit();

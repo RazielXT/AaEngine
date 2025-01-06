@@ -24,7 +24,6 @@ enum class GpuBufferType
 	Root,
 	Instancing,
 	Geometry,
-	RWBuffer,
 	COUNT
 };
 
@@ -55,7 +54,7 @@ struct ResourcesInfo
 
 	struct UAV
 	{
-		ShaderUAV* uav{};
+		ID3D12Resource* uav;
 		UINT rootIndex{};
 	};
 	std::vector<UAV> uavs;

@@ -101,7 +101,7 @@ void Editor::initialize(TargetWindow& v)
 	{
 		D3D12_DESCRIPTOR_HEAP_DESC desc = {};
 		desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-		desc.NumDescriptors = 64 + icons.size();
+		desc.NumDescriptors = 64 + (UINT)icons.size();
 		desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 		if (renderer.device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&g_pd3dSrvDescHeap)) != S_OK)
 			return;
@@ -289,9 +289,9 @@ struct ImageButtonCombo
 	{
 		ImGui::BeginGroup();
 
-		int selected = current;
+		UINT selected = current;
 
-		for (size_t i = 0; i < options.size(); i++)
+		for (UINT i = 0; i < options.size(); i++)
 		{
 			if (ImGui::ImageButton(options[i].iconName, (ImTextureID)icons[options[i].iconName]->srvHandles.ptr, ImVec2(32, 32), ImVec2(0, 0), ImVec2(1, 1), ItemBg(i)))
 			{
@@ -316,7 +316,7 @@ struct ImageButtonCombo
 		return current == idx ? activeBg : inactiveBg;
 	}
 
-	int current{};
+	UINT current{};
 	bool active{};
 }
 transformButtons;
@@ -495,7 +495,7 @@ void Editor::prepareElements(Camera& camera)
 			{
 				gizmoCenter += s.obj.getCenterPosition();
 			}
-			gizmoCenter /= selection.size();
+			gizmoCenter /= (float)selection.size();
 
 			objTransformation.position = gizmoCenter;
 			XMStoreFloat4x4(&transform, objTransformation.createWorldMatrix());
@@ -543,7 +543,7 @@ void Editor::prepareElements(Camera& camera)
 		gizmoActive = ImGuizmo::IsOver();
 
 		if (ImGuizmo::IsUsing())
-			VoxelizeSceneTask::Get().reset();
+			VoxelizeSceneTask::Get().revoxelize();
 	}
 
 	ImGui::End();

@@ -93,6 +93,8 @@ public:
 	void SetTexture(ShaderTextureView& texture, UINT slot);
 	ShaderTextureView* GetTexture(UINT slot) const;
 
+	void SetUAV(ID3D12Resource* uav, UINT slot);
+
 	void SetParameter(const std::string& name, const void* value, size_t size);
 	void SetParameter(const std::string& name, float* buffer, const void* value, size_t size) const;
 	void GetParameter(const std::string& name, float* output) const;

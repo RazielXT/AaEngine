@@ -3,6 +3,7 @@
 #include "MaterialFileParser.h"
 #include "GraphicsResources.h"
 #include "Directories.h"
+#include "ComputeShader.h"
 
 MaterialResources::MaterialResources(RenderSystem& rs, GraphicsResources& r) : renderSystem(rs), resources(r)
 {
@@ -90,4 +91,6 @@ void MaterialResources::ReloadShaders()
 			}
 		}
 	}
+
+	ComputeShaderLibrary::Reload(*renderSystem.core.device, shadersChanged);
 }

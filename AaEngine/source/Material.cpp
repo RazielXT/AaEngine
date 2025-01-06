@@ -333,6 +333,12 @@ ShaderTextureView* MaterialInstance::GetTexture(UINT slot) const
 	return resources->textures[slot].texture;
 }
 
+void MaterialInstance::SetUAV(ID3D12Resource* uav, UINT slot)
+{
+	auto& u = resources->uavs[slot];
+	u.uav = uav;
+}
+
 void MaterialInstance::SetParameter(const std::string& name, const void* value, size_t size)
 {
 	SetParameter(name, resources->rootBuffer.defaultData.data(), value, size);
@@ -492,7 +498,7 @@ void MaterialInstance::BindTextures(ID3D12GraphicsCommandList* commandList)
 			commandList->SetGraphicsRootDescriptorTable(t.rootIndex, t.texture->srvHandles);
 
 	for (auto& uav : resources->uavs)
-		commandList->SetGraphicsRootDescriptorTable(uav.rootIndex, uav.uav->uavHandles);
+		commandList->SetGraphicsRootUnorderedAccessView(uav.rootIndex, uav.uav->GetGPUVirtualAddress());
 }
 
 void MaterialInstance::BindConstants(ID3D12GraphicsCommandList* commandList, const MaterialDataStorage& data, const ShaderConstantsProvider& constants)

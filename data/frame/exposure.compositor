@@ -1,11 +1,11 @@
 compositor Exposure
 {
-	texture exposureDs target_size_div 4 DXGI_FORMAT_R8_UNORM
-	texture exposureDs2 64 64 DXGI_FORMAT_R8_UNORM
-	texture exposureDs3 16 16 DXGI_FORMAT_R8_UNORM
-	texture exposureDs4 4 4 DXGI_FORMAT_R8_UNORM
-	texture exposureDs5 1 1 DXGI_FORMAT_R8_UNORM
-	texture exposure 1 1 DXGI_FORMAT_R8_UNORM
+	texture exposureDs target_size_div 4 DXGI_FORMAT_R32_FLOAT
+	texture exposureDs2 64 64 DXGI_FORMAT_R32_FLOAT
+	texture exposureDs3 16 16 DXGI_FORMAT_R32_FLOAT
+	texture exposureDs4 4 4 DXGI_FORMAT_R32_FLOAT
+	texture exposureDs5 1 1 DXGI_FORMAT_R32_FLOAT
+	texture exposure 1 1 DXGI_FORMAT_R32_FLOAT
 
 	pass ExposureDownsample
 	{

@@ -438,14 +438,6 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData(GraphicsResour
 		resources->buffers.push_back(r);
 	}
 
-	for (auto& b : rwStructuredBuffers)
-	{
-		ResourcesInfo::GpuBuffer r;
-		r.type = GpuBufferType::RWBuffer;
-		r.rootIndex = rootIndex++;
-		resources->buffers.push_back(r);
-	}
-
 	resources->textures.resize(textures.size() + bindlessTextures.size());
 	for (size_t i = 0; i < textures.size(); i++)
 	{
@@ -458,12 +450,18 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData(GraphicsResour
 		t.autoParamIdx = bindlessTextures[i];
 	}
 
-	resources->uavs.resize(uavs.size());
+	resources->uavs.resize(uavs.size() + rwStructuredBuffers.size());
 	for (size_t i = 0; i < uavs.size(); i++)
 	{
 		auto& uav = resources->uavs[i];
 		uav.rootIndex = rootIndex++;
-		uav.uav = graphicsResources.textures.getNamedUAV(uavs[i].info.Name);
+//		uav.uav = graphicsResources.textures.getNamedUAV(uavs[i].info.Name);
+	}
+	for (size_t i = 0; i < rwStructuredBuffers.size(); i++)
+	{
+		auto& uav = resources->uavs[uavs.size() + i];
+		uav.rootIndex = rootIndex++;
+//		uav.uav = graphicsResources.textures.getNamedUAV(rwStructuredBuffers[i].info.Name);
 	}
 
 	return resources;

@@ -28,6 +28,8 @@ cbuffer PSSMShadows : register(b2)
 StructuredBuffer<float4x4> InstancingBuffer : register(t0);
 #endif
 
+RWStructuredBuffer<VoxelSceneData> SceneVoxelData : register(u0);
+
 struct VS_Input
 {
     float4 p : POSITION;
@@ -116,47 +118,44 @@ float4 PS_Main(PS_Input pin) : SV_TARGET
 	float3x3 worldMatrix = (float3x3)WorldMatrix;
 #endif
 
-	float3 normal = normalize(mul(pin.normal, worldMatrix).xyz);
-	float3 binormal = cross(pin.normal, pin.tangent);
+	float3 worldNormal = normalize(mul(pin.normal, worldMatrix));
+	float3 worldTangent = normalize(mul(pin.tangent, worldMatrix));
+	float3 worldBinormal = cross(worldNormal, worldTangent);
 
 	float3 diffuse = MaterialColor * GetTexture(TexIdDiffuse).Sample(LinearWrapSampler, pin.uv).rgb;
 
-    float3 geometryNormal = normal;
-    float3 geometryB = normalize(mul(binormal, worldMatrix).xyz);
-    float3 geometryT = normalize(mul(pin.tangent, worldMatrix).xyz);
-
-	float3 voxelUV = (pin.wp.xyz - VoxelInfo.Voxels[VoxelIdx].Offset) / VoxelInfo.Voxels[VoxelIdx].SceneSize;
 	Texture3D SceneVoxelBounces = GetTexture3D(VoxelInfo.Voxels[VoxelIdx].TexIdBounces);
-	float4 fullTraceSample = ConeTrace(voxelUV, geometryNormal, VoxelInfo.MiddleConeRatio.x, VoxelInfo.MiddleConeRatio.y, SceneVoxelBounces, VoxelSampler, 0) * 1;
-    fullTraceSample += ConeTrace(voxelUV, normalize(geometryNormal + geometryT), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, SceneVoxelBounces, VoxelSampler, 0) * 1.0;
-    fullTraceSample += ConeTrace(voxelUV, normalize(geometryNormal - geometryT), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, SceneVoxelBounces, VoxelSampler, 0) * 1.0;
-    fullTraceSample += ConeTrace(voxelUV, normalize(geometryNormal + geometryB), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, SceneVoxelBounces, VoxelSampler, 0) * 1.0;
-	fullTraceSample += ConeTrace(voxelUV, normalize(geometryNormal - geometryB), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, SceneVoxelBounces, VoxelSampler, 0) * 1.0;
-    float3 traceColor = fullTraceSample.rgb;
 
-	float3 baseColor = diffuse * traceColor * VoxelInfo.SteppingBounces; // + diffuse * VoxelInfo.Voxels[VoxelIdx].SteppingDiffuse;
+	float shadow = 0;
+	if (dot(Sun.Direction,worldNormal) < 0)
+		shadow = getShadow(pin.wp) * 0.5;
 
-    float occlusionSample = SampleVoxel(SceneVoxelBounces, VoxelSampler, voxelUV + geometryNormal / 128, geometryNormal, 2).w;
-    occlusionSample += SampleVoxel(SceneVoxelBounces, VoxelSampler, voxelUV + normalize(geometryNormal + geometryT) / 128, normalize(geometryNormal + geometryT), 2).w;
-    occlusionSample += SampleVoxel(SceneVoxelBounces, VoxelSampler, voxelUV + normalize(geometryNormal - geometryT) / 128, normalize(geometryNormal - geometryT), 2).w;
-    occlusionSample += SampleVoxel(SceneVoxelBounces, VoxelSampler, voxelUV + (geometryNormal + geometryB) / 128, (geometryNormal + geometryB), 2).w;
-    occlusionSample += SampleVoxel(SceneVoxelBounces, VoxelSampler, voxelUV + (geometryNormal - geometryB) / 128, (geometryNormal - geometryB), 2).w;
-    occlusionSample = 1 - saturate(occlusionSample / 5);
-	baseColor *= occlusionSample;
-	
-	if (dot(Sun.Direction,normal) < 0)
-		baseColor += diffuse * getShadow(pin.wp) * 0.5;
+	float3 baseColor = diffuse * shadow;
 
-    float3 posUV = (pin.wp.xyz - VoxelInfo.Voxels[VoxelIdx].Offset) * VoxelInfo.Voxels[VoxelIdx].Density;
-	
-	float3 prev = SceneVoxelBounces.Load(float4(posUV - VoxelInfo.Voxels[VoxelIdx].BouncesOffset * 32, 0)).rgb;
-	baseColor.rgb = lerp(prev, baseColor.rgb, 0.1);
+	float3 voxelWorldPos = (pin.wp.xyz - VoxelInfo.Voxels[VoxelIdx].Offset);
+    float3 posUV = voxelWorldPos * VoxelInfo.Voxels[VoxelIdx].Density;
 
-	baseColor = lerp(baseColor, diffuse * Emission, saturate(Emission));
+	float4 prev = SceneVoxelBounces.Load(float4(posUV - VoxelInfo.Voxels[VoxelIdx].BouncesOffset * 32, 0));
+	baseColor = max(baseColor, prev.rgb * prev.w);
 
 	RWTexture3D<float4> SceneVoxel = ResourceDescriptorHeap[VoxelInfo.Voxels[VoxelIdx].TexId];
-    SceneVoxel[posUV] = float4(baseColor, (1 - saturate(Emission)));
-	//SceneVoxel[posUV - normal].w = (1 - saturate(Emission));
+    SceneVoxel[posUV] = float4(baseColor, 1);
+
+	bool isInBounds = (posUV.x >= 0 && posUV.x < 128) &&
+					  (posUV.y >= 0 && posUV.y < 128) &&
+					  (posUV.z >= 0 && posUV.z < 128);
+
+	if (isInBounds)
+	{
+		uint linearIndex = uint(posUV.z) * 128 * 128 + uint(posUV.y) * 128 + uint(posUV.x);
+
+		//RWStructuredBuffer<VoxelSceneData> SceneVoxelData = ResourceDescriptorHeap[NonUniformResourceIndex(VoxelInfo.Voxels[VoxelIdx].ResIdData)];
+
+		SceneVoxelData[linearIndex].Diffuse = float4(diffuse, shadow);
+		SceneVoxelData[linearIndex].Normal = worldNormal;
+//		SceneVoxelData[linearIndex].Binormal = worldBinormal;
+//		SceneVoxelData[linearIndex].Tangent = worldTangent;
+	}
 
 	return float4(diffuse, 1);
 }

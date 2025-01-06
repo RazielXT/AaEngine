@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ShaderDataBuffers.h"
+#include "TextureResources.h"
 #include "MathUtils.h"
 
 struct RenderObjectsVisibilityData;
@@ -42,4 +43,5 @@ public:
 	const FrameParameters& params;
 
 	UINT voxelIdx{};
+	ID3D12Resource* voxelBufferUAV{};
 };

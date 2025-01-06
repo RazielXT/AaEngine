@@ -47,7 +47,10 @@ void TextureResource::setName(const char* n)
 
 void TextureResource::TransitionState(ID3D12GraphicsCommandList* commandList, TextureResource& t, D3D12_RESOURCE_STATES targetState)
 {
-	auto b = CD3DX12_RESOURCE_BARRIER::Transition(t.texture.Get(), t.state, targetState);
-	commandList->ResourceBarrier(1, &b);
-	t.state = targetState;
+	if (t.state != targetState)
+	{
+		auto b = CD3DX12_RESOURCE_BARRIER::Transition(t.texture.Get(), t.state, targetState);
+		commandList->ResourceBarrier(1, &b);
+		t.state = targetState;
+	}
 }

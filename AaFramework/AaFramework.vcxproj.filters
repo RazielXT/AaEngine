@@ -16,6 +16,9 @@
     <ClCompile Include="source\ApplicationCore.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="source\SceneParser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\FreeCamera.h">
@@ -25,6 +28,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="source\ApplicationCore.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="source\SceneParser.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

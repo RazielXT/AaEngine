@@ -105,6 +105,10 @@ ID3D12PipelineState* MaterialBase::CreatePipelineState(const std::vector<D3D12_I
 		psoDesc.PS = { shaders[ShaderTypePixel]->blob->GetBufferPointer(), shaders[ShaderTypePixel]->blob->GetBufferSize() };
 	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	psoDesc.RasterizerState.CullMode = ref.pipeline.culling;
+	psoDesc.RasterizerState.FillMode = ref.pipeline.fill;
+	psoDesc.RasterizerState.DepthBias = ref.pipeline.depthBias;
+	psoDesc.RasterizerState.SlopeScaledDepthBias = ref.pipeline.slopeScaledDepthBias;
+
 	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
@@ -380,6 +384,27 @@ void MaterialInstance::SetParameter(ResourcesInfo::AutoParam type, const void* v
 	}
 }
 
+void MaterialInstance::SetParameter(ResourcesInfo::AutoParam type, const void* value, size_t size, MaterialDataStorage& data)
+{
+	for (auto p : resources->autoParams)
+	{
+		if (p.type == type)
+		{
+			memcpy(&data.rootParams[p.bufferOffset], value, size * sizeof(float));
+			return;
+		}
+	}
+}
+
+void MaterialInstance::SetParameter(FastParam id, const void* value, MaterialDataStorage& data)
+{
+	auto& param = paramsTable[(int)id];
+	if (param.data)
+	{
+		memcpy(data.rootParams.data() + param.Offset, value, param.Size);
+	}
+}
+
 void MaterialInstance::GetParameter(const std::string& name, float* output) const
 {
 	if (base.info.rootBuffer)
@@ -451,6 +476,8 @@ void MaterialInstance::UpdatePerFrame(MaterialDataStorage& data, const ShaderCon
 			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&data.rootParams[p.bufferOffset], XMMatrixTranspose(info.getInverseViewMatrix()));
 		else if (p.type == ResourcesInfo::AutoParam::INV_PROJ_MATRIX)
 			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&data.rootParams[p.bufferOffset], XMMatrixTranspose(info.getInverseProjectionMatrix()));
+		else if (p.type == ResourcesInfo::AutoParam::PROJ_MATRIX)
+			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&data.rootParams[p.bufferOffset], XMMatrixTranspose(info.getProjectionMatrix()));
 		else if (p.type == ResourcesInfo::AutoParam::Z_MAGIC)
 			data.rootParams[p.bufferOffset] = info.camera.getCameraZ();
 	}

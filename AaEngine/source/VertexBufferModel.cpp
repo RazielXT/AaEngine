@@ -151,8 +151,10 @@ uint32_t VertexBufferModel::getLayoutVertexSize(uint16_t slot) const
 	return sz;
 }
 
-void VertexBufferModel::CreateVertexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, void* vertices, UINT vertexCount, UINT vertexSize)
+void VertexBufferModel::CreateVertexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, const void* vertices, UINT vc, UINT vertexSize)
 {
+	vertexCount = vc;
+
 	auto hr = CreateStaticBuffer(device, *memory,
 		vertices,
 		vertexCount,
@@ -164,10 +166,29 @@ void VertexBufferModel::CreateVertexBuffer(ID3D12Device* device, ResourceUploadB
 	vertexBufferView.SizeInBytes = vertexCount * vertexSize;
 	vertexBufferView.StrideInBytes = vertexSize;
 	vertexBuffer->SetName(L"VB");
+
+	{
+		positions.resize(vertexCount);
+		UINT positionOffset = 0;
+		for (auto& f : vertexLayout)
+			if (f.SemanticName == VertexElementSemantic::POSITION)
+			{
+				positionOffset = f.AlignedByteOffset;
+				break;
+			}
+
+		for (size_t i = 0; i < vertexCount; i++)
+		{
+			auto positionsPtr = (float*)(((const uint8_t*)vertices) + i * vertexSize + positionOffset);
+			positions[i] = { positionsPtr[0], positionsPtr[1], positionsPtr[2], 1 };
+		}
+	}
 }
 
 void VertexBufferModel::CreateIndexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, const std::vector<uint16_t>& data)
 {
+	indexCount = (uint32_t)data.size();
+
 	auto hr = CreateStaticBuffer(device, *memory,
 		data,
 		D3D12_RESOURCE_STATE_INDEX_BUFFER, &indexBuffer);
@@ -177,15 +198,54 @@ void VertexBufferModel::CreateIndexBuffer(ID3D12Device* device, ResourceUploadBa
 	indexBufferView.SizeInBytes = static_cast<UINT>(data.size()) * sizeof(uint16_t);
 	indexBufferView.Format = DXGI_FORMAT_R16_UINT;
 	indexBuffer->SetName(L"IB");
+
+	indices.resize(data.size());
+	for (size_t i = 0; i < data.size(); i++)
+	{
+		indices[i] = data[i];
+	}
 }
 
-void VertexBufferModel::calculateBounds(const std::vector<float>& positions)
+void VertexBufferModel::CreateIndexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, const uint32_t* data, size_t dataCount)
+{
+	indexCount = (uint32_t)dataCount;
+
+	auto hr = CreateStaticBuffer(device, *memory,
+		data, dataCount,
+		D3D12_RESOURCE_STATE_INDEX_BUFFER, &indexBuffer);
+
+	// Create the index buffer view
+	indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
+	indexBufferView.SizeInBytes = static_cast<UINT>(dataCount) * sizeof(uint32_t);
+	indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+	indexBuffer->SetName(L"IB");
+
+	indices.resize(dataCount);
+	for (size_t i = 0; i < dataCount; i++)
+	{
+		indices[i] = data[i];
+	}
+}
+
+void VertexBufferModel::calculateBounds(const std::vector<float>& positionsBuffer)
 {
 	BoundingBoxVolume volume;
 
-	for (size_t i = 0; i < positions.size(); i += 3)
+	for (size_t i = 0; i < positionsBuffer.size(); i += 3)
 	{
-		volume.add({ positions[i], positions[i + 1], positions[i + 2] });
+		volume.add({ positionsBuffer[i], positionsBuffer[i + 1], positionsBuffer[i + 2] });
+	}
+
+	bbox = volume.createBbox();
+}
+
+void VertexBufferModel::calculateBounds()
+{
+	BoundingBoxVolume volume;
+
+	for (size_t i = 0; i < positions.size(); i++)
+	{
+		volume.add(positions[i]);
 	}
 
 	bbox = volume.createBbox();

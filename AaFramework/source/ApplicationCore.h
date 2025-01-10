@@ -5,6 +5,7 @@
 #include "FrameCompositor.h"
 #include "ShadowMap.h"
 #include "GraphicsResources.h"
+#include "PhysicsManager.h"
 
 struct DebugReporter
 {
@@ -38,6 +39,7 @@ public:
 	GraphicsResources resources;
 	SceneManager sceneMgr;
 	FrameParameters params;
+	PhysicsManager physicsMgr;
 	FrameCompositor* compositor;
 	AaShadowMap* shadowMap;
 	SceneLights lights;
@@ -47,6 +49,4 @@ private:
 	void onViewportResize(UINT, UINT) override;
 	void onScreenResize(UINT, UINT) override;
 	float timeSinceLastFrame{};
-
-	void loadCore();
 };

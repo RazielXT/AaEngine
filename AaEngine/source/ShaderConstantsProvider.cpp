@@ -28,9 +28,14 @@ XMMATRIX ShaderConstantsProvider::getViewProjectionMatrix() const
 	return camera.getViewProjectionMatrix();
 }
 
-DirectX::XMMATRIX ShaderConstantsProvider::getViewMatrix() const
+XMMATRIX ShaderConstantsProvider::getViewMatrix() const
 {
 	return camera.getViewMatrix();
+}
+
+XMMATRIX ShaderConstantsProvider::getProjectionMatrix() const
+{
+	return camera.getProjectionMatrixNoOffset();
 }
 
 XMMATRIX ShaderConstantsProvider::getInverseViewProjectionMatrix() const
@@ -48,12 +53,12 @@ XMMATRIX ShaderConstantsProvider::getInverseProjectionMatrix() const
 	return XMMatrixInverse(nullptr, camera.getProjectionMatrix());
 }
 
-DirectX::XMFLOAT3 ShaderConstantsProvider::getWorldPosition() const
+XMFLOAT3 ShaderConstantsProvider::getWorldPosition() const
 {
 	return entity->getPosition();
 }
 
-DirectX::XMFLOAT3 ShaderConstantsProvider::getCameraPosition() const
+XMFLOAT3 ShaderConstantsProvider::getCameraPosition() const
 {
 	return camera.getPosition();
 }
@@ -62,4 +67,3 @@ D3D12_GPU_VIRTUAL_ADDRESS ShaderConstantsProvider::getGeometryBuffer() const
 {
 	return entity->geometry.geometryCustomBuffer;
 }
-

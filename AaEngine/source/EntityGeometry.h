@@ -32,7 +32,9 @@ struct EntityGeometry
 
 	void* source{};
 
-	void fromModel(const VertexBufferModel& model);
-	void fromInstancedModel(const VertexBufferModel& model, InstanceGroup& group);
+	void fromModel(VertexBufferModel& model);
+	void fromInstancedModel(VertexBufferModel& model, InstanceGroup& group);
 	void fromGrass(GrassArea& grass);
+
+	VertexBufferModel* getModel() const;
 };

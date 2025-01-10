@@ -50,6 +50,8 @@ public:
 	{
 		app.beginRendering([this](float timeSinceLastFrame)
 			{
+				app.physicsMgr.update(timeSinceLastFrame);
+
 				editorUi.rendererActive ? InputHandler::consumeInput(*this) : InputHandler::clearInput();
 				editorUi.updateViewportSize();
 
@@ -66,18 +68,19 @@ public:
 
 				auto presentResult = app.present();
 
-// 				{
-// 					UINT sleepTime = 10;
-// 
-// 					//locked
-// 					if (presentResult == DXGI_STATUS_OCCLUDED)
-// 						sleepTime += 1000;
-// 					//minimized
-// 					if (IsIconic(window->getHwnd()))
-// 						sleepTime += 100;
-// 
-// 					Sleep(sleepTime);
-// 				}
+				if (editorUi.state.limitFrameRate)
+				{
+					UINT sleepTime = 10;
+
+					//locked
+					if (presentResult == DXGI_STATUS_OCCLUDED)
+						sleepTime += 1000;
+					//minimized
+					if (IsIconic(window->getHwnd()))
+						sleepTime += 100;
+
+					Sleep(sleepTime);
+				}
 
 				return continueRendering;
 			});
@@ -121,6 +124,22 @@ public:
 
 		editorUi.keyPressed(key);
 
+		if (key == 'F')
+		{
+			auto model = app.resources.models.getLoadedModel("sphere.mesh", ResourceGroup::Core);
+			auto material = app.resources.materials.getMaterial("WhiteVCT");
+
+			auto pos = freeCamera.camera.getPosition();
+
+			static int i = 0;
+			auto ent = app.sceneMgr.createEntity("shoot" + std::to_string(i++));
+			ent->setPosition(pos);
+			ent->geometry.fromModel(*model);
+			ent->material = material;
+
+			auto id = app.physicsMgr.createDynamicSphere(model->bbox.Extents.x, pos, freeCamera.camera.getCameraDirection() * 30);
+			app.physicsMgr.dynamicBodies.push_back({ ent, id });
+		}
 		return freeCamera.keyPressed(key);
 	}
 

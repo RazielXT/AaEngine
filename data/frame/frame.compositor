@@ -51,6 +51,11 @@ compositor Frame
 		target sceneTexture
 	}
 
+	task RenderPhysics
+	{
+		target sceneTexture
+	}
+
 	ref SSAO:SSAO
 
 	pass SceneDownsample

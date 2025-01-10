@@ -100,6 +100,18 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 			else
 				mat.pipeline.blend.alphaBlend = false;
 		}
+		else if (member.type == "wireframe")
+		{
+			mat.pipeline.fill = D3D12_FILL_MODE_WIREFRAME;
+		}
+		else if (member.type == "depth_bias")
+		{
+			mat.pipeline.depthBias = std::stoi(member.value);
+		}
+		else if (member.type == "depth_slope_bias")
+		{
+			mat.pipeline.slopeScaledDepthBias = std::stof(member.value);
+		}
 		else
 		{
 			parentInvalidated = false;

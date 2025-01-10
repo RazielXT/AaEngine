@@ -11,6 +11,7 @@
 #include "DebugWindow.h"
 #include "VoxelizeSceneTask.h"
 #include <algorithm>
+#include "PhysicsRenderTask.h"
 
 // Store frame times in a buffer
 float frameTimes[200] = { 0.0f };
@@ -568,6 +569,21 @@ void Editor::prepareElements(Camera& camera)
 	ImGui::Combo("DLSS", &state.DlssMode, UpscaleModeNames, std::size(UpscaleModeNames));
 	ImGui::Combo("FSR", &state.FsrMode, UpscaleModeNames, std::size(UpscaleModeNames));
 
+	if (ImGui::CollapsingHeader("Physics"))
+	{
+		const char* physicsDraw[] = {
+			"Off",
+			"Wireframe",
+			"Solid"
+		};
+		static int physicsDrawIdx = 0;
+		if (ImGui::Combo("Draw physics", &physicsDrawIdx, physicsDraw, std::size(physicsDraw)))
+			((PhysicsRenderTask*)app.compositor->getTask("RenderPhysics"))->setMode((PhysicsRenderTask::Mode)physicsDrawIdx);
+
+		if (ImGui::Button("Big physics"))
+			app.physicsMgr.test();
+	}
+
 	const char* scenes[] = {
 		"test",
 		"testCubes",
@@ -592,6 +608,8 @@ void Editor::prepareElements(Camera& camera)
 	}
 
 	{
+		ImGui::Checkbox("Limit framerate", &state.limitFrameRate);
+
 		UpdateFrameTimeBuffer();
 
 		ImGui::PlotLines("Frame Times", frameTimes, std::size(frameTimes), frameChartIndex, NULL, 0.0f, maxFrameTime, ImVec2(0, 80));

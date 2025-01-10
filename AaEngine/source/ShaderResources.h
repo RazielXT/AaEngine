@@ -64,6 +64,7 @@ struct ResourcesInfo
 		None,
 		VP_MATRIX,
 		VIEW_MATRIX,
+		PROJ_MATRIX,
 		INV_VP_MATRIX,
 		INV_VIEW_MATRIX,
 		INV_PROJ_MATRIX,

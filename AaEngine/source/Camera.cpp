@@ -155,6 +155,14 @@ void Camera::setInCameraRotation(Vector3& direction) const
 	direction.y *= -1;
 }
 
+DirectX::SimpleMath::Vector3 Camera::getCameraDirection() const
+{
+	Vector3 dir{ 0, 0, 1 };
+	setInCameraRotation(dir);
+
+	return dir;
+}
+
 void Camera::yaw(float Yaw)
 {
 	Vector3 yAxis = rotation * Vector3::UnitY;

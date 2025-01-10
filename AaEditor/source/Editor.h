@@ -24,6 +24,8 @@ struct DebugState
 
 	int DlssMode = (int)UpscaleMode::Off;
 	int FsrMode = (int)UpscaleMode::Off;
+
+	bool limitFrameRate = true;
 };
 
 class Editor

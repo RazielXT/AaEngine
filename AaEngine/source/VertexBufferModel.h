@@ -3,10 +3,10 @@
 #include <d3d12.h>
 #include <cstdint>
 #include <vector>
-#include <DirectXMath.h>
 #include <string>
 #include <DirectXCollision.h>
 #include "ResourceUploadBatch.h"
+#include "MathUtils.h"
 
 using namespace DirectX;
 
@@ -36,17 +36,21 @@ public:
 	uint32_t getLayoutVertexSize(uint16_t slot) const;
 	std::vector<D3D12_INPUT_ELEMENT_DESC> vertexLayout;
 
-	void CreateVertexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, void* vertices, UINT vertexBufferSize, UINT vertexSize);
+	void CreateVertexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, const void* vertices, UINT vertexCount, UINT vertexSize);
 	ID3D12Resource* vertexBuffer{};
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 	uint32_t vertexCount = 0;
 
 	void CreateIndexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, const std::vector<uint16_t>& data);
+	void CreateIndexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, const uint32_t* data, size_t dataCount);
 	ID3D12Resource* indexBuffer{};
 	D3D12_INDEX_BUFFER_VIEW indexBufferView;
 	uint32_t indexCount = 0;
 
 	DirectX::BoundingBox bbox;
 	void calculateBounds(const std::vector<float>& positions);
+	void calculateBounds();
 
+	std::vector<Vector3> positions;
+	std::vector<uint32_t> indices;
 };

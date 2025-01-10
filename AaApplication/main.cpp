@@ -30,6 +30,8 @@ public:
 	{
 		app.beginRendering([this](float timeSinceLastFrame)
 			{
+				app.physicsMgr.update(timeSinceLastFrame);
+
 				InputHandler::consumeInput(*this);
 
 				freeCamera.update(timeSinceLastFrame);

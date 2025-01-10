@@ -11,6 +11,7 @@
 #include "TextureData.h"
 #include "VoxelizeSceneTask.h"
 #include <dxgidebug.h>
+#include "PhysicsRenderTask.h"
 
 ApplicationCore::ApplicationCore(TargetViewport& viewport) : renderSystem(viewport), resources(renderSystem), sceneMgr(resources)
 {
@@ -36,9 +37,15 @@ void ApplicationCore::initialize(const TargetWindow& window, const InitParams& a
 	shadowMap->update(renderSystem.core.frameIndex, {});
 
 	compositor = new FrameCompositor({ params, renderSystem, resources }, sceneMgr, *shadowMap);
+	compositor->registerTask("RenderPhysics", [this](RenderProvider& provider, SceneManager& sceneMgr)
+	{
+		return std::make_shared<PhysicsRenderTask>(provider, sceneMgr, physicsMgr);
+	});
 	compositor->load(appParams.defaultCompositor, appParams.defaultCompositorParams);
 
 	sceneMgr.initialize(renderSystem);
+
+	physicsMgr.init();
 
 	FileLogger::log("ApplicationCore Initialized");
 }
@@ -111,9 +118,10 @@ void ApplicationCore::loadScene(const char* scene)
 {
 	renderSystem.core.WaitForAllFrames();
 	sceneMgr.clear();
+	physicsMgr.init();
 	resources.models.clear();
 
-	auto result = SceneParser::load(scene, { sceneMgr, renderSystem, resources });
+	auto result = SceneParser::load(scene, { sceneMgr, renderSystem, resources, physicsMgr });
 
 	auto commands = renderSystem.core.CreateCommandList(L"loadSceneCmd");
 	{

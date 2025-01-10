@@ -247,6 +247,14 @@ void RenderObject::resetRotation()
 	coords.orientation = XMQuaternionIdentity();
 }
 
+void RenderObject::setPositionOrientation(Vector3 position, Quaternion orientation)
+{
+	auto& coords = source.objectsData.transformation[id];
+	coords.dirty = true;
+	coords.position = position;
+	coords.orientation = orientation;
+}
+
 void RenderObject::setTransformation(const ObjectTransformation& transformation, bool initialize)
 {
 	auto& t = source.objectsData.transformation[id];

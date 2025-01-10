@@ -100,8 +100,10 @@ public:
 	void GetParameter(const std::string& name, float* output) const;
 
 	void SetParameter(ResourcesInfo::AutoParam, const void* value, size_t size);
+	void SetParameter(ResourcesInfo::AutoParam, const void* value, size_t size, MaterialDataStorage& data);
 
 	void SetParameter(FastParam param, const void* value);
+	void SetParameter(FastParam param, const void* value, MaterialDataStorage& data);
 	void GetParameter(FastParam param, float* output) const;
 	UINT GetParameterOffset(FastParam id) const;
 

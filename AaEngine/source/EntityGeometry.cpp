@@ -8,7 +8,7 @@ bool EntityGeometry::usesInstancing() const
 	return type == Type::Instancing;
 }
 
-void EntityGeometry::fromModel(const VertexBufferModel& model)
+void EntityGeometry::fromModel(VertexBufferModel& model)
 {
 	vertexCount = model.vertexCount;
 	indexCount = model.indexCount;
@@ -16,10 +16,11 @@ void EntityGeometry::fromModel(const VertexBufferModel& model)
 	indexBufferView = model.indexBufferView;
 	layout = &model.vertexLayout;
 	instanceCount = 1;
+	source = &model;
 	type = Type::Model;
 }
 
-void EntityGeometry::fromInstancedModel(const VertexBufferModel& model, InstanceGroup& group)
+void EntityGeometry::fromInstancedModel(VertexBufferModel& model, InstanceGroup& group)
 {
 	fromModel(model);
 	instanceCount = group.count;
@@ -35,4 +36,12 @@ void EntityGeometry::fromGrass(GrassArea& grass)
 	instanceCount = 1;
 	type = Type::Manual;
 	source = &grass;
+}
+
+VertexBufferModel* EntityGeometry::getModel() const
+{
+	if (type == Type::Model)
+		return (VertexBufferModel*)source;
+
+	return nullptr;
 }

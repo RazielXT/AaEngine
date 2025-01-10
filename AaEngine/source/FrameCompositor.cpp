@@ -56,16 +56,25 @@ void FrameCompositor::load(CompositorInfo i)
 
 	for (auto& p : info.passes)
 	{
-		if (p.condition)
-		{
-			bool pass = !p.condition->accept;
-			for (auto& c : conditions)
-				if (c.param == p.condition->param)
-					pass = c == p.condition;
+		bool passedCondition = true;
 
-			if (!pass)
-				continue;
+		for (auto& passCondition : p.conditions)
+		{
+			bool found = false;
+
+			for (auto& c : conditions)
+				if (c.param == passCondition.param)
+				{
+					found = true;
+					if (c.accept != passCondition.accept)
+						passedCondition = false;
+				}
+
+			if (!found && passCondition.accept)
+				passedCondition = false;
 		}
+		if (!passedCondition)
+			continue;
 
 		auto& pass = passes.emplace_back(p);
 		auto& task = tasks[pass.info.task];
@@ -111,6 +120,10 @@ void FrameCompositor::load(CompositorInfo i)
 			else if (pass.info.task == "HiZDepthDownsample")
 			{
 				pass.task = std::make_shared<DownsampleDepthTask>(provider, sceneMgr);
+			}
+			else if (auto it = externTasks.find(pass.info.task); it != externTasks.end())
+			{
+				pass.task = it->second(provider, sceneMgr);
 			}
 
 			task = pass.task;
@@ -334,6 +347,22 @@ const RenderTargetTexture* FrameCompositor::getTexture(const std::string& name) 
 		return nullptr;
 
 	return &it->second;
+}
+
+void FrameCompositor::registerTask(const std::string& name, CreateTaskFunc f)
+{
+	externTasks[name] = f;
+}
+
+CompositorTask* FrameCompositor::getTask(const std::string& name)
+{
+	for (auto& p : passes)
+	{
+		if (p.info.name == name && p.task)
+			return p.task.get();
+	}
+
+	return nullptr;
 }
 
 void FrameCompositor::executeCommands()

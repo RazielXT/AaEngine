@@ -117,8 +117,7 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 	auto objects = Config::Parse(directory + path);
 	std::map<std::string, CompositorInfo> imports;
 
-	std::optional<CompositorPassCondition> prevCondition;
-	std::optional<CompositorPassCondition> currentCondition;
+	std::vector<CompositorPassCondition> currentConditions;
 
 	for (auto& obj : objects)
 	{
@@ -216,7 +215,7 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 				{
 					CompositorPassInfo pass;
 					pass.name = member.value;
-					pass.condition = currentCondition;
+					pass.conditions = currentConditions;
 
 					for (auto& param : member.children)
 					{
@@ -240,7 +239,7 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 				{
 					CompositorPassInfo pass;
 					pass.task = pass.name = member.value;
-					pass.condition = currentCondition;
+					pass.conditions = currentConditions;
 
 					UINT flags = parseFlags(member);
 
@@ -274,7 +273,7 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 						if (pass.name == what || what == "*")
 						{
 							auto& added = info.passes.emplace_back(pass);
-							added.condition = currentCondition;
+							added.conditions.insert(added.conditions.end(), currentConditions.begin(), currentConditions.end());
 						}
 					}
 
@@ -285,22 +284,20 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 				{
 					if (member.type == "#if")
 					{
-						prevCondition = currentCondition;
-						currentCondition = { true, member.value };
+						currentConditions.push_back({ true, member.value });
 					}
 					else if (member.type == "#elif")
 					{
-						currentCondition = { true, member.value };
+						currentConditions.pop_back();
+						currentConditions.push_back({ true, member.value });
 					}
 					else if (member.type == "#else")
 					{
-						if (currentCondition)
-							currentCondition->accept = false;
+						currentConditions.back().accept = !currentConditions.back().accept;
 					}
 					else if (member.type == "#endif")
 					{
-						currentCondition = prevCondition;
-						prevCondition.reset();
+						currentConditions.pop_back();
 					}
 				}
 			}

@@ -204,6 +204,40 @@ void loadEntityUserData(const xml_node& element, SceneEntity* ent, SceneNode* no
 		{
 			if (auto extensionElement = physicalElement.child("Extension"))
 				loadExtensions(extensionElement, ent, node);
+
+			std::string_view type = physicalElement.child("BodyType").child_value();
+			auto mass = physicalElement.child("Mass").text().as_float();
+
+			if (type == "box")
+			{
+				auto bbox = ent->getBoundingBox();
+
+				if (mass == 0)
+					ctx->physicsMgr.createStaticBox(bbox.Extents, node->transformation, bbox.Center);
+				else
+				{
+					auto id = ctx->physicsMgr.createDynamicBox(bbox.Extents, node->transformation, bbox.Center, mass);
+					ctx->physicsMgr.dynamicBodies.push_back({ ent, id });
+				}
+			}
+			else if (type == "sphere")
+			{
+				auto radius = ent->getBoundingBox().Extents.x;
+
+				auto id = ctx->physicsMgr.createDynamicSphere(radius, node->transformation.position, Vector3::Zero);
+				ctx->physicsMgr.dynamicBodies.push_back({ ent, id });
+			}
+			else if (type == "conv")
+			{
+				auto model = ent->geometry.getModel();
+				auto id = ctx->physicsMgr.createConvexBody(model->positions, node->transformation, mass);
+				ctx->physicsMgr.dynamicBodies.push_back({ ent, id });
+			}
+			else if (type == "tree")
+			{
+				auto model = ent->geometry.getModel();
+				ctx->physicsMgr.createMeshBody(model->positions, model->indices, node->transformation);
+			}
 		}
 	}
 }

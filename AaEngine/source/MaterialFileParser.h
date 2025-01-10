@@ -35,6 +35,9 @@ struct MaterialPipelineInfo
 	MaterialDepthState depth;
 	MaterialBlendState blend;
 	D3D12_CULL_MODE culling = D3D12_CULL_MODE_BACK;
+	D3D12_FILL_MODE fill = D3D12_FILL_MODE_SOLID;
+	float slopeScaledDepthBias = 0.0f;
+	int depthBias = 0;
 };
 
 struct MaterialResourcesInfo

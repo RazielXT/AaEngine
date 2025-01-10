@@ -28,6 +28,7 @@ public:
 	void move(Vector3 position);
 	void setPosition(Vector3 position);
 	void setInCameraRotation(Vector3& direction) const;
+	Vector3 getCameraDirection() const;
 
 	void yaw(float Yaw);
 	void pitch(float Pitch);

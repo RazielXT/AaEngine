@@ -1,0 +1,26 @@
+material DebugMaterialBase abstract
+{
+	vertex_shader vsBasicShadingVc
+	pixel_shader psBasicShadingVc
+	
+	texture Diffuse
+	{
+		file white.png
+	}
+	
+	default_params
+	{
+		float MaterialColor 1 1 1
+	}
+}
+
+material DebugColor : DebugMaterialBase
+{
+	depth_bias 1
+	depth_slope_bias 1
+}
+
+material DebugWireframe : DebugColor
+{
+	wireframe
+}

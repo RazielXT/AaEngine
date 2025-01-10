@@ -26,6 +26,11 @@ public:
 
 	const RenderTargetTexture* getTexture(const std::string& name) const;
 
+	using CreateTaskFunc = std::function<std::shared_ptr<CompositorTask>(RenderProvider&, SceneManager&)>;
+	void registerTask(const std::string& name, CreateTaskFunc);
+
+	CompositorTask* getTask(const std::string& name);
+
 protected:
 
 	void load(CompositorInfo info);
@@ -69,4 +74,6 @@ protected:
 	RenderProvider provider;
 	SceneManager& sceneMgr;
 	AaShadowMap& shadowMaps;
+
+	std::map<std::string, CreateTaskFunc> externTasks;
 };

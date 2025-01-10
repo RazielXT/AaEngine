@@ -27,6 +27,7 @@ public:
 	XMMATRIX getPreviousWorldMatrix() const;
 	XMMATRIX getViewProjectionMatrix() const;
 	XMMATRIX getViewMatrix() const;
+	XMMATRIX getProjectionMatrix() const;
 	XMMATRIX getInverseViewProjectionMatrix() const;
 	XMMATRIX getInverseViewMatrix() const;
 	XMMATRIX getInverseProjectionMatrix() const;

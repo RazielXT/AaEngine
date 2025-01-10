@@ -99,6 +99,8 @@ public:
 	void roll(float roll);
 	void resetRotation();
 
+	void setPositionOrientation(Vector3 position, Quaternion orientation);
+
 	void setTransformation(const ObjectTransformation& transformation, bool initialize);
 	const ObjectTransformation& getTransformation() const;
 

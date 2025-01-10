@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SceneManager.h"
+#include "PhysicsManager.h"
 
 namespace SceneParser
 {
@@ -9,6 +10,7 @@ namespace SceneParser
 		SceneManager& sceneMgr;
 		RenderSystem& renderSystem;
 		GraphicsResources& resources;
+		PhysicsManager& physicsMgr;
 	};
 
 	struct Result

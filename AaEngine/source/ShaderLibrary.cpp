@@ -75,12 +75,30 @@ std::vector<const LoadedShader*> ShaderLibrary::reloadShaders()
 
 		for (auto& [name, shader] : shadersType)
 		{
-			struct stat attrib;
-			if (shader->blob && stat((SHADER_HLSL_DIRECTORY + shader->ref.file).c_str(), &attrib) == 0 && attrib.st_mtime > shader->filetime)
+			if (!shader->blob)
+				continue;
+
+			bool fileChanged = [&]()
+				{
+					struct stat attrib;
+
+					if (stat((SHADER_HLSL_DIRECTORY + shader->ref.file).c_str(), &attrib) == 0 && attrib.st_mtime > shader->filetime)
+						return true;
+
+					for (auto& i : shader->desc.includes)
+					{
+						if (stat((SHADER_HLSL_DIRECTORY + i).c_str(), &attrib) == 0 && attrib.st_mtime > shader->filetime)
+							return true;
+					}
+
+					return false;
+				}();
+
+			if (fileChanged)
 			{
 				shader->desc = {};
 				shader->blob = compiler.compileShader(shader->ref, shader->desc, (ShaderType)type);
-				shader->filetime = attrib.st_mtime;
+				shader->filetime = std::time(nullptr);
 
 				changed.push_back(shader.get());
 			}

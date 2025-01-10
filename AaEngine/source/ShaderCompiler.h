@@ -61,6 +61,7 @@ struct ShaderDescription
 	std::vector<ShaderReflection::UAV> uavs;
 	std::vector<ShaderReflection::StructuredBuffer> structuredBuffers;
 	std::vector<ShaderReflection::StructuredBuffer> rwStructuredBuffers;
+	std::vector<std::string> includes;
 
 	bool bindlessTextures = false;
 };

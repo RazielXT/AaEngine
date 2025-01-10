@@ -270,7 +270,8 @@ ComPtr<IDxcBlob> ShaderCompiler::compileShader(const ShaderRef& ref, ShaderDescr
 	// Set up compile arguments
 	std::vector<LPCWSTR> arguments = { L"-E", wentry.c_str() , L"-T", wprofile.c_str() };
 #ifdef _DEBUG
-	arguments.insert(arguments.end(), { L"-Zi", L"-Qembed_debug" });
+	arguments.insert(arguments.end(), { L"-Zi", L"-Qembed_debug"});
+	//arguments.push_back(L"-Od");
 #else
 	arguments.push_back(L"-Qstrip_debug");
 	arguments.push_back(L"-Qstrip_reflect");
@@ -294,6 +295,11 @@ ComPtr<IDxcBlob> ShaderCompiler::compileShader(const ShaderRef& ref, ShaderDescr
 	{
 		FileLogger::logErrorD3D("compileShader " + ref.entry, hr);
 		return nullptr;
+	}
+
+	for (auto& h : includeHandler.IncludedFiles)
+	{
+		description.includes.push_back(as_string(h));
 	}
 
 	// Check for compilation errors

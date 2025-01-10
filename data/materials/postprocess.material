@@ -11,6 +11,11 @@ material PassThrough : PostProcess
 	pixel_shader psPassThrough
 }
 
+material PassThroughIllumination : PostProcess
+{
+	pixel_shader psPassThroughIllumination
+}
+
 material PassThroughAvg : PostProcess
 {
 	pixel_shader psPassThroughAvg
@@ -137,6 +142,26 @@ material MotionVectors : PostProcess
 	{
 		file motionVectors.hlsl
 		entry PSMain
+		profile ps_6_6
+	}
+}
+
+material SkyPassThrough : PostProcess
+{
+	pixel_shader
+	{
+		file postprocess.hlsl
+		entry PSSkyPassThrough
+		profile ps_6_6
+	}
+}
+
+material TraceGodray : PostProcess
+{
+	pixel_shader
+	{
+		file godray.hlsl
+		entry PSTraceGodray
 		profile ps_6_6
 	}
 }

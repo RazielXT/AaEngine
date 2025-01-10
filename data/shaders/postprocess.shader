@@ -12,6 +12,13 @@ pixel_shader psPassThrough
 	profile ps_6_6
 }
 
+pixel_shader psPassThroughIllumination
+{
+	file postprocess.hlsl
+	entry PSPassThroughIllumination
+	profile ps_6_6
+}
+
 pixel_shader psPassThroughAvg
 {
 	file postprocess.hlsl

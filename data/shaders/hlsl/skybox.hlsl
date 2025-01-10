@@ -62,7 +62,9 @@ PSOutput PSMain(PSInput input)
 	PSOutput output;
 	
 	float3 texColor = skyboxTexture.Sample(samplerState, input.uv).rgb;
-	output.color = float4(texColor,1);
+	float brightness = (texColor.r + texColor.g + texColor.b) / 2;
+
+	output.color = float4(texColor,brightness);
 	output.normals = 0;
 	output.camDistance = 0;
 	output.motionVectors = 0;

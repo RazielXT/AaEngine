@@ -1,6 +1,7 @@
 import ssao
 import exposure
 import bloom
+import godray
 
 compositor Frame
 {
@@ -22,6 +23,10 @@ compositor Frame
 
 	rwtexture depthHiZDownsample4 target_size_div 4 DXGI_FORMAT_R32_FLOAT	
 	rwtexture depthHiZDownsample32 target_size_div 32 DXGI_FORMAT_R32_FLOAT
+
+	texture tmpColorDownsample2 output_size_div 2 DXGI_FORMAT_R8G8B8A8_UNORM
+	texture tmpColorDownsample4 output_size_div 4 DXGI_FORMAT_R8G8B8A8_UNORM
+	texture tmpColorDownsample8 output_size_div 8 DXGI_FORMAT_R8G8B8A8_UNORM
 
 	texture voxelDummy 128 128 DXGI_FORMAT_R8G8B8A8_UNORM
 
@@ -58,9 +63,10 @@ compositor Frame
 
 	ref SSAO:SSAO
 
+
 	pass SceneDownsample
 	{
-		material PassThrough
+		material PassThroughIllumination
 		input sceneTexture:Color
 		target sceneDownscale2
 	}
@@ -152,11 +158,14 @@ compositor Frame
 		}
 	#endif
 
+	ref Godray:*
+
 	pass Combine
 	{
 		material AddThroughNoLuma
 		input sceneTexture2_upscaled
 		input bloomTexture
+		input godray
 		input exposure
 		target Output
 	}
@@ -168,11 +177,15 @@ compositor Frame
 	}
 
 #else
+
+	ref Godray:*
+
 	pass Combine
 	{
 		material AddThrough
 		input sceneColors
 		input bloomTexture
+		input godray
 		input exposure
 		target sceneTexture3
 	}

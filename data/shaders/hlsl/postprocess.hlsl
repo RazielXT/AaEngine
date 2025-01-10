@@ -27,6 +27,12 @@ float4 PSPassThrough(VS_OUTPUT input) : SV_TARGET
     return colorMap.Sample(colorSampler, input.TexCoord);
 }
 
+float4 PSPassThroughIllumination(VS_OUTPUT input) : SV_TARGET
+{
+	float4 sample = colorMap.Sample(colorSampler, input.TexCoord);
+    return sample * sample.a * 2;
+}
+
 float4 PSPassThroughAvg(VS_OUTPUT input) : SV_TARGET
 {
 	float4 color = colorMap.Sample(colorSampler, input.TexCoord);
@@ -75,7 +81,8 @@ float4 PSBlurY(VS_OUTPUT input) : SV_TARGET
 }
 
 Texture2D colorMap2 : register(t1);
-Texture2D exposureMap : register(t2);
+Texture2D godrayMap : register(t2);
+Texture2D exposureMap : register(t3);
 
 float4 PSAddThrough(VS_OUTPUT input) : SV_TARGET
 {
@@ -94,6 +101,8 @@ float4 PSAddThrough(VS_OUTPUT input) : SV_TARGET
 #endif
 
 	original.rgb += bloom;
+	original.rgb += godrayMap.Sample(colorSampler, input.TexCoord).rgb * exposure;
+
     return original;
 }
 
@@ -103,4 +112,12 @@ float4 PSDarken(VS_OUTPUT input) : SV_TARGET
 	color.rgb *= lerp(colorMap2.Sample(colorSampler, input.TexCoord).r, 1, color.a);
 
     return color;
+}
+
+float4 PSSkyPassThrough(VS_OUTPUT input) : SV_TARGET
+{
+	if (colorMap2.Sample(colorSampler, input.TexCoord).a < 1)
+		return colorMap.Sample(colorSampler, input.TexCoord);
+
+    return float4(0, 0, 0, 0);
 }

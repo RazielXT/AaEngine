@@ -109,6 +109,9 @@
     <ClCompile Include="source\MaterialResources.cpp" />
     <ClCompile Include="source\MathUtils.cpp" />
     <ClCompile Include="source\SceneSkybox.cpp" />
+    <ClCompile Include="source\TerrainGenerationCS.cpp" />
+    <ClCompile Include="source\TerrainGenerator.cpp" />
+    <ClCompile Include="source\TerrainGrid.cpp" />
     <ClCompile Include="source\VertexBufferModel.cpp" />
     <ClCompile Include="source\ModelResources.cpp" />
     <ClCompile Include="source\AoBlurAndUpsampleCS.cpp" />
@@ -198,6 +201,9 @@
     <ClInclude Include="source\ShaderConstantsProvider.h" />
     <ClInclude Include="source\MaterialFileParser.h" />
     <ClInclude Include="source\MaterialResources.h" />
+    <ClInclude Include="source\TerrainGenerationCS.h" />
+    <ClInclude Include="source\TerrainGenerator.h" />
+    <ClInclude Include="source\TerrainGrid.h" />
     <ClInclude Include="source\VertexBufferModel.h" />
     <ClInclude Include="source\ModelResources.h" />
     <ClInclude Include="source\RenderObject.h" />

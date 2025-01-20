@@ -546,7 +546,10 @@ void readSubMesh(std::ifstream& stream, MeshInfo& info, ModelParseOptions o)
 	{
 		if (idx32bit)
 		{
-			//readData(stream, static_cast<unsigned int*>(info.indices), sm->indexData->indexCount);
+			std::vector<uint32_t> data;
+			data.resize(submesh.model->indexCount);
+			readData(stream, data.data(), submesh.model->indexCount);
+			submesh.model->CreateIndexBuffer(o.device, o.batch, data.data(), submesh.model->indexCount);
 		}
 		else // 16-bit
 		{

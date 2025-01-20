@@ -24,7 +24,7 @@ material WaterLake
 	}
 	texture Depth
 	{
-		compositor Frame:linearDepthDownsample2
+		compositor Frame:depthDownsample2
 	}
 	texture DepthDownsample
 	{

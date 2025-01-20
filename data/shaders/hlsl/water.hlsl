@@ -18,7 +18,7 @@ uint TexIdSceneDepthLow;
 uint TexIdSceneDepthVeryLow;
 uint TexIdSceneColor;
 uint TexIdSkybox;
-float ZMagic;
+//float ZMagic;
 
 #ifdef ENTITY_ID
 uint EntityId;
@@ -41,6 +41,7 @@ TextureCube<float4> GetTextureCube(uint index)
 
 SamplerState LinearWrapSampler : register(s0);
 SamplerState DepthSampler : register(s1);
+SamplerState PointSampler : register(s2);
 
 float GetWavesSize(float2 uv)
 {
@@ -101,32 +102,8 @@ float4 GetWaves(float2 uv)
 	return worldPosition.xyz / 10;
 }
  */
-/* 
-float3 traceReflection(float3 wp, float3 normal, float3 camDirection, float2 uv, float currentDepthLinear)
-{
-	float3 traceDir = reflect(camDirection, normal);
-	traceDir = mul(traceDir, (float3x3)ViewProjectionMatrix);
 
-//	uv.y = 1 - uv.y;
-
-	float3 screenStep = (traceDir) * 0.2;
-	screenStep.x *= -1;
-	float3 screenOffset = screenStep;
-	Texture2D depthTex = GetTexture(TexIdLinearDepth);
-
-	for (int i = 0; i < 10; i++)
-	{
-		float stepDepth = depthTex.Sample(LinearWrapSampler, uv - screenOffset.xy).r;
-		if (stepDepth > currentDepthLinear + screenOffset.z)
-			return GetTexture(TexIdSceneColor).Sample(LinearWrapSampler, uv - screenOffset.xy).rgb;
-		
-		screenOffset += screenStep;
-	}
-
-	return GetTexture(TexIdSceneColor).Sample(LinearWrapSampler, uv.xy).rgb;
-} */
-
-static const int NUM_RAY_MARCH_SAMPLES = 16;
+static const int NUM_RAY_MARCH_SAMPLES = 32;
 static const float MAX_REFLECTION_RAY_MARCH_STEP = (1.0f / (NUM_RAY_MARCH_SAMPLES + 1));
 static const int NUM_BINARY_SEARCH_SAMPLES = 8;
 
@@ -140,15 +117,20 @@ float4 GetReflection(
 	Texture2D DepthBufferHigh = GetTexture(TexIdSceneDepthHigh);
 	float3 PrevRaySample = ScreenSpacePos;
 	float MaxOffset = 0.00005f;
+	float Retry = 1;
 
 	// Raymarch in the direction of the ScreenSpaceReflectionVec until you get an intersection with your z buffer
-	if (ScreenSpaceReflectionVec.z > 0)
+	//if (ScreenSpaceReflectionVec.z < 0 && !(ScreenSpaceReflectionVec.x == 0 && ScreenSpaceReflectionVec.y == 0))
 	for (int RayStepIdx = 0; RayStepIdx<NUM_RAY_MARCH_SAMPLES; RayStepIdx++)
 	{
 		float3 RaySample = (RayStepIdx * MAX_REFLECTION_RAY_MARCH_STEP) * ScreenSpaceReflectionVec + ScreenSpacePos;
-		float ZBufferVal = DepthBufferVeryLow.Sample(DepthSampler, RaySample.xy).r;
+		
+		if (RaySample.x < 0 || RaySample.y < 0 || RaySample.x > 1 || RaySample.y > 1)
+			break;
 
-		if (RaySample.z > ZBufferVal)
+		float ZBufferVal = DepthBufferLow.Sample(DepthSampler, RaySample.xy).r;
+
+		if (RaySample.z < ZBufferVal)
 		{
 			float3 MinRaySample = PrevRaySample;
 			float3 MaxRaySample = RaySample;
@@ -159,9 +141,9 @@ float4 GetReflection(
 			for (int i = 0; i < NUM_BINARY_SEARCH_SAMPLES; i++)
 			{
 				MidRaySample = lerp(MinRaySample, MaxRaySample, 0.5);
-				ZBufferVal = DepthBufferHigh.Sample(DepthSampler, MidRaySample.xy).r;
-
-				if (MidRaySample.z < ZBufferVal)
+				ZBufferVal = DepthBufferLow.Sample(DepthSampler, MidRaySample.xy).r;
+				
+				if (MidRaySample.z > ZBufferVal)
 				{
 					MinRaySample = MidRaySample;
 					MinDistance += DistanceWeight;
@@ -178,6 +160,7 @@ float4 GetReflection(
 			float ZDiff = abs(ZBufferVal - MidRaySample.z);
 			
 			//secant
+			//if (false)
 			{
 				const float TotalDistance = MaxDistance - MinDistance;
 				const float3 RefinedMidRaySample = lerp(MinRaySample, MaxRaySample, MinDistance / TotalDistance);
@@ -185,7 +168,7 @@ float4 GetReflection(
 				ZBufferVal = DepthBufferHigh.Sample(DepthSampler, RefinedMidRaySample.xy).r;
 				float refinedDiff = abs(ZBufferVal - RefinedMidRaySample.z);
 				
-				if (refinedDiff < ZDiff && MaxRaySample.z > ZBufferVal)
+				if (refinedDiff < ZDiff && MaxRaySample.z < ZBufferVal)
 				{
 					ZDiff = refinedDiff;
 					MidRaySample = RefinedMidRaySample;
@@ -195,10 +178,11 @@ float4 GetReflection(
 			//background
 			if (ZBufferVal == 0)
 				break;		
-				
+
 			//skip something too far in front, this allows marching behind objects
-			if (ZDiff > MaxOffset * RayStepIdx || MidRaySample.z + MaxOffset < ZBufferVal)
+			if (ZDiff > MaxOffset * RayStepIdx)
 			{
+				Retry = 0;
 				continue;
 			}
 
@@ -230,9 +214,16 @@ struct PSOutput
     float4 fill : SV_Target1;
 };
 
-float LinearizeDepth(float depth)
+float checkerboard(float2 uv)
 {
-	return 1.0 / (ZMagic * depth + 1.0);
+    // Compute the checkerboard pattern
+    int checkX = int(floor(uv.x) % 2);
+    int checkY = int(floor(uv.y) % 2);
+
+    // Determine the color based on the pattern
+    float color = (checkX == checkY) ? 1 : 0;
+
+    return color;
 }
 
 PSOutput PSMain(PSInput input)
@@ -246,9 +237,11 @@ PSOutput PSMain(PSInput input)
 
 	const float FadeDistance = 20;
 	float fade = (groundDistance - waterDistance) / FadeDistance;
+	//float fade = smoothstep(0, FadeDistance, groundDistance - waterDistance);
+
 	float4 albedo = GetWaves(input.uv);
 	albedo.a = albedo.r * 0.2 + fade;
-	
+	albedo.rgb *= float3(0.2,0.8, 0.6);
 	float3 voxelUV = (input.worldPosition.xyz-VoxelInfo.NearVoxels.Offset)/VoxelInfo.NearVoxels.SceneSize;
 	
 	//albedo.rgb = length(input.worldPosition.xyz - worldPosGround);
@@ -264,37 +257,91 @@ PSOutput PSMain(PSInput input)
 	Texture3D voxelmap = ResourceDescriptorHeap[VoxelInfo.NearVoxels.TexId];
 	albedo.rgb *= (voxelmap.SampleLevel(LinearWrapSampler, voxelUV, 3).rgb + voxelmap.SampleLevel(LinearWrapSampler, voxelUV, 4).rgb * 2) * 10;
 
-	float3 normal = normalize(input.normal + 0.2 * GetTexture(TexIdNormal).Sample(LinearWrapSampler,input.uv * 2).rgb); 
+	float3 normal = normalize(input.normal + 0.1 * GetTexture(TexIdNormal).Sample(LinearWrapSampler,input.uv * 2).rgb); 
 	float4 WorldNormal = float4(normal,1);
 	float3 WorldPosition = input.worldPosition.xyz;
 
-	float DeviceZ = LinearizeDepth(input.position.z);
+	float DeviceZ = input.position.z;
 	float2 ScreenUV = input.position.xy * ViewportSizeInverse;
 	float2 SsrPixelUV = ScreenUV;
 
 	float4 ScreenSpacePos = float4(SsrPixelUV, DeviceZ, 1.f);
 	float3 ReflectionVector = reflect(cameraVector, WorldNormal.xyz);
+	ReflectionVector.xy += getJitter(ScreenUV, 0.01);
 
-	float4 PointAlongReflectionVec = float4(40.f*ReflectionVector + WorldPosition, 1.f);
+	float4 PointAlongReflectionVec = float4(ReflectionVector + WorldPosition, 1.f);
 	float4 ScreenSpaceReflectionPoint = mul(PointAlongReflectionVec, ViewProjectionMatrix);
 	ScreenSpaceReflectionPoint /= ScreenSpaceReflectionPoint.w;
 	ScreenSpaceReflectionPoint.xy = ScreenSpaceReflectionPoint.xy * float2(0.5, -0.5) + float2(0.5, 0.5);
-	ScreenSpaceReflectionPoint.z = LinearizeDepth(ScreenSpaceReflectionPoint.z);
 	
-// Compute the sreen space reflection vector as the difference of the two screen space points
+	// Compute the sreen space reflection vector as the difference of the two screen space points
 	float3 ScreenSpaceReflectionVec = normalize(ScreenSpaceReflectionPoint.xyz - ScreenSpacePos.xyz);
-	ScreenSpaceReflectionVec.xy += getJitter(ScreenUV, 0.01);
 
-	float4 reflection = GetReflection(ScreenSpaceReflectionVec, ScreenSpacePos.xyz, -ReflectionVector);
-	//reflection *= fade;
-	//float currentDepthLinear = 1.0 / (ZMagic * depth + 1.0);
-/* 	albedo.rgb += traceReflection(input.worldPosition.xyz, input.normal.xyz, cameraVector / waterDistance, input.position.xy * ViewportSizeInverse, currentDepthLinear); */
+	float4 reflection = 0;
+
+	//if (checkerboard(input.position.xy) != 0)
+	{
+		reflection = GetReflection(ScreenSpaceReflectionVec, ScreenSpacePos.xyz, -ReflectionVector);
+		
+		if (reflection.a == 0)
+		{
+			float3 jjj = getJitter(ScreenUV, 0.5).xyx;
+			SceneVoxelChunkInfo Voxels = VoxelInfo.NearVoxels;
+
+			float3 rayDir = ReflectionVector;
+			float stepSize = 6.f; // Adjust as needed
+			float3 rayStart = input.worldPosition.xyz + rayDir * 3 * stepSize;
+
+			float4 nearVoxel = 0.xxxx;
+			for (int i = 1; i < 16; ++i)
+			{
+				// Move the ray position
+				float3 rayPos = rayStart + rayDir * stepSize * i;
+				stepSize += 1 / 16.f;
+
+				// Convert to UVW coordinates (range [0, 1])
+				float3 voxelUV = (rayPos - Voxels.Offset) / Voxels.SceneSize;
+
+				if (voxelUV.x <= 0 || voxelUV.x >= 1 || voxelUV.y <= 0 || voxelUV.y >= 1 || voxelUV.z <= 0 || voxelUV.z >= 1)
+				{
+					nearVoxel.a = 0;
+					break;
+				}
+
+				// Sample the 3D texture
+				nearVoxel = voxelmap.SampleLevel(PointSampler, voxelUV, 2);
+
+				// If a filled voxel is hit
+				if (nearVoxel.a > 0.f)
+				{		
+					float detailStepSize = stepSize / 4.f; // Adjust as needed
+
+					for (int i = 4; i >= 0; i--)
+					{
+						float3 rayPosDetail = rayPos - rayDir * i * detailStepSize + jjj;
+						float3 voxelUV = (rayPosDetail - Voxels.Offset) / Voxels.SceneSize;
+						nearVoxel = voxelmap.SampleLevel(PointSampler, voxelUV, 0);
+						
+						if (nearVoxel.a > 0.f)
+							break;
+					}
+				}
+
+				// If a filled voxel is hit
+				if (nearVoxel.a > 0.f)
+					break;
+			}
+
+			if (nearVoxel.a != 0.f)	
+				reflection = float4(nearVoxel.rgb , 1);
+		}
+	}
 
 	float fresnel = saturate((1 - abs(dot(cameraVector, normal))));
 	fresnel *= fresnel;
 
 	albedo.rgb = lerp(albedo.rgb, reflection.rgb, fresnel);
-	//albedo.rgb = reflection.rgb;
+//	albedo.rgb = reflection.rgb;
 	float3 sceneColor = GetTexture(TexIdSceneColor).Sample(LinearWrapSampler, ScreenUV).rgb;
 
 	albedo.rgb = lerp(sceneColor, albedo.rgb, saturate(albedo.a));
@@ -302,6 +349,7 @@ PSOutput PSMain(PSInput input)
 
 	PSOutput output;
 	output.color = albedo;
+	//output.color.rgb = reflection.rgb;
 	output.fill = float4(1,1,1, reflection.a);
 
 	return output;

@@ -96,7 +96,7 @@ compositor Frame
 
 	task HiZDepthDownsample (compute_shader)
 	{
-		input linearDepthDownsample2 (read)
+		input depthDownsample2 (read)
 		input depthHiZDownsample4
 		input depthHiZDownsample32
 	}
@@ -115,7 +115,7 @@ compositor Frame
 
 		input sceneTexture:Distance
 		input sceneTexture2
-		input linearDepthDownsample2
+		input depthDownsample2
 		input depthHiZDownsample4
 		input depthHiZDownsample32
 		target sceneTransparentTexture sceneTexture:Depth (depth_read)

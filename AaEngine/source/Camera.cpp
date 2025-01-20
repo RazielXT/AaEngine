@@ -257,7 +257,7 @@ void Camera::lookTo(FXMVECTOR vEyePt, FXMVECTOR vLookatPt)
 // 	m_fCameraPitchAngle = -atan2f(zBasis.y, fLen);
 }
 
-void Camera::setProjection(XMMATRIX proj)
+void Camera::setOrthographicProjection(XMMATRIX proj)
 {
 	orthographic = true;
 	projection_m = reversedProjection_m = proj;

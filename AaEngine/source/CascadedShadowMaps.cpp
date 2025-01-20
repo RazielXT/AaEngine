@@ -8,7 +8,6 @@ enum FIT_PROJECTION_TO_CASCADES
 };
 FIT_PROJECTION_TO_CASCADES          m_eSelectedCascadesFit = FIT_TO_SCENE;
 FLOAT m_fCascadePartitionsFrustum[8]; // Values are  between near and far
-INT m_iCascadePartitionsZeroToOne[8] = { 200, 400, 800 }; // Values are 0 to 100 and represent a percent of the frstum
 INT m_iCascadePartitionsMax = 100;
 
 enum FIT_TO_NEAR_FAR
@@ -25,8 +24,6 @@ static const XMVECTORF32 g_vFLTMIN = { -FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX };
 static const XMVECTORF32 g_vHalfVector = { 0.5f, 0.5f, 0.5f, 0.5f };
 static const XMVECTORF32 g_vMultiplySetzwToZero = { 1.0f, 1.0f, 0.0f, 0.0f };
 static const XMVECTORF32 g_vZero = { 0.0f, 0.0f, 0.0f, 0.0f };
-
-int cascadesCount = 2;
 
 void ComputeNearAndFar(FLOAT& fNearPlane,
 	FLOAT& fFarPlane,
@@ -68,7 +65,7 @@ void CreateFrustumPointsFromCascadeInterval(float fCascadeIntervalBegin,
 
 }
 
-void ShadowMapCascade::update(Camera& lightCamera, Camera& viewer)
+void ShadowMapCascade::update(Camera& lightCamera, Camera& viewer, float extends, Vector2& nearFarClip)
 {
 	XMMATRIX matViewCameraProjection = viewer.getProjectionMatrixNoReverse();
 	XMMATRIX matViewCameraView = viewer.getViewMatrix();
@@ -76,24 +73,24 @@ void ShadowMapCascade::update(Camera& lightCamera, Camera& viewer)
 
 	XMMATRIX matInverseViewCamera = XMMatrixInverse(nullptr, matViewCameraView);
 
-	// Convert from min max representation to center extents represnetation.
+	// Convert from min max representation to center extents representation.
 	// This will make it easier to pull the points out of the transformation.
-// 	BoundingBox bb;
-// 	BoundingBox::CreateFromPoints(bb, m_vSceneAABBMin, m_vSceneAABBMax);
-// 
-// 	XMFLOAT3 tmp[8];
-// 	bb.GetCorners(tmp);
-// 
-// 	// Transform the scene AABB to Light space.
-// 	XMVECTOR vSceneAABBPointsLightSpace[8];
-// 	for (int index = 0; index < 8; ++index)
-// 	{
-// 		XMVECTOR v = XMLoadFloat3(&tmp[index]);
-// 		vSceneAABBPointsLightSpace[index] = XMVector3Transform(v, matLightCameraView);
-// 	}
+	BoundingBox bb(viewer.getPosition(), { extends, extends, extends });
+	//BoundingBox::CreateFromPoints(bb, m_vSceneAABBMin, m_vSceneAABBMax);
+
+	XMFLOAT3 tmp[8];
+	bb.GetCorners(tmp);
+
+	// Transform the scene AABB to Light space.
+	XMVECTOR vSceneAABBPointsLightSpace[8];
+	for (int index = 0; index < 8; ++index)
+	{
+		XMVECTOR v = XMLoadFloat3(&tmp[index]);
+		vSceneAABBPointsLightSpace[index] = XMVector3Transform(v, matLightCameraView);
+	}
 
 	FLOAT fFrustumIntervalBegin, fFrustumIntervalEnd;
-	XMVECTOR vLightCameraOrthographicMin;  // light space frustrum aabb 
+	XMVECTOR vLightCameraOrthographicMin;  // light space frustum aabb 
 	XMVECTOR vLightCameraOrthographicMax;
 	FLOAT fCameraNearFarRange = 100;// m_pViewerCamera->GetFarClip() - m_pViewerCamera->GetNearClip();
 
@@ -106,20 +103,20 @@ void ShadowMapCascade::update(Camera& lightCamera, Camera& viewer)
 		// the cascade covers as a Min and Max distance along the Z Axis.
 		if (m_eSelectedCascadesFit == FIT_TO_CASCADES)
 		{
-			// Because we want to fit the orthogrpahic projection tightly around the Cascade, we set the Mimiumum cascade 
+			// Because we want to fit the orthographic projection tightly around the Cascade, we set the Minimum cascade 
 			// value to the previous Frustum end Interval
 			if (iCascadeIndex == 0) fFrustumIntervalBegin = 0.0f;
-			else fFrustumIntervalBegin = (FLOAT)m_iCascadePartitionsZeroToOne[iCascadeIndex - 1];
+			else fFrustumIntervalBegin = (FLOAT)cascadePartitionsZeroToOne[iCascadeIndex - 1];
 		}
 		else
 		{
-			// In the FIT_TO_SCENE technique the Cascades overlap eachother.  In other words, interval 1 is coverd by
+			// In the FIT_TO_SCENE technique the Cascades overlap each other.  In other words, interval 1 is covered by
 			// cascades 1 to 8, interval 2 is covered by cascades 2 to 8 and so forth.
 			fFrustumIntervalBegin = 0.0f;
 		}
 
 		// Scale the intervals between 0 and 1. They are now percentages that we can scale with.
-		fFrustumIntervalEnd = (FLOAT)m_iCascadePartitionsZeroToOne[iCascadeIndex];
+		fFrustumIntervalEnd = (FLOAT)cascadePartitionsZeroToOne[iCascadeIndex];
 		fFrustumIntervalBegin /= (FLOAT)m_iCascadePartitionsMax;
 		fFrustumIntervalEnd /= (FLOAT)m_iCascadePartitionsMax;
 		fFrustumIntervalBegin = fFrustumIntervalBegin * fCameraNearFarRange;
@@ -127,7 +124,7 @@ void ShadowMapCascade::update(Camera& lightCamera, Camera& viewer)
 		XMVECTOR vFrustumPoints[8];
 
 		// This function takes the began and end intervals along with the projection matrix and returns the 8
-		// points that repreresent the cascade Interval
+		// points that represent the cascade Interval
 		CreateFrustumPointsFromCascadeInterval(fFrustumIntervalBegin, fFrustumIntervalEnd,
 			matViewCameraProjection, vFrustumPoints);
 
@@ -203,7 +200,7 @@ void ShadowMapCascade::update(Camera& lightCamera, Camera& viewer)
 // 
 // 			// The world units per texel are used to snap  the orthographic projection
 // 			// to texel sized increments.  
-// 			// Because we're fitting tighly to the cascades, the shimmering shadow edges will still be present when the 
+// 			// Because we're fitting tightly to the cascades, the shimmering shadow edges will still be present when the 
 // 			// camera rotates.  However, when zooming in or strafing the shadow edge will not shimmer.
 // 			vWorldUnitsPerTexel = vLightCameraOrthographicMax - vLightCameraOrthographicMin;
 // 			vWorldUnitsPerTexel *= vNormalizeByBufferSize;
@@ -215,7 +212,7 @@ void ShadowMapCascade::update(Camera& lightCamera, Camera& viewer)
 		if (true)
 		{
 
-			// We snape the camera to 1 pixel increments so that moving the camera does not cause the shadows to jitter.
+			// We snap the camera to 1 pixel increments so that moving the camera does not cause the shadows to jitter.
 			// This is a matter of integer dividing by the world space size of a texel
 			vLightCameraOrthographicMin /= vWorldUnitsPerTexel;
 			vLightCameraOrthographicMin = XMVectorFloor(vLightCameraOrthographicMin);
@@ -227,29 +224,29 @@ void ShadowMapCascade::update(Camera& lightCamera, Camera& viewer)
 
 		}
 
-		//These are the unconfigured near and far plane values.  They are purposly awful to show 
+		//These are the unconfigured near and far plane values.  They are purposely awful to show 
 		// how important calculating accurate near and far planes is.
-		FLOAT fNearPlane = 0.0f;
-		FLOAT fFarPlane = 1000.0f;
+		FLOAT fNearPlane = -extends;
+		FLOAT fFarPlane = extends;
 
-// 		if (m_eSelectedNearFarFit == FIT_NEARFAR_AABB)
-// 		{
-// 
-// 			XMVECTOR vLightSpaceSceneAABBminValue = g_vFLTMAX;  // world space scene aabb 
-// 			XMVECTOR vLightSpaceSceneAABBmaxValue = g_vFLTMIN;
-// 			// We calculate the min and max vectors of the scene in light space. The min and max "Z" values of the  
-// 			// light space AABB can be used for the near and far plane. This is easier than intersecting the scene with the AABB
-// 			// and in some cases provides similar results.
-// 			for (int index = 0; index < 8; ++index)
-// 			{
-// 				vLightSpaceSceneAABBminValue = XMVectorMin(vSceneAABBPointsLightSpace[index], vLightSpaceSceneAABBminValue);
-// 				vLightSpaceSceneAABBmaxValue = XMVectorMax(vSceneAABBPointsLightSpace[index], vLightSpaceSceneAABBmaxValue);
-// 			}
-// 
-// 			// The min and max z values are the near and far planes.
-// 			fNearPlane = XMVectorGetZ(vLightSpaceSceneAABBminValue);
-// 			fFarPlane = XMVectorGetZ(vLightSpaceSceneAABBmaxValue);
-// 		}
+		//if (m_eSelectedNearFarFit == FIT_NEARFAR_AABB)
+		{
+
+			XMVECTOR vLightSpaceSceneAABBminValue = g_vFLTMAX;  // world space scene aabb 
+			XMVECTOR vLightSpaceSceneAABBmaxValue = g_vFLTMIN;
+			// We calculate the min and max vectors of the scene in light space. The min and max "Z" values of the  
+			// light space AABB can be used for the near and far plane. This is easier than intersecting the scene with the AABB
+			// and in some cases provides similar results.
+			for (int index = 0; index < 8; ++index)
+			{
+				vLightSpaceSceneAABBminValue = XMVectorMin(vSceneAABBPointsLightSpace[index], vLightSpaceSceneAABBminValue);
+				vLightSpaceSceneAABBmaxValue = XMVectorMax(vSceneAABBPointsLightSpace[index], vLightSpaceSceneAABBmaxValue);
+			}
+
+			// The min and max z values are the near and far planes.
+			fNearPlane = XMVectorGetZ(vLightSpaceSceneAABBminValue);
+			fFarPlane = XMVectorGetZ(vLightSpaceSceneAABBmaxValue);
+		}
 // 		if (m_eSelectedNearFarFit == FIT_NEARFAR_SCENE_AABB
 // 			|| m_eSelectedNearFarFit == FIT_NEARFAR_PANCAKING)
 // 		{
@@ -266,16 +263,17 @@ void ShadowMapCascade::update(Camera& lightCamera, Camera& viewer)
 // 		}
 // 
 		// Create the orthographic projection for this cascade.
-		m_matShadowProj[iCascadeIndex] = XMMatrixOrthographicOffCenterLH(XMVectorGetX(vLightCameraOrthographicMin), XMVectorGetX(vLightCameraOrthographicMax),
+		matShadowProj[iCascadeIndex] = XMMatrixOrthographicOffCenterLH(XMVectorGetX(vLightCameraOrthographicMin), XMVectorGetX(vLightCameraOrthographicMax),
 			XMVectorGetY(vLightCameraOrthographicMin), XMVectorGetY(vLightCameraOrthographicMax),
 			fNearPlane, fFarPlane);
 		m_fCascadePartitionsFrustum[iCascadeIndex] = fFrustumIntervalEnd;
+
+		nearFarClip = { fNearPlane, fFarPlane };
 	}
-	auto m_matShadowView = lightCamera.getViewMatrix();
 }
 
 //--------------------------------------------------------------------------------------
-// Computing an accurate near and flar plane will decrease surface acne and Peter-panning.
+// Computing an accurate near and far plane will decrease surface acne and Peter-panning.
 // Surface acne is the term for erroneous self shadowing.  Peter-panning is the effect where
 // shadows disappear near the base of an object.
 // As offsets are generally used with PCF filtering due self shadowing issues, computing the
@@ -310,7 +308,7 @@ void ComputeNearAndFar(FLOAT& fNearPlane,
 	triangleList[0].pt[2] = pvPointsInCameraView[2];
 	triangleList[0].culled = false;
 
-	// These are the indices used to tesselate an AABB into a list of triangles.
+	// These are the indices used to tessellate an AABB into a list of triangles.
 	static const INT iAABBTriIndexes[] =
 	{
 		0,1,2,  1,2,3,
@@ -328,7 +326,7 @@ void ComputeNearAndFar(FLOAT& fNearPlane,
 	// 2. Clip the triangles against each plane. Create new triangles as needed.
 	// 3. Find the min and max z values as the near and far plane.
 
-	//This is easier because the triangles are in camera spacing making the collisions tests simple comparisions.
+	//This is easier because the triangles are in camera spacing making the collisions tests simple comparisons.
 
 	float fLightCameraOrthographicMinX = XMVectorGetX(vLightCameraOrthographicMin);
 	float fLightCameraOrthographicMaxX = XMVectorGetX(vLightCameraOrthographicMax);
@@ -344,7 +342,7 @@ void ComputeNearAndFar(FLOAT& fNearPlane,
 		iTriangleCnt = 1;
 		triangleList[0].culled = FALSE;
 
-		// Clip each invidual triangle against the 4 frustums.  When ever a triangle is clipped into new triangles, 
+		// Clip each individual triangle against the 4 frustums.  When ever a triangle is clipped into new triangles, 
 		//add them to the list.
 		for (INT frustumPlaneIter = 0; frustumPlaneIter < 4; ++frustumPlaneIter)
 		{
@@ -448,7 +446,7 @@ void ComputeNearAndFar(FLOAT& fNearPlane,
 						}
 					}
 
-					// Move the points that pass the frustum test to the begining of the array.
+					// Move the points that pass the frustum test to the beginning of the array.
 					if (iPointPassesCollision[1] && !iPointPassesCollision[0])
 					{
 						tempOrder = triangleList[triIter].pt[0];
@@ -502,7 +500,7 @@ void ComputeNearAndFar(FLOAT& fNearPlane,
 
 					}
 					else if (iInsideVertCount == 2)
-					{ // 2 in  // tesselate into 2 triangles
+					{ // 2 in  // tessellate into 2 triangles
 
 
 						// Copy the triangle\(if it exists) after the current triangle out of
@@ -519,7 +517,7 @@ void ComputeNearAndFar(FLOAT& fNearPlane,
 						// Get the hit point ratio.
 						FLOAT fHitPointTime_2_0 = fEdge - XMVectorGetByIndex(triangleList[triIter].pt[2], iComponent);
 						FLOAT fDistanceAlongVector_2_0 = fHitPointTime_2_0 / XMVectorGetByIndex(vVert2ToVert0, iComponent);
-						// Calcaulte the new vert by adding the percentage of the vector plus point 2.
+						// Calculate the new vert by adding the percentage of the vector plus point 2.
 						vVert2ToVert0 *= fDistanceAlongVector_2_0;
 						vVert2ToVert0 += triangleList[triIter].pt[2];
 
@@ -536,7 +534,7 @@ void ComputeNearAndFar(FLOAT& fNearPlane,
 						triangleList[triIter].pt[0] = triangleList[triIter + 1].pt[1];
 						triangleList[triIter].pt[1] = triangleList[triIter + 1].pt[2];
 						triangleList[triIter].pt[2] = vVert2ToVert1;
-						// Cncrement triangle count and skip the triangle we just inserted.
+						// increment triangle count and skip the triangle we just inserted.
 						++iTriangleCnt;
 						++triIter;
 
@@ -554,7 +552,7 @@ void ComputeNearAndFar(FLOAT& fNearPlane,
 		{
 			if (!triangleList[index].culled)
 			{
-				// Set the near and far plan and the min and max z values respectivly.
+				// Set the near and far plan and the min and max z values respectively.
 				for (int vertind = 0; vertind < 3; ++vertind)
 				{
 					float fTriangleCoordZ = XMVectorGetZ(triangleList[index].pt[vertind]);

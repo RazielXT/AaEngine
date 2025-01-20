@@ -4,8 +4,11 @@
 
 struct ShadowMapCascade
 {
-	void update(Camera& light, Camera& viewer);
+	void update(Camera& light, Camera& viewer, float extends, Vector2& nearFarClip);
 
-	DirectX::XMMATRIX m_matShadowProj[4];
-	DirectX::XMMATRIX m_matShadowView;
+	DirectX::XMMATRIX matShadowProj[4];
+	DirectX::XMMATRIX matShadowView;
+
+	const int cascadePartitionsZeroToOne[3] = { 50, 200, 600 };
+	const int cascadesCount = _countof(cascadePartitionsZeroToOne);
 };

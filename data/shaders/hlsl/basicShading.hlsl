@@ -1,4 +1,4 @@
-#include "ShadowsCommon.hlsl"
+#include "ShadowsPssm.hlsl"
 
 float4x4 ViewProjectionMatrix;
 float4x4 PreviousWorldMatrix;
@@ -78,20 +78,6 @@ Texture2D<float4> GetTexture(uint index)
 
 SamplerState ShadowSampler : register(s0);
 
-float getShadow(float4 wp)
-{
-	uint ShadowIndex = 0;
-
-	Texture2D shadowmap = GetTexture(Sun.TexIdShadowOffset + ShadowIndex);
-    float4 sunLookPos = mul(wp, Sun.ShadowMatrix[ShadowIndex]);
-    sunLookPos.xy = sunLookPos.xy / sunLookPos.w;
-	sunLookPos.xy /= float2(2, -2);
-    sunLookPos.xy += 0.5;
-	sunLookPos.z -= 0.005;
-
-	return CalcShadowTermSoftPCF(shadowmap, ShadowSampler, sunLookPos.z, sunLookPos.xy, 5, Sun.ShadowMapSize, Sun.ShadowMapSizeInv);
-}
-
 struct PSOutput
 {
     float4 color : SV_Target0;
@@ -104,7 +90,8 @@ PSOutput PSMain(PSInput input)
 {
 	float3 normal = input.normal;//normalize(mul(input.normal, (float3x3)WorldMatrix).xyz);
 
-	float3 diffuse = saturate(dot(-Sun.Direction, normal)) * Sun.Color;
+	float dotLighting = dot(-Sun.Direction, normal);
+	float3 diffuse = saturate(dotLighting) * Sun.Color;
 
 #ifdef USE_VC
 	float3 ambientColor = input.color.rgb;
@@ -116,16 +103,17 @@ PSOutput PSMain(PSInput input)
 	float4 albedo = GetTexture(TexIdDiffuse).Sample(sampler, input.uv);
 	albedo.rgb *= MaterialColor;
 
-	float3 lighting = (ambientColor + getShadow(input.worldPosition) * diffuse);
+	float camDistance = length(CameraPosition - input.worldPosition.xyz);
+
+	float shadow = getPssmShadow(input.worldPosition, camDistance, dotLighting, ShadowSampler, Sun);
+	float3 lighting = (ambientColor + shadow * diffuse);
 	float lightPower = (lighting.r + lighting.g + lighting.b) / 3;
 	float4 outColor = float4(lighting * albedo.rgb, lightPower);
-	
-	
+
 	PSOutput output;
     output.color = outColor;
 	output.normals = float4(normal, 1);
-	float camDistance = length(CameraPosition - input.worldPosition.xyz) / 10000;
-	output.camDistance = float4(camDistance, 0, 0, 0);
+	output.camDistance = float4(camDistance / 10000, 0, 0, 0);
 	output.motionVectors = float4((input.previousPosition.xy / input.previousPosition.w - input.currentPosition.xy / input.currentPosition.w) * ViewportSize, 0, 0);
 	output.motionVectors.xy *= 0.5;
 	output.motionVectors.y *= -1;

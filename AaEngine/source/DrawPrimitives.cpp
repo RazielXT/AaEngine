@@ -73,6 +73,8 @@ void BoundingBoxDraw::renderObjectAligned(ID3D12GraphicsCommandList* commandList
 
 		Vector3 positionOffset{};
 		positionOffset.y -= (bbox.Extents.y - bbox.Center.y) + minScale * boundsOffsetAdd; //box model has center at bottom
+		positionOffset.x = bbox.Center.x;
+		positionOffset.z = bbox.Center.z;
 
 		{
 			XMMATRIX translationM = XMMatrixTranslation(positionOffset.x, positionOffset.y, positionOffset.z);

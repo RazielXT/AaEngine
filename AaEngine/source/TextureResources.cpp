@@ -49,6 +49,9 @@ TextureResources::~TextureResources()
 
 FileTexture* TextureResources::loadFile(ID3D12Device& device, ResourceUploadBatch& resourceUpload, std::string file)
 {
+	if (file.front() != '.')
+		file = TEXTURE_DIRECTORY + file;
+
 	auto& t = loadedTextures[file];
 
 	if (!t)

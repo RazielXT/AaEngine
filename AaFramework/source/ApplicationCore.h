@@ -6,6 +6,7 @@
 #include "ShadowMaps.h"
 #include "GraphicsResources.h"
 #include "PhysicsManager.h"
+#include "TerrainGenerator.h"
 
 struct DebugReporter
 {

@@ -286,6 +286,11 @@ XMMATRIX RenderObject::getPreviousWorldMatrix() const
 	return source.objectsData.prevWorldMatrix[id];
 }
 
+void RenderObject::updateWorldMatrix()
+{
+	source.initializeTransformation(id, source.objectsData.transformation[id]);
+}
+
 void RenderObject::setBoundingBox(const BoundingBox& bbox)
 {
 	source.objectsData.bbox[id] = bbox;

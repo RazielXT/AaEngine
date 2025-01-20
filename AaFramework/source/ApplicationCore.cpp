@@ -144,6 +144,8 @@ void ApplicationCore::loadScene(const char* scene)
 
 	VoxelizeSceneTask::Get().clear(commands.commandList);
 
+	sceneMgr.terrain.createTerrain(commands.commandList, sceneMgr, {});
+
 	renderSystem.core.ExecuteCommandList(commands);
 	renderSystem.core.WaitForCurrentFrame();
 	commands.deinit();

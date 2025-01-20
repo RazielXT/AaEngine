@@ -37,12 +37,14 @@ public:
 	std::vector<D3D12_INPUT_ELEMENT_DESC> vertexLayout;
 
 	void CreateVertexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, const void* vertices, UINT vertexCount, UINT vertexSize);
+	void CreateVertexBuffer(ID3D12Resource* buffer, UINT vertexCount, UINT vertexSize);
 	ID3D12Resource* vertexBuffer{};
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 	uint32_t vertexCount = 0;
 
 	void CreateIndexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, const std::vector<uint16_t>& data);
 	void CreateIndexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, const uint32_t* data, size_t dataCount);
+	void CreateIndexBuffer(ID3D12Resource* buffer, uint32_t dataCount);
 	ID3D12Resource* indexBuffer{};
 	D3D12_INDEX_BUFFER_VIEW indexBufferView;
 	uint32_t indexCount = 0;
@@ -53,4 +55,6 @@ public:
 
 	std::vector<Vector3> positions;
 	std::vector<uint32_t> indices;
+
+	bool owner = true;
 };

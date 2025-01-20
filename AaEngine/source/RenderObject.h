@@ -118,6 +118,7 @@ public:
 
 	XMMATRIX getWorldMatrix() const;
 	XMMATRIX getPreviousWorldMatrix() const;
+	void updateWorldMatrix();
 
 	void setBoundingBox(const BoundingBox& bbox);
 	const BoundingBox& getBoundingBox() const;

@@ -567,6 +567,9 @@ void Editor::prepareElements(Camera& camera)
 	if (ImGui::Button("Reload shaders"))
 		state.reloadShaders = true;
 
+	if (ImGui::Button("Rebuild terrain"))
+		app.sceneMgr.terrain.rebuild();
+
 	auto& wireframeTask = RenderWireframeTask::Get();
 	ImGui::Checkbox("Render wireframe", &wireframeTask.enabled);
 

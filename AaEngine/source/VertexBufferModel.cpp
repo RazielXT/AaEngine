@@ -11,9 +11,9 @@ VertexBufferModel::VertexBufferModel()
 
 VertexBufferModel::~VertexBufferModel()
 {
-	if (vertexBuffer)
+	if (vertexBuffer && owner)
 		vertexBuffer->Release();
-	if (indexBuffer)
+	if (indexBuffer && owner)
 		indexBuffer->Release();
 }
 
@@ -185,6 +185,17 @@ void VertexBufferModel::CreateVertexBuffer(ID3D12Device* device, ResourceUploadB
 	}
 }
 
+void VertexBufferModel::CreateVertexBuffer(ID3D12Resource* buffer, UINT vc, UINT vertexSize)
+{
+	vertexCount = vc;
+	vertexBuffer = buffer;
+
+	// Create the vertex buffer view
+	vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
+	vertexBufferView.SizeInBytes = vertexCount * vertexSize;
+	vertexBufferView.StrideInBytes = vertexSize;
+}
+
 void VertexBufferModel::CreateIndexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, const std::vector<uint16_t>& data)
 {
 	indexCount = (uint32_t)data.size();
@@ -225,6 +236,18 @@ void VertexBufferModel::CreateIndexBuffer(ID3D12Device* device, ResourceUploadBa
 	{
 		indices[i] = data[i];
 	}
+}
+
+void VertexBufferModel::CreateIndexBuffer(ID3D12Resource* buffer, uint32_t dataCount)
+{
+	owner = false;
+	indexCount = dataCount;
+	indexBuffer = buffer;
+
+	// Create the index buffer view
+	indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
+	indexBufferView.SizeInBytes = dataCount * sizeof(uint16_t);
+	indexBufferView.Format = DXGI_FORMAT_R16_UINT;
 }
 
 void VertexBufferModel::calculateBounds(const std::vector<float>& positionsBuffer)

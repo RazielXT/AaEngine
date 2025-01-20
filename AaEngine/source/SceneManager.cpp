@@ -17,6 +17,7 @@ SceneManager::~SceneManager()
 void SceneManager::initialize(RenderSystem& renderSystem)
 {
 	grass.initializeGpuResources(renderSystem, resources, getQueueTargetFormats());
+	terrain.initialize(renderSystem, resources);
 }
 
 void SceneManager::update()
@@ -128,6 +129,17 @@ RenderQueue* SceneManager::createQueue(const std::vector<DXGI_FORMAT>& targets, 
 	queue->targetOrder = order;
 
 	return queues.emplace_back(std::move(queue)).get();
+}
+
+RenderQueue* SceneManager::getQueue(MaterialTechnique technique /*= MaterialTechnique::Default*/, Order order /*= Order::Normal*/)
+{
+	for (auto& q : queues)
+	{
+		if (q->technique == technique && q->targetOrder == order)
+			return q.get();
+	}
+
+	return nullptr;
 }
 
 std::vector<DXGI_FORMAT> SceneManager::getQueueTargetFormats(MaterialTechnique technique, Order order) const

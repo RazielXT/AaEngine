@@ -53,6 +53,9 @@
     <Filter Include="Source Files\Resources\Textures">
       <UniqueIdentifier>{0e4b961a-a3dd-4b9a-8f2e-fe85ba608ebf}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\RenderObject\Terrain">
+      <UniqueIdentifier>{eb81da19-258a-4082-9d8e-11c6ddff65e4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\TargetWindow.cpp">
@@ -262,8 +265,17 @@
     <ClCompile Include="source\ClearBufferCS.cpp">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClCompile>
+    <ClCompile Include="source\TerrainGenerationCS.cpp">
+      <Filter>Source Files\Resources\Compute</Filter>
+    </ClCompile>
+    <ClCompile Include="source\TerrainGenerator.cpp">
+      <Filter>Source Files\RenderObject\Terrain</Filter>
+    </ClCompile>
     <ClCompile Include="source\PrepareFrameTask.cpp">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
+    </ClCompile>
+    <ClCompile Include="source\TerrainGrid.cpp">
+      <Filter>Source Files\RenderObject\Terrain</Filter>
     </ClCompile>
     <ClCompile Include="source\RenderWireframeTask.cpp">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
@@ -495,8 +507,17 @@
     <ClInclude Include="source\ClearBufferCS.h">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClInclude>
+    <ClInclude Include="source\TerrainGenerationCS.h">
+      <Filter>Source Files\Resources\Compute</Filter>
+    </ClInclude>
+    <ClInclude Include="source\TerrainGenerator.h">
+      <Filter>Source Files\RenderObject\Terrain</Filter>
+    </ClInclude>
     <ClInclude Include="source\PrepareFrameTask.h">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
+    </ClInclude>
+    <ClInclude Include="source\TerrainGrid.h">
+      <Filter>Source Files\RenderObject\Terrain</Filter>
     </ClInclude>
     <ClInclude Include="source\RenderWireframeTask.h">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>

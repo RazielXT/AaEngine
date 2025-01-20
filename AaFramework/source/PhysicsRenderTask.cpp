@@ -39,5 +39,5 @@ void PhysicsRenderTask::setMode(Mode m)
 	if (mode != Off)
 		physicsMgr.enableRenderer(provider.renderSystem, provider.resources);
 	else
-		physicsMgr.disableRenderer();
+		physicsMgr.disableRenderer(provider.renderSystem);
 }

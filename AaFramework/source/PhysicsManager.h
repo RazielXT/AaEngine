@@ -43,7 +43,7 @@ public:
 	JPH::PhysicsSystem* system{};
 
 	void enableRenderer(RenderSystem&, GraphicsResources&);
-	void disableRenderer();
+	void disableRenderer(RenderSystem& rs);
 
 	void drawDebugRender(ID3D12GraphicsCommandList* commandList, ShaderConstantsProvider* constants, const std::vector<DXGI_FORMAT>& targets, bool wireframe);
 

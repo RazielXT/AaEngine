@@ -90,11 +90,20 @@ RenderCore::RenderCore()
 #endif
 	}
 
-	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
-	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+	{
+		D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+		queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+		queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 
-	device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&commandQueue));
+		device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&commandQueue));
+	}
+	{
+		D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+		queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+		queueDesc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
+
+		device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&copyQueue));
+	}
 
 	device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
 	fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
@@ -105,6 +114,7 @@ RenderCore::~RenderCore()
 	fence->Release();
 
 	swapChain->Release();
+	copyQueue->Release();
 	commandQueue->Release();
 	device->Release();
 

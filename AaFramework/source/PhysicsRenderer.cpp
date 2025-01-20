@@ -35,26 +35,35 @@ PhysicsRenderer::~PhysicsRenderer()
 {
 }
 
-void PhysicsRenderer::PrepareForRendering(ID3D12GraphicsCommandList* commandList, ShaderConstantsProvider* constants, const std::vector<DXGI_FORMAT>& targets)
+bool PhysicsRenderer::PrepareForRendering(ID3D12GraphicsCommandList* commandList, ShaderConstantsProvider* constants, const std::vector<DXGI_FORMAT>& targets)
 {
+	if (batch)
+	{
+		if (!batchSubmitted)
+		{
+			batchUploadFuture = batch->End(renderSystem.core.copyQueue);
+			batchSubmitted = true;
+		}
+
+		if (batchUploadFuture.wait_for(std::chrono::seconds(0)) != std::future_status::ready)
+			return false;
+
+		batch.reset();
+		batchSubmitted = false;
+	}
+
 	if (!renderCtx.solidColorMaterial)
 	{
 		renderCtx.solidColorMaterial = resources.materials.getMaterial("DebugColor");
 		renderCtx.wireframeMaterial = resources.materials.getMaterial("DebugWireframe");
 	}
 
-	if (batch)
-	{
-		auto uploadResourcesFinished = batch->End(renderSystem.core.commandQueue);
-		uploadResourcesFinished.wait();
-
-		batch.reset();
-	}
-
 	renderCtx.lastMaterial = nullptr;
 	renderCtx.commandList = commandList;
 	renderCtx.targets = targets;
 	renderCtx.constants = constants;
+
+	return true;
 }
 
 JPH::DebugRenderer::Batch PhysicsRenderer::CreateTriangleBatch(const Triangle* inTriangles, int inTriangleCount)
@@ -140,7 +149,7 @@ void PhysicsRenderer::PrepareUploadBatch()
 	if (!batch)
 	{
 		batch = std::make_unique<ResourceUploadBatch>(renderSystem.core.device);
-		batch->Begin();
+		batch->Begin(D3D12_COMMAND_LIST_TYPE_COPY);
 	}
 }
 

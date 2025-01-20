@@ -45,6 +45,7 @@ public:
 
 	ID3D12Device* device;
 	ID3D12CommandQueue* commandQueue;
+	ID3D12CommandQueue* copyQueue;
 
 	CommandsData CreateCommandList(const wchar_t* name = nullptr);
 	CommandsMarker StartCommandList(CommandsData& commands);

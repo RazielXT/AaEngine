@@ -251,9 +251,13 @@ void PhysicsManager::enableRenderer(RenderSystem& rs, GraphicsResources& r)
 		renderer = std::make_unique<PhysicsRenderer>(rs, r);
 }
 
-void PhysicsManager::disableRenderer()
+void PhysicsManager::disableRenderer(RenderSystem& rs)
 {
-	renderer.reset();
+	if (renderer)
+	{
+		rs.core.WaitForAllFrames();
+		renderer.reset();
+	}
 }
 
 void PhysicsManager::drawDebugRender(ID3D12GraphicsCommandList* commandList, ShaderConstantsProvider* constants, const std::vector<DXGI_FORMAT>& targets, bool wireframe)
@@ -265,8 +269,8 @@ void PhysicsManager::drawDebugRender(ID3D12GraphicsCommandList* commandList, Sha
 
 		CommandsMarker marker(commandList, "RenderPhysics");
 
-		renderer->PrepareForRendering(commandList, constants, targets);
-		system->DrawBodies(drawSettings, renderer.get());
+		if (renderer->PrepareForRendering(commandList, constants, targets))
+			system->DrawBodies(drawSettings, renderer.get());
 	}
 }
 

@@ -15,7 +15,7 @@ public:
 	PhysicsRenderer(RenderSystem&, GraphicsResources&);
 	~PhysicsRenderer();
 
-	void PrepareForRendering(ID3D12GraphicsCommandList* commandList, ShaderConstantsProvider* constants, const std::vector<DXGI_FORMAT>& targets);
+	bool PrepareForRendering(ID3D12GraphicsCommandList* commandList, ShaderConstantsProvider* constants, const std::vector<DXGI_FORMAT>& targets);
 
 	void DrawLine(JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, JPH::ColorArg inColor) override;
 
@@ -37,6 +37,8 @@ private:
 	GraphicsResources& resources;
 
 	std::unique_ptr<ResourceUploadBatch> batch;
+	bool batchSubmitted = false;
+	std::future<void> batchUploadFuture;
 	void PrepareUploadBatch();
 
 	struct 

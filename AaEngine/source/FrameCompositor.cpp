@@ -14,6 +14,7 @@
 #include "SsaoComputeTask.h"
 #include "UpscaleTask.h"
 #include "DownsampleTask.h"
+#include "RenderWireframeTask.h"
 
 FrameCompositor::FrameCompositor(RenderProvider p, SceneManager& scene, AaShadowMap& shadows) : provider(p), sceneMgr(scene), shadowMaps(shadows)
 {
@@ -92,6 +93,10 @@ void FrameCompositor::load(CompositorInfo i)
 			else if (pass.info.task == "VoxelScene")
 			{
 				pass.task = std::make_shared<VoxelizeSceneTask>(provider, sceneMgr, shadowMaps);
+			}
+			else if (pass.info.task == "RenderWireframe")
+			{
+				pass.task = std::make_shared<RenderWireframeTask>(provider, sceneMgr);
 			}
 			else if (pass.info.task == "DebugOverlay")
 			{

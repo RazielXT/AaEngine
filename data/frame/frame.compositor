@@ -56,6 +56,11 @@ compositor Frame
 		target sceneTexture
 	}
 
+	task RenderWireframe
+	{
+		target sceneTexture
+	}
+
 	task RenderPhysics
 	{
 		target sceneTexture

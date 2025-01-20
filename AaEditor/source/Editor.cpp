@@ -12,6 +12,7 @@
 #include "VoxelizeSceneTask.h"
 #include <algorithm>
 #include "PhysicsRenderTask.h"
+#include "RenderWireframeTask.h"
 
 // Store frame times in a buffer
 float frameTimes[200] = { 0.0f };
@@ -565,6 +566,9 @@ void Editor::prepareElements(Camera& camera)
 
 	if (ImGui::Button("Reload shaders"))
 		state.reloadShaders = true;
+
+	auto& wireframeTask = RenderWireframeTask::Get();
+	ImGui::Checkbox("Render wireframe", &wireframeTask.enabled);
 
 	ImGui::Combo("DLSS", &state.DlssMode, UpscaleModeNames, std::size(UpscaleModeNames));
 	ImGui::Combo("FSR", &state.FsrMode, UpscaleModeNames, std::size(UpscaleModeNames));

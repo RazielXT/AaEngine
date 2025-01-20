@@ -24,3 +24,9 @@ material DebugWireframe : DebugColor
 {
 	wireframe
 }
+
+material DebugWireframeNoVC : DebugWireframe
+{
+	vertex_shader vsBasicShading
+	pixel_shader psBasicShading
+}

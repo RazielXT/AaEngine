@@ -40,7 +40,7 @@ public:
 
 	void BindSignature(ID3D12GraphicsCommandList* commandList) const;
 
-	AssignedMaterial* GetAssignedMaterial(MaterialInstance* instance, const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target, D3D12_COMPARISON_FUNC);
+	AssignedMaterial* GetAssignedMaterial(MaterialInstance* instance, const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target, MaterialTechnique technique);
 	void ReloadPipeline(ShaderLibrary& shaderLib);
 	bool ContainsShader(const LoadedShader*) const;
 
@@ -59,14 +59,20 @@ private:
 	ID3D12RootSignature* rootSignature{};
 	ID3D12Device& device;
 
-	ID3D12PipelineState* GetPipelineState(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target, D3D12_COMPARISON_FUNC);
-	ID3D12PipelineState* CreatePipelineState(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target, D3D12_COMPARISON_FUNC);
+	struct TechniqueProperties
+	{
+		D3D12_COMPARISON_FUNC comparisonFunc;
+		float slopeScaledDepthBias;
+	};
+
+	ID3D12PipelineState* GetPipelineState(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target, MaterialTechnique);
+	ID3D12PipelineState* CreatePipelineState(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target, const TechniqueProperties&);
 	struct PipelineStateData
 	{
 		size_t hashId;
 		std::vector<D3D12_INPUT_ELEMENT_DESC> layout;
 		std::vector<DXGI_FORMAT> target;
-		D3D12_COMPARISON_FUNC comparisonFunc;
+		TechniqueProperties properties;
 		ID3D12PipelineState* pipeline;
 	};
 	std::vector<PipelineStateData> pipelineStates;
@@ -114,7 +120,7 @@ public:
 	void BindTextures(ID3D12GraphicsCommandList* commandList);
 	void BindConstants(ID3D12GraphicsCommandList* commandList, const MaterialDataStorage& data, const ShaderConstantsProvider& buffers);
 
-	AssignedMaterial* Assign(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target, D3D12_COMPARISON_FUNC func = D3D12_COMPARISON_FUNC_GREATER_EQUAL);
+	AssignedMaterial* Assign(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target, MaterialTechnique technique =  MaterialTechnique::Default);
 
 	const MaterialBase* GetBase() const;
 

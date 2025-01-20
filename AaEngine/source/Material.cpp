@@ -77,9 +77,13 @@ std::size_t HashInputLayout(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout,
 	return seed;
 }
 
-ID3D12PipelineState* MaterialBase::GetPipelineState(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target, D3D12_COMPARISON_FUNC comparisonFunc)
+ID3D12PipelineState* MaterialBase::GetPipelineState(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target, MaterialTechnique technique)
 {
-	auto layoutHash = HashInputLayout(layout, target, comparisonFunc);
+	TechniqueProperties props;
+	props.comparisonFunc = technique != MaterialTechnique::DepthShadowmap ? D3D12_COMPARISON_FUNC_GREATER_EQUAL : D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	props.slopeScaledDepthBias = technique == MaterialTechnique::DepthShadowmap ? 1.0f : ref.pipeline.slopeScaledDepthBias;
+
+	auto layoutHash = HashInputLayout(layout, target, props.comparisonFunc);
 
 	for (const auto& s : pipelineStates)
 	{
@@ -87,14 +91,14 @@ ID3D12PipelineState* MaterialBase::GetPipelineState(const std::vector<D3D12_INPU
 			return s.pipeline;
 	}
 
-	auto pipelineState = CreatePipelineState(layout, target, comparisonFunc);
+	auto pipelineState = CreatePipelineState(layout, target, props);
 
-	pipelineStates.emplace_back(layoutHash, layout, target, comparisonFunc, pipelineState);
+	pipelineStates.emplace_back(layoutHash, layout, target, props, pipelineState);
 
 	return pipelineState;
 }
 
-ID3D12PipelineState* MaterialBase::CreatePipelineState(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target, D3D12_COMPARISON_FUNC comparisonFunc)
+ID3D12PipelineState* MaterialBase::CreatePipelineState(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target, const TechniqueProperties& technique)
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 	psoDesc.InputLayout = { layout.empty() ? nullptr : layout.data(), (UINT)layout.size() };
@@ -107,7 +111,7 @@ ID3D12PipelineState* MaterialBase::CreatePipelineState(const std::vector<D3D12_I
 	psoDesc.RasterizerState.CullMode = ref.pipeline.culling;
 	psoDesc.RasterizerState.FillMode = ref.pipeline.fill;
 	psoDesc.RasterizerState.DepthBias = ref.pipeline.depthBias;
-	psoDesc.RasterizerState.SlopeScaledDepthBias = ref.pipeline.slopeScaledDepthBias;
+	psoDesc.RasterizerState.SlopeScaledDepthBias = technique.slopeScaledDepthBias;
 
 	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	psoDesc.SampleMask = UINT_MAX;
@@ -128,7 +132,7 @@ ID3D12PipelineState* MaterialBase::CreatePipelineState(const std::vector<D3D12_I
 
 	psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-	psoDesc.DepthStencilState.DepthFunc = comparisonFunc;
+	psoDesc.DepthStencilState.DepthFunc = technique.comparisonFunc;
 
 	if (!ref.pipeline.depth.check)
 	{
@@ -151,11 +155,11 @@ ID3D12PipelineState* MaterialBase::CreatePipelineState(const std::vector<D3D12_I
 	return pipelineState;
 }
 
-AssignedMaterial* MaterialBase::GetAssignedMaterial(MaterialInstance* instance, const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target, D3D12_COMPARISON_FUNC comparisonFunc)
+AssignedMaterial* MaterialBase::GetAssignedMaterial(MaterialInstance* instance, const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target, MaterialTechnique technique)
 {
 	auto& mats = assignedMaterials[instance];
 
-	auto pipeline = GetPipelineState(layout, target, comparisonFunc);
+	auto pipeline = GetPipelineState(layout, target, technique);
 
 	for (auto& m : mats)
 	{
@@ -185,7 +189,7 @@ void MaterialBase::ReloadPipeline(ShaderLibrary& shaderLib)
 
 	for (auto& s : pipelineStates)
 	{
-		auto newPipeline = CreatePipelineState(s.layout, s.target, s.comparisonFunc);
+		auto newPipeline = CreatePipelineState(s.layout, s.target, s.properties);
 		oldMapping[s.pipeline] = newPipeline;
 		s.pipeline->Release();
 		s.pipeline = newPipeline;
@@ -266,7 +270,7 @@ void MaterialBase::CreateResourcesData(MaterialInstance& instance, GraphicsResou
 	{
 		if (!t.file.empty())
 		{
-			auto texture = resources.textures.loadFile(device, batch, TEXTURE_DIRECTORY + t.file);
+			auto texture = resources.textures.loadFile(device, batch, t.file);
 			resources.descriptors.createTextureView(*texture);
 
 			instance.SetTexture(*texture, texSlot);
@@ -298,9 +302,9 @@ MaterialInstance::~MaterialInstance()
 
 }
 
-AssignedMaterial* MaterialInstance::Assign(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target, D3D12_COMPARISON_FUNC func)
+AssignedMaterial* MaterialInstance::Assign(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target, MaterialTechnique technique)
 {
-	return base.GetAssignedMaterial(this, layout, target, func);
+	return base.GetAssignedMaterial(this, layout, target, technique);
 }
 
 const MaterialBase* MaterialInstance::GetBase() const

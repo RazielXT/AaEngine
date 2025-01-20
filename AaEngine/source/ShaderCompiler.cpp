@@ -310,6 +310,8 @@ ComPtr<IDxcBlob> ShaderCompiler::compileShader(const ShaderRef& ref, ShaderDescr
 		OutputDebugStringA(pErrors->GetStringPointer());
 		FileLogger::logWarning(pErrors->GetStringPointer());
 
+		__debugbreak();
+
 		return nullptr;
 	}
 

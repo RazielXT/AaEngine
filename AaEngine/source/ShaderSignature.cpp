@@ -281,7 +281,7 @@ ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device& device, co
 			sampler.MaxAnisotropy = refSampler.maxAnisotropy;
 			sampler.BorderColor = refSampler.borderColor;
 		}
-		if (samplers[i].info.Name == "DepthSampler")
+		if (samplers[i].info.Name == "DepthSampler" || samplers[i].info.Name == "PointSampler")
 		{
 			sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
 			sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
@@ -296,6 +296,15 @@ ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device& device, co
 			sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
 			sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
 			sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;
+		}
+		else if (samplers[i].info.Name == "ShadowCmpSampler")
+		{
+			sampler.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
+			sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+			sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+			sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+			sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;
+			sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_LESS;
 		}
 		else if (samplers[i].info.Name == "LinearSampler")
 		{

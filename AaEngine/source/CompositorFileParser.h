@@ -48,6 +48,7 @@ struct CompositorPassInfo
 
 	std::string material;
 	std::string entry;
+	std::string after;
 	std::vector<CompositorPassCondition> conditions;
 };
 

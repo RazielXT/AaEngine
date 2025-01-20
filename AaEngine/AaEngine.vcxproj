@@ -101,6 +101,7 @@
     <ClCompile Include="source\DrawPrimitives.cpp" />
     <ClCompile Include="source\EntityPicker.cpp" />
     <ClCompile Include="source\ObjectId.cpp" />
+    <ClCompile Include="source\PrepareFrameTask.cpp" />
     <ClCompile Include="source\RenderWireframeTask.cpp" />
     <ClCompile Include="source\SceneEntity.cpp" />
     <ClCompile Include="source\Material.cpp" />
@@ -170,6 +171,7 @@
     <ClInclude Include="source\DrawPrimitives.h" />
     <ClInclude Include="source\EntityPicker.h" />
     <ClInclude Include="source\ObjectId.h" />
+    <ClInclude Include="source\PrepareFrameTask.h" />
     <ClInclude Include="source\RenderWireframeTask.h" />
     <ClInclude Include="source\ResourceGroup.h" />
     <ClInclude Include="source\SceneEntity.h" />

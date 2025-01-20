@@ -14,6 +14,7 @@
 #include "SsaoComputeTask.h"
 #include "UpscaleTask.h"
 #include "DownsampleTask.h"
+#include "PrepareFrameTask.h"
 #include "RenderWireframeTask.h"
 
 FrameCompositor::FrameCompositor(RenderProvider p, SceneManager& scene, ShadowMaps& shadows) : provider(p), sceneMgr(scene), shadowMaps(shadows)
@@ -85,6 +86,10 @@ void FrameCompositor::load(CompositorInfo i)
 			if (pass.info.task == "SceneRender")
 			{
 				pass.task = std::make_shared<SceneRenderTask>(provider, sceneMgr);
+			}
+			else if (pass.info.task == "PrepareFrame")
+			{
+				pass.task = std::make_shared<PrepareFrameTask>(provider, sceneMgr);
 			}
 			else if (pass.info.task == "Shadows")
 			{

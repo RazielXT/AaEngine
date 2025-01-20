@@ -180,6 +180,9 @@ void FrameCompositor::initializeCommands()
 		{
 			for (auto& target : passes)
 			{
+				if (pass.after == target->name)
+					return true;
+
 				for (auto& input : target->inputs)
 				{
 					for (auto& myInput : pass.inputs)

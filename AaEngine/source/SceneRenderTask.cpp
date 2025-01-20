@@ -118,21 +118,10 @@ AsyncTasksInfo SceneRenderTask::initializeEarlyZ(CompositorPass& pass)
 
 void SceneRenderTask::run(RenderContext& renderCtx, CommandsData& cmd, CompositorPass& pass)
 {
-	if (pass.info.entry == "Prepare")
-	{
-		ctx = renderCtx;
-
-		auto& dlss = provider.renderSystem.upscale.dlss;
-		if (dlss.enabled())
-			ctx.camera->setPixelOffset(dlss.getJitter(), dlss.getRenderSize());
-		auto& fsr = provider.renderSystem.upscale.fsr;
-		if (fsr.enabled())
-			ctx.camera->setPixelOffset(fsr.getJitter(), fsr.getRenderSize());
-	}
-
 	//starts from Opaque thread
 	if (pass.info.entry == "EarlyZ")
 	{
+		ctx = renderCtx;
 	}
 	else if (pass.info.entry == "Opaque")
 	{
@@ -150,7 +139,7 @@ void SceneRenderTask::run(RenderContext& renderCtx, CommandsData& cmd, Composito
 
 void SceneRenderTask::resize(CompositorPass& pass)
 {
-	if (pass.info.entry == "Prepare")
+	if (pass.info.entry == "Editor")
 		picker.initializeGpuResources(provider.renderSystem, provider.resources);
 }
 

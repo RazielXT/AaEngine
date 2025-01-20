@@ -262,6 +262,9 @@
     <ClCompile Include="source\ClearBufferCS.cpp">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClCompile>
+    <ClCompile Include="source\PrepareFrameTask.cpp">
+      <Filter>Source Files\FrameCompositor\Tasks</Filter>
+    </ClCompile>
     <ClCompile Include="source\RenderWireframeTask.cpp">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClCompile>
@@ -491,6 +494,9 @@
     </ClInclude>
     <ClInclude Include="source\ClearBufferCS.h">
       <Filter>Source Files\Resources\Compute</Filter>
+    </ClInclude>
+    <ClInclude Include="source\PrepareFrameTask.h">
+      <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClInclude>
     <ClInclude Include="source\RenderWireframeTask.h">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>

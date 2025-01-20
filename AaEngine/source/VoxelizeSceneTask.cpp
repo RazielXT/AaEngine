@@ -9,7 +9,7 @@
 
 static VoxelizeSceneTask* instance = nullptr;
 
-VoxelizeSceneTask::VoxelizeSceneTask(RenderProvider p, SceneManager& s, AaShadowMap& shadows) : shadowMaps(shadows), CompositorTask(p, s)
+VoxelizeSceneTask::VoxelizeSceneTask(RenderProvider p, SceneManager& s, ShadowMaps& shadows) : shadowMaps(shadows), CompositorTask(p, s)
 {
 	instance = this;
 }
@@ -105,6 +105,7 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 	clearSceneTexture.setName("VoxelClear");
 
 	cbuffer = provider.resources.shaderBuffers.CreateCbufferResource(sizeof(cbufferData), "SceneVoxelInfo");
+	frameCbuffer = provider.resources.shaderBuffers.CreateCbufferResource(sizeof(Matrix), "FrameInfo");
 
 	computeMips.init(*provider.renderSystem.core.device, "generateMipmaps", provider.resources.shaders);
 
@@ -177,6 +178,17 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 
 void VoxelizeSceneTask::run(RenderContext& renderCtx, CommandsData& syncCommands, CompositorPass&)
 {
+	if (showVoxelsEnabled)
+		showVoxels(*renderCtx.camera);
+
+	{
+		auto m = XMMatrixMultiplyTranspose(renderCtx.camera->getViewMatrix(), renderCtx.camera->getProjectionMatrixNoReverse());
+		Matrix data;
+		XMStoreFloat4x4(&data, m);
+		auto& cbufferResource = *frameCbuffer.data[provider.params.frameIndex];
+		memcpy(cbufferResource.Memory(), &data, sizeof(data));
+	}
+
 	ctx = renderCtx;
 	SetEvent(eventBegin);
 }
@@ -286,7 +298,17 @@ void VoxelizeSceneTask::bounceChunk(CommandsData& commands, CommandsMarker& mark
 	TextureResource::TransitionState(commands.commandList, chunk.voxelSceneTexture, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	TextureResource::TransitionState(commands.commandList, chunk.voxelPreviousSceneTexture, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
-	bouncesCS.dispatch(commands.commandList, chunk.voxelSceneTexture.textureView, chunk.voxelPreviousSceneTexture.textureView, chunk.dataBuffer->GetGPUVirtualAddress());
+	XM_ALIGNED_STRUCT(16)
+	{
+		Vector3 cameraPosition;
+		float padding;
+		Vector3 VoxelsOffset;
+		float padding2;
+		Vector3 VoxelsSceneSize;
+	}
+	data = { ctx.camera->getPosition(), {}, chunk.settings.center - Vector3(chunk.settings.extends), {}, Vector3(chunk.settings.extends * 2) };
+
+	bouncesCS.dispatch(commands.commandList, std::span{ (float*) & data, 11 }, chunk.voxelSceneTexture.textureView, chunk.voxelPreviousSceneTexture.textureView, chunk.dataBuffer->GetGPUVirtualAddress());
 
 	marker.move("VoxelMipMaps");
 	computeMips.dispatch(commands.commandList, chunk.voxelSceneTexture);
@@ -386,14 +408,15 @@ Vector3 SceneVoxelsChunk::update(const Vector3& cameraPosition)
 	return diff;
 }
 
-void BounceVoxelsCS::dispatch(ID3D12GraphicsCommandList* commandList, const ShaderTextureView& target, const ShaderTextureView& source, D3D12_GPU_VIRTUAL_ADDRESS dataAddr)
+void BounceVoxelsCS::dispatch(ID3D12GraphicsCommandList* commandList, const std::span<float>& data, const ShaderTextureView& target, const ShaderTextureView& source, D3D12_GPU_VIRTUAL_ADDRESS dataAddr)
 {
 	commandList->SetPipelineState(pipelineState.Get());
 	commandList->SetComputeRootSignature(signature);
 
-	commandList->SetComputeRootShaderResourceView(0, dataAddr);
-	commandList->SetComputeRootDescriptorTable(1, source.srvHandles);
-	commandList->SetComputeRootDescriptorTable(2, target.uavHandles);
+	commandList->SetComputeRoot32BitConstants(0, data.size(), data.data(), 0);
+	commandList->SetComputeRootShaderResourceView(1, dataAddr);
+	commandList->SetComputeRootDescriptorTable(2, source.srvHandles);
+	commandList->SetComputeRootDescriptorTable(3, target.uavHandles);
 
 	const UINT threadSize = 4;
 	const auto voxelSize = UINT(VoxelSize);

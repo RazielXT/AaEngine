@@ -90,15 +90,12 @@ SamplerState ShadowSampler : register(s2);
 float readShadowmap(Texture2D shadowmap, float2 shadowCoord)
 {
 	return shadowmap.SampleLevel(ShadowSampler, shadowCoord, 0).r;
-	
-//	int2 texCoord = int2(shadowCoord * 512);
-//	return shadowmap.Load(int3(texCoord, 0)).r;
 }
 
 float getShadow(float4 wp)
 {
-	Texture2D shadowmap = GetTexture(Sun.TexIdShadowOffset + 1);
-    float4 sunLookPos = mul(wp, Sun.ShadowMatrix[1]);
+	Texture2D shadowmap = GetTexture(Sun.TexIdShadowOffset + 3);
+    float4 sunLookPos = mul(wp, Sun.MaxShadowMatrix);
     sunLookPos.xy = sunLookPos.xy / sunLookPos.w;
 	sunLookPos.xy /= float2(2, -2);
     sunLookPos.xy += 0.5;
@@ -119,8 +116,6 @@ float4 PS_Main(PS_Input pin) : SV_TARGET
 #endif
 
 	float3 worldNormal = normalize(mul(pin.normal, worldMatrix));
-	float3 worldTangent = normalize(mul(pin.tangent, worldMatrix));
-	float3 worldBinormal = cross(worldNormal, worldTangent);
 
 	float3 diffuse = MaterialColor * GetTexture(TexIdDiffuse).Sample(LinearWrapSampler, pin.uv).rgb;
 
@@ -128,18 +123,16 @@ float4 PS_Main(PS_Input pin) : SV_TARGET
 
 	float shadow = 0;
 	if (dot(Sun.Direction,worldNormal) < 0)
-		shadow = getShadow(pin.wp) * 0.5;
-
-	float3 baseColor = diffuse * shadow;
+		shadow = getShadow(pin.wp);
 
 	float3 voxelWorldPos = (pin.wp.xyz - VoxelInfo.Voxels[VoxelIdx].Offset);
     float3 posUV = voxelWorldPos * VoxelInfo.Voxels[VoxelIdx].Density;
 
 	float4 prev = SceneVoxelBounces.Load(float4(posUV - VoxelInfo.Voxels[VoxelIdx].BouncesOffset * 32, 0));
-	baseColor = max(baseColor, prev.rgb * prev.w);
 
 	RWTexture3D<float4> SceneVoxel = ResourceDescriptorHeap[VoxelInfo.Voxels[VoxelIdx].TexId];
-    SceneVoxel[posUV] = float4(baseColor, 1);
+    SceneVoxel[posUV] = float4(prev.rgb * prev.w, 1);
+	//SceneVoxel[posUV - worldNormal].a = 1;
 
 	bool isInBounds = (posUV.x >= 0 && posUV.x < 128) &&
 					  (posUV.y >= 0 && posUV.y < 128) &&
@@ -151,11 +144,17 @@ float4 PS_Main(PS_Input pin) : SV_TARGET
 
 		//RWStructuredBuffer<VoxelSceneData> SceneVoxelData = ResourceDescriptorHeap[NonUniformResourceIndex(VoxelInfo.Voxels[VoxelIdx].ResIdData)];
 
-		SceneVoxelData[linearIndex].Diffuse = float4(diffuse, shadow);
-		SceneVoxelData[linearIndex].Normal = worldNormal;
-//		SceneVoxelData[linearIndex].Binormal = worldBinormal;
-//		SceneVoxelData[linearIndex].Tangent = worldTangent;
+		int newCheckValue = shadow * 100;
+		
+		int previousCheckValue = 0;
+		InterlockedMax(SceneVoxelData[linearIndex].Max, newCheckValue, previousCheckValue);
+
+		if (previousCheckValue <= newCheckValue)
+		{
+			SceneVoxelData[linearIndex].Diffuse = float4(diffuse, shadow);
+			SceneVoxelData[linearIndex].Normal = worldNormal;
+		}
 	}
 
-	return float4(diffuse, 1);
+	return float4(diffuse * shadow, 1);
 }

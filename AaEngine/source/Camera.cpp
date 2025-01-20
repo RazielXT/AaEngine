@@ -155,9 +155,10 @@ void Camera::setInCameraRotation(Vector3& direction) const
 	direction.y *= -1;
 }
 
-DirectX::SimpleMath::Vector3 Camera::getCameraDirection() const
+Vector3 Camera::getCameraDirection() const
 {
-	Vector3 dir{ 0, 0, 1 };
+	Vector3 dir = Forward;
+
 	setInCameraRotation(dir);
 
 	return dir;
@@ -226,6 +227,11 @@ void Camera::setDirection(Vector3 Direction)
 void Camera::lookAt(Vector3 target)
 {
 	setDirection(target - position);
+}
+
+Quaternion Camera::getOrientation() const
+{
+	return Quaternion::CreateFromYawPitchRoll(-yaw_, -pitch_, 0);
 }
 
 void Camera::lookTo(FXMVECTOR vEyePt, FXMVECTOR vLookatPt)

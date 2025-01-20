@@ -1,5 +1,5 @@
 #include "VoxelConeTracingCommon.hlsl"
-#include "ShadowsCommon.hlsl"
+#include "ShadowsPssm.hlsl"
 
 float4x4 ViewProjectionMatrix;
 float4x4 WorldMatrix;
@@ -8,6 +8,7 @@ float3 CameraPosition;
 float Emission;
 float3 MaterialColor;
 uint TexIdDiffuse;
+uint TexIdNormal;
 uint2 ViewportSize;
 
 cbuffer PSSMShadows : register(b1)
@@ -45,7 +46,7 @@ PS_Input VSMain(VS_Input vin)
 
     vsOut.wp = mul(vin.p, WorldMatrix);
     vsOut.pos = mul(vsOut.wp, ViewProjectionMatrix);
-    vsOut.uv = vin.uv;
+    vsOut.uv = vin.uv / 30;
     vsOut.normal = vin.n;
     vsOut.tangent = vin.t;
 	
@@ -66,18 +67,6 @@ Texture3D<float4> GetTexture3D(uint index)
 }
 
 SamplerState ShadowSampler : register(s1);
-
-float getShadow(float4 wp)
-{
-	Texture2D shadowmap = GetTexture(Sun.TexIdShadowOffset);
-    float4 sunLookPos = mul(wp, Sun.ShadowMatrix[0]);
-    sunLookPos.xy = sunLookPos.xy / sunLookPos.w;
-	sunLookPos.xy /= float2(2, -2);
-    sunLookPos.xy += 0.5;
-	sunLookPos.z -= 0.005;
-
-	return CalcShadowTermSoftPCF(shadowmap, ShadowSampler, sunLookPos.z, sunLookPos.xy, 5, Sun.ShadowMapSize, Sun.ShadowMapSizeInv);
-}
 
 float getDistanceBlend(float dist, float sceneSize)
 {
@@ -102,19 +91,35 @@ SamplerState VoxelSampler : register(s0);
 
 PSOutput PSMain(PS_Input pin)
 {
+	SamplerState diffuse_sampler = SamplerDescriptorHeap[0];
 	float camDistance = length(CameraPosition - pin.wp.xyz);
 
+    float3 normalTex = float3(GetTexture(TexIdNormal).Sample(diffuse_sampler, pin.uv).rg, 1);
+    //normalTex = (normalTex + float3(0.5f, 0.5f, 1.0f) * 3) / 4;
+	float3 bin = cross(pin.normal, pin.tangent);
+    float3x3 tbn = float3x3(pin.tangent, bin, pin.normal);
+    float3 normal = mul(normalTex.xyz * 2 - 1, tbn); // to object space
+
 	float3x3 worldMatrix = (float3x3)WorldMatrix;
-	float3 worldNormal = normalize(mul(pin.normal, worldMatrix));
+	float3 worldDetailNormal = normalize(mul(normal, worldMatrix));
+
+	float3 worldNormal = normalize(mul(normal, worldMatrix));
 	float3 worldTangent = normalize(mul(pin.tangent, worldMatrix));
 	float3 worldBinormal = cross(worldNormal, worldTangent);
 
 	float3 voxelAmbient = 0;
+	float globalOcclusion = 1;
 	//far cascade
 //	{
 		float3 voxelUVFar = (pin.wp.xyz - VoxelInfo.FarVoxels.Offset) / VoxelInfo.FarVoxels.SceneSize;
 		Texture3D voxelmapFar = GetTexture3D(VoxelInfo.FarVoxels.TexId);
-		float4 fullTraceFar = ConeTrace(voxelUVFar, worldNormal, VoxelInfo.MiddleConeRatio.x, VoxelInfo.MiddleConeRatio.y, voxelmapFar, VoxelSampler, 0);
+		float4 fullTraceFar = ConeTrace(voxelUVFar, worldNormal, VoxelInfo.MiddleConeRatio.x, VoxelInfo.MiddleConeRatio.y, voxelmapFar, VoxelSampler);
+
+		/*fullTraceFar += ConeTrace(voxelUVFar, normalize(worldNormal + worldTangent), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmapFar, VoxelSampler);
+		fullTraceFar += ConeTrace(voxelUVFar, normalize(worldNormal - worldTangent), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmapFar, VoxelSampler);
+		fullTraceFar += ConeTrace(voxelUVFar, normalize(worldNormal + worldBinormal), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmapFar, VoxelSampler);
+		fullTraceFar += ConeTrace(voxelUVFar, normalize(worldNormal - worldBinormal), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmapFar, VoxelSampler);
+		fullTraceFar.rgb /= 5;*/
 		{
 			float occlusionSample = SampleVoxel(voxelmapFar, VoxelSampler, voxelUVFar + worldNormal / 128, worldNormal, 2).w;
 			occlusionSample += SampleVoxel(voxelmapFar, VoxelSampler, voxelUVFar + normalize(worldNormal + worldTangent) / 128, normalize(worldNormal + worldTangent), 2).w;
@@ -122,6 +127,7 @@ PSOutput PSMain(PS_Input pin)
 			occlusionSample += SampleVoxel(voxelmapFar, VoxelSampler, voxelUVFar + (worldNormal + worldBinormal) / 128, (worldNormal + worldBinormal), 2).w;
 			occlusionSample += SampleVoxel(voxelmapFar, VoxelSampler, voxelUVFar + (worldNormal - worldBinormal) / 128, (worldNormal - worldBinormal), 2).w;
 			occlusionSample = 1 - saturate(occlusionSample / 5);
+			globalOcclusion = fullTraceFar.w * occlusionSample;
 			fullTraceFar *= occlusionSample;
 		}
 
@@ -134,12 +140,12 @@ PSOutput PSMain(PS_Input pin)
 //	{
 		float3 voxelUV = (pin.wp.xyz - VoxelInfo.NearVoxels.Offset) / VoxelInfo.NearVoxels.SceneSize;
 		Texture3D voxelmap = GetTexture3D(VoxelInfo.NearVoxels.TexId);
-		float4 fullTraceNear = ConeTrace(voxelUV, worldNormal, VoxelInfo.MiddleConeRatio.x, VoxelInfo.MiddleConeRatio.y, voxelmap, VoxelSampler, 0);
+		float4 fullTraceNear = ConeTraceNear(voxelUV, worldNormal, VoxelInfo.MiddleConeRatio.x, VoxelInfo.MiddleConeRatio.y, voxelmap, VoxelSampler);
 #ifndef GI_MEDIUM
-		fullTraceNear += ConeTrace(voxelUV, normalize(worldNormal + worldTangent), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler, 0);
-		fullTraceNear += ConeTrace(voxelUV, normalize(worldNormal - worldTangent), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler, 0);
-		fullTraceNear += ConeTrace(voxelUV, normalize(worldNormal + worldBinormal), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler, 0);
-		fullTraceNear += ConeTrace(voxelUV, normalize(worldNormal - worldBinormal), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler, 0);
+		fullTraceNear += ConeTraceNear(voxelUV, normalize(worldNormal + worldTangent), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler);
+		fullTraceNear += ConeTraceNear(voxelUV, normalize(worldNormal - worldTangent), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler);
+		fullTraceNear += ConeTraceNear(voxelUV, normalize(worldNormal + worldBinormal), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler);
+		fullTraceNear += ConeTraceNear(voxelUV, normalize(worldNormal - worldBinormal), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler);
 		fullTraceNear.rgb /= 5;
 #endif //GI_MEDIUM
 		{
@@ -156,31 +162,40 @@ PSOutput PSMain(PS_Input pin)
 //	}
 #endif //GI_LOW
 
-	float3 staticAmbient = float3(0.2, 0.2, 0.2);
+	float dotStepLighting = step(0, dot(-Sun.Direction,worldNormal));
+	float dotLighting = dot(-Sun.Direction,worldDetailNormal);
+	float3 skyAmbient = float3(0.3, 0.3, 0.35) * (0.5 + 0.5 * saturate(worldDetailNormal.y));
 
 	float voxelWeight = getDistanceBlend(camDistance, VoxelInfo.FarVoxels.SceneSize);
-	float3 finalAmbient = lerp(voxelAmbient, staticAmbient, voxelWeight);
+	float3 finalAmbient = lerp(voxelAmbient, skyAmbient, voxelWeight);
 	
-	SamplerState diffuse_sampler = SamplerDescriptorHeap[0];
-    float3 albedo = GetTexture(TexIdDiffuse).Sample(diffuse_sampler, pin.uv / 20).rgb;
+	globalOcclusion = min(pow(globalOcclusion, 6), 1 - voxelWeight);
+	float3 skyLighting = globalOcclusion * skyAmbient;
+	finalAmbient += skyLighting;
+
+    float3 albedo = GetTexture(TexIdDiffuse).Sample(diffuse_sampler, pin.uv).rgb;
 	albedo *= MaterialColor;
 
-	float directShadow = getShadow(pin.wp);
-	float directLight = saturate(dot(-Sun.Direction,worldNormal)) * directShadow;
-	float3 lighting = max(directLight, finalAmbient);
+	float directShadow = getPssmShadow(pin.wp, camDistance, dotLighting, ShadowSampler, Sun) * dotStepLighting;
+	float directLight = saturate(dotLighting) * directShadow;
+	float3 lighting = (directLight + finalAmbient);
 
     float4 color1 = float4(saturate(albedo * lighting), 1);
 	color1.rgb += albedo * Emission;
-	color1.a = (lighting.r + lighting.g + lighting.b) / 3;
+	color1.a = (lighting.r + lighting.g + lighting.b) / 30;
 	
-	float3 nearVoxel = voxelmap.SampleLevel(VoxelSampler, voxelUV, 0).rgb;
-	float3 farVoxel = voxelmapFar.SampleLevel(VoxelSampler, voxelUVFar, 0).rgb;
-	//color1.rgb = farVoxel;
+	int voxelLod = 0;
+	float3 nearVoxel = voxelmap.SampleLevel(VoxelSampler, voxelUV, voxelLod).rgb;
+	float3 farVoxel = voxelmapFar.SampleLevel(VoxelSampler, voxelUVFar, voxelLod).rgb;
+	float4 debugTrace = DebugConeTrace(voxelUV, worldNormal, VoxelInfo.MiddleConeRatio.x, VoxelInfo.MiddleConeRatio.y, voxelmap, VoxelSampler, 9);
+	//color1.rgb = nearVoxel;
 	//color1.rgb = lerp(nearVoxel, farVoxel, nearFarBlend);
+	//color1.rgb = debugTrace.rgb;
+	//color1.rgb = finalAmbient;
 
 	PSOutput output;
     output.color = color1;
-	output.normals = float4(worldNormal, 1);
+	output.normals = float4(worldDetailNormal, 1);
 
 	output.camDistance = float4(camDistance / 10000, 0, 0, 0);
 

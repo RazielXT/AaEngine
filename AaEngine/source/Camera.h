@@ -39,6 +39,8 @@ public:
 	void setDirection(Vector3 Direction);
 	void lookAt(Vector3 target);
 
+	Quaternion getOrientation() const;
+
 	void lookTo(FXMVECTOR vEyePt, FXMVECTOR vLookatPt);
 	void setProjection(XMMATRIX);
 
@@ -64,6 +66,8 @@ public:
 		float farZ;
 	};
 	const Params& getParams() const;
+
+	const Vector3 Forward{ 0, 0, 1 };
 
 private:
 

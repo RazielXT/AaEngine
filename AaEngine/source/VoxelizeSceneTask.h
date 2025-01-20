@@ -6,8 +6,9 @@
 #include "MathUtils.h"
 #include "GenerateMipsComputeShader.h"
 #include <thread>
-#include "ShadowMap.h"
+#include "ShadowMaps.h"
 #include "ClearBufferCS.h"
+#include <span>
 
 struct RenderQueue;
 class SceneManager;
@@ -37,7 +38,7 @@ struct SceneVoxelsChunk
 
 	Vector3 update(const Vector3& cameraPosition);
 
-	const UINT DataElementSize = sizeof(float) * 7;
+	const UINT DataElementSize = sizeof(float) * 8;
 	const UINT DataElementCount = 128 * 128 * 128;
 
 	ComPtr<ID3D12Resource> dataBuffer;
@@ -50,14 +51,14 @@ class BounceVoxelsCS : public ComputeShader
 {
 public:
 
-	void dispatch(ID3D12GraphicsCommandList* commandList, const ShaderTextureView&, const ShaderTextureView&, D3D12_GPU_VIRTUAL_ADDRESS);
+	void dispatch(ID3D12GraphicsCommandList* commandList, const std::span<float>& data, const ShaderTextureView&, const ShaderTextureView&, D3D12_GPU_VIRTUAL_ADDRESS);
 };
 
 class VoxelizeSceneTask : public CompositorTask
 {
 public:
 
-	VoxelizeSceneTask(RenderProvider provider, SceneManager&, AaShadowMap& shadows);
+	VoxelizeSceneTask(RenderProvider provider, SceneManager&, ShadowMaps& shadows);
 	~VoxelizeSceneTask();
 
 	AsyncTasksInfo initialize(CompositorPass& pass) override;
@@ -110,6 +111,7 @@ private:
 	cbufferData;
 
 	CbufferView cbuffer;
+	CbufferView frameCbuffer;
 	void updateCBufferChunk(SceneVoxelChunkInfo& info, Vector3 diff, SceneVoxelsChunk& chunk);
 	void updateCBuffer(Vector3 diff, Vector3 diffFar, UINT frameIndex);
 
@@ -123,7 +125,7 @@ private:
 	GenerateMipsComputeShader computeMips;
 	ClearBufferComputeShader clearBufferCS;
 
-	AaShadowMap& shadowMaps;
+	ShadowMaps& shadowMaps;
 
 	TextureResource clearSceneTexture;
 

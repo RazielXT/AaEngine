@@ -8,6 +8,11 @@ material ColorVCT abstract
 		file white.png
 	}
 
+	texture Normal
+	{
+		file concrete_norm.dds
+	}
+
 	default_params
 	{
 		float MaterialColor 1 1 1
@@ -55,6 +60,11 @@ material GreenVCT : ColorVCT
 	texture Diffuse
 	{
 		file SilveryBlue.dds
+	}
+
+	texture Normal
+	{
+		file rock_norm.dds
 	}
 }
 

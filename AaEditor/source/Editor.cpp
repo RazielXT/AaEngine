@@ -611,6 +611,10 @@ void Editor::prepareElements(Camera& camera)
 			ImGui::Text("Texture: %s", name);
 	}
 
+	static bool showVoxels = false;
+	if (ImGui::Checkbox("Show voxels", &showVoxels))
+		VoxelizeSceneTask::Get().showVoxelsInfo(showVoxels);
+
 	{
 		ImGui::Checkbox("Limit framerate", &state.limitFrameRate);
 

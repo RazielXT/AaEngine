@@ -68,6 +68,8 @@ public:
 	void revoxelize();
 	void clear(ID3D12GraphicsCommandList* c);
 
+	void showVoxelsInfo(bool show);
+
 private:
 
 	CommandsData commands;
@@ -127,4 +129,8 @@ private:
 
 	SceneVoxelsChunk nearVoxels;
 	SceneVoxelsChunk farVoxels;
+
+	bool showVoxelsEnabled = false;
+	void showVoxels(Camera& camera);
+	void hideVoxels();
 };

@@ -48,6 +48,44 @@ void VoxelizeSceneTask::clear(ID3D12GraphicsCommandList* c)
 	farVoxels.clearAll(c, clearSceneTexture, clearBufferCS);
 }
 
+void VoxelizeSceneTask::showVoxelsInfo(bool show)
+{
+	if (show != showVoxelsEnabled)
+	{
+		showVoxelsEnabled = show;
+
+		if (!show)
+			hideVoxels();
+	}
+}
+
+void VoxelizeSceneTask::showVoxels(Camera& camera)
+{
+	auto debugVoxel = sceneMgr.getEntity("DebugVoxel");
+
+	if (!debugVoxel)
+	{
+		debugVoxel = sceneMgr.createEntity("DebugVoxel");
+		debugVoxel->material = provider.resources.materials.getMaterial("VisualizeVoxelTexture");
+		debugVoxel->geometry.fromModel(*provider.resources.models.getLoadedModel("box.mesh", ResourceGroup::Core));
+	}
+
+	auto orientation = camera.getOrientation();
+	auto pos = camera.getPosition() - orientation * Vector3(0, 5.f, 0) + camera.getCameraDirection() * 1.75;
+
+	debugVoxel->setTransformation({ orientation, pos, Vector3(10, 10, 1) }, true);
+}
+
+void VoxelizeSceneTask::hideVoxels()
+{
+	auto debugVoxel = sceneMgr.getEntity("DebugVoxel");
+
+	if (debugVoxel)
+	{
+		sceneMgr.removeEntity(debugVoxel);
+	}
+}
+
 constexpr float NearClipDistance = 1;
 
 constexpr float VoxelSize = 128.f;

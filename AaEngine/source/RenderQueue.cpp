@@ -6,64 +6,64 @@
 void RenderQueue::update(const EntityChangeDescritpion& changeInfo, GraphicsResources& resources)
 {
 	auto& [change, order, entity] = changeInfo;
+
+	if (change == EntityChange::Add)
 	{
-		if (change == EntityChange::Add)
+		if (order != targetOrder)
+			return;
+
+		auto matInstance = entity->material;
+		if (technique != MaterialTechnique::Default)
 		{
-			if (order != targetOrder)
+			if (technique == MaterialTechnique::DepthShadowmap && entity->hasFlag(RenderObjectFlag::NoShadow))
 				return;
 
-			auto matInstance = entity->material;
-			if (technique != MaterialTechnique::Default)
+			std::string techniqueMaterial;
+
+			if (technique == MaterialTechnique::Depth || technique == MaterialTechnique::DepthShadowmap)
+				techniqueMaterial = "Depth";
+			else if (technique == MaterialTechnique::Voxelize)
+				techniqueMaterial = "Voxelize";
+			else if (technique == MaterialTechnique::EntityId)
+				techniqueMaterial = "EntityId";
+
+			if (auto techniqueOverride = matInstance->GetBase()->GetTechniqueOverride(technique))
 			{
-				std::string techniqueMaterial;
+				if (techniqueOverride[0] == '\0') //skip
+					return;
 
-				if (technique == MaterialTechnique::Depth || technique == MaterialTechnique::DepthNonReversed)
-					techniqueMaterial = "Depth";
-				else if (technique == MaterialTechnique::Voxelize)
-					techniqueMaterial = "Voxelize";
-				else if (technique == MaterialTechnique::EntityId)
-					techniqueMaterial = "EntityId";
-
-				if (auto techniqueOverride = matInstance->GetBase()->GetTechniqueOverride(technique))
-				{
-					if (techniqueOverride[0] == '\0') //skip
-						return;
-
-					techniqueMaterial = techniqueOverride;
-				}
-				else if (matInstance->HasInstancing())
-				{
-					techniqueMaterial += "Instancing";
-				}
-
-				matInstance = resources.materials.getMaterial(techniqueMaterial);
+				techniqueMaterial = techniqueOverride;
+			}
+			else if (matInstance->HasInstancing())
+			{
+				techniqueMaterial += "Instancing";
 			}
 
-			auto comparison = technique != MaterialTechnique::DepthNonReversed ? D3D12_COMPARISON_FUNC_GREATER_EQUAL : D3D12_COMPARISON_FUNC_LESS_EQUAL;
-
-			auto entry = EntityEntry{ entity, matInstance->Assign(entity->geometry.layout ? *entity->geometry.layout : std::vector<D3D12_INPUT_ELEMENT_DESC>{}, targets, comparison) };
-
-			auto it = std::lower_bound(entities.begin(), entities.end(), entry);
-			entities.insert(it, entry);
+			matInstance = resources.materials.getMaterial(techniqueMaterial);
 		}
-		if (change == EntityChange::Delete)
-		{
-			if (order != targetOrder)
-				return;
 
-			for (auto it = entities.begin(); it != entities.end(); it++)
+		auto entry = EntityEntry{ entity, matInstance->Assign(entity->geometry.layout ? *entity->geometry.layout : std::vector<D3D12_INPUT_ELEMENT_DESC>{}, targets, technique) };
+
+		auto it = std::lower_bound(entities.begin(), entities.end(), entry);
+		entities.insert(it, entry);
+	}
+	if (change == EntityChange::Delete)
+	{
+		if (order != targetOrder)
+			return;
+
+		for (auto it = entities.begin(); it != entities.end(); it++)
+		{
+			if (it->entity == entity)
 			{
-				if (it->entity == entity)
-				{
-					entities.erase(it);
-					break;
-				}
+				entities.erase(it);
+				break;
 			}
 		}
-		if (change == EntityChange::DeleteAll)
-		{
-			reset();
-		}
+	}
+	if (change == EntityChange::DeleteAll)
+	{
+		reset();
 	}
 }
 

@@ -219,7 +219,7 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 				mat.techniqueMaterial[int(technique)] = value;
 
 				if (technique == MaterialTechnique::Depth)
-					mat.techniqueMaterial[int(MaterialTechnique::DepthNonReversed)] = value;
+					mat.techniqueMaterial[int(MaterialTechnique::DepthShadowmap)] = value;
 			}
 		}
 	}

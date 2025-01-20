@@ -124,6 +124,7 @@ SceneEntity* GrassAreaGenerator::createGrassEntity(const std::string& name, cons
 	auto grassEntity = sceneMgr.createEntity(name, renderQueue);
 	grassEntity->setBoundingBox(desc.bbox);
 	grassEntity->material = material;
+	grassEntity->setFlag(RenderObjectFlag::NoShadow);
 
 	return grassEntity;
 }

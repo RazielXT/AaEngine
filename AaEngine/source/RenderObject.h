@@ -24,6 +24,15 @@ struct ObjectTransformation
 
 using RenderObjectsVisibilityState = std::vector<bool>;
 using RenderObjectsFilter = std::vector<UINT>;
+using RenderObjectFlags = uint8_t;
+
+namespace RenderObjectFlag
+{
+	enum Value
+	{
+		NoShadow = 1
+	};
+}
 
 struct RenderObjectsVisibilityData
 {
@@ -58,6 +67,7 @@ public:
 		std::vector<BoundingBox> worldBbox;
 		std::vector<BoundingBox> bbox;
 		std::vector<RenderObject*> objects;
+		std::vector<RenderObjectFlags> flags;
 	}
 	objectsData;
 
@@ -118,8 +128,13 @@ public:
 
 	RenderObjectsStorage& getStorage() const;
 
+	RenderObjectFlags getFlags() const;
+	bool hasFlag(RenderObjectFlag::Value) const;
+	void setFlag(RenderObjectFlag::Value);
+
 private:
 
 	UINT id;
+	RenderObjectFlags flags{};
 	RenderObjectsStorage& source;
 };

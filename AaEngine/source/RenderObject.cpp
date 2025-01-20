@@ -22,6 +22,7 @@ UINT RenderObjectsStorage::createId(RenderObject* obj)
 		objectsData.worldMatrix[id] = {};
 		objectsData.prevWorldMatrix[id] = {};
 		objectsData.objects[id] = obj;
+		objectsData.flags[id] = {};
 
 		auto pos = std::lower_bound(ids.begin(), ids.end(), id);
 		ids.insert(pos, id);
@@ -37,6 +38,7 @@ UINT RenderObjectsStorage::createId(RenderObject* obj)
 	objectsData.worldMatrix.emplace_back();
 	objectsData.prevWorldMatrix.emplace_back();
 	objectsData.objects.push_back(obj);
+	objectsData.flags.emplace_back();
 
 	ids.push_back(id);
 
@@ -312,4 +314,20 @@ ObjectId RenderObject::getGlobalId() const
 RenderObjectsStorage& RenderObject::getStorage() const
 {
 	return source;
+}
+
+RenderObjectFlags RenderObject::getFlags() const
+{
+	return flags;
+}
+
+bool RenderObject::hasFlag(RenderObjectFlag::Value v) const
+{
+	return flags & v;
+}
+
+void RenderObject::setFlag(RenderObjectFlag::Value v)
+{
+	flags |= v;
+	source.objectsData.flags[id] = flags;
 }

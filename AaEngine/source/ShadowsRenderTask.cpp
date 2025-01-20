@@ -30,7 +30,7 @@ ShadowsRenderTask::~ShadowsRenderTask()
 
 AsyncTasksInfo ShadowsRenderTask::initialize(CompositorPass&)
 {
-	depthQueue = sceneMgr.createQueue({}, MaterialTechnique::DepthNonReversed);
+	depthQueue = sceneMgr.createQueue({}, MaterialTechnique::DepthShadowmap);
 
 	AsyncTasksInfo tasks;
 

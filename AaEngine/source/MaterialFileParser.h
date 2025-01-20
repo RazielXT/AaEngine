@@ -53,7 +53,7 @@ enum class MaterialTechnique
 {
 	Default,
 	Depth,
-	DepthNonReversed,
+	DepthShadowmap,
 	Voxelize,
 	EntityId,
 	COUNT

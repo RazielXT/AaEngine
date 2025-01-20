@@ -233,9 +233,12 @@ void PhysicsManager::update(float deltaTime)
 
 	for (auto& info  : dynamicBodies)
 	{
-		system->GetBodyInterface().GetPositionAndRotation(info.id, pos, quat);
-		Quaternion q{ quat.GetX(), quat.GetY(), quat.GetZ(), quat.GetW() };
-		info.entity->setPositionOrientation(Vector3{ pos.GetX(), pos.GetY(), pos.GetZ() }, q);
+		if (system->GetBodyInterface().IsActive(info.id))
+		{
+			system->GetBodyInterface().GetPositionAndRotation(info.id, pos, quat);
+			Quaternion q{ quat.GetX(), quat.GetY(), quat.GetZ(), quat.GetW() };
+			info.entity->setPositionOrientation(Vector3{ pos.GetX(), pos.GetY(), pos.GetZ() }, q);
+		}
 	}
 
 	// If you take larger steps than 1 / 60th of a second you need to do multiple collision steps in order to keep the simulation stable. Do 1 collision step per 1 / 60th of a second (round up).

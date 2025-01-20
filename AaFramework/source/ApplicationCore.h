@@ -3,7 +3,7 @@
 #include "RenderSystem.h"
 #include "SceneManager.h"
 #include "FrameCompositor.h"
-#include "ShadowMap.h"
+#include "ShadowMaps.h"
 #include "GraphicsResources.h"
 #include "PhysicsManager.h"
 
@@ -41,7 +41,7 @@ public:
 	FrameParameters params;
 	PhysicsManager physicsMgr;
 	FrameCompositor* compositor;
-	AaShadowMap* shadowMap;
+	ShadowMaps* shadowMap;
 	SceneLights lights;
 
 private:

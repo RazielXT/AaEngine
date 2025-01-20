@@ -1,14 +1,18 @@
 struct SunParams
 {
-	float4x4 ShadowMatrix[2];
+	float4x4 ShadowMatrix[3];
+	float4x4 MaxShadowMatrix;
 	float3 Direction;
 	uint TexIdShadowOffset;
 	float3 Color;
 	float ShadowMapSize;
 	float ShadowMapSizeInv;
+	float ShadowCascadeDistance0;
+	float ShadowCascadeDistance1;
+	float ShadowCascadeDistance2;
 };
 
-float readShadowmap(Texture2D shadowmap, SamplerState sampler, float2 shadowCoord)
+float readShadowmap(Texture2D<float> shadowmap, SamplerState sampler, float2 shadowCoord)
 {
 	return shadowmap.SampleLevel(sampler, shadowCoord, 0).r;
 	
@@ -16,12 +20,15 @@ float readShadowmap(Texture2D shadowmap, SamplerState sampler, float2 shadowCoor
 //	return shadowmap.Load(int3(texCoord, 0)).r;
 }
 
-float CalcShadowTermSoftPCF(Texture2D shadowmap, SamplerState sampler, float fLightDepth, float2 vShadowTexCoord, int iSqrtSamples, float ShadowMapSize, float ShadowMapSizeInv)
+float CalcShadowTermSoftPCF(Texture2D<float> shadowmap, SamplerState sampler, float fLightDepth, float2 vShadowTexCoord, int iSqrtSamples, float ShadowMapSize, float ShadowMapSizeInv)
 {
 	float fShadowTerm = 0.0f;
 
 	float fRadius = (iSqrtSamples - 1.0f) / 2;
 	float fWeightAccum = 0.0f;
+
+	if (fLightDepth >= 1)
+		fLightDepth = 0;
 
 	for (float y = -fRadius; y <= fRadius; y++)
 	{
@@ -55,7 +62,32 @@ float CalcShadowTermSoftPCF(Texture2D shadowmap, SamplerState sampler, float fLi
 	return fShadowTerm;
 }
 
-float ShadowPCF(Texture2D shadowmap, SamplerState sampler, float4 shadowCoord, float ShadowMapSizeInv)
+float CalculatePCFPercentLit(Texture2D<float> shadowmap, SamplerComparisonState sampler, float fLightDepth, float2 vShadowTexCoord, float ShadowMapSizeInv) 
+{
+    float fPercentLit = 0.0f;
+    // This loop could be unrolled, and texture immediate offsets could be used if the kernel size were fixed.
+    // This would be performance improvment.
+	int m_iPCFBlurForLoopStart = -2;
+	int m_iPCFBlurForLoopEnd = 3;
+
+    for( int x = m_iPCFBlurForLoopStart; x < m_iPCFBlurForLoopEnd; ++x ) 
+    {
+        for( int y = m_iPCFBlurForLoopStart; y < m_iPCFBlurForLoopEnd; ++y ) 
+        {
+            fPercentLit += shadowmap.SampleCmpLevelZero(sampler, 
+                float2( 
+                    vShadowTexCoord.x + ( ( (float) x ) * ShadowMapSizeInv / 3 ) , 
+                    vShadowTexCoord.y + ( ( (float) y ) * ShadowMapSizeInv ) 
+                    ), 
+                fLightDepth);
+        }
+    }
+    fPercentLit /= (float)5*5;
+	
+	return fPercentLit;
+}
+
+float ShadowPCF(Texture2D<float> shadowmap, SamplerState sampler, float4 shadowCoord, float ShadowMapSizeInv)
 {
     float shadow = 0.0;
     float2 texelSize = ShadowMapSizeInv;

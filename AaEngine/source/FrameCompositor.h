@@ -4,13 +4,13 @@
 #include "CompositorTask.h"
 
 class AssignedMaterial;
-class AaShadowMap;
+class ShadowMaps;
 
 class FrameCompositor
 {
 public:
 
-	FrameCompositor(RenderProvider provider, SceneManager& sceneMgr, AaShadowMap& shadows);
+	FrameCompositor(RenderProvider provider, SceneManager& sceneMgr, ShadowMaps& shadows);
 	~FrameCompositor();
 
 	struct InitParams
@@ -73,7 +73,7 @@ protected:
 
 	RenderProvider provider;
 	SceneManager& sceneMgr;
-	AaShadowMap& shadowMaps;
+	ShadowMaps& shadowMaps;
 
 	std::map<std::string, CreateTaskFunc> externTasks;
 };

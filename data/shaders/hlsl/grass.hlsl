@@ -1,10 +1,11 @@
-#include "ShadowsCommon.hlsl"
+#include "ShadowsPssm.hlsl"
 
 float4x4 ViewProjectionMatrix;
 uint2 ViewportSize;
-uint TexIdDiffuse;
 float Time;
 float DeltaTime;
+float3 CameraPosition;
+uint TexIdDiffuse;
 
 #ifdef ENTITY_ID
 uint EntityId;
@@ -93,18 +94,6 @@ Texture2D<float4> GetTexture(uint index)
 
 SamplerState ShadowSampler : register(s0);
 
-float getShadow(float4 wp)
-{
-	Texture2D shadowmap = GetTexture(Sun.TexIdShadowOffset);
-    float4 sunLookPos = mul(wp, Sun.ShadowMatrix[0]);
-    sunLookPos.xy = sunLookPos.xy / sunLookPos.w;
-	sunLookPos.xy /= float2(2, -2);
-    sunLookPos.xy += 0.5;
-	sunLookPos.z -= 0.01;
-
-	return CalcShadowTermSoftPCF(shadowmap, ShadowSampler, sunLookPos.z, sunLookPos.xy, 3, Sun.ShadowMapSize, Sun.ShadowMapSizeInv);
-}
-
 struct PSOutput
 {
     float4 color : SV_Target0;
@@ -126,14 +115,16 @@ PSOutput PSMain(PSInput input)
 
 	albedo.rgb *= input.color * 1.5;
 
-	float shadowing = getShadow(input.worldPosition);
+	float camDistance = length(CameraPosition - input.worldPosition.xyz);
+
+	float shadowing = getPssmShadowSimple(input.worldPosition, camDistance, 1, ShadowSampler, Sun);
 	float shading = saturate(1.2 - input.uv.y + shadowing);
 	shading *= lerp(0.5, 1, shadowing);
 	
 	PSOutput output;
     output.color = albedo * shading;
 	output.normals = float4(input.normal, 1);
-	output.camDistance = 0;
+	output.camDistance = camDistance / 10000;
 
 	output.motionVectors = float4((input.previousPosition.xy / input.previousPosition.w - input.currentPosition.xy / input.currentPosition.w) * ViewportSize, 0, 0);
 	output.motionVectors.xy *= 0.5;

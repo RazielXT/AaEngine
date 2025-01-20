@@ -6,7 +6,7 @@
 #include <thread>
 #include "AoBlurAndUpsampleCS.h"
 
-class AaShadowMap;
+class ShadowMaps;
 
 class SsaoComputeTask : public CompositorTask
 {

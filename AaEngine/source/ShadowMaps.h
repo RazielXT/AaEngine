@@ -6,21 +6,28 @@
 #include "ShaderDataBuffers.h"
 #include "ShaderResources.h"
 #include "GraphicsResources.h"
+#include "CascadedShadowMaps.h"
 
-class AaShadowMap
+class ShadowMaps
 {
 public:
 
-	AaShadowMap(SceneLights::Light&, PssmParameters&);
+	ShadowMaps(SceneLights::Light&, PssmParameters&);
 
 	void init(RenderSystem& renderSystem, GraphicsResources& resources);
 
-	RenderTargetTexture texture[2];
-	Camera camera[2];
+	struct ShadowData
+	{
+		RenderTargetTexture texture;
+		Camera camera;
+		bool update = true;
+	};
+
+	ShadowData cascades[3];
+	ShadowData maxShadow;
 
 	SceneLights::Light& sun;
 	void update(UINT frameIndex, Camera& camera);
-	void update(UINT frameIndex, Vector3 center);
 	void clear(ID3D12GraphicsCommandList* commandList);
 
 private:
@@ -28,4 +35,8 @@ private:
 	RenderTargetHeap targetHeap;
 	PssmParameters& data;
 	CbufferView cbuffer;
+
+	ShadowMapCascade cascadeInfo;
+
+	int counter = 0;
 };

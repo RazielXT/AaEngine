@@ -32,9 +32,8 @@ void ApplicationCore::initialize(const TargetWindow& window, const InitParams& a
 
 	Vector3(-1, -1, -1).Normalize(lights.directionalLight.direction);
 
-	shadowMap = new AaShadowMap(lights.directionalLight, params.sun);
+	shadowMap = new ShadowMaps(lights.directionalLight, params.sun);
 	shadowMap->init(renderSystem, resources);
-	shadowMap->update(renderSystem.core.frameIndex, {});
 
 	compositor = new FrameCompositor({ params, renderSystem, resources }, sceneMgr, *shadowMap);
 	compositor->registerTask("RenderPhysics", [this](RenderProvider& provider, SceneManager& sceneMgr)

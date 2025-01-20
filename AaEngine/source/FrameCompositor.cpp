@@ -2,7 +2,7 @@
 #include "CompositorFileParser.h"
 #include "MaterialResources.h"
 #include "SceneManager.h"
-#include "ShadowMap.h"
+#include "ShadowMaps.h"
 #include "DebugWindow.h"
 #include "ShadowsRenderTask.h"
 #include "SceneRenderTask.h"
@@ -16,7 +16,7 @@
 #include "DownsampleTask.h"
 #include "RenderWireframeTask.h"
 
-FrameCompositor::FrameCompositor(RenderProvider p, SceneManager& scene, AaShadowMap& shadows) : provider(p), sceneMgr(scene), shadowMaps(shadows)
+FrameCompositor::FrameCompositor(RenderProvider p, SceneManager& scene, ShadowMaps& shadows) : provider(p), sceneMgr(scene), shadowMaps(shadows)
 {
 }
 

@@ -4,13 +4,13 @@
 #include "RenderQueue.h"
 #include <thread>
 
-class AaShadowMap;
+class ShadowMaps;
 
 class ShadowsRenderTask : public CompositorTask
 {
 public:
 
-	ShadowsRenderTask(RenderProvider provider, SceneManager&, AaShadowMap& shadows);
+	ShadowsRenderTask(RenderProvider provider, SceneManager&, ShadowMaps& shadows);
 	~ShadowsRenderTask();
 
 	AsyncTasksInfo initialize(CompositorPass& pass) override;
@@ -18,7 +18,7 @@ public:
 
 private:
 
-	struct 
+	struct ShadowWork
 	{
 		CommandsData commands;
 		HANDLE eventBegin{};
@@ -27,12 +27,14 @@ private:
 
 		RenderObjectsVisibilityData renderablesData;
 		RenderObjectsStorage* renderables;
-	}
-	shadowsData[2];
+	};
+
+	ShadowWork cascades[3];
+	ShadowWork maxShadow;
 
 	bool running = true;
 
 	RenderQueue* depthQueue{};
 
-	AaShadowMap& shadowMaps;
+	ShadowMaps& shadowMaps;
 };

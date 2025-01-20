@@ -150,7 +150,7 @@
     <ClCompile Include="source\ShaderDataBuffers.cpp" />
     <ClCompile Include="source\ShaderConstantsProvider.cpp" />
     <ClCompile Include="source\ShaderSignature.cpp" />
-    <ClCompile Include="source\ShadowMap.cpp" />
+    <ClCompile Include="source\ShadowMaps.cpp" />
     <ClCompile Include="source\ShadowsRenderTask.cpp" />
     <ClCompile Include="source\SsaoComputeTask.cpp" />
     <ClCompile Include="source\StringUtils.cpp" />
@@ -228,7 +228,7 @@
     <ClInclude Include="source\SceneRenderTask.h" />
     <ClInclude Include="source\ShaderDataBuffers.h" />
     <ClInclude Include="source\ShaderSignature.h" />
-    <ClInclude Include="source\ShadowMap.h" />
+    <ClInclude Include="source\ShadowMaps.h" />
     <ClInclude Include="source\ShadowsRenderTask.h" />
     <ClInclude Include="source\SsaoComputeTask.h" />
     <ClInclude Include="source\TextureData.h" />

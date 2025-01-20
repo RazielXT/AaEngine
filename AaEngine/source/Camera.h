@@ -42,7 +42,7 @@ public:
 	Quaternion getOrientation() const;
 
 	void lookTo(FXMVECTOR vEyePt, FXMVECTOR vLookatPt);
-	void setProjection(XMMATRIX);
+	void setOrthographicProjection(XMMATRIX);
 
 	Vector3 getPosition() const;
 

@@ -669,6 +669,20 @@ void Editor::prepareElements(Camera& camera)
 	if (ImGui::Button("Regenerate voxels"))
 		VoxelizeSceneTask::Get().clear();
 
+	if (ImGui::CollapsingHeader("Sun"))
+	{
+		static int sunYaw = 0;
+		static int lastYaw = sunYaw;
+		static int sunPitch = 0;
+		static int lastPitch = sunPitch;
+		if (ImGui::InputInt("Yaw", &sunYaw, 1, 3) || ImGui::InputInt("Pitch", &sunPitch, 1, 3))
+		{
+			auto rotation = Quaternion::CreateFromYawPitchRoll(XMConvertToRadians((float)lastYaw - sunYaw), XMConvertToRadians((float)lastPitch - sunPitch), 0);
+			app.lights.directionalLight.direction = rotation * app.lights.directionalLight.direction;
+			lastPitch = sunPitch;
+			lastYaw = sunYaw;
+		}
+	}
 	{
 		ImGui::Checkbox("Limit framerate", &state.limitFrameRate);
 

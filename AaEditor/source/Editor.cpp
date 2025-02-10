@@ -650,6 +650,25 @@ void Editor::prepareElements(Camera& camera)
 	if (ImGui::Checkbox("Show voxels", &showVoxels))
 		VoxelizeSceneTask::Get().showVoxelsInfo(showVoxels);
 
+	if (showVoxels)
+	{
+		static int showVoxelsIndex = 0;
+		if (ImGui::InputInt("Show voxels index", &showVoxelsIndex))
+		{
+			showVoxelsIndex = std::clamp(showVoxelsIndex, 0, 3);
+			app.resources.materials.getMaterial("VisualizeVoxelTexture")->SetParameter("VoxelIndex", &showVoxelsIndex, 1);
+		}
+		static int showVoxelsMip = 0;
+		if (ImGui::InputInt("Show voxels MIP", &showVoxelsMip))
+		{
+			showVoxelsMip = std::clamp(showVoxelsMip, 0, 7);
+			app.resources.materials.getMaterial("VisualizeVoxelTexture")->SetParameter("VoxelMip", &showVoxelsMip, 1);
+		}
+	}
+
+	if (ImGui::Button("Regenerate voxels"))
+		VoxelizeSceneTask::Get().clear();
+
 	{
 		ImGui::Checkbox("Limit framerate", &state.limitFrameRate);
 

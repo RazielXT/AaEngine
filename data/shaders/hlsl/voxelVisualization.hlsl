@@ -6,10 +6,12 @@ float4x4 WorldMatrix;
 float4x4 PreviousWorldMatrix;
 float3 CameraPosition;
 uint2 ViewportSize;
+uint VoxelIndex;
+uint VoxelMip;
 
 cbuffer SceneVoxelInfo : register(b2)
 {
-    SceneVoxelCbuffer VoxelInfo;
+    SceneVoxelCbufferIndexed VoxelInfo;
 };
 
 struct VS_Input
@@ -65,20 +67,21 @@ SamplerState PointSampler : register(s0);
 
 PSOutput PSMain(PS_Input pin)
 {
-	SceneVoxelChunkInfo Voxels = VoxelInfo.NearVoxels;
+	SceneVoxelChunkInfo Voxels = VoxelInfo.Voxels[VoxelIndex];
 
 	Texture3D voxelmap = GetTexture3D(Voxels.TexId);
 
 	float3 rayDir = normalize(pin.wp.xyz - CameraPosition);
 	float3 rayStart = pin.wp.xyz;
-	float stepSize = 0.5f; // Adjust as needed
+	float stepSize = 1.f / Voxels.Density; // Adjust as needed
 
 	float4 nearVoxel = 0.xxxx;
-	for (int i = 0; i < 300; ++i)
+	int i = 0;
+	for (; i < 128; ++i)
 	{
 		// Move the ray position
 		float3 rayPos = rayStart + rayDir * stepSize * i;
-		stepSize += 1 / 300.f;
+		//stepSize += Voxels.Density * 32.f;
 
 		// Convert to UVW coordinates (range [0, 1])
 		float3 voxelUV = (rayPos - Voxels.Offset) / Voxels.SceneSize;
@@ -90,18 +93,18 @@ PSOutput PSMain(PS_Input pin)
 		}
 
 		// Sample the 3D texture
-		nearVoxel = voxelmap.SampleLevel(PointSampler, voxelUV, 2);
+		nearVoxel = voxelmap.SampleLevel(PointSampler, voxelUV, min(VoxelMip + 2, 7));
 
 		// If a filled voxel is hit
 		if (nearVoxel.a > 0.f)
 		{		
-			float detailStepSize = stepSize / 8.f; // Adjust as needed
+			float detailStepSize = stepSize / 32.f; // Adjust as needed
 
-			for (int i = 16; i >= 0; i--)
+			for (int i = 32; i >= 0; i--)
 			{
 				float3 rayPosDetail = rayPos - rayDir * i * detailStepSize;
 				float3 voxelUV = (rayPosDetail - Voxels.Offset) / Voxels.SceneSize;
-				nearVoxel = voxelmap.SampleLevel(PointSampler, voxelUV, 0);
+				nearVoxel = voxelmap.SampleLevel(PointSampler, voxelUV, VoxelMip);
 				
 				if (nearVoxel.a > 0.f)
 					break;
@@ -117,13 +120,13 @@ PSOutput PSMain(PS_Input pin)
 		discard;
 
 	PSOutput output;
-    output.color = float4(nearVoxel.rgb + stepSize / 10, 1);
+    output.color = float4(nearVoxel.rgb + i / 1000.f, 1);
 	
 	float3 worldNormal = normalize(mul(pin.normal, (float3x3)WorldMatrix));
 	output.normals = float4(worldNormal, 1);
 
 	float camDistance = length(CameraPosition - pin.wp.xyz);
-	output.camDistance = float4(camDistance / 10000, 0, 0, 0);
+	output.camDistance = float4(camDistance, 0, 0, 0);
 
 	output.motionVectors = float4((pin.previousPosition.xy / pin.previousPosition.w - pin.currentPosition.xy / pin.currentPosition.w) * ViewportSize, 0, 0);
 	output.motionVectors.xy *= 0.5;

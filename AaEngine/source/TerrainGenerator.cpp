@@ -7,29 +7,48 @@ TerrainGenerator::TerrainGenerator()
 {
 }
 
-void TerrainGenerator::initialize(RenderSystem& rs, GraphicsResources& resources)
+constexpr UINT MaxLodScale_Quads = constexpr_pow(2, TerrainGrid::LodsCount - 1);
+constexpr UINT StepLodScale_Quads = constexpr_pow(2, 4); //lod4
+
+constexpr UINT ChunkWidth_Quads = TerrainGrid::ChunkWidthQuads;
+constexpr UINT GridWidth_Chunks = 4;
+constexpr UINT GridHalfWidth_Chunks = 2;
+constexpr UINT WorldGridWidth_Quads = GridWidth_Chunks * MaxLodScale_Quads * ChunkWidth_Quads;
+
+constexpr float QuadSize_Units = 4.f; //this controls tessellation detail
+constexpr float WorldMappingScale = QuadSize_Units; //this controls heightmap mapping
+constexpr float WorldWidth_Units = QuadSize_Units * WorldGridWidth_Quads;
+constexpr float WorldHeight_Units = 8000.f;
+
+void TerrainGenerator::initialize(RenderSystem& rs, GraphicsResources& resources, ResourceUploadBatch& batch)
 {
 	auto csShader = resources.shaders.getShader("TerrainGeneratorCS", ShaderTypeCompute, ShaderRef{ "terrainGenerateCS.hlsl", "main", "cs_6_6" });
 	cs.init(*rs.core.device, "TerrainGeneratorCS", *csShader);
 
-	terrainMaterial = resources.materials.getMaterial("GreenVCT");
+	terrainMaterial = resources.materials.getMaterial("TerrainVCT");
 
-	ResourceUploadBatch batch(rs.core.device);
-	batch.Begin(D3D12_COMMAND_LIST_TYPE_COPY);
-
-	auto file = resources.textures.loadFile(*rs.core.device, batch, "dmap.png");
+	auto file = resources.textures.loadFile(*rs.core.device, batch, "Mountain Range Height Map PNG.png");
 	resources.descriptors.createTextureView(*file);
 	heightmap = file->srvHeapIndex;
 
-	grid.init(rs, resources, batch);
+	grid.init(rs, resources, batch, WorldWidth_Units, WorldHeight_Units);
 
-	auto uploadResourcesFinished = batch.End(rs.core.copyQueue);
-	uploadResourcesFinished.wait();
+	vegetation.initialize(rs, resources);
 }
 
-void TerrainGenerator::createTerrain(ID3D12GraphicsCommandList* commandList, SceneManager& sceneMgr, const Vector3& position)
+void TerrainGenerator::createTerrain(ID3D12GraphicsCommandList* commandList, SceneManager& sceneMgr, GraphicsResources& resources)
 {
-	auto createLodEntity = [&](TerrainGrid::ChunkLod& lod, std::string lodName)
+	constexpr float GridHalfWidthLod0_Units = ChunkWidth_Quads * GridHalfWidth_Chunks * QuadSize_Units;
+	constexpr float GridBlendOffset_Units = QuadSize_Units * StepLodScale_Quads;
+
+	float halfWidthLod = GridHalfWidthLod0_Units;
+	for (auto& m : lodMatOverrides)
+	{
+		m.params.push_back({ "BlendDistance", sizeof(float), { halfWidthLod - GridBlendOffset_Units } });
+		halfWidthLod *= 2;
+	}
+
+	auto createLodEntity = [&](TerrainGrid::ChunkLod& lod, UINT idx)
 		{
 			for (UINT x = 0; x < 4; x++)
 				for (UINT y = 0; y < 4; y++)
@@ -38,22 +57,22 @@ void TerrainGenerator::createTerrain(ID3D12GraphicsCommandList* commandList, Sce
 					if (!cell.chunk)
 						continue;
 
-					auto entity = sceneMgr.createEntity("terrain" + lodName + std::to_string(x) + std::to_string(y));
+					auto entity = sceneMgr.createEntity("terrain" + std::to_string(idx) + std::to_string(x) + std::to_string(y));
 					entity->geometry.fromModel(cell.chunk->model);
 					entity->material = terrainMaterial;
 					entity->setBoundingBox(cell.chunk->model.bbox);
+					entity->materialOverride = &lodMatOverrides[idx];
 					cell.entity = entity;
 				}
 		};
 
-	createLodEntity(grid.lod0, "0");
-	createLodEntity(grid.lod1, "1");
-	createLodEntity(grid.lod2, "2");
+	for (UINT idx = 0; auto& lod : grid.lods)
+		createLodEntity(lod, idx++);
 
-	generateTerrain(commandList, position);
+	vegetation.generate(resources);
 }
 
-void TerrainGenerator::update(ID3D12GraphicsCommandList* commandList, const Vector3& position)
+void TerrainGenerator::update(ID3D12GraphicsCommandList* commandList, SceneManager& sceneMgr, const Vector3& position)
 {
 // 	if (!rebuildScheduled)
 // 		return;
@@ -76,13 +95,14 @@ void TerrainGenerator::update(ID3D12GraphicsCommandList* commandList, const Vect
 				}
 		};
 
-	transitionToUav(grid.lod0);
-	transitionToUav(grid.lod1);
-	transitionToUav(grid.lod2);
+	for (auto& lod : grid.lods)
+		transitionToUav(lod);
 
 	commandList->ResourceBarrier(barriers.size(), barriers.data());
 
 	generateTerrain(commandList, position);
+
+	vegetation.update(commandList, heightmap);
 }
 
 void TerrainGenerator::rebuild()
@@ -90,69 +110,87 @@ void TerrainGenerator::rebuild()
 	rebuildScheduled = true;
 }
 
-float snapValue(float value, float step)
-{
-	return round(value / step) * step;
-}
-
 void TerrainGenerator::generateTerrain(ID3D12GraphicsCommandList* commandList, const Vector3& cameraPosition)
 {
-	float fullWidth = 1024.f;
+	constexpr UINT QuadsPerStep = 2; //we need to step by 2 quads to maintain topology |\|/|
+	constexpr UINT StepQuadsCount = StepLodScale_Quads * QuadsPerStep; //biggest lod quad
+	constexpr float StepWidth_Units = StepQuadsCount * QuadSize_Units; //in world units
 
-	Vector2 snapPosition;
-	float snapStepping = fullWidth / (64 * 4);
-	snapPosition.x = snapValue(cameraPosition.x, snapStepping);
-	snapPosition.y = snapValue(cameraPosition.z, snapStepping);
+	Vector2 cameraOffset = { cameraPosition.x + StepWidth_Units * 0.5f, cameraPosition.z + StepWidth_Units * 0.5f }; //center by half offset
+	if (cameraOffset.x < 0)
+		cameraOffset.x -= StepWidth_Units;
+	if (cameraOffset.y < 0)
+		cameraOffset.y -= StepWidth_Units;
+
+	XMINT2 snapPosition{};
+	snapPosition.x = (int)(cameraOffset.x / StepWidth_Units) * StepQuadsCount;
+	snapPosition.y = (int)(cameraOffset.y / StepWidth_Units) * StepQuadsCount;
+
+	// ---------------------
+
+	constexpr UINT MaxStepQuadsCount = MaxLodScale_Quads * QuadsPerStep;
+	constexpr float MaxStepWidth_Units = MaxStepQuadsCount * QuadSize_Units;
+
+	Vector2 cameraOffsetMax = { cameraPosition.x + MaxStepWidth_Units * 0.5f, cameraPosition.z + MaxStepWidth_Units * 0.5f };
+	if (cameraOffsetMax.x < 0)
+		cameraOffsetMax.x -= MaxStepWidth_Units;
+	if (cameraOffsetMax.y < 0)
+		cameraOffsetMax.y -= MaxStepWidth_Units;
+
+	XMINT2 snapPositionMax{};
+	snapPositionMax.x = (int)(cameraOffsetMax.x / MaxStepWidth_Units) * MaxStepQuadsCount;
+	snapPositionMax.y = (int)(cameraOffsetMax.y / MaxStepWidth_Units) * MaxStepQuadsCount;
+
+	// ---------------------
 
 	std::vector<CD3DX12_RESOURCE_BARRIER> barriers;
+	barriers.reserve(grid.LodsCount * 12 + 4);
 
-	auto updateLod = [&](TerrainGrid::ChunkLod& lod, TerrainGrid& grid, float terrainPortion, float terrainOffset)
+	auto updateLod = [&](TerrainGrid::ChunkLod& lod, TerrainGrid& grid, UINT gridScale, const XMINT2& snapPosition)
 		{
-			for (UINT x = 0; x < 4; x++)
-				for (UINT y = 0; y < 4; y++)
+			for (UINT x = 0; x < GridWidth_Chunks; x++)
+				for (UINT y = 0; y < GridWidth_Chunks; y++)
 				{
 					auto& cell = lod.data[x][y];
 					if (!cell.chunk)
 						continue;
 
-					XMUINT4 borderSeamsIdx = { grid.ChunkSize, grid.ChunkSize, grid.ChunkSize, grid.ChunkSize };
+					XMUINT4 borderSeamsIdx = { grid.ChunkWidthVertices, grid.ChunkWidthVertices, grid.ChunkWidthVertices, grid.ChunkWidthVertices };
 
-					if (lod.borderSeamsFix)
+					if (lod.fixBorderSeams)
 					{
 						if (x == 0)
 							borderSeamsIdx.x = 0;
 						if (x == 3)
-							borderSeamsIdx.y = grid.ChunkSize - 1;
+							borderSeamsIdx.y = ChunkWidth_Quads;
 						if (y == 0)
 							borderSeamsIdx.z = 0;
 						if (y == 3)
-							borderSeamsIdx.w = grid.ChunkSize - 1;
+							borderSeamsIdx.w = ChunkWidth_Quads;
 					}
 
-					Vector2 gridOffset = Vector2(terrainOffset + x * terrainPortion, terrainOffset + y * terrainPortion);
-					gridOffset.x += -0.5f + snapPosition.x / fullWidth;
-					gridOffset.y += -0.5f + snapPosition.y / fullWidth;
+					const UINT gridStepSize = ChunkWidth_Quads * gridScale;
 
-					cs.dispatch(commandList, cell.chunk->vertexBuffer.Get(), heightmap, grid.ChunkSize, gridOffset, { x, y }, terrainPortion, borderSeamsIdx, fullWidth);
-					cell.entity->setPosition({ gridOffset.x * fullWidth, -200, gridOffset.y * fullWidth });
+					XMINT2 gridOffset(x * gridStepSize, y * gridStepSize);
+					//center, move grid by half
+					gridOffset.x -= gridStepSize * GridHalfWidth_Chunks;
+					gridOffset.y -= gridStepSize * GridHalfWidth_Chunks;
+					gridOffset.x += snapPosition.x;
+					gridOffset.y += snapPosition.y;
+
+					cs.dispatch(commandList, cell.chunk->vertexBuffer.Get(), heightmap, WorldGridWidth_Quads, gridOffset, grid.ChunkWidthVertices, gridScale, borderSeamsIdx, QuadSize_Units, WorldHeight_Units, WorldMappingScale);
+					cell.entity->setPosition({ gridOffset.x * WorldWidth_Units / WorldGridWidth_Quads, WorldHeight_Units / -2.f, gridOffset.y * WorldWidth_Units / WorldGridWidth_Quads });
 					cell.entity->updateWorldMatrix();
 
 					barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(cell.chunk->vertexBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
 				}
 		};
 
-	const float lod2Portion = 1 / 4.f;
-	const float lod2Offset = 0;
-
-	const float lod1Portion = 1 / 8.f;
-	const float lod1Offset = lod2Portion;
-
-	const float lod0Portion = 1 / 16.f;
-	const float lod0Offset = lod1Portion + lod2Portion;
-
-	updateLod(grid.lod0, grid, lod0Portion, lod0Offset);
-	updateLod(grid.lod1, grid, lod1Portion, lod1Offset);
-	updateLod(grid.lod2, grid, lod2Portion, lod2Offset);
+	for (UINT idx = 0; auto& lod : grid.lods)
+	{
+		const UINT lodScale = std::pow(2, idx++);
+		updateLod(lod, grid, lodScale, lodScale > StepLodScale_Quads ? snapPositionMax : snapPosition);
+	}
 
 	commandList->ResourceBarrier(barriers.size(), barriers.data());
 }

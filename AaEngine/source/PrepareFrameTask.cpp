@@ -25,5 +25,7 @@ void PrepareFrameTask::run(RenderContext& ctx, CommandsData& cmd, CompositorPass
 	if (fsr.enabled())
 		ctx.camera->setPixelOffset(fsr.getJitter(), fsr.getRenderSize());
 
-	sceneMgr.terrain.update(cmd.commandList, ctx.camera->getPosition());
+	sceneMgr.terrain.update(cmd.commandList, sceneMgr, ctx.camera->getPosition());
+
+	static int c = 0;
 }

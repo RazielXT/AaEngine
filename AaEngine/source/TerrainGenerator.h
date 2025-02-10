@@ -3,12 +3,13 @@
 #include "TerrainGenerationCS.h"
 #include "VertexBufferModel.h"
 #include "TerrainGrid.h"
+#include "Material.h"
+#include "Vegetation.h"
 
 class SceneManager;
 class SceneEntity;
 class RenderSystem;
 struct GraphicsResources;
-class MaterialInstance;
 
 class TerrainGenerator
 {
@@ -16,10 +17,10 @@ public:
 
 	TerrainGenerator();
 
-	void initialize(RenderSystem& renderSystem, GraphicsResources& resources);
+	void initialize(RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch);
 
-	void createTerrain(ID3D12GraphicsCommandList* commandList, SceneManager& sceneMgr, const Vector3& position);
-	void update(ID3D12GraphicsCommandList* commandList, const Vector3& position);
+	void createTerrain(ID3D12GraphicsCommandList* commandList, SceneManager& sceneMgr, GraphicsResources& resources);
+	void update(ID3D12GraphicsCommandList* commandList, SceneManager& sceneMgr, const Vector3& position);
 	void rebuild();
 
 public:
@@ -31,8 +32,11 @@ public:
 	TerrainGrid grid;
 
 	MaterialInstance* terrainMaterial{};
+	MaterialPropertiesOverrideDescription lodMatOverrides[TerrainGrid::LodsCount];
 
 	UINT heightmap{};
 
 	bool rebuildScheduled = false;
+
+	Vegetation vegetation;
 };

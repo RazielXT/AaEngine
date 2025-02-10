@@ -3,7 +3,6 @@
 #include "VertexBufferModel.h"
 #include "Directx.h"
 
-class SceneManager;
 class SceneEntity;
 class RenderSystem;
 struct GraphicsResources;
@@ -16,7 +15,7 @@ struct TerrainChunk
 
 struct TerrainGrid
 {
-	void init(RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch);
+	void init(RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch, float worldWidth, float maxHeight);
 
 	struct ChunkInfo
 	{
@@ -27,21 +26,22 @@ struct TerrainGrid
 	struct ChunkLod
 	{
 		ChunkInfo data[4][4];
-		bool borderSeamsFix = true;
+		bool fixBorderSeams = true;
 	};
 
-	ChunkLod lod0;
-	ChunkLod lod1;
-	ChunkLod lod2;
+	static constexpr UINT LodsCount = 6;
+	ChunkLod lods[LodsCount];
 
-	const UINT BuildThreads = 16;
-	const UINT ChunkSize = BuildThreads * 4 - 1;
-	const UINT IndexCount = 3 * 2 * (ChunkSize - 1) * (ChunkSize - 1);
+	static constexpr UINT BuildGroups = 4;
+	static constexpr UINT BuildGroupVertices = 16; //last group 17
+	static constexpr UINT ChunkWidthQuads = BuildGroupVertices * BuildGroups;
+	static constexpr UINT ChunkWidthVertices = ChunkWidthQuads + 1; //keep odd count vertices so have even count quads
+	static constexpr UINT IndexCount = 3 * 2 * (ChunkWidthVertices - 1) * (ChunkWidthVertices - 1);
 
 private:
 
 	std::vector<TerrainChunk> chunks;
-	void createChunk(TerrainChunk& chunk, GraphicsResources& resources, const wchar_t* name, float width);
+	void createChunk(TerrainChunk& chunk, GraphicsResources& resources, const wchar_t* name, float width, float maxHeight);
 
 	ComPtr<ID3D12Resource> indexBuffer;
 	void createIndexBuffer(RenderSystem& renderSystem, ResourceUploadBatch& batch);

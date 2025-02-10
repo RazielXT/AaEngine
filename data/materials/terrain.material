@@ -1,0 +1,43 @@
+material TerrainBaseVCT abstract
+{
+	vertex_shader vsVoxelTracingTerrain
+	pixel_shader psVoxelTracingTerrain
+	
+	technique Depth TerrainDepth
+	technique Voxelize VoxelizeTerrain
+}
+
+material TerrainDepth
+{
+	vertex_shader vsVoxelTracingTerrain
+}
+
+material TerrainVCT : TerrainBaseVCT
+{
+	texture Diffuse
+	{
+		file SilveryBlue.dds
+	}
+
+	texture Grass
+	{
+		file grass.dds
+	}
+
+	texture Normal
+	{
+		file rock_norm.dds
+	}
+	
+	texture Spread
+	{
+		file spread.png
+	}
+
+	technique TerrainScan TerrainScanMaterial
+}
+
+material TerrainScanMaterial : TerrainVCT
+{
+	shader_defines TERRAIN_SCAN
+}

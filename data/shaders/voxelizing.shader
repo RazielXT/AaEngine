@@ -21,3 +21,13 @@ pixel_shader voxelizePSInstancing : voxelizePS
 {
 	defines INSTANCED
 }
+
+vertex_shader voxelizeVSTerrain : voxelizeVS
+{
+	defines TERRAIN
+}
+
+pixel_shader voxelizePSTerrain : voxelizePS
+{
+	defines TERRAIN
+}

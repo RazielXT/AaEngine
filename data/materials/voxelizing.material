@@ -17,3 +17,9 @@ material VoxelizeInstancing : Voxelize
 	vertex_shader voxelizeVSInstancing
 	pixel_shader voxelizePSInstancing
 }
+
+material VoxelizeTerrain : Voxelize
+{
+	vertex_shader voxelizeVSTerrain
+	pixel_shader voxelizePSTerrain
+}

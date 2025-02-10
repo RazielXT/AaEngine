@@ -55,7 +55,7 @@ void ShadowMaps::init(RenderSystem& renderSystem, GraphicsResources& resources)
 
 void ShadowMaps::update(UINT frameIndex, Camera& mainCamera)
 {
-	const float LightRange = 1000.f;
+	const float LightRange = 5000.f;
 
 	const XMVECTORF32 lightEye = { sun.direction.x * -LightRange, sun.direction.y * -LightRange, sun.direction.z * -LightRange, 0.f };
 	const XMVECTORF32 lightTarget = g_XMZero;
@@ -86,7 +86,7 @@ void ShadowMaps::update(UINT frameIndex, Camera& mainCamera)
 	{
 		maxShadow.camera.lookTo(lightEye, lightTarget);
 
-		float extends = 600;
+		float extends = 6000;
 
 		float fWorldUnitsPerTexel = extends * 2 / 512.f;
 		auto vWorldUnitsPerTexel = XMVectorSet(fWorldUnitsPerTexel, fWorldUnitsPerTexel, 0.0f, 0.0f);

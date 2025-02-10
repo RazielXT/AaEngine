@@ -3,6 +3,7 @@
 #include "SceneEntity.h"
 #include "Camera.h"
 #include "RenderObject.h"
+#include <functional>
 
 enum class EntityChange
 {
@@ -26,6 +27,7 @@ struct RenderQueue
 	{
 		const MaterialBase* base{};
 		AssignedMaterial* material{};
+		std::unique_ptr<MaterialPropertiesOverride> materialOverride{};
 		SceneEntity* entity{};
 
 		EntityEntry() = default;
@@ -34,7 +36,7 @@ struct RenderQueue
 		bool operator<(const EntityEntry& other) const
 		{
 			if (base != other.base) return base < other.base;
-			return material < other.material;
+			return material < other.material || (material == other.material && materialOverride < other.materialOverride);
 		}
 	};
 

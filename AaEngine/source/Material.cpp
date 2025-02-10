@@ -168,6 +168,7 @@ AssignedMaterial* MaterialBase::GetAssignedMaterial(MaterialInstance* instance, 
 	}
 
 	auto newMat = std::make_unique<AssignedMaterial>(*instance, pipeline);
+	newMat->origin = instance;
 	auto ptr = newMat.get();
 	mats.emplace_back(std::move(newMat));
 
@@ -312,6 +313,26 @@ const MaterialBase* MaterialInstance::GetBase() const
 	return &base;
 }
 
+const char* MaterialInstance::GetTechniqueOverride(MaterialTechnique technique) const
+{
+	const auto& m = ref.techniqueMaterial[int(technique)];
+
+	if (m)
+		return m->c_str();
+
+	if (auto m = base.GetTechniqueOverride(technique))
+		return m;
+
+	if (technique == MaterialTechnique::Depth || technique == MaterialTechnique::DepthShadowmap)
+		return HasInstancing() ? "DepthInstancing" : "Depth";
+	else if (technique == MaterialTechnique::Voxelize)
+		return HasInstancing() ? "VoxelizeInstancing" : "Voxelize";
+	else if (technique == MaterialTechnique::EntityId)
+		return HasInstancing() ? "EntityIdInstancing" : "EntityId";
+
+	return nullptr;
+}
+
 bool MaterialInstance::HasInstancing() const
 {
 	for (auto& r : resources->buffers)
@@ -347,12 +368,46 @@ void MaterialInstance::SetUAV(ID3D12Resource* uav, UINT slot)
 	u.uav = uav;
 }
 
-void MaterialInstance::SetParameter(const std::string& name, const void* value, size_t size)
+
+std::unique_ptr<MaterialPropertiesOverride> MaterialInstance::CreateParameterOverride(const MaterialPropertiesOverrideDescription& description) const
 {
-	SetParameter(name, resources->rootBuffer.defaultData.data(), value, size);
+	auto output = std::make_unique<MaterialPropertiesOverride>();
+
+	if (base.info.rootBuffer)
+	{
+		for (auto& d : description.params)
+		{
+			for (const auto& p : base.info.rootBuffer->info.Params)
+			{
+				if (p.Name == d.name)
+				{
+					auto& param = output->params.emplace_back();
+					param.offsetFloats = p.StartOffset / sizeof(float);
+					param.sizeBytes = d.sizeBytes;
+					memcpy(output->params.back().value, d.value, param.sizeBytes);
+					break;
+				}
+			}
+		}
+	}
+
+	return output->params.empty() ? nullptr : std::move(output);
 }
 
-void MaterialInstance::SetParameter(const std::string& name, float* output, const void* value, size_t size) const
+void MaterialInstance::ApplyParametersOverride(MaterialPropertiesOverride& data, MaterialDataStorage& output) const
+{
+	for (auto& p : data.params)
+	{
+		memcpy(output.rootParams.data() + p.offsetFloats, p.value, p.sizeBytes);
+	}
+}
+
+void MaterialInstance::SetParameter(const std::string& name, const void* value, size_t count)
+{
+	SetParameter(name, resources->rootBuffer.defaultData.data(), value, count);
+}
+
+void MaterialInstance::SetParameter(const std::string& name, float* output, const void* value, size_t count) const
 {
 	if (base.info.rootBuffer)
 	{
@@ -360,7 +415,7 @@ void MaterialInstance::SetParameter(const std::string& name, float* output, cons
 		{
 			if (p.Name == name)
 			{
-				memcpy(output + p.StartOffset / sizeof(float), value, size * sizeof(float));
+				memcpy(output + p.StartOffset / sizeof(float), value, count * sizeof(float));
 				break;
 			}
 		}
@@ -376,25 +431,25 @@ void MaterialInstance::SetParameter(FastParam id, const void* value)
 	}
 }
 
-void MaterialInstance::SetParameter(ResourcesInfo::AutoParam type, const void* value, size_t size)
+void MaterialInstance::SetParameter(ResourcesInfo::AutoParam type, const void* value, size_t count)
 {
-	for (auto p : resources->autoParams)
+	for (auto p : resources->objectAutoParams)
 	{
 		if (p.type == type)
 		{
-			memcpy(&resources->rootBuffer.defaultData[p.bufferOffset], value, size * sizeof(float));
+			memcpy(&resources->rootBuffer.defaultData[p.bufferOffset], value, count * sizeof(float));
 			return;
 		}
 	}
 }
 
-void MaterialInstance::SetParameter(ResourcesInfo::AutoParam type, const void* value, size_t size, MaterialDataStorage& data)
+void MaterialInstance::SetParameter(ResourcesInfo::AutoParam type, const void* value, size_t count, MaterialDataStorage& data)
 {
-	for (auto p : resources->autoParams)
+	for (auto p : resources->objectAutoParams)
 	{
 		if (p.type == type)
 		{
-			memcpy(&data.rootParams[p.bufferOffset], value, size * sizeof(float));
+			memcpy(&data.rootParams[p.bufferOffset], value, count * sizeof(float));
 			return;
 		}
 	}

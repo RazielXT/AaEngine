@@ -45,7 +45,7 @@ void RenderQueue::update(const EntityChangeDescritpion& changeInfo, GraphicsReso
 		auto entry = EntityEntry{ entity, matInstance->Assign(entity->geometry.layout ? *entity->geometry.layout : std::vector<D3D12_INPUT_ELEMENT_DESC>{}, targets, technique) };
 
 		auto it = std::lower_bound(entities.begin(), entities.end(), entry);
-		entities.insert(it, entry);
+		entities.insert(it, std::move(entry));
 	}
 	if (change == EntityChange::Delete)
 	{
@@ -86,25 +86,29 @@ std::vector<UINT> RenderQueue::createEntityFilter() const
 	return out;
 }
 
-static void RenderObject(ID3D12GraphicsCommandList* commandList, SceneEntity* e)
+static void RenderObject(ID3D12GraphicsCommandList* commandList, EntityGeometry& geometry)
 {
-	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY(geometry.topology));
 
-	if (e->geometry.type != EntityGeometry::Type::Manual)
+	if (geometry.type != EntityGeometry::Type::Manual)
 	{
-		commandList->IASetVertexBuffers(0, 1, &e->geometry.vertexBufferView);
-		commandList->IASetIndexBuffer(&e->geometry.indexBufferView);
+		commandList->IASetVertexBuffers(0, 1, &geometry.vertexBufferView);
 	}
 
-	if (e->geometry.indexCount)
-		commandList->DrawIndexedInstanced(e->geometry.indexCount, e->geometry.instanceCount, 0, 0, 0);
+	if (geometry.indexCount)
+	{
+		commandList->IASetIndexBuffer(&geometry.indexBufferView);
+		commandList->DrawIndexedInstanced(geometry.indexCount, geometry.instanceCount, 0, 0, 0);
+	}
 	else
-		commandList->DrawInstanced(e->geometry.vertexCount, e->geometry.instanceCount, 0, 0);
+		commandList->DrawInstanced(geometry.vertexCount, geometry.instanceCount, 0, 0);
 }
 
 void RenderQueue::renderObjects(ShaderConstantsProvider& constants, ID3D12GraphicsCommandList* commandList)
 {
-	EntityEntry lastEntry{};
+	const MaterialBase* lastMaterialBase{};
+	AssignedMaterial* lastMaterial{};
+
 	MaterialDataStorage storage;
 
 	for (auto& entry : entities)
@@ -114,28 +118,29 @@ void RenderQueue::renderObjects(ShaderConstantsProvider& constants, ID3D12Graphi
 
 		constants.entity = entry.entity;
 
-		if (entry.base != lastEntry.base)
+		if (entry.base != lastMaterialBase)
 			entry.base->BindSignature(commandList);
 
-		if (entry.material != lastEntry.material)
+		if (entry.material != lastMaterial)
 		{
-			if (technique == MaterialTechnique::Voxelize)
-			{
-				entry.material->SetUAV(constants.voxelBufferUAV, 0);
-			}
-
-			entry.material->LoadMaterialConstants(storage);
-			entry.material->UpdatePerFrame(storage, constants);
 			entry.material->BindPipeline(commandList);
-			entry.material->BindTextures(commandList);
+
+			if (!lastMaterial || entry.material->origin != lastMaterial->origin)
+			{
+				entry.material->LoadMaterialConstants(storage);
+				entry.material->UpdatePerFrame(storage, constants);
+				entry.material->BindTextures(commandList);
+			}
 		}
+
+		if (entry.materialOverride)
+			entry.material->ApplyParametersOverride(*entry.materialOverride, storage);
 
 		if (technique == MaterialTechnique::Voxelize)
 		{
-			entry.entity->material->GetParameter(FastParam::Emission, storage.rootParams.data() + entry.material->GetParameterOffset(FastParam::Emission));
-			entry.entity->material->GetParameter(FastParam::MaterialColor, storage.rootParams.data() + entry.material->GetParameterOffset(FastParam::MaterialColor));
-			entry.entity->material->GetParameter(FastParam::TexIdDiffuse, storage.rootParams.data() + entry.material->GetParameterOffset(FastParam::TexIdDiffuse));
-			memcpy(storage.rootParams.data() + entry.material->GetParameterOffset(FastParam::VoxelIdx), &constants.voxelIdx, sizeof(constants.voxelIdx));
+			entry.material->CopyParameter(FastParam::Emission, *entry.entity->material, storage, 0.0f);
+			entry.material->CopyParameter(FastParam::MaterialColor, *entry.entity->material, storage, 1.0f);
+			entry.material->CopyParameter(FastParam::TexIdDiffuse, *entry.entity->material, storage, 0.0f);
 		}
 		if (technique == MaterialTechnique::EntityId)
 		{
@@ -147,14 +152,14 @@ void RenderQueue::renderObjects(ShaderConstantsProvider& constants, ID3D12Graphi
 			else
 			{
 				UINT id = entry.entity->getGlobalId().value;
-				entry.material->SetParameter("EntityId", storage.rootParams.data(), &id, sizeof(id) / sizeof(float));
+				entry.material->SetParameter("EntityId", storage.rootParams.data(), &id, 1);
 			}
 		}
 
 		entry.material->UpdatePerObject(storage, constants);
 		entry.material->BindConstants(commandList, storage, constants);
 
-		RenderObject(commandList, entry.entity);
+		RenderObject(commandList, entry.entity->geometry);
 
 		if (technique == MaterialTechnique::Voxelize)
 		{
@@ -162,7 +167,10 @@ void RenderQueue::renderObjects(ShaderConstantsProvider& constants, ID3D12Graphi
 			commandList->ResourceBarrier(1, &uavBarrier);
 		}
 
-		lastEntry = entry;
+		lastMaterialBase = entry.base;
+		lastMaterial = entry.material;
+	}
+}
 	}
 }
 
@@ -171,4 +179,7 @@ RenderQueue::EntityEntry::EntityEntry(SceneEntity* e, AssignedMaterial* m)
 	entity = e;
 	material = m;
 	base = material->GetBase();
+
+	if (e->materialOverride)
+		materialOverride = material->CreateParameterOverride(*e->materialOverride);
 }

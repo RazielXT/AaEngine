@@ -82,6 +82,28 @@ private:
 	const MaterialRef& ref;
 };
 
+struct MaterialPropertiesOverrideDescription
+{
+	struct Input
+	{
+		std::string name;
+		UINT sizeBytes;
+		float value[4];
+	};
+	std::vector<Input> params;
+};
+
+struct MaterialPropertiesOverride
+{
+	struct Input
+	{
+		UINT offsetFloats;
+		UINT sizeBytes;
+		float value[4];
+	};
+	std::vector<Input> params;
+};
+
 class MaterialInstance
 {
 	friend MaterialBase;
@@ -101,12 +123,15 @@ public:
 
 	void SetUAV(ID3D12Resource* uav, UINT slot);
 
-	void SetParameter(const std::string& name, const void* value, size_t size);
-	void SetParameter(const std::string& name, float* buffer, const void* value, size_t size) const;
+	std::unique_ptr<MaterialPropertiesOverride> CreateParameterOverride(const MaterialPropertiesOverrideDescription& description) const;
+	void ApplyParametersOverride(MaterialPropertiesOverride& data, MaterialDataStorage& output) const;
+
+	void SetParameter(const std::string& name, const void* value, size_t count);
+	void SetParameter(const std::string& name, float* buffer, const void* value, size_t count) const;
 	void GetParameter(const std::string& name, float* output) const;
 
-	void SetParameter(ResourcesInfo::AutoParam, const void* value, size_t size);
-	void SetParameter(ResourcesInfo::AutoParam, const void* value, size_t size, MaterialDataStorage& data);
+	void SetParameter(ResourcesInfo::AutoParam, const void* value, size_t count);
+	void SetParameter(ResourcesInfo::AutoParam, const void* value, size_t count, MaterialDataStorage& data);
 
 	void SetParameter(FastParam param, const void* value);
 	void SetParameter(FastParam param, const void* value, MaterialDataStorage& data);
@@ -123,6 +148,8 @@ public:
 	AssignedMaterial* Assign(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target, MaterialTechnique technique =  MaterialTechnique::Default);
 
 	const MaterialBase* GetBase() const;
+
+	const char* GetTechniqueOverride(MaterialTechnique technique) const;
 
 	bool HasInstancing() const;
 	bool IsTransparent() const;
@@ -167,6 +194,8 @@ public:
 	}
 
 	void BindPipeline(ID3D12GraphicsCommandList* commandList);
+
+	MaterialInstance* origin{};
 
 private:
 

@@ -19,6 +19,7 @@ public:
 	const char* name;
 
 	MaterialInstance* material{};
+	MaterialPropertiesOverrideDescription* materialOverride{};
 
 	EntityGeometry geometry;
 };

@@ -435,8 +435,8 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData(GraphicsResour
 					type = ResourcesInfo::AutoParam::SUN_COLOR;
 				else if (p.Name == "CameraPosition")
 					type = ResourcesInfo::AutoParam::CAMERA_POSITION;
-				else if (p.Name == "WorldPosition")
-					type = ResourcesInfo::AutoParam::WORLD_POSITION;
+				else if (p.Name == "MainCameraPosition")
+					type = ResourcesInfo::AutoParam::MAIN_CAMERA_POSITION;
 				else if (p.Name == "ZMagic")
 					type = ResourcesInfo::AutoParam::Z_MAGIC;
 
@@ -485,13 +485,11 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData(GraphicsResour
 	{
 		auto& uav = resources->uavs[i];
 		uav.rootIndex = rootIndex++;
-//		uav.uav = graphicsResources.textures.getNamedUAV(uavs[i].info.Name);
 	}
 	for (size_t i = 0; i < rwStructuredBuffers.size(); i++)
 	{
 		auto& uav = resources->uavs[uavs.size() + i];
 		uav.rootIndex = rootIndex++;
-//		uav.uav = graphicsResources.textures.getNamedUAV(rwStructuredBuffers[i].info.Name);
 	}
 
 	return resources;

@@ -536,6 +536,8 @@ void MaterialInstance::UpdatePerFrame(MaterialDataStorage& data, const ShaderCon
 			*(DirectX::XMUINT2*)&data.rootParams[p.bufferOffset] = info.viewportSize;
 		else if (p.type == ResourcesInfo::AutoParam::CAMERA_POSITION)
 			*(DirectX::XMFLOAT3*)&data.rootParams[p.bufferOffset] = info.getCameraPosition();
+		else if (p.type == ResourcesInfo::AutoParam::MAIN_CAMERA_POSITION)
+			*(DirectX::XMFLOAT3*)&data.rootParams[p.bufferOffset] = info.getMainCameraPosition();
 		else if (p.type == ResourcesInfo::AutoParam::VP_MATRIX)
 			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&data.rootParams[p.bufferOffset], XMMatrixTranspose(info.getViewProjectionMatrix()));
 		else if (p.type == ResourcesInfo::AutoParam::VIEW_MATRIX)

@@ -37,4 +37,6 @@ private:
 	RenderQueue* depthQueue{};
 
 	ShadowMaps& shadowMaps;
+
+	RenderContext ctx;
 };

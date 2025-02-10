@@ -2,14 +2,19 @@
 #include "RenderQueue.h"
 #include "RenderObject.h"
 
-ShaderConstantsProvider::ShaderConstantsProvider(const FrameParameters& p, const RenderObjectsVisibilityData& i, const Camera& c, const RenderTargetTexture& target) : info(i), camera(c), params(p)
+ShaderConstantsProvider::ShaderConstantsProvider(const FrameParameters& p, const RenderObjectsVisibilityData& i, const Camera& c, const Camera& mc, const RenderTargetTexture& target) : info(i), camera(c), mainCamera(mc), params(p)
 {
 	inverseViewportSize = { 1.f / target.width, 1.f / target.height };
 	viewportSize = { target.width, target.height };
 }
 
 ShaderConstantsProvider::ShaderConstantsProvider(const FrameParameters& params, const RenderObjectsVisibilityData& info, const Camera& camera, const RenderTargetTextures& targets) :
-	ShaderConstantsProvider(params, info, camera, targets.textures.front())
+	ShaderConstantsProvider(params, info, camera, camera, targets.textures.front())
+{
+}
+
+ShaderConstantsProvider::ShaderConstantsProvider(const FrameParameters& params, const RenderObjectsVisibilityData& info, const Camera& camera, const RenderTargetTexture& target) :
+	ShaderConstantsProvider(params, info, camera, camera, target)
 {
 }
 
@@ -61,6 +66,11 @@ XMFLOAT3 ShaderConstantsProvider::getWorldPosition() const
 XMFLOAT3 ShaderConstantsProvider::getCameraPosition() const
 {
 	return camera.getPosition();
+}
+
+DirectX::XMFLOAT3 ShaderConstantsProvider::getMainCameraPosition() const
+{
+	return mainCamera.getPosition();
 }
 
 D3D12_GPU_VIRTUAL_ADDRESS ShaderConstantsProvider::getGeometryBuffer() const

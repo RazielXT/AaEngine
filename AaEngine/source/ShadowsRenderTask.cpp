@@ -73,7 +73,7 @@ AsyncTasksInfo ShadowsRenderTask::initialize(CompositorPass&)
 
 					cascade.texture.PrepareAsDepthTarget(shadow.commands.commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
-					ShaderConstantsProvider constants(provider.params, sceneInfo, cascade.camera, cascade.texture);
+					ShaderConstantsProvider constants(provider.params, sceneInfo, cascade.camera, *ctx.camera, cascade.texture);
 					depthQueue->renderObjects(constants, shadow.commands.commandList);
 
 					cascade.texture.PrepareAsView(shadow.commands.commandList, D3D12_RESOURCE_STATE_DEPTH_WRITE);
@@ -114,7 +114,7 @@ AsyncTasksInfo ShadowsRenderTask::initialize(CompositorPass&)
 
 					cascade.texture.PrepareAsDepthTarget(shadow.commands.commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
-					ShaderConstantsProvider constants(provider.params, sceneInfo, cascade.camera, cascade.texture);
+					ShaderConstantsProvider constants(provider.params, sceneInfo, cascade.camera, *ctx.camera, cascade.texture);
 					depthQueue->renderObjects(constants, shadow.commands.commandList);
 
 					cascade.texture.PrepareAsView(shadow.commands.commandList, D3D12_RESOURCE_STATE_DEPTH_WRITE);
@@ -132,6 +132,8 @@ AsyncTasksInfo ShadowsRenderTask::initialize(CompositorPass&)
 
 void ShadowsRenderTask::run(RenderContext& renderCtx, CommandsData&, CompositorPass&)
 {
+	ctx = renderCtx;
+
 	for (auto& shadow : cascades)
 	{
 		SetEvent(shadow.eventBegin);

@@ -34,9 +34,9 @@ Texture2D<float4> GetTexture(uint index)
 {
     return ResourceDescriptorHeap[index];
 }
-SamplerState g_sampler : register(s0);
+SamplerState LinearSampler : register(s0);
 
 float4 PSTexturePreview(VS_OUTPUT input) : SV_TARGET
 {
-    return GetTexture(TextureIndex).Sample(g_sampler, input.uv);
+    return GetTexture(TextureIndex).Sample(LinearSampler, input.uv);
 }

@@ -51,10 +51,12 @@ float4 PSWaterPostY(VS_OUTPUT input) : SV_TARGET
 	return getFilteredWater(input.Position.xy, int2(1,0));
 }
 
+SamplerState LinearWrapSampler : register(s0);
+
 float4 PSWaterApply(VS_OUTPUT input) : SV_TARGET
 {
 	float4 color = colorMap.Load(int3(input.Position.xy,0));
-	float4 transparent = transparentMap.Load(int3(input.Position.xy,0));
+	float4 transparent = transparentMap.SampleLevel(LinearWrapSampler, input.TexCoord, 0);
 
     return lerp(color, transparent, transparent.a);
 }

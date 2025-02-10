@@ -259,28 +259,19 @@ ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device& device, co
 	for (size_t i = 0; i < samplers.size(); i++)
 	{
 		auto& sampler = samplersDesc[i];
-		sampler.Filter = D3D12_FILTER_ANISOTROPIC;
+		sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
 		sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 		sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 		sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 		sampler.MipLODBias = 0.0f;
 		sampler.MaxAnisotropy = 8;
 		sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-		sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
 		sampler.MinLOD = 0.0f;
 		sampler.MaxLOD = D3D12_FLOAT32_MAX;
 		sampler.ShaderRegister = samplers[i].info.Slot;
 		sampler.RegisterSpace = 0;
 		sampler.ShaderVisibility = samplers[i].visibility;
 
-		if (i < staticSamplers.size())
-		{
-			auto& refSampler = staticSamplers[i];
-			sampler.Filter = refSampler.filter;
-			sampler.AddressU = sampler.AddressV = sampler.AddressW = refSampler.bordering;
-			sampler.MaxAnisotropy = refSampler.maxAnisotropy;
-			sampler.BorderColor = refSampler.borderColor;
-		}
 		if (samplers[i].info.Name == "DepthSampler" || samplers[i].info.Name == "PointSampler")
 		{
 			sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
@@ -334,7 +325,15 @@ ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device& device, co
 			sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
 			sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
 			sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-			sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
+			sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+		}
+		else if (i < staticSamplers.size())
+		{
+			auto& refSampler = staticSamplers[i];
+			sampler.Filter = refSampler.filter;
+			sampler.AddressU = sampler.AddressV = sampler.AddressW = refSampler.bordering;
+			sampler.MaxAnisotropy = refSampler.maxAnisotropy;
+			sampler.BorderColor = refSampler.borderColor;
 		}
 	}
 

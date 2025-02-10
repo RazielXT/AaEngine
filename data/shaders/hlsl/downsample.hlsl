@@ -3,7 +3,7 @@ float DeltaTime;
 
 Texture2D colorMap : register(t0);
 Texture2D brightnessMap : register(t1);
-SamplerState colorSampler : register(s0);
+SamplerState LinearSampler : register(s0);
 SamplerState DepthSampler : register(s0);
 
 struct VS_OUTPUT
@@ -35,7 +35,7 @@ float4 PSDownsample3x3(VS_OUTPUT input) : SV_TARGET
 
 	for( int i = 0; i < 9; i++ )
     {
-        accum += colorMap.Sample(colorSampler, input.TexCoord + ViewportSizeInverse * texOffset[i]);
+        accum += colorMap.Sample(LinearSampler, input.TexCoord + ViewportSizeInverse * texOffset[i]);
     }
     
 	// take average of 9 samples
@@ -74,7 +74,7 @@ float4 PSDownsample3x3Exposure(VS_OUTPUT input) : SV_TARGET
 
 	for( int i = 0; i < 9; i++ )
     {
-        accum += colorMap.Sample(colorSampler, input.TexCoord + ViewportSizeInverse * texOffset[i]);
+        accum += colorMap.Sample(LinearSampler, input.TexCoord + ViewportSizeInverse * texOffset[i]);
     }
     
 	// take average of 9 samples
@@ -140,7 +140,7 @@ float4 PSBloomBlurX(VS_OUTPUT input) : SV_TARGET
     float4 output = 0;
 	for (int i = 0; i < 11; i++)
 	{
-		output += colorMap.Sample(colorSampler, input.TexCoord + offsetSize * float2(bloomOffset[i],0)) * bloomSampleWeight[i];
+		output += colorMap.Sample(LinearSampler, input.TexCoord + offsetSize * float2(bloomOffset[i],0)) * bloomSampleWeight[i];
 	}
 
 	return output;
@@ -155,7 +155,7 @@ float4 PSBloomBlurY(VS_OUTPUT input) : SV_TARGET
     float4 output = 0;
 	for (int i = 0; i < 11; i++)
 	{
-		output += colorMap.Sample(colorSampler, input.TexCoord + offsetSize * float2(0,bloomOffset[i])) * bloomSampleWeight[i];
+		output += colorMap.Sample(LinearSampler, input.TexCoord + offsetSize * float2(0,bloomOffset[i])) * bloomSampleWeight[i];
 	}
 
 	return output;

@@ -42,7 +42,7 @@ void ComputeShader::init(ID3D12Device& device, const std::string& n, const Loade
 	if (volatileTextures)
 		info.setTexturesVolatile();
 
-	signature = info.createRootSignature(device, as_wstring(name).c_str(), { {.bordering = D3D12_TEXTURE_ADDRESS_MODE_BORDER} });
+	signature = info.createRootSignature(device, as_wstring(name).c_str());
 
 	D3D12_COMPUTE_PIPELINE_STATE_DESC computePsoDesc = {};
 	computePsoDesc.pRootSignature = signature;

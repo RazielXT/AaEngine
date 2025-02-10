@@ -978,7 +978,7 @@ FxaaFloat4 FxaaPixelShader(
 float2 ViewportSizeInverse;
 
 Texture2D colorMap : register(t0);
-SamplerState colorSampler : register(s0);
+SamplerState LinearSampler : register(s0);
 
 struct VS_OUTPUT
 {
@@ -992,7 +992,7 @@ float4 PS_FXAA(
 {
 	FxaaTex texInfo;
 	texInfo.tex = colorMap;
-	texInfo.smpl = colorSampler;
+	texInfo.smpl = LinearSampler;
 
 	return float4(FxaaPixelShader(input.TexCoord,texInfo,ViewportSizeInverse,0.95,0.125,0.0425).rgb, 1);
 }

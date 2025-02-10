@@ -20,47 +20,47 @@ VS_OUTPUT VSQuad(uint vI : SV_VertexId)
 static const float BlurSize = 0.005;
 
 Texture2D colorMap : register(t0);
-SamplerState colorSampler : register(s0);
+SamplerState LinearSampler : register(s0);
 
 float4 PSPassThrough(VS_OUTPUT input) : SV_TARGET
 {
-    return colorMap.Sample(colorSampler, input.TexCoord);
+    return colorMap.Sample(LinearSampler, input.TexCoord);
 }
 
 float4 PSPassThroughIllumination(VS_OUTPUT input) : SV_TARGET
 {
-	float4 sample = colorMap.Sample(colorSampler, input.TexCoord);
+	float4 sample = colorMap.Sample(LinearSampler, input.TexCoord);
     return sample * sample.a * 2;
 }
 
 float4 PSPassThroughAvg(VS_OUTPUT input) : SV_TARGET
 {
-	float4 color = colorMap.Sample(colorSampler, input.TexCoord);
+	float4 color = colorMap.Sample(LinearSampler, input.TexCoord);
 	float avg = length(color.rgb)/1.5; //color.r + color.g + color.b / 3;
     return float4(avg.rrr, color.a);
 }
 
 float4 PSPutBlurThrough(VS_OUTPUT input) : SV_TARGET
 {
-	float4 color = colorMap.Sample(colorSampler, input.TexCoord);
+	float4 color = colorMap.Sample(LinearSampler, input.TexCoord);
 	float offset = BlurSize;
-	color += colorMap.Sample(colorSampler, input.TexCoord + float2(offset, offset));
-	color += colorMap.Sample(colorSampler, input.TexCoord + float2(-offset,offset));
-	color += colorMap.Sample(colorSampler, input.TexCoord + float2(offset,-offset));
-	color += colorMap.Sample(colorSampler, input.TexCoord + float2(-offset,-offset));
+	color += colorMap.Sample(LinearSampler, input.TexCoord + float2(offset, offset));
+	color += colorMap.Sample(LinearSampler, input.TexCoord + float2(-offset,offset));
+	color += colorMap.Sample(LinearSampler, input.TexCoord + float2(offset,-offset));
+	color += colorMap.Sample(LinearSampler, input.TexCoord + float2(-offset,-offset));
 
     return color / 5;
 }
 
 float4 PSBlurX(VS_OUTPUT input) : SV_TARGET
 {
-	float4 color = colorMap.Sample(colorSampler, input.TexCoord);
+	float4 color = colorMap.Sample(LinearSampler, input.TexCoord);
 	float offset = BlurSize;
 	float samples = 4;
 	for (float i = 1; i < samples; i++)
 	{
-		color += colorMap.Sample(colorSampler, input.TexCoord + float2(offset * i,0));
-		color += colorMap.Sample(colorSampler, input.TexCoord + float2(-offset * i,0));
+		color += colorMap.Sample(LinearSampler, input.TexCoord + float2(offset * i,0));
+		color += colorMap.Sample(LinearSampler, input.TexCoord + float2(-offset * i,0));
 	}
 
     return color / (1 + samples * 2);
@@ -68,13 +68,13 @@ float4 PSBlurX(VS_OUTPUT input) : SV_TARGET
 
 float4 PSBlurY(VS_OUTPUT input) : SV_TARGET
 {
-	float4 color = colorMap.Sample(colorSampler, input.TexCoord);
+	float4 color = colorMap.Sample(LinearSampler, input.TexCoord);
 	float offset = BlurSize;
 	float samples = 4;
 	for (float i = 1; i < samples; i++)
 	{
-		color += colorMap.Sample(colorSampler, input.TexCoord + float2(0, offset * i));
-		color += colorMap.Sample(colorSampler, input.TexCoord + float2(0, -offset * i));
+		color += colorMap.Sample(LinearSampler, input.TexCoord + float2(0, offset * i));
+		color += colorMap.Sample(LinearSampler, input.TexCoord + float2(0, -offset * i));
 	}
 
     return color / (1 + samples * 2);
@@ -86,10 +86,11 @@ Texture2D exposureMap : register(t3);
 
 float4 PSAddThrough(VS_OUTPUT input) : SV_TARGET
 {
-	float4 original = colorMap.Sample(colorSampler, input.TexCoord);
+	float4 original = colorMap.Sample(LinearSampler, input.TexCoord);
 	float exposure = 1 - exposureMap.Load(int3(0, 0, 0)).r;
 
-	float3 bloom = colorMap2.Sample(colorSampler, input.TexCoord).rgb;
+
+	float3 bloom = colorMap2.Sample(LinearSampler, input.TexCoord).rgb;
 	bloom *= bloom;
 	bloom *= exposure * exposure;
 
@@ -101,23 +102,23 @@ float4 PSAddThrough(VS_OUTPUT input) : SV_TARGET
 #endif
 
 	original.rgb += bloom;
-	original.rgb += godrayMap.Sample(colorSampler, input.TexCoord).rgb * exposure;
+	original.rgb += godrayMap.Sample(LinearSampler, input.TexCoord).rgb * exposure;
 
     return original;
 }
 
 float4 PSDarken(VS_OUTPUT input) : SV_TARGET
 {
-	float4 color = colorMap.Sample(colorSampler, input.TexCoord);
-	color.rgb *= lerp(colorMap2.Sample(colorSampler, input.TexCoord).r, 1, color.a);
+	float4 color = colorMap.Sample(LinearSampler, input.TexCoord);
+	color.rgb *= lerp(colorMap2.Sample(LinearSampler, input.TexCoord).r, 1, saturate(color.a));
 
     return color;
 }
 
 float4 PSSkyPassThrough(VS_OUTPUT input) : SV_TARGET
 {
-	if (colorMap2.Sample(colorSampler, input.TexCoord).a < 1)
-		return colorMap.Sample(colorSampler, input.TexCoord);
+	if (colorMap2.Sample(LinearSampler, input.TexCoord).a < 1)
+		return colorMap.Sample(LinearSampler, input.TexCoord);
 
     return float4(0, 0, 0, 0);
 }

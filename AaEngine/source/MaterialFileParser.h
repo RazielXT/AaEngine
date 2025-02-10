@@ -69,6 +69,13 @@ struct MaterialRef
 	MaterialResourcesInfo resources;
 
 	std::array<std::optional<std::string>, int(MaterialTechnique::COUNT)> techniqueMaterial;
+
+	struct TechniqueOverride
+	{
+		MaterialTechnique technique;
+		std::string overrideMaterial;
+	};
+	std::vector<TechniqueOverride> techniqueOverrides;
 };
 
 struct shaderRefMaps;

@@ -34,6 +34,26 @@ void ShaderLibrary::addShaderReferences(const shaderRefMaps& maps)
 			else
 				FileLogger::logWarning("Duplicate shader ref " + name);
 		}
+
+		auto& customizations = maps.shaderCustomizations[type];
+
+		for (const auto& [name, info] : customizations)
+		{
+			auto& original = loadedShaders[type][info.sourceName];
+			if (original)
+			{
+				auto& customizedShader = loadedShaders[type][name];
+				customizedShader = std::make_unique<LoadedShader>();
+				customizedShader->ref = original->ref;
+
+				for (auto& d : info.customization.defines)
+				{
+					customizedShader->ref.defines.push_back(d);
+				}
+			}
+			else
+				FileLogger::logWarning("Invalid customization shader ref " + info.sourceName);
+		}
 	}
 }
 

@@ -23,24 +23,29 @@ void ShaderFileParser::ParseShaderParams(ShaderRef& shader, const Config::Object
 		}
 		else if (param.type == "defines")
 		{
-			auto addDefine = [&](const std::string& token)
-				{
-					size_t pos = token.find('=');
-					if (pos != std::string::npos) {
-						std::string key = token.substr(0, pos);
-						std::string value = token.substr(pos + 1);
-						shader.defines.emplace_back(key, value);
-					}
-					else {
-						shader.defines.emplace_back(token, "1");
-					}
-				};
-
-			addDefine(param.value);
-			for (auto& p : param.params)
-				addDefine(p);
+			ParseShaderDefines(shader, param);
 		}
 	}
+}
+
+void ShaderFileParser::ParseShaderDefines(ShaderRef& shader, const Config::Object& param)
+{
+	auto addDefine = [&](const std::string& token)
+		{
+			size_t pos = token.find('=');
+			if (pos != std::string::npos) {
+				std::string key = token.substr(0, pos);
+				std::string value = token.substr(pos + 1);
+				shader.defines.emplace_back(key, value);
+			}
+			else {
+				shader.defines.emplace_back(token, "1");
+			}
+		};
+
+	addDefine(param.value);
+	for (auto& p : param.params)
+		addDefine(p);
 }
 
 static void ParseShaderParams(ShaderRef& shader, ShaderType type, const Config::Object& obj, const ParsedObjects& previous)

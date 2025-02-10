@@ -62,7 +62,7 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 				{
 					if (member.value.empty() && !member.children.empty())
 					{
-						auto generatedName = *refNamePtr = mat.name + "_" + member.type;
+						auto generatedName = *refNamePtr = member.type + "_" + mat.name;
 						auto shaderType = ShaderFileParser::ParseShaderType(member.type);
 
 						auto& ref = shaders.shaderRefs[shaderType][generatedName];
@@ -71,7 +71,29 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 				}
 			}	
 		}
-		
+		else if (member.type == "shader_defines")
+		{
+			auto addCustomizationDefines = [&](std::string& sourceShader, ShaderType type)
+				{
+					if (!sourceShader.empty())
+					{
+						auto customizedName = sourceShader + "_" + mat.name;
+
+						auto& customization = shaders.shaderCustomizations[type][customizedName];
+
+						if (customization.sourceName.empty())
+						{
+							ShaderFileParser::ParseShaderDefines(customization.customization, member);
+							customization.sourceName = sourceShader;
+						}
+
+						sourceShader = customizedName;
+					}
+				};
+
+			addCustomizationDefines(mat.pipeline.vs_ref, ShaderTypeVertex);
+			addCustomizationDefines(mat.pipeline.ps_ref, ShaderTypePixel);
+		}
 		else if (member.type == "depth")
 		{
 			mat.pipeline.depth.check = mat.pipeline.depth.write = parseToggleValue(member.value);
@@ -212,21 +234,54 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 			else if (member.value == "EntityId")
 				technique = MaterialTechnique::EntityId;
 
-			for (auto& p : member.params)
+			if (!member.params.empty())
 			{
-				std::string value = (p == "skip") ? "" : p;
+				std::string value = (member.params.front() == "skip") ? "" : member.params.front();
 
-				mat.techniqueMaterial[int(technique)] = value;
+				if (member.params.back() == "override")
+				{
+					mat.techniqueOverrides.push_back({ technique, value });
 
-				if (technique == MaterialTechnique::Depth)
-					mat.techniqueMaterial[int(MaterialTechnique::DepthShadowmap)] = value;
+					if (technique == MaterialTechnique::Depth)
+						mat.techniqueOverrides.push_back({ MaterialTechnique::DepthShadowmap, value });
+				}
+				else
+				{
+					mat.techniqueMaterial[int(technique)] = value;
+
+					if (technique == MaterialTechnique::Depth)
+						mat.techniqueMaterial[int(MaterialTechnique::DepthShadowmap)] = value;
+				}
 			}
 		}
 	}
 }
 
+void PostProcessMaterial(MaterialRef& ref, shaderRefMaps& shaders, const ParsedObjects& parsed, std::vector<MaterialRef>& mats)
+{
+	for (auto& to : ref.techniqueOverrides)
+	{
+		if (ref.techniqueMaterial[int(to.technique)])
+			continue;
+
+		MaterialRef techniqueRef = ref;
+		auto& overrideObj = *parsed.find(to.overrideMaterial)->second;
+
+		ParseMaterialObject(techniqueRef, shaders, overrideObj, parsed);
+
+		std::string name = ref.name + "_" + overrideObj.value;
+		ref.techniqueMaterial[int(to.technique)] = name;
+		techniqueRef.name = name;
+		techniqueRef.abstract = false;
+		techniqueRef.base = name;
+
+		mats.push_back(techniqueRef);
+	}
+}
+
 void parseMaterialFile(std::vector<MaterialRef>& mats, shaderRefMaps& shaders, std::string file)
 {
+	auto matsStartCount = mats.size();
 	auto objects = Config::Parse(file);
 
 	ParsedObjects parsed;
@@ -241,6 +296,12 @@ void parseMaterialFile(std::vector<MaterialRef>& mats, shaderRefMaps& shaders, s
 			mats.push_back(mat);
 			parsed[obj.value] = &obj;
 		}
+	}
+
+	size_t baseMatsSize = mats.size();
+	for (size_t i = matsStartCount; i < baseMatsSize; i++)
+	{
+		PostProcessMaterial(mats[i], shaders, parsed, mats);
 	}
 }
 

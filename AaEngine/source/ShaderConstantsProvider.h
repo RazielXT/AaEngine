@@ -45,7 +45,4 @@ public:
 	const Camera& mainCamera;
 
 	const FrameParameters& params;
-
-	UINT voxelIdx{};
-	ID3D12Resource* voxelBufferUAV{};
 };

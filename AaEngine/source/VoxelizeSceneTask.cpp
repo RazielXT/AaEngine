@@ -250,8 +250,12 @@ void VoxelizeSceneTask::voxelizeChunk(CommandsData& commands, CommandsMarker& ma
 	camera.setOrthographicCamera(orthoHalfSize * 2, orthoHalfSize * 2, NearClipDistance, NearClipDistance + orthoHalfSize * 2);
 
 	ShaderConstantsProvider constants(provider.params, sceneInfo, camera, *viewportOutput.texture);
-	constants.voxelIdx = chunk.idx;
-	constants.voxelBufferUAV = chunk.dataBuffer.Get();
+
+	sceneQueue->iterateMaterials([&cascade](AssignedMaterial* material)
+		{
+			material->SetUAV(cascade.dataBuffer.Get(), 0);
+			material->SetParameter(FastParam::VoxelIdx, &cascade.idx);
+		});
 
 	//from all 3 axes
 	//Z

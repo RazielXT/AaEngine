@@ -159,6 +159,18 @@ void RenderQueue::renderObjects(ShaderConstantsProvider& constants, ID3D12Graphi
 		lastMaterial = entry.material;
 	}
 }
+
+void RenderQueue::iterateMaterials(std::function<void(AssignedMaterial*)> func)
+{
+	AssignedMaterial* m{};
+
+	for (auto& entry : entities)
+	{
+		if (entry.material != m)
+		{
+			m = entry.material;
+			func(m);
+		}
 	}
 }
 

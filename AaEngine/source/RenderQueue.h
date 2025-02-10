@@ -50,4 +50,6 @@ struct RenderQueue
 
 	std::vector<UINT> createEntityFilter() const;
 	void renderObjects(ShaderConstantsProvider& info, ID3D12GraphicsCommandList* commandList);
+
+	void iterateMaterials(std::function<void(AssignedMaterial*)>);
 };

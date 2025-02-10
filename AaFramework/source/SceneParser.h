@@ -7,6 +7,7 @@ namespace SceneParser
 {
 	struct Ctx
 	{
+		ResourceUploadBatch& batch;
 		SceneManager& sceneMgr;
 		RenderSystem& renderSystem;
 		GraphicsResources& resources;

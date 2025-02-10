@@ -120,9 +120,21 @@ void ApplicationCore::loadScene(const char* scene)
 	physicsMgr.init();
 	resources.models.clear();
 
-	auto result = SceneParser::load(scene, { sceneMgr, renderSystem, resources, physicsMgr });
+	SceneParser::Result result;
+	{
+		GlobalQueueMarker marker(renderSystem.core.commandQueue, "SceneParser");
 
-	auto commands = renderSystem.core.CreateCommandList(L"loadSceneCmd");
+		ResourceUploadBatch batch(renderSystem.core.device);
+		batch.Begin();
+
+		result = SceneParser::load(scene, { batch, sceneMgr, renderSystem, resources, physicsMgr });
+
+
+		auto uploadResourcesFinished = batch.End(renderSystem.core.commandQueue);
+		uploadResourcesFinished.wait();
+	}
+
+	auto commands = renderSystem.core.CreateCommandList(L"loadScene");
 	{
 		auto marker = renderSystem.core.StartCommandList(commands);
 
@@ -140,11 +152,13 @@ void ApplicationCore::loadScene(const char* scene)
 		{
 			sceneMgr.grass.scheduleGrassCreation(g, commands.commandList, params, resources, sceneMgr);
 		}
+
+		marker.move("loadSceneVoxels");
+		VoxelizeSceneTask::Get().clear(commands.commandList);
+
+		marker.move("loadSceneTerrain");
+		sceneMgr.terrain.createTerrain(commands.commandList, sceneMgr, resources);
 	}
-
-	VoxelizeSceneTask::Get().clear(commands.commandList);
-
-	sceneMgr.terrain.createTerrain(commands.commandList, sceneMgr, {});
 
 	renderSystem.core.ExecuteCommandList(commands);
 	renderSystem.core.WaitForCurrentFrame();

@@ -14,7 +14,7 @@ using namespace pugi;
 
 static SceneParser::Ctx* ctx{};
 static SceneParser::Result* parseResult{};
-static ModelLoadContext* loadCtx{};
+static std::string loadFolder;
 
 struct SceneNode
 {
@@ -254,8 +254,8 @@ void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible)
 	for (const auto& element : entityElement.child("subentities").children())
 	{
 		auto materialName = GetStringAttribute(element, "materialName");
-		auto material = ctx->resources.materials.getMaterial(materialName, loadCtx->batch);
-		auto model = ctx->resources.models.getModel(mesh, *loadCtx);
+		auto material = ctx->resources.materials.getMaterial(materialName, ctx->batch);
+		auto model = ctx->resources.models.getModel(mesh, ctx->batch, { loadFolder });
 
 		if (material->HasInstancing())
 		{
@@ -270,9 +270,8 @@ void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible)
 		if (material->IsTransparent() && renderQueue < Order::Transparent)
 			renderQueue = Order::Transparent;
 
-		ent = ctx->sceneMgr.createEntity(name, node->transformation, model->bbox, renderQueue);
+		ent = ctx->sceneMgr.createEntity(name, node->transformation, *model, renderQueue);
 		ent->material = material;
-		ent->geometry.fromModel(*model);
 		//ent->setVisible(visible);
 
 		break;
@@ -324,29 +323,20 @@ SceneParser::Result SceneParser::load(std::string name, Ctx parseCtx)
 	parseResult = &result;
 	ctx = &parseCtx;
 
-	auto folder = SCENE_DIRECTORY + name + "/";
-	auto filename = findFileWithExtension(folder, ".scene");
+	loadFolder = SCENE_DIRECTORY + name + "/";
+	auto filename = findFileWithExtension(loadFolder, ".scene");
 
 	if (filename.empty())
 		return result;
 
 	if (xml_document doc; doc.load_file(filename.c_str()))
 	{
-		ModelLoadContext loaderCtx(parseCtx.renderSystem);
-		loaderCtx.folder = folder;
-		loaderCtx.batch.Begin();
-
-		loadCtx = &loaderCtx;
-
 		const auto& scene = doc.child("scene");
 
 		for (const auto& node : scene.child("nodes").children())
 		{
 			loadNode(node);
 		}
-
-		auto uploadResourcesFinished = loaderCtx.batch.End(parseCtx.renderSystem.core.commandQueue);
-		uploadResourcesFinished.wait();
 	}
 
 	parseCtx.sceneMgr.skybox.setMaterial("Skybox", parseCtx.sceneMgr.getQueueTargetFormats());

@@ -28,7 +28,7 @@ ModelResources::~ModelResources()
 	instance = nullptr;
 }
 
-VertexBufferModel* ModelResources::getModel(const std::string& filename, ModelLoadContext& ctx)
+VertexBufferModel* ModelResources::getModel(const std::string& filename, ResourceUploadBatch& batch, const ModelLoadContext& ctx)
 {
 	ModelLibraryGroup* group = nullptr;
 
@@ -52,7 +52,7 @@ VertexBufferModel* ModelResources::getModel(const std::string& filename, ModelLo
 		group = &groups.emplace_back(ModelLibraryGroup{ ctx.group });
 	}
 
-	VertexBufferModel* m = loadModel(filename, ctx);
+	VertexBufferModel* m = loadModel(filename, batch, ctx);
 	if (m)
 		group->models[filename] = m;
 
@@ -74,7 +74,7 @@ VertexBufferModel* ModelResources::getLoadedModel(const std::string& filename, R
 	return nullptr;
 }
 
-UINT ModelResources::preloadFolder(ModelLoadContext& ctx)
+UINT ModelResources::preloadFolder(ResourceUploadBatch& batch, const ModelLoadContext& ctx)
 {
 	UINT c{};
 	std::error_code ec;
@@ -83,7 +83,7 @@ UINT ModelResources::preloadFolder(ModelLoadContext& ctx)
 	{
 		if (entry.is_regular_file())
 		{
-			getModel(entry.path().filename().generic_string(), ctx);
+			getModel(entry.path().filename().generic_string(), batch, ctx);
 			c++;
 		}
 	}
@@ -106,7 +106,7 @@ void ModelResources::clear(ResourceGroup group)
 	}
 }
 
-VertexBufferModel* ModelResources::loadModel(const std::string& filename, ModelLoadContext& ctx)
+VertexBufferModel* ModelResources::loadModel(const std::string& filename, ResourceUploadBatch& batch, const ModelLoadContext& ctx)
 {
 	VertexBufferModel* model{};
 
@@ -117,7 +117,7 @@ VertexBufferModel* ModelResources::loadModel(const std::string& filename, ModelL
 	if (filename.ends_with("mesh"))
 	{
 		ModelParseOptions o;
-		o.batch = &ctx.batch;
+		o.batch = &batch;
 		o.device = &device;
 
 		struct stat attrib;
@@ -141,8 +141,4 @@ VertexBufferModel* ModelResources::loadModel(const std::string& filename, ModelL
 		FileLogger::logError("Model " + filename + " failed to load");
 
 	return model;
-}
-
-ModelLoadContext::ModelLoadContext(RenderSystem& rs) : batch(rs.core.device)
-{
 }

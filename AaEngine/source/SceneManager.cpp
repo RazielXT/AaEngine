@@ -36,11 +36,12 @@ SceneEntity* SceneManager::createEntity(const std::string& name, Order order)
 	return ent;
 }
 
-SceneEntity* SceneManager::createEntity(const std::string& name, const ObjectTransformation& transformation, BoundingBox bbox, Order order)
+SceneEntity* SceneManager::createEntity(const std::string& name, const ObjectTransformation& transformation, VertexBufferModel& model, Order order)
 {
 	auto entity = createEntity(name, order);
-	entity->setBoundingBox(bbox);
+	entity->setBoundingBox(model.bbox);
 	entity->setTransformation(transformation, true);
+	entity->geometry.fromModel(model);
 
 	return entity;
 }

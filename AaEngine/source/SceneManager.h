@@ -39,7 +39,7 @@ public:
 	void clear();
 
 	SceneEntity* createEntity(const std::string& name, Order order = Order::Normal);
-	SceneEntity* createEntity(const std::string& name, const ObjectTransformation&, BoundingBox, Order order = Order::Normal);
+	SceneEntity* createEntity(const std::string& name, const ObjectTransformation&, VertexBufferModel&, Order order = Order::Normal);
 	void removeEntity(SceneEntity* entity);
 
 	SceneEntity* getEntity(const std::string& name) const;

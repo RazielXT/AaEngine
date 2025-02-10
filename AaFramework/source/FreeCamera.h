@@ -32,7 +32,7 @@ private:
 	float wheelDiff{};
 
 	float mouseX{}, mouseY{};
-	bool w{}, s{}, a{}, d{}, turbo{}, move{};
+	bool w{}, s{}, a{}, d{}, turbo{}, slow{}, move{};
 	bool strafe{};
 
 	TargetViewport* target{};

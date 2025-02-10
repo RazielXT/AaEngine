@@ -31,9 +31,11 @@ void FreeCamera::update(float time)
 	{
 		dir.Normalize();
 
-		float speed = 30 * time;
+		float speed = 40 * time;
 		if (turbo)
-			speed *= 5;
+			speed *= 10;
+		else if (slow)
+			speed /= 5;
 
 		dir *= speed;
 
@@ -72,6 +74,9 @@ bool FreeCamera::keyPressed(int key)
 	case VK_SHIFT:
 		turbo = true;
 		break;
+	case VK_CONTROL:
+		slow = true;
+		break;
 	}
 
 	return true;
@@ -98,6 +103,9 @@ bool FreeCamera::keyReleased(int key)
 		break;
 	case VK_SHIFT:
 		turbo = false;
+		break;
+	case VK_CONTROL:
+		slow = false;
 		break;
 	}
 
@@ -157,12 +165,12 @@ bool FreeCamera::mouseWheel(float change)
 
 void FreeCamera::stop()
 {
-	w = s = a = d = turbo = move = false;
+	w = s = a = d = turbo = slow = move = false;
 }
 
 void FreeCamera::onViewportResize(UINT width, UINT height)
 {
-	camera.setPerspectiveCamera(70, width / (float)height, 1, 10000);
+	camera.setPerspectiveCamera(70, width / (float)height, 1, 30000);
 }
 
 void FreeCamera::onScreenResize(UINT, UINT)

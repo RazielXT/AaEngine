@@ -79,6 +79,32 @@ Texture3D<float4> GetTexture3D(uint index)
     return ResourceDescriptorHeap[index];
 }
 
+#ifdef TERRAIN_SCAN
+
+struct PSOutput
+{
+    float4 color : SV_Target0;
+    float4 normals : SV_Target1;
+    float4 types : SV_Target2;
+    float4 height : SV_Target3;
+};
+
+PSOutput PSMain(PS_Input pin)
+{
+	SamplerState diffuse_sampler = SamplerDescriptorHeap[0];
+	float4 albedo = GetTexture(TexIdDiffuse).Sample(diffuse_sampler, pin.uv);
+
+	PSOutput output;
+    output.color = albedo;
+	output.normals = float4(pin.normal, 1);
+	output.types = float4(1, 1, 0, 0);
+	output.height = float4(pin.wp.y, 0, 0, 0);
+
+	return output;
+}
+
+#else
+
 SamplerState ShadowSampler : register(s1);
 
 float getDistanceBlend(float dist, float sceneSize)
@@ -197,3 +223,5 @@ PSOutput PSMain(PS_Input pin)
 
 	return output;
 }
+
+#endif

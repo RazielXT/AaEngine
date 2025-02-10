@@ -56,6 +56,7 @@ enum class MaterialTechnique
 	DepthShadowmap,
 	Voxelize,
 	EntityId,
+	TerrainScan,
 	COUNT
 };
 

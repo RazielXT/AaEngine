@@ -190,7 +190,7 @@ void loadExtensions(const xml_node& element, SceneEntity* ent, SceneNode* node)
 	{
 		if (e.name == "addGrass")
 		{
-			parseResult->grassTasks.emplace_back(ent, ent->getWorldBoundingBox());
+			//parseResult->grassTasks.emplace_back(ent, ent->getWorldBoundingBox());
 		}
 	}
 }

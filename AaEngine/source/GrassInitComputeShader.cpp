@@ -3,7 +3,7 @@
 #include "directx\d3dx12.h"
 #include "GrassArea.h"
 
-void GrassInitComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, GrassAreaDescription& desc, XMMATRIX invView, UINT colorTex, UINT depthTex, ID3D12Resource* vertexBuffer, ID3D12Resource* vertexCounter)
+void GrassInitComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, GrassAreaDescription& desc, XMMATRIX invView, InputTextures textures, ID3D12Resource* vertexBuffer, ID3D12Resource* vertexCounter)
 {
 	commandList->SetPipelineState(pipelineState.Get());
 	commandList->SetComputeRootSignature(signature);
@@ -19,6 +19,8 @@ void GrassInitComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, Gr
 		UINT rows;
 		UINT depthTexture;
 		UINT colorTexture;
+		UINT normalTexture;
+		UINT typeTexture;
 	}
 	ctx = {
 		{},
@@ -26,7 +28,7 @@ void GrassInitComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, Gr
 		desc.bbox.Center - desc.bbox.Extents,
 		desc.bbox.Center + desc.bbox.Extents,
 		desc.width, desc.count, desc.areaCount.y,
-		depthTex, colorTex
+		textures.depthTex, textures.colorTex, textures.normalTex, textures.typeTex
 	};
 
 	XMStoreFloat4x4(&ctx.invViewMatrix, invView);

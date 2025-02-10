@@ -33,9 +33,14 @@ void EntityGeometry::fromGrass(GrassArea& grass)
 {
 	geometryCustomBuffer = grass.gpuBuffer->GetGPUVirtualAddress();
 	vertexCount = grass.vertexCount;
-	instanceCount = 1;
+	indexCount = grass.indexCount;
+	instanceCount = grass.instanceCount;
 	type = Type::Manual;
 	source = &grass;
+
+	indexBufferView.BufferLocation = grass.indexBuffer->GetGPUVirtualAddress();
+	indexBufferView.SizeInBytes = grass.indexCount * sizeof(uint32_t);
+	indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 }
 
 VertexBufferModel* EntityGeometry::getModel() const

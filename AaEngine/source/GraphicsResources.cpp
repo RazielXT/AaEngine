@@ -12,14 +12,12 @@ GraphicsResources::GraphicsResources(RenderSystem& rs)
 
 	//core
 	{
-		ModelLoadContext loaderCtx(rs);
-		loaderCtx.folder = SCENE_DIRECTORY + "core/";
-		loaderCtx.group = ResourceGroup::Core;
-		loaderCtx.batch.Begin();
+		ResourceUploadBatch batch(rs.core.device);
+		batch.Begin();
 
-		models.preloadFolder(loaderCtx);
+		models.preloadFolder(batch, { SCENE_DIRECTORY + "core/", ResourceGroup::Core });
 
-		auto uploadResourcesFinished = loaderCtx.batch.End(rs.core.commandQueue);
+		auto uploadResourcesFinished = batch.End(rs.core.commandQueue);
 		uploadResourcesFinished.wait();
 	}
 }

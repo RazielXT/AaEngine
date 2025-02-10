@@ -136,7 +136,7 @@ public:
 	void SetParameter(FastParam param, const void* value);
 	void SetParameter(FastParam param, const void* value, MaterialDataStorage& data);
 	void GetParameter(FastParam param, float* output) const;
-	UINT GetParameterOffset(FastParam id) const;
+	void CopyParameter(FastParam param, MaterialInstance& source, MaterialDataStorage& data, float defaultValue);
 
 	void LoadMaterialConstants(MaterialDataStorage& buffers) const;
 	void UpdatePerFrame(MaterialDataStorage& data, const ShaderConstantsProvider& info);

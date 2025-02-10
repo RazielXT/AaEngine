@@ -488,9 +488,20 @@ void MaterialInstance::GetParameter(FastParam id, float* output) const
 	}
 }
 
-UINT MaterialInstance::GetParameterOffset(FastParam id) const
+void MaterialInstance::CopyParameter(FastParam id, MaterialInstance& source, MaterialDataStorage& data, float defaultValue)
 {
-	return paramsTable[(int)id].Offset;
+	auto& targetInfo = paramsTable[(int)id];
+	auto& sourceInfo = source.paramsTable[(int)id];
+
+	if (sourceInfo.data)
+	{
+		memcpy(data.rootParams.data() + targetInfo.Offset, sourceInfo.data, sourceInfo.Size);
+	}
+	else
+	{
+		for (UINT i = 0; i < targetInfo.Size / sizeof(float); i++)
+			data.rootParams[i + targetInfo.Offset] = defaultValue;
+	}
 }
 
 void MaterialInstance::LoadMaterialConstants(MaterialDataStorage& data) const

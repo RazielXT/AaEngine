@@ -124,7 +124,7 @@ PSOutput PSMain(PSInput input)
 	PSOutput output;
     output.color = outColor;
 	output.normals = float4(normal, 1);
-	output.camDistance = float4(camDistance / 10000, 0, 0, 0);
+	output.camDistance = float4(camDistance, 0, 0, 0);
 	output.motionVectors = float4((input.previousPosition.xy / input.previousPosition.w - input.currentPosition.xy / input.currentPosition.w) * ViewportSize, 0, 0);
 	output.motionVectors.xy *= 0.5;
 	output.motionVectors.y *= -1;

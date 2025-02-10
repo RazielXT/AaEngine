@@ -17,7 +17,7 @@ VS_OUTPUT VSQuad(uint vI : SV_VertexId)
     return vout;
 }
 
-static const float BlurSize = 0.005;
+static const float BlurSize = 0.002;
 
 Texture2D colorMap : register(t0);
 SamplerState LinearSampler : register(s0);
@@ -83,12 +83,16 @@ float4 PSBlurY(VS_OUTPUT input) : SV_TARGET
 Texture2D colorMap2 : register(t1);
 Texture2D godrayMap : register(t2);
 Texture2D exposureMap : register(t3);
+Texture2D<float> distanceMap : register(t4);
 
 float4 PSAddThrough(VS_OUTPUT input) : SV_TARGET
 {
 	float4 original = colorMap.Sample(LinearSampler, input.TexCoord);
 	float exposure = 1 - exposureMap.Load(int3(0, 0, 0)).r;
 
+	float3 fogColor = float3(0.6,0.6,0.7);
+	float camDistance = distanceMap.Load(int3(input.Position.xy, 0)).r;
+	original.rgb = lerp(original.rgb, fogColor, min(0.85, saturate((camDistance - 1000) / 14000)));
 
 	float3 bloom = colorMap2.Sample(LinearSampler, input.TexCoord).rgb;
 	bloom *= bloom;
@@ -101,6 +105,7 @@ float4 PSAddThrough(VS_OUTPUT input) : SV_TARGET
 	original.w = luma;
 #endif
 
+	original.rgb *= 1 + exposure * exposure;
 	original.rgb += bloom;
 	original.rgb += godrayMap.Sample(LinearSampler, input.TexCoord).rgb * exposure;
 

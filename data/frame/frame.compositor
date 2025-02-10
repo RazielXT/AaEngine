@@ -194,6 +194,7 @@ compositor Frame
 		input bloomTexture
 		input godray
 		input exposure
+		input sceneTexture:Distance
 		target sceneTexture3
 	}
 

@@ -357,9 +357,20 @@ PSOutput PSMain(PSInput input)
 
 #ifdef ENTITY_ID
 
-uint PSMainEntityId(PSInput input) : SV_TARGET
+struct PSOutputId
 {
-	return EntityId;
+    uint4 id : SV_Target0;
+    float4 position : SV_Target1;
+	float4 normal : SV_Target2;
+};
+
+PSOutputId PSMainEntityId(PSInput input)
+{
+	PSOutputId output;
+	output.id = uint4(EntityId, 0, 0, 0);
+	output.position = float4(input.worldPosition.xyz, 0);
+	output.normal = float4(input.normal.xyz, 0);
+	return output;
 }
 
 #endif

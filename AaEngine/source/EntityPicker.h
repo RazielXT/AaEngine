@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RenderTargetTexture.h"
+#include "RenderContext.h"
 #include "ShaderResources.h"
 #include "GraphicsResources.h"
 #include "ObjectId.h"
@@ -14,33 +15,45 @@ class EntityPicker
 {
 public:
 
-	EntityPicker();
+	EntityPicker(RenderSystem& renderSystem);
 	~EntityPicker();
 
 	static EntityPicker& Get();
 
-	void initializeGpuResources(RenderSystem& renderSystem, GraphicsResources& resources);
-	void clear();
+	void initializeGpuResources();
+	void update(ID3D12GraphicsCommandList* commandList, RenderProvider& provider, Camera& camera, SceneManager& sceneMgr);
 
-	void renderEntityIds(ID3D12GraphicsCommandList* commandList, RenderQueue& queue, Camera& camera, const RenderObjectsVisibilityData& info, const FrameParameters& frame);
-	void scheduleEntityIdRead(ID3D12GraphicsCommandList* commandList);
+	void scheduleNextPick(XMUINT2 position);
 
-	ObjectId readEntityId();
+	struct PickInfo
+	{
+		ObjectId id;
+		Vector3 position;
+		Vector3 normal;
+	};
+	const PickInfo& getLastPick();
 	bool lastPickWasTransparent() const;
-
-	RenderQueue createRenderQueue() const;
-
-	std::optional<XMUINT2> scheduled;
 
 	std::vector<ObjectId> active;
 
-//private:
+private:
 
-	RenderTargetHeap heap;
 	RenderTargetTextures rtt;
-	ComPtr<ID3D12Resource> readbackBuffer;
+	RenderTargetHeap heap;
 
-	const std::vector<DXGI_FORMAT> formats = { DXGI_FORMAT_R32_UINT };
+	RenderQueue createRenderQueue() const;
 
-	ObjectId lastPick{};
+	ComPtr<ID3D12Resource> readbackBuffer[3];
+	void scheduleReadback(ID3D12GraphicsCommandList* commandList);
+	void readPickResult();
+
+	const std::vector<DXGI_FORMAT> formats = { DXGI_FORMAT_R32G32B32A32_UINT, DXGI_FORMAT_R32G32B32A32_FLOAT, DXGI_FORMAT_R32G32B32A32_FLOAT };
+	const UINT formatSize = 4 * sizeof(UINT);
+
+	PickInfo lastPick{};
+
+	std::optional<XMUINT2> scheduled;
+	bool nextPickPrepared = false;
+
+	RenderSystem& renderSystem;
 };

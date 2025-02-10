@@ -145,16 +145,30 @@ void PSMainDepth(PSInput input)
 
 #ifdef ENTITY_ID
 
-uint PSMainEntityId(PSInput input) : SV_TARGET
+struct PSOutputId
 {
-	SamplerState g_sampler = SamplerDescriptorHeap[0];
-	float4 albedo = GetTexture(TexIdDiffuse).Sample(g_sampler, input.uv);
+    uint4 id : SV_Target0;
+    float4 position : SV_Target1;
+	float4 normal : SV_Target2;
+};
 
-	float distanceFade = saturate(2000 * input.worldPosition.z / input.position.w);
+PSOutputId PSMainEntityId(PSInput input)
+{
+	SamplerState colorSampler = SamplerDescriptorHeap[0];
+	float4 albedo = GetTexture(TexIdDiffuse).Sample(colorSampler, input.uv);
 
-	if (albedo.a <0.5) discard;
+	if (albedo.a < AlphaThreshold) discard;
 	
-	return EntityId;
+	float camDistance = length(CameraPosition - input.worldPosition.xyz);
+	float distanceFade = camDistance / FadeThreshold;
+
+	if (albedo.a < distanceFade) discard;
+
+	PSOutputId output;
+	output.id = uint4(EntityId, 0, 0, 0);
+	output.position = float4(input.worldPosition.xyz, 0);
+	output.normal = float4(input.normal.xyz, 0);
+	return output;
 }
 
 #endif

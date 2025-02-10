@@ -5,7 +5,7 @@
 #include "ModelResources.h"
 #include "DrawPrimitives.h"
 
-SceneRenderTask::SceneRenderTask(RenderProvider p, SceneManager& s) : CompositorTask(p, s)
+SceneRenderTask::SceneRenderTask(RenderProvider p, SceneManager& s) : CompositorTask(p, s), picker(p.renderSystem)
 {
 	renderables = sceneMgr.getRenderables(Order::Normal);
 	transparent.renderables = sceneMgr.getRenderables(Order::Transparent);
@@ -118,9 +118,9 @@ AsyncTasksInfo SceneRenderTask::initializeEarlyZ(CompositorPass& pass)
 
 void SceneRenderTask::run(RenderContext& renderCtx, CommandsData& cmd, CompositorPass& pass)
 {
-	//starts from Opaque thread
 	if (pass.info.entry == "EarlyZ")
 	{
+		//just init, early z starts from Opaque thread
 		ctx = renderCtx;
 	}
 	else if (pass.info.entry == "Opaque")
@@ -140,7 +140,7 @@ void SceneRenderTask::run(RenderContext& renderCtx, CommandsData& cmd, Composito
 void SceneRenderTask::resize(CompositorPass& pass)
 {
 	if (pass.info.entry == "Editor")
-		picker.initializeGpuResources(provider.renderSystem, provider.resources);
+		picker.initializeGpuResources();
 }
 
 bool SceneRenderTask::writesSyncCommands(CompositorPass& pass) const
@@ -196,67 +196,7 @@ void SceneRenderTask::renderTransparentScene(CompositorPass& pass)
 
 void SceneRenderTask::renderEditor(CompositorPass& pass, CommandsData& cmd)
 {
-	if (picker.scheduled)
-	{
-		picker.rtt.PrepareAsTarget(cmd.commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
-
-		CommandsMarker marker(cmd.commandList, "EntityPicker");
-		RenderQueue idQueue = picker.createRenderQueue();
-		{
-			auto opaqueRenderables = sceneMgr.getRenderables(Order::Normal);
-
-			RenderObjectsVisibilityData opaqueVisibility;
-			opaqueVisibility.visibility.resize(opaqueRenderables->objectsData.objects.size(), false);
-			opaqueRenderables->updateVisibility(*ctx.camera, opaqueVisibility);
-
-			opaqueRenderables->iterateObjects([this, &idQueue, &opaqueVisibility](RenderObject& obj)
-				{
-					if (obj.isVisible(opaqueVisibility.visibility))
-					{
-						idQueue.update({ EntityChange::Add, Order::Normal, (SceneEntity*)&obj }, provider.resources);
-					}
-				});
-
-			ShaderConstantsProvider constants(provider.params, opaqueVisibility, *ctx.camera, picker.rtt);
-			idQueue.renderObjects(constants, cmd.commandList);
-		}
-		idQueue.reset();
-
-		auto pickTransparent = [this]()
-			{
-				auto currentPickTime = duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-				constexpr auto transparentSkipMaxDelay = std::chrono::milliseconds(500);
-				static auto lastPickTime = currentPickTime - transparentSkipMaxDelay;
-
-				bool pick = !(currentPickTime - lastPickTime < transparentSkipMaxDelay && picker.lastPickWasTransparent());
-
-				lastPickTime = currentPickTime;
-				return pick;
-			};
-
-		if (pickTransparent())
-		{
-			auto transparentRenderables = sceneMgr.getRenderables(Order::Transparent);
-
-			RenderObjectsVisibilityData transparentVisibility;
-			transparentVisibility.visibility.resize(transparentRenderables->objectsData.objects.size(), false);
-			transparentRenderables->updateVisibility(*ctx.camera, transparentVisibility);
-
-			idQueue.reset();
-			transparentRenderables->iterateObjects([this, &idQueue, &transparentVisibility](RenderObject& obj)
-				{
-					if (obj.isVisible(transparentVisibility.visibility))
-					{
-						idQueue.update({ EntityChange::Add, Order::Normal, (SceneEntity*)&obj }, provider.resources);
-					}
-				});
-
-			ShaderConstantsProvider constants(provider.params, transparentVisibility, *ctx.camera, picker.rtt);
-			idQueue.renderObjects(constants, cmd.commandList);
-		}
-
-		picker.scheduleEntityIdRead(cmd.commandList);
-	}
+	picker.update(cmd.commandList, provider, *ctx.camera, sceneMgr);
 
 	pass.target.textureSet->PrepareAsTarget(cmd.commandList, false, TransitionFlags::DepthPrepareRead);
 
@@ -264,7 +204,7 @@ void SceneRenderTask::renderEditor(CompositorPass& pass, CommandsData& cmd)
 	{
 		BoundingBoxDraw bboxDraw(provider.resources, { pass.target.texture->format });
 
-		ShaderConstantsProvider constants(provider.params, {}, *ctx.camera, picker.rtt);
+		ShaderConstantsProvider constants(provider.params, {}, *ctx.camera, *pass.target.texture);
 
 		for (auto selectedId : picker.active)
 		{

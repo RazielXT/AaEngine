@@ -63,8 +63,11 @@ private:
 	void prepareElements(Camera& camera);
 
 	XMUINT2 m_ViewportBounds[2];
+	Vector3 selectionPosition{};
 	bool updateEntitySelect = false;
 	bool ctrlActive = false;
+	bool addTree = false;
+	bool addTreeNormals = false;
 
 	XMUINT2 viewportPanelSize;
 	XMUINT2 lastViewportPanelSize;

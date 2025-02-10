@@ -235,7 +235,7 @@ bool Editor::onClick(MouseButton button)
 
 		if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
 		{
-			EntityPicker::Get().scheduled = { mouseX, viewportSize.y - mouseY };
+			EntityPicker::Get().scheduleNextPick({ mouseX, viewportSize.y - mouseY });
 			lastScheduled = { mouseX, viewportSize.y - mouseY };
 			updateEntitySelect = true;
 		}
@@ -398,31 +398,58 @@ void Editor::prepareElements(Camera& camera)
 
 	if (updateEntitySelect)
 	{
-		renderer.WaitForCurrentFrame();
+		auto& pickInfo = EntityPicker::Get().getLastPick();
 
-		if (auto selectedId = EntityPicker::Get().readEntityId())
+		if (auto selectedId = pickInfo.id)
 		{
-			bool newObject = true;
-
-			if (!ctrlActive)
+			if (addTree)
 			{
-				selection.clear();
+				ObjectTransformation tr;
+				tr.position = pickInfo.position;
+				tr.position.y -= 2;
+				tr.orientation = Quaternion::CreateFromYawPitchRoll(getRandomFloat(0, XM_2PI), 0, 0);
+				tr.scale = Vector3(getRandomFloat(1.8f, 2.2f));
+
+				if (addTreeNormals)
+					tr.orientation *= Quaternion::FromToRotation(Vector3::UnitY, pickInfo.normal);
+
+				static int t = 0;
+
+				auto model = app.resources.models.getLoadedModel("treeBunchBigLeafs.mesh", ResourceGroup::Core);
+				auto tree = app.sceneMgr.createEntity("Tree" + std::to_string(t), tr, *model);
+				tree->material = app.resources.materials.getMaterial("TreeBranch");
+
+				auto modelTrunk = app.resources.models.getLoadedModel("treeBunchBigTrunk.mesh", ResourceGroup::Core);
+				auto treeTrunk = app.sceneMgr.createEntity("TreeTrunk" + std::to_string(t), tr, *modelTrunk);
+				treeTrunk->material = app.resources.materials.getMaterial("TreeTrunk");
+
+				t++;
 			}
 			else
 			{
-				for (auto& s : selection)
-				{
-					if (s.obj.id == selectedId)
-						newObject = false;
-				}
-			}
+				selectionPosition = pickInfo.position;
+				bool newObject = true;
 
-			if (newObject)
-			{
-				auto obj = app.sceneMgr.getObject(selectedId);
-				if (obj)
+				if (!ctrlActive)
 				{
-					selection.emplace_back(obj.getTransformation(), obj);
+					selection.clear();
+				}
+				else
+				{
+					for (auto& s : selection)
+					{
+						if (s.obj.id == selectedId)
+							newObject = false;
+					}
+				}
+
+				if (newObject)
+				{
+					auto obj = app.sceneMgr.getObject(selectedId);
+					if (obj)
+					{
+						selection.emplace_back(obj.getTransformation(), obj);
+					}
 				}
 			}
 		}
@@ -560,7 +587,12 @@ void Editor::prepareElements(Camera& camera)
 		ImGui::Text("EntityId %#010x", selection.back().obj.id);
 		ImGui::Text("Entity name %s", selection.back().obj.getName());
 		ImGui::Text("Entity pos %f %f %f", objTransformation.position.x, objTransformation.position.y, objTransformation.position.z);
+		ImGui::Text("Selection pos %f %f %f", selectionPosition.x, selectionPosition.y, selectionPosition.z);
 	}
+
+	ImGui::Checkbox("Add Tree", &addTree);
+	if (addTree)
+		ImGui::Checkbox("Add Tree on normals", &addTreeNormals);
 
 	ImGui::NewLine();
 

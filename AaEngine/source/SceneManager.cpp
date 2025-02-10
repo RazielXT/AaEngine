@@ -17,8 +17,15 @@ SceneManager::~SceneManager()
 void SceneManager::initialize(RenderSystem& renderSystem)
 {
 	GlobalQueueMarker marker(renderSystem.core.commandQueue, "InitializeSceneManager");
-	grass.initializeGpuResources(renderSystem, resources, getQueueTargetFormats());
-	terrain.initialize(renderSystem, resources);
+
+	ResourceUploadBatch batch(renderSystem.core.device);
+	batch.Begin();
+
+	grass.initializeGpuResources(renderSystem, resources, batch);
+	terrain.initialize(renderSystem, resources, batch);
+
+	auto uploadResourcesFinished = batch.End(renderSystem.core.commandQueue);
+	uploadResourcesFinished.wait();
 }
 
 void SceneManager::update()

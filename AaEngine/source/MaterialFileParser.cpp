@@ -233,6 +233,8 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 				technique = MaterialTechnique::Voxelize;
 			else if (member.value == "EntityId")
 				technique = MaterialTechnique::EntityId;
+			else if (member.value == "TerrainScan")
+				technique = MaterialTechnique::TerrainScan;
 
 			if (!member.params.empty())
 			{

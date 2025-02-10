@@ -10,7 +10,9 @@ struct GrassArea;
 
 struct EntityGeometry
 {
-	enum Type
+	uint16_t topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+	enum Type : uint16_t
 	{
 		Model,
 		Instancing,
@@ -25,8 +27,8 @@ struct EntityGeometry
 
 	bool usesInstancing() const;
 
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
-	D3D12_INDEX_BUFFER_VIEW indexBufferView;
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+	D3D12_INDEX_BUFFER_VIEW indexBufferView{};
 
 	D3D12_GPU_VIRTUAL_ADDRESS geometryCustomBuffer{};
 

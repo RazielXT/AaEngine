@@ -18,28 +18,16 @@ void RenderQueue::update(const EntityChangeDescritpion& changeInfo, GraphicsReso
 			if (technique == MaterialTechnique::DepthShadowmap && entity->hasFlag(RenderObjectFlag::NoShadow))
 				return;
 
-			std::string techniqueMaterial;
-
-			if (technique == MaterialTechnique::Depth || technique == MaterialTechnique::DepthShadowmap)
-				techniqueMaterial = "Depth";
-			else if (technique == MaterialTechnique::Voxelize)
-				techniqueMaterial = "Voxelize";
-			else if (technique == MaterialTechnique::EntityId)
-				techniqueMaterial = "EntityId";
-
-			if (auto techniqueOverride = matInstance->GetBase()->GetTechniqueOverride(technique))
+			if (auto techniqueOverride = matInstance->GetTechniqueOverride(technique))
 			{
 				if (techniqueOverride[0] == '\0') //skip
 					return;
 
-				techniqueMaterial = techniqueOverride;
-			}
-			else if (matInstance->HasInstancing())
-			{
-				techniqueMaterial += "Instancing";
-			}
+				matInstance = resources.materials.getMaterial(techniqueOverride);
 
-			matInstance = resources.materials.getMaterial(techniqueMaterial);
+				if (!matInstance)
+					__debugbreak();
+			}
 		}
 
 		auto entry = EntityEntry{ entity, matInstance->Assign(entity->geometry.layout ? *entity->geometry.layout : std::vector<D3D12_INPUT_ELEMENT_DESC>{}, targets, technique) };

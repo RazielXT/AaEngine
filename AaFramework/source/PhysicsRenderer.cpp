@@ -55,7 +55,7 @@ bool PhysicsRenderer::PrepareForRendering(ID3D12GraphicsCommandList* commandList
 	if (!renderCtx.solidColorMaterial)
 	{
 		renderCtx.solidColorMaterial = resources.materials.getMaterial("DebugColor");
-		renderCtx.wireframeMaterial = resources.materials.getMaterial("DebugWireframe");
+		renderCtx.wireframeMaterial = resources.materials.getMaterial("DebugWireframeColor");
 	}
 
 	renderCtx.lastMaterial = nullptr;
@@ -121,7 +121,7 @@ void PhysicsRenderer::DrawGeometry(RMat44Arg inModelMatrix, const AABox& inWorld
 		material->GetBase()->BindSignature(renderCtx.commandList);
 		material->LoadMaterialConstants(renderCtx.storage);
 		material->BindPipeline(renderCtx.commandList);
-		material->BindTextures(renderCtx.commandList);
+		//material->BindTextures(renderCtx.commandList);
 		material->UpdatePerFrame(renderCtx.storage, *renderCtx.constants);
 	}
 

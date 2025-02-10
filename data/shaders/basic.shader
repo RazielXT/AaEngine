@@ -10,6 +10,16 @@ vertex_shader vsBasicShadingVc : vsBasicShading
 	defines USE_VC
 }
 
+vertex_shader vsBasicShadingPlainVc : vsBasicShadingVc
+{
+	defines USE_VC NO_TEXTURE
+}
+
+vertex_shader vsBasicShadingPlain : vsBasicShading
+{
+	defines NO_TEXTURE
+}
+
 vertex_shader vsBasicShadingInstancing : vsBasicShading
 {
 	defines INSTANCED
@@ -25,6 +35,16 @@ pixel_shader psBasicShading
 pixel_shader psBasicShadingVc : psBasicShading
 {
 	defines USE_VC
+}
+
+pixel_shader psBasicShadingPlainVc : psBasicShadingVc
+{
+	defines USE_VC NO_TEXTURE
+}
+
+pixel_shader psBasicShadingPlain : psBasicShading
+{
+	defines NO_TEXTURE
 }
 
 vertex_shader vsDepthWrite

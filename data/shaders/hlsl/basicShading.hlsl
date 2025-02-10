@@ -21,7 +21,9 @@ struct VSInput
 {
     float4 position : POSITION;
 	float3 normal : NORMAL;
+#ifndef NO_TEXTURE
     float2 uv : TEXCOORD;
+#endif
 #ifdef USE_VC
 	float4 color : COLOR;
 #endif
@@ -37,10 +39,12 @@ struct PSInput
 #ifdef USE_VC
     float4 color : COLOR;
 #endif
-	float2 uv : TEXCOORD1;
-	float4 worldPosition : TEXCOORD2;
-	float4 previousPosition : TEXCOORD3;
-	float4 currentPosition : TEXCOORD4;
+#ifndef NO_TEXTURE
+	float2 uv : TEXCOORD0;
+#endif
+	float4 worldPosition : TEXCOORD1;
+	float4 previousPosition : TEXCOORD2;
+	float4 currentPosition : TEXCOORD3;
 };
 
 PSInput VSMain(VSInput input)
@@ -66,7 +70,9 @@ PSInput VSMain(VSInput input)
     result.color = input.color;
 #endif
 
+#ifndef NO_TEXTURE
 	result.uv = input.uv;
+#endif
 
     return result;
 }
@@ -100,15 +106,20 @@ PSOutput PSMain(PSInput input)
 #endif
 
 	SamplerState sampler = SamplerDescriptorHeap[0];
-	float4 albedo = GetTexture(TexIdDiffuse).Sample(sampler, input.uv);
-	albedo.rgb *= MaterialColor;
+
+#ifndef NO_TEXTURE
+	float3 albedo = GetTexture(TexIdDiffuse).Sample(sampler, input.uv).rgb;
+	albedo *= MaterialColor;
+#else
+	float3 albedo = MaterialColor;
+#endif
 
 	float camDistance = length(CameraPosition - input.worldPosition.xyz);
 
 	float shadow = getPssmShadow(input.worldPosition, camDistance, dotLighting, ShadowSampler, Sun);
 	float3 lighting = (ambientColor + shadow * diffuse);
 	float lightPower = (lighting.r + lighting.g + lighting.b) / 3;
-	float4 outColor = float4(lighting * albedo.rgb, lightPower);
+	float4 outColor = float4(lighting * albedo, lightPower);
 
 	PSOutput output;
     output.color = outColor;

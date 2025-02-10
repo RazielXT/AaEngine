@@ -15,7 +15,7 @@ RenderWireframeTask::~RenderWireframeTask()
 
 AsyncTasksInfo RenderWireframeTask::initialize(CompositorPass& pass)
 {
-	wireframeMaterial = provider.resources.materials.getMaterial("DebugWireframeNoVC");
+	wireframeMaterial = provider.resources.materials.getMaterial("DebugWireframe");
 
 	return {};
 }
@@ -65,7 +65,7 @@ void RenderWireframeTask::run(RenderContext& ctx, CommandsData& syncCommands, Co
 			material->GetBase()->BindSignature(syncCommands.commandList);
 			material->LoadMaterialConstants(storage);
 			material->BindPipeline(syncCommands.commandList);
-			material->BindTextures(syncCommands.commandList);
+			//material->BindTextures(syncCommands.commandList);
 			material->UpdatePerFrame(storage, constants);
 		}
 

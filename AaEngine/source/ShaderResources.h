@@ -90,7 +90,9 @@ struct ResourcesInfo
 		AutoParam type;
 		UINT bufferOffset;
 	};
-	std::vector<AutoParamInfo> autoParams;
+	std::vector<AutoParamInfo> frameAutoParams;
+	std::vector<AutoParamInfo> objectAutoParams;
+	std::vector<AutoParamInfo> resourceAutoParams;
 };
 
 enum class FastParam

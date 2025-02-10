@@ -374,6 +374,35 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData(GraphicsResour
 			for (const auto& p : cb.info.Params)
 			{
 				ResourcesInfo::AutoParam type = ResourcesInfo::AutoParam::None;
+
+				if (p.Name.starts_with("TexId"))
+				{
+					type = ResourcesInfo::AutoParam::TEXID;
+					bindlessTextures.push_back((UINT)resources->resourceAutoParams.size());
+				}
+				if (type != ResourcesInfo::AutoParam::None)
+				{
+					resources->resourceAutoParams.emplace_back(type, (UINT)(p.StartOffset / sizeof(float)));
+					continue;
+				}
+
+				type = ResourcesInfo::AutoParam::None;
+
+				if (p.Name == "WorldMatrix")
+					type = ResourcesInfo::AutoParam::WORLD_MATRIX;
+				else if (p.Name == "PreviousWorldMatrix")
+					type = ResourcesInfo::AutoParam::PREV_WORLD_MATRIX;
+				else if (p.Name == "WorldPosition")
+					type = ResourcesInfo::AutoParam::WORLD_POSITION;
+
+				if (type != ResourcesInfo::AutoParam::None)
+				{
+					resources->objectAutoParams.emplace_back(type, (UINT)(p.StartOffset / sizeof(float)));
+					continue;
+				}
+
+				type = ResourcesInfo::AutoParam::None;
+
 				if (p.Name == "ViewProjectionMatrix")
 					type = ResourcesInfo::AutoParam::VP_MATRIX;
 				else if (p.Name == "ViewMatrix")
@@ -386,21 +415,12 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData(GraphicsResour
 					type = ResourcesInfo::AutoParam::INV_VIEW_MATRIX;
 				else if (p.Name == "InvProjectionMatrix")
 					type = ResourcesInfo::AutoParam::INV_PROJ_MATRIX;
-				else if (p.Name == "WorldMatrix")
-					type = ResourcesInfo::AutoParam::WORLD_MATRIX;
-				else if (p.Name == "PreviousWorldMatrix")
-					type = ResourcesInfo::AutoParam::PREV_WORLD_MATRIX;
 				else if (p.Name == "ShadowMatrix")
 					type = ResourcesInfo::AutoParam::SHADOW_MATRIX;
 				else if (p.Name == "ShadowMapSize")
 					type = ResourcesInfo::AutoParam::SHADOW_MAP_SIZE;
 				else if (p.Name == "ShadowMapSizeInv")
 					type = ResourcesInfo::AutoParam::SHADOW_MAP_SIZE_INV;
-				else if (p.Name.starts_with("TexId"))
-				{
-					type = ResourcesInfo::AutoParam::TEXID;
-					bindlessTextures.push_back((UINT)resources->autoParams.size());
-				}
 				else if (p.Name == "Time")
 					type = ResourcesInfo::AutoParam::TIME;
 				else if (p.Name == "DeltaTime")
@@ -421,7 +441,7 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData(GraphicsResour
 					type = ResourcesInfo::AutoParam::Z_MAGIC;
 
 				if (type != ResourcesInfo::AutoParam::None)
-					resources->autoParams.emplace_back(type, (UINT)(p.StartOffset / sizeof(float)));
+					resources->frameAutoParams.emplace_back(type, (UINT)(p.StartOffset / sizeof(float)));
 			}
 		}
 		else

@@ -500,7 +500,7 @@ void MaterialInstance::LoadMaterialConstants(MaterialDataStorage& data) const
 
 void MaterialInstance::UpdatePerFrame(MaterialDataStorage& data, const ShaderConstantsProvider& info)
 {
-	for (auto p : resources->autoParams)
+	for (auto p : resources->frameAutoParams)
 	{
 		if (p.type == ResourcesInfo::AutoParam::TIME)
 			data.rootParams[p.bufferOffset] = info.params.time;
@@ -549,7 +549,7 @@ void MaterialInstance::UpdatePerFrame(MaterialDataStorage& data, const ShaderCon
 			{
 				//UpdateBindlessTexture(t);
 
-				auto& param = resources->autoParams[t.autoParamIdx];
+				auto& param = resources->resourceAutoParams[t.autoParamIdx];
 				*(UINT*)&data.rootParams[param.bufferOffset] = t.texture->srvHeapIndex;
 			}
 		}
@@ -558,7 +558,7 @@ void MaterialInstance::UpdatePerFrame(MaterialDataStorage& data, const ShaderCon
 
 void MaterialInstance::UpdatePerObject(MaterialDataStorage& data, const ShaderConstantsProvider& info)
 {
-	for (auto p : resources->autoParams)
+	for (auto p : resources->objectAutoParams)
 	{
 		if (p.type == ResourcesInfo::AutoParam::WORLD_MATRIX)
 			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&data.rootParams[p.bufferOffset], XMMatrixTranspose(info.getWorldMatrix()));
@@ -571,7 +571,7 @@ void MaterialInstance::UpdatePerObject(MaterialDataStorage& data, const ShaderCo
 
 void MaterialInstance::UpdateBindlessTexture(const ResourcesInfo::Texture& texture)
 {
-	auto& param = resources->autoParams[texture.autoParamIdx];
+	auto& param = resources->resourceAutoParams[texture.autoParamIdx];
 
 	auto& buff = resources->rootBuffer.defaultData;
 	*(UINT*)&buff[param.bufferOffset] = texture.texture->srvHeapIndex;

@@ -1,6 +1,10 @@
 #include "VoxelConeTracingCommon.hlsl"
 #include "ShadowsPssm.hlsl"
 
+#ifdef BRANCH_WAVE
+#include "TreeCommon.hlsl"
+#endif
+
 float4x4 ViewProjectionMatrix;
 float4x4 WorldMatrix;
 float4x4 PreviousWorldMatrix;
@@ -10,6 +14,7 @@ float3 MaterialColor;
 uint TexIdDiffuse;
 uint TexIdNormal;
 uint2 ViewportSize;
+float Time;
 
 cbuffer PSSMShadows : register(b1)
 {
@@ -45,12 +50,20 @@ PS_Input VSMain(VS_Input vin)
     PS_Input vsOut;
 
     vsOut.wp = mul(vin.p, WorldMatrix);
+	
+#ifdef BRANCH_WAVE
+	vsOut.wp.xyz += getBranchWaveOffset(Time, vin.p.xyz, vin.uv);
+#endif
+
     vsOut.pos = mul(vsOut.wp, ViewProjectionMatrix);
     vsOut.uv = vin.uv;
     vsOut.normal = vin.n;
     vsOut.tangent = vin.t;
 	
 	float4 previousWorldPosition = mul(vin.p, PreviousWorldMatrix);
+#ifdef BRANCH_WAVE
+	previousWorldPosition.xyz += getBranchWaveOffset(Time, vin.p.xyz, vin.uv);
+#endif
 	vsOut.previousPosition = mul(previousWorldPosition, ViewProjectionMatrix);
 	vsOut.currentPosition = vsOut.pos;
 
@@ -94,6 +107,12 @@ PSOutput PSMain(PS_Input pin)
 	SamplerState diffuse_sampler = SamplerDescriptorHeap[0];
 
     float4 albedo = GetTexture(TexIdDiffuse).Sample(diffuse_sampler, pin.uv);
+#ifdef ALPHA_TEST
+	if (albedo.a < 0.37f)
+		discard;
+#endif
+	albedo.rgb *= MaterialColor;
+
 	float camDistance = length(CameraPosition - pin.wp.xyz);
 
     float3 normalTex = float3(GetTexture(TexIdNormal).Sample(diffuse_sampler, pin.uv).rg, 1);

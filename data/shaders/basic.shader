@@ -58,3 +58,16 @@ vertex_shader vsDepthWriteInstancing : vsDepthWrite
 {
 	defines INSTANCED
 }
+
+vertex_shader vsDepthWriteAlphaTest : vsDepthWrite
+{
+	defines ALPHA_TEST
+}
+
+pixel_shader psDepthWriteAlphaTest
+{
+	file depthWrite.hlsl
+	entry PSMain
+	profile ps_6_6
+	defines ALPHA_TEST
+}

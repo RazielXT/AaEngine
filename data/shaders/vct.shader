@@ -11,3 +11,9 @@ pixel_shader psVoxelTracing
 	entry PSMain
 	profile ps_6_6
 }
+
+pixel_shader psVoxelTracingAlpha : psVoxelTracing
+{
+	defines ALPHA_TEST
+}
+

@@ -75,3 +75,46 @@ material YellowVCT : ColorVCT
 		float MaterialColor 1 1 0.1
 	}
 }
+
+material TreeTrunk : ColorVCT
+{
+	texture Diffuse
+	{
+		file bark.dds
+	}
+
+	texture Normal
+	{
+		file barkNormal.dds
+	}
+}
+
+material TreeBranch : ColorVCT
+{
+	pixel_shader psVoxelTracingAlpha
+	shader_defines BRANCH_WAVE
+
+	texture Diffuse
+	{
+		file treeBranch.dds
+	}
+
+	texture Normal
+	{
+		file treeBranchNormal.dds
+	}
+	
+	technique Depth TreeBranchDepth
+}
+
+material TreeBranchDepth
+{
+	vertex_shader vsDepthWriteAlphaTest
+	pixel_shader psDepthWriteAlphaTest
+	shader_defines BRANCH_WAVE
+
+	texture Diffuse
+	{
+		file treeBranch.dds
+	}
+}

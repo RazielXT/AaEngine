@@ -16,6 +16,7 @@ SceneManager::~SceneManager()
 
 void SceneManager::initialize(RenderSystem& renderSystem)
 {
+	GlobalQueueMarker marker(renderSystem.core.commandQueue, "InitializeSceneManager");
 	grass.initializeGpuResources(renderSystem, resources, getQueueTargetFormats());
 	terrain.initialize(renderSystem, resources);
 }

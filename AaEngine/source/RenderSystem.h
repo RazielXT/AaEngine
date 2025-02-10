@@ -19,6 +19,16 @@ struct CommandsData
 	void deinit();
 };
 
+struct GlobalQueueMarker
+{
+	GlobalQueueMarker(ID3D12CommandQueue*, const char* name);
+	~GlobalQueueMarker();
+
+private:
+
+	ID3D12CommandQueue* queue{};
+};
+
 struct CommandsMarker
 {
 	CommandsMarker(CommandsData&);

@@ -417,3 +417,13 @@ void CommandsMarker::close()
 		PIXEndEvent(commandList);
 	}
 }
+
+GlobalQueueMarker::GlobalQueueMarker(ID3D12CommandQueue* q, const char* name) : queue(q)
+{
+	PIXBeginEvent(q, 0, name);
+}
+
+GlobalQueueMarker::~GlobalQueueMarker()
+{
+	PIXEndEvent(queue);
+}

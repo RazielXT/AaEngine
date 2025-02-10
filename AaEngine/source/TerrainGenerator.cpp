@@ -16,7 +16,7 @@ constexpr UINT GridHalfWidth_Chunks = 2;
 constexpr UINT WorldGridWidth_Quads = GridWidth_Chunks * MaxLodScale_Quads * ChunkWidth_Quads;
 
 constexpr float QuadSize_Units = 4.f; //this controls tessellation detail
-constexpr float WorldMappingScale = QuadSize_Units; //this controls tessellation detail
+constexpr float WorldMappingScale = QuadSize_Units; //this controls heightmap mapping
 constexpr float WorldWidth_Units = QuadSize_Units * WorldGridWidth_Quads;
 constexpr float WorldHeight_Units = 8000.f;
 

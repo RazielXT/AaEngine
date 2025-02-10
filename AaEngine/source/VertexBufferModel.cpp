@@ -29,6 +29,11 @@ void VertexBufferModel::addLayoutElement(unsigned short slot, UINT offset, DXGI_
 	vertexLayout.push_back(desc);
 }
 
+void VertexBufferModel::addLayoutElement(DXGI_FORMAT format, const char* semantic, unsigned short index)
+{
+	addLayoutElement(0, getLayoutVertexSize(0), format, semantic, index);
+}
+
 static uint32_t getTypeSize(DXGI_FORMAT t)
 {
 	switch (t)

@@ -19,10 +19,10 @@ public:
 
 	void initializeLayout()
 	{
-		model.addLayoutElement(0, 0, DXGI_FORMAT_R32G32B32_FLOAT, VertexElementSemantic::POSITION, 0);
-		model.addLayoutElement(0, 12, DXGI_FORMAT_R32G32B32_FLOAT, VertexElementSemantic::NORMAL, 0);
-		model.addLayoutElement(0, 24, DXGI_FORMAT_R32G32_FLOAT, VertexElementSemantic::TEXCOORD, 0);
-		model.addLayoutElement(0, 32, DXGI_FORMAT_R8G8B8A8_UNORM, VertexElementSemantic::COLOR, 0);
+		model.addLayoutElement(DXGI_FORMAT_R32G32B32_FLOAT, VertexElementSemantic::POSITION);
+		model.addLayoutElement(DXGI_FORMAT_R32G32B32_FLOAT, VertexElementSemantic::NORMAL);
+		model.addLayoutElement(DXGI_FORMAT_R32G32_FLOAT, VertexElementSemantic::TEXCOORD);
+		model.addLayoutElement(DXGI_FORMAT_R8G8B8A8_UNORM, VertexElementSemantic::COLOR);
 	}
 };
 

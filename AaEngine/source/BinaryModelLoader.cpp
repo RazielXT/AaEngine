@@ -24,13 +24,13 @@ VertexBufferModel* BinaryModelLoader::load(std::string filename, ModelParseOptio
 	}
 
 	if (!info.positions.empty())
-		model->addLayoutElement(0, 0, DXGI_FORMAT_R32G32B32_FLOAT, VertexElementSemantic::POSITION, 0);
+		model->addLayoutElement(DXGI_FORMAT_R32G32B32_FLOAT, VertexElementSemantic::POSITION);
 	if (!info.texCoords.empty())
-		model->addLayoutElement(0, model->getLayoutVertexSize(0), DXGI_FORMAT_R32G32_FLOAT, VertexElementSemantic::TEXCOORD, 0);
+		model->addLayoutElement(DXGI_FORMAT_R32G32_FLOAT, VertexElementSemantic::TEXCOORD);
 	if (!info.normals.empty())
-		model->addLayoutElement(0, model->getLayoutVertexSize(0), DXGI_FORMAT_R32G32B32_FLOAT, VertexElementSemantic::NORMAL, 0);
+		model->addLayoutElement(DXGI_FORMAT_R32G32B32_FLOAT, VertexElementSemantic::NORMAL);
 	if (!info.tangents.empty())
-		model->addLayoutElement(0, model->getLayoutVertexSize(0), DXGI_FORMAT_R32G32B32_FLOAT, VertexElementSemantic::TANGENT, 0);
+		model->addLayoutElement(DXGI_FORMAT_R32G32B32_FLOAT, VertexElementSemantic::TANGENT);
 
 	auto vertexSize = model->getLayoutVertexSize(0);
 

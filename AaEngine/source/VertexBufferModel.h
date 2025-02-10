@@ -33,6 +33,7 @@ public:
 	~VertexBufferModel();
 
 	void addLayoutElement(unsigned short slot, UINT offset, DXGI_FORMAT format, const char* semantic, unsigned short index);
+	void addLayoutElement(DXGI_FORMAT format, const char* semantic, unsigned short index = 0);
 	uint32_t getLayoutVertexSize(uint16_t slot) const;
 	std::vector<D3D12_INPUT_ELEMENT_DESC> vertexLayout;
 

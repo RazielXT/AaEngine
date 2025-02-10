@@ -69,3 +69,11 @@ struct BoundingBoxVolume
 
 float getRandomAngleInRadians();
 float getRandomFloat(float min, float max);
+
+template <typename T>
+constexpr T constexpr_pow(T base, int exp)
+{
+	return (exp == 0) ? 1 :
+		(exp % 2 == 0) ? constexpr_pow(base * base, exp / 2) :
+		base * constexpr_pow(base * base, (exp - 1) / 2);
+}

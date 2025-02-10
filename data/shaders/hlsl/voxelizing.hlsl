@@ -35,6 +35,10 @@ struct VS_Input
     float4 p : POSITION;
     float3 n : NORMAL;
 
+#ifndef TERRAIN
+    float2 uv : TEXCOORD0;
+#endif
+
 #ifdef INSTANCED
 	uint instanceID : SV_InstanceID;
 #endif
@@ -46,6 +50,10 @@ struct PS_Input
     float3 normal : NORMAL;
     float4 wp : TEXCOORD1;
 	
+#ifndef TERRAIN
+    float2 uv : TEXCOORD0;
+#endif
+	
 #ifdef INSTANCED
 	uint instanceID : TEXCOORD2;
 #endif
@@ -56,9 +64,9 @@ PS_Input VS_Main(VS_Input vin)
     PS_Input vsOut;
 	vsOut.normal = vin.n;
 
+#ifndef TERRAIN
     vsOut.uv = vin.uv;
-    vsOut.tangent = vin.t;
-	vsOut.normal = vin.n;
+#endif
 
 #ifdef INSTANCED
 	vsOut.wp = mul(vin.p, InstancingBuffer[vin.instanceID]);
@@ -114,7 +122,13 @@ float4 PS_Main(PS_Input pin) : SV_TARGET
 
 	float3 worldNormal = normalize(mul(pin.normal, worldMatrix));
 
+#ifdef TERRAIN
+	float3 diffuse = float3(0.6, 0.6, 0.6);
+	float3 green = float3(0.6, 0.65, 0.2);
+	diffuse = lerp(diffuse, green, step(0.9,worldNormal.y));
+#else
 	float3 diffuse = MaterialColor * GetTexture(TexIdDiffuse).Sample(LinearWrapSampler, pin.uv).rgb;
+#endif
 
 	Texture3D SceneVoxelBounces = GetTexture3D(VoxelInfo.Voxels[VoxelIdx].TexIdBounces);
 

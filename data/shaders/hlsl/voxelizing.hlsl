@@ -33,9 +33,7 @@ RWStructuredBuffer<VoxelSceneData> SceneVoxelData : register(u0);
 struct VS_Input
 {
     float4 p : POSITION;
-    float2 uv : TEXCOORD0;
     float3 n : NORMAL;
-    float3 t : TANGENT;
 
 #ifdef INSTANCED
 	uint instanceID : SV_InstanceID;
@@ -45,10 +43,8 @@ struct VS_Input
 struct PS_Input
 {
     float4 pos : SV_POSITION;
-    float2 uv : TEXCOORD0;
-    float4 wp : TEXCOORD1;
     float3 normal : NORMAL;
-    float3 tangent : TANGENT;
+    float4 wp : TEXCOORD1;
 	
 #ifdef INSTANCED
 	uint instanceID : TEXCOORD2;
@@ -58,6 +54,7 @@ struct PS_Input
 PS_Input VS_Main(VS_Input vin)
 {
     PS_Input vsOut;
+	vsOut.normal = vin.n;
 
     vsOut.uv = vin.uv;
     vsOut.tangent = vin.t;
@@ -99,7 +96,7 @@ float getShadow(float4 wp)
     sunLookPos.xy = sunLookPos.xy / sunLookPos.w;
 	sunLookPos.xy /= float2(2, -2);
     sunLookPos.xy += 0.5;
-	sunLookPos.z -= 0.01;
+	sunLookPos.z -= 0.001;
 
 	return readShadowmap(shadowmap, sunLookPos.xy) < sunLookPos.z ? 0.0 : 1.0;
 }
@@ -121,14 +118,18 @@ float4 PS_Main(PS_Input pin) : SV_TARGET
 
 	Texture3D SceneVoxelBounces = GetTexture3D(VoxelInfo.Voxels[VoxelIdx].TexIdBounces);
 
-	float shadow = 0;
-	if (dot(Sun.Direction,worldNormal) < 0)
-		shadow = getShadow(pin.wp);
-
+//	float shadow = 0;
+//	if (dot(Sun.Direction,worldNormal) < 0)
+//		shadow = getShadow(pin.wp);
+	float shadow = getShadow(pin.wp);
+	if (shadow > 0)
+		shadow = -dot(Sun.Direction,worldNormal);
+	
 	float3 voxelWorldPos = (pin.wp.xyz - VoxelInfo.Voxels[VoxelIdx].Offset);
     float3 posUV = voxelWorldPos * VoxelInfo.Voxels[VoxelIdx].Density;
 
-	float4 prev = SceneVoxelBounces.Load(float4(posUV - VoxelInfo.Voxels[VoxelIdx].BouncesOffset * 32, 0));
+	const float StepSize = 32.f;
+	float4 prev = SceneVoxelBounces.Load(float4(posUV - VoxelInfo.Voxels[VoxelIdx].BouncesOffset * StepSize, 0));
 
 	RWTexture3D<float4> SceneVoxel = ResourceDescriptorHeap[VoxelInfo.Voxels[VoxelIdx].TexId];
     SceneVoxel[posUV] = float4(prev.rgb * prev.w, 1);

@@ -13,7 +13,7 @@
 struct RenderQueue;
 class SceneManager;
 
-struct SceneVoxelsChunk
+struct SceneVoxelsCascade
 {
 	TextureResource voxelSceneTexture;
 	TextureResource voxelPreviousSceneTexture;
@@ -21,10 +21,9 @@ struct SceneVoxelsChunk
 	UINT idx{};
 
 	void initialize(const std::string& name, ID3D12Device* device, GraphicsResources&);
-	void clearChunk(ID3D12GraphicsCommandList* commandList, const TextureResource& clear, ClearBufferComputeShader&);
 	void clearAll(ID3D12GraphicsCommandList* commandList, const TextureResource& clear, ClearBufferComputeShader&);
 
-	void prepareForVoxelization(ID3D12GraphicsCommandList* commandList);
+	void prepareForVoxelization(ID3D12GraphicsCommandList* commandList, const TextureResource& clear, ClearBufferComputeShader&);
 	void prepareForReading(ID3D12GraphicsCommandList* commandList);
 
 	struct
@@ -67,11 +66,14 @@ public:
 	static VoxelizeSceneTask& Get();
 
 	void revoxelize();
+	void clear();
 	void clear(ID3D12GraphicsCommandList* c);
 
 	void showVoxelsInfo(bool show);
 
 private:
+
+	static constexpr UINT CascadesCount = 4;
 
 	CommandsData commands;
 	HANDLE eventBegin{};
@@ -105,21 +107,20 @@ private:
 		float voxelizeLighting = 0.0f;
 		float padding;
 
-		SceneVoxelChunkInfo nearVoxels;
-		SceneVoxelChunkInfo farVoxels;
+		SceneVoxelChunkInfo cascadeInfo[CascadesCount];
 	}
 	cbufferData;
 
 	CbufferView cbuffer;
 	CbufferView frameCbuffer;
-	void updateCBufferChunk(SceneVoxelChunkInfo& info, Vector3 diff, SceneVoxelsChunk& chunk);
-	void updateCBuffer(Vector3 diff, Vector3 diffFar, UINT frameIndex);
+	void updateCBufferCascade(SceneVoxelChunkInfo& info, Vector3 diff, SceneVoxelsCascade& chunk);
+	void updateCBuffer(UINT frameIndex);
 
-	void voxelizeChunk(CommandsData& commands, CommandsMarker& marker, PassTarget& viewportOutput, SceneVoxelsChunk& chunk);
-	void bounceChunk(CommandsData& commands, CommandsMarker& marker, PassTarget& viewportOutput, SceneVoxelsChunk& chunk);
+	void voxelizeCascade(CommandsData& commands, CommandsMarker& marker, PassTarget& viewportOutput, SceneVoxelsCascade& chunk);
+	void bounceCascade(CommandsData& commands, CommandsMarker& marker, PassTarget& viewportOutput, SceneVoxelsCascade& chunk);
 
-	UINT buildNearCounter = 0;
-	UINT buildFarCounter = 0;
+	UINT buildCounter[CascadesCount];
+	bool reset = false;
 
 	BounceVoxelsCS bouncesCS;
 	GenerateMipsComputeShader computeMips;
@@ -129,10 +130,10 @@ private:
 
 	TextureResource clearSceneTexture;
 
-	SceneVoxelsChunk nearVoxels;
-	SceneVoxelsChunk farVoxels;
+	SceneVoxelsCascade voxelCascades[CascadesCount];
 
 	bool showVoxelsEnabled = false;
-	void showVoxels(Camera& camera);
+	void showVoxelsUpdate(Camera& camera);
+	SceneEntity* showVoxels();
 	void hideVoxels();
 };

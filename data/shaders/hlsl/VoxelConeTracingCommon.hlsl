@@ -32,7 +32,7 @@ struct SceneVoxelCbufferIndexed
     float VoxelizeLighting;
     float Padding;
 
-    SceneVoxelChunkInfo Voxels[2];
+    SceneVoxelChunkInfo Voxels[4];
 };
 
 float4 SampleVoxel(Texture3D cmap, SamplerState sampl, float3 pos, float3 dir, float lod)
@@ -64,7 +64,7 @@ float4 ConeTraceImpl(float3 o, float3 d, float coneRatio, float maxDist, Texture
 {
 	const float voxDim = 128.0f;
     const float minDiam = 1.0 / voxDim;
-    const float startDist = minDiam * 3;
+    const float startDist = minDiam * 2;
     float dist = startDist;
     float3 samplePos = o;
     float4 accum = float4(0, 0, 0, 0);

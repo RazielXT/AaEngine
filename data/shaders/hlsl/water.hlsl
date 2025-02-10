@@ -73,13 +73,13 @@ PSInput VSMain(VSInput input)
 	
 	float2 texUv = input.uv * 0.5 - Time / 4;
 	
-	float waveSize = GetWavesSize(texUv) * 1.01;
+	float waveSize = GetWavesSize(texUv) * 0.01;
 	objPosition.y += waveSize;
 
 	result.worldPosition = mul(objPosition, WorldMatrix);
     result.position = mul(result.worldPosition, ViewProjectionMatrix);
 	result.normal = input.normal;//normalize(mul(input.normal, (float3x3)WorldMatrix));
-	result.uv = texUv;
+	result.uv = texUv / 10;
 
     return result;
 }
@@ -103,9 +103,27 @@ float4 GetWaves(float2 uv)
 }
  */
 
-static const int NUM_RAY_MARCH_SAMPLES = 32;
+static const int NUM_RAY_MARCH_SAMPLES = 64;
 static const float MAX_REFLECTION_RAY_MARCH_STEP = (1.0f / (NUM_RAY_MARCH_SAMPLES + 1));
 static const int NUM_BINARY_SEARCH_SAMPLES = 8;
+
+float borderBlend(float2 uv, float edgeThreshold)
+{
+    // Calculate the distance from the UV coordinates to the nearest edge
+    float left = uv.x;
+    float right = 1.0 - uv.x;
+    float top = uv.y;
+    float bottom = 1.0 - uv.y;
+
+    // Determine the minimum distance to an edge
+    float minDist = min(min(left, right), min(top, bottom));
+
+    // Perform linear interpolation (lerp) based on the dist / edgeThresholdance to the edge
+    float alpha = saturate(minDist / edgeThreshold);
+
+    return alpha;
+}
+
 
 float4 GetReflection(
 	float3 ScreenSpaceReflectionVec, 
@@ -119,6 +137,8 @@ float4 GetReflection(
 	float MaxOffset = 0.00005f;
 	float Retry = 1;
 
+	float3 skyboxColor = GetTextureCube(TexIdSkybox).Sample(LinearWrapSampler, reflection).rgb;
+
 	// Raymarch in the direction of the ScreenSpaceReflectionVec until you get an intersection with your z buffer
 	//if (ScreenSpaceReflectionVec.z < 0 && !(ScreenSpaceReflectionVec.x == 0 && ScreenSpaceReflectionVec.y == 0))
 	for (int RayStepIdx = 0; RayStepIdx<NUM_RAY_MARCH_SAMPLES; RayStepIdx++)
@@ -128,7 +148,7 @@ float4 GetReflection(
 		if (RaySample.x < 0 || RaySample.y < 0 || RaySample.x > 1 || RaySample.y > 1)
 			break;
 
-		float ZBufferVal = DepthBufferLow.Sample(DepthSampler, RaySample.xy).r;
+		float ZBufferVal = DepthBufferHigh.Sample(DepthSampler, RaySample.xy).r;
 
 		if (RaySample.z < ZBufferVal)
 		{
@@ -141,7 +161,7 @@ float4 GetReflection(
 			for (int i = 0; i < NUM_BINARY_SEARCH_SAMPLES; i++)
 			{
 				MidRaySample = lerp(MinRaySample, MaxRaySample, 0.5);
-				ZBufferVal = DepthBufferLow.Sample(DepthSampler, MidRaySample.xy).r;
+				ZBufferVal = DepthBufferHigh.Sample(DepthSampler, MidRaySample.xy).r;
 				
 				if (MidRaySample.z > ZBufferVal)
 				{
@@ -186,13 +206,15 @@ float4 GetReflection(
 				continue;
 			}
 
-			return float4(GetTexture(TexIdSceneColor).Sample(LinearWrapSampler, MidRaySample.xy).rgb, 1);
+			float alpha = borderBlend(MidRaySample.xy, 0.15f);
+			float3 color = lerp(skyboxColor, GetTexture(TexIdSceneColor).Sample(LinearWrapSampler, MidRaySample.xy).rgb, alpha);
+			return float4(color, 1);
 		}
 		
 		PrevRaySample = RaySample;
 	}
 
-	return float4(GetTextureCube(TexIdSkybox).Sample(LinearWrapSampler, reflection).rgb, 0);
+	return float4(skyboxColor, 0);
 }
 
 float rand(float2 co)
@@ -228,21 +250,21 @@ float checkerboard(float2 uv)
 
 PSOutput PSMain(PSInput input)
 {
-	float groundDistance = GetTexture(TexIdDistance).Load(int3(input.position.xy, 0)).r * 10000;
+	float groundDistance = GetTexture(TexIdDistance).Load(int3(input.position.xy, 0)).r;
 	float3 cameraVector = input.worldPosition.xyz - CameraPosition;
-	float waterDistance = length(cameraVector);
-	cameraVector = cameraVector / waterDistance; //normalize
+	float camDistance = length(cameraVector);
+	cameraVector = cameraVector / camDistance; //normalize
 //	float2 clipSpacePos = input.position.xy * ViewportSizeInverse * 2.0 - 1.0;
 //	float3 worldPosGround = getWorldPos(depthGround, clipSpacePos);
 
 	const float FadeDistance = 20;
-	float fade = (groundDistance - waterDistance) / FadeDistance;
-	//float fade = smoothstep(0, FadeDistance, groundDistance - waterDistance);
+	float fade = (groundDistance - camDistance) / FadeDistance;
+	//float fade = smoothstep(0, FadeDistance, groundDistance - camDistance);
 
 	float4 albedo = GetWaves(input.uv);
 	albedo.a = albedo.r * 0.2 + fade;
 	albedo.rgb *= float3(0.2,0.8, 0.6);
-	float3 voxelUV = (input.worldPosition.xyz-VoxelInfo.NearVoxels.Offset)/VoxelInfo.NearVoxels.SceneSize;
+	float3 voxelUV = (input.worldPosition.xyz-VoxelInfo.FarVoxels.Offset)/VoxelInfo.FarVoxels.SceneSize;
 	
 	//albedo.rgb = length(input.worldPosition.xyz - worldPosGround);
 	//albedo.rgb = depthGround.rrr;
@@ -254,10 +276,10 @@ PSOutput PSMain(PSInput input)
 	worldPosition /= worldPosition.w;
 	albedo.rgb += worldPosition.xyz; */
 
-	Texture3D voxelmap = ResourceDescriptorHeap[VoxelInfo.NearVoxels.TexId];
-	albedo.rgb *= (voxelmap.SampleLevel(LinearWrapSampler, voxelUV, 3).rgb + voxelmap.SampleLevel(LinearWrapSampler, voxelUV, 4).rgb * 2) * 10;
+	Texture3D voxelmap = ResourceDescriptorHeap[VoxelInfo.FarVoxels.TexId];
+	albedo.rgb *= max(0.3, (voxelmap.SampleLevel(LinearWrapSampler, voxelUV, 3).rgb + voxelmap.SampleLevel(LinearWrapSampler, voxelUV, 4).rgb * 2) * 10);
 
-	float3 normal = normalize(input.normal + 0.1 * GetTexture(TexIdNormal).Sample(LinearWrapSampler,input.uv * 2).rgb); 
+	float3 normal = normalize(input.normal + 0.1 * GetTexture(TexIdNormal).Sample(LinearWrapSampler,input.uv).rgb); 
 	float4 WorldNormal = float4(normal,1);
 	float3 WorldPosition = input.worldPosition.xyz;
 
@@ -267,7 +289,7 @@ PSOutput PSMain(PSInput input)
 
 	float4 ScreenSpacePos = float4(SsrPixelUV, DeviceZ, 1.f);
 	float3 ReflectionVector = reflect(cameraVector, WorldNormal.xyz);
-	ReflectionVector.xy += getJitter(ScreenUV, 0.01);
+	//ReflectionVector.xy += getJitter(ScreenUV, 0.01);
 
 	float4 PointAlongReflectionVec = float4(ReflectionVector + WorldPosition, 1.f);
 	float4 ScreenSpaceReflectionPoint = mul(PointAlongReflectionVec, ViewProjectionMatrix);
@@ -283,17 +305,17 @@ PSOutput PSMain(PSInput input)
 	{
 		reflection = GetReflection(ScreenSpaceReflectionVec, ScreenSpacePos.xyz, -ReflectionVector);
 		
-		if (reflection.a == 0)
+		if (false && reflection.a == 0)
 		{
 			float3 jjj = getJitter(ScreenUV, 0.5).xyx;
-			SceneVoxelChunkInfo Voxels = VoxelInfo.NearVoxels;
+			SceneVoxelChunkInfo Voxels = VoxelInfo.FarVoxels;
 
 			float3 rayDir = ReflectionVector;
 			float stepSize = 6.f; // Adjust as needed
 			float3 rayStart = input.worldPosition.xyz + rayDir * 3 * stepSize;
 
 			float4 nearVoxel = 0.xxxx;
-			for (int i = 1; i < 16; ++i)
+			for (int i = 1; i < 64; ++i)
 			{
 				// Move the ray position
 				float3 rayPos = rayStart + rayDir * stepSize * i;
@@ -342,10 +364,13 @@ PSOutput PSMain(PSInput input)
 
 	albedo.rgb = lerp(albedo.rgb, reflection.rgb, fresnel);
 //	albedo.rgb = reflection.rgb;
-	float3 sceneColor = GetTexture(TexIdSceneColor).Sample(LinearWrapSampler, ScreenUV).rgb;
+	float3 sceneColor = GetTexture(TexIdSceneColor).Sample(LinearWrapSampler, saturate(ScreenUV + normal.xz * 0.1f)).rgb;
 
 	albedo.rgb = lerp(sceneColor, albedo.rgb, saturate(albedo.a));
 	albedo.a = 1;
+
+	float3 fogColor = float3(0.6,0.6,0.7);
+	albedo.rgb = lerp(albedo.rgb, fogColor, min(0.7, saturate(camDistance / 15000)));
 
 	PSOutput output;
 	output.color = albedo;

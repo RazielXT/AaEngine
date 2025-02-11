@@ -266,16 +266,18 @@ void PostProcessMaterial(MaterialRef& ref, shaderRefMaps& shaders, const ParsedO
 		if (ref.techniqueMaterial[int(to.technique)])
 			continue;
 
-		MaterialRef techniqueRef = ref;
 		auto& overrideObj = *parsed.find(to.overrideMaterial)->second;
 
+		MaterialRef techniqueRef = ref;
 		ParseMaterialObject(techniqueRef, shaders, overrideObj, parsed);
 
 		std::string name = ref.name + "_" + overrideObj.value;
 		ref.techniqueMaterial[int(to.technique)] = name;
 		techniqueRef.name = name;
-		techniqueRef.abstract = false;
-		techniqueRef.base = name;
+		techniqueRef.abstract = ref.abstract;
+
+		// all materials that use this override would share same base if possible
+		techniqueRef.base = ref.base + "_" + overrideObj.value;
 
 		mats.push_back(techniqueRef);
 	}

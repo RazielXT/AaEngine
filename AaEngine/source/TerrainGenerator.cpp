@@ -19,6 +19,7 @@ constexpr float QuadSize_Units = 4.f; //this controls tessellation detail
 constexpr float WorldMappingScale = QuadSize_Units; //this controls heightmap mapping
 constexpr float WorldWidth_Units = QuadSize_Units * WorldGridWidth_Quads;
 constexpr float WorldHeight_Units = 8000.f;
+constexpr float WorldWidthPerMap_Units = WorldWidth_Units / WorldMappingScale;
 
 void TerrainGenerator::initialize(RenderSystem& rs, GraphicsResources& resources, ResourceUploadBatch& batch)
 {
@@ -33,10 +34,10 @@ void TerrainGenerator::initialize(RenderSystem& rs, GraphicsResources& resources
 
 	grid.init(rs, resources, batch, WorldWidth_Units, WorldHeight_Units);
 
-	vegetation.initialize(rs, resources);
+	vegetation.initialize(rs, resources, batch);
 }
 
-void TerrainGenerator::createTerrain(ID3D12GraphicsCommandList* commandList, SceneManager& sceneMgr, GraphicsResources& resources)
+void TerrainGenerator::createTerrain(ID3D12GraphicsCommandList* commandList, RenderSystem& rs, SceneManager& sceneMgr, GraphicsResources& resources, ResourceUploadBatch& batch)
 {
 	constexpr float GridHalfWidthLod0_Units = ChunkWidth_Quads * GridHalfWidth_Chunks * QuadSize_Units;
 	constexpr float GridBlendOffset_Units = QuadSize_Units * StepLodScale_Quads;
@@ -69,7 +70,7 @@ void TerrainGenerator::createTerrain(ID3D12GraphicsCommandList* commandList, Sce
 	for (UINT idx = 0; auto& lod : grid.lods)
 		createLodEntity(lod, idx++);
 
-	vegetation.generate(resources);
+	vegetation.createDrawObject(sceneMgr, rs, *resources.materials.getMaterial("Billboard", batch), batch, resources);
 }
 
 void TerrainGenerator::update(ID3D12GraphicsCommandList* commandList, SceneManager& sceneMgr, const Vector3& position)

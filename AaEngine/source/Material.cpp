@@ -55,6 +55,11 @@ void MaterialBase::BindSignature(ID3D12GraphicsCommandList* commandList) const
 	commandList->SetGraphicsRootSignature(rootSignature);
 }
 
+ID3D12RootSignature* MaterialBase::GetSignature() const
+{
+	return rootSignature;
+}
+
 std::size_t HashInputLayout(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target, D3D12_COMPARISON_FUNC comparisonFunc)
 {
 	std::size_t seed = 0;

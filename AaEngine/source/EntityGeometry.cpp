@@ -50,3 +50,14 @@ VertexBufferModel* EntityGeometry::getModel() const
 
 	return nullptr;
 }
+
+void IndirectEntityGeometry::draw(ID3D12GraphicsCommandList* commandList, UINT frameIndex)
+{
+	commandList->ExecuteIndirect(
+		commandSignature.Get(),
+		maxCommands,
+		commandBuffer.Get(),
+		0,
+		nullptr,
+		0);
+}

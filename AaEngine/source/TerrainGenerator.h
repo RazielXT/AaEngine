@@ -19,7 +19,7 @@ public:
 
 	void initialize(RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch);
 
-	void createTerrain(ID3D12GraphicsCommandList* commandList, SceneManager& sceneMgr, GraphicsResources& resources);
+	void createTerrain(ID3D12GraphicsCommandList* commandList, RenderSystem& rs, SceneManager& sceneMgr, GraphicsResources& resources, ResourceUploadBatch& batch);
 	void update(ID3D12GraphicsCommandList* commandList, SceneManager& sceneMgr, const Vector3& position);
 	void rebuild();
 

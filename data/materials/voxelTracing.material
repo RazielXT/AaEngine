@@ -83,6 +83,32 @@ material YellowVCT : ColorVCT
 	}
 }
 
+material RockVCT : ColorVCT
+{
+	texture Diffuse
+	{
+		file SilveryBlue.dds
+	}
+
+	texture Normal
+	{
+		file rock_norm.dds
+	}
+}
+
+material GrassVCT : ColorVCT
+{
+	texture Diffuse
+	{
+		file grass.png
+	}
+	
+	texture Normal
+	{
+		file rock_norm.dds
+	}
+}
+
 material TreeTrunk : ColorVCT
 {
 	texture Diffuse

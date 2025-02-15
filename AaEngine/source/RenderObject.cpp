@@ -87,7 +87,7 @@ void RenderObjectsStorage::updateVisibility(const BoundingFrustum& frustum, Rend
 
 	for (auto id : ids)
 	{
-		visible[id] = frustum.Intersects(objectsData.worldBbox[id]);
+		visible[id] = objectsData.worldBbox[id].Extents.x == 0 || frustum.Intersects(objectsData.worldBbox[id]);
 	}
 }
 
@@ -101,40 +101,12 @@ void RenderObjectsStorage::updateVisibility(const BoundingOrientedBox& box, Rend
 	}
 }
 
-void RenderObjectsStorage::updateVisibility(const BoundingFrustum& frustum, RenderObjectsVisibilityState& visible, const RenderObjectsFilter& filter) const
-{
-	visible.resize(ids.size());
-
-	for (auto id : filter)
-	{
-		visible[id] = frustum.Intersects(objectsData.worldBbox[id]);
-	}
-}
-
-void RenderObjectsStorage::updateVisibility(const BoundingOrientedBox& box, RenderObjectsVisibilityState& visible, const RenderObjectsFilter& filter) const
-{
-	visible.resize(ids.size());
-
-	for (auto id : filter)
-	{
-		visible[id] = box.Intersects(objectsData.worldBbox[id]);
-	}
-}
-
 void RenderObjectsStorage::updateVisibility(const Camera& camera, RenderObjectsVisibilityData& info) const
 {
 	if (camera.isOrthographic())
 		updateVisibility(camera.prepareOrientedBox(), info.visibility);
 	else
 		updateVisibility(camera.prepareFrustum(), info.visibility);
-}
-
-void RenderObjectsStorage::updateVisibility(const Camera& camera, RenderObjectsVisibilityData& info, const RenderObjectsFilter& filter) const
-{
-	if (camera.isOrthographic())
-		updateVisibility(camera.prepareOrientedBox(), info.visibility, filter);
-	else
-		updateVisibility(camera.prepareFrustum(), info.visibility, filter);
 }
 
 RenderObject* RenderObjectsStorage::getObject(UINT id) const

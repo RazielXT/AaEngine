@@ -17,6 +17,7 @@ struct EntityGeometry
 		Model,
 		Instancing,
 		Manual,
+		Indirect,
 	}
 	type{};
 
@@ -39,4 +40,16 @@ struct EntityGeometry
 	void fromGrass(GrassArea& grass);
 
 	VertexBufferModel* getModel() const;
+};
+
+class IndirectEntityGeometry
+{
+public:
+
+	ComPtr<ID3D12CommandSignature> commandSignature;
+	ComPtr<ID3D12Resource> commandBuffer;
+
+	UINT maxCommands{};
+
+	void draw(ID3D12GraphicsCommandList* commandList, UINT frameIndex);
 };

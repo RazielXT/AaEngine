@@ -173,7 +173,7 @@ bool ShaderCompiler::reflectShaderInfo(IDxcResult* compiledShaderBuffer, ShaderD
 
 			description.uavs.push_back(uavInfo);
 		}
-		else if (shaderInputBindDesc.Type == D3D_SIT_STRUCTURED)
+		else if (shaderInputBindDesc.Type == D3D_SIT_STRUCTURED || shaderInputBindDesc.Type == D3D_SIT_BYTEADDRESS)
 		{
 			ShaderReflection::StructuredBuffer uavInfo;
 			uavInfo.Name = shaderInputBindDesc.Name;

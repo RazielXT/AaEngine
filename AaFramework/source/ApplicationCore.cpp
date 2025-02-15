@@ -120,18 +120,23 @@ void ApplicationCore::loadScene(const char* scene)
 	physicsMgr.init();
 	resources.models.clear();
 
+	ResourceUploadBatch batch(renderSystem.core.device);
+	batch.Begin();
+
 	SceneParser::Result result;
 	{
 		GlobalQueueMarker marker(renderSystem.core.commandQueue, "SceneParser");
 
-		ResourceUploadBatch batch(renderSystem.core.device);
-		batch.Begin();
-
 		result = SceneParser::load(scene, { batch, sceneMgr, renderSystem, resources, physicsMgr });
 
+// 		planes.CreatePlanesVertexBuffer(renderSystem, batch, { { {0,-1400,-2000}, 4000 }, { {0,-1400,2000}, 4000 } });
+// 		auto e = sceneMgr.createEntity("testPlane", Order::Transparent);
+// 		e->material = resources.materials.getMaterial("WaterLake", batch);
+// 		planes.AssignToEntity(e);
 
-		auto uploadResourcesFinished = batch.End(renderSystem.core.commandQueue);
-		uploadResourcesFinished.wait();
+// 		auto e = sceneMgr.createEntity("pyramid", { {}, {0, -500, 0 }, { 20,20,20 } }, *resources.models.getLoadedModel("pyramid.mesh", ResourceGroup::Core));
+// 		e->material = resources.materials.getMaterial("RedVCT", batch);
+// 		result.grassTasks.push_back({ e, e->getWorldBoundingBox() });
 	}
 
 	auto commands = renderSystem.core.CreateCommandList(L"loadScene");
@@ -157,8 +162,11 @@ void ApplicationCore::loadScene(const char* scene)
 		VoxelizeSceneTask::Get().clear(commands.commandList);
 
 		marker.move("loadSceneTerrain");
-		sceneMgr.terrain.createTerrain(commands.commandList, sceneMgr, resources);
+		sceneMgr.terrain.createTerrain(commands.commandList, renderSystem, sceneMgr, resources, batch);
 	}
+
+	auto uploadResourcesFinished = batch.End(renderSystem.core.commandQueue);
+	uploadResourcesFinished.wait();
 
 	renderSystem.core.ExecuteCommandList(commands);
 	renderSystem.core.WaitForCurrentFrame();

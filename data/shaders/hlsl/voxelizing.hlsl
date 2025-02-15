@@ -104,7 +104,7 @@ float getShadow(float4 wp)
     sunLookPos.xy = sunLookPos.xy / sunLookPos.w;
 	sunLookPos.xy /= float2(2, -2);
     sunLookPos.xy += 0.5;
-	sunLookPos.z -= 0.001;
+	sunLookPos.z -= 0.00001;
 
 	return readShadowmap(shadowmap, sunLookPos.xy) < sunLookPos.z ? 0.0 : 1.0;
 }
@@ -124,7 +124,7 @@ float4 PS_Main(PS_Input pin) : SV_TARGET
 
 #ifdef TERRAIN
 	float3 diffuse = float3(0.6, 0.6, 0.6);
-	float3 green = float3(0.6, 0.65, 0.2);
+	float3 green = float3(0.5, 0.55, 0.3);
 	diffuse = lerp(diffuse, green, step(0.9,worldNormal.y));
 #else
 	float3 diffuse = MaterialColor * GetTexture(TexIdDiffuse).Sample(LinearWrapSampler, pin.uv).rgb;

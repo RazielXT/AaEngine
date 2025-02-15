@@ -56,6 +56,9 @@
     <Filter Include="Source Files\RenderObject\Terrain">
       <UniqueIdentifier>{eb81da19-258a-4082-9d8e-11c6ddff65e4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\RenderObject\Vegetation">
+      <UniqueIdentifier>{730c7ab0-11a4-45a5-85db-0d2528dbd114}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\TargetWindow.cpp">
@@ -279,6 +282,9 @@
     </ClCompile>
     <ClCompile Include="source\RenderWireframeTask.cpp">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Vegetation.cpp">
+      <Filter>Source Files\RenderObject\Vegetation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -521,6 +527,9 @@
     </ClInclude>
     <ClInclude Include="source\RenderWireframeTask.h">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Vegetation.h">
+      <Filter>Source Files\RenderObject\Vegetation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

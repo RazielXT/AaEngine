@@ -1,0 +1,31 @@
+material Billboard
+{
+	vertex_shader vsBillboard
+	pixel_shader psBillboard
+
+	culling none
+
+	texture Diffuse
+	{
+		file treeBillboard.dds
+	}
+	texture Normal
+	{
+		file roundNormal.dds
+	}
+
+	technique Depth BillboardDepth
+	technique Voxelize skip
+	technique EntityId BillboardEntityId
+}
+
+material BillboardDepth : Billboard
+{
+	pixel_shader psBillboardDepth
+}
+
+material BillboardEntityId : Billboard
+{
+	vertex_shader vsBillboardEntityId
+	pixel_shader psBillboardEntityId
+}

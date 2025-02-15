@@ -39,6 +39,7 @@ public:
 	void Load(ShaderLibrary& shaderLib);
 
 	void BindSignature(ID3D12GraphicsCommandList* commandList) const;
+	ID3D12RootSignature* GetSignature() const;
 
 	AssignedMaterial* GetAssignedMaterial(MaterialInstance* instance, const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target, MaterialTechnique technique);
 	void ReloadPipeline(ShaderLibrary& shaderLib);

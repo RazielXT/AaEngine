@@ -74,22 +74,34 @@ std::vector<UINT> RenderQueue::createEntityFilter() const
 	return out;
 }
 
-static void RenderObject(ID3D12GraphicsCommandList* commandList, EntityGeometry& geometry)
+static void RenderObject(ID3D12GraphicsCommandList* commandList, EntityGeometry& geometry, UINT frameIndex)
 {
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY(geometry.topology));
 
-	if (geometry.type != EntityGeometry::Type::Manual)
+	if (geometry.type == EntityGeometry::Type::Indirect)
 	{
-		commandList->IASetVertexBuffers(0, 1, &geometry.vertexBufferView);
-	}
+		if (geometry.indexCount)
+		{
+			commandList->IASetIndexBuffer(&geometry.indexBufferView);
+		}
 
-	if (geometry.indexCount)
-	{
-		commandList->IASetIndexBuffer(&geometry.indexBufferView);
-		commandList->DrawIndexedInstanced(geometry.indexCount, geometry.instanceCount, 0, 0, 0);
+		((IndirectEntityGeometry*)geometry.source)->draw(commandList, frameIndex);
 	}
 	else
-		commandList->DrawInstanced(geometry.vertexCount, geometry.instanceCount, 0, 0);
+	{
+		if (geometry.type != EntityGeometry::Type::Manual)
+		{
+			commandList->IASetVertexBuffers(0, 1, &geometry.vertexBufferView);
+		}
+
+		if (geometry.indexCount)
+		{
+			commandList->IASetIndexBuffer(&geometry.indexBufferView);
+			commandList->DrawIndexedInstanced(geometry.indexCount, geometry.instanceCount, 0, 0, 0);
+		}
+		else
+			commandList->DrawInstanced(geometry.vertexCount, geometry.instanceCount, 0, 0);
+	}
 }
 
 void RenderQueue::renderObjects(ShaderConstantsProvider& constants, ID3D12GraphicsCommandList* commandList)
@@ -147,7 +159,7 @@ void RenderQueue::renderObjects(ShaderConstantsProvider& constants, ID3D12Graphi
 		entry.material->UpdatePerObject(storage, constants);
 		entry.material->BindConstants(commandList, storage, constants);
 
-		RenderObject(commandList, entry.entity->geometry);
+		RenderObject(commandList, entry.entity->geometry, constants.params.frameIndex);
 
 		if (technique == MaterialTechnique::Voxelize)
 		{

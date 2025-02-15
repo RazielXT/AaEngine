@@ -57,7 +57,6 @@ public:
 	void initializeTransformation(UINT id, ObjectTransformation& transformation);
 
 	void updateVisibility(const Camera& camera, RenderObjectsVisibilityData&) const;
-	void updateVisibility(const Camera& camera, RenderObjectsVisibilityData&, const RenderObjectsFilter&) const;
 
 	struct
 	{
@@ -79,9 +78,7 @@ public:
 private:
 
 	void updateVisibility(const BoundingFrustum&, RenderObjectsVisibilityState&) const;
-	void updateVisibility(const BoundingFrustum&, RenderObjectsVisibilityState&, const RenderObjectsFilter&) const;
 	void updateVisibility(const BoundingOrientedBox&, RenderObjectsVisibilityState&) const;
-	void updateVisibility(const BoundingOrientedBox&, RenderObjectsVisibilityState&, const RenderObjectsFilter&) const;
 
 	void reset();
 

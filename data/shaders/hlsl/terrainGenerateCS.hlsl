@@ -32,16 +32,16 @@ float getTerrainHeight(float2 coords)
     return height * HeightSize;
 }
 
-// Define shared memory for height values 16x16 (17x17 for last group) + edges
-groupshared float sharedHeights[19][19];
-groupshared float3 sharedNormals[19][19];
-groupshared float3 sharedTangents[19][19];
+// Define shared memory for thread values + edges
+groupshared float sharedHeights[11][11];
+groupshared float3 sharedNormals[11][11];
+groupshared float3 sharedTangents[11][11];
 
-[numthreads(17, 17, 1)]
+[numthreads(9, 9, 1)]
 void main(uint3 groupId : SV_GroupID, uint3 groupThreadId : SV_GroupThreadID)
 {
-	//we create 65 vertices (64 quads) 16/16/16/17, so SV_DispatchThreadID from 17 threads wont align
-	uint3 id = groupId * 16 + groupThreadId;
+	//we create 65 vertices (64 quads), so SV_DispatchThreadID wont align, we drop last thread manually
+	uint3 id = groupId * 8 + groupThreadId;
 
     // Calculate UV coordinates based on thread ID
 	int2 worldIdx = uint2(WorldGridOffset.x + id.x * GridScale, WorldGridOffset.y + id.y * GridScale);
@@ -65,11 +65,11 @@ void main(uint3 groupId : SV_GroupID, uint3 groupThreadId : SV_GroupThreadID)
         sharedHeights[0][sharedX] = getTerrainHeight(float2(uv.x, uv.y - invGridSize));
     }
 	// This is only needed in last group, otherwise last group thread filled it and returned above
-    if (sharedX == 17) {
-        sharedHeights[sharedY][18] = getTerrainHeight(float2(uv.x + invGridSize, uv.y));
+    if (sharedX == 9) {
+        sharedHeights[sharedY][10] = getTerrainHeight(float2(uv.x + invGridSize, uv.y));
     }
-    if (sharedY == 17) {
-        sharedHeights[18][sharedX] = getTerrainHeight(float2(uv.x, uv.y + invGridSize));
+    if (sharedY == 9) {
+        sharedHeights[10][sharedX] = getTerrainHeight(float2(uv.x, uv.y + invGridSize));
     }
 
 	GroupMemoryBarrierWithGroupSync();
@@ -155,19 +155,19 @@ void main(uint3 groupId : SV_GroupID, uint3 groupThreadId : SV_GroupThreadID)
 		sharedNormals[0][sharedX] = lodNormal;
 		sharedTangents[0][sharedX] = lodTangent;
     }
-	if (sharedX == 17)
+	if (sharedX == 9)
 	{
-		sharedNormals[sharedY][18] = lodNormal;
-		sharedTangents[sharedY][18] = lodTangent;
+		sharedNormals[sharedY][10] = lodNormal;
+		sharedTangents[sharedY][10] = lodTangent;
     }
-    if (sharedY == 17)
+    if (sharedY == 9)
 	{
-		sharedNormals[18][sharedX] = lodNormal;
-		sharedTangents[18][sharedX] = lodTangent;
+		sharedNormals[10][sharedX] = lodNormal;
+		sharedTangents[10][sharedX] = lodTangent;
     }
 
-	// To make 65 vertices, only last group edge adds 17 and other groups 16
-	if ((sharedX == 17 && id.x != 64) || (sharedY == 17 && id.y != 64))
+	// To make 65 vertices, only last group edge adds last vertex
+	if ((sharedX == 9 && id.x != 64) || (sharedY == 9 && id.y != 64))
 		return;
 
 	GroupMemoryBarrierWithGroupSync();

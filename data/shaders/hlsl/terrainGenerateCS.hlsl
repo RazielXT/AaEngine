@@ -37,11 +37,11 @@ groupshared float sharedHeights[19][19];
 groupshared float3 sharedNormals[19][19];
 groupshared float3 sharedTangents[19][19];
 
-[numthreads(17, 17, 1)]
+[numthreads(9, 9, 1)]
 void main(uint3 groupId : SV_GroupID, uint3 groupThreadId : SV_GroupThreadID)
 {
 	//we create 65 vertices (64 quads) 16/16/16/17, so SV_DispatchThreadID from 17 threads wont align
-	uint3 id = groupId * 16 + groupThreadId;
+	uint3 id = groupId * 8 + groupThreadId;
 
     // Calculate UV coordinates based on thread ID
 	int2 worldIdx = uint2(WorldGridOffset.x + id.x * GridScale, WorldGridOffset.y + id.y * GridScale);
@@ -65,11 +65,11 @@ void main(uint3 groupId : SV_GroupID, uint3 groupThreadId : SV_GroupThreadID)
         sharedHeights[0][sharedX] = getTerrainHeight(float2(uv.x, uv.y - invGridSize));
     }
 	// This is only needed in last group, otherwise last group thread filled it and returned above
-    if (sharedX == 17) {
-        sharedHeights[sharedY][18] = getTerrainHeight(float2(uv.x + invGridSize, uv.y));
+    if (sharedX == 9) {
+        sharedHeights[sharedY][10] = getTerrainHeight(float2(uv.x + invGridSize, uv.y));
     }
-    if (sharedY == 17) {
-        sharedHeights[18][sharedX] = getTerrainHeight(float2(uv.x, uv.y + invGridSize));
+    if (sharedY == 9) {
+        sharedHeights[10][sharedX] = getTerrainHeight(float2(uv.x, uv.y + invGridSize));
     }
 
 	GroupMemoryBarrierWithGroupSync();

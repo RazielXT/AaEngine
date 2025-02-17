@@ -24,5 +24,5 @@ void TerrainGenerationComputeShader::dispatch(ID3D12GraphicsCommandList* command
 	commandList->SetComputeRoot32BitConstants(0, sizeof(data) / sizeof(float), &data, 0);
 	commandList->SetComputeRootUnorderedAccessView(1, vertexBuffer->GetGPUVirtualAddress());
 
-	commandList->Dispatch(4, 4, 1);
+	commandList->Dispatch(8, 8, 1);
 }

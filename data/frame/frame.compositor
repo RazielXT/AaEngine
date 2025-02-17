@@ -135,6 +135,12 @@ compositor Frame
 
 	ref Bloom:*
 
+	task SceneRender
+	{
+		entry Editor
+		target sceneColors sceneTexture:Depth (depth_read)
+	}
+
 #if UPSCALE
 
 	task UpscalePrepare
@@ -174,13 +180,8 @@ compositor Frame
 		input bloomTexture
 		input godray
 		input exposure
+		input sceneTexture:Distance
 		target Output
-	}
-	
-	task SceneRender
-	{
-		entry Editor
-		target Output sceneTexture:Depth (depth_read)
 	}
 
 #else
@@ -196,12 +197,6 @@ compositor Frame
 		input exposure
 		input sceneTexture:Distance
 		target sceneTexture3
-	}
-
-	task SceneRender
-	{
-		entry Editor
-		target sceneTexture3 sceneTexture:Depth (depth_read)
 	}
 
 	pass Fxaa

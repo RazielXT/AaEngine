@@ -125,6 +125,7 @@ void ShadowMaps::update(UINT frameIndex, Camera& mainCamera)
 		XMStoreFloat4x4(&data.ShadowMatrix[i], XMMatrixTranspose(cascades[i].camera.getViewProjectionMatrix()));
 	}
 	XMStoreFloat4x4(&data.MaxShadowMatrix, XMMatrixTranspose(maxShadow.camera.getViewProjectionMatrix()));
+	data.ShadowMatrix[3] = data.MaxShadowMatrix;
 
 	data.SunDirection = sun.direction;
 	data.SunColor = sun.color;

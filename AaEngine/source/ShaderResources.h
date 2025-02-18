@@ -117,7 +117,7 @@ constexpr std::array<std::string_view, (int)FastParam::COUNT> FastParamNames =
 
 struct PssmParameters
 {
-	XMFLOAT4X4 ShadowMatrix[3];
+	XMFLOAT4X4 ShadowMatrix[4];
 	XMFLOAT4X4 MaxShadowMatrix;
 	XMFLOAT3 SunDirection;
 	UINT TexIdShadowOffsetStart;

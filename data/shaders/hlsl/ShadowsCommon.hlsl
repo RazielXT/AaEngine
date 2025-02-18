@@ -1,6 +1,6 @@
 struct SunParams
 {
-	float4x4 ShadowMatrix[3];
+	float4x4 ShadowMatrix[4];
 	float4x4 MaxShadowMatrix;
 	float3 Direction;
 	uint TexIdShadowOffset;

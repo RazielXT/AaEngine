@@ -32,8 +32,8 @@ struct TerrainGrid
 	static constexpr UINT LodsCount = 6;
 	ChunkLod lods[LodsCount];
 
-	static constexpr UINT BuildGroups = 4;
-	static constexpr UINT BuildGroupVertices = 16; //last group 17
+	static constexpr UINT BuildGroups = 8;
+	static constexpr UINT BuildGroupVertices = 8; //last group 9
 	static constexpr UINT ChunkWidthQuads = BuildGroupVertices * BuildGroups;
 	static constexpr UINT ChunkWidthVertices = ChunkWidthQuads + 1; //keep odd count vertices so have even count quads
 	static constexpr UINT IndexCount = 3 * 2 * (ChunkWidthVertices - 1) * (ChunkWidthVertices - 1);

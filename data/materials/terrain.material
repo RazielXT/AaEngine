@@ -5,6 +5,7 @@ material TerrainBaseVCT abstract
 	
 	technique Depth TerrainDepth
 	technique Voxelize VoxelizeTerrain
+	technique TerrainScan TerrainScanMaterial
 }
 
 material TerrainDepth
@@ -26,15 +27,56 @@ material TerrainVCT : TerrainBaseVCT
 
 	texture Normal
 	{
-		file rock_norm.dds
+		file SilveryBlue_NRM.png
 	}
 	
+	texture NormalGrass
+	{
+		file grass_norm.dds
+	}
+
 	texture Spread
 	{
 		file spread.png
 	}
 
-	technique TerrainScan TerrainScanMaterial
+	texture Displacement
+	{
+		file SilveryBlue_DISP.png
+	}
+}
+
+material TerrainVCT2 : TerrainBaseVCT
+{
+	texture Diffuse
+	{
+		file brick19.jpg
+	}
+
+	texture Grass
+	{
+		file grass.dds
+	}
+
+	texture Normal
+	{
+		file brick19_NORM.dds
+	}
+
+	texture NormalGrass
+	{
+		file grass_norm.dds
+	}
+
+	texture Spread
+	{
+		file spread.png
+	}
+
+	texture Displacement
+	{
+		file brick19_DISP.jpg
+	}
 }
 
 material TerrainScanMaterial : TerrainVCT

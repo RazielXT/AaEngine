@@ -17,11 +17,6 @@ material ColorVc abstract
 
 material White : Color
 {
-	texture Diffuse
-	{
-		file white.png
-	}
-	
 	default_params
 	{
 		float MaterialColor 1 1 1
@@ -42,11 +37,6 @@ material yellowVc : Yellow ColorVc
 
 material Blue : Color
 {
-	texture Diffuse
-	{
-		file white.png
-	}
-	
 	default_params
 	{
 		float MaterialColor 0.2 0.2 1
@@ -57,11 +47,6 @@ material blueVc : Blue ColorVc
 
 material Red : Color
 {
-	texture Diffuse
-	{
-		file white.png
-	}
-	
 	default_params
 	{
 		float MaterialColor 1 0.2 0.2
@@ -72,11 +57,6 @@ material niceRedVc : Red ColorVc
 
 material Green : Color
 {
-	texture Diffuse
-	{
-		file white.png
-	}
-	
 	default_params
 	{
 		float MaterialColor 0.2 0.8 0.2

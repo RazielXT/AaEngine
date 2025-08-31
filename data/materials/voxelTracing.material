@@ -2,7 +2,7 @@ material ColorVCT abstract
 {
 	vertex_shader vsVoxelTracing
 	pixel_shader psVoxelTracing
-	
+
 	texture Diffuse
 	{
 		file white.png
@@ -17,7 +17,7 @@ material ColorVCT abstract
 	{
 		float MaterialColor 1 1 1
 	}
-	
+
 	technique TerrainScan TerrainScanColorVCT override
 }
 
@@ -96,13 +96,13 @@ material RockVCT : ColorVCT
 	}
 }
 
-material GrassVCT : ColorVCT
+material GrassVCT2 : ColorVCT
 {
 	texture Diffuse
 	{
 		file grass.png
 	}
-	
+
 	texture Normal
 	{
 		file rock_norm.dds
@@ -127,16 +127,18 @@ material TreeBranch : ColorVCT
 	pixel_shader psVoxelTracingAlpha
 	shader_defines BRANCH_WAVE
 
+	culling none
+
 	texture Diffuse
 	{
-		file treeBranch.dds
+		file Branch_Summer.dds //treeBranch.dds
 	}
 
 	texture Normal
 	{
-		file treeBranchNormal.dds
+		file Branch_Summer_NORM.dds //treeBranchNormal.dds
 	}
-	
+
 	technique Depth TreeBranchDepth
 }
 
@@ -148,6 +150,69 @@ material TreeBranchDepth
 
 	texture Diffuse
 	{
-		file treeBranch.dds
+		file Branch_Summer.dds
+	}
+}
+
+material PineBranch : TreeBranch
+{
+	texture Diffuse
+	{
+		file pineBranch.dds
+	}
+
+	texture Normal
+	{
+		file pineBranch_NORM.dds
+	}
+
+	technique Depth PineBranchDepth
+}
+
+material PineBranchDepth
+{
+	vertex_shader vsDepthWriteAlphaTest
+	pixel_shader psDepthWriteAlphaTest
+	shader_defines BRANCH_WAVE
+
+	texture Diffuse
+	{
+		file pineBranch.dds
+	}
+}
+
+material PineTrunk : TreeTrunk
+{
+}
+
+
+material GrassVCT
+{
+	vertex_shader
+	{
+		file poTest2.hlsl
+		entry VSMain
+		profile vs_6_6
+	}
+	pixel_shader
+	{
+		file poTest2.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
+
+	texture Diffuse
+	{
+		file brick19.jpg //SilveryBlue.dds
+	}
+
+	texture Normal
+	{
+		file brick19_NORM.dds //SilveryBlue_NRM.png
+	}
+
+	texture Displacement
+	{
+		file brick19_DISP.jpg //SilveryBlue_DISP.png
 	}
 }

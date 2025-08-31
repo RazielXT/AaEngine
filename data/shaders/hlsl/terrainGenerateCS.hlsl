@@ -166,10 +166,6 @@ void main(uint3 groupId : SV_GroupID, uint3 groupThreadId : SV_GroupThreadID)
 		sharedTangents[10][sharedX] = lodTangent;
     }
 
-	// To make 65 vertices, only last group edge adds last vertex
-	if ((sharedX == 9 && id.x != 64) || (sharedY == 9 && id.y != 64))
-		return;
-
 	GroupMemoryBarrierWithGroupSync();
 
 	if (groupThreadId.y % 2 == 1)
@@ -204,6 +200,10 @@ void main(uint3 groupId : SV_GroupID, uint3 groupThreadId : SV_GroupThreadID)
 			}
 		}
 	}
+
+	// To make 65 vertices, only last group edge adds last vertex
+	if ((sharedX == 9 && id.x != 64) || (sharedY == 9 && id.y != 64))
+		return;
 
 	// Far LOD
 	if (GridScale >= 16)

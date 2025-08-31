@@ -5,6 +5,7 @@
 #include "TerrainGrid.h"
 #include "Material.h"
 #include "Vegetation.h"
+#include "VegetationTrees.h"
 
 class SceneManager;
 class SceneEntity;
@@ -15,13 +16,15 @@ class TerrainGenerator
 {
 public:
 
-	TerrainGenerator();
+	TerrainGenerator(SceneManager& sceneMgr);
 
 	void initialize(RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch);
 
 	void createTerrain(ID3D12GraphicsCommandList* commandList, RenderSystem& rs, SceneManager& sceneMgr, GraphicsResources& resources, ResourceUploadBatch& batch);
 	void update(ID3D12GraphicsCommandList* commandList, SceneManager& sceneMgr, const Vector3& position);
 	void rebuild();
+
+	VegetationTrees trees;
 
 public:
 

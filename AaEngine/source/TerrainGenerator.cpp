@@ -3,7 +3,7 @@
 #include "GraphicsResources.h"
 #include "SceneManager.h"
 
-TerrainGenerator::TerrainGenerator()
+TerrainGenerator::TerrainGenerator(SceneManager& sceneMgr) : trees(sceneMgr)
 {
 }
 
@@ -35,6 +35,8 @@ void TerrainGenerator::initialize(RenderSystem& rs, GraphicsResources& resources
 	grid.init(rs, resources, batch, WorldWidth_Units, WorldHeight_Units);
 
 	vegetation.initialize(rs, resources, batch);
+
+	trees.initialize(resources, batch);
 }
 
 void TerrainGenerator::createTerrain(ID3D12GraphicsCommandList* commandList, RenderSystem& rs, SceneManager& sceneMgr, GraphicsResources& resources, ResourceUploadBatch& batch)
@@ -104,6 +106,8 @@ void TerrainGenerator::update(ID3D12GraphicsCommandList* commandList, SceneManag
 	generateTerrain(commandList, position);
 
 	vegetation.update(commandList, heightmap);
+
+	trees.update(position);
 }
 
 void TerrainGenerator::rebuild()

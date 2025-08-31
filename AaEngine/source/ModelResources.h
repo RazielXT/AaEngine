@@ -8,8 +8,8 @@
 
 struct ModelLoadContext
 {
-	std::string folder;
 	ResourceGroup group = ResourceGroup::General;
+	std::string folder;
 };
 
 class ModelResources

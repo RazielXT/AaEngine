@@ -114,6 +114,7 @@
     <ClCompile Include="source\TerrainGenerator.cpp" />
     <ClCompile Include="source\TerrainGrid.cpp" />
     <ClCompile Include="source\Vegetation.cpp" />
+    <ClCompile Include="source\VegetationTrees.cpp" />
     <ClCompile Include="source\VertexBufferModel.cpp" />
     <ClCompile Include="source\ModelResources.cpp" />
     <ClCompile Include="source\AoBlurAndUpsampleCS.cpp" />
@@ -208,6 +209,7 @@
     <ClInclude Include="source\TerrainGenerator.h" />
     <ClInclude Include="source\TerrainGrid.h" />
     <ClInclude Include="source\Vegetation.h" />
+    <ClInclude Include="source\VegetationTrees.h" />
     <ClInclude Include="source\VertexBufferModel.h" />
     <ClInclude Include="source\ModelResources.h" />
     <ClInclude Include="source\RenderObject.h" />

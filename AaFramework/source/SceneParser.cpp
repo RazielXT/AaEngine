@@ -255,7 +255,7 @@ void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible)
 	{
 		auto materialName = GetStringAttribute(element, "materialName");
 		auto material = ctx->resources.materials.getMaterial(materialName, ctx->batch);
-		auto model = ctx->resources.models.getModel(mesh, ctx->batch, { loadFolder });
+		auto model = ctx->resources.models.getModel(mesh, ctx->batch, { ResourceGroup::General, loadFolder });
 
 		if (material->HasInstancing())
 		{

@@ -416,17 +416,7 @@ void Editor::prepareElements(Camera& camera)
 				if (addTreeNormals)
 					tr.orientation *= Quaternion::FromToRotation(Vector3::UnitY, pickInfo.normal);
 
-				static int t = 0;
-
-				auto model = app.resources.models.getLoadedModel("treeBunchBigLeafs.mesh", ResourceGroup::Core);
-				auto tree = app.sceneMgr.createEntity("Tree" + std::to_string(t), tr, *model);
-				tree->material = app.resources.materials.getMaterial("TreeBranch");
-
-				auto modelTrunk = app.resources.models.getLoadedModel("treeBunchBigTrunk.mesh", ResourceGroup::Core);
-				auto treeTrunk = app.sceneMgr.createEntity("TreeTrunk" + std::to_string(t), tr, *modelTrunk);
-				treeTrunk->material = app.resources.materials.getMaterial("TreeTrunk");
-
-				t++;
+				app.sceneMgr.terrain.trees.addTree(tr);
 			}
 			else
 			{
@@ -596,6 +586,9 @@ void Editor::prepareElements(Camera& camera)
 	ImGui::Checkbox("Add Tree", &addTree);
 	if (addTree)
 		ImGui::Checkbox("Add Tree on normals", &addTreeNormals);
+
+	if (ImGui::Button("Swap Tree lod"))
+		app.sceneMgr.terrain.trees.swapLods();
 
 	ImGui::NewLine();
 

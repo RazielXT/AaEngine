@@ -15,7 +15,7 @@ GraphicsResources::GraphicsResources(RenderSystem& rs)
 		ResourceUploadBatch batch(rs.core.device);
 		batch.Begin();
 
-		models.preloadFolder(batch, { SCENE_DIRECTORY + "core/", ResourceGroup::Core });
+		models.preloadFolder(batch, { ResourceGroup::Core, SCENE_DIRECTORY + "core/" });
 
 		auto uploadResourcesFinished = batch.End(rs.core.commandQueue);
 		uploadResourcesFinished.wait();

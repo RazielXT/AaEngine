@@ -13,6 +13,7 @@
 #include <algorithm>
 #include "PhysicsRenderTask.h"
 #include "RenderWireframeTask.h"
+#include "SystemUtils.h"
 
 // Store frame times in a buffer
 float frameTimes[200] = { 0.0f };
@@ -361,6 +362,8 @@ void Editor::prepareElements(Camera& camera)
 	ImGui::Begin("Debug");
 
 	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+	ImGui::Text("VRAM used %uMB", GetGpuMemoryUsage());
+	ImGui::Text("RAM used %uMB", GetSystemMemoryUsage());
 
 	ImGui::End();
 

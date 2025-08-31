@@ -286,6 +286,9 @@
     <ClCompile Include="source\Vegetation.cpp">
       <Filter>Source Files\RenderObject\Vegetation</Filter>
     </ClCompile>
+    <ClCompile Include="source\SystemUtils.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\TargetWindow.h">
@@ -530,6 +533,9 @@
     </ClInclude>
     <ClInclude Include="source\Vegetation.h">
       <Filter>Source Files\RenderObject\Vegetation</Filter>
+    </ClInclude>
+    <ClInclude Include="source\SystemUtils.h">
+      <Filter>Source Files\Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

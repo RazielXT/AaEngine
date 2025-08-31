@@ -6,6 +6,7 @@
 #include "SceneManager.h"
 #include "MaterialResources.h"
 #include "DebugOverlayTask.h"
+#include "SystemUtils.h"
 
 imgui::DebugWindow* instance{};
 
@@ -118,22 +119,6 @@ namespace imgui
 		srvDescHeap->Release();
 
 		instance = nullptr;
-	}
-
-	size_t GetGpuMemoryUsage()
-	{
-		static IDXGIFactory4* pFactory{};
-		if (!pFactory)
-			CreateDXGIFactory1(__uuidof(IDXGIFactory4), (void**)&pFactory);
-
-		static IDXGIAdapter3* adapter{};
-		if (!adapter)
-			pFactory->EnumAdapters(0, reinterpret_cast<IDXGIAdapter**>(&adapter));
-
-		DXGI_QUERY_VIDEO_MEMORY_INFO videoMemoryInfo;
-		adapter->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &videoMemoryInfo);
-
-		return videoMemoryInfo.CurrentUsage / 1024 / 1024;
 	}
 
 	void DebugWindow::draw(ID3D12GraphicsCommandList* commandList, MaterialResources& materials)

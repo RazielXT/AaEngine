@@ -2,7 +2,6 @@
 
 #include <string>
 
-std::wstring as_wstring(const std::string& str);
+std::wstring as_wstring(const std::string_view& str);
 
-std::string as_string(const wchar_t* str);
-std::string as_string(const std::wstring& str);
+std::string as_string(const std::wstring_view& str);

@@ -1,6 +1,7 @@
 #include "EntityPicker.h"
 #include "RenderObject.h"
 #include "SceneManager.h"
+#include <chrono>
 
 EntityPicker* instance = nullptr;
 
@@ -219,7 +220,7 @@ void EntityPicker::update(ID3D12GraphicsCommandList* commandList, RenderProvider
 
 	auto pickTransparent = [this]()
 		{
-			auto currentPickTime = duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+			auto currentPickTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
 			constexpr auto transparentSkipMaxDelay = std::chrono::milliseconds(500);
 			static auto lastPickTime = currentPickTime - transparentSkipMaxDelay;
 

@@ -39,15 +39,12 @@ private:
 
 	bool initLibrary();
 
-	NVSDK_NGX_Parameter* m_ngxParameters = nullptr;
-	NVSDK_NGX_Handle* m_dlssFeature = nullptr;
+	NVSDK_NGX_Parameter* ngxParameters = nullptr;
+	NVSDK_NGX_Handle* dlssFeature = nullptr;
 
 	struct DlssRecommendedSettings
 	{
-		float m_ngxRecommendedSharpness = 0.01f; // in ngx sdk 3.1, dlss sharpening is deprecated
-		XMUINT2 m_ngxRecommendedOptimalRenderSize = { ~(0u), ~(0u) };
-		XMUINT2 m_ngxDynamicMaximumRenderSize = { ~(0u), ~(0u) };
-		XMUINT2 m_ngxDynamicMinimumRenderSize = { ~(0u), ~(0u) };
+		XMUINT2 ngxRecommendedOptimalRenderSize = {};
 	};
 
 	struct UpscaleInfo

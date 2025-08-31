@@ -14,7 +14,7 @@ DLSS::DLSS(RenderSystem& rs) : renderSystem(rs)
 
 bool DLSS::initLibrary()
 {
-	if (m_ngxParameters)
+	if (ngxParameters)
 		return true;
 
 	NVSDK_NGX_Result Result = NVSDK_NGX_D3D12_Init_with_ProjectID(DlssProjectId, NVSDK_NGX_ENGINE_TYPE_CUSTOM, "1.0", L".", renderSystem.core.device);
@@ -24,7 +24,7 @@ bool DLSS::initLibrary()
 		return false;
 	}
 
-	Result = NVSDK_NGX_D3D12_GetCapabilityParameters(&m_ngxParameters);
+	Result = NVSDK_NGX_D3D12_GetCapabilityParameters(&ngxParameters);
 	if (NVSDK_NGX_FAILED(Result))
 	{
 		FileLogger::logWarning(std::format("NVSDK_NGX_GetCapabilityParameters failed, code = {}", (int)Result));
@@ -33,11 +33,11 @@ bool DLSS::initLibrary()
 	}
 
 	int dlssAvailable = 0;
-	NVSDK_NGX_Result ResultDLSS = m_ngxParameters->Get(NVSDK_NGX_Parameter_SuperSampling_Available, &dlssAvailable);
+	NVSDK_NGX_Result ResultDLSS = ngxParameters->Get(NVSDK_NGX_Parameter_SuperSampling_Available, &dlssAvailable);
 	if (ResultDLSS != NVSDK_NGX_Result_Success || !dlssAvailable)
 	{
 		NVSDK_NGX_Result FeatureInitResult = NVSDK_NGX_Result_Fail;
-		NVSDK_NGX_Parameter_GetI(m_ngxParameters, NVSDK_NGX_Parameter_SuperSampling_FeatureInitResult, (int*)&FeatureInitResult);
+		NVSDK_NGX_Parameter_GetI(ngxParameters, NVSDK_NGX_Parameter_SuperSampling_FeatureInitResult, (int*)&FeatureInitResult);
 		FileLogger::logWarning(std::format("NVIDIA DLSS not available on this hardward/platform., FeatureInitResult = {}", (int)FeatureInitResult));
 		shutdown();
 		return false;
@@ -52,16 +52,17 @@ void DLSS::updateRenderSizeInfo()
 {
 	XMUINT2 windowSize = { renderSystem.viewport.getWidth(), renderSystem.viewport.getHeight() };
 
+	uint32_t tmpU;
+	float tmpF;
+
 	for (auto& upscaleInfo : upscaleTypes)
 	{
-		NVSDK_NGX_Result Result = NGX_DLSS_GET_OPTIMAL_SETTINGS(m_ngxParameters,
+		NVSDK_NGX_Result Result = NGX_DLSS_GET_OPTIMAL_SETTINGS(ngxParameters,
 			windowSize.x, windowSize.y, upscaleInfo.type,
-			&upscaleInfo.settings.m_ngxRecommendedOptimalRenderSize.x, &upscaleInfo.settings.m_ngxRecommendedOptimalRenderSize.y,
-			&upscaleInfo.settings.m_ngxDynamicMaximumRenderSize.x, &upscaleInfo.settings.m_ngxDynamicMaximumRenderSize.y,
-			&upscaleInfo.settings.m_ngxDynamicMinimumRenderSize.x, &upscaleInfo.settings.m_ngxDynamicMinimumRenderSize.y,
-			&upscaleInfo.settings.m_ngxRecommendedSharpness);
+			&upscaleInfo.settings.ngxRecommendedOptimalRenderSize.x, &upscaleInfo.settings.ngxRecommendedOptimalRenderSize.y,
+			&tmpU, &tmpU, &tmpU, &tmpU, &tmpF);
 
-		upscaleInfo.lodBias = std::log2f(float(upscaleInfo.settings.m_ngxRecommendedOptimalRenderSize.x) / windowSize.x) - 1.0f;
+		upscaleInfo.lodBias = std::log2f(float(upscaleInfo.settings.ngxRecommendedOptimalRenderSize.x) / windowSize.x) - 1.0f;
 	}
 
 	//off
@@ -108,7 +109,7 @@ DirectX::XMFLOAT2 DLSS::getJitter() const
 
 void DLSS::shutdown()
 {
-	NVSDK_NGX_D3D12_DestroyParameters(m_ngxParameters);
+	NVSDK_NGX_D3D12_DestroyParameters(ngxParameters);
 	NVSDK_NGX_D3D12_Shutdown1(nullptr);
 }
 
@@ -116,10 +117,10 @@ bool DLSS::selectMode(UpscaleMode m)
 {
 	renderSystem.core.WaitForAllFrames();
 
-	if (m_dlssFeature)
+	if (dlssFeature)
 	{
-		NVSDK_NGX_D3D12_ReleaseFeature(m_dlssFeature);
-		m_dlssFeature = nullptr;
+		NVSDK_NGX_D3D12_ReleaseFeature(dlssFeature);
+		dlssFeature = nullptr;
 	}
 
 	if (m != UpscaleMode::Off && compatible && !initLibrary())
@@ -136,17 +137,11 @@ bool DLSS::selectMode(UpscaleMode m)
 		return true;
 
 	reset = true;
-	unsigned int CreationNodeMask = 1;
-	unsigned int VisibilityNodeMask = 1;
-	NVSDK_NGX_Result ResultDLSS = NVSDK_NGX_Result_Fail;
 
-	int MotionVectorResolutionLow = 1; // we let the Snippet do the upsampling of the motion vector
-	// Next create features	
 	int DlssCreateFeatureFlags = NVSDK_NGX_DLSS_Feature_Flags_None;
-	DlssCreateFeatureFlags |= MotionVectorResolutionLow ? NVSDK_NGX_DLSS_Feature_Flags_MVLowRes : 0;
+	DlssCreateFeatureFlags |= NVSDK_NGX_DLSS_Feature_Flags_MVLowRes;
 	//DlssCreateFeatureFlags |= isContentHDR ? NVSDK_NGX_DLSS_Feature_Flags_IsHDR : 0;
 	DlssCreateFeatureFlags |= NVSDK_NGX_DLSS_Feature_Flags_DepthInverted;
-	//DlssCreateFeatureFlags |= NVSDK_NGX_DLSS_Feature_Flags_DoSharpening;
 	//DlssCreateFeatureFlags |= enableAutoExposure ? NVSDK_NGX_DLSS_Feature_Flags_AutoExposure : 0;
 
 	NVSDK_NGX_DLSS_Create_Params DlssCreateParams{};
@@ -154,26 +149,28 @@ bool DLSS::selectMode(UpscaleMode m)
 	XMUINT2 windowSize = renderSystem.getOutputSize();
 
 	auto& selectedInfo = upscaleTypes[(int)selectedUpscale];
-	DlssCreateParams.Feature.InWidth = selectedInfo.settings.m_ngxRecommendedOptimalRenderSize.x;
-	DlssCreateParams.Feature.InHeight = selectedInfo.settings.m_ngxRecommendedOptimalRenderSize.y;
+	DlssCreateParams.Feature.InWidth = selectedInfo.settings.ngxRecommendedOptimalRenderSize.x;
+	DlssCreateParams.Feature.InHeight = selectedInfo.settings.ngxRecommendedOptimalRenderSize.y;
 	DlssCreateParams.Feature.InTargetWidth = windowSize.x;
 	DlssCreateParams.Feature.InTargetHeight = windowSize.y;
 	DlssCreateParams.Feature.InPerfQualityValue = selectedInfo.type;
 	DlssCreateParams.InFeatureCreateFlags = DlssCreateFeatureFlags;
 
 	// Select render preset (DL weights)
-	int renderPreset = NVSDK_NGX_DLSS_Hint_Render_Preset_F;
-	NVSDK_NGX_Parameter_SetUI(m_ngxParameters, NVSDK_NGX_Parameter_DLSS_Hint_Render_Preset_DLAA, renderPreset);              // will remain the chosen weights after OTA
-	NVSDK_NGX_Parameter_SetUI(m_ngxParameters, NVSDK_NGX_Parameter_DLSS_Hint_Render_Preset_Quality, renderPreset);           // ^
-	NVSDK_NGX_Parameter_SetUI(m_ngxParameters, NVSDK_NGX_Parameter_DLSS_Hint_Render_Preset_Balanced, renderPreset);          // ^
-	NVSDK_NGX_Parameter_SetUI(m_ngxParameters, NVSDK_NGX_Parameter_DLSS_Hint_Render_Preset_Performance, renderPreset);       // ^
-	NVSDK_NGX_Parameter_SetUI(m_ngxParameters, NVSDK_NGX_Parameter_DLSS_Hint_Render_Preset_UltraPerformance, renderPreset);  // ^
+	const int renderPreset = NVSDK_NGX_DLSS_Hint_Render_Preset_K; // NVSDK_NGX_DLSS_Hint_Render_Preset_J;
+	NVSDK_NGX_Parameter_SetUI(ngxParameters, NVSDK_NGX_Parameter_DLSS_Hint_Render_Preset_DLAA, renderPreset);              // will remain the chosen weights after OTA
+	NVSDK_NGX_Parameter_SetUI(ngxParameters, NVSDK_NGX_Parameter_DLSS_Hint_Render_Preset_Quality, renderPreset);           // ^
+	NVSDK_NGX_Parameter_SetUI(ngxParameters, NVSDK_NGX_Parameter_DLSS_Hint_Render_Preset_Balanced, renderPreset);          // ^
+	NVSDK_NGX_Parameter_SetUI(ngxParameters, NVSDK_NGX_Parameter_DLSS_Hint_Render_Preset_Performance, renderPreset);       // ^
+	NVSDK_NGX_Parameter_SetUI(ngxParameters, NVSDK_NGX_Parameter_DLSS_Hint_Render_Preset_UltraPerformance, renderPreset);  // ^
 
 	{
 		auto commands = renderSystem.core.CreateCommandList(L"DLSS");
 		renderSystem.core.StartCommandList(commands);
 
-		ResultDLSS = NGX_D3D12_CREATE_DLSS_EXT(commands.commandList, CreationNodeMask, VisibilityNodeMask, &m_dlssFeature, m_ngxParameters, &DlssCreateParams);
+		const unsigned int CreationNodeMask = 1;
+		const unsigned int VisibilityNodeMask = 1;
+		auto ResultDLSS = NGX_D3D12_CREATE_DLSS_EXT(commands.commandList, CreationNodeMask, VisibilityNodeMask, &dlssFeature, ngxParameters, &DlssCreateParams);
 
 		if (NVSDK_NGX_FAILED(ResultDLSS))
 		{
@@ -212,12 +209,12 @@ UpscaleMode DLSS::selectedMode() const
 
 DirectX::XMUINT2 DLSS::getRenderSize() const
 {
-	return upscaleTypes[(int)selectedUpscale].settings.m_ngxRecommendedOptimalRenderSize;
+	return upscaleTypes[(int)selectedUpscale].settings.ngxRecommendedOptimalRenderSize;
 }
 
 bool DLSS::upscale(ID3D12GraphicsCommandList* commandList, const UpscaleInput& input)
 {
-	if (!m_dlssFeature)
+	if (!dlssFeature)
 		return false;
 
 	NVSDK_NGX_D3D12_DLSS_Eval_Params D3D12DlssEvalParams;
@@ -249,7 +246,7 @@ bool DLSS::upscale(ID3D12GraphicsCommandList* commandList, const UpscaleInput& i
 	NVSDK_NGX_Dimensions renderingSize = { getRenderSize().x, getRenderSize().y };
 	D3D12DlssEvalParams.InRenderSubrectDimensions = renderingSize;
 
-	NVSDK_NGX_Result Result = NGX_D3D12_EVALUATE_DLSS_EXT(commandList, m_dlssFeature, m_ngxParameters, &D3D12DlssEvalParams);
+	NVSDK_NGX_Result Result = NGX_D3D12_EVALUATE_DLSS_EXT(commandList, dlssFeature, ngxParameters, &D3D12DlssEvalParams);
 
 	frameIndex = (frameIndex + 1) % 64;
 

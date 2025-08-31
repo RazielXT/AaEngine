@@ -5,4 +5,4 @@
 
 using namespace Microsoft::WRL;
 
-static const UINT FrameCount = 2;
+static constexpr UINT FrameCount = 2;

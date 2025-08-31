@@ -280,7 +280,7 @@ void PhysicsManager::drawDebugRender(ID3D12GraphicsCommandList* commandList, Sha
 void PhysicsManager::test()
 {
 	Ref<PhysicsScene> scene;
-	if (!ObjectStreamIn::sReadObject("../data/terrain2.bof", scene))
+	if (!ObjectStreamIn::sReadObject("../JoltPhysics/Assets/terrain2.bof", scene))
 		return;
 	for (BodyCreationSettings& body : scene->GetBodies())
 		body.mObjectLayer = Layers::NON_MOVING;

@@ -8,9 +8,9 @@ compositor Frame
 	texture sceneTexture target_size Color:DXGI_FORMAT_R8G8B8A8_UNORM Normal:DXGI_FORMAT_R10G10B10A2_UNORM Distance:DXGI_FORMAT_R32_FLOAT MotionVectors:DXGI_FORMAT_R16G16_FLOAT Depth
 	texture sceneTransparentTexture target_size Color:DXGI_FORMAT_R8G8B8A8_UNORM Fill:DXGI_FORMAT_R8G8B8A8_UNORM
 	texture sceneTexture2 target_size DXGI_FORMAT_R8G8B8A8_UNORM
+	texture sceneColors target_size DXGI_FORMAT_R8G8B8A8_UNORM
 	texture sceneTransparentTextureDownscale4 target_size_div 4 DXGI_FORMAT_R8G8B8A8_UNORM
 	texture sceneTransparentTexture2 target_size DXGI_FORMAT_R8G8B8A8_UNORM
-	texture sceneColors target_size DXGI_FORMAT_R8G8B8A8_UNORM
 	texture motionVectors target_size DXGI_FORMAT_R16G16_FLOAT
 	rwtexture sceneTexture2_upscaled output_size DXGI_FORMAT_R8G8B8A8_UNORM
 	texture sceneTexture3 output_size DXGI_FORMAT_R8G8B8A8_UNORM
@@ -135,10 +135,18 @@ compositor Frame
 
 	ref Bloom:*
 
+	pass CombineLighting
+	{
+		material CombineLighting
+		input sceneColors
+		input sceneTexture:Distance
+		target sceneTexture2
+	}
+
 	task SceneRender
 	{
 		entry Editor
-		target sceneColors sceneTexture:Depth (depth_read)
+		target sceneTexture2 sceneTexture:Depth (depth_read)
 	}
 
 #if UPSCALE
@@ -156,7 +164,7 @@ compositor Frame
 	#if DLSS
 		task Upscale (compute_shader)
 		{
-			input sceneColors
+			input sceneTexture2
 			input motionVectors
 			input sceneTexture:Depth
 			input sceneTexture2_upscaled
@@ -164,7 +172,7 @@ compositor Frame
 	#elif FSR
 		task Upscale (compute_shader)
 		{
-			input sceneColors
+			input sceneTexture2
 			input motionVectors
 			input sceneTexture:Depth
 			input sceneTexture2_upscaled
@@ -180,7 +188,6 @@ compositor Frame
 		input bloomTexture
 		input godray
 		input exposure
-		input sceneTexture:Distance
 		target Output
 	}
 
@@ -191,11 +198,10 @@ compositor Frame
 	pass Combine
 	{
 		material AddThrough
-		input sceneColors
+		input sceneTexture2
 		input bloomTexture
 		input godray
 		input exposure
-		input sceneTexture:Distance
 		target sceneTexture3
 	}
 

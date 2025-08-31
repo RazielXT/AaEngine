@@ -279,7 +279,7 @@ PSOutput PSMain(PS_Input pin)
 
 	float directShadow = getPssmShadow(pin.wp, camDistance, dotLighting, ShadowSampler, Sun) * dotStepLighting;
 	float directLight = abs(dotLighting) * directShadow;
-	float3 lighting = (pow(directLight, 2) + finalAmbient);
+	float3 lighting = (pow(directLight, 2) * Sun.Color + finalAmbient);
 
     float4 color1 = float4(albedo * lighting, 1);
 	color1.a = (lighting.r + lighting.g + lighting.b) / 30;

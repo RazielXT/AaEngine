@@ -674,16 +674,26 @@ void Editor::prepareElements(Camera& camera)
 
 	if (ImGui::CollapsingHeader("Sun"))
 	{
-		static int sunYaw = 0;
-		static int lastYaw = sunYaw;
-		static int sunPitch = 0;
-		static int lastPitch = sunPitch;
-		if (ImGui::InputInt("Yaw", &sunYaw, 1, 3) || ImGui::InputInt("Pitch", &sunPitch, 1, 3))
+		static float sunYaw = std::atan2(app.lights.directionalLight.direction.x, app.lights.directionalLight.direction.z);
+		static float sunPitch = std::asin(app.lights.directionalLight.direction.y);
+
+		bool change = ImGui::SliderFloat("Yaw", &sunYaw, -XM_PI, XM_PI);
+		change |= ImGui::SliderFloat("Pitch", &sunPitch, -XM_PI, 0);
+
+		if (change)
 		{
-			auto rotation = Quaternion::CreateFromYawPitchRoll(XMConvertToRadians((float)lastYaw - sunYaw), XMConvertToRadians((float)lastPitch - sunPitch), 0);
-			app.lights.directionalLight.direction = rotation * app.lights.directionalLight.direction;
-			lastPitch = sunPitch;
-			lastYaw = sunYaw;
+			Vector3& direction = app.lights.directionalLight.direction;
+			direction.x = std::cos(sunPitch) * std::sin(sunYaw);
+			direction.y = std::sin(sunPitch);
+			direction.z = std::cos(sunPitch) * std::cos(sunYaw);
+			direction.Normalize();
+
+			VoxelizeSceneTask::Get().revoxelize();
+		}
+
+		if (ImGui::ColorEdit3("Color", &app.lights.directionalLight.color.x))
+		{
+			VoxelizeSceneTask::Get().revoxelize();
 		}
 	}
 	{

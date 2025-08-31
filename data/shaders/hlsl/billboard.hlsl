@@ -175,7 +175,7 @@ PSOutput PSMain(PSInput input)
 
 	float dotLighting = saturate(dot(-Sun.Direction,worldNormal));
 
-	float3 lighting = (directShadow * dotLighting + finalAmbient);
+	float3 lighting = (directShadow * dotLighting * Sun.Color + finalAmbient);
 	albedo.rgb *= lighting;
 
 	//albedo.rgb = albedo.rgb * 0.01 + dotLighting;

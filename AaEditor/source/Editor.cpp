@@ -621,6 +621,7 @@ void Editor::prepareElements(Camera& camera)
 
 	const char* scenes[] = {
 		"test",
+		"cubesTower",
 		"testCubes",
 		"voxelRoom",
 		"voxelOutside",

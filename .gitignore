@@ -3,3 +3,10 @@
 Packages/
 Debug/
 x64/
+data/scene/*
+!data/scene/core
+!data/scene/testCubes
+!data/scene/voxelOutside
+!data/scene/voxelOutsideBig
+!data/scene/cubesTower
+!data/scene/voxelRoom

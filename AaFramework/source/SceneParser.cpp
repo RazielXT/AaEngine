@@ -283,12 +283,18 @@ void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible)
 	}
 }
 
-void loadNode(const xml_node& nodeElement)
+void loadNode(const xml_node& nodeElement, SceneNode* parentNode = nullptr)
 {
 	SceneNode node;
-	node.transformation.position = LoadXYZ(nodeElement.child("position"));
-	node.transformation.orientation = LoadRotation(nodeElement.child("rotation"));
-	node.transformation.scale = LoadXYZ(nodeElement.child("scale"));
+
+	if (!parentNode)
+	{
+		node.transformation.position = LoadXYZ(nodeElement.child("position"));
+		node.transformation.orientation = LoadRotation(nodeElement.child("rotation"));
+		node.transformation.scale = LoadXYZ(nodeElement.child("scale"));
+	}
+	else
+		node = *parentNode;
 
 	auto name = nodeElement.attribute("name").value();
 	bool visible = nodeElement.attribute("visibility").value() != std::string("hidden");
@@ -299,6 +305,8 @@ void loadNode(const xml_node& nodeElement)
 
 		if (elementName == "entity")
 			loadEntity(element, &node, visible);
+		if (elementName == "node")
+			loadNode(element, &node);
 // 		else if (elementName == "light")
 // 			loadLight(childElement, &node, sceneMgr);
 	}

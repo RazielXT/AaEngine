@@ -151,4 +151,5 @@ struct VoxelSceneData
 	float4 Diffuse;
 	float3 Normal;
 	int Max;
+	float Occupy;
 };

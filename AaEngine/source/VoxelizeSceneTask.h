@@ -37,7 +37,7 @@ struct SceneVoxelsCascade
 
 	Vector3 update(const Vector3& cameraPosition);
 
-	const UINT DataElementSize = sizeof(float) * 8;
+	const UINT DataElementSize = sizeof(float) * 9;
 	const UINT DataElementCount = 128 * 128 * 128;
 
 	ComPtr<ID3D12Resource> dataBuffer;

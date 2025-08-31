@@ -146,8 +146,7 @@ float4 PS_Main(PS_Input pin) : SV_TARGET
 	float4 prev = SceneVoxelBounces.Load(float4(posUV - VoxelInfo.Voxels[VoxelIdx].BouncesOffset * StepSize, 0));
 
 	RWTexture3D<float4> SceneVoxel = ResourceDescriptorHeap[VoxelInfo.Voxels[VoxelIdx].TexId];
-    SceneVoxel[posUV] = float4(prev.rgb * prev.w, 1);
-	//SceneVoxel[posUV - worldNormal].a = 1;
+    SceneVoxel[posUV] = float4(prev.rgb * prev.w, prev.w);
 
 	bool isInBounds = (posUV.x >= 0 && posUV.x < 128) &&
 					  (posUV.y >= 0 && posUV.y < 128) &&
@@ -168,6 +167,7 @@ float4 PS_Main(PS_Input pin) : SV_TARGET
 		{
 			SceneVoxelData[linearIndex].Diffuse = float4(diffuse, shadow);
 			SceneVoxelData[linearIndex].Normal = worldNormal;
+			SceneVoxelData[linearIndex].Occupy = 1;
 		}
 	}
 

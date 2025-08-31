@@ -206,6 +206,7 @@ class CustomIncludeHandler : public IDxcIncludeHandler
 public:
 
 	IDxcUtils* pUtils;
+	std::wstring localPath;
 
 	HRESULT STDMETHODCALLTYPE LoadSource(LPCWSTR pFilename, IDxcBlob** ppIncludeSource) override
 	{
@@ -220,7 +221,7 @@ public:
 			return S_OK;
 		}
 
-		auto fullpath = as_wstring(SHADER_HLSL_DIRECTORY) + pFilename;
+		auto fullpath = localPath + pFilename;
 		HRESULT hr = pUtils->LoadFile(fullpath.c_str(), nullptr, pEncoding.GetAddressOf());
 		if (SUCCEEDED(hr))
 		{
@@ -287,6 +288,7 @@ ComPtr<IDxcBlob> ShaderCompiler::compileShader(const ShaderRef& ref, ShaderDescr
 	sourceBuffer.Encoding = 0;
 
 	CustomIncludeHandler includeHandler;
+	includeHandler.localPath = wfile.substr(0, wfile.find_last_of('/') + 1);
 	includeHandler.pUtils = pUtils.Get();
 
 	ComPtr<IDxcResult> pCompileResult;

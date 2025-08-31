@@ -21,7 +21,7 @@ float getPssmShadow(float4 wp, float cameraDistance, float dotView, SamplerState
 		biasSlopeAdjust += (0.5 - dotView) * 5;
 
 	uint ShadowIndex = 0;
-	float ShadowBias[4] = { 0.0001, 0.0002, 0.0003, 0.001 };
+	float ShadowBias[4] = { 0.0001, 0.0002, 0.001, 0.003 };
 	float lerpPoint = cameraDistance / params.ShadowCascadeDistance0;
 
 	if (params.ShadowCascadeDistance0 < cameraDistance)
@@ -34,15 +34,11 @@ float getPssmShadow(float4 wp, float cameraDistance, float dotView, SamplerState
 		ShadowIndex = 2;
 		lerpPoint = (cameraDistance - params.ShadowCascadeDistance1) / (params.ShadowCascadeDistance2 - params.ShadowCascadeDistance1);
 	}
-	if (params.ShadowCascadeDistance2 < cameraDistance)
-	{
-		lerpPoint = saturate((cameraDistance - params.ShadowCascadeDistance2) / 1000.f);
-	}
 
 	float shadow = getCascadeShadow(wp, ShadowIndex, ShadowBias[ShadowIndex] * biasSlopeAdjust, sampler, params);
 	float nextShadow = getCascadeShadow(wp, ShadowIndex + 1, ShadowBias[ShadowIndex + 1] * biasSlopeAdjust, sampler, params);
 
-	shadow = lerp(shadow, nextShadow, lerpPoint);
+	shadow = lerp(shadow, nextShadow, saturate(lerpPoint));
 
 	return shadow;
 }

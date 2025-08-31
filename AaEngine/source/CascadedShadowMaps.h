@@ -9,6 +9,6 @@ struct ShadowMapCascade
 	DirectX::XMMATRIX matShadowProj[4];
 	DirectX::XMMATRIX matShadowView;
 
-	const int cascadePartitionsZeroToOne[3] = { 50, 200, 2000 };
+	const int cascadePartitionsZeroToOne[3] = { 50, 200, 1000 };
 	const int cascadesCount = _countof(cascadePartitionsZeroToOne);
 };

@@ -645,6 +645,13 @@ void Editor::prepareElements(Camera& camera)
 		if (ImGui::InputInt("Texture preview", &next))
 			overlayTask.changeIdx(next);
 
+		if (next >= 0)
+		{
+			bool f = overlayTask.isFullscreen();
+			if (ImGui::Checkbox("Texture preview fullscreen", &f))
+				overlayTask.setFullscreen(f);
+		}
+
 		if (auto name = overlayTask.getCurrentIdxName())
 			ImGui::Text("Texture: %s", name);
 	}

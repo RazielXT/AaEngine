@@ -23,9 +23,16 @@ public:
 	int currentIdx() const;
 	const char* getCurrentIdxName() const;
 
+	bool isFullscreen() const;
+	void setFullscreen(bool);
+
 private:
 
 	AssignedMaterial* material{};
+
+	Vector2 screenSize{};
+	bool fullscreen = false;
+	void updateQuad();
 	ScreenQuad quad;
 
 	int current = -1;

@@ -23,7 +23,8 @@ AsyncTasksInfo DebugOverlayTask::initialize(CompositorPass& pass)
 
 void DebugOverlayTask::resize(CompositorPass& pass)
 {
-	quad.SetPosition({}, 0.5f, ScreenQuad::TopRight, pass.target.texture->width / float(pass.target.texture->height));
+	screenSize = { (float)pass.target.texture->width, (float)pass.target.texture->height };
+	updateQuad();
 }
 
 void DebugOverlayTask::run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass)
@@ -72,4 +73,23 @@ int DebugOverlayTask::currentIdx() const
 const char* DebugOverlayTask::getCurrentIdxName() const
 {
 	return current >= 0 ? DescriptorManager::get().getDescriptorName(current) : nullptr;
+}
+
+bool DebugOverlayTask::isFullscreen() const
+{
+	return fullscreen;
+}
+
+void DebugOverlayTask::setFullscreen(bool f)
+{
+	fullscreen = f;
+	updateQuad();
+}
+
+void DebugOverlayTask::updateQuad()
+{
+	if (fullscreen)
+		quad.SetPosition(screenSize);
+	else
+		quad.SetPosition({}, 0.5f, ScreenQuad::TopRight, screenSize.x / screenSize.y);
 }

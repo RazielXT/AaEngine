@@ -12,6 +12,8 @@ struct ScreenQuad
 	enum RelativePosition { BottomLeft = 0, Top = 1, Right = 2, TopRight = Top | Right };
 	void SetPosition(Vector2 offset, float size, RelativePosition relative, float aspectRatio);
 
+	void SetPosition(Vector2 size);
+
 	XM_ALIGNED_STRUCT(16) QuadData
 	{
 		Vector4 vertices[4] = { { 1.0f, 0.0f, 0.0f, 1.0f }, // Bottom-right

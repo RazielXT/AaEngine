@@ -79,3 +79,14 @@ void ScreenQuad::SetPosition(Vector2 offset, float size, RelativePosition relati
 		v.y = v.y * 2 - 1;
 	}
 }
+
+void ScreenQuad::SetPosition(Vector2 size)
+{
+	data = {};
+
+	for (auto& v : data.vertices)
+	{
+		if (v.x == 0) v.x = -1.f;
+		if (v.y == 0) v.y = -1.f;
+	}
+}

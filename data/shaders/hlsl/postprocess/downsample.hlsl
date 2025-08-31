@@ -1,3 +1,5 @@
+#include "PostProcessCommon.hlsl"
+
 float2 ViewportSizeInverse;
 float DeltaTime;
 
@@ -5,12 +7,6 @@ Texture2D colorMap : register(t0);
 Texture2D brightnessMap : register(t1);
 SamplerState LinearSampler : register(s0);
 SamplerState DepthSampler : register(s0);
-
-struct VS_OUTPUT
-{
-    float4 Position : SV_POSITION;
-    float2 TexCoord : TEXCOORD0;
-};
 
 float4 PSLoadThrough(VS_OUTPUT input) : SV_TARGET
 {

@@ -60,7 +60,7 @@ material LoadThrough : PostProcess
 {
 	pixel_shader
 	{
-		file downsample.hlsl
+		file postprocess/downsample.hlsl
 		entry PSLoadThrough
 		profile ps_6_6
 	}
@@ -70,7 +70,7 @@ material Downsample3x3 : PostProcess
 {
 	pixel_shader
 	{
-		file downsample.hlsl
+		file postprocess/downsample.hlsl
 		entry PSDownsample3x3
 		profile ps_6_6
 	}
@@ -80,7 +80,7 @@ material Downsample3x3Exposure : PostProcess
 {
 	pixel_shader
 	{
-		file downsample.hlsl
+		file postprocess/downsample.hlsl
 		entry PSDownsample3x3Exposure
 		profile ps_6_6
 	}
@@ -120,7 +120,7 @@ material BloomBlurX : PostProcess
 {
 	pixel_shader
 	{
-		file downsample.hlsl
+		file postprocess/downsample.hlsl
 		entry PSBloomBlurX
 		profile ps_6_6
 	}
@@ -130,7 +130,7 @@ material BloomBlurY : PostProcess
 {
 	pixel_shader
 	{
-		file downsample.hlsl
+		file postprocess/downsample.hlsl
 		entry PSBloomBlurY
 		profile ps_6_6
 	}
@@ -150,7 +150,7 @@ material SkyPassThrough : PostProcess
 {
 	pixel_shader
 	{
-		file postprocess.hlsl
+		file postprocess/postprocess.hlsl
 		entry PSSkyPassThrough
 		profile ps_6_6
 	}

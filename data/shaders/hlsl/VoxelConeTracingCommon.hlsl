@@ -37,7 +37,7 @@ struct SceneVoxelCbufferIndexed
 
 float4 SampleVoxel(Texture3D cmap, SamplerState sampl, float3 pos, float3 dir, float lod)
 {
-#ifdef GI_LOW
+#ifndef GI_MAX
 	return cmap.SampleLevel(sampl, pos, lod);
 #endif
 

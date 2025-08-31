@@ -1,7 +1,7 @@
 #pragma once
 
 #include "directx/d3d12.h"
-#include <ffx_api/dx12/ffx_api_dx12.hpp>
+#include <FidelityFX-SDK/Kits/FidelityFX/api/include/dx12/ffx_api_dx12.hpp>
 #include "MathUtils.h"
 #include "UpscaleTypes.h"
 

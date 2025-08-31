@@ -1,5 +1,5 @@
 #include "FSR.h"
-#include <ffx_api/ffx_upscale.hpp>
+#include "FidelityFX-SDK/Kits/FidelityFX/upscalers/include/ffx_upscale.hpp"
 #include "RenderSystem.h"
 #include "FileLogger.h"
 #include <format>
@@ -106,12 +106,6 @@ void FSR::initializeContext()
 
 	reloadUpscaleParams();
 	updateJitter();
-
-// 	FfxApiEffectMemoryUsage gpuMemoryUsageUpscaler;
-// 	ffx::QueryDescUpscaleGetGPUMemoryUsage upscalerGetGPUMemoryUsage{};
-// 	upscalerGetGPUMemoryUsage.gpuMemoryUsageUpscaler = &gpuMemoryUsageUpscaler;
-// 
-// 	ffx::Query(m_UpscalingContext, upscalerGetGPUMemoryUsage);
 }
 
 void FSR::reloadUpscaleParams()

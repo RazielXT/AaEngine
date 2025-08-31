@@ -390,6 +390,8 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData(GraphicsResour
 
 				if (p.Name == "WorldMatrix")
 					type = ResourcesInfo::AutoParam::WORLD_MATRIX;
+				else if (p.Name == "InvWorldMatrix")
+					type = ResourcesInfo::AutoParam::INV_WORLD_MATRIX;
 				else if (p.Name == "PreviousWorldMatrix")
 					type = ResourcesInfo::AutoParam::PREV_WORLD_MATRIX;
 				else if (p.Name == "WorldPosition")

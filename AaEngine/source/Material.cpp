@@ -580,6 +580,8 @@ void MaterialInstance::UpdatePerObject(MaterialDataStorage& data, const ShaderCo
 	{
 		if (p.type == ResourcesInfo::AutoParam::WORLD_MATRIX)
 			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&data.rootParams[p.bufferOffset], XMMatrixTranspose(info.getWorldMatrix()));
+		else if (p.type == ResourcesInfo::AutoParam::INV_WORLD_MATRIX)
+			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&data.rootParams[p.bufferOffset], XMMatrixTranspose(XMMatrixInverse(nullptr, info.getWorldMatrix())));
 		else if (p.type == ResourcesInfo::AutoParam::PREV_WORLD_MATRIX)
 			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&data.rootParams[p.bufferOffset], XMMatrixTranspose(info.getPreviousWorldMatrix()));
 		else if (p.type == ResourcesInfo::AutoParam::WORLD_POSITION)

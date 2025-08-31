@@ -66,6 +66,7 @@ struct ResourcesInfo
 		TEXID,
 
 		WORLD_MATRIX,
+		INV_WORLD_MATRIX,
 		PREV_WORLD_MATRIX,
 		WORLD_POSITION,
 

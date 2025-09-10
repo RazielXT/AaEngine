@@ -57,6 +57,7 @@ enum class MaterialTechnique
 	Voxelize,
 	EntityId,
 	TerrainScan,
+	Wireframe,
 	COUNT
 };
 

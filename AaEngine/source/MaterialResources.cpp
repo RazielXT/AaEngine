@@ -64,6 +64,22 @@ void MaterialResources::loadMaterials(std::string directory, bool subDirectories
 	MaterialFileParser::parseAllMaterialFiles(knownMaterials, shaders, directory, subDirectories);
 	resources.shaders.addShaderReferences(shaders);
 
+	for (size_t i = 0; i < knownMaterials.size(); i++)
+	{
+		MaterialRef& info = knownMaterials[i];
+
+		if (!info.abstract && info.pipeline.fill == D3D12_FILL_MODE_SOLID && !info.techniqueMaterial[int(MaterialTechnique::Wireframe)])
+		{
+			auto wMat = info;
+			wMat.pipeline.fill = D3D12_FILL_MODE_WIREFRAME;
+
+			wMat.base = wMat.name = info.name + "_GW";
+			info.techniqueMaterial[int(MaterialTechnique::Wireframe)] = wMat.name;
+
+			knownMaterials.push_back(wMat);
+		}
+	}
+
 	for (const MaterialRef& info : knownMaterials)
 	{
 		auto& base = materialBaseMap[info.base];

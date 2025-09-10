@@ -4,7 +4,7 @@
 
 struct ShadowMapCascade
 {
-	void update(Camera& light, Camera& viewer, float extends, Vector2& nearFarClip);
+	void update(Camera& light, Camera& viewer, float extends, Vector2& nearFarClip, float shadowMapSize);
 
 	DirectX::XMMATRIX matShadowProj[4];
 	DirectX::XMMATRIX matShadowView;

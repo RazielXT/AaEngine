@@ -3,6 +3,8 @@
 #include "directx\d3dx12.h"
 #include <format>
 
+const UINT shadowMapSize = 1024;
+
 ShadowMaps::ShadowMaps(SceneLights::Light& l,	PssmParameters& d) : sun(l), data(d)
 {
 	for (int i = 0; auto c : cascadeInfo.cascadePartitionsZeroToOne)
@@ -13,8 +15,6 @@ ShadowMaps::ShadowMaps(SceneLights::Light& l,	PssmParameters& d) : sun(l), data(
 
 void ShadowMaps::init(RenderSystem& renderSystem, GraphicsResources& resources)
 {
-	const UINT shadowMapSize = 512;
-
 	const UINT count = std::size(cascades);
 	targetHeap.InitDsv(renderSystem.core.device, count + 1, L"ShadowMapsDSV");
 
@@ -63,7 +63,7 @@ void ShadowMaps::update(UINT frameIndex, Camera& mainCamera)
 	cascades[0].camera.lookTo(lightEye, lightTarget);
 
 	Vector2 nearFarPlane{};
-	cascadeInfo.update(cascades[0].camera, mainCamera, LightRange, nearFarPlane);
+	cascadeInfo.update(cascades[0].camera, mainCamera, LightRange, nearFarPlane, shadowMapSize);
 
 	for (int i = 0; auto& cascade : cascades)
 	{
@@ -88,7 +88,7 @@ void ShadowMaps::update(UINT frameIndex, Camera& mainCamera)
 
 		float extends = 6000;
 
-		float fWorldUnitsPerTexel = extends * 2 / 512.f;
+		float fWorldUnitsPerTexel = extends * 2 / shadowMapSize;
 		auto vWorldUnitsPerTexel = XMVectorSet(fWorldUnitsPerTexel, fWorldUnitsPerTexel, 0.0f, 0.0f);
 
 		XMVECTOR myPos = mainCamera.getPosition();

@@ -1,12 +1,15 @@
 #include "MathUtils.h"
 #include "CascadedShadowMaps.h"
 
+// from CascadedShadowMaps11 example
+
 enum FIT_PROJECTION_TO_CASCADES
 {
 	FIT_TO_CASCADES,
 	FIT_TO_SCENE
 };
-FIT_PROJECTION_TO_CASCADES          m_eSelectedCascadesFit = FIT_TO_SCENE;
+FIT_PROJECTION_TO_CASCADES m_eSelectedCascadesFit = FIT_TO_SCENE;
+
 FLOAT m_fCascadePartitionsFrustum[8]; // Values are  between near and far
 INT m_iCascadePartitionsMax = 100;
 
@@ -17,7 +20,7 @@ enum FIT_TO_NEAR_FAR
 	FIT_NEARFAR_AABB,
 	FIT_NEARFAR_SCENE_AABB
 };
-FIT_TO_NEAR_FAR                     m_eSelectedNearFarFit = FIT_NEARFAR_SCENE_AABB;
+FIT_TO_NEAR_FAR m_eSelectedNearFarFit = FIT_NEARFAR_AABB;
 
 static const XMVECTORF32 g_vFLTMAX = { FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX };
 static const XMVECTORF32 g_vFLTMIN = { -FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX };
@@ -65,7 +68,7 @@ void CreateFrustumPointsFromCascadeInterval(float fCascadeIntervalBegin,
 
 }
 
-void ShadowMapCascade::update(Camera& lightCamera, Camera& viewer, float extends, Vector2& nearFarClip)
+void ShadowMapCascade::update(Camera& lightCamera, Camera& viewer, float extends, Vector2& nearFarClip, float shadowMapSize)
 {
 	XMMATRIX matViewCameraProjection = viewer.getProjectionMatrixNoReverse();
 	XMMATRIX matViewCameraView = viewer.getViewMatrix();
@@ -173,10 +176,8 @@ void ShadowMapCascade::update(Camera& lightCamera, Camera& viewer, float extends
 
 			// The world units per texel are used to snap the shadow the orthographic projection
 			// to texel sized increments.  This keeps the edges of the shadows from shimmering.
-			FLOAT fWorldUnitsPerTexel = fCascadeBound / (float)512.f;
+			FLOAT fWorldUnitsPerTexel = fCascadeBound / shadowMapSize;
 			vWorldUnitsPerTexel = XMVectorSet(fWorldUnitsPerTexel, fWorldUnitsPerTexel, 0.0f, 0.0f);
-
-
 		}
 // 		else if (m_eSelectedCascadesFit == FIT_TO_CASCADES)
 // 		{
@@ -208,10 +209,8 @@ void ShadowMapCascade::update(Camera& lightCamera, Camera& viewer, float extends
 // 		}
 		float fLightCameraOrthographicMinZ = XMVectorGetZ(vLightCameraOrthographicMin);
 
-
-		if (true)
+		//if (m_bMoveLightTexelSize)
 		{
-
 			// We snap the camera to 1 pixel increments so that moving the camera does not cause the shadows to jitter.
 			// This is a matter of integer dividing by the world space size of a texel
 			vLightCameraOrthographicMin /= vWorldUnitsPerTexel;
@@ -229,7 +228,7 @@ void ShadowMapCascade::update(Camera& lightCamera, Camera& viewer, float extends
 		FLOAT fNearPlane = -extends;
 		FLOAT fFarPlane = extends;
 
-		//if (m_eSelectedNearFarFit == FIT_NEARFAR_AABB)
+		if (m_eSelectedNearFarFit == FIT_NEARFAR_AABB)
 		{
 
 			XMVECTOR vLightSpaceSceneAABBminValue = g_vFLTMAX;  // world space scene aabb 

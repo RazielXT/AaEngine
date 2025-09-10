@@ -52,7 +52,7 @@ public:
 
 	InstanceGroup* getGroup(UINT) const;
 
-	void updateEntity(ObjectId, ObjectTransformation);
+	void updateEntity(ObjectId, const ObjectTransformation&);
 
 private:
 

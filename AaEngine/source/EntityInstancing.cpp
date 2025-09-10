@@ -14,7 +14,7 @@ InstanceGroup* InstancingManager::getGroup(UINT id) const
 	return it == groups.end() ? nullptr : it->second.get();
 }
 
-void InstancingManager::updateEntity(ObjectId id, ObjectTransformation transform)
+void InstancingManager::updateEntity(ObjectId id, const ObjectTransformation& transform)
 {
 	updates.emplace_back(id, transform);
 }
@@ -109,12 +109,13 @@ void InstanceGroup::update(UINT idx, ObjectTransformation transform)
 
 void InstanceGroup::updateBbox()
 {
-	auto init = entities.front().transformation.position - modelBbox.Center;
-	BoundingBoxVolume volume{ init, init };
+	const auto& init = entities.front().transformation;
+	BoundingBoxVolume volume{ init.position, init.position };
 	for (auto& obj : entities)
-		volume.add(obj.transformation.position - modelBbox.Center);
+		volume.add(obj.transformation.position);
 
 	auto bbox = volume.createBbox();
+	bbox.Center += init.orientation * modelBbox.Center; // todo handle all rotations and use unified bbox range
 	bbox.Extents += modelBbox.Extents;
 
 	entity->setPosition(bbox.Center);

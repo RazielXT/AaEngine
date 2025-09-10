@@ -25,19 +25,23 @@ public:
 
 	bool writesSyncCommands(CompositorPass&) const override;
 
+	static SceneRenderTask& Get();
+
+	bool enabledWireframe = false;
+
 private:
 
 	AsyncTasksInfo initializeEarlyZ(CompositorPass& pass);
 
-	struct Work
+	struct AsyncWork
 	{
 		CommandsData commands;
 		HANDLE eventBegin{};
 		HANDLE eventFinish{};
 		std::thread worker;
 	};
-	Work earlyZ;
-	Work scene;
+	AsyncWork earlyZ;
+	AsyncWork scene;
 
 	bool running = true;
 
@@ -57,7 +61,7 @@ private:
 		RenderObjectsStorage* renderables;
 		RenderQueue* transparentQueue{};
 
-		Work work;
+		AsyncWork work;
 	}
 	transparent;
 
@@ -65,4 +69,7 @@ private:
 
 	EntityPicker picker;
 	void renderEditor(CompositorPass& pass, CommandsData& cmd);
+
+	RenderQueue* wireframeQueue{};
+	void renderWireframe(CompositorPass& pass, CommandsData& cmd);
 };

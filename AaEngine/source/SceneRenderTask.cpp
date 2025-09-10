@@ -5,14 +5,18 @@
 #include "ModelResources.h"
 #include "DrawPrimitives.h"
 
+SceneRenderTask* instance = nullptr;
+
 SceneRenderTask::SceneRenderTask(RenderProvider p, SceneManager& s) : CompositorTask(p, s), picker(p.renderSystem)
 {
 	renderables = sceneMgr.getRenderables(Order::Normal);
 	transparent.renderables = sceneMgr.getRenderables(Order::Transparent);
+	instance = this;
 }
 
 SceneRenderTask::~SceneRenderTask()
 {
+	instance = nullptr;
 	running = false;
 
 	if (scene.eventBegin)
@@ -91,6 +95,10 @@ AsyncTasksInfo SceneRenderTask::initialize(CompositorPass& pass)
 
 		tasks = { { transparent.work.eventFinish, transparent.work.commands } };
 	}
+	else if (pass.info.entry == "Wireframe")
+	{
+		wireframeQueue = sceneMgr.createQueue(pass.target.textureSet->formats, MaterialTechnique::Wireframe, Order::Normal);
+	}
 
 	return tasks;
 }
@@ -135,6 +143,10 @@ void SceneRenderTask::run(RenderContext& renderCtx, CommandsData& cmd, Composito
 	{
 		renderEditor(pass, cmd);
 	}
+	else if (pass.info.entry == "Wireframe")
+	{
+		renderWireframe(pass, cmd);
+	}
 }
 
 void SceneRenderTask::resize(CompositorPass& pass)
@@ -145,7 +157,12 @@ void SceneRenderTask::resize(CompositorPass& pass)
 
 bool SceneRenderTask::writesSyncCommands(CompositorPass& pass) const
 {
-	return pass.info.entry == "Editor";
+	return pass.info.entry == "Editor" || pass.info.entry == "Wireframe";
+}
+
+SceneRenderTask& SceneRenderTask::Get()
+{
+	return *instance;
 }
 
 void SceneRenderTask::renderScene(CompositorPass& pass)
@@ -214,4 +231,16 @@ void SceneRenderTask::renderEditor(CompositorPass& pass, CommandsData& cmd)
 			}
 		}
 	}
+}
+
+void SceneRenderTask::renderWireframe(CompositorPass& pass, CommandsData& cmd)
+{
+	if (!enabledWireframe)
+		return;
+
+	pass.target.textureSet->PrepareAsTarget(cmd.commandList, true, TransitionFlags::DepthContinue);
+
+	ShaderConstantsProvider constants(provider.params, sceneVisibility, *ctx.camera, *pass.target.texture);
+
+	wireframeQueue->renderObjects(constants, cmd.commandList);
 }

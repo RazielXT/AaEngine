@@ -16,7 +16,7 @@ struct RenderProvider
 
 struct RenderContext
 {
-	Camera* camera;
+	Camera* camera{};
 };
 
 struct AsyncTaskInfo

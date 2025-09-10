@@ -12,7 +12,7 @@
 #include "VoxelizeSceneTask.h"
 #include <algorithm>
 #include "PhysicsRenderTask.h"
-#include "RenderWireframeTask.h"
+#include "SceneRenderTask.h"
 #include "SystemUtils.h"
 
 // Store frame times in a buffer
@@ -598,8 +598,8 @@ void Editor::prepareElements(Camera& camera)
 	if (ImGui::Button("Rebuild terrain"))
 		app.sceneMgr.terrain.rebuild();
 
-	auto& wireframeTask = RenderWireframeTask::Get();
-	ImGui::Checkbox("Render wireframe", &wireframeTask.enabled);
+	auto& renderTask = SceneRenderTask::Get();
+	ImGui::Checkbox("Render wireframe", &renderTask.enabledWireframe);
 
 	ImGui::Combo("DLSS", &state.DlssMode, UpscaleModeNames, std::size(UpscaleModeNames));
 	ImGui::Combo("FSR", &state.FsrMode, UpscaleModeNames, std::size(UpscaleModeNames));

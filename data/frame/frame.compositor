@@ -58,8 +58,10 @@ compositor Frame
 		target sceneTexture
 	}
 
-	task RenderWireframe
+	task SceneRender
 	{
+		after SceneRender
+		entry Wireframe
 		target sceneTexture
 	}
 

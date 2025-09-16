@@ -8,7 +8,6 @@
 #include <format>
 #include "UpscaleTypes.h"
 #include "DebugOverlayTask.h"
-#include "DebugWindow.h"
 #include "VoxelizeSceneTask.h"
 #include <algorithm>
 #include "PhysicsRenderTask.h"

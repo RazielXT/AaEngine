@@ -7,6 +7,11 @@ material Color abstract
 	{
 		file white.png
 	}
+
+	default_params
+	{
+		float MaterialColor 1 1 1
+	}
 }
 
 material ColorVc abstract
@@ -17,10 +22,6 @@ material ColorVc abstract
 
 material White : Color
 {
-	default_params
-	{
-		float MaterialColor 1 1 1
-	}
 }
 
 material whiteVc : White ColorVc

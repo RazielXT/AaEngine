@@ -1,6 +1,5 @@
 #include "DebugOverlayTask.h"
 #include "Material.h"
-#include "DebugWindow.h"
 
 DebugOverlayTask* instance = nullptr;
 

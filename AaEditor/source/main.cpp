@@ -2,7 +2,6 @@
 #include "TargetWindow.h"
 #include "FreeCamera.h"
 #include "ApplicationCore.h"
-#include "DebugWindow.h"
 #include <shellscalingapi.h>
 #include "Editor.h"
 #include "imgui.h"

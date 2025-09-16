@@ -184,7 +184,6 @@ RenderQueue EntityPicker::createRenderQueue() const
 	return idQueue;
 }
 
-
 void EntityPicker::update(ID3D12GraphicsCommandList* commandList, RenderProvider& provider, Camera& camera, SceneManager& sceneMgr)
 {
 	if (!scheduled)

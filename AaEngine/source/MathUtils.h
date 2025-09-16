@@ -26,6 +26,14 @@ inline XMFLOAT3& operator+=(XMFLOAT3& l, const XMFLOAT3& r)
 	return l;
 }
 
+inline XMFLOAT3& operator-=(XMFLOAT3& l, const XMFLOAT3& r)
+{
+	l.x -= r.x;
+	l.y -= r.y;
+	l.z -= r.z;
+	return l;
+}
+
 struct BoundingBoxVolume
 {
 	Vector3 min{};

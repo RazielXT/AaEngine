@@ -7,6 +7,7 @@
 #include "GraphicsResources.h"
 #include "PhysicsManager.h"
 #include "TerrainGenerator.h"
+#include "DrawPrimitives.h"
 
 struct DebugReporter
 {
@@ -45,6 +46,7 @@ public:
 	ShadowMaps* shadowMap;
 	SceneLights lights;
 
+	PlanesModel planes;
 private:
 
 	void onViewportResize(UINT, UINT) override;

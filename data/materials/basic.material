@@ -2,7 +2,7 @@ material Color abstract
 {
 	vertex_shader vsBasicShading
 	pixel_shader psBasicShading
-	
+
 	texture Diffuse
 	{
 		file white.png
@@ -64,20 +64,78 @@ material Green : Color
 	}
 }
 
+material grassBlade : Color
+{
+	texture Diffuse
+	{
+		file grassBlade.dds
+	}
+
+	culling none
+
+	shader_defines VERTEX_WAVE
+
+	technique Depth grassBladeDepth
+}
+
+material grassBladeInstanced : grassBlade
+{
+	shader_defines INSTANCED
+	
+	technique Depth grassBladeInstancedDepth
+}
+
+material grassBladeDepth
+{
+	vertex_shader vsBasicShading
+	shader_defines VERTEX_WAVE
+}
+
+material grassBladeInstancedDepth : grassBladeDepth
+{
+	shader_defines INSTANCED
+
+	culling none
+}
+
 material terrainGrass : Color
 {
 	texture Diffuse
 	{
-		file grass.png
-	}
-	
-	default_params
-	{
-		float MaterialColor 1 1 1
+		file grassDark.dds
 	}
 }
 
 material terrainGrassInstanced : terrainGrass
 {
 	vertex_shader vsBasicShadingInstancing
+}
+
+material bushBranchesDepth
+{
+	texture Diffuse
+	{
+		file bushBranches.dds
+	}
+
+	vertex_shader vsDepthWriteAlphaTest
+	pixel_shader psDepthWriteAlphaTest
+
+	shader_defines VERTEX_WAVE
+
+	culling none
+}
+
+material bushBranches : Color
+{
+	texture Diffuse
+	{
+		file bushBranches.dds
+	}
+
+	culling none
+
+	shader_defines VERTEX_WAVE ALPHA_TEST
+
+	technique Depth bushBranchesDepth
 }

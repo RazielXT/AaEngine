@@ -5,8 +5,12 @@ float4x4 PreviousWorldMatrix;
 float4x4 WorldMatrix;
 float3 MaterialColor;
 uint TexIdDiffuse;
-float3 CameraPosition;
+float3 MainCameraPosition;
 uint2 ViewportSize;
+#ifdef VERTEX_WAVE
+float Time;
+float DeltaTime;
+#endif
 
 cbuffer PSSMShadows : register(b1)
 {
@@ -47,21 +51,59 @@ struct PSInput
 	float4 currentPosition : TEXCOORD3;
 };
 
+float3 WindWave(float3 basePos, float swayFactor, float seed)
+{
+	const float3 WindDirection = float3(1,0.5,0);
+	const float  WindStrength = 2.5f;
+	const float  WindSpeed = 3;
+
+	float leafRandom = (basePos.z + basePos.x)/5;
+	float phase = WindSpeed * seed + leafRandom + swayFactor * 3;
+	float windOffset = ((sin(phase*0.4 + 0.5) + sin(phase)) * 0.25 + 0.75) * WindStrength;
+
+	float3 windDisplacement = WindDirection * windOffset * swayFactor;
+	return basePos + windDisplacement;
+}
+
+void ComputeBaseBend(float4 basePosOS, inout float4 vertexPosOS, float w)
+{
+	vertexPosOS.y -= dot(basePosOS.xz, basePosOS.xz) * 0.15 * w;
+}
+
 PSInput VSMain(VSInput input)
 {
-    PSInput result;
+	PSInput result;
 
 #ifdef INSTANCED
 	result.worldPosition = mul(input.position, InstancingBuffer[input.instanceID]);
-    result.position = mul(result.worldPosition, ViewProjectionMatrix);
-	result.normal = mul(input.normal, (float3x3)InstancingBuffer[input.instanceID]);
-	result.previousPosition = result.position; // no support
+	#ifdef VERTEX_WAVE
+		float waveWeight = saturate(1 - length(MainCameraPosition - result.worldPosition.xyz)/400) * (1-input.uv.y);
+		ComputeBaseBend(input.position, result.worldPosition, waveWeight);
+		float4 worldPositionNoWave = result.worldPosition;
+		result.worldPosition.xyz = WindWave(result.worldPosition.xyz, waveWeight, Time);
+	#endif
+	result.position = mul(result.worldPosition, ViewProjectionMatrix);
+	result.normal = normalize(mul(input.normal, (float3x3)InstancingBuffer[input.instanceID]));
+	
+	#ifdef VERTEX_WAVE
+		float4 previousWorldPosition = float4(WindWave(worldPositionNoWave.xyz, waveWeight, Time - DeltaTime), 1);
+		result.previousPosition = mul(previousWorldPosition, ViewProjectionMatrix);
+	#else
+		result.previousPosition = result.position; // no support
+	#endif
 	result.currentPosition = result.position;
 #else
 	result.worldPosition = mul(input.position, WorldMatrix);
-    result.position = mul(result.worldPosition, ViewProjectionMatrix);
-	result.normal = mul(input.normal, (float3x3)WorldMatrix);
+	#ifdef VERTEX_WAVE
+		result.worldPosition.xyz = WindWave(result.worldPosition.xyz, 1-input.uv.y, Time);
+	#endif
+	result.position = mul(result.worldPosition, ViewProjectionMatrix);
+	result.normal = normalize(mul(input.normal, (float3x3)WorldMatrix));
+
 	float4 previousWorldPosition = mul(input.position, PreviousWorldMatrix);
+	#ifdef VERTEX_WAVE
+		previousWorldPosition.xyz = WindWave(previousWorldPosition.xyz, 1-input.uv.y, Time - DeltaTime);
+	#endif
 	result.previousPosition = mul(previousWorldPosition, ViewProjectionMatrix);
 	result.currentPosition = result.position;
 #endif
@@ -72,6 +114,9 @@ PSInput VSMain(VSInput input)
 
 #ifndef NO_TEXTURE
 	result.uv = input.uv;
+	#ifndef VERTEX_WAVE
+		result.uv *= 10;
+	#endif
 #endif
 
     return result;
@@ -108,13 +153,18 @@ PSOutput PSMain(PSInput input)
 	SamplerState sampler = SamplerDescriptorHeap[0];
 
 #ifndef NO_TEXTURE
-	float3 albedo = GetTexture(TexIdDiffuse).Sample(sampler, input.uv).rgb;
-	albedo *= MaterialColor;
+	float4 albedoTex = GetTexture(TexIdDiffuse).Sample(sampler, input.uv);
+	#ifdef ALPHA_TEST
+		if (albedoTex.a < 0.37)
+			discard;
+	#endif
+
+	float3 albedo = albedoTex.rgb * MaterialColor;
 #else
 	float3 albedo = MaterialColor;
 #endif
 
-	float camDistance = length(CameraPosition - input.worldPosition.xyz);
+	float camDistance = length(MainCameraPosition - input.worldPosition.xyz);
 
 	float shadow = getPssmShadow(input.worldPosition, camDistance, dotLighting, ShadowSampler, Sun);
 	float3 lighting = (ambientColor + shadow * diffuse);

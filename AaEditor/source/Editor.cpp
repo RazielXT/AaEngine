@@ -580,6 +580,7 @@ void Editor::prepareElements(Camera& camera)
 		ImGui::Text("EntityId %#010x", selection.back().obj.id);
 		ImGui::Text("Entity name %s", selection.back().obj.getName());
 		ImGui::Text("Entity pos %f %f %f", objTransformation.position.x, objTransformation.position.y, objTransformation.position.z);
+		ImGui::Text("Entity vertex count %d", selection.back().obj.entity->geometry.vertexCount);
 		ImGui::Text("Selection pos %f %f %f", selectionPosition.x, selectionPosition.y, selectionPosition.z);
 	}
 

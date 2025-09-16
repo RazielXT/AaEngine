@@ -333,7 +333,7 @@ const char* MaterialInstance::GetTechniqueOverride(MaterialTechnique technique) 
 	else if (technique == MaterialTechnique::Voxelize)
 		return HasInstancing() ? "VoxelizeInstancing" : "Voxelize";
 	else if (technique == MaterialTechnique::EntityId)
-		return HasInstancing() ? "EntityIdInstancing" : "EntityId";
+		return HasInstancing() ? "EntityIdInstancing" : (ref.pipeline.culling == D3D12_CULL_MODE_NONE ? "EntityIdCullNone" : "EntityId");
 
 	return nullptr;
 }

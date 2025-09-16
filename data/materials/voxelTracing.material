@@ -127,8 +127,6 @@ material TreeBranch : ColorVCT
 	pixel_shader psVoxelTracingAlpha
 	shader_defines BRANCH_WAVE
 
-	culling none
-
 	texture Diffuse
 	{
 		file Branch_Summer.dds //treeBranch.dds
@@ -139,6 +137,7 @@ material TreeBranch : ColorVCT
 		file Branch_Summer_NORM.dds //treeBranchNormal.dds
 	}
 
+	culling none
 	technique Depth TreeBranchDepth
 }
 
@@ -152,6 +151,8 @@ material TreeBranchDepth
 	{
 		file Branch_Summer.dds
 	}
+
+	culling none
 }
 
 material PineBranch : TreeBranch

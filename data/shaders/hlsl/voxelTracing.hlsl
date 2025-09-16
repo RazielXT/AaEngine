@@ -43,6 +43,7 @@ struct PS_Input
     float4 wp : TEXCOORD1;
 	float4 currentPosition : TEXCOORD2;
 	float4 previousPosition : TEXCOORD3;
+	float sunOffset : TEXCOORD4;
 };
 
 PS_Input VSMain(VS_Input vin)
@@ -66,6 +67,8 @@ PS_Input VSMain(VS_Input vin)
 #endif
 	vsOut.previousPosition = mul(previousWorldPosition, ViewProjectionMatrix);
 	vsOut.currentPosition = vsOut.pos;
+
+	vsOut.sunOffset = saturate((10 + -dot(vin.p.xyz, Sun.Direction)) / 20);
 
     return vsOut;
 }
@@ -142,15 +145,19 @@ PSOutput PSMain(PS_Input pin)
 	float camDistance = length(CameraPosition - pin.wp.xyz);
 
     float3 normalTex = float3(GetTexture(TexIdNormal).Sample(diffuse_sampler, pin.uv).rg, 1);
-    //normalTex = (normalTex + float3(0.5f, 0.5f, 1.0f) * 3) / 4;
-	float3 bin = cross(pin.normal, pin.tangent);
-    float3x3 tbn = float3x3(pin.tangent, bin, pin.normal);
+   // normalTex = (normalTex + float3(0.5f, 0.5f, 1.0f) * 1) / 2;
+   
+	float3x3 worldMatrix = (float3x3)WorldMatrix;
+   	float3 worldNormalT = normalize(mul(pin.normal, worldMatrix));
+	float3 worldTangentT = normalize(mul(pin.tangent, worldMatrix));
+	float3 worldBinormalT = cross(worldNormalT, worldTangentT);
+
+    float3x3 tbn = float3x3(worldTangentT, worldBinormalT, worldNormalT);
     float3 normal = mul(normalTex.xyz * 2 - 1, tbn); // to object space
 
-	float3x3 worldMatrix = (float3x3)WorldMatrix;
-	float3 worldDetailNormal = normalize(mul(normal, worldMatrix));
+	float3 worldDetailNormal = normal;//normalize(mul(normal, worldMatrix));
 
-	float3 worldNormal = normalize(mul(normal, worldMatrix));
+	float3 worldNormal = normal;//normalize(mul(normal, worldMatrix));
 	float3 worldTangent = normalize(mul(pin.tangent, worldMatrix));
 	float3 worldBinormal = cross(worldNormal, worldTangent);
 
@@ -166,6 +173,11 @@ PSOutput PSMain(PS_Input pin)
 		
 		float mipOffset = idx == 3 ? 0 : -1;
 		float4 fullTrace = ConeTraceImpl(voxelUV, worldNormal, VoxelInfo.MiddleConeRatio.x, VoxelInfo.MiddleConeRatio.y, voxelmap, VoxelSampler, mipOffset);
+		fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal + worldTangent), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler, 0) * 1.0;
+		fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal - worldTangent), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler, 0) * 1.0;
+		fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal + worldBinormal), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler, 0) * 1.0;
+		fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal - worldBinormal), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler, 0) * 1.0;
+		fullTrace /= 5;
 
 		float offsetScale = idx >= 2 ? 128 : 64;
 		float mipTarget = idx >= 2 ? 1 : 2;
@@ -186,7 +198,11 @@ PSOutput PSMain(PS_Input pin)
 		}
 	}
 
-	voxelAmbient /= max(0.5f, pow(fullWeight, 1));
+#ifdef ALPHA_TEST
+	//voxelAmbient += (1 - pin.uv.y) * 0.1;
+#endif
+
+	//voxelAmbient /= max(0.5f, pow(fullWeight, 1));
 	fullWeight /= 4.0f;
 	fullWeight = 1 - fullWeight;
 
@@ -199,6 +215,9 @@ PSOutput PSMain(PS_Input pin)
 
 	float3 skyLighting = fullWeight * skyAmbient;
 	finalAmbient = saturate(finalAmbient + skyLighting);
+#ifdef ALPHA_TEST
+	//finalAmbient = max(finalAmbient, pin.sunOffset);
+#endif
 
 	float directShadow = getPssmShadow(pin.wp, camDistance, dotLighting, ShadowSampler, Sun) * dotStepLighting;
 	float directLight = saturate(dotLighting) * directShadow;
@@ -208,7 +227,7 @@ PSOutput PSMain(PS_Input pin)
 	color1.rgb += albedo.rgb * Emission;
 	color1.a = (lighting.r + lighting.g + lighting.b) / 30;
 
-	//color1.rgb = finalAmbient;
+	//color1.rgb = pin.sunOffset;
 	//color1.rgb = pin.normal;
 
 	PSOutput output;

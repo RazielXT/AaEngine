@@ -9,7 +9,9 @@ uint2 ViewportSize;
 uint TexIdDiffuse;
 uint TexIdGrass;
 uint TexIdNormal;
+uint TexIdGrassNormal;
 uint TexIdSpread;
+uint TexIdDisplacement;
 
 cbuffer PSSMShadows : register(b1)
 {
@@ -185,15 +187,19 @@ struct PSOutput
 PSOutput PSMain(PS_Input pin)
 {
 	SamplerState diffuse_sampler = SamplerDescriptorHeap[0];
-	float camDistance = length(MainCameraPosition - pin.wp.xyz);
+	float3 cameraView = MainCameraPosition - pin.wp.xyz;
+	float camDistance = length(cameraView);
 
-	float diffuseStepDistance[3] = { 0, 500, 2000 };
-	float diffuseStepScale[3] = { 2, 1.f /2, 1.f /20 };
-	float3 diffuseDistanceWeights = CreateDistanceWeigths3(camDistance, diffuseStepDistance, diffuseStepScale);
-	float3 rock = ReadDistanceTexture(TexIdDiffuse, diffuse_sampler, pin.uv.xy, diffuseDistanceWeights);
+	float3 inNormal = pin.normal;
+	//inNormal.y /= 2;
+	//inNormal = normalize(inNormal);
+	float3 bin = cross(inNormal, pin.tangent);
 
-	float3 green = GetTexture(TexIdGrass).Sample(diffuse_sampler, pin.uv * 5).rgb * float3(0.9, 1, 0.9);
-	float3 brown = float3(0.45, 0.35, 0.25) * 1.5f * rock; // Color for brown
+	//pm offset
+	//float height = GetTexture(TexIdDisplacement).Sample(diffuse_sampler, pin.uv * 4).r;
+	//float3 vVec = float3(dot(cameraView, pin.tangent.xyz), dot(cameraView, bin.xyz), dot(cameraView, pin.normal.xyz));
+	//float dispWeight = lerp(-0.01, 0, saturate(camDistance / 500));
+	//float2 texCoordDispOffset = dispWeight * (height - 0.5) * normalize(vVec).xy;
 
 	float spread = GetTexture(TexIdSpread).Sample(diffuse_sampler, pin.uv / 10).r;
 	float detailSpread = GetTexture(TexIdSpread).Sample(diffuse_sampler, pin.uv * 2).r * spread * spread  * 0.1;
@@ -201,19 +207,27 @@ PSOutput PSMain(PS_Input pin)
 	float detailSpread2 = GetTexture(TexIdSpread).Sample(diffuse_sampler, (pin.uv  + 0.5) * 10).r * spread2 * spread2 * 0.1;
 
 	float rockWeight = smoothstep(0.77 + detailSpread, 0.78 + detailSpread, pin.normal.y);
-	float3 albedoMid = lerp(rock, brown, rockWeight);
 	float grassWeight = smoothstep(0.78 + detailSpread2, 0.8 + detailSpread2, pin.normal.y);
+
+	//texCoordDispOffset *= 1 - grassWeight;
+	float2 texCoordWithOffset = pin.uv;
+
+	float diffuseStepDistance[5] = { 0, 50, 500, 2000, 6000 };
+	float diffuseStepScale[5] = { 4, 2, 1.f /2, 1.f /5, 1.f /20 };
+	float3 diffuseDistanceWeights = CreateDistanceWeigths5(camDistance, diffuseStepDistance, diffuseStepScale);
+	float3 rock = ReadDistanceTexture(TexIdDiffuse, diffuse_sampler, texCoordWithOffset, diffuseDistanceWeights);
+
+	float3 green = GetTexture(TexIdGrass).Sample(diffuse_sampler, pin.uv * 5).rgb * float3(0.9, 1, 0.9);
+	float3 brown = float3(0.45, 0.35, 0.25) * 1.5f * rock; // Color for brown
+
+	float3 albedoMid = lerp(rock, brown, rockWeight);
 	float3 albedo = lerp(albedoMid, green, grassWeight);
 
-	float normalStepDistance[5] = { 0, 50, 300, 3000, 6000 };
-	float normalStepScale[5] = { 4, 1, 1.f /6, 1.f /40, 1.f /80 };
-	float3 normalDistanceWeights = CreateDistanceWeigths5(camDistance, normalStepDistance, normalStepScale);
-
-	float3 normalTex = ReadDistanceTexture(TexIdNormal, diffuse_sampler, pin.uv.xy, normalDistanceWeights);
+	uint NormalTex = rockWeight > 0.5 ? TexIdGrassNormal : TexIdNormal;
+	float3 normalTex = ReadDistanceTexture(NormalTex, diffuse_sampler, texCoordWithOffset, diffuseDistanceWeights);
 	normalTex.b = 1;
-	normalTex = lerp(normalTex, float3(0.5f, 0.5f, 1.0f), saturate(rockWeight - grassWeight));
+	//normalTex = lerp(normalTex, float3(0.5f, 0.5f, 1.0f), 0.5);
 
-	float3 bin = cross(pin.normal, pin.tangent);
     float3x3 tbn = float3x3(pin.tangent, bin, pin.normal);
     float3 normal = mul(normalTex.xyz * 2 - 1, tbn); // to object space
 
@@ -234,35 +248,32 @@ PSOutput PSMain(PS_Input pin)
 		float3 voxelUV = (pin.wp.xyz - VoxelInfo.Voxels[idx].Offset) / VoxelInfo.Voxels[idx].SceneSize;
 		Texture3D voxelmap = GetTexture3D(VoxelInfo.Voxels[idx].TexId);
 		
-		float mipOffset = idx == 3 ? 0 : -1;
+		float mipOffset = idx > 2 ? 0 : -1;
 		float4 fullTrace = ConeTraceImpl(voxelUV, worldNormal, VoxelInfo.MiddleConeRatio.x, VoxelInfo.MiddleConeRatio.y, voxelmap, VoxelSampler, mipOffset);
+		fullTrace.rgb *= 4;
+		float traceW = fullTrace.w;
+		fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal + worldTangent), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler, 0) * 1.0;
+		fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal - worldTangent), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler, 0) * 1.0;
+		fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal + worldBinormal), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler, 0) * 1.0;
+		fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal - worldBinormal), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler, 0) * 1.0;
+		fullTrace /= 5;
+		traceW = min(traceW, fullTrace.w);
 
 		if (idx < 3)
-		fullTrace *= 1 - getDistanceBlend(camDistance, VoxelInfo.Voxels[idx].SceneSize);
-
-		float offsetScale = idx >= 2 ? 128 : 64;
-		float mipTarget = idx >= 2 ? 1 : 2;
-		float occlusionSample = SampleVoxel(voxelmap, VoxelSampler, voxelUV + worldNormal / offsetScale, worldNormal, mipTarget).w;
-		occlusionSample += SampleVoxel(voxelmap, VoxelSampler, voxelUV + (worldNormal + worldTangent) / offsetScale, (worldNormal + worldTangent), mipTarget).w;
-		occlusionSample += SampleVoxel(voxelmap, VoxelSampler, voxelUV + (worldNormal - worldTangent) / offsetScale, (worldNormal - worldTangent), mipTarget).w;
-		occlusionSample += SampleVoxel(voxelmap, VoxelSampler, voxelUV + (worldNormal + worldBinormal) / offsetScale, (worldNormal + worldBinormal), mipTarget).w;
-		occlusionSample += SampleVoxel(voxelmap, VoxelSampler, voxelUV + (worldNormal - worldBinormal) / offsetScale, (worldNormal - worldBinormal), mipTarget).w;
-		occlusionSample = 1 - saturate(occlusionSample / 5);
-		globalOcclusion = min(globalOcclusion, fullTrace.w * occlusionSample);
+			fullTrace *= 1 - getDistanceBlend(camDistance, VoxelInfo.Voxels[idx].SceneSize);
 
 		//if (idx >= 1)
 		voxelAmbient += fullTrace.rgb * voxelWeight;
 
-		//if (idx >= 2)
+		if (idx >= 2)
 		{
-			voxelWeight = saturate(voxelWeight - fullTrace.w);
-			fullWeight += fullTrace.w;
+			voxelWeight = saturate(voxelWeight - traceW);
+			fullWeight += traceW;
 		}
 	}
 
-	voxelWeight = pow(1 - voxelWeight, 2);
-
-	voxelAmbient /= max(0.2f, voxelWeight);
+	//voxelWeight = pow(1 - voxelWeight, 2);
+	//voxelAmbient /= max(0.9f, voxelWeight);
 	fullWeight /= 4.0f;
 	fullWeight = pow(1 - fullWeight, 1);
 
@@ -272,8 +283,7 @@ PSOutput PSMain(PS_Input pin)
 
 	float voxelFarWeight = getDistanceBlend(camDistance, VoxelInfo.Voxels[3].SceneSize);
 	float3 finalAmbient = lerp(voxelAmbient, skyAmbient, voxelFarWeight);
-	
-	//globalOcclusion = pow(1 - globalOcclusion, 2);
+
 	float3 skyLighting = fullWeight * skyAmbient;
 	finalAmbient = saturate(finalAmbient + skyLighting);
 
@@ -286,7 +296,7 @@ PSOutput PSMain(PS_Input pin)
 
 	//color1.rgb = voxelAmbient;
 	//color1.rgb = skyLighting;
-	//color1.rgb = voxelAmbient;
+	//color1.rgb = directShadow;
 	//color1.rgb = color1.rgb * 0.01 + step(0.99, pin.www);
 	
 	PSOutput output;

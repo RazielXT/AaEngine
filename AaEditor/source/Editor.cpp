@@ -620,13 +620,12 @@ void Editor::prepareElements(Camera& camera)
 	}
 
 	const char* scenes[] = {
-		"test",
+		"basic",
 		"cubesTower",
 		"testCubes",
 		"voxelRoom",
 		"voxelOutside",
 		"voxelOutsideBig",
-		"voxelOutsideBigCave"
 	};
 	static int currentScene = 0;
 	if (ImGui::Combo("Scene", &currentScene, scenes, std::size(scenes)))

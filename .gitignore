@@ -5,8 +5,10 @@ Debug/
 x64/
 data/scene/*
 !data/scene/core
+!data/scene/basic
 !data/scene/testCubes
 !data/scene/voxelOutside
 !data/scene/voxelOutsideBig
 !data/scene/cubesTower
 !data/scene/voxelRoom
+!data/scene/tmp

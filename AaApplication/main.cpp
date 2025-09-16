@@ -19,7 +19,7 @@ public:
 		debugWindow.state.DlssMode = (int)app.renderSystem.upscale.dlss.selectedMode();
 		debugWindow.state.FsrMode = (int)app.renderSystem.upscale.fsr.selectedMode();
 
-		app.loadScene("test");
+		app.loadScene("basic");
 	}
 
 	~ApplicationObject()

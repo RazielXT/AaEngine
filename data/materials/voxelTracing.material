@@ -191,13 +191,13 @@ material GrassVCT
 {
 	vertex_shader
 	{
-		file poTest2.hlsl
+		file pomTest.hlsl
 		entry VSMain
 		profile vs_6_6
 	}
 	pixel_shader
 	{
-		file poTest2.hlsl
+		file pomTest.hlsl
 		entry PSMain
 		profile ps_6_6
 	}

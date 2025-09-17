@@ -235,6 +235,10 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 				technique = MaterialTechnique::EntityId;
 			else if (member.value == "TerrainScan")
 				technique = MaterialTechnique::TerrainScan;
+			else if (member.value == "Wireframe")
+				technique = MaterialTechnique::Wireframe;
+			else
+				__debugbreak();
 
 			if (!member.params.empty())
 			{

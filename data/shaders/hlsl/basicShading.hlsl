@@ -154,7 +154,7 @@ PSOutput PSMain(PSInput input)
 
 #ifndef NO_TEXTURE
 	float4 albedoTex = GetTexture(TexIdDiffuse).Sample(sampler, input.uv);
-	#ifdef ALPHA_TEST
+	#if defined(ALPHA_TEST) && !defined(FLAT_COLOR)
 		if (albedoTex.a < 0.37)
 			discard;
 	#endif
@@ -170,6 +170,10 @@ PSOutput PSMain(PSInput input)
 	float3 lighting = (ambientColor + shadow * diffuse);
 	float lightPower = (lighting.r + lighting.g + lighting.b) / 3;
 	float4 outColor = float4(lighting * albedo, lightPower);
+
+	#ifdef FLAT_COLOR
+		outColor = float4(albedo, (albedo.r + albedo.g + albedo.b) / 3);
+	#endif
 
 	PSOutput output;
     output.color = outColor;

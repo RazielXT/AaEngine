@@ -138,4 +138,12 @@ material bushBranches : Color
 	shader_defines VERTEX_WAVE ALPHA_TEST
 
 	technique Depth bushBranchesDepth
+	technique Wireframe bushBranchesWireframe
+}
+
+material bushBranchesWireframe : bushBranches
+{
+	wireframe
+
+	shader_defines VERTEX_WAVE FLAT_COLOR
 }

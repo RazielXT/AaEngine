@@ -1,0 +1,269 @@
+<scene formatVersion="1.0" upAxis="y" unitsPerMeter="39.3701" minOgreVersion="1.8" ogreMaxVersion="2.4.3" author="OgreMax Scene Exporter (www.ogremax.com)" application="3DS Max">
+    <environment>
+        <colourAmbient r="0.333333" g="0.333333" b="0.333333" />
+        <colourBackground r="0" g="0" b="0" />
+        <clipping near="0" far="100000" />
+    </environment>
+    <nodes>
+        <node name="Plane001">
+            <position x="9.5171" y="1.66218" z="5.2032" />
+            <scale x="2.22874" y="2.40287" z="2.40287" />
+            <rotation qx="0" qy="0" qz="0" qw="1" />
+            <entity name="Plane001" castShadows="true" receiveShadows="true" meshFile="Plane001.mesh">
+                <subentities>
+                    <subentity index="0" materialName="grassBlade" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Plane002">
+            <position x="-6.02949" y="-0.628687" z="3.83735" />
+            <scale x="1.8569" y="1.9655" z="1.9655" />
+            <rotation qx="-0.209542" qy="-0.312223" qz="-0.054508" qw="0.925007" />
+            <entity name="Plane002" castShadows="true" receiveShadows="true" meshFile="Plane002.mesh">
+                <subentities>
+                    <subentity index="0" materialName="grassBlade" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box001">
+            <position x="-8.53445" y="-4.43474" z="0.677587" />
+            <scale x="7.47033" y="2.40287" z="2.40287" />
+            <rotation qx="0" qy="0" qz="0" qw="1" />
+            <entity name="Box001" castShadows="true" receiveShadows="true" meshFile="Box001.mesh">
+                <subentities>
+                    <subentity index="0" materialName="terrainGrass" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Plane003">
+            <position x="-5.10339" y="3.31244" z="-5.63402" />
+            <scale x="2.27011" y="2.40287" z="2.40288" />
+            <rotation qx="0.263938" qy="0.801097" qz="0.401705" qw="-0.356671" />
+            <entity name="Plane003" castShadows="true" receiveShadows="true" meshFile="Plane003.mesh">
+                <subentities>
+                    <subentity index="0" materialName="grassBlade" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Plane004">
+            <position x="-4.74666" y="5.11426" z="-1.13107" />
+            <scale x="3.34646" y="3.54202" z="2.42156" />
+            <rotation qx="-0.438716" qy="-0.542118" qz="-0.446804" qw="0.560359" />
+            <entity name="Plane004" castShadows="true" receiveShadows="true" meshFile="Plane004.mesh">
+                <subentities>
+                    <subentity index="0" materialName="grassBlade" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Plane005">
+            <position x="3.83634" y="1.34824" z="-6.7546" />
+            <scale x="2.27011" y="2.40287" z="2.40287" />
+            <rotation qx="-0.163223" qy="0.870016" qz="0.264307" qw="0.382848" />
+            <entity name="Plane005" castShadows="true" receiveShadows="true" meshFile="Plane005.mesh">
+                <subentities>
+                    <subentity index="0" materialName="grassBlade" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Plane006">
+            <position x="1.70728" y="1.40976" z="3.85491" />
+            <scale x="2.27011" y="2.40288" z="2.40287" />
+            <rotation qx="-0.321389" qy="0.257977" qz="0.0914601" qw="0.906527" />
+            <entity name="Plane006" castShadows="true" receiveShadows="true" meshFile="Plane006.mesh">
+                <subentities>
+                    <subentity index="0" materialName="grassBlade" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Plane007">
+            <position x="3.6136" y="-0.45952" z="-1.38185" />
+            <scale x="2.27181" y="1.93852" z="1.53669" />
+            <rotation qx="-0.205298" qy="0.676361" qz="0.135477" qw="0.694287" />
+            <entity name="Plane007" castShadows="true" receiveShadows="true" meshFile="Plane007.mesh">
+                <subentities>
+                    <subentity index="0" materialName="grassBlade" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Plane105">
+            <position x="-50.6954" y="-0.194385" z="0.728426" />
+            <scale x="1" y="1" z="1" />
+            <rotation qx="0" qy="-3.25675e-016" qz="-7.45058e-009" qw="1" />
+            <entity name="Plane105" castShadows="true" receiveShadows="true" meshFile="Plane105.mesh">
+                <subentities>
+                    <subentity index="0" materialName="grassBlade" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="GrassBladeMedium001">
+            <position x="44.4522" y="5.13749" z="-1.38185" />
+            <scale x="1" y="1" z="1" />
+            <rotation qx="0" qy="-8.74228e-008" qz="3.82137e-015" qw="1" />
+            <entity name="GrassBladeMedium001" castShadows="true" receiveShadows="true" meshFile="GrassBladeMedium001.mesh">
+                <subentities>
+                    <subentity index="0" materialName="grassBlade" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Plane106">
+            <position x="18.5895" y="3.31244" z="-42.8794" />
+            <scale x="2.27011" y="2.40287" z="2.40288" />
+            <rotation qx="0.263938" qy="0.801097" qz="0.401705" qw="-0.356671" />
+            <entity name="Plane106" castShadows="true" receiveShadows="true" meshFile="Plane106.mesh">
+                <subentities>
+                    <subentity index="0" materialName="grassBlade" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Plane107">
+            <position x="18.9463" y="5.11426" z="-38.3765" />
+            <scale x="3.34646" y="3.54202" z="2.42156" />
+            <rotation qx="-0.438716" qy="-0.542118" qz="-0.446804" qw="0.560359" />
+            <entity name="Plane107" castShadows="true" receiveShadows="true" meshFile="Plane107.mesh">
+                <subentities>
+                    <subentity index="0" materialName="grassBlade" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Plane108">
+            <position x="27.5293" y="1.34823" z="-44" />
+            <scale x="2.27011" y="2.40287" z="2.40287" />
+            <rotation qx="-0.163223" qy="0.870016" qz="0.264307" qw="0.382848" />
+            <entity name="Plane108" castShadows="true" receiveShadows="true" meshFile="Plane108.mesh">
+                <subentities>
+                    <subentity index="0" materialName="grassBlade" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Plane109">
+            <position x="25.4002" y="1.40976" z="-33.3905" />
+            <scale x="2.27011" y="2.40288" z="2.40287" />
+            <rotation qx="-0.321389" qy="0.257977" qz="0.0914601" qw="0.906527" />
+            <entity name="Plane109" castShadows="true" receiveShadows="true" meshFile="Plane109.mesh">
+                <subentities>
+                    <subentity index="0" materialName="grassBlade" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Plane110">
+            <position x="27.3065" y="-0.459522" z="-38.6273" />
+            <scale x="2.27181" y="1.93852" z="1.53669" />
+            <rotation qx="-0.205298" qy="0.676361" qz="0.135477" qw="0.694287" />
+            <entity name="Plane110" castShadows="true" receiveShadows="true" meshFile="Plane110.mesh">
+                <subentities>
+                    <subentity index="0" materialName="grassBlade" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Plane111">
+            <position x="17.6634" y="-0.628689" z="-33.408" />
+            <scale x="1.8569" y="1.9655" z="1.9655" />
+            <rotation qx="-0.209542" qy="-0.312223" qz="-0.054508" qw="0.925007" />
+            <entity name="Plane111" castShadows="true" receiveShadows="true" meshFile="Plane111.mesh">
+                <subentities>
+                    <subentity index="0" materialName="grassBlade" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Plane112">
+            <position x="10.1914" y="-4.17406" z="-48.2407" />
+            <scale x="2.78281" y="2.40287" z="2.40287" />
+            <rotation qx="0" qy="0" qz="0" qw="1" />
+            <entity name="Plane112" castShadows="true" receiveShadows="true" meshFile="Plane112.mesh">
+                <subentities>
+                    <subentity index="0" materialName="grassBlade" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Plane113">
+            <position x="8.56931" y="-4.17406" z="-48.2407" />
+            <scale x="2.78281" y="2.40287" z="1.69697" />
+            <rotation qx="0" qy="0" qz="0" qw="1" />
+            <entity name="Plane113" castShadows="true" receiveShadows="true" meshFile="Plane113.mesh">
+                <subentities>
+                    <subentity index="0" materialName="grassBlade" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Plane114">
+            <position x="5.08066" y="-4.17406" z="-48.2407" />
+            <scale x="2.78281" y="2.40287" z="3.07862" />
+            <rotation qx="0" qy="0" qz="0" qw="1" />
+            <entity name="Plane114" castShadows="true" receiveShadows="true" meshFile="Plane114.mesh">
+                <subentities>
+                    <subentity index="0" materialName="grassBlade" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Plane115">
+            <position x="6.70272" y="-4.17406" z="-48.2407" />
+            <scale x="2.78281" y="2.40287" z="2.31909" />
+            <rotation qx="0" qy="0" qz="0" qw="1" />
+            <entity name="Plane115" castShadows="true" receiveShadows="true" meshFile="Plane115.mesh">
+                <subentities>
+                    <subentity index="0" materialName="grassBlade" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Plane117">
+            <position x="3.48008" y="-4.17406" z="-48.2407" />
+            <scale x="2.78281" y="2.40287" z="2.00145" />
+            <rotation qx="0" qy="0" qz="0" qw="1" />
+            <entity name="Plane117" castShadows="true" receiveShadows="true" meshFile="Plane117.mesh">
+                <subentities>
+                    <subentity index="0" materialName="grassBlade" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="GrassBladeMedium0">
+            <position x="-9.83924" y="-11.3878" z="-51.4673" />
+            <scale x="1" y="1" z="1" />
+            <rotation qx="0" qy="-8.74228e-008" qz="3.82137e-015" qw="1" />
+            <entity name="GrassBladeMedium0" castShadows="true" receiveShadows="true" meshFile="GrassBladeMedium0.mesh">
+                <subentities>
+                    <subentity index="0" materialName="grassBlade" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="GrassBladeMedium">
+            <position x="-20.1878" y="-11.3878" z="-51.4673" />
+            <scale x="1" y="1" z="1" />
+            <rotation qx="0" qy="-8.74228e-008" qz="3.82137e-015" qw="1" />
+            <entity name="GrassBladeMedium" castShadows="true" receiveShadows="true" meshFile="GrassBladeMedium.mesh">
+                <subentities>
+                    <subentity index="0" materialName="grassBlade" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Plane118">
+            <position x="31.6049" y="3.4441e-006" z="78.7918" />
+            <scale x="1" y="1" z="1" />
+            <rotation qx="0" qy="-0.707107" qz="3.09086e-008" qw="0.707107" />
+            <entity name="Plane118" castShadows="true" receiveShadows="true" meshFile="Plane118.mesh">
+                <subentities>
+                    <subentity index="0" materialName="bushBranches" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Plane119">
+            <position x="31.6049" y="5.71197" z="78.7918" />
+            <scale x="1" y="1" z="1" />
+            <rotation qx="0" qy="-0.707107" qz="3.09086e-008" qw="0.707107" />
+            <entity name="Plane119" castShadows="true" receiveShadows="true" meshFile="Plane119.mesh">
+                <subentities>
+                    <subentity index="0" materialName="bushBranches" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Plane120">
+            <position x="31.6049" y="5.71197" z="40.4724" />
+            <scale x="1" y="1" z="1" />
+            <rotation qx="0.364187" qy="-0.606109" qz="0.364187" qw="0.606109" />
+            <entity name="Plane120" castShadows="true" receiveShadows="true" meshFile="Plane120.mesh">
+                <subentities>
+                    <subentity index="0" materialName="bushBranches" />
+                </subentities>
+            </entity>
+        </node>
+    </nodes>
+</scene>

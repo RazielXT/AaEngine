@@ -561,9 +561,9 @@ void MaterialInstance::UpdatePerFrame(MaterialDataStorage& data, const ShaderCon
 
 	//TODO: just when texture descriptor changes
 	{
-		for (auto& t : resources->textures)
+		for (UINT i = resources->boundTexturesCount; i < resources->textures.size(); i++)
 		{
-			if (t.texture && t.rootIndex == BindlessTextureIndex)
+			if (auto& t = resources->textures[i]; t.texture)
 			{
 				//UpdateBindlessTexture(t);
 
@@ -599,9 +599,11 @@ void MaterialInstance::UpdateBindlessTexture(const ResourcesInfo::Texture& textu
 
 void MaterialInstance::BindTextures(ID3D12GraphicsCommandList* commandList)
 {
-	for (auto& t : resources->textures)
-		if (t.texture && t.rootIndex != BindlessTextureIndex)
-			commandList->SetGraphicsRootDescriptorTable(t.rootIndex, t.texture->srvHandles);
+	for (UINT i = 0; i < resources->boundTexturesCount; i++)
+	{
+		auto& t = resources->textures[i];
+		commandList->SetGraphicsRootDescriptorTable(t.rootIndex, t.texture->srvHandles);
+	}
 
 	for (auto& uav : resources->uavs)
 		commandList->SetGraphicsRootUnorderedAccessView(uav.rootIndex, uav.uav->GetGPUVirtualAddress());

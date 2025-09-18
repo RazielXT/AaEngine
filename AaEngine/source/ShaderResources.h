@@ -51,6 +51,7 @@ struct ResourcesInfo
 		UINT autoParamIdx = {};
 	};
 	std::vector<Texture> textures;
+	UINT boundTexturesCount{};
 
 	struct UAV
 	{

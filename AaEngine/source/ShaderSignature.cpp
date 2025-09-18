@@ -482,6 +482,8 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData(GraphicsResour
 		t.autoParamIdx = bindlessTextures[i];
 	}
 
+	resources->boundTexturesCount = (UINT)textures.size();
+
 	resources->uavs.resize(uavs.size() + rwStructuredBuffers.size());
 	for (size_t i = 0; i < uavs.size(); i++)
 	{

@@ -176,6 +176,9 @@ void SceneRenderTask::renderScene(CompositorPass& pass)
 
 	pass.target.textureSet->PrepareAsTarget(scene.commands.commandList, true, TransitionFlags::DepthContinue);
 
+	if (enabledWireframe)
+		return;
+
 	ShaderConstantsProvider constants(provider.params, sceneVisibility, *ctx.camera, *pass.target.texture);
 
 	sceneMgr.skybox.render(scene.commands.commandList, constants);

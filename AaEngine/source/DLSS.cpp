@@ -165,7 +165,7 @@ bool DLSS::selectMode(UpscaleMode m)
 	NVSDK_NGX_Parameter_SetUI(ngxParameters, NVSDK_NGX_Parameter_DLSS_Hint_Render_Preset_UltraPerformance, renderPreset);  // ^
 
 	{
-		auto commands = renderSystem.core.CreateCommandList(L"DLSS");
+		auto commands = renderSystem.core.CreateCommandList(L"DLSS", PixColor::Nvidia);
 		renderSystem.core.StartCommandList(commands);
 
 		const unsigned int CreationNodeMask = 1;

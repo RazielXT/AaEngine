@@ -537,6 +537,9 @@
     <ClInclude Include="source\SystemUtils.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
+    <ClInclude Include="source\PixColor.h">
+      <Filter>Source Files\Render</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

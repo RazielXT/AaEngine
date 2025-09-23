@@ -270,7 +270,7 @@ void PhysicsManager::drawDebugRender(ID3D12GraphicsCommandList* commandList, Sha
 		BodyManager::DrawSettings drawSettings;
 		drawSettings.mDrawShapeWireframe = wireframe;
 
-		CommandsMarker marker(commandList, "RenderPhysics");
+		CommandsMarker marker(commandList, "RenderPhysics", PixColor::Debug);
 
 		if (renderer->PrepareForRendering(commandList, constants, targets))
 			system->DrawBodies(drawSettings, renderer.get());

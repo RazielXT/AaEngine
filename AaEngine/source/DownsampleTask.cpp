@@ -29,7 +29,7 @@ void DownsampleDepthTask::resize(CompositorPass& pass)
 
 void DownsampleDepthTask::run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass)
 {
-	CommandsMarker marker(syncCommands.commandList, "DownsampleDepthHiZ");
+	CommandsMarker marker(syncCommands.commandList, "DownsampleDepthHiZ", PixColor::Compositor2);
 
 	RenderTargetTransitions<3> tr;
 	tr.addConst(inputs[0], D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);

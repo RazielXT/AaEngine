@@ -61,7 +61,7 @@ AsyncTasksInfo SceneRenderTask::initialize(CompositorPass& pass)
 
 		scene.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
 		scene.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
-		scene.commands = provider.renderSystem.core.CreateCommandList(L"Scene");
+		scene.commands = provider.renderSystem.core.CreateCommandList(L"Scene", PixColor::SceneRender);
 
 		scene.worker = std::thread([this, &pass]
 			{
@@ -81,7 +81,7 @@ AsyncTasksInfo SceneRenderTask::initialize(CompositorPass& pass)
 
 		transparent.work.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
 		transparent.work.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
-		transparent.work.commands = provider.renderSystem.core.CreateCommandList(L"SceneTransparent");
+		transparent.work.commands = provider.renderSystem.core.CreateCommandList(L"SceneTransparent", PixColor::SceneTransparent);
 
 		transparent.work.worker = std::thread([this, &pass]
 			{
@@ -109,7 +109,7 @@ AsyncTasksInfo SceneRenderTask::initializeEarlyZ(CompositorPass& pass)
 
 	earlyZ.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
 	earlyZ.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
-	earlyZ.commands = provider.renderSystem.core.CreateCommandList(L"EarlyZ");
+	earlyZ.commands = provider.renderSystem.core.CreateCommandList(L"EarlyZ", PixColor::EarlyZ);
 
 	earlyZ.worker = std::thread([this, &pass]
 		{

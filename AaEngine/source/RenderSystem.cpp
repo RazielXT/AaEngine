@@ -255,7 +255,7 @@ void RenderCore::WaitForCurrentFrame()
 	fenceValues[frameIndex]++;
 }
 
-CommandsData RenderCore::CreateCommandList(const wchar_t* name)
+CommandsData RenderCore::CreateCommandList(const wchar_t* name, PixColor c)
 {
 	CommandsData data;
 
@@ -271,6 +271,7 @@ CommandsData RenderCore::CreateCommandList(const wchar_t* name)
 	{
 		data.commandList->SetName(name);
 		data.name = as_string(name);
+		data.color = c;
 	}
 
 	return data;
@@ -382,13 +383,13 @@ CommandsMarker::CommandsMarker(CommandsData& c)
 	if (!c.name.empty())
 	{
 		commandList = c.commandList;
-		PIXBeginEvent(commandList, 0, c.name.c_str());
+		PIXBeginEvent(commandList, (UINT64)c.color, c.name.c_str());
 	}
 }
 
-CommandsMarker::CommandsMarker(ID3D12GraphicsCommandList* c, const char* text) : commandList(c)
+CommandsMarker::CommandsMarker(ID3D12GraphicsCommandList* c, const char* text, PixColor color) : commandList(c)
 {
-	PIXBeginEvent(commandList, 0, text);
+	PIXBeginEvent(commandList, (UINT64)color, text);
 }
 
 CommandsMarker::~CommandsMarker()
@@ -396,17 +397,17 @@ CommandsMarker::~CommandsMarker()
 	close();
 }
 
-void CommandsMarker::move(const char* text)
+void CommandsMarker::move(const char* text, PixColor color)
 {
 	close();
 	closed = false;
-	PIXBeginEvent(commandList, 0, text);
+	PIXBeginEvent(commandList, (UINT64)color, text);
 }
 
-void CommandsMarker::mark(const char* text)
+void CommandsMarker::mark(const char* text, PixColor color)
 {
 	if (!closed && commandList)
-		PIXSetMarker(commandList, 0, text);
+		PIXSetMarker(commandList, (UINT64)color, text);
 }
 
 void CommandsMarker::close()

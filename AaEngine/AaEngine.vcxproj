@@ -176,6 +176,7 @@
     <ClInclude Include="source\DrawPrimitives.h" />
     <ClInclude Include="source\EntityPicker.h" />
     <ClInclude Include="source\ObjectId.h" />
+    <ClInclude Include="source\PixColor.h" />
     <ClInclude Include="source\PrepareFrameTask.h" />
     <ClInclude Include="source\ResourceGroup.h" />
     <ClInclude Include="source\SceneEntity.h" />

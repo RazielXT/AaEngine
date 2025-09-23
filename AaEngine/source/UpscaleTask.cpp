@@ -15,7 +15,7 @@ AsyncTasksInfo UpscaleTask::initialize(CompositorPass& pass)
 
 void UpscaleTask::run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass)
 {
-	CommandsMarker marker(syncCommands.commandList, "Upscale");
+	CommandsMarker marker(syncCommands.commandList, "Upscale", PixColor::Upscale);
 
 	std::vector<CD3DX12_RESOURCE_BARRIER> barriers;
 	barriers.resize(pass.inputs.size());

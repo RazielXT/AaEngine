@@ -126,7 +126,7 @@ void Editor::initialize(TargetWindow& v)
 	init_info.SrvDescriptorFreeFn = [](ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle) { return g_pd3dSrvDescHeapAlloc.Free(cpu_handle, gpu_handle); };
 	ImGui_ImplDX12_Init(&init_info);
 
-	commands = renderer.CreateCommandList(L"Editor");
+	commands = renderer.CreateCommandList(L"Editor", PixColor::Editor);
 }
 
 void Editor::updateViewportSize()

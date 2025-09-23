@@ -16,7 +16,7 @@ AsyncTasksInfo ImguiDebugWindowTask::initialize(CompositorPass&)
 
 void ImguiDebugWindowTask::run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass)
 {
-	CommandsMarker marker(syncCommands.commandList, "Imgui");
+	CommandsMarker marker(syncCommands.commandList, "Imgui", PixColor::Orange);
 
 	pass.target.texture->PrepareAsTarget(syncCommands.commandList, pass.target.previousState);
 

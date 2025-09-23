@@ -170,7 +170,7 @@ void FrameCompositor::initializeCommands()
 		{
 			if (!syncCommands.commandList)
 			{
-				syncCommands = generalCommandsArray.emplace_back(provider.renderSystem.core.CreateCommandList(L"Compositor"));
+				syncCommands = generalCommandsArray.emplace_back(provider.renderSystem.core.CreateCommandList(L"Compositor", PixColor::Compositor));
 				passData.startCommands = true;
 			}
 			passData.generalCommands = syncCommands;

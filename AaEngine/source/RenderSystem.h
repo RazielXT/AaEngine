@@ -7,6 +7,7 @@
 #include "RenderTargetTexture.h"
 #include "Upscaling.h"
 #include "DescriptorManager.h"
+#include "PixColor.h"
 
 using namespace DirectX;
 
@@ -15,6 +16,7 @@ struct CommandsData
 	ID3D12GraphicsCommandList* commandList{};
 	ID3D12CommandAllocator* commandAllocators[FrameCount];
 	std::string name;
+	PixColor color;
 
 	void deinit();
 };
@@ -32,11 +34,11 @@ private:
 struct CommandsMarker
 {
 	CommandsMarker(CommandsData&);
-	CommandsMarker(ID3D12GraphicsCommandList* c, const char* name);
+	CommandsMarker(ID3D12GraphicsCommandList* c, const char* name, PixColor color);
 	~CommandsMarker();
 
-	void move(const char* text);
-	void mark(const char* text);
+	void move(const char* text, PixColor);
+	void mark(const char* text, PixColor);
 	void close();
 
 private:
@@ -57,7 +59,7 @@ public:
 	ID3D12CommandQueue* commandQueue;
 	ID3D12CommandQueue* copyQueue;
 
-	CommandsData CreateCommandList(const wchar_t* name = nullptr);
+	CommandsData CreateCommandList(const wchar_t* name, PixColor);
 	CommandsMarker StartCommandList(CommandsData& commands);
 	void StartCommandListNoMarker(CommandsData& commands);
 	CommandsMarker StartCommandList(CommandsData& commands, ID3D12DescriptorHeap* heap);

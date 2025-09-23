@@ -82,7 +82,7 @@ void TerrainGenerator::update(ID3D12GraphicsCommandList* commandList, SceneManag
 // 
 // 	rebuildScheduled = false;
 
-	CommandsMarker marker(commandList, "TerrainGenerator");
+	CommandsMarker marker(commandList, "TerrainGenerator", PixColor::Terrain);
 
 	std::vector<CD3DX12_RESOURCE_BARRIER> barriers;
 	auto transitionToUav = [&](TerrainGrid::ChunkLod& lod)

@@ -195,7 +195,7 @@ void EntityPicker::update(ID3D12GraphicsCommandList* commandList, RenderProvider
 	auto rect = CD3DX12_RECT(scheduled->x, scheduled->y, scheduled->x + 1, scheduled->y + 1);
 	commandList->RSSetScissorRects(1, &rect);
 
-	CommandsMarker marker(commandList, "EntityPicker");
+	CommandsMarker marker(commandList, "EntityPicker", PixColor::Debug);
 	RenderQueue idQueue = createRenderQueue();
 	{
 		auto opaqueRenderables = sceneMgr.getRenderables(Order::Normal);

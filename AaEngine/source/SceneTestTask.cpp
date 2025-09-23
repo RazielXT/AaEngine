@@ -42,7 +42,7 @@ void SceneTestTask::run(RenderContext& ctx, CommandsData& commands, CompositorPa
 	static RenderObjectsVisibilityData sceneInfo;
 	sceneMgr.getRenderables(Order::Normal)->updateVisibility(tmpCamera, sceneInfo);
 
-	CommandsMarker marker(commands.commandList, "Test");
+	CommandsMarker marker(commands.commandList, "Test", PixColor::OliveDrab);
 
 	textures.PrepareAsTarget(commands.commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
 

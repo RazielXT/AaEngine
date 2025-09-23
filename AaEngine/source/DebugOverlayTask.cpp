@@ -34,7 +34,7 @@ void DebugOverlayTask::run(RenderContext& ctx, CommandsData& syncCommands, Compo
 
 	if (idx >= 0)
 	{
-		CommandsMarker marker(syncCommands.commandList, "DebugOverlay");
+		CommandsMarker marker(syncCommands.commandList, "DebugOverlay", PixColor::Debug);
 
 		quad.data.textureIndex = UINT(idx);
 

@@ -170,7 +170,7 @@ void ApplicationCore::loadScene(const char* scene)
 		}
 	}
 
-	auto commands = renderSystem.core.CreateCommandList(L"loadScene");
+	auto commands = renderSystem.core.CreateCommandList(L"loadScene", PixColor::Load);
 	{
 		auto marker = renderSystem.core.StartCommandList(commands);
 
@@ -189,10 +189,10 @@ void ApplicationCore::loadScene(const char* scene)
 			sceneMgr.grass.scheduleGrassCreation(g, commands.commandList, params, resources, sceneMgr);
 		}
 
-		marker.move("loadSceneVoxels");
+		marker.move("loadSceneVoxels", commands.color);
 		VoxelizeSceneTask::Get().clear(commands.commandList);
 
-		marker.move("loadSceneTerrain");
+		marker.move("loadSceneTerrain", commands.color);
 		sceneMgr.terrain.createTerrain(commands.commandList, renderSystem, sceneMgr, resources, batch);
 	}
 

@@ -32,7 +32,7 @@ void SsaoComputeTask::run(RenderContext& ctx, CommandsData& syncCommands, Compos
 
 	{
 		auto& commands = syncCommands;
-		auto marker = CommandsMarker(commands.commandList, "SSAO");
+		auto marker = CommandsMarker(commands.commandList, "SSAO", PixColor::SSAO);
 
 		RenderTargetTransitions<11> tr;
 

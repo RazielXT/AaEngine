@@ -30,7 +30,7 @@ void PrepareFrameTask::run(RenderContext& ctx, CommandsData& cmd, CompositorPass
 	static int c = 0;
 	if (c == 0)
 	{
-		CommandsMarker marker(cmd.commandList, "GrassCreation");
+		CommandsMarker marker(cmd.commandList, "GrassCreation", PixColor::Foliage);
 		for (UINT x = 1; x < 3; x++)
 			for (UINT y = 1; y < 3; y++)
 			{
@@ -42,7 +42,7 @@ void PrepareFrameTask::run(RenderContext& ctx, CommandsData& cmd, CompositorPass
 	}
 	else if (c == 2)
 	{
-		CommandsMarker marker(cmd.commandList, "GrassCreation");
+		CommandsMarker marker(cmd.commandList, "GrassCreation", PixColor::Foliage);
 		sceneMgr.grass.finishGrassCreation();
 	}
 

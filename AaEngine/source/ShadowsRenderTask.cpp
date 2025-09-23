@@ -48,7 +48,7 @@ AsyncTasksInfo ShadowsRenderTask::initialize(CompositorPass&)
 	{
 		shadow.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
 		shadow.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
-		shadow.commands = provider.renderSystem.core.CreateCommandList(L"Shadows");
+		shadow.commands = provider.renderSystem.core.CreateCommandList(L"Shadows", PixColor::Shadows);
 
 		shadow.worker = std::thread([this, idx = tasks.size()]
 			{
@@ -89,7 +89,7 @@ AsyncTasksInfo ShadowsRenderTask::initialize(CompositorPass&)
 	{
 		maxShadow.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
 		maxShadow.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
-		maxShadow.commands = provider.renderSystem.core.CreateCommandList(L"MaxShadows");
+		maxShadow.commands = provider.renderSystem.core.CreateCommandList(L"MaxShadows", PixColor::Shadows);
 
 		maxShadow.worker = std::thread([this]
 			{

@@ -138,7 +138,7 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 	AsyncTasksInfo tasks;
 	eventBegin = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 	eventFinish = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-	commands = provider.renderSystem.core.CreateCommandList(L"Voxelize");
+	commands = provider.renderSystem.core.CreateCommandList(L"Voxelize", PixColor::Voxelize);
 
 	worker = std::thread([this, &pass]
 		{
@@ -289,7 +289,7 @@ void VoxelizeSceneTask::voxelizeCascade(CommandsData& commands, CommandsMarker& 
 	//renderables.updateVisibility(camera, sceneInfo);
 	sceneQueue->renderObjects(constants, commands.commandList);
 
-	marker.move("VoxelMipMaps");
+	marker.move("VoxelMipMaps", PixColor::Voxelize);
 	computeMips.dispatch(commands.commandList, cascade.voxelSceneTexture);
 
 	{
@@ -305,7 +305,7 @@ void VoxelizeSceneTask::voxelizeCascade(CommandsData& commands, CommandsMarker& 
 
 void VoxelizeSceneTask::bounceCascade(CommandsData& commands, CommandsMarker& marker, PassTarget& viewportOutput, SceneVoxelsCascade& cascade)
 {
-	marker.move("VoxelBounces");
+	marker.move("VoxelBounces", PixColor::Voxelize);
 	TextureResource::TransitionState(commands.commandList, cascade.voxelSceneTexture, D3D12_RESOURCE_STATE_COPY_SOURCE);
 	TextureResource::TransitionState(commands.commandList, cascade.voxelPreviousSceneTexture, D3D12_RESOURCE_STATE_COPY_DEST);
 
@@ -326,7 +326,7 @@ void VoxelizeSceneTask::bounceCascade(CommandsData& commands, CommandsMarker& ma
 
 	bouncesCS.dispatch(commands.commandList, std::span{ (float*) & data, 11 }, cascade.voxelSceneTexture.textureView, cascade.voxelPreviousSceneTexture.textureView, cascade.dataBuffer->GetGPUVirtualAddress());
 
-	marker.move("VoxelMipMaps");
+	marker.move("VoxelMipMaps", PixColor::Voxelize);
 	computeMips.dispatch(commands.commandList, cascade.voxelSceneTexture);
 
 	cascade.prepareForReading(commands.commandList);

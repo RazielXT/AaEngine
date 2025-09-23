@@ -64,21 +64,21 @@ void MaterialResources::loadMaterials(std::string directory, bool subDirectories
 	MaterialFileParser::parseAllMaterialFiles(knownMaterials, shaders, directory, subDirectories);
 	resources.shaders.addShaderReferences(shaders);
 
+	knownMaterials.reserve(knownMaterials.size() * 2);
+
 	for (size_t i = 0; i < knownMaterials.size(); i++)
 	{
 		MaterialRef& info = knownMaterials[i];
 
 		if (!info.abstract && info.pipeline.fill == D3D12_FILL_MODE_SOLID && !info.techniqueMaterial[int(MaterialTechnique::Wireframe)])
 		{
-			auto wMat = info;
+			auto& wMat = knownMaterials.emplace_back(info);
 			wMat.pipeline.fill = D3D12_FILL_MODE_WIREFRAME;
 			wMat.pipeline.depthBias = 1;
 			wMat.pipeline.slopeScaledDepthBias = 1;
 
 			wMat.base = wMat.name = info.name + "_WIRE";
 			info.techniqueMaterial[int(MaterialTechnique::Wireframe)] = wMat.name;
-
-			knownMaterials.push_back(wMat);
 		}
 	}
 

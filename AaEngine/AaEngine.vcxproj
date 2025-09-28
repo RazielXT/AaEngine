@@ -101,6 +101,8 @@
     <ClCompile Include="source\DrawPrimitives.cpp" />
     <ClCompile Include="source\EntityPicker.cpp" />
     <ClCompile Include="source\ObjectId.cpp" />
+    <ClCompile Include="source\PagedGeometry.cpp" />
+    <ClCompile Include="source\PagedGeometryCpuLoader.cpp" />
     <ClCompile Include="source\PrepareFrameTask.cpp" />
     <ClCompile Include="source\SceneEntity.cpp" />
     <ClCompile Include="source\Material.cpp" />
@@ -108,6 +110,8 @@
     <ClCompile Include="source\MaterialResources.cpp" />
     <ClCompile Include="source\MathUtils.cpp" />
     <ClCompile Include="source\SceneSkybox.cpp" />
+    <ClCompile Include="source\SpatialGrid\GlobalBucketProvider.cpp" />
+    <ClCompile Include="source\SpatialGrid\SpatialGrid.cpp" />
     <ClCompile Include="source\SystemUtils.cpp" />
     <ClCompile Include="source\TerrainGenerationCS.cpp" />
     <ClCompile Include="source\TerrainGenerator.cpp" />
@@ -176,6 +180,9 @@
     <ClInclude Include="source\DrawPrimitives.h" />
     <ClInclude Include="source\EntityPicker.h" />
     <ClInclude Include="source\ObjectId.h" />
+    <ClInclude Include="source\PagedGeometry.h" />
+    <ClInclude Include="source\PagedGeometryCpuLoader.h" />
+    <ClInclude Include="source\PagedGeometryLoader.h" />
     <ClInclude Include="source\PixColor.h" />
     <ClInclude Include="source\PrepareFrameTask.h" />
     <ClInclude Include="source\ResourceGroup.h" />
@@ -195,6 +202,10 @@
     <ClInclude Include="source\GrassArea.h" />
     <ClInclude Include="source\GrassInitComputeShader.h" />
     <ClInclude Include="source\SceneSkybox.h" />
+    <ClInclude Include="source\SpatialGrid\BucketData.h" />
+    <ClInclude Include="source\SpatialGrid\GlobalBucketProvider.h" />
+    <ClInclude Include="source\SpatialGrid\IBucketProvider.h" />
+    <ClInclude Include="source\SpatialGrid\SpatialGrid.h" />
     <ClInclude Include="source\StringUtils.h" />
     <ClInclude Include="source\ImguiDebugWindowTask.h" />
     <ClInclude Include="source\AoPrepareDepthBuffersCS.h" />

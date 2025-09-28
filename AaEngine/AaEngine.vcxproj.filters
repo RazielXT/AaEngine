@@ -59,6 +59,15 @@
     <Filter Include="Source Files\RenderObject\Vegetation">
       <UniqueIdentifier>{730c7ab0-11a4-45a5-85db-0d2528dbd114}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\RenderObject\PagedGeometry">
+      <UniqueIdentifier>{5c7985cb-bdf9-4e22-b04d-c671b122a218}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\RenderObject\PagedGeometry\Cpu">
+      <UniqueIdentifier>{a20211a2-116e-461f-8e6f-d4416275e3e9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\RenderObject\PagedGeometry\Cpu\SpatialGrid">
+      <UniqueIdentifier>{b6980038-2251-4fc5-93f4-2fe1fe6f852d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\TargetWindow.cpp">
@@ -288,6 +297,18 @@
     </ClCompile>
     <ClCompile Include="source\SystemUtils.cpp">
       <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="source\PagedGeometry.cpp">
+      <Filter>Source Files\RenderObject\PagedGeometry</Filter>
+    </ClCompile>
+    <ClCompile Include="source\PagedGeometryCpuLoader.cpp">
+      <Filter>Source Files\RenderObject\PagedGeometry\Cpu</Filter>
+    </ClCompile>
+    <ClCompile Include="source\SpatialGrid\GlobalBucketProvider.cpp">
+      <Filter>Source Files\RenderObject\PagedGeometry\Cpu\SpatialGrid</Filter>
+    </ClCompile>
+    <ClCompile Include="source\SpatialGrid\SpatialGrid.cpp">
+      <Filter>Source Files\RenderObject\PagedGeometry\Cpu\SpatialGrid</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -539,6 +560,27 @@
     </ClInclude>
     <ClInclude Include="source\PixColor.h">
       <Filter>Source Files\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="source\PagedGeometry.h">
+      <Filter>Source Files\RenderObject\PagedGeometry</Filter>
+    </ClInclude>
+    <ClInclude Include="source\PagedGeometryLoader.h">
+      <Filter>Source Files\RenderObject\PagedGeometry</Filter>
+    </ClInclude>
+    <ClInclude Include="source\PagedGeometryCpuLoader.h">
+      <Filter>Source Files\RenderObject\PagedGeometry\Cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="source\SpatialGrid\BucketData.h">
+      <Filter>Source Files\RenderObject\PagedGeometry\Cpu\SpatialGrid</Filter>
+    </ClInclude>
+    <ClInclude Include="source\SpatialGrid\GlobalBucketProvider.h">
+      <Filter>Source Files\RenderObject\PagedGeometry\Cpu\SpatialGrid</Filter>
+    </ClInclude>
+    <ClInclude Include="source\SpatialGrid\IBucketProvider.h">
+      <Filter>Source Files\RenderObject\PagedGeometry\Cpu\SpatialGrid</Filter>
+    </ClInclude>
+    <ClInclude Include="source\SpatialGrid\SpatialGrid.h">
+      <Filter>Source Files\RenderObject\PagedGeometry\Cpu\SpatialGrid</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

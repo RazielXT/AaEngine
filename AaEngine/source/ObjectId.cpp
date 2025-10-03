@@ -23,8 +23,8 @@
  * +--------+---------+---------+----------------------------+---------------+
  *
  *  - Bit 31      : Custom Entity Flag (0 for Custom Entity)
- *  - Bits 30-27  : Group Type (4 bits, 0xF) - max size 8
- *  - Bits 26-16  : Group Index (11 bits, 0x7FF) - max size 4096
+ *  - Bits 30-28  : Group Type (3 bits, 0xF) - max size 7 (reserved 0)
+ *  - Bits 27-16  : Group Index (12 bits, 0xFFF) - max size 4096
  *  - Bits 15-0   : Entity Index (16 bits, 0xFFFF) - max size 65536
  */
 
@@ -37,7 +37,7 @@ ObjectId::ObjectId(UINT idx, Order order)
 
 ObjectId::ObjectId(UINT idx, ObjectType type, UINT groupId)
 {
-	value = (UINT(type) << 27) | (groupId << 16) | idx;
+	value = (UINT(type) << 28) | (groupId << 16) | idx;
 }
 
 ObjectId::ObjectId(UINT v) : value(v)
@@ -62,7 +62,7 @@ UINT ObjectId::getLocalIdx() const
 
 UINT ObjectId::getGroupId() const
 {
-	return (value >> 16) & 0x7FF;
+	return (value >> 16) & 0xFFF;
 }
 
 ObjectType ObjectId::getObjectType() const
@@ -70,5 +70,5 @@ ObjectType ObjectId::getObjectType() const
 	if (value & SceneEntityFlag)
 		return ObjectType::Entity;
 
-	return ObjectType(value >> 27);
+	return ObjectType(value >> 28);
 }

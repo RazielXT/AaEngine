@@ -113,8 +113,8 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>d3d12.lib;dxgi.lib;dxcompiler.lib;dxguid.lib;DirectXTK12.lib;Shcore.lib;nvsdk_ngx_d_dbg.lib;amd_fidelityfx_dx12.lib;Jolt.lib;..\x64\Debug\AaEngine.lib;..\x64\Debug\AaFramework.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\dependencies\DirectXTK12\Bin\Desktop_2022_Win10\x64\Debug\;..\dependencies\DLSS\lib\Windows_x86_64\x64\;..\dependencies\FidelityFX-SDK\PrebuiltSignedDLL\;..\dependencies\JoltPhysics\Build\VS2022_CL\Debug\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>d3d12.lib;dxgi.lib;dxcompiler.lib;dxguid.lib;DirectXTK12.lib;Shcore.lib;nvsdk_ngx_d_dbg.lib;amd_fidelityfx_loader_dx12.lib;amd_fidelityfx_upscaler_dx12.lib;Jolt.lib;..\x64\Debug\AaEngine.lib;..\x64\Debug\AaFramework.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\dependencies\DirectXTK12\Bin\Desktop_2022_Win10\x64\Debug\;..\dependencies\DLSS\lib\Windows_x86_64\x64\;..\dependencies\FidelityFX-SDK\Kits\FidelityFX\signedbin\;..\dependencies\JoltPhysics\Build\VS2022_CL\Debug\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -135,8 +135,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\dependencies\DirectXTK12\Bin\Desktop_2022_Win10\x64\Release\;..\dependencies\DLSS\lib\Windows_x86_64\x64\;..\dependencies\FidelityFX-SDK\PrebuiltSignedDLL\;..\dependencies\JoltPhysics\Build\VS2022_CL\Release\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>d3d12.lib;dxgi.lib;dxcompiler.lib;dxguid.lib;DirectXTK12.lib;Shcore.lib;user32.lib;advapi32.lib;nvsdk_ngx_d.lib;amd_fidelityfx_dx12.lib;Jolt.lib;..\x64\Release\AaEngine.lib;..\x64\Release\AaFramework.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\dependencies\DirectXTK12\Bin\Desktop_2022_Win10\x64\Release\;..\dependencies\DLSS\lib\Windows_x86_64\x64\;..\dependencies\FidelityFX-SDK\Kits\FidelityFX\signedbin\;..\dependencies\JoltPhysics\Build\VS2022_CL\Release\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>d3d12.lib;dxgi.lib;dxcompiler.lib;dxguid.lib;DirectXTK12.lib;Shcore.lib;user32.lib;advapi32.lib;nvsdk_ngx_d.lib;amd_fidelityfx_loader_dx12.lib;amd_fidelityfx_upscaler_dx12.lib;Jolt.lib;..\x64\Release\AaEngine.lib;..\x64\Release\AaFramework.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

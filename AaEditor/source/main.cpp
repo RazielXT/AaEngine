@@ -31,7 +31,7 @@ public:
 		window->listeners.push_back(this);
 
 		ApplicationCore::InitParams params;
-		params.defaultCompositorParams.renderToBackbuffer = false;
+		params.compositor.renderToBackbuffer = false;
 		app.initialize(*window, params);
 
 		freeCamera.bind(renderPanelViewport);

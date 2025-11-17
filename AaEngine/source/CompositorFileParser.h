@@ -3,6 +3,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <set>
 #include <optional>
 #include <d3d12.h>
 
@@ -30,14 +31,6 @@ struct CompositorTextureSlot
 	Compositor::UsageFlags flags = Compositor::PixelShader;
 };
 
-struct CompositorPassCondition
-{
-	bool accept;
-	std::string param;
-
-	bool operator==(const CompositorPassCondition& other) const { return (accept == other.accept) && (param == other.param); }
-};
-
 struct CompositorPassInfo
 {
 	std::string name;
@@ -49,7 +42,6 @@ struct CompositorPassInfo
 	std::string material;
 	std::string entry;
 	std::string after;
-	std::vector<CompositorPassCondition> conditions;
 };
 
 struct CompositorInfo
@@ -62,5 +54,12 @@ struct CompositorInfo
 
 namespace CompositorFileParser
 {
-	CompositorInfo parseFile(std::string directory, std::string path);
+	struct Input
+	{
+		std::set<std::string> defines;
+		std::string scope;
+		std::vector<std::string> textures;
+	};
+
+	CompositorInfo parseFile(std::string directory, std::string path, const Input& input);
 };

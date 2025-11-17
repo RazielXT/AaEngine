@@ -2,24 +2,18 @@ compositor Godray
 {
 	texture godray output_size_div 4 DXGI_FORMAT_R8G8B8A8_UNORM
 	texture godray2 output_size_div 4 DXGI_FORMAT_R8G8B8A8_UNORM
+	texture tmpColorDownsample2 output_size_div 2 DXGI_FORMAT_R8G8B8A8_UNORM
 
-#if UPSCALE
+	extern sceneTexture
+	extern depthTexture
+
 	pass SkyDownsample
 	{
 		material SkyPassThrough
-		input sceneTexture2_upscaled
-		input sceneTexture:Normal
+		input sceneTexture
+		input depthTexture
 		target tmpColorDownsample2
 	}
-#else
-	pass SkyDownsample
-	{
-		material SkyPassThrough
-		input sceneTexture:Color
-		input sceneTexture:Normal
-		target tmpColorDownsample2
-	}
-#endif
 
 	pass SkyDownsample
 	{

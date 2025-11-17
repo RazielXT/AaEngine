@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <set>
 
 namespace Config
 {
@@ -14,5 +15,5 @@ namespace Config
 		std::vector<Object> children;
 	};
 
-	std::vector<Object> Parse(const std::string& file);
+	std::vector<Object> Parse(const std::string& file, const std::set<std::string>& defines = {});
 }

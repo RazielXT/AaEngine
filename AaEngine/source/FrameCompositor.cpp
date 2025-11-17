@@ -16,7 +16,7 @@
 #include "DownsampleTask.h"
 #include "PrepareFrameTask.h"
 
-FrameCompositor::FrameCompositor(RenderProvider p, SceneManager& scene, ShadowMaps& shadows) : provider(p), sceneMgr(scene), shadowMaps(shadows)
+FrameCompositor::FrameCompositor(const InitConfig& params, RenderProvider p, SceneManager& scene, ShadowMaps& shadows) : config(params), provider(p), sceneMgr(scene), shadowMaps(shadows)
 {
 }
 
@@ -26,30 +26,24 @@ FrameCompositor::~FrameCompositor()
 		c.deinit();
 }
 
-void FrameCompositor::load(std::string path, const InitParams& params)
+void FrameCompositor::reloadPasses()
 {
-	renderToBackbuffer = params.renderToBackbuffer;
-	info = CompositorFileParser::parseFile(FRAME_DIRECTORY, path + ".compositor");
+	std::set<std::string> defines;
+	auto& upscale = provider.renderSystem.upscale;
+	if (upscale.dlss.enabled()) defines.insert("DLSS");
+	if (upscale.fsr.enabled()) defines.insert("FSR");
+	if (upscale.dlss.enabled() || upscale.fsr.enabled()) defines.insert("UPSCALE");
 
-	if (!renderToBackbuffer)
+	info = CompositorFileParser::parseFile(FRAME_DIRECTORY, config.file + ".compositor", { defines });
+
+	if (!config.renderToBackbuffer)
 	{
 		auto& outputTexture = info.textures["Output"];
 		outputTexture.name = "Output";
 		outputTexture.outputScale = true;
 		outputTexture.height = outputTexture.width = 1.0f;
-		outputTexture.format = params.outputFormat;
+		outputTexture.format = config.outputFormat;
 	}
-
-	load(info);
-}
-
-void FrameCompositor::load(CompositorInfo i)
-{
-	std::vector<CompositorPassCondition> conditions;
-	auto& upscale = provider.renderSystem.upscale;
-	conditions.push_back({ upscale.dlss.enabled() , "DLSS" });
-	conditions.push_back({ upscale.fsr.enabled() , "FSR" });
-	conditions.push_back({ upscale.dlss.enabled() || upscale.fsr.enabled() , "UPSCALE" });
 
 	passes.clear();
 
@@ -57,26 +51,6 @@ void FrameCompositor::load(CompositorInfo i)
 
 	for (auto& p : info.passes)
 	{
-		bool passedCondition = true;
-
-		for (auto& passCondition : p.conditions)
-		{
-			bool found = false;
-
-			for (auto& c : conditions)
-				if (c.param == passCondition.param)
-				{
-					found = true;
-					if (c.accept != passCondition.accept)
-						passedCondition = false;
-				}
-
-			if (!found && passCondition.accept)
-				passedCondition = false;
-		}
-		if (!passedCondition)
-			continue;
-
 		auto& pass = passes.emplace_back(p);
 		auto& task = tasks[pass.info.task];
 
@@ -150,11 +124,6 @@ void FrameCompositor::load(CompositorInfo i)
 	}
 
 	initializeCommands();
-}
-
-void FrameCompositor::reloadPasses()
-{
-	load(info);
 }
 
 void FrameCompositor::reloadTextures()
@@ -253,7 +222,7 @@ void FrameCompositor::reloadTextures()
 
 		if (!p.info.targets.empty())
 		{
-			if (renderToBackbuffer && p.info.targets.front().name == "Output")
+			if (config.renderToBackbuffer && p.info.targets.front().name == "Output")
 			{
 				p.target.texture = &provider.renderSystem.core.backbuffer[0];
 				p.target.backbuffer = true;
@@ -336,7 +305,7 @@ void FrameCompositor::render(RenderContext& ctx)
 
 		if (pass.target.present)
 		{
-			if (renderToBackbuffer)
+			if (config.renderToBackbuffer)
 				pass.target.texture->PrepareToPresent(syncCommands.commandList, pass.target.previousState);
 			else
 				pass.target.texture->PrepareAsView(syncCommands.commandList, pass.target.previousState);

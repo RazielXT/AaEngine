@@ -1,32 +1,22 @@
-import ssao
-import exposure
-import bloom
-import godray
+import ssao.SSAO
+import exposure.Exposure
+import bloom.Bloom
+import godray.Godray
 
 compositor Frame
 {
-	texture sceneTexture target_size Color:DXGI_FORMAT_R8G8B8A8_UNORM Normal:DXGI_FORMAT_R10G10B10A2_UNORM Distance:DXGI_FORMAT_R32_FLOAT MotionVectors:DXGI_FORMAT_R16G16_FLOAT Depth
-	texture sceneTransparentTexture target_size Color:DXGI_FORMAT_R8G8B8A8_UNORM Fill:DXGI_FORMAT_R8G8B8A8_UNORM
-	texture sceneTexture2 target_size DXGI_FORMAT_R8G8B8A8_UNORM
-	texture sceneColors target_size DXGI_FORMAT_R8G8B8A8_UNORM
-	texture sceneTransparentTextureDownscale4 target_size_div 4 DXGI_FORMAT_R8G8B8A8_UNORM
-	texture sceneTransparentTexture2 target_size DXGI_FORMAT_R8G8B8A8_UNORM
-	texture motionVectors target_size DXGI_FORMAT_R16G16_FLOAT
-	rwtexture sceneTexture2_upscaled output_size DXGI_FORMAT_R8G8B8A8_UNORM
-	texture sceneTexture3 output_size DXGI_FORMAT_R8G8B8A8_UNORM
+	texture sceneTexture target_size Albedo:DXGI_FORMAT_R8G8B8A8_UNORM Normal:DXGI_FORMAT_R16G16B16A16_FLOAT Distance:DXGI_FORMAT_R32_FLOAT MotionVectors:DXGI_FORMAT_R16G16_FLOAT Depth
+	texture sceneVCT target_size DXGI_FORMAT_R8G8B8A8_UNORM
+	texture sceneTextureTmp target_size DXGI_FORMAT_R8G8B8A8_UNORM
+	texture sceneTextureTmpOut output_size DXGI_FORMAT_R8G8B8A8_UNORM
 
 	texture sceneDownscale2 target_size_div 2 DXGI_FORMAT_R8G8B8A8_UNORM
 	texture sceneDownscale4 target_size_div 8 DXGI_FORMAT_R8G8B8A8_UNORM
 
-	texture depthDownsample2 target_size_div 2 DXGI_FORMAT_R32_FLOAT
-	texture depthDownsample4 target_size_div 4 DXGI_FORMAT_R32_FLOAT
-
-	rwtexture depthHiZDownsample4 target_size_div 4 DXGI_FORMAT_R32_FLOAT	
-	rwtexture depthHiZDownsample32 target_size_div 32 DXGI_FORMAT_R32_FLOAT
-
-	texture tmpColorDownsample2 output_size_div 2 DXGI_FORMAT_R8G8B8A8_UNORM
-	texture tmpColorDownsample4 output_size_div 4 DXGI_FORMAT_R8G8B8A8_UNORM
-	texture tmpColorDownsample8 output_size_div 8 DXGI_FORMAT_R8G8B8A8_UNORM
+#if UPSCALE
+	texture motionVectors target_size DXGI_FORMAT_R16G16_FLOAT
+	rwtexture sceneTextureTmp_upscaled output_size DXGI_FORMAT_R8G8B8A8_UNORM
+#endif
 
 	texture voxelDummy 128 128 DXGI_FORMAT_R8G8B8A8_UNORM
 
@@ -58,25 +48,32 @@ compositor Frame
 		target sceneTexture
 	}
 
-	task SceneRender
+	ref SSAO(sceneTexture:Depth)
+
+	pass DeferredVCT
 	{
-		after SceneRender
-		entry Wireframe
-		target sceneTexture
+		material DeferredVCT
+		input sceneTexture:Normal
+		input sceneTexture:Depth
+		target sceneVCT
 	}
 
-	task RenderPhysics
+	pass DeferredLighting
 	{
-		target sceneTexture
+		material DeferredLighting
+		input sceneTexture:Albedo
+		input sceneTexture:Normal
+		input sceneTexture:Distance
+		input sceneTexture:Depth
+		input SSAO.aoSmooth
+		input sceneVCT
+		target sceneTextureTmp
 	}
-
-	ref SSAO:SSAO
-
 
 	pass SceneDownsample
 	{
-		material PassThroughIllumination
-		input sceneTexture:Color
+		material PassThrough
+		input sceneTextureTmp
 		target sceneDownscale2
 	}
 	pass SceneDownsample
@@ -85,74 +82,18 @@ compositor Frame
 		input sceneDownscale2
 		target sceneDownscale4
 	}
-	pass DepthDownsample
-	{
-		material LoadThrough
-		input sceneTexture:Depth
-		target depthDownsample2
-	}
-	pass DepthDownsample
-	{
-		material LoadThrough
-		input depthDownsample2
-		target depthDownsample4
-	}
 
-	task HiZDepthDownsample (compute_shader)
-	{
-		input depthDownsample2 (read)
-		input depthHiZDownsample4
-		input depthHiZDownsample32
-	}
+	ref Exposure(sceneTextureTmp)
 
-	pass SSAODarken
-	{
-		material Darken
-		input sceneTexture:Color
-		input aoSmooth
-		target sceneTexture2
-	}
-
-	task SceneRender
-	{
-		entry Transparent
-
-		input sceneTexture:Distance
-		input sceneTexture2
-		input depthDownsample2
-		input depthHiZDownsample4
-		input depthHiZDownsample32
-		target sceneTransparentTexture sceneTexture:Depth (depth_read)
-	}
-
-	pass ApplySceneWater
-	{
-		material ApplySceneWater
-		input sceneTexture2
-		input sceneTransparentTexture
-		target sceneColors
-	}
-
-	ref Exposure:*
-
-	ref Bloom:*
-
-	pass CombineLighting
-	{
-		material CombineLighting
-		input sceneColors
-		input sceneTexture:Distance
-		target sceneTexture2
-	}
+	ref Bloom(sceneDownscale4,Exposure.exposure)
 
 	task SceneRender
 	{
 		entry Editor
-		target sceneTexture2 sceneTexture:Depth (depth_read)
+		target sceneTextureTmp sceneTexture:Depth (depth_read)
 	}
 
 #if UPSCALE
-
 	task UpscalePrepare
 
 	pass MotionVectors
@@ -163,54 +104,42 @@ compositor Frame
 		target motionVectors
 	}
 
-	#if DLSS
-		task Upscale (compute_shader)
-		{
-			input sceneTexture2
-			input motionVectors
-			input sceneTexture:Depth
-			input sceneTexture2_upscaled
-		}
-	#elif FSR
-		task Upscale (compute_shader)
-		{
-			input sceneTexture2
-			input motionVectors
-			input sceneTexture:Depth
-			input sceneTexture2_upscaled
-		}
-	#endif
-
-	ref Godray:*
-
-	pass Combine
+	task Upscale (compute_shader)
 	{
-		material AddThroughNoLuma
-		input sceneTexture2_upscaled
-		input bloomTexture
-		input godray
-		input exposure
-		target Output
+		input sceneTextureTmp
+		input motionVectors
+		input sceneTexture:Depth
+		input sceneTextureTmp_upscaled
 	}
 
-#else
+	ref Godray(sceneTextureTmp_upscaled,sceneTexture:Depth)
 
-	ref Godray:*
-
-	pass Combine
+	pass ToneMapping
 	{
-		material AddThrough
-		input sceneTexture2
-		input bloomTexture
-		input godray
-		input exposure
-		target sceneTexture3
+		material ToneMappingNoLuma
+		input sceneTextureTmp_upscaled
+		input Bloom.bloomTexture
+		input Exposure.exposure
+		input Godray.godray
+		target Output
+	}
+#else
+	ref Godray(sceneTextureTmp,sceneTexture:Depth)
+
+	pass ToneMapping
+	{
+		material ToneMapping
+		input sceneTextureTmp
+		input Bloom.bloomTexture
+		input Exposure.exposure
+		input Godray.godray
+		target sceneTextureTmpOut
 	}
 
 	pass Fxaa
  	{
 		material FXAA
-		input sceneTexture3
+		input sceneTextureTmpOut
  		target Output
  	}
 #endif
@@ -219,11 +148,4 @@ compositor Frame
 	{
 		target Output
 	}
-
-#if STANDALONE
-	task Imgui
-	{
-		target Output
-	}
-#endif
 }

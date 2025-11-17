@@ -31,7 +31,7 @@ void FrameCompositor::initializeTextureStates()
 		{
 			auto& state = lastTextureStates[name];
 			if (pass.target.present)
-				state = renderToBackbuffer ? D3D12_RESOURCE_STATE_PRESENT : D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+				state = config.renderToBackbuffer ? D3D12_RESOURCE_STATE_PRESENT : D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 			else if (name.ends_with(":Depth"))
 			{
 				if (flags & Compositor::DepthRead)
@@ -69,7 +69,7 @@ void FrameCompositor::initializeTextureStates()
 			if (pass.info.targets.size() == 1)
 			{
 				if (pass.target.present)
-					lastState = renderToBackbuffer ? D3D12_RESOURCE_STATE_PRESENT : D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+					lastState = config.renderToBackbuffer ? D3D12_RESOURCE_STATE_PRESENT : D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 				else if (targetName.ends_with(":Depth"))
 				{
 					if (flags & Compositor::DepthRead)

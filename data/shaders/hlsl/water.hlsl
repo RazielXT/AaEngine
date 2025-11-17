@@ -268,13 +268,6 @@ PSOutput PSMain(PSInput input)
 	
 	//albedo.rgb = length(input.worldPosition.xyz - worldPosGround);
 	//albedo.rgb = depthGround.rrr;
-	
-/* 	float4 screenPos = float4(clipSpacePos * -1, input.position.z, 1.0);
-	float4 worldPosition = mul(screenPos, InvProjectionMatrix);
-	worldPosition /= worldPosition.w;
-	worldPosition = mul(worldPosition, InvViewMatrix);
-	worldPosition /= worldPosition.w;
-	albedo.rgb += worldPosition.xyz; */
 
 	Texture3D voxelmap = ResourceDescriptorHeap[VoxelInfo.FarVoxels.TexId];
 	albedo.rgb *= max(0.3, (voxelmap.SampleLevel(LinearWrapSampler, voxelUV, 3).rgb + voxelmap.SampleLevel(LinearWrapSampler, voxelUV, 4).rgb * 2) * 10);

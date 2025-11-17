@@ -134,8 +134,12 @@ float4 PSDarken(VS_OUTPUT input) : SV_TARGET
 
 float4 PSSkyPassThrough(VS_OUTPUT input) : SV_TARGET
 {
-	if (colorMap2.Sample(LinearSampler, input.TexCoord).a < 1)
-		return colorMap.Sample(LinearSampler, input.TexCoord);
+	if (colorMap2.Sample(LinearSampler, input.TexCoord).r > 0)
+		return float4(0, 0, 0, 0);
 
-    return float4(0, 0, 0, 0);
+	float4 color = colorMap.Sample(LinearSampler, input.TexCoord);
+
+	color = color * 2;
+
+	return color;
 }

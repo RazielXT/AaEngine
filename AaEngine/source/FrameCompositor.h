@@ -10,15 +10,16 @@ class FrameCompositor
 {
 public:
 
-	FrameCompositor(RenderProvider provider, SceneManager& sceneMgr, ShadowMaps& shadows);
-	~FrameCompositor();
-
-	struct InitParams
+	struct InitConfig
 	{
+		std::string file = "frame";
 		bool renderToBackbuffer = true;
 		DXGI_FORMAT outputFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 	};
-	void load(std::string path, const InitParams& params = InitParams{});
+
+	FrameCompositor(const InitConfig& params, RenderProvider provider, SceneManager& sceneMgr, ShadowMaps& shadows);
+	~FrameCompositor();
+
 	void reloadPasses();
 	void reloadTextures();
 
@@ -33,11 +34,10 @@ public:
 
 protected:
 
-	void load(CompositorInfo info);
+	InitConfig config;
 
 	CompositorInfo info;
 	std::map<std::string, RenderTargetTexture> textures;
-	bool renderToBackbuffer{};
 
 	RenderTargetHeap rtvHeap;
 

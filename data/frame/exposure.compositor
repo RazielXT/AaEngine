@@ -7,10 +7,12 @@ compositor Exposure
 	texture exposureDs5 1 1 DXGI_FORMAT_R32_FLOAT
 	texture exposure 1 1 DXGI_FORMAT_R32_FLOAT
 
+	extern sceneTexture
+
 	pass ExposureDownsample
 	{
 		material PassThroughAvg
-		input sceneTexture:Color
+		input sceneTexture
 		target exposureDs
 	}
 	pass ExposureDownsample2

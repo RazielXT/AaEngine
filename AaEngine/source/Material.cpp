@@ -547,14 +547,14 @@ void MaterialInstance::UpdatePerFrame(MaterialDataStorage& data, const ShaderCon
 			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&data.rootParams[p.bufferOffset], XMMatrixTranspose(info.getViewProjectionMatrix()));
 		else if (p.type == ResourcesInfo::AutoParam::VIEW_MATRIX)
 			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&data.rootParams[p.bufferOffset], XMMatrixTranspose(info.getViewMatrix()));
+		else if (p.type == ResourcesInfo::AutoParam::PROJ_MATRIX)
+			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&data.rootParams[p.bufferOffset], XMMatrixTranspose(info.getProjectionMatrix()));
 		else if (p.type == ResourcesInfo::AutoParam::INV_VP_MATRIX)
 			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&data.rootParams[p.bufferOffset], XMMatrixTranspose(info.getInverseViewProjectionMatrix()));
 		else if (p.type == ResourcesInfo::AutoParam::INV_VIEW_MATRIX)
 			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&data.rootParams[p.bufferOffset], XMMatrixTranspose(info.getInverseViewMatrix()));
 		else if (p.type == ResourcesInfo::AutoParam::INV_PROJ_MATRIX)
 			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&data.rootParams[p.bufferOffset], XMMatrixTranspose(info.getInverseProjectionMatrix()));
-		else if (p.type == ResourcesInfo::AutoParam::PROJ_MATRIX)
-			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&data.rootParams[p.bufferOffset], XMMatrixTranspose(info.getProjectionMatrix()));
 		else if (p.type == ResourcesInfo::AutoParam::Z_MAGIC)
 			data.rootParams[p.bufferOffset] = info.camera.getCameraZ();
 	}

@@ -26,8 +26,7 @@ public:
 
 	struct InitParams
 	{
-		std::string defaultCompositor = "frame";
-		FrameCompositor::InitParams defaultCompositorParams;
+		FrameCompositor::InitConfig compositor;
 	};
 	void initialize(const TargetWindow& window, const InitParams& appParams = InitParams{});
 

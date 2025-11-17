@@ -17,8 +17,6 @@ material ColorVCT abstract
 	{
 		float MaterialColor 1 1 1
 	}
-
-	technique TerrainScan TerrainScanColorVCT override
 }
 
 material TerrainScanColorVCT abstract
@@ -96,7 +94,7 @@ material RockVCT : ColorVCT
 	}
 }
 
-material GrassVCT2 : ColorVCT
+material GrassVCT : ColorVCT
 {
 	texture Diffuse
 	{
@@ -187,7 +185,7 @@ material PineTrunk : TreeTrunk
 }
 
 
-material GrassVCT
+material BrickPom
 {
 	vertex_shader
 	{

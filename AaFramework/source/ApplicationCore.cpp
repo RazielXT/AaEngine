@@ -35,12 +35,12 @@ void ApplicationCore::initialize(const TargetWindow& window, const InitParams& a
 	shadowMap = new ShadowMaps(lights.directionalLight, params.sun);
 	shadowMap->init(renderSystem, resources);
 
-	compositor = new FrameCompositor({ params, renderSystem, resources }, sceneMgr, *shadowMap);
+	compositor = new FrameCompositor(appParams.compositor, { params, renderSystem, resources }, sceneMgr, *shadowMap);
 	compositor->registerTask("RenderPhysics", [this](RenderProvider& provider, SceneManager& sceneMgr)
 	{
 		return std::make_shared<PhysicsRenderTask>(provider, sceneMgr, physicsMgr);
 	});
-	compositor->load(appParams.defaultCompositor, appParams.defaultCompositorParams);
+	compositor->reloadPasses();
 
 	sceneMgr.initialize(renderSystem);
 
@@ -138,36 +138,36 @@ void ApplicationCore::loadScene(const char* scene)
 // 		e->material = resources.materials.getMaterial("RedVCT", batch);
 // 		result.grassTasks.push_back({ e, e->getWorldBoundingBox() });
 
-		{
-			auto material = resources.materials.getMaterial("grassBladeInstanced", batch);
-			auto model = resources.models.getModel("GrassBladeMedium.mesh", batch, {ResourceGroup::General, SCENE_DIRECTORY + "tmp/" });
-
-			auto& instanceDescription = result.instanceDescriptions[material];
-			instanceDescription.material = material;
-			instanceDescription.model = model;
-
-			for (float x = 0; x < 50; x++)
-				for (float z = 0; z < 50; z++)
-				{
-					float distance = std::sqrt(x * x + z * z); // Distance from origin (0,0)
-					float densityFactor = 1.0f + distance * 0.04f; // Increase spacing with distance
-
-					float GrassOffset = 3.0f * densityFactor;
-					float GrassRandomOffset = GrassOffset * 0.7f;
-
-					auto& tr = instanceDescription.objects.emplace_back();
-					tr.position = {
-						x * GrassOffset + getRandomFloat(-GrassRandomOffset, GrassRandomOffset),
-						0,
-						z * GrassOffset + getRandomFloat(-GrassRandomOffset, GrassRandomOffset)
-					};
-					tr.scale = Vector3(getRandomFloat(0.4f, 1.5f));
-					tr.orientation = Quaternion::CreateFromAxisAngle(Vector3::UnitY, getRandomFloat(0, XM_2PI));
-				}
-
-			planes.CreatePlanesVertexBuffer(renderSystem, batch, { { {0,0,250}, 500 }, { {500,0,250}, 500 } }, 0.01f, true);
-			planes.CreateEntity("testPlane", sceneMgr, resources.materials.getMaterial("terrainGrass", batch));
-		}
+// 		{
+// 			auto material = resources.materials.getMaterial("grassBladeInstanced", batch);
+// 			auto model = resources.models.getModel("GrassBladeMedium.mesh", batch, {ResourceGroup::General, SCENE_DIRECTORY + "tmp/" });
+// 
+// 			auto& instanceDescription = result.instanceDescriptions[material];
+// 			instanceDescription.material = material;
+// 			instanceDescription.model = model;
+// 
+// 			for (float x = 0; x < 50; x++)
+// 				for (float z = 0; z < 50; z++)
+// 				{
+// 					float distance = std::sqrt(x * x + z * z); // Distance from origin (0,0)
+// 					float densityFactor = 1.0f + distance * 0.04f; // Increase spacing with distance
+// 
+// 					float GrassOffset = 3.0f * densityFactor;
+// 					float GrassRandomOffset = GrassOffset * 0.7f;
+// 
+// 					auto& tr = instanceDescription.objects.emplace_back();
+// 					tr.position = {
+// 						x * GrassOffset + getRandomFloat(-GrassRandomOffset, GrassRandomOffset),
+// 						0,
+// 						z * GrassOffset + getRandomFloat(-GrassRandomOffset, GrassRandomOffset)
+// 					};
+// 					tr.scale = Vector3(getRandomFloat(0.4f, 1.5f));
+// 					tr.orientation = Quaternion::CreateFromAxisAngle(Vector3::UnitY, getRandomFloat(0, XM_2PI));
+// 				}
+// 
+// 			planes.CreatePlanesVertexBuffer(renderSystem, batch, { { {0,0,250}, 500 }, { {500,0,250}, 500 } }, 0.01f, true);
+// 			planes.CreateEntity("testPlane", sceneMgr, resources.materials.getMaterial("terrainGrass", batch));
+// 		}
 	}
 
 	auto commands = renderSystem.core.CreateCommandList(L"loadScene", PixColor::Load);
@@ -192,8 +192,8 @@ void ApplicationCore::loadScene(const char* scene)
 		marker.move("loadSceneVoxels", commands.color);
 		VoxelizeSceneTask::Get().clear(commands.commandList);
 
-		marker.move("loadSceneTerrain", commands.color);
-		sceneMgr.terrain.createTerrain(commands.commandList, renderSystem, sceneMgr, resources, batch);
+// 		marker.move("loadSceneTerrain", commands.color);
+// 		sceneMgr.terrain.createTerrain(commands.commandList, renderSystem, sceneMgr, resources, batch);
 	}
 
 	auto uploadResourcesFinished = batch.End(renderSystem.core.commandQueue);

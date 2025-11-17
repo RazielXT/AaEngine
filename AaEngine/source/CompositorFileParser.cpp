@@ -1,5 +1,6 @@
 #include "CompositorFileParser.h"
 #include "ConfigParser.h"
+#include <sstream>
 
 static DXGI_FORMAT StringToFormat(const std::string& str)
 {
@@ -79,7 +80,13 @@ static UINT parseFlags(const Config::Object& member)
 	return flags;
 }
 
-static std::vector<CompositorTextureSlot> parseCompositorTextureSlot(const Config::Object& param, const CompositorInfo& info, UINT flags = 0)
+struct ParseContext
+{
+	std::string scope;
+	std::map<std::string, std::string> externTextureNameRemap;
+};
+
+static std::vector<CompositorTextureSlot> parseCompositorTextureSlot(const Config::Object& param, const CompositorInfo& info, const ParseContext& ctx, UINT flags = 0)
 {
 	flags |= parseFlags(param);
 	if (!flags)
@@ -109,22 +116,62 @@ static std::vector<CompositorTextureSlot> parseCompositorTextureSlot(const Confi
 	for (auto& p : param.params)
 		appendTexture(p);
 
+	for (auto& t : textures)
+	{
+		if (auto it = ctx.externTextureNameRemap.find(t.name); it != ctx.externTextureNameRemap.end())
+			t.name = it->second;
+		else
+			t.name = ctx.scope + t.name;
+	}
+
 	return textures;
 }
 
-CompositorInfo CompositorFileParser::parseFile(std::string directory, std::string path)
+struct ParsedRef
 {
-	auto objects = Config::Parse(directory + path);
-	std::map<std::string, CompositorInfo> imports;
+	std::string name;
+	std::vector<std::string> parameters;
+};
 
-	std::vector<CompositorPassCondition> currentConditions;
+static ParsedRef parseRef(const std::string& refString)
+{
+	auto openParen = refString.find('(');
+	auto closeParen = refString.find(')', openParen);
+
+	if (openParen == std::string::npos || closeParen == std::string::npos)
+		return { refString };
+
+	ParsedRef result;
+	result.name = refString.substr(0, openParen);
+	std::string paramsStr = refString.substr(openParen + 1, closeParen - openParen - 1);
+
+	std::stringstream ss(paramsStr);
+	std::string param;
+	while (std::getline(ss, param, ','))
+	{
+		if (!param.empty())
+			result.parameters.push_back(param);
+	}
+
+	return result;
+}
+
+CompositorInfo CompositorFileParser::parseFile(std::string directory, std::string path, const Input& input)
+{
+	auto objects = Config::Parse(directory + path, input.defines);
+
+	std::map<std::string, std::string> importMap;
+	ParseContext ctx;
+	ctx.scope = input.scope;
 
 	for (auto& obj : objects)
 	{
 		if (obj.type == "import")
 		{
-			auto parsedImport = parseFile(directory, obj.value + ".compositor");
-			imports[parsedImport.name] = std::move(parsedImport);
+			auto split = obj.value.find('.');
+			auto from = obj.value.substr(0, split);
+			auto what = obj.value.substr(split + 1);
+			importMap[what] = from;
 		}
 		if (obj.type == "compositor")
 		{
@@ -133,10 +180,14 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 
 			for (auto& member : obj.children)
 			{
+				if (member.type == "extern")
+				{
+					ctx.externTextureNameRemap.emplace(member.value, input.textures[ctx.externTextureNameRemap.size()]);
+				}
 				if (member.type == "texture" || member.type == "rwtexture")
 				{
 					CompositorTextureInfo tex;
-					tex.name = member.value;
+					tex.name = ctx.scope + member.value;
 					tex.uav = member.type == "rwtexture";
 
 					if (member.params.size() >= 2)
@@ -215,13 +266,12 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 				{
 					CompositorPassInfo pass;
 					pass.name = member.value;
-					pass.conditions = currentConditions;
 
 					for (auto& param : member.children)
 					{
 						if (param.type == "target")
 						{
-							pass.targets = parseCompositorTextureSlot(param, info);
+							pass.targets = parseCompositorTextureSlot(param, info, ctx);
 						}
 						else if (param.type == "material")
 						{
@@ -229,7 +279,7 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 						}
 						else if (param.type == "input")
 						{
-							pass.inputs.push_back(parseCompositorTextureSlot(param, info).front());
+							pass.inputs.push_back(parseCompositorTextureSlot(param, info, ctx).front());
 						}
 					}
 
@@ -239,7 +289,6 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 				{
 					CompositorPassInfo pass;
 					pass.task = pass.name = member.value;
-					pass.conditions = currentConditions;
 
 					UINT flags = parseFlags(member);
 
@@ -247,7 +296,7 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 					{
 						if (param.type == "target")
 						{
-							pass.targets = parseCompositorTextureSlot(param, info, flags);
+							pass.targets = parseCompositorTextureSlot(param, info, ctx, flags);
 						}
 						else if (param.type == "entry")
 						{
@@ -259,7 +308,7 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 						}
 						else if (param.type == "input")
 						{
-							pass.inputs.push_back(parseCompositorTextureSlot(param, info, flags).front());
+							pass.inputs.push_back(parseCompositorTextureSlot(param, info, ctx, flags).front());
 						}
 					}
 
@@ -267,42 +316,16 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 				}
 				else if (member.type == "ref")
 				{
-					auto split = member.value.find(':');
-					auto from = member.value.substr(0, split);
-					auto what = member.value.substr(split + 1);
-
-					auto& ref = imports[from];
-					for (auto& pass : ref.passes)
-					{
-						if (pass.name == what || what == "*")
-						{
-							auto& added = info.passes.emplace_back(pass);
-							added.conditions.insert(added.conditions.end(), currentConditions.begin(), currentConditions.end());
-						}
-					}
+					const auto refInfo = parseRef(member.value);
+					const auto source = importMap[refInfo.name];
+					const auto refScope = input.scope + refInfo.name + ".";
+					auto ref = parseFile(directory, source + ".compositor", { input.defines, refScope, refInfo.parameters });
 
 					info.textures.insert(ref.textures.begin(), ref.textures.end());
 					ref.textures.clear();
-				}
-				else if (member.type.starts_with('#'))
-				{
-					if (member.type == "#if")
-					{
-						currentConditions.push_back({ true, member.value });
-					}
-					else if (member.type == "#elif")
-					{
-						currentConditions.pop_back();
-						currentConditions.push_back({ true, member.value });
-					}
-					else if (member.type == "#else")
-					{
-						currentConditions.back().accept = !currentConditions.back().accept;
-					}
-					else if (member.type == "#endif")
-					{
-						currentConditions.pop_back();
-					}
+
+					for (auto& pass : ref.passes)
+						info.passes.emplace_back(pass);
 				}
 			}
 

@@ -186,6 +186,8 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 
 	tasks.emplace_back(eventFinish, commands);
 
+	revoxelize();
+
 	return tasks;
 }
 

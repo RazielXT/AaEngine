@@ -1,0 +1,46 @@
+material DeferredLighting
+{
+	vertex_shader vsQuad
+
+	depth off
+
+	pixel_shader
+	{
+		file postprocess/deferredLighting.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
+}
+
+material DeferredVCT
+{
+	vertex_shader vsQuad
+
+	depth off
+
+	pixel_shader
+	{
+		file postprocess/deferredVCT.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
+}
+
+material ToneMapping
+{
+	vertex_shader vsQuad
+
+	depth off
+
+	pixel_shader
+	{
+		file postprocess/toneMapping.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
+}
+
+material ToneMappingNoLuma : ToneMapping
+{
+	shader_defines NO_LUMA
+}

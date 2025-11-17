@@ -6,6 +6,9 @@ compositor Bloom
 	texture bloomTexture4 target_size_scaled 0.0625 DXGI_FORMAT_R10G10B10A2_UNORM
 	texture bloomTexture5 target_size_scaled 0.0625 DXGI_FORMAT_R10G10B10A2_UNORM
 
+	extern sceneDownscale4
+	extern exposure
+
 	pass BloomDownscale
 	{
 		material PassThrough

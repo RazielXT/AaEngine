@@ -509,7 +509,7 @@ void Editor::prepareElements(Camera& camera)
 
 		XMFLOAT4X4 transform;
 
-		if (true) //centered gizmo
+		//centered gizmo
 		{
 			gizmoCenter = {};
 			for (auto& s : selection)
@@ -526,7 +526,8 @@ void Editor::prepareElements(Camera& camera)
 
 		XMFLOAT4X4 transformDelta{};
 
-		ImGuizmo::Manipulate(&cameraView._11, &cameraProjection._11,
+		static bool manipulated{};
+		manipulated |= ImGuizmo::Manipulate(&cameraView._11, &cameraProjection._11,
 			m_GizmoType, selection.size() == 1 ? ImGuizmo::LOCAL : ImGuizmo::WORLD, &transform._11,
 			&transformDelta._11, nullptr);
 
@@ -561,10 +562,14 @@ void Editor::prepareElements(Camera& camera)
 			}
 		}
 
+		bool wasActive = gizmoActive;
 		gizmoActive = ImGuizmo::IsOver();
 
-		if (ImGuizmo::IsUsing())
+		if (!gizmoActive && wasActive && manipulated)
 			VoxelizeSceneTask::Get().revoxelize();
+
+		if (gizmoActive)
+			manipulated = false;
 	}
 
 	ImGui::End();
@@ -670,7 +675,7 @@ void Editor::prepareElements(Camera& camera)
 	}
 
 	if (ImGui::Button("Regenerate voxels"))
-		VoxelizeSceneTask::Get().clear();
+		VoxelizeSceneTask::Get().revoxelize();
 
 	if (ImGui::CollapsingHeader("Sun"))
 	{

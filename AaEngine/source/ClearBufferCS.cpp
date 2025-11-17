@@ -8,5 +8,6 @@ void ClearBufferComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, 
 	commandList->SetComputeRootUnorderedAccessView(0, buffer->GetGPUVirtualAddress());
 
 	const UINT threads = 256;
-	commandList->Dispatch(size / threads, 1, 1);
+	const UINT clearPerThread = 4;
+	commandList->Dispatch(size / (clearPerThread * threads), 1, 1);
 }

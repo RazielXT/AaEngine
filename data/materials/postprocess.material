@@ -175,3 +175,13 @@ material TraceGodray : PostProcess
 		profile ps_6_6
 	}
 }
+
+material UpsampleDepthAware : PostProcess
+{
+	pixel_shader
+	{
+		file postprocess/upsampling.hlsl
+		entry PS_UpsampleDepthAware
+		profile ps_6_6
+	}
+}

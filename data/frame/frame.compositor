@@ -63,7 +63,8 @@ compositor Frame
 	{
 		material UpsampleDepthAware
 		input sceneVCTLow
-		input sceneTexture:Depth
+		input SSAO.linearDepth
+		input SSAO.linearDepthDownsample2
 		target sceneVCT
 	}
 

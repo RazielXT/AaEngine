@@ -16,31 +16,34 @@ namespace
 	};
 }
 
-static bool skipThisLine(const Config::Object& obj, ParseContext& ctx)
+static bool skipThisLine(const std::vector<std::string>& tokens, ParseContext& ctx)
 {
-	if (!obj.type.starts_with('#'))
+	if (tokens.empty() || !tokens.front().starts_with('#'))
 		return !ctx.ifdefs.empty() && !ctx.ifdefs.back().eval;
 
-	if (obj.type == "#if" || obj.type == "#ifdef")
+	auto& type = tokens.front();
+	std::string value = tokens.size() > 1 ? tokens[1] : "";
+
+	if (type == "#if" || type == "#ifdef")
 	{
-		ctx.ifdefs.emplace_back().eval = ctx.defines.contains(obj.value);
+		ctx.ifdefs.emplace_back().eval = ctx.defines.contains(value);
 		ctx.ifdefs.back().hadEval = ctx.ifdefs.back().eval;
 	}
-	else if (obj.type == "#ifndef")
+	else if (type == "#ifndef")
 	{
-		ctx.ifdefs.emplace_back().eval = !ctx.defines.contains(obj.value);
+		ctx.ifdefs.emplace_back().eval = !ctx.defines.contains(value);
 		ctx.ifdefs.back().hadEval = ctx.ifdefs.back().eval;
 	}
-	else if (obj.type == "#elif")
+	else if (type == "#elif")
 	{
-		ctx.ifdefs.back().eval = ctx.defines.contains(obj.value);
+		ctx.ifdefs.back().eval = ctx.defines.contains(value);
 		ctx.ifdefs.back().hadEval |= ctx.ifdefs.back().eval;
 	}
-	else if (obj.type == "#else")
+	else if (type == "#else")
 	{
 		ctx.ifdefs.back().eval = !ctx.ifdefs.back().hadEval;
 	}
-	else if (obj.type == "#endif")
+	else if (type == "#endif")
 	{
 		ctx.ifdefs.pop_back();
 	}
@@ -48,44 +51,83 @@ static bool skipThisLine(const Config::Object& obj, ParseContext& ctx)
 	return true;
 }
 
+static std::vector<std::string> tokenize(const std::string& input)
+{
+	std::vector<std::string> tokens;
+	std::string current;
+	bool inParens = false;
+
+	for (size_t i = 0; i < input.size(); ++i)
+	{
+		char c = input[i];
+
+		// Handle comments: skip rest of line
+		if (!inParens && c == '/' && i + 1 < input.size() && input[i + 1] == '/') {
+			break; // stop processing
+		}
+
+		// Enter parentheses mode
+		if (c == '(' && !inParens) {
+			inParens = true;
+		}
+
+		// Exit parentheses mode
+		if (c == ')' && inParens) {
+			current.push_back(c);
+			// remove whitespace inside parentheses
+			std::string compact;
+			for (char pc : current) {
+				if (!std::isspace(static_cast<unsigned char>(pc))) {
+					compact.push_back(pc);
+				}
+			}
+			tokens.push_back(compact);
+			current.clear();
+			inParens = false;
+			continue;
+		}
+
+		if (inParens) {
+			current.push_back(c);
+		}
+		else {
+			if (std::isspace(static_cast<unsigned char>(c))) {
+				if (!current.empty()) {
+					tokens.push_back(current);
+					current.clear();
+				}
+			}
+			else {
+				current.push_back(c);
+			}
+		}
+	}
+
+	if (!current.empty()) {
+		tokens.push_back(current);
+	}
+
+	return tokens;
+}
+
 static bool readNextObject(Config::Object& out, std::ifstream& file, ParseContext& ctx)
 {
 	std::string line;
 	while (file && std::getline(file, line))
 	{
-		size_t pos = 0;
-		Config::Object obj;
+		auto tokens = tokenize(line);
 
-		while (pos < line.size())
-		{
-			while (pos < line.size() && (line[pos] == ' ' || line[pos] == '\t'))
-				pos++;
-
-			auto start = pos;
-			if (pos <= line.size())
-			{
-				while (pos < line.size() && line[pos] != ' ' && line[pos] != '\t')
-					pos++;
-
-				auto token = line.substr(start, pos - start);
-				if (token.starts_with("//"))
-					break;
-
-				if (obj.type.empty())
-					obj.type = token;
-				else if (obj.value.empty())
-					obj.value = token;
-				else
-					obj.params.push_back(token);
-			}
-		}
-
-		if (skipThisLine(obj, ctx))
+		if (skipThisLine(tokens, ctx))
 			continue;
 
-		if (!obj.type.empty())
+		if (!tokens.empty())
 		{
-			out = obj;
+			out.type = tokens.front();
+			if (tokens.size() > 1)
+				out.value = tokens[1];
+			if (tokens.size() > 2)
+				out.params.assign(tokens.begin() + 2, tokens.end());
+
 			return true;
 		}
 	}

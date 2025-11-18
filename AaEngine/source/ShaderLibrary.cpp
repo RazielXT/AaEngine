@@ -105,9 +105,18 @@ std::vector<const LoadedShader*> ShaderLibrary::reloadShaders()
 					if (stat((SHADER_HLSL_DIRECTORY + shader->ref.file).c_str(), &attrib) == 0 && attrib.st_mtime > shader->filetime)
 						return true;
 
+					auto extractPath = [&]() -> std::string
+						{
+							size_t pos = shader->ref.file.find_last_of("\\/");
+							if (pos == std::string::npos)
+								return "";
+
+							return shader->ref.file.substr(0, pos + 1);
+						}();
+
 					for (auto& i : shader->desc.includes)
 					{
-						if (stat((SHADER_HLSL_DIRECTORY + i).c_str(), &attrib) == 0 && attrib.st_mtime > shader->filetime)
+						if (stat((SHADER_HLSL_DIRECTORY + extractPath + i).c_str(), &attrib) == 0 && attrib.st_mtime > shader->filetime)
 							return true;
 					}
 

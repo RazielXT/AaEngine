@@ -5,26 +5,45 @@ float2 ViewportSizeInverse;
 Texture2D<float4> g_Color : register(t0);
 Texture2D<float>  g_Depth : register(t1);
 Texture2D<float>  g_LowDepth : register(t2);
+Texture2D<float4> g_Normal : register(t3);
 
 SamplerState LinearSampler : register(s0);
 SamplerState PointSampler : register(s1);
 
-float4 BilateralUpsample( float HiDepth, float4 LowDepths, float4 LowColors[4] )
+float4 BilateralUpsample(
+    float  HiDepth,
+    float3 HiNormal,
+    float4 LowDepths,
+    float3 LowNormals[4],
+    float4 LowColors[4])
 {
-	const float NoiseFilterStrength = 0.0;
-	const float kUpsampleTolerance = 0.000001;
+    const float NoiseFilterStrength = 0.0;
+    const float kUpsampleTolerance  = 1e-6;
 
-    float4 weights = 1 / ( abs(HiDepth - LowDepths) + kUpsampleTolerance );
-    float TotalWeight = dot(weights, 1) + NoiseFilterStrength;
+    // Depth weights
+    float4 depthWeights = 1.0 / (abs(HiDepth - LowDepths) + kUpsampleTolerance);
+
+    // Normal weights: use dot product similarity
+    float4 normalWeights;
+    normalWeights.x = max(0.0, dot(HiNormal, LowNormals[0]));
+    normalWeights.y = max(0.0, dot(HiNormal, LowNormals[1]));
+    normalWeights.z = max(0.0, dot(HiNormal, LowNormals[2]));
+    normalWeights.w = max(0.0, dot(HiNormal, LowNormals[3]));
+
+    // Combine depth + normal
+    float4 weights = depthWeights * normalWeights;
+
+    float TotalWeight = dot(weights, 1.0) + NoiseFilterStrength;
 
     float4 WeightedSum = NoiseFilterStrength;
-	WeightedSum += LowColors[0] * weights.x;
-	WeightedSum += LowColors[1] * weights.y;
-	WeightedSum += LowColors[2] * weights.z;
-	WeightedSum += LowColors[3] * weights.w;
+    WeightedSum += LowColors[0] * weights.x;
+    WeightedSum += LowColors[1] * weights.y;
+    WeightedSum += LowColors[2] * weights.z;
+    WeightedSum += LowColors[3] * weights.w;
 
     return WeightedSum / TotalWeight;
 }
+
 
 float4 PS_UpsampleDepthAware(VS_OUTPUT input) : SV_Target
 {
@@ -51,9 +70,16 @@ float4 PS_UpsampleDepthAware(VS_OUTPUT input) : SV_Target
     LowDepths.z = g_LowDepth.Sample(PointSampler, uvBL_Color);
     LowDepths.w = g_LowDepth.Sample(PointSampler, uvBR_Color);
 
-    // Reference depth (min for edge preservation)
-    float refDepth = g_Depth.Sample(PointSampler, uv);//max(max(d0, d1), max(d2, d3));
+    float refDepth = g_Depth.Sample(PointSampler, uv);
 
-    return BilateralUpsample(refDepth, LowDepths, lowColors);
+	float3 lowNormals[4];
+	lowNormals[0] = normalize(g_Normal.Sample(PointSampler, uvTL_Color).xyz);
+	lowNormals[1] = normalize(g_Normal.Sample(PointSampler, uvTR_Color).xyz);
+	lowNormals[2] = normalize(g_Normal.Sample(PointSampler, uvBL_Color).xyz);
+	lowNormals[3] = normalize(g_Normal.Sample(PointSampler, uvBR_Color).xyz);
+
+	float3 refNormal = normalize(g_Normal.Sample(PointSampler, uv).xyz);
+
+	return BilateralUpsample(refDepth, refNormal, LowDepths, lowNormals, lowColors);
 
 }

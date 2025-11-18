@@ -9,7 +9,6 @@ compositor Frame
 	texture sceneVCT target_size DXGI_FORMAT_R8G8B8A8_UNORM
 	texture sceneVCTLow target_size_div 2 DXGI_FORMAT_R8G8B8A8_UNORM
 	texture sceneTextureTmp target_size DXGI_FORMAT_R8G8B8A8_UNORM
-	texture sceneTextureTmpOut output_size DXGI_FORMAT_R8G8B8A8_UNORM
 
 	texture sceneDownscale2 target_size_div 2 DXGI_FORMAT_R8G8B8A8_UNORM
 	texture sceneDownscale4 target_size_div 8 DXGI_FORMAT_R8G8B8A8_UNORM
@@ -17,6 +16,8 @@ compositor Frame
 #if UPSCALE
 	texture motionVectors target_size DXGI_FORMAT_R16G16_FLOAT
 	rwtexture sceneTextureTmp_upscaled output_size DXGI_FORMAT_R8G8B8A8_UNORM
+#else
+	texture sceneTextureTmpOut output_size DXGI_FORMAT_R8G8B8A8_UNORM
 #endif
 
 	texture voxelDummy 128 128 DXGI_FORMAT_R8G8B8A8_UNORM
@@ -65,6 +66,7 @@ compositor Frame
 		input sceneVCTLow
 		input SSAO.linearDepth
 		input SSAO.linearDepthDownsample2
+		input sceneTexture:Normal
 		target sceneVCT
 	}
 

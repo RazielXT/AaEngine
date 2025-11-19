@@ -114,7 +114,7 @@ std::vector<const LoadedShader*> ShaderLibrary::reloadShaders()
 							return shader->ref.file.substr(0, pos + 1);
 						}();
 
-					for (auto& i : shader->desc.includes)
+					for (auto& i : shader->desc.compiledIncludes)
 					{
 						if (stat((SHADER_HLSL_DIRECTORY + extractPath + i).c_str(), &attrib) == 0 && attrib.st_mtime > shader->filetime)
 							return true;

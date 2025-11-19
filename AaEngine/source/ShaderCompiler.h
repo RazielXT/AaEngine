@@ -4,6 +4,7 @@
 #include "ShaderFileParser.h"
 #include <dxcapi.h>
 #include "directx\d3dx12.h"
+#include <unordered_set>
 
 namespace ShaderReflection
 {
@@ -61,7 +62,9 @@ struct ShaderDescription
 	std::vector<ShaderReflection::UAV> uavs;
 	std::vector<ShaderReflection::StructuredBuffer> structuredBuffers;
 	std::vector<ShaderReflection::StructuredBuffer> rwStructuredBuffers;
-	std::vector<std::string> includes;
+
+	std::vector<std::string> compiledIncludes;
+	std::unordered_set<std::string> allDefines;
 
 	bool bindlessTextures = false;
 };

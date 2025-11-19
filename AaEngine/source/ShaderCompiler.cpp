@@ -8,6 +8,8 @@
 #include "VertexBufferModel.h"
 #include <unordered_set>
 #include "StringUtils.h"
+#include <algorithm>
+#include <regex>
 
 ShaderCompiler::ShaderCompiler()
 {
@@ -201,11 +203,48 @@ bool ShaderCompiler::reflectShaderInfo(IDxcResult* compiledShaderBuffer, ShaderD
 	return true;
 }
 
+static std::unordered_set<std::string> FindDefineUsages(ComPtr<IDxcBlobEncoding> sourceBlob)
+{
+	std::unordered_set<std::string> usage;
+	if (!sourceBlob) return usage;
+
+	auto sourceText = reinterpret_cast<const char*>(sourceBlob->GetBufferPointer());
+	size_t sourceSize = sourceBlob->GetBufferSize();
+
+	std::string_view shaderView(sourceText, sourceSize);
+	std::regex defineRegex(R"(#\s*(ifdef|ifndef|if\s+defined)\s*\(?\s*([A-Za-z_]\w*)\s*\)?)");
+
+	size_t start = 0;
+	while (start < shaderView.size())
+	{
+		size_t end = shaderView.find('\n', start);
+		if (end == std::string_view::npos) end = shaderView.size();
+
+		std::string_view line = shaderView.substr(start, end - start);
+
+		std::match_results<std::string_view::const_iterator> match;
+		if (std::regex_search(line.begin(), line.end(), match, defineRegex))
+		{
+			if (match.size() >= 3)
+			{
+				usage.insert(std::string(match[2].first, match[2].second));
+			}
+		}
+
+		start = end + 1;
+	}
+
+	return usage;
+}
+
 class CustomIncludeHandler : public IDxcIncludeHandler
 {
 public:
 
-	IDxcUtils* pUtils;
+	CustomIncludeHandler(ShaderDescription& d) : description(d) {}
+
+	ShaderDescription& description;
+	IDxcUtils* pUtils{};
 	std::wstring localPath;
 
 	HRESULT STDMETHODCALLTYPE LoadSource(LPCWSTR pFilename, IDxcBlob** ppIncludeSource) override
@@ -223,6 +262,10 @@ public:
 
 		auto fullpath = localPath + pFilename;
 		HRESULT hr = pUtils->LoadFile(fullpath.c_str(), nullptr, pEncoding.GetAddressOf());
+
+		auto defines = FindDefineUsages(pEncoding);
+		description.allDefines.insert(defines.cbegin(), defines.cend());
+
 		if (SUCCEEDED(hr))
 		{
 			IncludedFiles.insert(pFilename);
@@ -265,6 +308,8 @@ ComPtr<IDxcBlob> ShaderCompiler::compileShader(const ShaderRef& ref, ShaderDescr
 		return nullptr;
 	}
 
+	description.allDefines = FindDefineUsages(pSourceBlob);
+
 	auto wentry = as_wstring(ref.entry);
  	auto wprofile = as_wstring(ref.profile);
 
@@ -287,7 +332,7 @@ ComPtr<IDxcBlob> ShaderCompiler::compileShader(const ShaderRef& ref, ShaderDescr
 	sourceBuffer.Size = pSourceBlob->GetBufferSize();
 	sourceBuffer.Encoding = 0;
 
-	CustomIncludeHandler includeHandler;
+	CustomIncludeHandler includeHandler{ description };
 	includeHandler.localPath = wfile.substr(0, wfile.find_last_of('/') + 1);
 	includeHandler.pUtils = pUtils.Get();
 
@@ -301,7 +346,7 @@ ComPtr<IDxcBlob> ShaderCompiler::compileShader(const ShaderRef& ref, ShaderDescr
 
 	for (auto& h : includeHandler.IncludedFiles)
 	{
-		description.includes.push_back(as_string(h));
+		description.compiledIncludes.push_back(as_string(h));
 	}
 
 	// Check for compilation errors

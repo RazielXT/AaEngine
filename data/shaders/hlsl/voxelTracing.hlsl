@@ -6,7 +6,6 @@ uint TexIdNormal;
 uint2 ViewportSize;
 float3 MaterialColor;
 float Emission;
-float3 CameraPosition;
 
 struct VS_Input
 {
@@ -53,8 +52,7 @@ struct PSOutput
 {
 	float4 albedo : SV_Target0;
 	float4 normals : SV_Target1;
-	float4 camDistance : SV_Target2;
-	float4 motionVectors : SV_Target3;
+	float4 motionVectors : SV_Target2;
 };
 
 SamplerState VoxelSampler : register(s0);
@@ -83,9 +81,6 @@ PSOutput PSMain(PS_Input pin)
 	PSOutput output;
 	output.albedo = albedo;
 	output.normals = float4(worldNormal, 1);
-
-	float camDistance = length(CameraPosition - pin.wp.xyz);
-	output.camDistance = float4(camDistance, 0, 0, 0);
 
 	output.motionVectors = float4((pin.previousPosition.xy / pin.previousPosition.w - pin.currentPosition.xy / pin.currentPosition.w) * ViewportSize, 0, 0);
 	output.motionVectors.xy *= 0.5;

@@ -4,6 +4,7 @@
 float4x4 InvProjectionMatrix;
 float4x4 InvViewMatrix;
 float ResId;
+float3 CameraPosition;
 
 cbuffer PSSMShadows : register(b1)
 {
@@ -12,10 +13,9 @@ cbuffer PSSMShadows : register(b1)
 
 Texture2D colorMap : register(t0);
 Texture2D normalMap : register(t1);
-Texture2D<float> distanceMap : register(t2);
-Texture2D<float> depthMap : register(t3);
-Texture2D<float> ssaoMap : register(t4);
-Texture2D vctMap : register(t5);
+Texture2D<float> depthMap : register(t2);
+Texture2D<float> ssaoMap : register(t3);
+Texture2D vctMap : register(t4);
 
 SamplerState ShadowSampler : register(s0);
 SamplerState LinearSampler : register(s1);
@@ -24,7 +24,6 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 {
 	float3 albedo = colorMap.Load(int3(input.Position.xy, 0)).rgb;
 	float3 worldNormal = normalMap.Load(int3(input.Position.xy, 0)).rgb;
-	float camDistance = distanceMap.Load(int3(input.Position.xy, 0)).r;
 
 	if (all(worldNormal == float3(0,0,0))) return float4(albedo,0);
 
@@ -32,6 +31,8 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 
 	float depth = depthMap.Load(int3(input.Position.xy, 0)).r;
 	float4 worldPosition = float4(ReconstructWorldPosition(input.TexCoord, depth, InvProjectionMatrix, InvViewMatrix), 1);
+	float camDistance = length(CameraPosition - worldPosition.xyz);
+
 	float directShadow = getPssmShadowLow(worldPosition, camDistance, dotLighting, ShadowSampler, Sun);
 
 	float3 vctLighting = vctMap.Load(int3(input.Position.xy, 0)).rgb;

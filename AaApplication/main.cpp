@@ -43,7 +43,7 @@ public:
 				}
 				if (debugWindow.state.reloadShaders)
 				{
-					app.resources.materials.ReloadShaders();
+					app.resources.materials.reloadChangedShaders();
 					debugWindow.state.reloadShaders = false;
 				}
 				if (debugWindow.state.DlssMode != (int)app.renderSystem.upscale.dlss.selectedMode())

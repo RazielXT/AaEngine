@@ -609,6 +609,25 @@ void Editor::prepareElements(Camera& camera)
 	ImGui::Combo("DLSS", &state.DlssMode, UpscaleModeNames, std::size(UpscaleModeNames));
 	ImGui::Combo("FSR", &state.FsrMode, UpscaleModeNames, std::size(UpscaleModeNames));
 
+	if (ImGui::CollapsingHeader("Defines"))
+	{
+		auto knownDefines = app.resources.shaders.getKnownDefines();
+		auto setDefines = app.resources.shaderDefines.getDefines();
+
+		for (const auto& value : knownDefines)
+		{
+			bool isActive = setDefines.contains(value);
+
+			if (ImGui::Checkbox(value.c_str(), &isActive))
+			{
+				if (isActive)
+					app.resources.shaderDefines.setDefine(value);
+				else
+					app.resources.shaderDefines.removeDefine(value);
+			}
+		}
+	}
+
 	if (ImGui::CollapsingHeader("Physics"))
 	{
 		const char* physicsDraw[] = {

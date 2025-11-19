@@ -3,6 +3,7 @@
 #include "DescriptorManager.h"
 #include "ShaderDataBuffers.h"
 #include "ShaderLibrary.h"
+#include "ShaderDefines.h"
 #include "MaterialResources.h"
 #include "ModelResources.h"
 
@@ -14,6 +15,7 @@ struct GraphicsResources
 
 	DescriptorManager descriptors;
 	ShaderDataBuffers shaderBuffers;
+	ShaderDefines shaderDefines;
 	ShaderLibrary shaders;
 	TextureResources textures;
 	MaterialResources materials;

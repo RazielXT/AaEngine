@@ -95,7 +95,7 @@ public:
 		}
 		if (editorUi.state.reloadShaders)
 		{
-			app.resources.materials.ReloadShaders();
+			app.resources.materials.reloadChangedShaders();
 			editorUi.state.reloadShaders = false;
 		}
 		if (editorUi.state.DlssMode != (int)app.renderSystem.upscale.dlss.selectedMode())

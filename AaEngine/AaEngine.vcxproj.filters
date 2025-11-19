@@ -289,6 +289,9 @@
     <ClCompile Include="source\SystemUtils.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="source\ShaderDefines.cpp">
+      <Filter>Source Files\Resources\Shader</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\TargetWindow.h">
@@ -539,6 +542,9 @@
     </ClInclude>
     <ClInclude Include="source\PixColor.h">
       <Filter>Source Files\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ShaderDefines.h">
+      <Filter>Source Files\Resources\Shader</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

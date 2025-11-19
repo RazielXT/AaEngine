@@ -69,6 +69,8 @@ struct ShaderDescription
 	bool bindlessTextures = false;
 };
 
+class ShaderDefines;
+
 class ShaderCompiler
 {
 public:
@@ -76,7 +78,7 @@ public:
 	ShaderCompiler();
 	~ShaderCompiler();
 
-	ComPtr<IDxcBlob> compileShader(const ShaderRef& ref, ShaderDescription&, ShaderType);
+	ComPtr<IDxcBlob> compileShader(const ShaderRef& ref, ShaderDescription&, ShaderType, const ShaderDefines& globalDefines);
 
 private:
 

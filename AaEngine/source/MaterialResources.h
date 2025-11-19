@@ -19,7 +19,10 @@ public:
 
 	void loadMaterials(std::string directory, bool subDirectories = false);
 
-	void ReloadShaders();
+	void reloadChangedShaders();
+
+	void reloadShadersWithDefine(const std::string&);
+	std::set<std::string> getKnownDefines() const;
 
 private:
 

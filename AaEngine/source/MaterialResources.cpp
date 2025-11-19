@@ -92,11 +92,32 @@ void MaterialResources::loadMaterials(std::string directory, bool subDirectories
 	}
 }
 
-void MaterialResources::ReloadShaders()
+void MaterialResources::reloadChangedShaders()
 {
 	renderSystem.core.WaitForAllFrames();
 
-	auto shadersChanged = resources.shaders.reloadShaders();
+	auto shadersChanged = resources.shaders.reloadShadersChangedFiles();
+
+	for (auto& [name, base] : materialBaseMap)
+	{
+		for (auto& s : shadersChanged)
+		{
+			if (base->ContainsShader(s))
+			{
+				base->ReloadPipeline(resources.shaders);
+				break;
+			}
+		}
+	}
+
+	ComputeShaderLibrary::Reload(*renderSystem.core.device, shadersChanged);
+}
+
+void MaterialResources::reloadShadersWithDefine(const std::string& define)
+{
+	renderSystem.core.WaitForAllFrames();
+
+	auto shadersChanged = resources.shaders.reloadShadersWithDefine(define);
 
 	for (auto& [name, base] : materialBaseMap)
 	{

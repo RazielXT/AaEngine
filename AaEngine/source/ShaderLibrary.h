@@ -18,7 +18,7 @@ class ShaderLibrary
 {
 public:
 
-	ShaderLibrary();
+	ShaderLibrary(const ShaderDefines&);
 	~ShaderLibrary();
 
 	void loadShaderReferences(std::string directory, bool subDirectories = false);
@@ -27,11 +27,16 @@ public:
 	const LoadedShader* getShader(const std::string& name, ShaderType);
 	const LoadedShader* getShader(const std::string& name, ShaderType, const ShaderRef& ref);
 
-	std::vector<const LoadedShader*> reloadShaders();
+	std::vector<const LoadedShader*> reloadShadersChangedFiles();
+	std::vector<const LoadedShader*> reloadShadersWithDefine(const std::string&);
+
+	std::set<std::string> getKnownDefines() const;
 
 private:
 
  	std::map<std::string, std::unique_ptr<LoadedShader>> loadedShaders[ShaderType_COUNT];
 
 	ShaderCompiler compiler;
+
+	const ShaderDefines& defines;
 };

@@ -2,7 +2,7 @@
 #include "FileLogger.h"
 #include "Directories.h"
 
-ShaderLibrary::ShaderLibrary()
+ShaderLibrary::ShaderLibrary(const ShaderDefines& d) : defines(d)
 {
 }
 
@@ -66,7 +66,7 @@ const LoadedShader* ShaderLibrary::getShader(const std::string& name, ShaderType
 
 	if (!it->second->blob)
 	{
-		it->second->blob = compiler.compileShader(it->second->ref, it->second->desc, type);
+		it->second->blob = compiler.compileShader(it->second->ref, it->second->desc, type, defines);
 		it->second->filetime = std::time(nullptr);
 	}
 
@@ -85,7 +85,7 @@ const LoadedShader* ShaderLibrary::getShader(const std::string& name, ShaderType
 	return getShader(name, type);
 }
 
-std::vector<const LoadedShader*> ShaderLibrary::reloadShaders()
+std::vector<const LoadedShader*> ShaderLibrary::reloadShadersChangedFiles()
 {
 	std::vector<const LoadedShader*> changed;
 
@@ -126,7 +126,7 @@ std::vector<const LoadedShader*> ShaderLibrary::reloadShaders()
 			if (fileChanged)
 			{
 				shader->desc = {};
-				shader->blob = compiler.compileShader(shader->ref, shader->desc, (ShaderType)type);
+				shader->blob = compiler.compileShader(shader->ref, shader->desc, (ShaderType)type, defines);
 				shader->filetime = std::time(nullptr);
 
 				changed.push_back(shader.get());
@@ -135,4 +135,46 @@ std::vector<const LoadedShader*> ShaderLibrary::reloadShaders()
 	}
 
 	return changed;
+}
+
+std::vector<const LoadedShader*> ShaderLibrary::reloadShadersWithDefine(const std::string& define)
+{
+	std::vector<const LoadedShader*> changed;
+
+	for (int type = 0; type < ShaderType_COUNT; ++type)
+	{
+		auto& shadersType = loadedShaders[type];
+
+		for (auto& [name, shader] : shadersType)
+		{
+			if (!shader->blob)
+				continue;
+
+			if (shader->desc.allDefines.contains(define))
+			{
+				shader->desc = {};
+				shader->blob = compiler.compileShader(shader->ref, shader->desc, (ShaderType)type, defines);
+				shader->filetime = std::time(nullptr);
+
+				changed.push_back(shader.get());
+			}
+		}
+	}
+
+	return changed;
+}
+
+std::set<std::string> ShaderLibrary::getKnownDefines() const
+{
+	std::set<std::string> usedDefines;
+
+	for (auto& shaders : loadedShaders)
+	{
+		for (auto& [name, shader] : shaders)
+		{
+			usedDefines.insert(shader->desc.allDefines.cbegin(), shader->desc.allDefines.cend());
+		}
+	}
+
+	return usedDefines;
 }

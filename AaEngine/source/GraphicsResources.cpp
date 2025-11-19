@@ -2,7 +2,7 @@
 #include "Directories.h"
 
 GraphicsResources::GraphicsResources(RenderSystem& rs)
-	: descriptors(*rs.core.device), shaderBuffers(*rs.core.device), materials(rs, *this), models(*rs.core.device)
+	: descriptors(*rs.core.device), shaderBuffers(*rs.core.device), materials(rs, *this), models(*rs.core.device), shaderDefines(*this), shaders(shaderDefines)
 {
 	descriptors.init(10000);
 	descriptors.initializeSamplers(rs.upscale.getMipLodBias());

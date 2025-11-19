@@ -10,6 +10,7 @@
 #include "StringUtils.h"
 #include <algorithm>
 #include <regex>
+#include "ShaderDefines.h"
 
 ShaderCompiler::ShaderCompiler()
 {
@@ -212,7 +213,8 @@ static std::unordered_set<std::string> FindDefineUsages(ComPtr<IDxcBlobEncoding>
 	size_t sourceSize = sourceBlob->GetBufferSize();
 
 	std::string_view shaderView(sourceText, sourceSize);
-	std::regex defineRegex(R"(#\s*(ifdef|ifndef|if\s+defined)\s*\(?\s*([A-Za-z_]\w*)\s*\)?)");
+	//std::regex defineRegex(R"(#\s*(ifdef|ifndef|if\s+defined)\s*\(?\s*([A-Za-z_]\w*)\s*\)?)");
+	std::regex defineRegex(R"(#\s*(ifdef|ifndef|if\s+defined)\s*\(?\s*(CFG_\w*)\s*\)?)"); // CFG_x
 
 	size_t start = 0;
 	while (start < shaderView.size())
@@ -281,7 +283,7 @@ public:
 	std::unordered_set<std::wstring> IncludedFiles;
 };
 
-static std::vector<std::wstring> MakeDefines(const ShaderRef& ref)
+static std::vector<std::wstring> MakeDefines(const ShaderRef& ref, const std::unordered_set<std::string>& defines)
 {
 	std::vector<std::wstring> out;
 
@@ -289,11 +291,15 @@ static std::vector<std::wstring> MakeDefines(const ShaderRef& ref)
 	{
 		out.emplace_back(d.first.begin(), d.first.end());
 	}
+	for (auto& d : defines)
+	{
+		out.emplace_back(d.begin(), d.end());
+	}
 
 	return out;
 }
 
-ComPtr<IDxcBlob> ShaderCompiler::compileShader(const ShaderRef& ref, ShaderDescription& description, ShaderType type)
+ComPtr<IDxcBlob> ShaderCompiler::compileShader(const ShaderRef& ref, ShaderDescription& description, ShaderType type, const ShaderDefines& globalDefines)
 {
 	auto path = SHADER_HLSL_DIRECTORY + ref.file;
  	auto wfile = as_wstring(path);
@@ -323,7 +329,7 @@ ComPtr<IDxcBlob> ShaderCompiler::compileShader(const ShaderRef& ref, ShaderDescr
 	arguments.push_back(L"-Qstrip_reflect");
 #endif // _DEBUG
 
-	auto defines = MakeDefines(ref);
+	auto defines = MakeDefines(ref, globalDefines.getDefines());
 	for (auto& d : defines)
 		arguments.insert(arguments.end(), { L"-D", d.c_str() });
 

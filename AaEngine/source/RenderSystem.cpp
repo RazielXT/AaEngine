@@ -74,8 +74,19 @@ RenderCore::RenderCore()
 
 		if (FAILED(hr))
 		{
-			FileLogger::logErrorD3D("D3D12CreateDevice failed", hr);
-			return;
+			auto err = "D3D12CreateDevice failed";
+			FileLogger::logErrorD3D(err, hr);
+			throw std::invalid_argument(err);
+		}
+
+		D3D12_FEATURE_DATA_SHADER_MODEL SM;
+		SM.HighestShaderModel = D3D_SHADER_MODEL_6_7;
+		device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &SM, sizeof(SM));
+		if (SM.HighestShaderModel < D3D_SHADER_MODEL_6_6)
+		{
+			auto err = std::format("D3D12Device shader support is {:#x}", (int)SM.HighestShaderModel);
+			FileLogger::logError(err);
+			throw std::invalid_argument(err);
 		}
 
 #ifndef NDEBUG

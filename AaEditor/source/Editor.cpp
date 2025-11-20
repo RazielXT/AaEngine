@@ -675,7 +675,7 @@ void Editor::prepareElements(Camera& camera)
 
 	static bool showVoxels = false;
 	if (ImGui::Checkbox("Show voxels", &showVoxels))
-		VoxelizeSceneTask::Get().showVoxelsInfo(showVoxels);
+		SceneRenderTask::Get().showVoxelsInfo(showVoxels);
 
 	if (showVoxels)
 	{

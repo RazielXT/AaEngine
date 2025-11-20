@@ -94,6 +94,12 @@ compositor Frame
 		target sceneDownscale4
 	}
 
+	task SceneRender
+	{
+		entry Debug
+		target sceneTextureTmp sceneTexture:MotionVectors
+	}
+
 	ref Exposure(sceneTextureTmp)
 
 	ref Bloom(sceneDownscale4,Exposure.exposure)

@@ -29,6 +29,8 @@ public:
 
 	bool enabledWireframe = false;
 
+	void showVoxelsInfo(bool show);
+
 private:
 
 	AsyncTasksInfo initializeEarlyZ(CompositorPass& pass);
@@ -72,4 +74,11 @@ private:
 
 	RenderQueue* wireframeQueue{};
 	void renderWireframe(CompositorPass& pass, CommandsData& cmd);
+
+	void renderDebug(CompositorPass& pass, CommandsData& cmd);
+
+	bool showVoxelsEnabled = false;
+	void showVoxelsUpdate(SceneEntity& debugVoxel, Camera& camera);
+	void showVoxels();
+	void hideVoxels();
 };

@@ -60,51 +60,6 @@ void VoxelizeSceneTask::clear(ID3D12GraphicsCommandList* c)
 	reset = false;
 }
 
-void VoxelizeSceneTask::showVoxelsInfo(bool show)
-{
-	if (show != showVoxelsEnabled)
-	{
-		showVoxelsEnabled = show;
-
-		if (!show)
-			hideVoxels();
-		else
-			showVoxels();
-	}
-}
-
-void VoxelizeSceneTask::showVoxelsUpdate(Camera& camera)
-{
-	if (!showVoxelsEnabled)
-		return;
-
-	auto debugVoxel = sceneMgr.getEntity("DebugVoxel");
-	if (!debugVoxel)
-		debugVoxel = showVoxels();
-
-	auto orientation = camera.getOrientation();
-	auto pos = camera.getPosition() - orientation * Vector3(0, 5.f, 0) + camera.getCameraDirection() * 1.75;
-
-	debugVoxel->setTransformation({ orientation, pos, Vector3(10, 10, 1) }, true);
-}
-
-SceneEntity* VoxelizeSceneTask::showVoxels()
-{
-	auto debugVoxel = sceneMgr.createEntity("DebugVoxel");
-	debugVoxel->material = provider.resources.materials.getMaterial("VisualizeVoxelTexture");
-	debugVoxel->geometry.fromModel(*provider.resources.models.getLoadedModel("box.mesh", ResourceGroup::Core));
-
-	return debugVoxel;
-}
-
-void VoxelizeSceneTask::hideVoxels()
-{
-	if (auto debugVoxel = sceneMgr.getEntity("DebugVoxel"))
-	{
-		sceneMgr.removeEntity(debugVoxel);
-	}
-}
-
 constexpr float VoxelSize = 128.f;
 
 constexpr DXGI_FORMAT VoxelFormat = DXGI_FORMAT_R8G8B8A8_UNORM; //DXGI_FORMAT_R16G16B16A16_FLOAT;
@@ -193,8 +148,6 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 
 void VoxelizeSceneTask::run(RenderContext& renderCtx, CommandsData& syncCommands, CompositorPass&)
 {
-	showVoxelsUpdate(*renderCtx.camera);
-
 	{
 		auto m = XMMatrixMultiplyTranspose(renderCtx.camera->getViewMatrix(), renderCtx.camera->getProjectionMatrixNoReverse());
 		Matrix data;

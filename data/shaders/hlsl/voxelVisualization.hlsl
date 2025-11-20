@@ -1,5 +1,4 @@
 #include "VoxelConeTracingCommon.hlsl"
-#include "ShadowsCommon.hlsl"
 
 float4x4 ViewProjectionMatrix;
 float4x4 WorldMatrix;
@@ -8,59 +7,58 @@ float3 CameraPosition;
 uint2 ViewportSize;
 uint VoxelIndex;
 uint VoxelMip;
+uint ResId;
 
-cbuffer SceneVoxelInfo : register(b2)
+cbuffer SceneVoxelInfo : register(b1)
 {
-    SceneVoxelCbufferIndexed VoxelInfo;
+	SceneVoxelCbufferIndexed VoxelInfo;
 };
 
 struct VS_Input
 {
-    float4 p : POSITION;
-    float3 n : NORMAL;
-    float3 t : TANGENT;
-    float2 uv : TEXCOORD0;
+	float4 p : POSITION;
+	float3 n : NORMAL;
+	float3 t : TANGENT;
+	float2 uv : TEXCOORD0;
 };
 
 struct PS_Input
 {
-    float4 pos : SV_POSITION;
-    float3 normal : NORMAL;
-    float3 tangent : TANGENT;
-    float2 uv : TEXCOORD0;
-    float4 wp : TEXCOORD1;
+	float4 pos : SV_POSITION;
+	float3 normal : NORMAL;
+	float3 tangent : TANGENT;
+	float2 uv : TEXCOORD0;
+	float4 wp : TEXCOORD1;
 	float4 currentPosition : TEXCOORD2;
 	float4 previousPosition : TEXCOORD3;
 };
 
 PS_Input VSMain(VS_Input vin)
 {
-    PS_Input vsOut;
+	PS_Input vsOut;
 
-    vsOut.wp = mul(vin.p, WorldMatrix);
-    vsOut.pos = mul(vsOut.wp, ViewProjectionMatrix);
-    vsOut.uv = vin.uv;
-    vsOut.normal = vin.n;
-    vsOut.tangent = vin.t;
-	
+	vsOut.wp = mul(vin.p, WorldMatrix);
+	vsOut.pos = mul(vsOut.wp, ViewProjectionMatrix);
+	vsOut.uv = vin.uv;
+	vsOut.normal = vin.n;
+	vsOut.tangent = vin.t;
+
 	float4 previousWorldPosition = mul(vin.p, PreviousWorldMatrix);
 	vsOut.previousPosition = mul(previousWorldPosition, ViewProjectionMatrix);
 	vsOut.currentPosition = vsOut.pos;
 
-    return vsOut;
+	return vsOut;
 }
 
 Texture3D<float4> GetTexture3D(uint index)
 {
-    return ResourceDescriptorHeap[index];
+	return ResourceDescriptorHeap[index];
 }
 
 struct PSOutput
 {
-    float4 color : SV_Target0;
-    float4 normals : SV_Target1;
-    float4 camDistance : SV_Target2;
-    float4 motionVectors : SV_Target3;
+	float4 color : SV_Target0;
+	float4 motionVectors : SV_Target1;
 };
 
 SamplerState PointSampler : register(s0);
@@ -71,62 +69,75 @@ PSOutput PSMain(PS_Input pin)
 
 	Texture3D voxelmap = GetTexture3D(Voxels.TexId);
 
-	float3 rayDir = normalize(pin.wp.xyz - CameraPosition);
+	// we presume camera is inside voxel, otherwise start pos needs to move inside first
 	float3 rayStart = pin.wp.xyz;
-	float stepSize = 1.f / Voxels.Density; // Adjust as needed
+	float3 rayDir = normalize(pin.wp.xyz - CameraPosition);
+
+	// Compute voxel size in world units
+	const float3 voxelSize = 1 / Voxels.Density;
+	const float3 VoxelDimensions = Voxels.Density * Voxels.SceneSize;
+	const float3 VoxelDimensionsInv = 1 / VoxelDimensions;
+
+	// Compute initial voxel coordinate
+	int3 voxelCoord = int3(floor((rayStart - Voxels.Offset) / voxelSize));
+
+	// Compute reciprocal direction
+	float3 invDir = 1.0 / rayDir;
+
+	// Compute tMax: distance to next voxel boundary along each axis
+	float3 stepSign = float3(
+		(rayDir.x > 0.0f) ? 1.0f : 0.0f,
+		(rayDir.y > 0.0f) ? 1.0f : 0.0f,
+		(rayDir.z > 0.0f) ? 1.0f : 0.0f
+	);
+	float3 nextBoundary = (float3(voxelCoord) + stepSign) * voxelSize + Voxels.Offset;
+	float3 tMax = (nextBoundary - rayStart) * invDir;
+
+	// Compute tDelta: distance to cross one voxel along each axis
+	float3 tDelta = voxelSize * abs(invDir);
 
 	float4 nearVoxel = 0.xxxx;
+
 	int i = 0;
-	for (; i < 128; ++i)
+	for (; i < 256; i++)
 	{
-		// Move the ray position
-		float3 rayPos = rayStart + rayDir * stepSize * i;
-		//stepSize += Voxels.Density * 32.f;
-
-		// Convert to UVW coordinates (range [0, 1])
-		float3 voxelUV = (rayPos - Voxels.Offset) / Voxels.SceneSize;
-
-		if (voxelUV.x <= 0 || voxelUV.x >= 1 || voxelUV.y <= 0 || voxelUV.y >= 1 || voxelUV.z <= 0 || voxelUV.z >= 1)
-		{
-			nearVoxel.a = 0;
-			break;
-		}
-
 		// Sample the 3D texture
-		nearVoxel = voxelmap.SampleLevel(PointSampler, voxelUV, min(VoxelMip + 2, 7));
+		//nearVoxel = voxelmap.SampleLevel(PointSampler, voxelCoord * VoxelDimensionsInv, VoxelMip);
+		nearVoxel = voxelmap.Load(int4(voxelCoord, VoxelMip));
 
 		// If a filled voxel is hit
 		if (nearVoxel.a > 0.f)
-		{		
-			float detailStepSize = stepSize / 32.f; // Adjust as needed
+			break;
 
-			for (int i = 32; i >= 0; i--)
-			{
-				float3 rayPosDetail = rayPos - rayDir * i * detailStepSize;
-				float3 voxelUV = (rayPosDetail - Voxels.Offset) / Voxels.SceneSize;
-				nearVoxel = voxelmap.SampleLevel(PointSampler, voxelUV, VoxelMip);
-				
-				if (nearVoxel.a > 0.f)
-					break;
-			}
+		// Pick axis with smallest tMax
+		if (tMax.x < tMax.y && tMax.x < tMax.z)
+		{
+			voxelCoord.x += (rayDir.x > 0 ? 1 : -1);
+			tMax.x += tDelta.x;
+		}
+		else if (tMax.y < tMax.z)
+		{
+			voxelCoord.y += (rayDir.y > 0 ? 1 : -1);
+			tMax.y += tDelta.y;
+		}
+		else
+		{
+			voxelCoord.z += (rayDir.z > 0 ? 1 : -1);
+			tMax.z += tDelta.z;
 		}
 
-		// If a filled voxel is hit
-		if (nearVoxel.a > 0.f)
+		// Stop if outside grid
+		if (voxelCoord.x < 0 || voxelCoord.x >= VoxelDimensions.x ||
+			voxelCoord.y < 0 || voxelCoord.y >= VoxelDimensions.y ||
+			voxelCoord.z < 0 || voxelCoord.z >= VoxelDimensions.z)
 			break;
 	}
 
-	if (nearVoxel.a == 0.f)	
-		discard;
+	//if (nearVoxel.a == 0.f)
+	//	discard;
 
 	PSOutput output;
-    output.color = float4(nearVoxel.rgb + i / 1000.f, 1);
-	
-	float3 worldNormal = normalize(mul(pin.normal, (float3x3)WorldMatrix));
-	output.normals = float4(worldNormal, 1);
-
-	float camDistance = length(CameraPosition - pin.wp.xyz);
-	output.camDistance = float4(camDistance, 0, 0, 0);
+	output.color = float4(nearVoxel.rgb, 1);
 
 	output.motionVectors = float4((pin.previousPosition.xy / pin.previousPosition.w - pin.currentPosition.xy / pin.currentPosition.w) * ViewportSize, 0, 0);
 	output.motionVectors.xy *= 0.5;

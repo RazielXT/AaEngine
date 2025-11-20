@@ -14,6 +14,8 @@ material VisualizeVoxelTexture
 		profile ps_6_6
 	}
 
+	depth off
+
 	technique Depth skip
 	technique Voxelize skip
 	technique EntityId skip

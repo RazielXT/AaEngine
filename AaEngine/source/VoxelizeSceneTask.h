@@ -69,8 +69,6 @@ public:
 	void clear();
 	void clear(ID3D12GraphicsCommandList* c);
 
-	void showVoxelsInfo(bool show);
-
 private:
 
 	static constexpr UINT CascadesCount = 4;
@@ -131,9 +129,4 @@ private:
 	TextureResource clearSceneTexture;
 
 	SceneVoxelsCascade voxelCascades[CascadesCount];
-
-	bool showVoxelsEnabled = false;
-	void showVoxelsUpdate(Camera& camera);
-	SceneEntity* showVoxels();
-	void hideVoxels();
 };

@@ -147,6 +147,10 @@ void SceneRenderTask::run(RenderContext& renderCtx, CommandsData& cmd, Composito
 	{
 		renderWireframe(pass, cmd);
 	}
+	else if (pass.info.entry == "Debug")
+	{
+		renderDebug(pass, cmd);
+	}
 }
 
 void SceneRenderTask::resize(CompositorPass& pass)
@@ -157,7 +161,7 @@ void SceneRenderTask::resize(CompositorPass& pass)
 
 bool SceneRenderTask::writesSyncCommands(CompositorPass& pass) const
 {
-	return pass.info.entry == "Editor" || pass.info.entry == "Wireframe";
+	return pass.info.entry == "Editor" || pass.info.entry == "Wireframe" || pass.info.entry == "Debug";
 }
 
 SceneRenderTask& SceneRenderTask::Get()
@@ -246,4 +250,39 @@ void SceneRenderTask::renderWireframe(CompositorPass& pass, CommandsData& cmd)
 	ShaderConstantsProvider constants(provider.params, sceneVisibility, *ctx.camera, *pass.target.texture);
 
 	wireframeQueue->renderObjects(constants, cmd.commandList);
+}
+
+void SceneRenderTask::renderDebug(CompositorPass& pass, CommandsData& cmd)
+{
+	pass.target.textureSet->PrepareAsTarget(cmd.commandList, false, TransitionFlags::NoDepth);
+
+	if (!showVoxelsEnabled)
+		return;
+
+	RenderObjectsStorage tmpStorage;
+	SceneEntity entity(tmpStorage, "");
+	RenderObjectsVisibilityData visibility{ { true } };
+
+	showVoxelsUpdate(entity, *ctx.camera);
+
+	ShaderConstantsProvider constants(provider.params, visibility, *ctx.camera, *pass.target.texture);
+
+	RenderQueue queue{ pass.target.textureSet->formats, MaterialTechnique::Default };
+	queue.update({ EntityChange::Add, Order::Normal, &entity }, provider.resources);
+	queue.renderObjects(constants, cmd.commandList);
+}
+
+void SceneRenderTask::showVoxelsInfo(bool show)
+{
+	showVoxelsEnabled = show;
+}
+
+void SceneRenderTask::showVoxelsUpdate(SceneEntity& debugVoxel, Camera& camera)
+{
+	auto orientation = camera.getOrientation();
+	auto pos = camera.getPosition() - orientation * Vector3(0, 5.f, 0) + camera.getCameraDirection() * 1.75;
+
+	debugVoxel.material = provider.resources.materials.getMaterial("VisualizeVoxelTexture");
+	debugVoxel.geometry.fromModel(*provider.resources.models.getLoadedModel("box.mesh", ResourceGroup::Core));
+	debugVoxel.setTransformation({ orientation, pos, Vector3(10, 10, 1) }, true);
 }

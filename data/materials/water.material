@@ -18,25 +18,21 @@ material WaterLake
 	{
 		file waterHeight.dds
 	}
-	texture CamDistance
-	{
-		compositor Frame:sceneTexture:Distance
-	}
 	texture Depth
 	{
 		compositor Frame:depthDownsample2
 	}
 	texture DepthDownsample
 	{
-		compositor Frame:depthHiZDownsample4
+		compositor Frame:SSAO.depthHiZDownsample4
 	}
 	texture DepthDownsample2
 	{
-		compositor Frame:depthHiZDownsample32
+		compositor Frame:SSAO.depthHiZDownsample32
 	}
 	texture SceneColor
 	{
-		compositor Frame:sceneTexture2
+		compositor Frame:sceneTextureTmp
 	}
 	texture skybox
 	{

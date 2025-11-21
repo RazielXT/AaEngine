@@ -2,9 +2,7 @@
 
 float4x4 WorldMatrix;
 float4x4 ViewProjectionMatrix;
-//float4x4 InvViewMatrix;
-//float4x4 InvProjectionMatrix;
-//float4x4 InvViewProjectionMatrix;
+float4x4 InvViewProjectionMatrix;
 
 float3 CameraPosition;
 float Time;
@@ -12,7 +10,6 @@ float2 ViewportSizeInverse;
 uint TexIdDiffuse;
 uint TexIdNormal;
 uint TexIdHeight;
-uint TexIdDistance;
 uint TexIdSceneDepthHigh;
 uint TexIdSceneDepthLow;
 uint TexIdSceneDepthVeryLow;
@@ -248,9 +245,27 @@ float checkerboard(float2 uv)
     return color;
 }
 
+float3 ReconstructWorldPosition(float2 uv, float depth, float4x4 InvViewProjectionMatrix)
+{
+	// Convert UV to clip-space XY
+	float4 clipPos;
+	clipPos.xy = float2(uv.x * 2 - 1, (1 - uv.y) * 2 - 1); // [0..1] → [-1..1]
+	clipPos.z = depth;
+	clipPos.w  = 1.0f;
+
+	float4 viewPos = mul(clipPos, InvViewProjectionMatrix);
+	return viewPos.xyz / viewPos.w;
+}
+
 PSOutput PSMain(PSInput input)
 {
-	float groundDistance = GetTexture(TexIdDistance).Load(int3(input.position.xy, 0)).r;
+	float2 ScreenUV = input.position.xy * ViewportSizeInverse;
+
+	Texture2D DepthBufferHigh = GetTexture(TexIdSceneDepthHigh);
+	float groundZ = DepthBufferHigh.Sample(LinearWrapSampler, ScreenUV).r;
+	float3 groundPosition = ReconstructWorldPosition(ScreenUV, groundZ, InvViewProjectionMatrix);
+	float groundDistance = length(input.worldPosition.xyz - groundPosition);
+
 	float3 cameraVector = input.worldPosition.xyz - CameraPosition;
 	float camDistance = length(cameraVector);
 	cameraVector = cameraVector / camDistance; //normalize
@@ -258,7 +273,7 @@ PSOutput PSMain(PSInput input)
 //	float3 worldPosGround = getWorldPos(depthGround, clipSpacePos);
 
 	const float FadeDistance = 20;
-	float fade = (groundDistance - camDistance) / FadeDistance;
+	float fade = groundDistance / FadeDistance;
 	//float fade = smoothstep(0, FadeDistance, groundDistance - camDistance);
 
 	float4 albedo = GetWaves(input.uv);
@@ -277,7 +292,6 @@ PSOutput PSMain(PSInput input)
 	float3 WorldPosition = input.worldPosition.xyz;
 
 	float DeviceZ = input.position.z;
-	float2 ScreenUV = input.position.xy * ViewportSizeInverse;
 	float2 SsrPixelUV = ScreenUV;
 
 	float4 ScreenSpacePos = float4(SsrPixelUV, DeviceZ, 1.f);
@@ -356,7 +370,7 @@ PSOutput PSMain(PSInput input)
 	fresnel *= fresnel;
 
 	albedo.rgb = lerp(albedo.rgb, reflection.rgb, fresnel);
-//	albedo.rgb = reflection.rgb;
+	//albedo.rgb = reflection.rgb;
 	float3 sceneColor = GetTexture(TexIdSceneColor).Sample(LinearWrapSampler, saturate(ScreenUV + normal.xz * 0.1f)).rgb;
 
 	albedo.rgb = lerp(sceneColor, albedo.rgb, saturate(albedo.a));

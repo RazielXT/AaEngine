@@ -7,11 +7,17 @@ compositor Frame
 {
 	texture sceneTexture target_size Albedo:DXGI_FORMAT_R8G8B8A8_UNORM Normal:DXGI_FORMAT_R16G16B16A16_FLOAT MotionVectors:DXGI_FORMAT_R16G16_FLOAT Depth
 	texture sceneVCT target_size DXGI_FORMAT_R8G8B8A8_UNORM
+	alias sceneTextureTmp2 sceneVCT
+
+	texture sceneTransparentTexture target_size Color:DXGI_FORMAT_R8G8B8A8_UNORM Fill:DXGI_FORMAT_R8G8B8A8_UNORM
+
 	texture sceneVCTLow target_size_div 2 DXGI_FORMAT_R8G8B8A8_UNORM
 	texture sceneTextureTmp target_size DXGI_FORMAT_R8G8B8A8_UNORM
 
 	texture sceneDownscale2 target_size_div 2 DXGI_FORMAT_R8G8B8A8_UNORM
 	texture sceneDownscale4 target_size_div 8 DXGI_FORMAT_R8G8B8A8_UNORM
+
+	texture depthDownsample2 target_size_div 2 DXGI_FORMAT_R32_FLOAT
 
 #if UPSCALE
 	texture motionVectors target_size DXGI_FORMAT_R16G16_FLOAT
@@ -81,10 +87,35 @@ compositor Frame
 		target sceneTextureTmp
 	}
 
+	pass DepthDownsample
+	{
+		material LoadThrough
+		input sceneTexture:Depth
+		target depthDownsample2
+	}
+	task SceneRender
+	{
+		entry Transparent
+
+		input sceneTextureTmp
+		input depthDownsample2
+		input SSAO.depthHiZDownsample4
+		input SSAO.depthHiZDownsample32
+		target sceneTransparentTexture sceneTexture:Depth (depth_read)
+	}
+
+	pass ApplySceneWater
+	{
+		material ApplySceneWater
+		input sceneTextureTmp
+		input sceneTransparentTexture
+		target sceneTextureTmp2
+	}
+
 	pass SceneDownsample
 	{
 		material PassThrough
-		input sceneTextureTmp
+		input sceneTextureTmp2
 		target sceneDownscale2
 	}
 	pass SceneDownsample
@@ -97,17 +128,17 @@ compositor Frame
 	task SceneRender
 	{
 		entry Debug
-		target sceneTextureTmp sceneTexture:MotionVectors
+		target sceneTextureTmp2 sceneTexture:MotionVectors
 	}
 
-	ref Exposure(sceneTextureTmp)
+	ref Exposure(sceneTextureTmp2)
 
 	ref Bloom(sceneDownscale4,Exposure.exposure)
 
 	task SceneRender
 	{
 		entry Editor
-		target sceneTextureTmp sceneTexture:Depth (depth_read)
+		target sceneTextureTmp2 sceneTexture:Depth (depth_read)
 	}
 
 #if UPSCALE
@@ -123,7 +154,7 @@ compositor Frame
 
 	task Upscale (compute_shader)
 	{
-		input sceneTextureTmp
+		input sceneTextureTmp2
 		input motionVectors
 		input sceneTexture:Depth
 		input sceneTextureTmp_upscaled
@@ -141,12 +172,12 @@ compositor Frame
 		target Output
 	}
 #else
-	ref Godray(sceneTextureTmp,sceneTexture:Depth)
+	ref Godray(sceneTextureTmp2,sceneTexture:Depth)
 
 	pass ToneMapping
 	{
 		material ToneMapping
-		input sceneTextureTmp
+		input sceneTextureTmp2
 		input Bloom.bloomTexture
 		input Exposure.exposure
 		input Godray.godray

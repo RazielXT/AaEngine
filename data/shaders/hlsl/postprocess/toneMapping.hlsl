@@ -13,7 +13,7 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	float exposure = 1 - exposureMap.Load(int3(0, 0, 0)).r;
 
 	float3 bloom = bloomMap.Sample(LinearSampler, input.TexCoord).rgb;
-	bloom *= bloom;
+	//bloom *= bloom;
 	bloom *= exposure * exposure;
 
 #ifdef NO_LUMA

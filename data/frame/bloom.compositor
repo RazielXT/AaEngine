@@ -49,6 +49,20 @@ compositor Bloom
 		input exposure
 		target bloomTexture4
 	}
+	pass BloomBlurX
+	{
+		material BloomBlurX
+		input bloomTexture4
+		input exposure
+		target bloomTexture5
+	}
+	pass BloomBlurY
+	{
+		material BloomBlurY
+		input bloomTexture5
+		input exposure
+		target bloomTexture4
+	}
 	pass BloomUpscale
 	{
 		material PutBlurThrough

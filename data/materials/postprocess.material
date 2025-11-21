@@ -130,7 +130,7 @@ material BloomBlurX : PostProcess
 {
 	pixel_shader
 	{
-		file postprocess/downsample.hlsl
+		file postprocess/bloom.hlsl
 		entry PSBloomBlurX
 		profile ps_6_6
 	}
@@ -140,7 +140,7 @@ material BloomBlurY : PostProcess
 {
 	pixel_shader
 	{
-		file postprocess/downsample.hlsl
+		file postprocess/bloom.hlsl
 		entry PSBloomBlurY
 		profile ps_6_6
 	}

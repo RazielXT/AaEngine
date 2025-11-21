@@ -84,6 +84,7 @@ struct ParseContext
 {
 	std::string scope;
 	std::map<std::string, std::string> externTextureNameRemap;
+	std::map<std::string, std::string> textureAlias;
 };
 
 static std::vector<CompositorTextureSlot> parseCompositorTextureSlot(const Config::Object& param, const CompositorInfo& info, const ParseContext& ctx, UINT flags = 0)
@@ -120,6 +121,8 @@ static std::vector<CompositorTextureSlot> parseCompositorTextureSlot(const Confi
 	{
 		if (auto it = ctx.externTextureNameRemap.find(t.name); it != ctx.externTextureNameRemap.end())
 			t.name = it->second;
+		else if (auto it = ctx.textureAlias.find(t.name); it != ctx.textureAlias.end())
+			t.name = it->second;
 		else
 			t.name = ctx.scope + t.name;
 	}
@@ -133,7 +136,7 @@ struct ParsedRef
 	std::vector<std::string> parameters;
 };
 
-static ParsedRef parseRef(const std::string& refString)
+static ParsedRef parseRef(const std::string& refString, const ParseContext& ctx)
 {
 	auto openParen = refString.find('(');
 	auto closeParen = refString.find(')', openParen);
@@ -149,6 +152,9 @@ static ParsedRef parseRef(const std::string& refString)
 	std::string param;
 	while (std::getline(ss, param, ','))
 	{
+		if (auto it = ctx.textureAlias.find(param); it != ctx.textureAlias.end())
+			param = it->second;
+
 		if (!param.empty())
 			result.parameters.push_back(param);
 	}
@@ -183,6 +189,10 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 				if (member.type == "extern")
 				{
 					ctx.externTextureNameRemap.emplace(member.value, input.textures[ctx.externTextureNameRemap.size()]);
+				}
+				if (member.type == "alias")
+				{
+					ctx.textureAlias.emplace(member.value, member.params.front());
 				}
 				if (member.type == "texture" || member.type == "rwtexture")
 				{
@@ -316,7 +326,7 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 				}
 				else if (member.type == "ref")
 				{
-					const auto refInfo = parseRef(member.value);
+					const auto refInfo = parseRef(member.value, ctx);
 					const auto source = importMap[refInfo.name];
 					const auto refScope = input.scope + refInfo.name + ".";
 					auto ref = parseFile(directory, source + ".compositor", { input.defines, refScope, refInfo.parameters });

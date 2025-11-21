@@ -1,10 +1,10 @@
 #include "PostProcessCommon.hlsl"
+#include "WorldReconstruction.hlsl"
 #include "../ShadowsPssm.hlsl"
 
-float4x4 InvProjectionMatrix;
-float4x4 InvViewMatrix;
-float ResId;
+float4x4 InvViewProjectionMatrix;
 float3 CameraPosition;
+float ResId;
 
 cbuffer PSSMShadows : register(b1)
 {
@@ -30,7 +30,7 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	float dotLighting = saturate(dot(-Sun.Direction, worldNormal));
 
 	float depth = depthMap.Load(int3(input.Position.xy, 0)).r;
-	float4 worldPosition = float4(ReconstructWorldPosition(input.TexCoord, depth, InvProjectionMatrix, InvViewMatrix), 1);
+	float4 worldPosition = float4(ReconstructWorldPosition(input.TexCoord, depth, InvViewProjectionMatrix), 1);
 	float camDistance = length(CameraPosition - worldPosition.xyz);
 
 #ifdef CFG_SHADOW_HIGH

@@ -1,4 +1,5 @@
 #include "VoxelConeTracingCommon.hlsl"
+#include "postprocess/WorldReconstruction.hlsl"
 
 float4x4 WorldMatrix;
 float4x4 ViewProjectionMatrix;
@@ -243,18 +244,6 @@ float checkerboard(float2 uv)
     float color = (checkX == checkY) ? 1 : 0;
 
     return color;
-}
-
-float3 ReconstructWorldPosition(float2 uv, float depth, float4x4 InvViewProjectionMatrix)
-{
-	// Convert UV to clip-space XY
-	float4 clipPos;
-	clipPos.xy = float2(uv.x * 2 - 1, (1 - uv.y) * 2 - 1); // [0..1] → [-1..1]
-	clipPos.z = depth;
-	clipPos.w  = 1.0f;
-
-	float4 viewPos = mul(clipPos, InvViewProjectionMatrix);
-	return viewPos.xyz / viewPos.w;
 }
 
 PSOutput PSMain(PSInput input)

@@ -1,8 +1,8 @@
 #include "PostProcessCommon.hlsl"
+#include "WorldReconstruction.hlsl"
 #include "../VoxelConeTracingCommon.hlsl"
 
-float4x4 InvProjectionMatrix;
-float4x4 InvViewMatrix;
+float4x4 InvViewProjectionMatrix;
 float ResId;
 
 cbuffer SceneVoxelInfo : register(b1)
@@ -31,7 +31,7 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	if (all(worldNormal == float3(0,0,0))) return float4(0,0,0,1);
 
 	float depth = depthMap.Sample(PointSampler, input.TexCoord).r;
-	float3 worldPosition = ReconstructWorldPosition(input.TexCoord, depth, InvProjectionMatrix, InvViewMatrix);
+	float3 worldPosition = ReconstructWorldPosition(input.TexCoord, depth, InvViewProjectionMatrix);
 
 	float3 voxelAmbient = 0;
 	float voxelWeight = 1.0f;

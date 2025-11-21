@@ -146,7 +146,7 @@ float4 PS_Main(PS_Input pin) : SV_TARGET
 	float4 prev = SceneVoxelBounces.Load(float4(posUV - VoxelInfo.Voxels[VoxelIdx].BouncesOffset * StepSize, 0));
 
 	RWTexture3D<float4> SceneVoxel = ResourceDescriptorHeap[VoxelInfo.Voxels[VoxelIdx].TexId];
-    SceneVoxel[posUV] = float4(prev.rgb * prev.w, prev.w);
+    SceneVoxel[posUV] = float4(prev.rgb, prev.w);
 
 	bool isInBounds = (posUV.x >= 0 && posUV.x < 128) &&
 					  (posUV.y >= 0 && posUV.y < 128) &&

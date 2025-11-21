@@ -199,7 +199,7 @@ void FrameCompositor::reloadTextures()
 			}
 		};
 
-	//ensure mrt handles are ordered
+	//ensure mrt handles are contiguous
 	for (auto& [_, names] : info.mrt)
 	{
 		for (auto& name : names)
@@ -246,7 +246,7 @@ void FrameCompositor::reloadTextures()
 						textureSet->texturesState[c++].texture = t;
 				}
 
-				textureSet->Init();
+				textureSet->Init(provider.renderSystem.core.device);
 			}
 		}
 

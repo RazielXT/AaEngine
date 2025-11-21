@@ -282,7 +282,7 @@ void RenderTargetTexture::ClearDepth(ID3D12GraphicsCommandList* commandList)
 	commandList->ClearDepthStencilView(view.handle, D3D12_CLEAR_FLAG_DEPTH, DepthClearValue, 0, 0, nullptr);
 }
 
-void RenderTargetTexturesView::Init()
+void RenderTargetTexturesView::Init(ID3D12Device* device)
 {
 	auto t = texturesState.empty() ? depthState.texture : texturesState.front().texture;
 	width = t->width;
@@ -295,6 +295,20 @@ void RenderTargetTexturesView::Init()
 	{
 		rtvHandles.push_back(t.texture->view.handle);
 		formats.push_back(t.texture->format);
+	}
+
+	if (!rtvHandles.empty())
+	{
+		const UINT inc = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		const UINT64 base = rtvHandles[0].ptr;
+		contiguous = true;
+
+		for (size_t i = 1; i < rtvHandles.size(); ++i)
+		{
+			const UINT64 expected = base + static_cast<UINT64>(i) * inc;
+			if (rtvHandles[i].ptr != expected)
+				contiguous = false;
+		}
 	}
 }
 
@@ -328,7 +342,7 @@ void RenderTargetTexturesView::PrepareAsTarget(ID3D12GraphicsCommandList* comman
 		commandList->ResourceBarrier(i, barriers);
 	}
 
-	commandList->OMSetRenderTargets(rtvHandles.size(), rtvHandles.data(), TRUE, (flags & TransitionFlags::UseDepth) ? &depthState.texture->view.handle : nullptr);
+	commandList->OMSetRenderTargets(rtvHandles.size(), rtvHandles.data(), contiguous, (flags & TransitionFlags::UseDepth) ? &depthState.texture->view.handle : nullptr);
 
 	if (flags & TransitionFlags::UseDepth && flags & TransitionFlags::ClearDepth)
 		commandList->ClearDepthStencilView(depthState.texture->view.handle, D3D12_CLEAR_FLAG_DEPTH, depthState.texture->DepthClearValue, 0, 0, nullptr);
@@ -376,7 +390,7 @@ void RenderTargetTexturesView::PrepareAsTarget(ID3D12GraphicsCommandList* comman
 			commandList->ResourceBarrier(i, barriers);
 	}
 
-	commandList->OMSetRenderTargets(rtvHandles.size(), rtvHandles.data(), TRUE, (flags & TransitionFlags::UseDepth) ? &depthState.texture->view.handle : nullptr);
+	commandList->OMSetRenderTargets(rtvHandles.size(), rtvHandles.data(), contiguous, (flags & TransitionFlags::UseDepth) ? &depthState.texture->view.handle : nullptr);
 
 	if ((flags & TransitionFlags::UseDepth) && (flags & TransitionFlags::ClearDepth))
 		commandList->ClearDepthStencilView(depthState.texture->view.handle, D3D12_CLEAR_FLAG_DEPTH, depthState.texture->DepthClearValue, 0, 0, nullptr);
@@ -473,7 +487,7 @@ void RenderTargetTextures::Init(ID3D12Device* device, UINT w, UINT h, RenderTarg
 		depthState = { &depth };
 	}
 
-	RenderTargetTexturesView::Init();
+	RenderTargetTexturesView::Init(device);
 }
 
 void RenderTargetTextures::SetName(const std::string& name)

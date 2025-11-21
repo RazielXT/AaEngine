@@ -102,7 +102,7 @@ class RenderTargetTexturesView
 {
 public:
 
-	void Init();
+	void Init(ID3D12Device* device);
 
 	std::vector<RenderTargetTextureState> texturesState;
 	RenderTargetTextureState depthState;
@@ -118,10 +118,11 @@ public:
 
 private:
 
+	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtvHandles;
+
 	UINT width;
 	UINT height;
-
-	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtvHandles;
+	bool contiguous{};
 };
 
 class RenderTargetTextures : public RenderTargetTexturesView

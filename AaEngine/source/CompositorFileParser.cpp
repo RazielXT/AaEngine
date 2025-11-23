@@ -100,7 +100,7 @@ static std::vector<CompositorTextureSlot> parseCompositorTextureSlot(const Confi
 			if (value.starts_with('('))
 				return;
 
-			auto mrt = info.mrt.find(value);
+			auto mrt = info.mrt.find(ctx.scope + value);
 			if (mrt != info.mrt.end())
 			{
 				for (auto& t : mrt->second)
@@ -123,7 +123,7 @@ static std::vector<CompositorTextureSlot> parseCompositorTextureSlot(const Confi
 			t.name = it->second;
 		else if (auto it = ctx.textureAlias.find(t.name); it != ctx.textureAlias.end())
 			t.name = it->second;
-		else
+		else if (t.name.find('.') == std::string::npos)
 			t.name = ctx.scope + t.name;
 	}
 
@@ -258,7 +258,7 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 						}
 						else
 						{
-							std::vector<std::string> mrtOrder;
+							auto& mrtOrder = info.mrt[tex.name];
 
 							for (int i = 0; auto & f : formats)
 							{
@@ -267,8 +267,6 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 								tex.format = f.first;
 								info.textures.emplace(name, tex);
 							}
-
-							info.mrt[tex.name] = mrtOrder;
 						}
 					}
 				}

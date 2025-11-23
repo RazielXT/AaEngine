@@ -1,13 +1,13 @@
 vertex_shader vsWaterLake
 {
-	file water.hlsl
+	file water/waterPrepare.hlsl
 	entry VSMain
 	profile vs_6_6
 }
 
 pixel_shader psWaterLake
 {
-	file water.hlsl
+	file water/waterPrepare.hlsl
 	entry PSMain
 	profile ps_6_6
 }

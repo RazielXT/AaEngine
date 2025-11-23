@@ -1,0 +1,61 @@
+material TraceReflections
+{
+	vertex_shader vsQuad
+
+	depth off
+
+	pixel_shader
+	{
+		file water/waterReflections.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
+
+	texture SceneColor
+	{
+	}
+	texture Depth
+	{
+	}
+	texture TransparentColor
+	{
+	}
+	texture TransparentNormal
+	{
+	}
+	texture TransparentDepth
+	{
+	}
+	texture Skybox
+	{
+		file tceCubemap.dds
+	}
+}
+
+material ApplySceneWater
+{
+	vertex_shader vsQuad
+
+	depth off
+
+	pixel_shader
+	{
+		file water/waterPost.hlsl
+		entry PSWaterApply
+		profile ps_6_6
+	}
+}
+
+material WaterBlur
+{
+	vertex_shader vsQuad
+
+	depth off
+
+	pixel_shader
+	{
+		file water/waterPost.hlsl
+		entry PSWaterBlur
+		profile ps_6_6
+	}
+}

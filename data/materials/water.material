@@ -4,7 +4,6 @@ material WaterLake
 	pixel_shader psWaterLake
 
 	culling none
-	depth_write off
 
 	texture Diffuse
 	{
@@ -21,22 +20,6 @@ material WaterLake
 	texture Depth
 	{
 		compositor Frame:depthDownsample2
-	}
-	texture DepthDownsample
-	{
-		compositor Frame:SSAO.depthHiZDownsample4
-	}
-	texture DepthDownsample2
-	{
-		compositor Frame:SSAO.depthHiZDownsample32
-	}
-	texture SceneColor
-	{
-		compositor Frame:sceneTextureTmp
-	}
-	texture skybox
-	{
-		file tceCubemap.dds
 	}
 
 	technique Depth skip

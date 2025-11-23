@@ -203,19 +203,59 @@ void SceneRenderTask::renderEarlyZ(CompositorPass& pass)
 
 void SceneRenderTask::renderTransparentScene(CompositorPass& pass)
 {
+	auto commandList = transparent.work.commands.commandList;
+
 	transparent.renderables->updateVisibility(*ctx.camera, transparent.sceneVisibility);
 
 	auto marker = provider.renderSystem.core.StartCommandList(transparent.work.commands);
 
 	for (auto& i : pass.inputs)
 	{
-		i.texture->PrepareAsView(transparent.work.commands.commandList, i.previousState);
+		i.texture->PrepareAsView(commandList, i.previousState);
 	}
 
-	pass.target.textureSet->PrepareAsTarget(transparent.work.commands.commandList, true, TransitionFlags::DepthPrepareRead);
+	// first lets copy input opaque depth to separate depth buffer
+	{
+		auto opaqueDepth = pass.inputs[0];
+		auto& ourDepth = pass.target.textureSet->depthState;
+
+		CD3DX12_RESOURCE_BARRIER barriers[] =
+		{
+			CD3DX12_RESOURCE_BARRIER::Transition(
+				opaqueDepth.texture->texture.Get(),
+				opaqueDepth.previousState,
+				D3D12_RESOURCE_STATE_COPY_SOURCE
+			),
+			CD3DX12_RESOURCE_BARRIER::Transition(
+				ourDepth.texture->texture.Get(),
+				ourDepth.previousState,
+				D3D12_RESOURCE_STATE_COPY_DEST
+			)
+		};
+		commandList->ResourceBarrier(2, barriers);
+
+		commandList->CopyResource(ourDepth.texture->texture.Get(), opaqueDepth.texture->texture.Get());
+
+		CD3DX12_RESOURCE_BARRIER barriersBack[] =
+		{
+			CD3DX12_RESOURCE_BARRIER::Transition(
+				opaqueDepth.texture->texture.Get(),
+				D3D12_RESOURCE_STATE_COPY_SOURCE,
+				opaqueDepth.previousState
+			),
+			CD3DX12_RESOURCE_BARRIER::Transition(
+				ourDepth.texture->texture.Get(),
+				D3D12_RESOURCE_STATE_COPY_DEST,
+				ourDepth.previousState
+			)
+		};
+		commandList->ResourceBarrier(2, barriersBack);
+	}
+
+	pass.target.textureSet->PrepareAsTarget(commandList, true, TransitionFlags::UseDepth);
 
 	ShaderConstantsProvider constants(provider.params, transparent.sceneVisibility, *ctx.camera, *pass.target.texture);
-	transparent.transparentQueue->renderObjects(constants, transparent.work.commands.commandList);
+	transparent.transparentQueue->renderObjects(constants, commandList);
 }
 
 void SceneRenderTask::renderEditor(CompositorPass& pass, CommandsData& cmd)

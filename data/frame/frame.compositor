@@ -2,14 +2,13 @@ import ssao.SSAO
 import exposure.Exposure
 import bloom.Bloom
 import godray.Godray
+import water.Water
 
 compositor Frame
 {
 	texture sceneTexture target_size Albedo:DXGI_FORMAT_R8G8B8A8_UNORM Normal:DXGI_FORMAT_R16G16B16A16_FLOAT MotionVectors:DXGI_FORMAT_R16G16_FLOAT Depth
 	texture sceneVCT target_size DXGI_FORMAT_R8G8B8A8_UNORM
 	alias sceneTextureTmp2 sceneVCT
-
-	texture sceneTransparentTexture target_size Color:DXGI_FORMAT_R8G8B8A8_UNORM Fill:DXGI_FORMAT_R8G8B8A8_UNORM
 
 	texture sceneVCTLow target_size_div 2 DXGI_FORMAT_R8G8B8A8_UNORM
 	texture sceneTextureTmp target_size DXGI_FORMAT_R8G8B8A8_UNORM
@@ -93,24 +92,8 @@ compositor Frame
 		input sceneTexture:Depth
 		target depthDownsample2
 	}
-	task SceneRender
-	{
-		entry Transparent
 
-		input sceneTextureTmp
-		input depthDownsample2
-		input SSAO.depthHiZDownsample4
-		input SSAO.depthHiZDownsample32
-		target sceneTransparentTexture sceneTexture:Depth (depth_read)
-	}
-
-	pass ApplySceneWater
-	{
-		material ApplySceneWater
-		input sceneTextureTmp
-		input sceneTransparentTexture
-		target sceneTextureTmp2
-	}
+	ref Water(sceneTextureTmp,sceneTexture:Depth,depthDownsample2,sceneTextureTmp2)
 
 	pass SceneDownsample
 	{

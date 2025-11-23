@@ -116,16 +116,6 @@ material WaterPostProcessY : PostProcess
 	}
 }
 
-material ApplySceneWater : PostProcess
-{
-	pixel_shader
-	{
-		file waterPost.hlsl
-		entry PSWaterApply
-		profile ps_6_6
-	}
-}
-
 material BloomBlurX : PostProcess
 {
 	pixel_shader

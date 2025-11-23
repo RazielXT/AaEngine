@@ -187,7 +187,7 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 				}
 				else if (param.type == "compositor")
 				{
-					tex.compositorId = param.value;
+					tex.id = param.value;
 				}
 			}
 

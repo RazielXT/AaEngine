@@ -281,13 +281,6 @@ void MaterialBase::CreateResourcesData(MaterialInstance& instance, GraphicsResou
 
 			instance.SetTexture(*texture, texSlot);
 		}
-		else if (!t.compositorId.empty())
-		{
-			if (auto texture = resources.textures.getNamedTexture(t.compositorId))
-			{
-				instance.SetTexture(*texture, texSlot);
-			}
-		}
 		else if (!t.id.empty())
 		{
 			if (auto texture = resources.textures.getNamedTexture(t.id))

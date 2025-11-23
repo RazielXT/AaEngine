@@ -22,7 +22,6 @@ struct TextureRef
 {
 	std::string id;
 	std::string file;
-	std::string compositorId;
 };
 
 using SamplerRef = SamplerInfo;

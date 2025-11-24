@@ -21,6 +21,10 @@ material WaterLake
 	{
 		compositor Frame:depthDownsample2
 	}
+	texture Caustics
+	{
+		file caustics.dds
+	}
 
 	technique Depth skip
 	technique Voxelize skip

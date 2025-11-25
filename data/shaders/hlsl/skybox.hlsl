@@ -33,8 +33,7 @@ struct PSOutput
 {
 	float4 albedo : SV_Target0;
 	float4 normals : SV_Target1;
-	float4 camDistance : SV_Target2;
-	float4 motionVectors : SV_Target3;
+	float4 motionVectors : SV_Target2;
 };
 
 TextureCube skyboxTexture : register(t0);
@@ -46,7 +45,6 @@ PSOutput PSMain(PSInput input)
 
 	output.albedo = float4(skyboxTexture.Sample(samplerState, input.uv).rgb, 0);
 	output.normals = 0;
-	output.camDistance = 0;
 	output.motionVectors = 0;
 
 	return output;

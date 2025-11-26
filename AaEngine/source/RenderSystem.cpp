@@ -10,7 +10,7 @@
 #include "FileLogger.h"
 #include "StringUtils.h"
 
-ComPtr<IDXGIAdapter1> GetHardwareAdapter(IDXGIFactory4* pFactory)
+ComPtr<IDXGIAdapter1> GetHardwareAdapter(IDXGIFactory4* pFactory, enum D3D_FEATURE_LEVEL level)
 {
 	ComPtr<IDXGIAdapter1> bestAdapter;
 	ComPtr<IDXGIAdapter1> fallbackAdapter;
@@ -29,8 +29,7 @@ ComPtr<IDXGIAdapter1> GetHardwareAdapter(IDXGIFactory4* pFactory)
 		if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
 			continue;
 
-		// Check to see if the adapter supports Direct3D 12, but don't create the actual device yet.
-		if (SUCCEEDED(D3D12CreateDevice(pAdapter.Get(), D3D_FEATURE_LEVEL_12_1, _uuidof(ID3D12Device), nullptr)))
+		if (SUCCEEDED(D3D12CreateDevice(pAdapter.Get(), level, _uuidof(ID3D12Device), nullptr)))
 		{
 			// Prefer dedicated GPUs
 			if (desc.DedicatedVideoMemory > 0)
@@ -69,9 +68,15 @@ RenderCore::RenderCore()
 	CreateDXGIFactory1(IID_PPV_ARGS(&factory));
 
 	{
-		auto hardwareAdapter = GetHardwareAdapter(factory.Get());
-		auto hr = D3D12CreateDevice(hardwareAdapter.Get(), D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(&device));
+		auto hardwareAdapter = GetHardwareAdapter(factory.Get(), D3D_FEATURE_LEVEL_12_1);
+		if (!hardwareAdapter)
+		{
+			auto err = "GetHardwareAdapter failed";
+			FileLogger::logErrorD3D(err, hr);
+			throw std::invalid_argument(err);
+		}
 
+		auto hr = D3D12CreateDevice(hardwareAdapter.Get(), D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(&device));
 		if (FAILED(hr))
 		{
 			auto err = "D3D12CreateDevice failed";

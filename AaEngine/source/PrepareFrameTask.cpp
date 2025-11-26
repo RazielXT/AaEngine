@@ -13,6 +13,7 @@ PrepareFrameTask::~PrepareFrameTask()
 
 AsyncTasksInfo PrepareFrameTask::initialize(CompositorPass& pass)
 {
+	water.initializeGpuResources(provider.renderSystem, provider.resources);
 	return {};
 }
 
@@ -24,6 +25,8 @@ void PrepareFrameTask::run(RenderContext& ctx, CommandsData& cmd, CompositorPass
 	auto& fsr = provider.renderSystem.upscale.fsr;
 	if (fsr.enabled())
 		ctx.camera->setPixelOffset(fsr.getJitter(), fsr.getRenderSize());
+
+	water.update(cmd.commandList, provider.params.timeDelta, provider.params.frameIndex);
 
 // 	sceneMgr.terrain.update(cmd.commandList, sceneMgr, ctx.camera->getPosition());
 // 

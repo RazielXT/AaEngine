@@ -113,6 +113,7 @@
     <ClCompile Include="source\TerrainGenerationCS.cpp" />
     <ClCompile Include="source\TerrainGenerator.cpp" />
     <ClCompile Include="source\TerrainGrid.cpp" />
+    <ClCompile Include="source\TextureUtils.cpp" />
     <ClCompile Include="source\Vegetation.cpp" />
     <ClCompile Include="source\VegetationTrees.cpp" />
     <ClCompile Include="source\VertexBufferModel.cpp" />
@@ -166,6 +167,8 @@
     <ClCompile Include="source\UpscaleTask.cpp" />
     <ClCompile Include="source\Upscaling.cpp" />
     <ClCompile Include="source\VoxelizeSceneTask.cpp" />
+    <ClCompile Include="source\WaterSim.cpp" />
+    <ClCompile Include="source\WaterSimCS.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dependencies\imgui\backends\imgui_impl_dx12.h" />
@@ -209,6 +212,7 @@
     <ClInclude Include="source\TerrainGenerationCS.h" />
     <ClInclude Include="source\TerrainGenerator.h" />
     <ClInclude Include="source\TerrainGrid.h" />
+    <ClInclude Include="source\TextureUtils.h" />
     <ClInclude Include="source\Vegetation.h" />
     <ClInclude Include="source\VegetationTrees.h" />
     <ClInclude Include="source\VertexBufferModel.h" />
@@ -252,6 +256,8 @@
     <ClInclude Include="source\UpscaleTypes.h" />
     <ClInclude Include="source\Upscaling.h" />
     <ClInclude Include="source\VoxelizeSceneTask.h" />
+    <ClInclude Include="source\WaterSim.h" />
+    <ClInclude Include="source\WaterSimCS.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

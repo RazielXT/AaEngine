@@ -74,6 +74,15 @@ void RenderTargetTexture::Init(ID3D12Device* device, UINT w, UINT h, RenderTarge
 		heap.CreateRenderTargetHandle(device, texture, view);
 }
 
+void RenderTargetTexture::InitUAV(ID3D12Device* device, UINT w, UINT h, DXGI_FORMAT f, D3D12_RESOURCE_STATES state)
+{
+	width = w;
+	height = h;
+	format = f;
+
+	CreateTextureBuffer(device, width, height, format, state, AllowUAV);
+}
+
 void RenderTargetTexture::InitDepth(ID3D12Device* device, UINT w, UINT h, RenderTargetHeap& heap, D3D12_RESOURCE_STATES initialState)
 {
 	width = w;

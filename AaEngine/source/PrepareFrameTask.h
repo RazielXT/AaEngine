@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CompositorTask.h"
+#include "WaterSim.h"
 
 class PrepareFrameTask : public CompositorTask
 {
@@ -14,4 +15,5 @@ public:
 
 	bool writesSyncCommands(CompositorPass&) const override { return true; }
 
+	WaterSim water;
 };

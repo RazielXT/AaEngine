@@ -44,6 +44,14 @@ material Blue : Color
 	}
 }
 
+material SkyBlue : Color
+{
+	default_params
+	{
+		color MaterialColor 0x87CEEB
+	}
+}
+
 material blueVc : Blue ColorVc
 
 material Red : Color
@@ -61,6 +69,14 @@ material Green : Color
 	default_params
 	{
 		float MaterialColor 0.2 0.8 0.2
+	}
+}
+
+material WaterSim : Color
+{
+	texture Diffuse
+	{
+		name WaterColorTexture
 	}
 }
 

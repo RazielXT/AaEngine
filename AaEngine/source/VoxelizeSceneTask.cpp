@@ -2,7 +2,6 @@
 #include "SceneManager.h"
 #include "MaterialResources.h"
 #include "TextureResources.h"
-#include "GenerateMipsComputeShader.h"
 #include "DebugWindow.h"
 #include "StringUtils.h"
 #include <format>
@@ -83,10 +82,10 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 	computeMips.init(*provider.renderSystem.core.device, "generateMipmaps", provider.resources.shaders);
 
 	auto bouncesShader = provider.resources.shaders.getShader("voxelBouncesCS", ShaderTypeCompute, ShaderRef{"voxelBouncesCS.hlsl", "main", "cs_6_6"});
-	bouncesCS.init(*provider.renderSystem.core.device, "voxelBouncesCS", *bouncesShader);
+	bouncesCS.init(*provider.renderSystem.core.device, *bouncesShader);
 
-	auto clearBufferShader = provider.resources.shaders.getShader("clearBufferCS", ShaderTypeCompute, ShaderRef{ "clearBufferCS.hlsl", "main", "cs_6_6" });
-	clearBufferCS.init(*provider.renderSystem.core.device, "clearBufferCS", *clearBufferShader);
+	auto clearBufferShader = provider.resources.shaders.getShader("clearBufferCS", ShaderTypeCompute, ShaderRef{ "utils/clearBufferCS.hlsl", "main", "cs_6_6" });
+	clearBufferCS.init(*provider.renderSystem.core.device, *clearBufferShader);
 
 	sceneQueue = sceneMgr.createQueue({ pass.target.texture->format }, MaterialTechnique::Voxelize);
 

@@ -12,11 +12,6 @@ float Time;
 float DeltaTime;
 #endif
 
-cbuffer PSSMShadows : register(b1)
-{
-	SunParams Sun;
-}
-
 #ifdef INSTANCED
 StructuredBuffer<float4x4> InstancingBuffer : register(t0);
 #endif
@@ -115,7 +110,7 @@ PSInput VSMain(VSInput input)
 #ifndef NO_TEXTURE
 	result.uv = input.uv;
 	#ifndef VERTEX_WAVE
-		result.uv *= 10;
+		//result.uv *= 10;
 	#endif
 #endif
 
@@ -124,31 +119,19 @@ PSInput VSMain(VSInput input)
 
 Texture2D<float4> GetTexture(uint index)
 {
-    return ResourceDescriptorHeap[index];
+	return ResourceDescriptorHeap[index];
 }
-
-SamplerState ShadowSampler : register(s0);
 
 struct PSOutput
 {
-    float4 color : SV_Target0;
-    float4 normals : SV_Target1;
-    float4 camDistance : SV_Target2;
-    float4 motionVectors : SV_Target3;
+	float4 albedo : SV_Target0;
+	float4 normals : SV_Target1;
+	float4 motionVectors : SV_Target2;
 };
 
 PSOutput PSMain(PSInput input)
 {
-	float3 normal = input.normal;//normalize(mul(input.normal, (float3x3)WorldMatrix).xyz);
-
-	float dotLighting = dot(-Sun.Direction, normal);
-	float3 diffuse = saturate(dotLighting) * Sun.Color;
-
-#ifdef USE_VC
-	float3 ambientColor = input.color.rgb;
-#else
-	float3 ambientColor = float3(0.2,0.2,0.2);
-#endif
+	float3 normal = input.normal;
 
 	SamplerState sampler = SamplerDescriptorHeap[0];
 
@@ -164,21 +147,9 @@ PSOutput PSMain(PSInput input)
 	float3 albedo = MaterialColor;
 #endif
 
-	float camDistance = length(MainCameraPosition - input.worldPosition.xyz);
-
-	float shadow = getPssmShadow(input.worldPosition, camDistance, dotLighting, ShadowSampler, Sun);
-	float3 lighting = (ambientColor + shadow * diffuse);
-	float lightPower = (lighting.r + lighting.g + lighting.b) / 3;
-	float4 outColor = float4(lighting * albedo, lightPower);
-
-	#ifdef FLAT_COLOR
-		outColor = float4(albedo, (albedo.r + albedo.g + albedo.b) / 3);
-	#endif
-
 	PSOutput output;
-    output.color = outColor;
+	output.albedo = float4(albedo,1);
 	output.normals = float4(normal, 1);
-	output.camDistance = float4(camDistance, 0, 0, 0);
 	output.motionVectors = float4((input.previousPosition.xy / input.previousPosition.w - input.currentPosition.xy / input.currentPosition.w) * ViewportSize, 0, 0);
 	output.motionVectors.xy *= 0.5;
 	output.motionVectors.y *= -1;

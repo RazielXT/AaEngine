@@ -7,6 +7,7 @@
 #include "GrassArea.h"
 #include "SceneSkybox.h"
 #include "TerrainGenerator.h"
+#include "WaterSim.h"
 
 struct SceneObject
 {
@@ -58,6 +59,8 @@ public:
 	GrassAreaGenerator grass;
 
 	TerrainGenerator terrain;
+
+	WaterSim water;
 
 	SceneSkybox skybox;
 

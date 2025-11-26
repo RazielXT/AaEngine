@@ -13,5 +13,4 @@ public:
 	void run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
 
 	bool writesSyncCommands(CompositorPass&) const override { return true; }
-
 };

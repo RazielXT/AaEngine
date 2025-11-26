@@ -24,7 +24,7 @@ constexpr float WorldWidthPerMap_Units = WorldWidth_Units / WorldMappingScale;
 void TerrainGenerator::initialize(RenderSystem& rs, GraphicsResources& resources, ResourceUploadBatch& batch)
 {
 	auto csShader = resources.shaders.getShader("TerrainGeneratorCS", ShaderTypeCompute, ShaderRef{ "terrainGenerateCS.hlsl", "main", "cs_6_6" });
-	cs.init(*rs.core.device, "TerrainGeneratorCS", *csShader);
+	cs.init(*rs.core.device, *csShader);
 
 	terrainMaterial = resources.materials.getMaterial("TerrainVCT");
 

@@ -59,6 +59,9 @@
     <Filter Include="Source Files\RenderObject\Vegetation">
       <UniqueIdentifier>{730c7ab0-11a4-45a5-85db-0d2528dbd114}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\RenderObject\WaterSim">
+      <UniqueIdentifier>{832d1661-7866-4045-a4e8-38c791a955b8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\TargetWindow.cpp">
@@ -291,6 +294,24 @@
     </ClCompile>
     <ClCompile Include="source\ShaderDefines.cpp">
       <Filter>Source Files\Resources\Shader</Filter>
+    </ClCompile>
+    <ClCompile Include="source\WaterSimCS.cpp">
+      <Filter>Source Files\Resources\Compute</Filter>
+    </ClCompile>
+    <ClCompile Include="source\WaterSim.cpp">
+      <Filter>Source Files\RenderObject\WaterSim</Filter>
+    </ClCompile>
+    <ClCompile Include="source\TextureUtils.cpp">
+      <Filter>Source Files\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="source\MeshUtils.cpp">
+      <Filter>Source Files\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="source\TextureToMeshCS.cpp">
+      <Filter>Source Files\Resources\Compute</Filter>
+    </ClCompile>
+    <ClCompile Include="source\CopyTexturesCS.cpp">
+      <Filter>Source Files\Resources\Compute</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -545,6 +566,24 @@
     </ClInclude>
     <ClInclude Include="source\ShaderDefines.h">
       <Filter>Source Files\Resources\Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="source\WaterSimCS.h">
+      <Filter>Source Files\Resources\Compute</Filter>
+    </ClInclude>
+    <ClInclude Include="source\WaterSim.h">
+      <Filter>Source Files\RenderObject\WaterSim</Filter>
+    </ClInclude>
+    <ClInclude Include="source\TextureUtils.h">
+      <Filter>Source Files\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="source\MeshUtils.h">
+      <Filter>Source Files\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="source\TextureToMeshCS.h">
+      <Filter>Source Files\Resources\Compute</Filter>
+    </ClInclude>
+    <ClInclude Include="source\CopyTexturesCS.h">
+      <Filter>Source Files\Resources\Compute</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

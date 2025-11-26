@@ -148,10 +148,29 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 			//get const value
 			for (auto& param : member.children)
 			{
+				if (param.params.empty())
+					continue;
+
 				std::vector<float> values;
 				for (auto& value : param.params)
 				{
-					values.push_back(std::stof(value));
+					if (value.starts_with("0x"))
+					{
+						auto hexStr = value.substr(2);
+
+						if (param.type == "color")
+						{
+							for (size_t i = 0; i < hexStr.size(); i += 2)
+							{
+								std::string byteString = hexStr.substr(i, 2);
+								values.push_back(std::stoi(byteString, nullptr, 16) / 255.f);
+							}
+						}
+						else
+							values.push_back(std::stoi(hexStr, nullptr, 16));
+					}
+					else
+						values.push_back(std::stof(value));
 				}
 
 				mat.resources.defaultParams[param.value] = values;
@@ -185,9 +204,10 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 				{
 					tex.file = param.value;
 				}
-				else if (param.type == "compositor")
+				else if (param.type == "compositor" || param.type == "name")
 				{
 					tex.id = param.value;
+					tex.file.clear();
 				}
 			}
 

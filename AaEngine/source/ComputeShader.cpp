@@ -27,12 +27,11 @@ ComputeShader::~ComputeShader()
 
 void ComputeShader::init(ID3D12Device& device, const std::string& name, ShaderLibrary& shaders)
 {
-	return init(device, name, *shaders.getShader(name, ShaderType::ShaderTypeCompute));
+	return init(device, *shaders.getShader(name, ShaderType::ShaderTypeCompute));
 }
 
-void ComputeShader::init(ID3D12Device& device, const std::string& n, const LoadedShader& shader)
+void ComputeShader::init(ID3D12Device& device, const LoadedShader& shader)
 {
-	name = n;
 	csShader = &shader;
 
 	SignatureInfo info;
@@ -42,7 +41,7 @@ void ComputeShader::init(ID3D12Device& device, const std::string& n, const Loade
 	if (volatileTextures)
 		info.setTexturesVolatile();
 
-	signature = info.createRootSignature(device, as_wstring(name).c_str());
+	signature = info.createRootSignature(device, as_wstring(shader.ref.file + ' ' + shader.ref.entry).c_str());
 
 	D3D12_COMPUTE_PIPELINE_STATE_DESC computePsoDesc = {};
 	computePsoDesc.pRootSignature = signature;
@@ -53,7 +52,7 @@ void ComputeShader::init(ID3D12Device& device, const std::string& n, const Loade
 
 void ComputeShader::reload(ID3D12Device& device)
 {
-	init(device, name, *csShader);
+	init(device, *csShader);
 }
 
 void ComputeShaderLibrary::Reload(ID3D12Device& device, const std::vector<const LoadedShader*>& changed)

@@ -35,5 +35,5 @@ private:
 	void updateQuad();
 	ScreenQuad quad;
 
-	int current = -1;
+	int current = 143;
 };

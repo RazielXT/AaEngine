@@ -73,8 +73,8 @@ void ApplicationCore::beginRendering(std::function<bool(float)> onUpdate)
 			timeSinceLastFrame = (thisTime.QuadPart - lastTime.QuadPart) / frequency;
 			lastTime = thisTime;
 
-			if (timeSinceLastFrame > 1.f)
-				timeSinceLastFrame = 1.f;
+			if (timeSinceLastFrame > 0.1f)
+				timeSinceLastFrame = 0.1f;
 
 			if (!onUpdate(timeSinceLastFrame))
 				return;
@@ -194,6 +194,7 @@ void ApplicationCore::loadScene(const char* scene)
 
 // 		marker.move("loadSceneTerrain", commands.color);
 // 		sceneMgr.terrain.createTerrain(commands.commandList, renderSystem, sceneMgr, resources, batch);
+		sceneMgr.water.initializeGpuResources(renderSystem, resources, batch, sceneMgr);
 	}
 
 	auto uploadResourcesFinished = batch.End(renderSystem.core.commandQueue);

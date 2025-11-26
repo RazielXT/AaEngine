@@ -24,7 +24,7 @@ public:
 	~ComputeShader();
 
 	void init(ID3D12Device& device, const std::string& name, ShaderLibrary& shaders);
-	void init(ID3D12Device& device, const std::string& name, const LoadedShader& shader);
+	void init(ID3D12Device& device, const LoadedShader& shader);
 
 	void reload(ID3D12Device& device);
 
@@ -36,5 +36,4 @@ protected:
 	bool volatileTextures = false;
 
 	const LoadedShader* csShader{};
-	std::string name;
 };

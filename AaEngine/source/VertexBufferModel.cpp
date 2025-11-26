@@ -255,6 +255,35 @@ void VertexBufferModel::CreateIndexBuffer(ID3D12Resource* buffer, uint32_t dataC
 	indexBufferView.Format = DXGI_FORMAT_R16_UINT;
 }
 
+void VertexBufferModel::CreateIndexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, UINT width, UINT height)
+{
+	std::vector<uint32_t> indices;
+	indices.reserve((width - 1) * (height - 1) * 6);
+
+	for (UINT y = 0; y < height - 1; ++y)
+	{
+		for (UINT x = 0; x < width - 1; ++x)
+		{
+			UINT v0 = y * width + x;
+			UINT v1 = v0 + 1;
+			UINT v2 = v0 + width;
+			UINT v3 = v2 + 1;
+
+			// First triangle
+			indices.push_back(v0);
+			indices.push_back(v2);
+			indices.push_back(v1);
+
+			// Second triangle
+			indices.push_back(v1);
+			indices.push_back(v2);
+			indices.push_back(v3);
+		}
+	}
+
+	CreateIndexBuffer(device, memory, indices.data(), indices.size());
+}
+
 void VertexBufferModel::calculateBounds(const std::vector<float>& positionsBuffer)
 {
 	BoundingBoxVolume volume;

@@ -98,8 +98,10 @@
     <ClCompile Include="source\Camera.cpp" />
     <ClCompile Include="source\CascadedShadowMaps.cpp" />
     <ClCompile Include="source\ClearBufferCS.cpp" />
+    <ClCompile Include="source\CopyTexturesCS.cpp" />
     <ClCompile Include="source\DrawPrimitives.cpp" />
     <ClCompile Include="source\EntityPicker.cpp" />
+    <ClCompile Include="source\MeshUtils.cpp" />
     <ClCompile Include="source\ObjectId.cpp" />
     <ClCompile Include="source\PrepareFrameTask.cpp" />
     <ClCompile Include="source\SceneEntity.cpp" />
@@ -113,6 +115,8 @@
     <ClCompile Include="source\TerrainGenerationCS.cpp" />
     <ClCompile Include="source\TerrainGenerator.cpp" />
     <ClCompile Include="source\TerrainGrid.cpp" />
+    <ClCompile Include="source\TextureToMeshCS.cpp" />
+    <ClCompile Include="source\TextureUtils.cpp" />
     <ClCompile Include="source\Vegetation.cpp" />
     <ClCompile Include="source\VegetationTrees.cpp" />
     <ClCompile Include="source\VertexBufferModel.cpp" />
@@ -166,6 +170,8 @@
     <ClCompile Include="source\UpscaleTask.cpp" />
     <ClCompile Include="source\Upscaling.cpp" />
     <ClCompile Include="source\VoxelizeSceneTask.cpp" />
+    <ClCompile Include="source\WaterSim.cpp" />
+    <ClCompile Include="source\WaterSimCS.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dependencies\imgui\backends\imgui_impl_dx12.h" />
@@ -174,8 +180,10 @@
     <ClInclude Include="source\Camera.h" />
     <ClInclude Include="source\CascadedShadowMaps.h" />
     <ClInclude Include="source\ClearBufferCS.h" />
+    <ClInclude Include="source\CopyTexturesCS.h" />
     <ClInclude Include="source\DrawPrimitives.h" />
     <ClInclude Include="source\EntityPicker.h" />
+    <ClInclude Include="source\MeshUtils.h" />
     <ClInclude Include="source\ObjectId.h" />
     <ClInclude Include="source\PixColor.h" />
     <ClInclude Include="source\PrepareFrameTask.h" />
@@ -209,6 +217,8 @@
     <ClInclude Include="source\TerrainGenerationCS.h" />
     <ClInclude Include="source\TerrainGenerator.h" />
     <ClInclude Include="source\TerrainGrid.h" />
+    <ClInclude Include="source\TextureToMeshCS.h" />
+    <ClInclude Include="source\TextureUtils.h" />
     <ClInclude Include="source\Vegetation.h" />
     <ClInclude Include="source\VegetationTrees.h" />
     <ClInclude Include="source\VertexBufferModel.h" />
@@ -252,6 +262,8 @@
     <ClInclude Include="source\UpscaleTypes.h" />
     <ClInclude Include="source\Upscaling.h" />
     <ClInclude Include="source\VoxelizeSceneTask.h" />
+    <ClInclude Include="source\WaterSim.h" />
+    <ClInclude Include="source\WaterSimCS.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

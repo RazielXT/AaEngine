@@ -29,11 +29,13 @@ public:
 	static void logError(std::string text)
 	{
 		log(text, Severity::Error);
+		MessageBoxA(0, text.c_str(), "Error", MB_OK | MB_ICONERROR);
 	}
 
 	static void logErrorD3D(std::string text, HRESULT result)
 	{
 		log("D3D " + text + "\n" + GetErrorMessage(result), Severity::Error);
+		MessageBoxA(0, text.c_str(), "Error", MB_OK | MB_ICONERROR);
 	}
 
 	static void log(std::string text, Severity severity = Severity::Info)

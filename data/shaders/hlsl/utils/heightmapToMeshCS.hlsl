@@ -1,4 +1,6 @@
 uint width, height;
+uint ResIdHeightMap;
+uint ResIdWaterMap;
 
 Texture2D<float> gHeightmap : register(t0);
 
@@ -15,20 +17,40 @@ struct Vertex
 
 RWStructuredBuffer<Vertex> gVertices : register(u0);
 
+#ifdef DIRECT_LOAD
+float readHeight(int3 coord)
+{
+    Texture2D<float> gHeightmap = ResourceDescriptorHeap[ResIdWaterMap];
+    Texture2D<float> Terrain = ResourceDescriptorHeap[ResIdHeightMap];
+	return max(gHeightmap.Load(coord), Terrain.Load(coord));
+}
+#else
+float readHeight(float2 uv)
+{
+    Texture2D<float> gHeightmap = ResourceDescriptorHeap[ResIdWaterMap];
+    Texture2D<float> Terrain = ResourceDescriptorHeap[ResIdHeightMap];
+	float heightValue = gHeightmap.SampleLevel(LinearSampler, uv, 0);
+	return max(heightValue, Terrain.SampleLevel(LinearSampler, uv, 0) * 10);
+}
+#endif
+
 [numthreads(8, 8, 1)]
 void CSMain(uint3 DTid : SV_DispatchThreadID)
 {
     if (DTid.x >= width || DTid.y >= height)
         return;
 
+    Texture2D<float> gHeightmap = ResourceDescriptorHeap[ResIdWaterMap];
+    Texture2D<float> Terrain = ResourceDescriptorHeap[ResIdHeightMap];
+
     // --- Height sampling ---
     float heightValue;
 #ifdef DIRECT_LOAD
     int3 coord = int3(DTid.xy, 0);
-    heightValue = gHeightmap.Load(coord);
+    heightValue = readHeight(coord);
 #else
     float2 uv = float2(DTid.x / (float)width, DTid.y / (float)height);
-    heightValue = gHeightmap.SampleLevel(LinearSampler, uv, 0);
+    heightValue = readHeight(uv);
 #endif
 
     uint vertexIndex = DTid.y * width + DTid.x;
@@ -44,11 +66,11 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
 	float stepWidth = 0.1f;
 
 #ifdef DIRECT_LOAD
-    float3 tangent = float3(0.0f, gHeightmap.Load(coord + int3(1,0,0) - heightValue, stepWidth);
-    float3 binormal = float3(stepWidth, gHeightmap.Load(coord + int3(0,1,0) - heightValue, 0.0f);
+    float3 tangent = float3(0.0f, readHeight(coord + int3(1,0,0)) - heightValue, stepWidth);
+    float3 binormal = float3(stepWidth, readHeight(coord + int3(0,1,0)) - heightValue, 0.0f);
 #else
-    float3 tangent = float3(0.0f, gHeightmap.SampleLevel(LinearSampler, uv + float2(1 / (float)width, 0), 0) - heightValue, stepWidth);
-    float3 binormal = float3(stepWidth, gHeightmap.SampleLevel(LinearSampler, uv + float2(0, 1 / (float)height), 0) - heightValue, 0.0f);
+    float3 tangent = float3(0.0f, readHeight(uv + float2(1 / (float)width, 0)) - heightValue, stepWidth);
+    float3 binormal = float3(stepWidth, readHeight(uv + float2(0, 1 / (float)height)) - heightValue, 0.0f);
 #endif
 
     // Calculate normal using cross product

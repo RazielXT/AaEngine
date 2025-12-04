@@ -120,6 +120,13 @@ RenderCore::RenderCore()
 
 		device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&copyQueue));
 	}
+	{
+		D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+		queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+		queueDesc.Type = D3D12_COMMAND_LIST_TYPE_COMPUTE;
+
+		device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&computeQueue));
+	}
 
 	device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
 	fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
@@ -130,6 +137,7 @@ RenderCore::~RenderCore()
 	fence->Release();
 
 	swapChain->Release();
+	computeQueue->Release();
 	copyQueue->Release();
 	commandQueue->Release();
 	device->Release();
@@ -271,16 +279,16 @@ void RenderCore::WaitForCurrentFrame()
 	fenceValues[frameIndex]++;
 }
 
-CommandsData RenderCore::CreateCommandList(const wchar_t* name, PixColor c)
+CommandsData RenderCore::CreateCommandList(const wchar_t* name, PixColor c, D3D12_COMMAND_LIST_TYPE type)
 {
 	CommandsData data;
 
 	for (auto& commandAllocator : data.commandAllocators)
 	{
-		device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator));
+		device->CreateCommandAllocator(type, IID_PPV_ARGS(&commandAllocator));
 	}
 
-	device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, data.commandAllocators[frameIndex], nullptr, IID_PPV_ARGS(&data.commandList));
+	device->CreateCommandList(0, type, data.commandAllocators[frameIndex], nullptr, IID_PPV_ARGS(&data.commandList));
 	data.commandList->Close();
 
 	if (name)
@@ -330,6 +338,15 @@ void RenderCore::ExecuteCommandList(CommandsData& commands)
 
 	ID3D12CommandList* commandLists[] = { commands.commandList };
 	commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
+}
+
+void RenderCore::ExecuteComputeCommandList(CommandsData& commands)
+{
+	// Close the command list and execute it
+	commands.commandList->Close();
+
+	ID3D12CommandList* commandLists[] = { commands.commandList };
+	computeQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
 }
 
 HRESULT RenderCore::Present(bool vsync)

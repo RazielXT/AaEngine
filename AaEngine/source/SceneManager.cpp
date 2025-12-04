@@ -236,6 +236,8 @@ void SceneManager::clear()
 	grass.clear();
 
 	terrain.trees.clear();
+
+	water.clear();
 }
 
 ObjectTransformation SceneObject::getTransformation() const

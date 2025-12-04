@@ -59,14 +59,38 @@ void CS_Continuity(uint3 id : SV_DispatchThreadID)
     float2 uD = Velocity.Load(int3(pD, 0));
     float2 uU = Velocity.Load(int3(pU, 0));
 
-    // Donor-cell fluxes across faces
-    float qxL = (uL.x > 0.0) ? (uL.x * dL) : (uL.x * dC);
-    float qxR = (uR.x > 0.0) ? (uR.x * dC) : (uR.x * dR);
-    float qyD = (uD.y > 0.0) ? (uD.y * dD) : (uD.y * dC);
-    float qyU = (uU.y > 0.0) ? (uU.y * dC) : (uU.y * dU);
+	// In CS_Continuity, replace the Flux calculation block:
 
-    // Divergence (world units): flux difference over cell size
-    float divQ = (qxR - qxL + qyU - qyD) / cellSize;
+	// Calculate Average Velocity at the face midpoint (more stable than neighbor velocity)
+	float uAvgX_L = (uL.x + uC.x) * 0.5; // Avg X-velocity across the Left face
+	float uAvgX_R = (uR.x + uC.x) * 0.5; // Avg X-velocity across the Right face
+	float uAvgY_D = (uD.y + uC.y) * 0.5; // Avg Y-velocity across the Down face
+	float uAvgY_U = (uU.y + uC.y) * 0.5; // Avg Y-velocity across the Up face
+
+	// Recalculate Flux using the Averaged Velocity and Donor Cell depth logic:
+	// Note: We use the SIGN of the *average* velocity for donor selection.
+
+	// Left Flux (Flowing IN is positive, Flowing OUT is negative)
+	float qxL = (uAvgX_L > 0.0) ? (uAvgX_L * dL) : (uAvgX_L * dC);
+
+	// Right Flux (Flowing OUT is positive, Flowing IN is negative)
+	float qxR = (uAvgX_R > 0.0) ? (uAvgX_R * dC) : (uAvgX_R * dR);
+
+	// Down Flux (Flowing IN is positive, Flowing OUT is negative)
+	float qyD = (uAvgY_D > 0.0) ? (uAvgY_D * dD) : (uAvgY_D * dC);
+
+	// Up Flux (Flowing OUT is positive, Flowing IN is negative)
+	float qyU = (uAvgY_U > 0.0) ? (uAvgY_U * dC) : (uAvgY_U * dU);
+
+	// === Apply Wall Boundary Conditions (Must be kept!) ===
+	if (id.x == 0) qxL = 0.0;
+	if (id.x == gridSize.x - 1) qxR = 0.0;
+	if (id.y == 0) qyD = 0.0;
+	if (id.y == gridSize.y - 1) qyU = 0.0;
+
+	// Divergence
+	float divQ = (qxR - qxL + qyU - qyD) / cellSize;
+	// ... (rest of continuity update) ...
 
     // Height update (mass conservation)
     float hNew = hC - dt * divQ;

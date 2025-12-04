@@ -20,7 +20,7 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     RWTexture2D<float4>  ColorOut = ResourceDescriptorHeap[ResIdColorMap];
 
     float waterHeight = Height.Load(int3(p, 0));
-    float terrainHeight = Terrain.Load(int3(p, 0)) * 10 + 0.01f;
+    float terrainHeight = Terrain.Load(int3(p, 0)) * 50;
     float2 waterVelocity = Velocity.Load(int3(p, 0));
 
 	float4 color = float4(0.4,0.7, 0.95, 1); //water
@@ -28,7 +28,7 @@ void CSMain(uint3 id : SV_DispatchThreadID)
 	if (terrainHeight >= waterHeight)
 		color.rgb = float3(0.2,0.6,0);
 	else
-		color.rgb = lerp(color.rgb, float3(waterVelocity,0.9), saturate(length(waterVelocity / 2)));
+		color.rgb = lerp(color.rgb, float3(1,1,1), saturate(length(waterVelocity / 2)));
 
 	//color.rgb = saturate(length(waterVelocity));
 

@@ -106,7 +106,7 @@ PSOutput PSMain(PSInput input)
 	float3 groundPosition = ReconstructWorldPosition(ScreenUV, groundZ, InvViewProjectionMatrix);
 	float groundDistance = length(input.worldPosition.xyz - groundPosition);
 
-	const float FadeDistance = 20;
+	const float FadeDistance = 0.1;
 	float fade = groundDistance / FadeDistance;
 
 	float4 albedo = GetWaves(input.uv);

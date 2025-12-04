@@ -1,6 +1,6 @@
 #include "TextureToMeshCS.h"
 
-void TextureToMeshCS::dispatch(ID3D12GraphicsCommandList* commandList, D3D12_GPU_DESCRIPTOR_HANDLE texture, UINT w, UINT h, ID3D12Resource* vertexBuffer)
+void TextureToMeshCS::dispatch(ID3D12GraphicsCommandList* commandList, UINT terrain, UINT w, UINT h, float scale, ID3D12Resource* vertexBuffer)
 {
 	commandList->SetPipelineState(pipelineState.Get());
 	commandList->SetComputeRootSignature(signature);
@@ -9,11 +9,32 @@ void TextureToMeshCS::dispatch(ID3D12GraphicsCommandList* commandList, D3D12_GPU
 	{
 		UINT width;
 		UINT height;
+		float scale;
+		UINT terrain;
 	}
-	data = { w, h };
+	data = { w, h, scale, terrain };
 
 	commandList->SetComputeRoot32BitConstants(0, sizeof(data) / sizeof(float), &data, 0);
-	commandList->SetComputeRootDescriptorTable(2, texture);
+	commandList->SetComputeRootUnorderedAccessView(1, vertexBuffer->GetGPUVirtualAddress());
+
+	commandList->Dispatch(data.width / 8, data.height / 8, 1);
+}
+
+void WaterTextureToMeshCS::dispatch(ID3D12GraphicsCommandList* commandList, UINT terrain, UINT water, UINT w, UINT h, ID3D12Resource* vertexBuffer)
+{
+	commandList->SetPipelineState(pipelineState.Get());
+	commandList->SetComputeRootSignature(signature);
+
+	struct Input
+	{
+		UINT width;
+		UINT height;
+		UINT terrain;
+		UINT water;
+	}
+	data = { w, h, terrain, water };
+
+	commandList->SetComputeRoot32BitConstants(0, sizeof(data) / sizeof(float), &data, 0);
 	commandList->SetComputeRootUnorderedAccessView(1, vertexBuffer->GetGPUVirtualAddress());
 
 	commandList->Dispatch(data.width / 8, data.height / 8, 1);

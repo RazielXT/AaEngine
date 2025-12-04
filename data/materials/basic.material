@@ -52,6 +52,14 @@ material SkyBlue : Color
 	}
 }
 
+material DarkGreen : Color
+{
+	default_params
+	{
+		color MaterialColor 0x025020
+	}
+}
+
 material blueVc : Blue ColorVc
 
 material Red : Color
@@ -63,6 +71,14 @@ material Red : Color
 }
 
 material niceRedVc : Red ColorVc
+
+material Green : Color
+{
+	default_params
+	{
+		float MaterialColor 0.2 0.8 0.2
+	}
+}
 
 material Green : Color
 {

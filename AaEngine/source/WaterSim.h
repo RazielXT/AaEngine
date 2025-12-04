@@ -24,7 +24,10 @@ private:
 
 	WaterSimContinuityComputeShader continuityComputeShader;
 	WaterSimMomentumComputeShader momentumComputeShader;
+
 	TextureToMeshCS textureToMeshCS;
+	WaterTextureToMeshCS waterToMeshCS;
+
 	CopyTexturesCS copyTexturesCS;
 	WaterMeshTextureCS meshTextureCS;
 
@@ -40,4 +43,10 @@ private:
 	ComPtr<ID3D12Resource> srcVelocity;
 
 	VertexBufferModel waterModel;
+	VertexBufferModel terrainModel;
+
+	UINT fenceCounter = 0;
+	ID3D12Fence* fence{};
+
+	CommandsData compute;
 };

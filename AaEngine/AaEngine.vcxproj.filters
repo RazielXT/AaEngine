@@ -11,9 +11,6 @@
     <Filter Include="Source Files\Utils">
       <UniqueIdentifier>{f743265e-3b5f-4a74-8167-7be61b17150c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Render">
-      <UniqueIdentifier>{e35fea04-fa32-4bb9-84d0-cf2298b22539}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Resources">
       <UniqueIdentifier>{0652f09e-2db8-4bd1-b908-a241b6d52230}</UniqueIdentifier>
     </Filter>
@@ -62,16 +59,19 @@
     <Filter Include="Source Files\RenderObject\WaterSim">
       <UniqueIdentifier>{832d1661-7866-4045-a4e8-38c791a955b8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\RenderCore">
+      <UniqueIdentifier>{e35fea04-fa32-4bb9-84d0-cf2298b22539}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\TargetWindow.cpp">
       <Filter>Source Files\App</Filter>
     </ClCompile>
     <ClCompile Include="source\RenderSystem.cpp">
-      <Filter>Source Files\Render</Filter>
+      <Filter>Source Files\RenderCore</Filter>
     </ClCompile>
     <ClCompile Include="source\RenderTargetTexture.cpp">
-      <Filter>Source Files\Render</Filter>
+      <Filter>Source Files\RenderCore</Filter>
     </ClCompile>
     <ClCompile Include="source\Material.cpp">
       <Filter>Source Files\Resources\Material</Filter>
@@ -119,7 +119,7 @@
       <Filter>Source Files\Scene</Filter>
     </ClCompile>
     <ClCompile Include="source\ShadowMaps.cpp">
-      <Filter>Source Files\Render</Filter>
+      <Filter>Source Files\RenderCore</Filter>
     </ClCompile>
     <ClCompile Include="..\dependencies\imgui\imgui.cpp">
       <Filter>Source Files\imgui</Filter>
@@ -167,7 +167,7 @@
       <Filter>Source Files\Resources\Model</Filter>
     </ClCompile>
     <ClCompile Include="source\TextureResource.cpp">
-      <Filter>Source Files\Render</Filter>
+      <Filter>Source Files\RenderCore</Filter>
     </ClCompile>
     <ClCompile Include="source\ShaderSignature.cpp">
       <Filter>Source Files\Resources\Shader</Filter>
@@ -200,7 +200,7 @@
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClCompile>
     <ClCompile Include="source\ScreenQuad.cpp">
-      <Filter>Source Files\Render</Filter>
+      <Filter>Source Files\RenderCore</Filter>
     </ClCompile>
     <ClCompile Include="source\SceneTestTask.cpp">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
@@ -212,7 +212,7 @@
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClCompile>
     <ClCompile Include="source\TextureData.cpp">
-      <Filter>Source Files\Render</Filter>
+      <Filter>Source Files\RenderCore</Filter>
     </ClCompile>
     <ClCompile Include="source\GrassInitComputeShader.cpp">
       <Filter>Source Files\Resources\Compute</Filter>
@@ -233,13 +233,13 @@
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClCompile>
     <ClCompile Include="source\DLSS.cpp">
-      <Filter>Source Files\Render</Filter>
+      <Filter>Source Files\RenderCore</Filter>
     </ClCompile>
     <ClCompile Include="source\FSR.cpp">
-      <Filter>Source Files\Render</Filter>
+      <Filter>Source Files\RenderCore</Filter>
     </ClCompile>
     <ClCompile Include="source\Upscaling.cpp">
-      <Filter>Source Files\Render</Filter>
+      <Filter>Source Files\RenderCore</Filter>
     </ClCompile>
     <ClCompile Include="source\DownsampleTask.cpp">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
@@ -266,7 +266,7 @@
       <Filter>Source Files\Scene</Filter>
     </ClCompile>
     <ClCompile Include="source\CascadedShadowMaps.cpp">
-      <Filter>Source Files\Render</Filter>
+      <Filter>Source Files\RenderCore</Filter>
     </ClCompile>
     <ClCompile Include="source\ClearBufferCS.cpp">
       <Filter>Source Files\Resources\Compute</Filter>
@@ -302,10 +302,10 @@
       <Filter>Source Files\RenderObject\WaterSim</Filter>
     </ClCompile>
     <ClCompile Include="source\TextureUtils.cpp">
-      <Filter>Source Files\Render</Filter>
+      <Filter>Source Files\RenderCore</Filter>
     </ClCompile>
     <ClCompile Include="source\MeshUtils.cpp">
-      <Filter>Source Files\Render</Filter>
+      <Filter>Source Files\RenderCore</Filter>
     </ClCompile>
     <ClCompile Include="source\TextureToMeshCS.cpp">
       <Filter>Source Files\Resources\Compute</Filter>
@@ -322,10 +322,10 @@
       <Filter>Source Files\App</Filter>
     </ClInclude>
     <ClInclude Include="source\RenderSystem.h">
-      <Filter>Source Files\Render</Filter>
+      <Filter>Source Files\RenderCore</Filter>
     </ClInclude>
     <ClInclude Include="source\RenderTargetTexture.h">
-      <Filter>Source Files\Render</Filter>
+      <Filter>Source Files\RenderCore</Filter>
     </ClInclude>
     <ClInclude Include="source\Material.h">
       <Filter>Source Files\Resources\Material</Filter>
@@ -385,7 +385,7 @@
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
     <ClInclude Include="source\ShadowMaps.h">
-      <Filter>Source Files\Render</Filter>
+      <Filter>Source Files\RenderCore</Filter>
     </ClInclude>
     <ClInclude Include="..\dependencies\imgui\imgui.h">
       <Filter>Source Files\imgui</Filter>
@@ -427,7 +427,7 @@
       <Filter>Source Files\Resources\Model</Filter>
     </ClInclude>
     <ClInclude Include="source\TextureResource.h">
-      <Filter>Source Files\Render</Filter>
+      <Filter>Source Files\RenderCore</Filter>
     </ClInclude>
     <ClInclude Include="source\ShaderResources.h">
       <Filter>Source Files\Resources\Shader</Filter>
@@ -463,7 +463,7 @@
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClInclude>
     <ClInclude Include="source\ScreenQuad.h">
-      <Filter>Source Files\Render</Filter>
+      <Filter>Source Files\RenderCore</Filter>
     </ClInclude>
     <ClInclude Include="source\SceneTestTask.h">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
@@ -475,7 +475,7 @@
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClInclude>
     <ClInclude Include="source\TextureData.h">
-      <Filter>Source Files\Render</Filter>
+      <Filter>Source Files\RenderCore</Filter>
     </ClInclude>
     <ClInclude Include="source\GrassInitComputeShader.h">
       <Filter>Source Files\Resources\Compute</Filter>
@@ -496,16 +496,16 @@
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClInclude>
     <ClInclude Include="source\DLSS.h">
-      <Filter>Source Files\Render</Filter>
+      <Filter>Source Files\RenderCore</Filter>
     </ClInclude>
     <ClInclude Include="source\FSR.h">
-      <Filter>Source Files\Render</Filter>
+      <Filter>Source Files\RenderCore</Filter>
     </ClInclude>
     <ClInclude Include="source\Upscaling.h">
-      <Filter>Source Files\Render</Filter>
+      <Filter>Source Files\RenderCore</Filter>
     </ClInclude>
     <ClInclude Include="source\UpscaleTypes.h">
-      <Filter>Source Files\Render</Filter>
+      <Filter>Source Files\RenderCore</Filter>
     </ClInclude>
     <ClInclude Include="source\DownsampleTask.h">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
@@ -535,7 +535,7 @@
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
     <ClInclude Include="source\CascadedShadowMaps.h">
-      <Filter>Source Files\Render</Filter>
+      <Filter>Source Files\RenderCore</Filter>
     </ClInclude>
     <ClInclude Include="source\ClearBufferCS.h">
       <Filter>Source Files\Resources\Compute</Filter>
@@ -562,7 +562,7 @@
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
     <ClInclude Include="source\PixColor.h">
-      <Filter>Source Files\Render</Filter>
+      <Filter>Source Files\RenderCore</Filter>
     </ClInclude>
     <ClInclude Include="source\ShaderDefines.h">
       <Filter>Source Files\Resources\Shader</Filter>
@@ -574,10 +574,10 @@
       <Filter>Source Files\RenderObject\WaterSim</Filter>
     </ClInclude>
     <ClInclude Include="source\TextureUtils.h">
-      <Filter>Source Files\Render</Filter>
+      <Filter>Source Files\RenderCore</Filter>
     </ClInclude>
     <ClInclude Include="source\MeshUtils.h">
-      <Filter>Source Files\Render</Filter>
+      <Filter>Source Files\RenderCore</Filter>
     </ClInclude>
     <ClInclude Include="source\TextureToMeshCS.h">
       <Filter>Source Files\Resources\Compute</Filter>

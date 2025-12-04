@@ -58,13 +58,16 @@ public:
 	ID3D12Device* device;
 	ID3D12CommandQueue* commandQueue;
 	ID3D12CommandQueue* copyQueue;
+	ID3D12CommandQueue* computeQueue;
 
-	CommandsData CreateCommandList(const wchar_t* name, PixColor);
+	CommandsData CreateCommandList(const wchar_t* name, PixColor, D3D12_COMMAND_LIST_TYPE type = D3D12_COMMAND_LIST_TYPE_DIRECT);
 	CommandsMarker StartCommandList(CommandsData& commands);
 	void StartCommandListNoMarker(CommandsData& commands);
 	CommandsMarker StartCommandList(CommandsData& commands, ID3D12DescriptorHeap* heap);
 
 	void ExecuteCommandList(CommandsData& commands);
+	void ExecuteComputeCommandList(CommandsData& commands);
+
 	HRESULT Present(bool vsync = true);
 	void EndFrame();
 

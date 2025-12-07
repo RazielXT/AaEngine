@@ -25,7 +25,7 @@ void PrepareFrameTask::run(RenderContext& ctx, CommandsData& cmd, CompositorPass
 	if (fsr.enabled())
 		ctx.camera->setPixelOffset(fsr.getJitter(), fsr.getRenderSize());
 
-	sceneMgr.water.update(cmd.commandList, provider.params.timeDelta, provider.params.frameIndex);
+	sceneMgr.water.update(provider.renderSystem, cmd.commandList, provider.params.timeDelta, provider.params.frameIndex);
 
 // 	sceneMgr.terrain.update(cmd.commandList, sceneMgr, ctx.camera->getPosition());
 // 
@@ -49,4 +49,9 @@ void PrepareFrameTask::run(RenderContext& ctx, CommandsData& cmd, CompositorPass
 // 	}
 // 
 // 	c++;
+}
+
+void PrepareFrameTask::runCompute(RenderContext& ctx, CommandsData& cmd, CompositorPass& pass)
+{
+	sceneMgr.water.updateCompute(provider.renderSystem, cmd.commandList, provider.params.timeDelta, provider.params.frameIndex);
 }

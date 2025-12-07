@@ -289,7 +289,12 @@ void FrameCompositor::render(RenderContext& ctx)
 	{
 		auto& syncCommands = pass.generalCommands;
 		if (pass.startCommands)
+		{
 			provider.renderSystem.core.StartCommandListNoMarker(syncCommands);
+
+			if (pass.computeCommands)
+				provider.renderSystem.core.StartCommandListNoMarker(*pass.computeCommands);
+		}
 		if (pass.target.backbuffer)
 			pass.target.texture = &provider.renderSystem.core.backbuffer[provider.renderSystem.core.frameIndex];
 
@@ -301,6 +306,9 @@ void FrameCompositor::render(RenderContext& ctx)
 		else if (pass.task)
 		{
 			pass.task->run(ctx, syncCommands, pass);
+
+			if (pass.computeCommands)
+				pass.task->runCompute(ctx, *pass.computeCommands, pass);
 		}
 
 		if (pass.target.present)
@@ -341,13 +349,18 @@ CompositorTask* FrameCompositor::getTask(const std::string& name)
 
 void FrameCompositor::executeCommands()
 {
+	auto& renderer = provider.renderSystem.core;
+
 	for (auto& t : tasks)
 	{
+		for (auto& f : t.syncWait)
+			renderer.commandQueue->Wait(f->fence.Get(), f->value++);
+
 		if (t.finishEvents.empty())
 		{
 			for (auto& c : t.data)
 			{
-				provider.renderSystem.core.ExecuteCommandList(c);
+				renderer.ExecuteCommandList(c);
 			}
 		}
 		else
@@ -358,9 +371,12 @@ void FrameCompositor::executeCommands()
 				if (dwWaitResult >= WAIT_OBJECT_0 && dwWaitResult < WAIT_OBJECT_0 + t.finishEvents.size())
 				{
 					int index = dwWaitResult - WAIT_OBJECT_0;
-					provider.renderSystem.core.ExecuteCommandList(t.data[index]);
+					renderer.ExecuteCommandList(t.data[index]);
 				}
 			}
 		}
+
+		for (auto& f : t.syncSignal)
+			renderer.computeQueue->Signal(f->fence.Get(), f->value);
 	}
 }

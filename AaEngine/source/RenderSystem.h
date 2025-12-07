@@ -66,7 +66,6 @@ public:
 	CommandsMarker StartCommandList(CommandsData& commands, ID3D12DescriptorHeap* heap);
 
 	void ExecuteCommandList(CommandsData& commands);
-	void ExecuteComputeCommandList(CommandsData& commands);
 
 	HRESULT Present(bool vsync = true);
 	void EndFrame();

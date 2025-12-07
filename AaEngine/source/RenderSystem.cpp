@@ -112,6 +112,7 @@ RenderCore::RenderCore()
 		queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 
 		device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&commandQueue));
+		commandQueue->SetName(L"DirectQueue");
 	}
 	{
 		D3D12_COMMAND_QUEUE_DESC queueDesc = {};
@@ -119,6 +120,7 @@ RenderCore::RenderCore()
 		queueDesc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
 
 		device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&copyQueue));
+		copyQueue->SetName(L"CopyQueue");
 	}
 	{
 		D3D12_COMMAND_QUEUE_DESC queueDesc = {};
@@ -126,6 +128,7 @@ RenderCore::RenderCore()
 		queueDesc.Type = D3D12_COMMAND_LIST_TYPE_COMPUTE;
 
 		device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&computeQueue));
+		computeQueue->SetName(L"ComputeQueue");
 	}
 
 	device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
@@ -337,16 +340,11 @@ void RenderCore::ExecuteCommandList(CommandsData& commands)
 	commands.commandList->Close();
 
 	ID3D12CommandList* commandLists[] = { commands.commandList };
-	commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
-}
 
-void RenderCore::ExecuteComputeCommandList(CommandsData& commands)
-{
-	// Close the command list and execute it
-	commands.commandList->Close();
-
-	ID3D12CommandList* commandLists[] = { commands.commandList };
-	computeQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
+	if (commands.commandList->GetType() == D3D12_COMMAND_LIST_TYPE_COMPUTE)
+		computeQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
+	else
+		commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
 }
 
 HRESULT RenderCore::Present(bool vsync)

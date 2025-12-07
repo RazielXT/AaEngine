@@ -314,6 +314,14 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 						{
 							pass.after = param.value;
 						}
+						else if (param.type == "sync_wait")
+						{
+							pass.syncWait = param.value;
+						}
+						else if (param.type == "sync_signal")
+						{
+							pass.syncSignal = param.value;
+						}
 						else if (param.type == "input")
 						{
 							pass.inputs.push_back(parseCompositorTextureSlot(param, info, ctx, flags).front());

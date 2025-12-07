@@ -42,6 +42,9 @@ struct CompositorPassInfo
 	std::string material;
 	std::string entry;
 	std::string after;
+
+	std::string syncWait;
+	std::string syncSignal;
 };
 
 struct CompositorInfo

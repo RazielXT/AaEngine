@@ -33,8 +33,10 @@ public:
 	virtual AsyncTasksInfo initialize(CompositorPass& pass) = 0;
 	virtual void resize(CompositorPass& pass) {};
 	virtual void run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) = 0;
+	virtual void runCompute(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) {};
 
 	virtual bool writesSyncCommands(CompositorPass&) const { return false; }
+	virtual bool writesSyncComputeCommands(CompositorPass&) const { return false; }
 	virtual bool forceTaskOrder() const { return false; }
 
 protected:

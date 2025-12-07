@@ -29,6 +29,7 @@ compositor Frame
 
 	task PrepareFrame
 	{
+		sync_signal Water
 	}
 
 	task Shadows

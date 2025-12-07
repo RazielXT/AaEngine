@@ -30,10 +30,11 @@ enum class PixColor : uint32_t
 	Debug = OliveDrab,
 	Compositor = LightBlue,
 	Compositor2 = SteelBlue,
+	CompositorCompute = OrangeRed,
 	SSAO = DodgerBlue,
 	Terrain = ForestGreen,
 	Foliage = ForestGreen,
 	Upscale = Nvidia,
 	Voxelize = BlueViolet,
-	Load = OrangeRed
+	Load = Orange
 };

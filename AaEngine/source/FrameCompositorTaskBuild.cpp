@@ -111,6 +111,7 @@ void FrameCompositor::initializeTextureStates()
 
 void FrameCompositor::initializeCommands()
 {
+	taskFences.clear();
 	tasks.clear();
 	for (auto& c : generalCommandsArray)
 	{
@@ -118,17 +119,49 @@ void FrameCompositor::initializeCommands()
 	}
 	generalCommandsArray.clear();
 
+	auto initFence = [this](const std::string& name)
+		{
+			if (auto& f = taskFences[name]; !f.fence)
+				 provider.renderSystem.core.device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&f.fence));
+		};
+	for (auto& pass : passes)
+	{
+		if (!pass.info.syncSignal.empty())
+			initFence(pass.info.syncSignal);
+		if (!pass.info.syncWait.empty())
+			initFence(pass.info.syncWait);
+	}
+
 	CommandsData syncCommands{};
+	std::optional<CommandsData> syncComputeCommands{};
 	std::vector<CompositorPassInfo*> syncPasses;
 	AsyncTasksInfo asyncTasks;
 	std::vector<CompositorPassInfo*> asyncPasses;
 
+	auto buildLastTasksFences = [&]()
+		{
+			auto& t = tasks.back();
+			for (auto pass : t.pass)
+			{
+				if (!pass->syncSignal.empty())
+					t.syncSignal.push_back(&taskFences[pass->syncSignal]);
+				if (!pass->syncWait.empty())
+					t.syncWait.push_back(&taskFences[pass->syncWait]);
+			}
+		};
 	auto buildSyncCommands = [&]()
 		{
 			if (syncCommands.commandList)
+			{
 				tasks.push_back({ {}, { syncCommands }, std::move(syncPasses) });
+				
+				if (syncComputeCommands)
+					tasks.back().data.push_back(*syncComputeCommands);
+			}
 
 			syncCommands = {};
+			syncComputeCommands.reset();
+			buildLastTasksFences();
 		};
 	auto buildAsyncCommands = [&]()
 		{
@@ -143,6 +176,7 @@ void FrameCompositor::initializeCommands()
 			}
 			group.pass = std::move(asyncPasses);
 			asyncTasks.clear();
+			buildLastTasksFences();
 		};
 	auto pushAsyncTasks = [&](CompositorPassInfo& pass, const AsyncTasksInfo& tasks, bool forceOrder)
 		{
@@ -173,7 +207,12 @@ void FrameCompositor::initializeCommands()
 				syncCommands = generalCommandsArray.emplace_back(provider.renderSystem.core.CreateCommandList(L"Compositor", PixColor::Compositor));
 				passData.startCommands = true;
 			}
+			if (passData.task && passData.task->writesSyncComputeCommands(passData))
+			{
+				syncComputeCommands = generalCommandsArray.emplace_back(provider.renderSystem.core.CreateCommandList(L"CompositorCompute", PixColor::Compositor, D3D12_COMMAND_LIST_TYPE_COMPUTE));
+			}
 			passData.generalCommands = syncCommands;
+			passData.computeCommands = syncComputeCommands;
 			syncPasses.push_back(&passData.info);
 		};
 	auto dependsOnPreviousPass = [](const CompositorPassInfo& pass, const std::vector<CompositorPassInfo*>& passes, bool forceTargetOrder = false)
@@ -219,7 +258,7 @@ void FrameCompositor::initializeCommands()
 
 	for (auto& pass : passes)
 	{
-		auto isSync = !pass.task || pass.task->writesSyncCommands(pass);
+		auto isSync = !pass.task || pass.task->writesSyncCommands(pass) || pass.task->writesSyncComputeCommands(pass);
 
 		if (dependsOnPreviousPass(pass.info, asyncPasses, true))
 			buildAsyncCommands();

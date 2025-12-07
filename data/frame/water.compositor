@@ -11,6 +11,7 @@ compositor Water
 
 	task SceneRender
 	{
+		sync_wait Water
 		entry Transparent
 
 		input depthTexture

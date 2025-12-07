@@ -35,7 +35,7 @@ public:
 		app.initialize(*window, params);
 
 		freeCamera.bind(renderPanelViewport);
-		freeCamera.camera.setPosition(XMFLOAT3(0, 0, -14.f));
+		freeCamera.camera.setPosition(XMFLOAT3(0, 0, 0));
 
 		app.loadScene("basic");
 	}

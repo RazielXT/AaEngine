@@ -17,7 +17,8 @@ public:
 	~WaterSim();
 
 	void initializeGpuResources(RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch, SceneManager& s);
-	void update(ID3D12GraphicsCommandList* commandList, float dt, UINT frameIdx);
+	void update(RenderSystem& renderSystem, ID3D12GraphicsCommandList* commandList, float dt, UINT frameIdx);
+	void updateCompute(RenderSystem& renderSystem, ID3D12GraphicsCommandList* commandList, float dt, UINT frameIdx);
 	void clear();
 
 private:
@@ -44,9 +45,4 @@ private:
 
 	VertexBufferModel waterModel;
 	VertexBufferModel terrainModel;
-
-	UINT fenceCounter = 0;
-	ID3D12Fence* fence{};
-
-	CommandsData compute;
 };

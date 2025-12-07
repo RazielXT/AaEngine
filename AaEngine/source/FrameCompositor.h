@@ -49,17 +49,28 @@ protected:
 		std::shared_ptr<CompositorTask> task;
 
 		CommandsData generalCommands;
+		std::optional<CommandsData> computeCommands;
 		bool startCommands = false;
 	};
 	std::vector<PassData> passes;
 
 	std::vector<CommandsData> generalCommandsArray;
 
+	struct FenceInfo
+	{
+		ComPtr<ID3D12Fence> fence;
+		UINT value = 1;
+	};
+	std::map<std::string, FenceInfo> taskFences;
+
 	struct TasksGroup
 	{
 		std::vector<HANDLE> finishEvents;
 		std::vector<CommandsData> data;
 		std::vector<CompositorPassInfo*> pass;
+
+		std::vector<FenceInfo*> syncWait;
+		std::vector<FenceInfo*> syncSignal;
 	};
 	std::vector<TasksGroup> tasks;
 

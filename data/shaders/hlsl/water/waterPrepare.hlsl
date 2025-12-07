@@ -67,7 +67,7 @@ PSInput VSMain(VSInput input)
 
 	float4 objPosition = input.position;
 	
-	float2 texUv = input.uv * 0.5 - Time / 8;
+	float2 texUv = input.uv * 0.5 - Time / 18;
 	
 	float waveSize = GetWavesSize(texUv) * 0.01;
 	objPosition.y += waveSize;
@@ -82,7 +82,7 @@ PSInput VSMain(VSInput input)
 
 float4 GetWaves(float2 uv)
 {
-	uv.xy -= Time * 0.025;
+	//uv.xy -= Time * 0.025;
 	float4 albedo = GetTexture(TexIdDiffuse).Sample(LinearWrapSampler, uv);
 	uv.xy -= Time * 0.007;
 	albedo += GetTexture(TexIdDiffuse).Sample(LinearWrapSampler, uv);

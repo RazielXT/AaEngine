@@ -18,7 +18,7 @@ public:
 
 	struct ShadowData
 	{
-		RenderTargetTexture texture;
+		GpuTexture2D texture;
 		Camera camera;
 		bool update = true;
 	};

@@ -1,8 +1,7 @@
 #pragma once
 
 #include <d3d12.h>
-#include "RenderTargetTexture.h"
-#include "TextureResource.h"
+#include "GpuTexture.h"
 
 struct Texture;
 
@@ -21,12 +20,12 @@ public:
 	void init(UINT maxDescriptors);
 	void initializeSamplers(float MipLODBias);
 
-	void createTextureView(TextureResource& texture, UINT mipLevel = -1);
 	void createTextureView(FileTexture& texture);
-	void createTextureView(RenderTargetTexture& texture);
+	void createTextureView(GpuTextureResource& texture);
+	void createTextureView(GpuTexture3D& texture);
 	void createTextureView(RenderTargetTextures& textures);
-	void createUAVView(TextureResource& texture);
-	UINT createUAVView(RenderTargetTexture& texture, UINT mipLevel = 0);
+	void createUAVView(GpuTexture3D& texture);
+	UINT createUAVView(GpuTextureResource& texture);
 	UINT createBufferView(ID3D12Resource* resource, UINT stride, UINT elements);
 
 	UINT nextDescriptor(UINT offset, D3D12_SRV_DIMENSION) const;
@@ -35,10 +34,8 @@ public:
 
 	void removeDescriptorIndex(UINT idx);
 	void removeTextureView(RenderTargetTextures& textures);
-	void removeTextureView(RenderTargetTexture& texture);
-	void removeTextureView(TextureResource& texture);
-	void removeUAVView(RenderTargetTexture& texture);
-	void removeUAVView(TextureResource& texture);
+	void removeTextureView(GpuTextureResource& texture);
+	void removeUAVView(GpuTextureResource& texture);
 private:
 
 	struct DescriptorInfo

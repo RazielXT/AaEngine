@@ -24,7 +24,8 @@ void DownsampleDepthTask::resize(CompositorPass& pass)
 	cs.data.depthOutputIdx2 = pass.inputs[2].texture->view.uavHeapIndex;
 	cs.inputSize = { pass.inputs[0].texture->width, pass.inputs[0].texture->height };
 
-	inputs = pass.inputs;
+	for (auto& i : pass.inputs)
+		inputs.push_back(i);
 }
 
 void DownsampleDepthTask::run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass)

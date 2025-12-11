@@ -3,7 +3,7 @@
 #include <d3d12.h>
 #include <DirectXMath.h>
 #include <wrl.h>
-#include "RenderTargetTexture.h"
+#include "GpuTexture.h"
 #include "VertexBufferModel.h"
 #include <dxcapi.h>
 #include <memory>

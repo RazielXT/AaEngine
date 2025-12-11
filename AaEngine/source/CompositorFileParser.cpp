@@ -296,7 +296,15 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 				else if (member.type == "task")
 				{
 					CompositorPassInfo pass;
-					pass.task = pass.name = member.value;
+					pass.name = member.value;
+
+					if (auto pos = pass.name.find_first_of('.'); pos != std::string::npos)
+					{
+						pass.task = pass.name.substr(0, pos);
+						pass.entry = pass.name.substr(pos + 1);
+					}
+					else
+						pass.task = pass.name;
 
 					UINT flags = parseFlags(member);
 
@@ -305,10 +313,6 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 						if (param.type == "target")
 						{
 							pass.targets = parseCompositorTextureSlot(param, info, ctx, flags);
-						}
-						else if (param.type == "entry")
-						{
-							pass.entry = param.value;
 						}
 						else if (param.type == "after")
 						{

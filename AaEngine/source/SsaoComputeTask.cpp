@@ -56,11 +56,11 @@ void SsaoComputeTask::run(RenderContext& ctx, CommandsData& syncCommands, Compos
 		}
 
 		//occlusion
-		auto renderAo = [&](RenderTargetTextureState& input, RenderTargetTextureState& output, AoRenderCS& aoRenderCS)
+		auto renderAo = [&](TextureStatePair& input, TextureStatePair& output, AoRenderCS& aoRenderCS)
 			{
 				tr.addAndPush(input, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, commands.commandList);
 
-				aoRenderCS.dispatch(input.texture->width, input.texture->height, input.texture->arraySize, TanHalfFovH, input.texture->view, output.texture->view, commands.commandList);
+				aoRenderCS.dispatch(input.texture->width, input.texture->height, input.texture->depthOrArraySize, TanHalfFovH, input.texture->view, output.texture->view, commands.commandList);
 
 				tr.addAndPush(input, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, commands.commandList);
 			};

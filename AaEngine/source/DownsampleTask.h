@@ -36,6 +36,6 @@ public:
 
 private:
 
-	std::vector<PassInput> inputs;
+	std::vector<TextureStatePair> inputs;
 	DownsampleDepthCS cs;
 };

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "RenderTargetTexture.h"
+#include "GpuTexture.h"
 #include "RenderContext.h"
 #include "ShaderResources.h"
 #include "GraphicsResources.h"

@@ -40,26 +40,26 @@ private:
 
 	struct Txt
 	{
-		RenderTargetTextureState sceneDepth;
-		RenderTargetTextureState linearDepth;
-		RenderTargetTextureState linearDepthDownsample2;
-		RenderTargetTextureState linearDepthDownsampleAtlas2;
-		RenderTargetTextureState linearDepthDownsample4;
-		RenderTargetTextureState linearDepthDownsampleAtlas4;
-		RenderTargetTextureState linearDepthDownsample8;
-		RenderTargetTextureState linearDepthDownsampleAtlas8;
-		RenderTargetTextureState linearDepthDownsample16;
-		RenderTargetTextureState linearDepthDownsampleAtlas16;
+		TextureStatePair sceneDepth;
+		TextureStatePair linearDepth;
+		TextureStatePair linearDepthDownsample2;
+		TextureStatePair linearDepthDownsampleAtlas2;
+		TextureStatePair linearDepthDownsample4;
+		TextureStatePair linearDepthDownsampleAtlas4;
+		TextureStatePair linearDepthDownsample8;
+		TextureStatePair linearDepthDownsampleAtlas8;
+		TextureStatePair linearDepthDownsample16;
+		TextureStatePair linearDepthDownsampleAtlas16;
 
-		RenderTargetTextureState occlusionInterleaved8;
-		RenderTargetTextureState occlusion8;
-		RenderTargetTextureState occlusionInterleaved4;
-		RenderTargetTextureState occlusion4;
-		RenderTargetTextureState occlusionInterleaved2;
+		TextureStatePair occlusionInterleaved8;
+		TextureStatePair occlusion8;
+		TextureStatePair occlusionInterleaved4;
+		TextureStatePair occlusion4;
+		TextureStatePair occlusionInterleaved2;
 
-		RenderTargetTextureState aoSmooth4;
-		RenderTargetTextureState aoSmooth2;
-		RenderTargetTextureState aoSmooth;
+		TextureStatePair aoSmooth4;
+		TextureStatePair aoSmooth2;
+		TextureStatePair aoSmooth;
 	}
 	textures;
 

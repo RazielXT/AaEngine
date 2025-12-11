@@ -173,19 +173,30 @@ void VertexBufferModel::CreateVertexBuffer(ID3D12Device* device, ResourceUploadB
 	vertexBuffer->SetName(L"VB");
 
 	{
-		positions.resize(vertexCount);
-		UINT positionOffset = 0;
+		D3D12_INPUT_ELEMENT_DESC* desc = nullptr;
 		for (auto& f : vertexLayout)
 			if (f.SemanticName == VertexElementSemantic::POSITION)
 			{
-				positionOffset = f.AlignedByteOffset;
+				desc = &f;
 				break;
 			}
 
-		for (size_t i = 0; i < vertexCount; i++)
+		if (desc)
 		{
-			auto positionsPtr = (float*)(((const uint8_t*)vertices) + i * vertexSize + positionOffset);
-			positions[i] = { positionsPtr[0], positionsPtr[1], positionsPtr[2], 1 };
+			positions.resize(vertexCount);
+			for (size_t i = 0; i < vertexCount; i++)
+			{
+				auto positionsPtr = (float*)(((const uint8_t*)vertices) + i * vertexSize + desc->AlignedByteOffset);
+
+				if (desc->Format == DXGI_FORMAT_R32G32B32_FLOAT)
+				{
+					positions[i] = { positionsPtr[0], positionsPtr[1], positionsPtr[2] };
+				}
+				else if (desc->Format == DXGI_FORMAT_R32_FLOAT)
+				{
+					positions[i] = { 0, positionsPtr[0], 0 };
+				}
+			}
 		}
 	}
 }

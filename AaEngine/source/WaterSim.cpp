@@ -42,46 +42,51 @@ void WaterSim::initializeGpuResources(RenderSystem& renderSystem, GraphicsResour
 	}
 	srcVelocity = TextureUtils::CreateUploadTexture(renderSystem.core.device, batch, velocityData.data(), TextureSize, TextureSize, DXGI_FORMAT_R32G32_FLOAT, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
-	waterModel.addLayoutElement(DXGI_FORMAT_R32G32B32_FLOAT, VertexElementSemantic::POSITION);
+	waterModel.addLayoutElement(DXGI_FORMAT_R32_FLOAT, VertexElementSemantic::TEXCOORD);
 	waterModel.addLayoutElement(DXGI_FORMAT_R32G32B32_FLOAT, VertexElementSemantic::NORMAL);
-	waterModel.addLayoutElement(DXGI_FORMAT_R32G32_FLOAT, VertexElementSemantic::TEXCOORD);
 	waterModel.CreateIndexBuffer(renderSystem.core.device, &batch, TextureSize, TextureSize);
+	struct WaterVertex
+	{
+		float height; // x,y,z
+		DirectX::XMFLOAT3 normal; // x,y,z
+	};
+	{
+		std::vector<WaterVertex> vertices;
+		vertices.reserve(TextureSize * TextureSize);
+
+		for (UINT y = 0; y < TextureSize; ++y)
+		{
+			for (UINT x = 0; x < TextureSize; ++x)
+			{
+				WaterVertex v;
+
+				// Flat grid position (z = 0 for now)
+				v.height = 0;
+// 				DirectX::XMFLOAT3(
+// 					static_cast<float>(x) * 0.1f,
+// 					0.0f,
+// 					static_cast<float>(y) * 0.1f);
+
+				v.normal = { 0, 1, 0 };
+
+				// Normalized UVs
+// 				v.uv = DirectX::XMFLOAT2(
+// 					static_cast<float>(x) * 40 / (TextureSize - 1),
+// 					static_cast<float>(y) * 40 / (TextureSize - 1));
+
+				vertices.push_back(v);
+			}
+		}
+		waterModel.CreateVertexBuffer(renderSystem.core.device, &batch, vertices.data(), vertices.size(), sizeof(WaterVertex));
+		waterModel.calculateBounds();
+	}
+
 	struct Vertex
 	{
 		DirectX::XMFLOAT3 position; // x,y,z
 		DirectX::XMFLOAT3 normal; // x,y,z
 		DirectX::XMFLOAT2 uv;       // u,v
 	};
-	{
-		std::vector<Vertex> vertices;
-		vertices.reserve(TextureSize* TextureSize);
-
-		for (UINT y = 0; y < TextureSize; ++y)
-		{
-			for (UINT x = 0; x < TextureSize; ++x)
-			{
-				Vertex v;
-
-				// Flat grid position (z = 0 for now)
-				v.position = DirectX::XMFLOAT3(
-					static_cast<float>(x) * 0.1f,
-					0.0f,
-					static_cast<float>(y) * 0.1f);
-
-				v.normal = { 0, 1, 0 };
-
-				// Normalized UVs
-				v.uv = DirectX::XMFLOAT2(
-					static_cast<float>(x) * 40 / (TextureSize - 1),
-					static_cast<float>(y) * 40 / (TextureSize - 1));
-
-				vertices.push_back(v);
-			}
-		}
-		waterModel.CreateVertexBuffer(renderSystem.core.device, &batch, vertices.data(), vertices.size(), sizeof(Vertex));
-		waterModel.calculateBounds();
-	}
-
 	terrainModel.addLayoutElement(DXGI_FORMAT_R32G32B32_FLOAT, VertexElementSemantic::POSITION);
 	terrainModel.addLayoutElement(DXGI_FORMAT_R32G32B32_FLOAT, VertexElementSemantic::NORMAL);
 	terrainModel.addLayoutElement(DXGI_FORMAT_R32G32_FLOAT, VertexElementSemantic::TEXCOORD);
@@ -317,9 +322,9 @@ void WaterSim::updateCompute(RenderSystem& renderSystem, ID3D12GraphicsCommandLi
 		computeList->ResourceBarrier(1, &uavb);
 	}
 
-	waterHeight[frameIdx].TransitionTarget(computeList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	waterHeight[frameIdx].Transition(computeList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
-	textureToMeshCS.dispatch(computeList, waterHeight[frameIdx].view.srvHeapIndex, TextureSize, TextureSize, 1, waterModel.vertexBuffer);
+	waterToMeshCS.dispatch(computeList, waterHeight[frameIdx].view.srvHeapIndex, TextureSize, TextureSize, waterModel.vertexBuffer);
 
 	{
 // 		meshColorTexture.TransitionTarget(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
@@ -329,7 +334,7 @@ void WaterSim::updateCompute(RenderSystem& renderSystem, ID3D12GraphicsCommandLi
 // 		meshColorTexture.TransitionTarget(commandList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	}
 
-	waterHeight[frameIdx].TransitionTarget(computeList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	waterHeight[frameIdx].Transition(computeList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
 	frameIdx = (frameIdx + 1) % FrameCount;
 }

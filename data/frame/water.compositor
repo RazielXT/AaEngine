@@ -9,10 +9,9 @@ compositor Water
 	extern depthDownsample2
 	extern sceneFinalColorTexture
 
-	task SceneRender
+	task SceneRender.Transparent
 	{
 		sync_wait Water
-		entry Transparent
 
 		input depthTexture
 		input sceneColorTexture

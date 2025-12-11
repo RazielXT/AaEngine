@@ -2,7 +2,7 @@
 #include "RenderQueue.h"
 #include "RenderObject.h"
 
-ShaderConstantsProvider::ShaderConstantsProvider(const FrameParameters& p, const RenderObjectsVisibilityData& i, const Camera& c, const Camera& mc, const RenderTargetTexture& target) : info(i), camera(c), mainCamera(mc), params(p)
+ShaderConstantsProvider::ShaderConstantsProvider(const FrameParameters& p, const RenderObjectsVisibilityData& i, const Camera& c, const Camera& mc, const GpuTexture2D& target) : info(i), camera(c), mainCamera(mc), params(p)
 {
 	inverseViewportSize = { 1.f / target.width, 1.f / target.height };
 	viewportSize = { target.width, target.height };
@@ -13,7 +13,7 @@ ShaderConstantsProvider::ShaderConstantsProvider(const FrameParameters& params, 
 {
 }
 
-ShaderConstantsProvider::ShaderConstantsProvider(const FrameParameters& params, const RenderObjectsVisibilityData& info, const Camera& camera, const RenderTargetTexture& target) :
+ShaderConstantsProvider::ShaderConstantsProvider(const FrameParameters& params, const RenderObjectsVisibilityData& info, const Camera& camera, const GpuTexture2D& target) :
 	ShaderConstantsProvider(params, info, camera, camera, target)
 {
 }

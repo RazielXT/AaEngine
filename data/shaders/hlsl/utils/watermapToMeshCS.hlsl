@@ -1,7 +1,5 @@
 uint width, height;
-uint ResIdHeightMap;
 uint ResIdWaterMap;
-
 
 #ifndef DIRECT_LOAD
 SamplerState LinearSampler : register(s0);
@@ -9,9 +7,8 @@ SamplerState LinearSampler : register(s0);
 
 struct Vertex
 {
-    float3 position;
+    float height;
     float3 normal;
-    float2 uv;
 };
 
 RWStructuredBuffer<Vertex> gVertices : register(u0);
@@ -20,16 +17,13 @@ RWStructuredBuffer<Vertex> gVertices : register(u0);
 float readHeight(int3 coord)
 {
     Texture2D<float> gHeightmap = ResourceDescriptorHeap[ResIdWaterMap];
-    Texture2D<float> Terrain = ResourceDescriptorHeap[ResIdHeightMap];
-	return max(gHeightmap.Load(coord), Terrain.Load(coord));
+	return gHeightmap.Load(coord);
 }
 #else
 float readHeight(float2 uv)
 {
     Texture2D<float> gHeightmap = ResourceDescriptorHeap[ResIdWaterMap];
-    Texture2D<float> Terrain = ResourceDescriptorHeap[ResIdHeightMap];
-	float heightValue = gHeightmap.SampleLevel(LinearSampler, uv, 0);
-	return max(heightValue, Terrain.SampleLevel(LinearSampler, uv, 0) * 50);
+	return gHeightmap.SampleLevel(LinearSampler, uv, 0);
 }
 #endif
 
@@ -38,9 +32,6 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
 {
     if (DTid.x >= width || DTid.y >= height)
         return;
-
-    Texture2D<float> gHeightmap = ResourceDescriptorHeap[ResIdWaterMap];
-    Texture2D<float> Terrain = ResourceDescriptorHeap[ResIdHeightMap];
 
     // --- Height sampling ---
     float heightValue;
@@ -55,12 +46,7 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
     uint vertexIndex = DTid.y * width + DTid.x;
 
     // --- Position ---
-    gVertices[vertexIndex].position.y = heightValue;
-
-    // --- UV ---
-    gVertices[vertexIndex].uv = float2(
-        (float)DTid.x / (width - 1),
-        (float)DTid.y / (height - 1));
+    gVertices[vertexIndex].height = heightValue;
 
 	float stepWidth = 0.05f;
 

@@ -64,7 +64,7 @@ void MaterialResources::loadMaterials(std::string directory, bool subDirectories
 	MaterialFileParser::parseAllMaterialFiles(knownMaterials, shaders, directory, subDirectories);
 	resources.shaders.addShaderReferences(shaders);
 
-	knownMaterials.reserve(knownMaterials.size() * 2);
+	knownMaterials.reserve(knownMaterials.size() * 3);
 
 	for (size_t i = 0; i < knownMaterials.size(); i++)
 	{
@@ -79,6 +79,14 @@ void MaterialResources::loadMaterials(std::string directory, bool subDirectories
 
 			wMat.base = wMat.name = info.name + "_WIRE";
 			info.techniqueMaterial[int(MaterialTechnique::Wireframe)] = wMat.name;
+		}
+		if (!info.abstract && info.pipeline.depth.write && !info.techniqueMaterial[int(MaterialTechnique::NoDepthWrite)])
+		{
+			auto& wMat = knownMaterials.emplace_back(info);
+			wMat.pipeline.depth.write = false;
+
+			wMat.base = wMat.name = info.name + "_NO_D";
+			info.techniqueMaterial[int(MaterialTechnique::NoDepthWrite)] = wMat.name;
 		}
 	}
 

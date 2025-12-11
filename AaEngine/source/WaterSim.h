@@ -34,11 +34,11 @@ private:
 
 	FileTexture* terrainTexture;
 	FileTexture* terrainTexture2;
-	RenderTargetTexture terrainHeight;
-	RenderTargetTexture waterHeight[FrameCount];
-	RenderTargetTexture waterVelocity[FrameCount];
+	GpuTexture2D terrainHeight;
+	GpuTexture2D waterHeight[FrameCount];
+	GpuTexture2D waterVelocity[FrameCount];
 
-	RenderTargetTexture meshColorTexture;
+	GpuTexture2D meshColorTexture;
 
 	ComPtr<ID3D12Resource> srcWater;
 	ComPtr<ID3D12Resource> srcVelocity;

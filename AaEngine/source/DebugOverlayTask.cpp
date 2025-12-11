@@ -28,7 +28,7 @@ void DebugOverlayTask::resize(CompositorPass& pass)
 
 void DebugOverlayTask::run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass)
 {
-	pass.target.texture->PrepareAsTarget(syncCommands.commandList, pass.target.previousState);
+	pass.target.texture->PrepareAsRenderTarget(syncCommands.commandList, pass.target.previousState);
 
 	auto idx = currentIdx();
 

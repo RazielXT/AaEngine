@@ -18,7 +18,7 @@ void ImguiDebugWindowTask::run(RenderContext& ctx, CommandsData& syncCommands, C
 {
 	CommandsMarker marker(syncCommands.commandList, "Imgui", PixColor::Orange);
 
-	pass.target.texture->PrepareAsTarget(syncCommands.commandList, pass.target.previousState);
+	pass.target.texture->PrepareAsRenderTarget(syncCommands.commandList, pass.target.previousState);
 
 	imgui::DebugWindow::Get().draw(syncCommands.commandList, provider.resources.materials);
 }

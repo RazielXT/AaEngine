@@ -104,6 +104,7 @@
     <ClCompile Include="source\MeshUtils.cpp" />
     <ClCompile Include="source\ObjectId.cpp" />
     <ClCompile Include="source\PrepareFrameTask.cpp" />
+    <ClCompile Include="source\RenderTargetHeap.cpp" />
     <ClCompile Include="source\SceneEntity.cpp" />
     <ClCompile Include="source\Material.cpp" />
     <ClCompile Include="source\MaterialFileParser.cpp" />
@@ -153,7 +154,7 @@
     <ClCompile Include="source\ImguiDebugWindowTask.cpp" />
     <ClCompile Include="source\OgreMeshFileParser.cpp" />
     <ClCompile Include="source\RenderQueue.cpp" />
-    <ClCompile Include="source\RenderTargetTexture.cpp" />
+    <ClCompile Include="source\GpuTexture.cpp" />
     <ClCompile Include="source\DescriptorManager.cpp" />
     <ClCompile Include="source\SceneRenderTask.cpp" />
     <ClCompile Include="source\SceneTestTask.cpp" />
@@ -166,7 +167,6 @@
     <ClCompile Include="source\SsaoComputeTask.cpp" />
     <ClCompile Include="source\StringUtils.cpp" />
     <ClCompile Include="source\TextureData.cpp" />
-    <ClCompile Include="source\TextureResource.cpp" />
     <ClCompile Include="source\UpscaleTask.cpp" />
     <ClCompile Include="source\Upscaling.cpp" />
     <ClCompile Include="source\VoxelizeSceneTask.cpp" />
@@ -187,6 +187,7 @@
     <ClInclude Include="source\ObjectId.h" />
     <ClInclude Include="source\PixColor.h" />
     <ClInclude Include="source\PrepareFrameTask.h" />
+    <ClInclude Include="source\RenderTargetHeap.h" />
     <ClInclude Include="source\ResourceGroup.h" />
     <ClInclude Include="source\SceneEntity.h" />
     <ClInclude Include="source\FileLogger.h" />
@@ -247,7 +248,7 @@
     <ClInclude Include="source\MathUtils.h" />
     <ClInclude Include="source\OgreMeshFileParser.h" />
     <ClInclude Include="source\RenderQueue.h" />
-    <ClInclude Include="source\RenderTargetTexture.h" />
+    <ClInclude Include="source\GpuTexture.h" />
     <ClInclude Include="source\DescriptorManager.h" />
     <ClInclude Include="source\SceneLights.h" />
     <ClInclude Include="source\SceneRenderTask.h" />
@@ -257,7 +258,6 @@
     <ClInclude Include="source\ShadowsRenderTask.h" />
     <ClInclude Include="source\SsaoComputeTask.h" />
     <ClInclude Include="source\TextureData.h" />
-    <ClInclude Include="source\TextureResource.h" />
     <ClInclude Include="source\UpscaleTask.h" />
     <ClInclude Include="source\UpscaleTypes.h" />
     <ClInclude Include="source\Upscaling.h" />

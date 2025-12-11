@@ -168,7 +168,7 @@ void Editor::render(Camera& camera)
 {
 	auto marker = renderer.StartCommandList(commands, g_pd3dSrvDescHeap);
 	auto& target = renderer.backbuffer[renderer.frameIndex];
-	target.PrepareAsTarget(commands.commandList, D3D12_RESOURCE_STATE_PRESENT, true);
+	target.PrepareAsRenderTarget(commands.commandList, D3D12_RESOURCE_STATE_PRESENT, true);
 
 	{
 		ImGui_ImplDX12_NewFrame();

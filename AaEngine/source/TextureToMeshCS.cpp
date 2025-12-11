@@ -20,7 +20,7 @@ void TextureToMeshCS::dispatch(ID3D12GraphicsCommandList* commandList, UINT terr
 	commandList->Dispatch(data.width / 8, data.height / 8, 1);
 }
 
-void WaterTextureToMeshCS::dispatch(ID3D12GraphicsCommandList* commandList, UINT terrain, UINT water, UINT w, UINT h, ID3D12Resource* vertexBuffer)
+void WaterTextureToMeshCS::dispatch(ID3D12GraphicsCommandList* commandList, UINT water, UINT w, UINT h, ID3D12Resource* vertexBuffer)
 {
 	commandList->SetPipelineState(pipelineState.Get());
 	commandList->SetComputeRootSignature(signature);
@@ -29,10 +29,9 @@ void WaterTextureToMeshCS::dispatch(ID3D12GraphicsCommandList* commandList, UINT
 	{
 		UINT width;
 		UINT height;
-		UINT terrain;
 		UINT water;
 	}
-	data = { w, h, terrain, water };
+	data = { w, h, water };
 
 	commandList->SetComputeRoot32BitConstants(0, sizeof(data) / sizeof(float), &data, 0);
 	commandList->SetComputeRootUnorderedAccessView(1, vertexBuffer->GetGPUVirtualAddress());

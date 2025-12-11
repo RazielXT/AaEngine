@@ -347,7 +347,7 @@ SceneParser::Result SceneParser::load(std::string name, Ctx parseCtx)
 		}
 	}
 
-	parseCtx.sceneMgr.skybox.setMaterial("Skybox", parseCtx.sceneMgr.getQueueTargetFormats());
+	parseCtx.sceneMgr.skybox.setMaterial("Skybox", parseCtx.sceneMgr.getQueueTargetFormats(MaterialTechnique::NoDepthWrite));
 
 	return result;
 }

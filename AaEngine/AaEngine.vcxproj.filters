@@ -70,7 +70,7 @@
     <ClCompile Include="source\RenderSystem.cpp">
       <Filter>Source Files\RenderCore</Filter>
     </ClCompile>
-    <ClCompile Include="source\RenderTargetTexture.cpp">
+    <ClCompile Include="source\GpuTexture.cpp">
       <Filter>Source Files\RenderCore</Filter>
     </ClCompile>
     <ClCompile Include="source\Material.cpp">
@@ -165,9 +165,6 @@
     </ClCompile>
     <ClCompile Include="source\BinaryModelSerialization.cpp">
       <Filter>Source Files\Resources\Model</Filter>
-    </ClCompile>
-    <ClCompile Include="source\TextureResource.cpp">
-      <Filter>Source Files\RenderCore</Filter>
     </ClCompile>
     <ClCompile Include="source\ShaderSignature.cpp">
       <Filter>Source Files\Resources\Shader</Filter>
@@ -313,6 +310,9 @@
     <ClCompile Include="source\CopyTexturesCS.cpp">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClCompile>
+    <ClCompile Include="source\RenderTargetHeap.cpp">
+      <Filter>Source Files\RenderCore</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\TargetWindow.h">
@@ -324,7 +324,7 @@
     <ClInclude Include="source\RenderSystem.h">
       <Filter>Source Files\RenderCore</Filter>
     </ClInclude>
-    <ClInclude Include="source\RenderTargetTexture.h">
+    <ClInclude Include="source\GpuTexture.h">
       <Filter>Source Files\RenderCore</Filter>
     </ClInclude>
     <ClInclude Include="source\Material.h">
@@ -425,9 +425,6 @@
     </ClInclude>
     <ClInclude Include="source\ModelParseOptions.h">
       <Filter>Source Files\Resources\Model</Filter>
-    </ClInclude>
-    <ClInclude Include="source\TextureResource.h">
-      <Filter>Source Files\RenderCore</Filter>
     </ClInclude>
     <ClInclude Include="source\ShaderResources.h">
       <Filter>Source Files\Resources\Shader</Filter>
@@ -584,6 +581,9 @@
     </ClInclude>
     <ClInclude Include="source\CopyTexturesCS.h">
       <Filter>Source Files\Resources\Compute</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RenderTargetHeap.h">
+      <Filter>Source Files\RenderCore</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

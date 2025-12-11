@@ -48,9 +48,8 @@ float GetWavesSize(float2 uv)
 
 struct VSInput
 {
-	float4 position : POSITION;
+	float height : TEXCOORD0;
 	float3 normal : NORMAL;
-	float2 uv : TEXCOORD;
 };
 
 struct PSInput
@@ -61,13 +60,28 @@ struct PSInput
 	float4 worldPosition : TEXCOORD1;
 };
 
-PSInput VSMain(VSInput input)
+PSInput VSMain(VSInput input, uint vertexID : SV_VertexID)
 {
 	PSInput result;
 
-	float4 objPosition = input.position;
-	
-	float2 texUv = input.uv * 0.5 - Time / 18;
+	const uint gridSize = 1024;
+	const float cellSize = gridSize * 0.1f;
+
+    // Compute 2D grid coordinates from vertexID
+    uint x = vertexID % gridSize;
+    uint y = vertexID / gridSize;
+
+    float2 inputUv = float2((float)x / (gridSize - 1), (float)y / (gridSize - 1));
+
+    // Generate world-space position
+    float4 objPosition;
+    objPosition.x = inputUv.x * cellSize;
+    objPosition.z = inputUv.y * cellSize;
+    objPosition.y = input.height; // height from VB
+	objPosition.w = 1;
+
+    // Generate UV based on grid coordinates
+	float2 texUv = inputUv * 0.5 - Time / 18;
 	
 	float waveSize = GetWavesSize(texUv) * 0.01;
 	objPosition.y += waveSize;

@@ -57,7 +57,7 @@ AsyncTasksInfo SceneRenderTask::initialize(CompositorPass& pass)
 	}
 	else if (pass.info.entry == "Opaque")
 	{
-		sceneQueue = sceneMgr.createQueue(pass.target.textureSet->formats);
+		sceneQueue = sceneMgr.createQueue(pass.target.textureSet->formats, MaterialTechnique::NoDepthWrite);
 
 		scene.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
 		scene.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -178,7 +178,7 @@ void SceneRenderTask::renderScene(CompositorPass& pass)
 
 	auto marker = provider.renderSystem.core.StartCommandList(scene.commands);
 
-	pass.target.textureSet->PrepareAsTarget(scene.commands.commandList, true, TransitionFlags::DepthContinue);
+	pass.target.textureSet->PrepareAsTarget(scene.commands.commandList, true, TransitionFlags::DepthPrepareRead);
 
 	if (enabledWireframe)
 		return;

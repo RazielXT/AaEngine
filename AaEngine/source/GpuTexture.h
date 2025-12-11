@@ -1,40 +1,16 @@
 #pragma once
 
 #include "TextureResources.h"
-#include "d3d12.h"
-#include "directx\d3dx12.h"
-#include <DirectXMath.h>
+#include "RenderTargetHeap.h"
 #include <vector>
 #include <string>
-#include <wrl.h>
 
-using namespace Microsoft::WRL;
-
-class RenderTargetHeap
+class GpuTextureResource
 {
 public:
 
-	void InitRtv(ID3D12Device* device, UINT count, const wchar_t* name = nullptr);
-	void InitDsv(ID3D12Device* device, UINT count, const wchar_t* name = nullptr);
-	void Reset();
-
-	void CreateRenderTargetHandle(ID3D12Device* device, ComPtr<ID3D12Resource>& texture, ShaderTextureView& view);
-	void CreateDepthTargetHandle(ID3D12Device* device, ComPtr<ID3D12Resource>& texture, D3D12_CPU_DESCRIPTOR_HANDLE& dsvHandle);
-
-private:
-
-	ComPtr<ID3D12DescriptorHeap> rtvHeap;
-	UINT rtvHandlesCount = 0;
-
-	ComPtr<ID3D12DescriptorHeap> dsvHeap;
-	UINT dsvHandlesCount = 0;
-};
-
-class RenderTextureInfo
-{
-public:
-
-	RenderTextureInfo() = default;
+	GpuTextureResource() = default;
+	~GpuTextureResource();
 
 	ComPtr<ID3D12Resource> texture;
 	ShaderTextureView view;
@@ -43,44 +19,53 @@ public:
 
 	UINT width = 0;
 	UINT height = 0;
-	UINT arraySize = 1;
-};
-
-class RenderTargetTexture : public RenderTextureInfo
-{
-public:
-	~RenderTargetTexture();
-
-	enum Flags { AllowRenderTarget = 1, AllowUAV = 2 };
-	void Init(ID3D12Device* device, UINT width, UINT height, RenderTargetHeap& heap, DXGI_FORMAT format, D3D12_RESOURCE_STATES state, UINT flags = AllowRenderTarget);
-	void InitUAV(ID3D12Device* device, UINT width, UINT height, DXGI_FORMAT format, D3D12_RESOURCE_STATES state);
-	void InitDepth(ID3D12Device* device, UINT width, UINT height, RenderTargetHeap& heap, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_DEPTH_WRITE);
-	void InitExisting(ID3D12Resource*, ID3D12Device* device, UINT width, UINT height, RenderTargetHeap& heap, DXGI_FORMAT format);
-	void Resize(ID3D12Device* device, UINT width, UINT height, RenderTargetHeap& heap, D3D12_RESOURCE_STATES state);
+	UINT depthOrArraySize = 1;
 
 	void SetName(const std::string& name);
 	std::string name;
 
- 	void PrepareAsTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from, bool clear = false);
+	void Transition(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from, D3D12_RESOURCE_STATES to);
+};
+
+class RenderTargetTexturesView;
+
+class GpuTexture2D : public GpuTextureResource
+{
+	friend RenderTargetTexturesView;
+public:
+
+	enum Flags { AllowRenderTarget = 1, AllowUAV = 2 };
+	void Init(ID3D12Device* device, UINT width, UINT height, RenderTargetHeap& heap, DXGI_FORMAT format, D3D12_RESOURCE_STATES state, UINT flags = AllowRenderTarget);
+	void InitDepth(ID3D12Device* device, UINT width, UINT height, RenderTargetHeap& heap, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_DEPTH_WRITE, float clearValue = 0.f);
+	void InitExisting(ID3D12Resource*, ID3D12Device* device, UINT width, UINT height, RenderTargetHeap& heap, DXGI_FORMAT format);
+	void InitUAV(ID3D12Device* device, UINT width, UINT height, DXGI_FORMAT format, D3D12_RESOURCE_STATES state);
+
+	void PrepareAsRenderTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from, bool clear = false);
  	void PrepareAsView(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from);
  	void PrepareToPresent(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from);
- 	void TransitionTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from, D3D12_RESOURCE_STATES to);
-
 	void PrepareAsDepthTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from, bool clear = true);
 	void ClearDepth(ID3D12GraphicsCommandList* commandList);
 
-	float DepthClearValue = 0.f;
-
 private:
 
-	void ResizeTextureBuffer(ID3D12Device* device, D3D12_RESOURCE_STATES state);
-	void CreateTextureBuffer(ID3D12Device* device, UINT width, UINT height, DXGI_FORMAT, D3D12_RESOURCE_STATES, UINT flags);
-	void CreateDepthBuffer(ID3D12Device* device, RenderTargetHeap& heap, D3D12_RESOURCE_STATES initialState);
+	void CreateTextureBuffer(ID3D12Device* device, D3D12_RESOURCE_STATES initialState, UINT flags);
+	void CreateDepthBuffer(ID3D12Device* device, D3D12_RESOURCE_STATES initialState);
+
+	float depthClearValue = 0.f;
+};
+
+class GpuTexture3D : public GpuTextureResource
+{
+public:
+
+	void Init(ID3D12Device* device, UINT width, UINT height, UINT depth, DXGI_FORMAT format);
+
+	std::vector<ShaderUAV> uav;
 };
 
 struct RenderTargetTextureState
 {
-	RenderTargetTexture* texture{};
+	GpuTexture2D* texture{};
 	D3D12_RESOURCE_STATES previousState{};
 };
 
@@ -133,8 +118,20 @@ public:
 	void Init(ID3D12Device* device, UINT width, UINT height, RenderTargetHeap& heap, const std::vector<DXGI_FORMAT>& format, D3D12_RESOURCE_STATES state, bool depthBuffer = true, D3D12_RESOURCE_STATES initialDepthState = D3D12_RESOURCE_STATE_DEPTH_WRITE);
 	void SetName(const std::string& name);
 
-	std::vector<RenderTargetTexture> textures;
-	RenderTargetTexture depth;
+	std::vector<GpuTexture2D> textures;
+	GpuTexture2D depth;
+};
+
+struct TextureStatePair
+{
+	TextureStatePair() = default;
+	TextureStatePair(const RenderTargetTextureState& s) : texture(s.texture), currentState(s.previousState) {}
+	TextureStatePair(GpuTextureResource* s, D3D12_RESOURCE_STATES state) : texture(s), currentState(state) {}
+
+	GpuTextureResource* texture{};
+	D3D12_RESOURCE_STATES currentState{};
+
+	void Transition(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES to);
 };
 
 template<UINT MAX>
@@ -143,25 +140,25 @@ struct RenderTargetTransitions
 	UINT c = 0;
 	CD3DX12_RESOURCE_BARRIER barriers[MAX];
 
-	void addConst(const RenderTargetTextureState& state, D3D12_RESOURCE_STATES to)
+	void addConst(const TextureStatePair& state, D3D12_RESOURCE_STATES to)
 	{
-		if (state.previousState == to)
+		if (state.currentState == to)
 			return;
 
 		barriers[c] = CD3DX12_RESOURCE_BARRIER::Transition(
 			state.texture->texture.Get(),
-			state.previousState,
+			state.currentState,
 			to);
 
 		c++;
 	}
-	void add(RenderTargetTextureState& state, D3D12_RESOURCE_STATES to)
+	void add(TextureStatePair& state, D3D12_RESOURCE_STATES to)
 	{
 		addConst(state, to);
 
-		state.previousState = to;
+		state.currentState = to;
 	}
-	void addAndPush(RenderTargetTextureState& state, D3D12_RESOURCE_STATES to, ID3D12GraphicsCommandList* commandList)
+	void addAndPush(TextureStatePair& state, D3D12_RESOURCE_STATES to, ID3D12GraphicsCommandList* commandList)
 	{
 		add(state, to);
 		push(commandList);

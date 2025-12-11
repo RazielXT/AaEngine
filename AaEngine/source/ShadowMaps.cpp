@@ -20,19 +20,14 @@ void ShadowMaps::init(RenderSystem& renderSystem, GraphicsResources& resources)
 
 	for (UINT i = 0; i < count; i++)
 	{
-		auto name = "ShadowMapCascade" + std::to_string(i);
-
-		cascades[i].texture.DepthClearValue = 1.0f;
-		cascades[i].texture.InitDepth(renderSystem.core.device, shadowMapSize, shadowMapSize, targetHeap, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-		cascades[i].texture.SetName(name);
+		cascades[i].texture.InitDepth(renderSystem.core.device, shadowMapSize, shadowMapSize, targetHeap, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, 1.f);
+		cascades[i].texture.SetName("ShadowMapCascade" + std::to_string(i));
 
 		DescriptorManager::get().createTextureView(cascades[i].texture);
-		//resources.textures.setNamedTexture(name, cascades[i].texture.view);
 	}
 
 	{
-		maxShadow.texture.DepthClearValue = 1.0f;
-		maxShadow.texture.InitDepth(renderSystem.core.device, shadowMapSize, shadowMapSize, targetHeap, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+		maxShadow.texture.InitDepth(renderSystem.core.device, shadowMapSize, shadowMapSize, targetHeap, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, 1.f);
 		maxShadow.texture.SetName("ShadowMapMax");
 
 		DescriptorManager::get().createTextureView(maxShadow.texture);
@@ -41,8 +36,6 @@ void ShadowMaps::init(RenderSystem& renderSystem, GraphicsResources& resources)
 	data.TexIdShadowOffsetStart = cascades[0].texture.view.srvHeapIndex;
 	data.ShadowMapSize = shadowMapSize;
 	data.ShadowMapSizeInv = 1 / data.ShadowMapSize;
-
-
 
 	cbuffer = resources.shaderBuffers.CreateCbufferResource(sizeof(data), "PSSMShadows");
 

@@ -177,15 +177,15 @@ void FrameCompositor::reloadTextures()
 			{
 				auto lastState = lastTextureStates[name];
 
-				RenderTargetTexture& tex = textures[name];
-				tex.arraySize = t.arraySize;
+				GpuTexture2D& tex = textures[name];
+				tex.depthOrArraySize = t.arraySize;
 
 				if (name.ends_with(":Depth"))
 					tex.InitDepth(provider.renderSystem.core.device, w, h, rtvHeap, lastState);
 				else
 				{
 
-					UINT flags = t.uav ? RenderTargetTexture::AllowUAV : RenderTargetTexture::AllowRenderTarget;
+					UINT flags = t.uav ? GpuTexture2D::AllowUAV : GpuTexture2D::AllowRenderTarget;
 					tex.Init(provider.renderSystem.core.device, w, h, rtvHeap, t.format, lastState, flags);
 				}
 
@@ -259,7 +259,7 @@ void FrameCompositor::reloadTextures()
 
 void FrameCompositor::renderQuad(PassData& pass, RenderContext& ctx, ID3D12GraphicsCommandList* commandList)
 {
-	pass.target.texture->PrepareAsTarget(commandList, pass.target.previousState);
+	pass.target.texture->PrepareAsRenderTarget(commandList, pass.target.previousState);
 
 	for (UINT i = 0; auto & input : pass.inputs)
 	{
@@ -322,7 +322,7 @@ void FrameCompositor::render(RenderContext& ctx)
 	executeCommands();
 }
 
-const RenderTargetTexture* FrameCompositor::getTexture(const std::string& name) const
+const GpuTexture2D* FrameCompositor::getTexture(const std::string& name) const
 {
 	auto it = textures.find(name);
 	if (it == textures.end())
@@ -340,7 +340,7 @@ CompositorTask* FrameCompositor::getTask(const std::string& name)
 {
 	for (auto& p : passes)
 	{
-		if (p.info.name == name && p.task)
+		if (p.info.task == name && p.task)
 			return p.task.get();
 	}
 

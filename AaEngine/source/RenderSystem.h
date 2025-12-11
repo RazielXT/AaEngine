@@ -4,7 +4,7 @@
 #include <dxgi1_4.h>
 #include <DirectXMath.h>
 #include "TargetWindow.h"
-#include "RenderTargetTexture.h"
+#include "GpuTexture.h"
 #include "Upscaling.h"
 #include "DescriptorManager.h"
 #include "PixColor.h"
@@ -74,7 +74,7 @@ public:
 	void WaitForCurrentFrame();
 
 	RenderTargetHeap rtvHeap;
-	RenderTargetTexture backbuffer[FrameCount];
+	GpuTexture2D backbuffer[FrameCount];
 
 	void initializeSwapChain(const TargetWindow& window);
 

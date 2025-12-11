@@ -1,97 +1,44 @@
-#include "RenderTargetTexture.h"
+#include "GpuTexture.h"
 #include "DescriptorManager.h"
 #include "StringUtils.h"
+#include <DirectXMath.h>
 
-static const DirectX::XMFLOAT4 clearColor = { 0.0f, 0.0f, 0.0f, 0.0f };
+static const DirectX::XMFLOAT4 ClearColor = { 0.0f, 0.0f, 0.0f, 0.0f };
 
-void RenderTargetHeap::InitRtv(ID3D12Device* device, UINT count, const wchar_t* name)
-{
-	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-	rtvHeapDesc.NumDescriptors = count;
-	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvHeap));
-
-	rtvHeap->SetName(name ? name : L"RTV");
-	Reset();
-}
-
-void RenderTargetHeap::InitDsv(ID3D12Device* device, UINT count, const wchar_t* name)
-{
-	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
-	dsvHeapDesc.NumDescriptors = count;
-	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-	dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&dsvHeap));
-
-	dsvHeap->SetName(name ? name : L"DSV");
-	Reset();
-}
-
-void RenderTargetHeap::Reset()
-{
-	rtvHandlesCount = dsvHandlesCount = 0;
-}
-
-void RenderTargetHeap::CreateRenderTargetHandle(ID3D12Device* device, ComPtr<ID3D12Resource>& texture, ShaderTextureView& view)
-{
-	if (view.handle.ptr)
-	{
-		view.handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(rtvHeap->GetCPUDescriptorHandleForHeapStart(), view.rtvHeapIndex, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
-	}
-	else
-	{
-		view.handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(rtvHeap->GetCPUDescriptorHandleForHeapStart(), rtvHandlesCount, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
-		view.rtvHeapIndex = rtvHandlesCount;
-		rtvHandlesCount++;
-	}
-
-	device->CreateRenderTargetView(texture.Get(), nullptr, view.handle);
-}
-
-void RenderTargetHeap::CreateDepthTargetHandle(ID3D12Device* device, ComPtr<ID3D12Resource>& texture, D3D12_CPU_DESCRIPTOR_HANDLE& dsvHandle)
-{
-	dsvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(dsvHeap->GetCPUDescriptorHandleForHeapStart(), dsvHandlesCount, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV));
-	device->CreateDepthStencilView(texture.Get(), nullptr, dsvHandle);
-	dsvHandlesCount++;
-}
-
-RenderTargetTexture::~RenderTargetTexture()
-{
-	DescriptorManager::get().removeTextureView(*this);
-	DescriptorManager::get().removeUAVView(*this);
-}
-
-void RenderTargetTexture::Init(ID3D12Device* device, UINT w, UINT h, RenderTargetHeap& heap, DXGI_FORMAT f, D3D12_RESOURCE_STATES state, UINT flags)
+void GpuTexture2D::Init(ID3D12Device* device, UINT w, UINT h, RenderTargetHeap& heap, DXGI_FORMAT f, D3D12_RESOURCE_STATES state, UINT flags)
 {
 	width = w;
 	height = h;
 	format = f;
 
-	CreateTextureBuffer(device, width, height, format, state, flags);
+	CreateTextureBuffer(device, state, flags);
 
 	if (flags & AllowRenderTarget)
 		heap.CreateRenderTargetHandle(device, texture, view);
 }
 
-void RenderTargetTexture::InitUAV(ID3D12Device* device, UINT w, UINT h, DXGI_FORMAT f, D3D12_RESOURCE_STATES state)
+void GpuTexture2D::InitUAV(ID3D12Device* device, UINT w, UINT h, DXGI_FORMAT f, D3D12_RESOURCE_STATES state)
 {
 	width = w;
 	height = h;
 	format = f;
 
-	CreateTextureBuffer(device, width, height, format, state, AllowUAV);
+	CreateTextureBuffer(device, state, AllowUAV);
 }
 
-void RenderTargetTexture::InitDepth(ID3D12Device* device, UINT w, UINT h, RenderTargetHeap& heap, D3D12_RESOURCE_STATES initialState)
+void GpuTexture2D::InitDepth(ID3D12Device* device, UINT w, UINT h, RenderTargetHeap& heap, D3D12_RESOURCE_STATES initialState, float clearValue)
 {
 	width = w;
 	height = h;
+	format = DXGI_FORMAT_D32_FLOAT;
+	depthClearValue = clearValue;
 
-	CreateDepthBuffer(device, heap, initialState);
+	CreateDepthBuffer(device, initialState);
+
+	heap.CreateDepthTargetHandle(device, texture, view.handle);
 }
 
-void RenderTargetTexture::InitExisting(ID3D12Resource* textureSource, ID3D12Device* device, UINT w, UINT h, RenderTargetHeap& heap, DXGI_FORMAT f)
+void GpuTexture2D::InitExisting(ID3D12Resource* textureSource, ID3D12Device* device, UINT w, UINT h, RenderTargetHeap& heap, DXGI_FORMAT f)
 {
 	width = w;
 	height = h;
@@ -101,28 +48,7 @@ void RenderTargetTexture::InitExisting(ID3D12Resource* textureSource, ID3D12Devi
 	heap.CreateRenderTargetHandle(device, texture, view);
 }
 
-void RenderTargetTexture::Resize(ID3D12Device* device, UINT w, UINT h, RenderTargetHeap& heap, D3D12_RESOURCE_STATES state)
-{
-	width = w;
-	height = h;
-
-	ResizeTextureBuffer(device, state);
-
-	heap.CreateRenderTargetHandle(device, texture, view);
-
-	if (view.srvHandles.ptr)
-	{
-		DescriptorManager::get().removeTextureView(*this);
-		DescriptorManager::get().createTextureView(*this);
-	}
-	if (view.uavHandles.ptr)
-	{
-		DescriptorManager::get().removeUAVView(*this);
-		DescriptorManager::get().createUAVView(*this);
-	}
-}
-
-void RenderTargetTexture::PrepareAsTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from, bool clear)
+void GpuTexture2D::PrepareAsRenderTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from, bool clear)
 {
 	auto vp = CD3DX12_VIEWPORT(0.0f, 0.0f, width, height);
 	commandList->RSSetViewports(1, &vp);
@@ -130,42 +56,26 @@ void RenderTargetTexture::PrepareAsTarget(ID3D12GraphicsCommandList* commandList
 	commandList->RSSetScissorRects(1, &rect);
 
 	if (from != D3D12_RESOURCE_STATE_RENDER_TARGET)
-	{
-		auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-			texture.Get(),
-			from,
-			D3D12_RESOURCE_STATE_RENDER_TARGET);
-		commandList->ResourceBarrier(1, &barrier);
-	}
+		Transition(commandList, from, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 	commandList->OMSetRenderTargets(1, &view.handle, TRUE, nullptr);
 
 	if (clear)
-		commandList->ClearRenderTargetView(view.handle, &clearColor.x, 0, nullptr);
+		commandList->ClearRenderTargetView(view.handle, &ClearColor.x, 0, nullptr);
 }
 
-void RenderTargetTexture::PrepareAsView(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from)
+void GpuTexture2D::PrepareAsView(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from)
 {
-	if (from == D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
-		return;
-
-	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-		texture.Get(),
-		from,
-		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-	commandList->ResourceBarrier(1, &barrier);
+	if (from != D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+		Transition(commandList, from, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 }
 
-void RenderTargetTexture::PrepareToPresent(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from)
+void GpuTexture2D::PrepareToPresent(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from)
 {
-	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-		texture.Get(),
-		from,
-		D3D12_RESOURCE_STATE_PRESENT);
-	commandList->ResourceBarrier(1, &barrier);
+	Transition(commandList, from, D3D12_RESOURCE_STATE_PRESENT);
 }
 
-void RenderTargetTexture::TransitionTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from, D3D12_RESOURCE_STATES to)
+void GpuTextureResource::Transition(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from, D3D12_RESOURCE_STATES to)
 {
 	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
 		texture.Get(),
@@ -174,7 +84,7 @@ void RenderTargetTexture::TransitionTarget(ID3D12GraphicsCommandList* commandLis
 	commandList->ResourceBarrier(1, &barrier);
 }
 
-void RenderTargetTexture::CreateDepthBuffer(ID3D12Device* device, RenderTargetHeap& heap, D3D12_RESOURCE_STATES initialState)
+void GpuTexture2D::CreateDepthBuffer(ID3D12Device* device, D3D12_RESOURCE_STATES initialState)
 {
 	D3D12_RESOURCE_DESC depthStencilResDesc = {};
 	depthStencilResDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
@@ -183,67 +93,36 @@ void RenderTargetTexture::CreateDepthBuffer(ID3D12Device* device, RenderTargetHe
 	depthStencilResDesc.Height = height;
 	depthStencilResDesc.DepthOrArraySize = 1;
 	depthStencilResDesc.MipLevels = 1;
-	depthStencilResDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	depthStencilResDesc.Format = format;
 	depthStencilResDesc.SampleDesc.Count = 1;
 	depthStencilResDesc.SampleDesc.Quality = 0;
 	depthStencilResDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	depthStencilResDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
 	D3D12_CLEAR_VALUE clearValue = {};
-	clearValue.Format = DXGI_FORMAT_D32_FLOAT;
-	clearValue.DepthStencil.Depth = DepthClearValue;
-	clearValue.DepthStencil.Stencil = 0;
-
-	{
-		auto heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-		device->CreateCommittedResource(
-			&heapProps,
-			D3D12_HEAP_FLAG_NONE,
-			&depthStencilResDesc,
-			initialState,
-			&clearValue,
-			IID_PPV_ARGS(&texture)
-		);
-
-		heap.CreateDepthTargetHandle(device, texture, view.handle);
-	}
-}
-
-void RenderTargetTexture::ResizeTextureBuffer(ID3D12Device* device, D3D12_RESOURCE_STATES state)
-{
-	auto textureDesc = texture->GetDesc();
-	textureDesc.Width = width;
-	textureDesc.Height = height;
-
-	D3D12_CLEAR_VALUE clearValue = {};
 	clearValue.Format = format;
-	memcpy(clearValue.Color, &clearColor, sizeof(clearColor));
-	auto clearValuePtr = &clearValue;
-
-	if (textureDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS)
-		clearValuePtr = nullptr;
+	clearValue.DepthStencil.Depth = depthClearValue;
+	clearValue.DepthStencil.Stencil = 0;
 
 	auto heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
 	device->CreateCommittedResource(
 		&heapProps,
 		D3D12_HEAP_FLAG_NONE,
-		&textureDesc,
-		state,
-		clearValuePtr,
-		IID_PPV_ARGS(&texture));
-
-	if (!name.empty())
-		texture->SetName(as_wstring(name).c_str());
+		&depthStencilResDesc,
+		initialState,
+		&clearValue,
+		IID_PPV_ARGS(&texture)
+	);
 }
 
-void RenderTargetTexture::CreateTextureBuffer(ID3D12Device* device, UINT width, UINT height, DXGI_FORMAT format, D3D12_RESOURCE_STATES state, UINT flags)
+void GpuTexture2D::CreateTextureBuffer(ID3D12Device* device, D3D12_RESOURCE_STATES state, UINT flags)
 {
 	D3D12_RESOURCE_DESC textureDesc = {};
 	textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	textureDesc.Width = width;
 	textureDesc.Height = height;
-	textureDesc.DepthOrArraySize = arraySize;
+	textureDesc.DepthOrArraySize = depthOrArraySize;
 	textureDesc.MipLevels = 1;
 	textureDesc.Format = format;
 	textureDesc.SampleDesc.Count = 1;
@@ -251,7 +130,7 @@ void RenderTargetTexture::CreateTextureBuffer(ID3D12Device* device, UINT width, 
 
 	D3D12_CLEAR_VALUE clearValue = {};
 	clearValue.Format = format;
-	memcpy(clearValue.Color, &clearColor, sizeof(clearColor));
+	memcpy(clearValue.Color, &ClearColor, sizeof(ClearColor));
 	auto clearValuePtr = &clearValue;
 
 	if (flags & AllowRenderTarget)
@@ -270,10 +149,11 @@ void RenderTargetTexture::CreateTextureBuffer(ID3D12Device* device, UINT width, 
 		&textureDesc,
 		state,
 		clearValuePtr,
-		IID_PPV_ARGS(&texture));
+		IID_PPV_ARGS(&texture)
+	);
 }
 
-void RenderTargetTexture::PrepareAsDepthTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from, bool clearDepth)
+void GpuTexture2D::PrepareAsDepthTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from, bool clearDepth)
 {
 	auto vp = CD3DX12_VIEWPORT(0.0f, 0.0f, width, height);
 	commandList->RSSetViewports(1, &vp);
@@ -281,13 +161,7 @@ void RenderTargetTexture::PrepareAsDepthTarget(ID3D12GraphicsCommandList* comman
 	commandList->RSSetScissorRects(1, &rect);
 
 	if (from != D3D12_RESOURCE_STATE_DEPTH_WRITE)
-	{
-		auto barrierToRT = CD3DX12_RESOURCE_BARRIER::Transition(
-			texture.Get(),
-			from,
-			D3D12_RESOURCE_STATE_DEPTH_WRITE);
-		commandList->ResourceBarrier(1, &barrierToRT);
-	}
+		Transition(commandList, from, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
 	commandList->OMSetRenderTargets(0, nullptr, FALSE, &view.handle);
 
@@ -295,9 +169,9 @@ void RenderTargetTexture::PrepareAsDepthTarget(ID3D12GraphicsCommandList* comman
 		ClearDepth(commandList);
 }
 
-void RenderTargetTexture::ClearDepth(ID3D12GraphicsCommandList* commandList)
+void GpuTexture2D::ClearDepth(ID3D12GraphicsCommandList* commandList)
 {
-	commandList->ClearDepthStencilView(view.handle, D3D12_CLEAR_FLAG_DEPTH, DepthClearValue, 0, 0, nullptr);
+	commandList->ClearDepthStencilView(view.handle, D3D12_CLEAR_FLAG_DEPTH, depthClearValue, 0, 0, nullptr);
 }
 
 void RenderTargetTexturesView::Init(ID3D12Device* device)
@@ -363,12 +237,12 @@ void RenderTargetTexturesView::PrepareAsTarget(ID3D12GraphicsCommandList* comman
 	commandList->OMSetRenderTargets(rtvHandles.size(), rtvHandles.data(), contiguous, (flags & TransitionFlags::UseDepth) ? &depthState.texture->view.handle : nullptr);
 
 	if (flags & TransitionFlags::UseDepth && flags & TransitionFlags::ClearDepth)
-		commandList->ClearDepthStencilView(depthState.texture->view.handle, D3D12_CLEAR_FLAG_DEPTH, depthState.texture->DepthClearValue, 0, 0, nullptr);
+		commandList->ClearDepthStencilView(depthState.texture->view.handle, D3D12_CLEAR_FLAG_DEPTH, depthState.texture->depthClearValue, 0, 0, nullptr);
 
 	if (clear)
 	{
 		for (size_t i = 0; i < texturesState.size(); i++)
-			commandList->ClearRenderTargetView(rtvHandles[i], &clearColor.x, 0, nullptr);
+			commandList->ClearRenderTargetView(rtvHandles[i], &ClearColor.x, 0, nullptr);
 	}
 }
 
@@ -411,12 +285,12 @@ void RenderTargetTexturesView::PrepareAsTarget(ID3D12GraphicsCommandList* comman
 	commandList->OMSetRenderTargets(rtvHandles.size(), rtvHandles.data(), contiguous, (flags & TransitionFlags::UseDepth) ? &depthState.texture->view.handle : nullptr);
 
 	if ((flags & TransitionFlags::UseDepth) && (flags & TransitionFlags::ClearDepth))
-		commandList->ClearDepthStencilView(depthState.texture->view.handle, D3D12_CLEAR_FLAG_DEPTH, depthState.texture->DepthClearValue, 0, 0, nullptr);
+		commandList->ClearDepthStencilView(depthState.texture->view.handle, D3D12_CLEAR_FLAG_DEPTH, depthState.texture->depthClearValue, 0, 0, nullptr);
 
 	if (clear)
 	{
 		for (size_t i = 0; i < texturesState.size(); i++)
-			commandList->ClearRenderTargetView(rtvHandles[i], &clearColor.x, 0, nullptr);
+			commandList->ClearRenderTargetView(rtvHandles[i], &ClearColor.x, 0, nullptr);
 	}
 }
 
@@ -481,14 +355,6 @@ void RenderTargetTexturesView::PrepareToPresent(ID3D12GraphicsCommandList* comma
 	commandList->ResourceBarrier(1, &barrier);
 }
 
-void RenderTargetTexture::SetName(const std::string& n)
-{
-	name = n;
-
-	if (texture)
-		texture->SetName(as_wstring(name).c_str());
-}
-
 void RenderTargetTextures::Init(ID3D12Device* device, UINT w, UINT h, RenderTargetHeap& heap, const std::vector<DXGI_FORMAT>& formats, D3D12_RESOURCE_STATES initialState, bool depthBuffer, D3D12_RESOURCE_STATES initialDepthState)
 {
 	textures.reserve(formats.size());
@@ -516,4 +382,55 @@ void RenderTargetTextures::SetName(const std::string& name)
 	}
 
 	depth.SetName(name + " Depth");
+}
+
+GpuTextureResource::~GpuTextureResource()
+{
+	DescriptorManager::get().removeTextureView(*this);
+	DescriptorManager::get().removeUAVView(*this);
+}
+
+void GpuTextureResource::SetName(const std::string& n)
+{
+	name = n;
+
+	if (texture)
+		texture->SetName(as_wstring(name).c_str());
+}
+
+void GpuTexture3D::Init(ID3D12Device* device, UINT w, UINT h, UINT d, DXGI_FORMAT f)
+{
+	format = f;
+	width = w;
+	height = h;
+	depthOrArraySize = d;
+
+	D3D12_RESOURCE_DESC textureDesc = {};
+	textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
+	textureDesc.Width = width;
+	textureDesc.Height = height;
+	textureDesc.DepthOrArraySize = depthOrArraySize;
+	textureDesc.MipLevels = 0;
+	textureDesc.Format = format;
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+	auto heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+
+	device->CreateCommittedResource(
+		&heapProps,
+		D3D12_HEAP_FLAG_NONE,
+		&textureDesc,
+		D3D12_RESOURCE_STATE_COMMON,
+		nullptr,
+		IID_PPV_ARGS(&texture));
+}
+
+void TextureStatePair::Transition(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES to)
+{
+	if (currentState != to)
+		texture->Transition(commandList, currentState, to);
+
+	currentState = to;
 }

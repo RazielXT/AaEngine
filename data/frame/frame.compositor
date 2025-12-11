@@ -37,29 +37,37 @@ compositor Frame
 		after PrepareFrame
 	}
 
-	task VoxelScene
+	task VoxelScene.Bounces (compute_shader)
 	{
 		after Shadows
+
+		sync_signal Voxels
+	}
+
+	task VoxelScene.Voxelize
+	{
 		target voxelDummy
 	}
 
-	task SceneRender
+	task SceneRender.EarlyZ
 	{
-		entry EarlyZ
 		target sceneTexture:Depth
+
+		//sync_signal Depth
 	}
 
-	task SceneRender
+	task SceneRender.Opaque
 	{
-		after VoxelScene
-		entry Opaque
-		target sceneTexture
+		target sceneTexture (depth_read)
 	}
 
 	ref SSAO(sceneTexture:Depth)
 
 	pass DeferredVCT
 	{
+		after VoxelScene.Voxelize
+		sync_wait Voxels
+
 		material DeferredVCT
 		input sceneTexture:Normal
 		input sceneTexture:Depth
@@ -109,9 +117,8 @@ compositor Frame
 		target sceneDownscale4
 	}
 
-	task SceneRender
+	task SceneRender.Debug
 	{
-		entry Debug
 		target sceneTextureTmp2 sceneTexture:MotionVectors
 	}
 
@@ -119,9 +126,8 @@ compositor Frame
 
 	ref Bloom(sceneDownscale4,Exposure.exposure)
 
-	task SceneRender
+	task SceneRender.Editor
 	{
-		entry Editor
 		target sceneTextureTmp2 sceneTexture:Depth (depth_read)
 	}
 

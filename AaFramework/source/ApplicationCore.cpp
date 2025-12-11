@@ -12,6 +12,7 @@
 #include "VoxelizeSceneTask.h"
 #include <dxgidebug.h>
 #include "PhysicsRenderTask.h"
+#include <filesystem>
 
 ApplicationCore::ApplicationCore(TargetViewport& viewport) : renderSystem(viewport), resources(renderSystem), sceneMgr(resources)
 {
@@ -28,6 +29,9 @@ ApplicationCore::~ApplicationCore()
 
 void ApplicationCore::initialize(const TargetWindow& window, const InitParams& appParams)
 {
+	if (!std::filesystem::exists(DATA_DIRECTORY) || !std::filesystem::is_directory(DATA_DIRECTORY))
+		FileLogger::logError("Missing directory " + std::filesystem::absolute(DATA_DIRECTORY).string());
+
 	renderSystem.core.initializeSwapChain(window);
 
 	Vector3(-1, -1, -1).Normalize(lights.directionalLight.direction);

@@ -25,7 +25,7 @@ public:
 
 	void render(RenderContext& ctx);
 
-	const RenderTargetTexture* getTexture(const std::string& name) const;
+	const GpuTexture2D* getTexture(const std::string& name) const;
 
 	using CreateTaskFunc = std::function<std::shared_ptr<CompositorTask>(RenderProvider&, SceneManager&)>;
 	void registerTask(const std::string& name, CreateTaskFunc);
@@ -37,7 +37,7 @@ protected:
 	InitConfig config;
 
 	CompositorInfo info;
-	std::map<std::string, RenderTargetTexture> textures;
+	std::map<std::string, GpuTexture2D> textures;
 
 	RenderTargetHeap rtvHeap;
 

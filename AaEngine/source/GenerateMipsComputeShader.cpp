@@ -8,17 +8,15 @@ GenerateMipsComputeShader::GenerateMipsComputeShader()
 	volatileTextures = true;
 }
 
-void GenerateMipsComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, TextureResource& texture)
+void GenerateMipsComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, GpuTexture3D& texture)
 {
 	auto resource = texture.texture.Get();
 
 	commandList->SetPipelineState(pipelineState.Get());
 	commandList->SetComputeRootSignature(signature);
 
-	TextureResource::TransitionState(commandList, texture, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-
 	//src Texture
-	commandList->SetComputeRootDescriptorTable(1, texture.textureView.srvHandles);
+	commandList->SetComputeRootDescriptorTable(1, texture.view.srvHandles);
 
 	UINT size = texture.width;
 

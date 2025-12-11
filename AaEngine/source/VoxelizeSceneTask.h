@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CompositorTask.h"
-#include "TextureResource.h"
+#include "GpuTexture.h"
 #include "Camera.h"
 #include "MathUtils.h"
 #include "GenerateMipsComputeShader.h"
@@ -15,16 +15,16 @@ class SceneManager;
 
 struct SceneVoxelsCascade
 {
-	TextureResource voxelSceneTexture;
-	TextureResource voxelPreviousSceneTexture;
+	GpuTexture3D voxelSceneTexture;
+	GpuTexture3D voxelPreviousSceneTexture;
+
 	std::string name;
 	UINT idx{};
 
 	void initialize(const std::string& name, ID3D12Device* device, GraphicsResources&);
-	void clearAll(ID3D12GraphicsCommandList* commandList, const TextureResource& clear, ClearBufferComputeShader&);
+	void clearAll(ID3D12GraphicsCommandList* commandList, const GpuTexture3D& clear, ClearBufferComputeShader&);
 
-	void prepareForVoxelization(ID3D12GraphicsCommandList* commandList, const TextureResource& clear, ClearBufferComputeShader&);
-	void prepareForReading(ID3D12GraphicsCommandList* commandList);
+	void prepareForVoxelization(ID3D12GraphicsCommandList* commandList, TextureStatePair& voxelScene, TextureStatePair& prevVoxelScene, const GpuTexture3D& clear, ClearBufferComputeShader&);
 
 	struct
 	{
@@ -63,6 +63,9 @@ public:
 	AsyncTasksInfo initialize(CompositorPass& pass) override;
 	void run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
 
+	void runCompute(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
+	bool writesSyncComputeCommands(CompositorPass&) const override;
+
 	static VoxelizeSceneTask& Get();
 
 	void revoxelize();
@@ -73,7 +76,7 @@ private:
 
 	static constexpr UINT CascadesCount = 4;
 
-	CommandsData commands;
+	CommandsData voxelizeCommands;
 	HANDLE eventBegin{};
 	HANDLE eventFinish;
 	std::thread worker;
@@ -114,8 +117,10 @@ private:
 	void updateCBufferCascade(SceneVoxelChunkInfo& info, Vector3 diff, SceneVoxelsCascade& chunk);
 	void updateCBuffer(UINT frameIndex);
 
-	void voxelizeCascade(CommandsData& commands, CommandsMarker& marker, PassTarget& viewportOutput, SceneVoxelsCascade& chunk);
-	void bounceCascade(CommandsData& commands, CommandsMarker& marker, PassTarget& viewportOutput, SceneVoxelsCascade& chunk);
+	void voxelizeCascades(PassTarget& viewportOutput);
+	void voxelizeCascade(TextureStatePair& voxelScene, TextureStatePair& prevVoxelScene, PassTarget& viewportOutput, SceneVoxelsCascade& chunk);
+
+	void bounceCascade(CommandsData& commands, PassTarget& viewportOutput, SceneVoxelsCascade& chunk);
 
 	UINT buildCounter[CascadesCount];
 	bool reset = false;
@@ -126,7 +131,7 @@ private:
 
 	ShadowMaps& shadowMaps;
 
-	TextureResource clearSceneTexture;
+	GpuTexture3D clearSceneTexture;
 
 	SceneVoxelsCascade voxelCascades[CascadesCount];
 };

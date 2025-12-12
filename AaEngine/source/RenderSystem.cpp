@@ -418,6 +418,8 @@ void RenderCore::MoveToNextFrame()
 		WaitForSingleObjectEx(computeFenceEvent, INFINITE, FALSE);
 	}
 
+	computeQueue->Wait(commandFence, currentFenceValue);
+
 	// Set the fence value for the next frame.
 	fenceValues[frameIndex] = currentFenceValue + 1;
 }

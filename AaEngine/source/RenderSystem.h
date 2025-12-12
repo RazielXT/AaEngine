@@ -86,8 +86,12 @@ private:
 
 	void MoveToNextFrame();
 
-	HANDLE fenceEvent;
-	ID3D12Fence* fence;
+	HANDLE commandFenceEvent;
+	ID3D12Fence* commandFence;
+
+	HANDLE computeFenceEvent;
+	ID3D12Fence* computeFence;
+
 	UINT64 fenceValues[FrameCount];
 };
 

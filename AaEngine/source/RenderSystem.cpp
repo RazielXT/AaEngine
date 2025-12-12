@@ -131,13 +131,20 @@ RenderCore::RenderCore()
 		computeQueue->SetName(L"ComputeQueue");
 	}
 
-	device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
-	fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+	device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&commandFence));
+	commandFenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+
+	device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&computeFence));
+	computeFenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+
+	for (auto& f : fenceValues)
+		f = 1;
 }
 
 RenderCore::~RenderCore()
 {
-	fence->Release();
+	computeFence->Release();
+	commandFence->Release();
 
 	swapChain->Release();
 	computeQueue->Release();
@@ -145,7 +152,8 @@ RenderCore::~RenderCore()
 	commandQueue->Release();
 	device->Release();
 
-	CloseHandle(fenceEvent);
+	CloseHandle(commandFenceEvent);
+	CloseHandle(computeFenceEvent);
 }
 
 RenderSystem::RenderSystem(TargetViewport& v) : viewport(v), upscale(*this)
@@ -263,7 +271,7 @@ void RenderCore::resize(UINT width, UINT height)
 	frameIndex = swapChain->GetCurrentBackBufferIndex();
 
 	for (auto& f : fenceValues)
-		f = 0;
+		f = 1;
 
 	MoveToNextFrame();
 }
@@ -271,12 +279,18 @@ void RenderCore::resize(UINT width, UINT height)
 void RenderCore::WaitForCurrentFrame()
 {
 	const UINT64 currentFenceValue = fenceValues[frameIndex];
-	commandQueue->Signal(fence, currentFenceValue);
+	commandQueue->Signal(commandFence, currentFenceValue);
+	computeQueue->Signal(computeFence, currentFenceValue);
 
-	//if (fence->GetCompletedValue() < currentFenceValue)
+	if (commandFence->GetCompletedValue() < currentFenceValue)
 	{
-		fence->SetEventOnCompletion(currentFenceValue, fenceEvent);
-		WaitForSingleObjectEx(fenceEvent, INFINITE, FALSE);
+		commandFence->SetEventOnCompletion(currentFenceValue, commandFenceEvent);
+		WaitForSingleObjectEx(commandFenceEvent, INFINITE, FALSE);
+	}
+	if (computeFence->GetCompletedValue() < currentFenceValue)
+	{
+		computeFence->SetEventOnCompletion(currentFenceValue, computeFenceEvent);
+		WaitForSingleObjectEx(computeFenceEvent, INFINITE, FALSE);
 	}
 
 	fenceValues[frameIndex]++;
@@ -362,12 +376,18 @@ void RenderCore::WaitForAllFrames()
 	for (int i = 0; i < FrameCount; i++)
 	{
 		const UINT64 currentFenceValue = fenceValues[i];
-		commandQueue->Signal(fence, currentFenceValue);
+		commandQueue->Signal(commandFence, currentFenceValue);
+		computeQueue->Signal(computeFence, currentFenceValue);
 
-		//if (fence->GetCompletedValue() < currentFenceValue)
+		if (commandFence->GetCompletedValue() < currentFenceValue)
 		{
-			fence->SetEventOnCompletion(currentFenceValue, fenceEvent);
-			WaitForSingleObjectEx(fenceEvent, INFINITE, FALSE);
+			commandFence->SetEventOnCompletion(currentFenceValue, commandFenceEvent);
+			WaitForSingleObjectEx(commandFenceEvent, INFINITE, FALSE);
+		}
+		if (computeFence->GetCompletedValue() < currentFenceValue)
+		{
+			computeFence->SetEventOnCompletion(currentFenceValue, computeFenceEvent);
+			WaitForSingleObjectEx(computeFenceEvent, INFINITE, FALSE);
 		}
 
 		fenceValues[i] += FrameCount;
@@ -379,16 +399,23 @@ void RenderCore::MoveToNextFrame()
 {
 	// Schedule a Signal command in the queue.
 	const UINT64 currentFenceValue = fenceValues[frameIndex];
-	commandQueue->Signal(fence, currentFenceValue);
+	commandQueue->Signal(commandFence, currentFenceValue);
+	computeQueue->Signal(computeFence, currentFenceValue);
 
 	// Update the frame index.
 	frameIndex = swapChain->GetCurrentBackBufferIndex();
+	const UINT64 lastFenceValue = fenceValues[frameIndex];
 
 	// If the next frame is not ready to be rendered yet, wait until it is ready.
-	if (fence->GetCompletedValue() < fenceValues[frameIndex])
+	if (commandFence->GetCompletedValue() < lastFenceValue)
 	{
-		fence->SetEventOnCompletion(fenceValues[frameIndex], fenceEvent);
-		WaitForSingleObjectEx(fenceEvent, INFINITE, FALSE);
+		commandFence->SetEventOnCompletion(lastFenceValue, commandFenceEvent);
+		WaitForSingleObjectEx(commandFenceEvent, INFINITE, FALSE);
+	}
+	if (computeFence->GetCompletedValue() < lastFenceValue)
+	{
+		computeFence->SetEventOnCompletion(lastFenceValue, computeFenceEvent);
+		WaitForSingleObjectEx(computeFenceEvent, INFINITE, FALSE);
 	}
 
 	// Set the fence value for the next frame.

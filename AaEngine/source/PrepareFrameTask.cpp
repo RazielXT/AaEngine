@@ -27,8 +27,8 @@ void PrepareFrameTask::run(RenderContext& ctx, CommandsData& cmd, CompositorPass
 
 	sceneMgr.water.update(provider.renderSystem, cmd.commandList, provider.params.timeDelta, provider.params.frameIndex);
 
-// 	sceneMgr.terrain.update(cmd.commandList, sceneMgr, ctx.camera->getPosition());
-// 
+//	sceneMgr.terrain.update(cmd.commandList, sceneMgr, ctx.camera->getPosition());
+
 // 	static int c = 0;
 // 	if (c == 0)
 // 	{

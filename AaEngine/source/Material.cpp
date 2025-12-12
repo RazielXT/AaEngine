@@ -355,6 +355,17 @@ void MaterialInstance::SetTexture(ShaderTextureView& texture, UINT slot)
 		UpdateBindlessTexture(t);
 }
 
+void MaterialInstance::SetTexture(ShaderTextureView& texture, const std::string& name)
+{
+	for (UINT slot = 0; const auto& t : ref.resources.textures)
+	{
+		if (t.id == name)
+			SetTexture(texture, slot);
+
+		slot++;
+	}
+}
+
 ShaderTextureView* MaterialInstance::GetTexture(UINT slot) const
 {
 	return resources->textures[slot].texture;

@@ -252,10 +252,14 @@ void SceneRenderTask::renderTransparentScene(CompositorPass& pass)
 		commandList->ResourceBarrier(2, barriersBack);
 	}
 
+	sceneMgr.water.prepareForRendering(commandList);
+
 	pass.target.textureSet->PrepareAsTarget(commandList, true, TransitionFlags::UseDepth);
 
 	ShaderConstantsProvider constants(provider.params, transparent.sceneVisibility, *ctx.camera, *pass.target.texture);
 	transparent.transparentQueue->renderObjects(constants, commandList);
+
+	sceneMgr.water.prepareAfterRendering(commandList);
 }
 
 void SceneRenderTask::renderEditor(CompositorPass& pass, CommandsData& cmd)

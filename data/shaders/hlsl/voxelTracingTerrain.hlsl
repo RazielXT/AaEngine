@@ -1,6 +1,3 @@
-#include "VoxelConeTracingCommon.hlsl"
-#include "ShadowsPssm.hlsl"
-
 float4x4 ViewProjectionMatrix;
 float4x4 WorldMatrix;
 float3 MainCameraPosition;
@@ -12,16 +9,6 @@ uint TexIdNormal;
 uint TexIdGrassNormal;
 uint TexIdSpread;
 uint TexIdDisplacement;
-
-cbuffer PSSMShadows : register(b1)
-{
-	SunParams Sun;
-}
-
-cbuffer SceneVoxelInfo : register(b2)
-{
-    SceneVoxelCbufferIndexed VoxelInfo;
-};
 
 struct VS_Input
 {
@@ -83,13 +70,6 @@ Texture2D<float4> GetTexture(uint index)
 {
     return ResourceDescriptorHeap[index];
 }
-Texture3D<float4> GetTexture3D(uint index)
-{
-    return ResourceDescriptorHeap[index];
-}
-
-SamplerState VoxelSampler : register(s0);
-SamplerState ShadowSampler : register(s1);
 
 float3 CreateDistanceWeigths3(float camDistance, float distances[3], float scales[3])
 {
@@ -178,10 +158,9 @@ PSOutput PSMain(PS_Input pin)
 
 struct PSOutput
 {
-    float4 color : SV_Target0;
-    float4 normals : SV_Target1;
-    float4 camDistance : SV_Target2;
-    float4 motionVectors : SV_Target3;
+	float4 albedo : SV_Target0;
+	float4 normals : SV_Target1;
+	float4 motionVectors : SV_Target2;
 };
 
 PSOutput PSMain(PS_Input pin)
@@ -195,12 +174,6 @@ PSOutput PSMain(PS_Input pin)
 	//inNormal = normalize(inNormal);
 	float3 bin = cross(inNormal, pin.tangent);
 
-	//pm offset
-	//float height = GetTexture(TexIdDisplacement).Sample(diffuse_sampler, pin.uv * 4).r;
-	//float3 vVec = float3(dot(cameraView, pin.tangent.xyz), dot(cameraView, bin.xyz), dot(cameraView, pin.normal.xyz));
-	//float dispWeight = lerp(-0.01, 0, saturate(camDistance / 500));
-	//float2 texCoordDispOffset = dispWeight * (height - 0.5) * normalize(vVec).xy;
-
 	float spread = GetTexture(TexIdSpread).Sample(diffuse_sampler, pin.uv / 10).r;
 	float detailSpread = GetTexture(TexIdSpread).Sample(diffuse_sampler, pin.uv * 2).r * spread * spread  * 0.1;
 	float spread2 = GetTexture(TexIdSpread).Sample(diffuse_sampler, (pin.uv  + 0.5) / 3).r;
@@ -209,13 +182,10 @@ PSOutput PSMain(PS_Input pin)
 	float rockWeight = smoothstep(0.77 + detailSpread, 0.78 + detailSpread, pin.normal.y);
 	float grassWeight = smoothstep(0.78 + detailSpread2, 0.8 + detailSpread2, pin.normal.y);
 
-	//texCoordDispOffset *= 1 - grassWeight;
-	float2 texCoordWithOffset = pin.uv;
-
 	float diffuseStepDistance[5] = { 0, 50, 500, 2000, 6000 };
 	float diffuseStepScale[5] = { 4, 2, 1.f /2, 1.f /5, 1.f /20 };
 	float3 diffuseDistanceWeights = CreateDistanceWeigths5(camDistance, diffuseStepDistance, diffuseStepScale);
-	float3 rock = ReadDistanceTexture(TexIdDiffuse, diffuse_sampler, texCoordWithOffset, diffuseDistanceWeights);
+	float3 rock = ReadDistanceTexture(TexIdDiffuse, diffuse_sampler, pin.uv, diffuseDistanceWeights);
 
 	float3 green = GetTexture(TexIdGrass).Sample(diffuse_sampler, pin.uv * 5).rgb * float3(0.9, 1, 0.9);
 	float3 brown = float3(0.45, 0.35, 0.25) * 1.5f * rock; // Color for brown
@@ -224,9 +194,8 @@ PSOutput PSMain(PS_Input pin)
 	float3 albedo = lerp(albedoMid, green, grassWeight);
 
 	uint NormalTex = rockWeight > 0.5 ? TexIdGrassNormal : TexIdNormal;
-	float3 normalTex = ReadDistanceTexture(NormalTex, diffuse_sampler, texCoordWithOffset, diffuseDistanceWeights);
+	float3 normalTex = ReadDistanceTexture(NormalTex, diffuse_sampler, pin.uv, diffuseDistanceWeights);
 	normalTex.b = 1;
-	//normalTex = lerp(normalTex, float3(0.5f, 0.5f, 1.0f), 0.5);
 
     float3x3 tbn = float3x3(pin.tangent, bin, pin.normal);
     float3 normal = mul(normalTex.xyz * 2 - 1, tbn); // to object space
@@ -234,77 +203,9 @@ PSOutput PSMain(PS_Input pin)
 	float3x3 worldMatrix = (float3x3)WorldMatrix;
 	float3 worldDetailNormal = normalize(mul(normal, worldMatrix));
 
-	float3 worldNormal = normalize(mul(normal, worldMatrix));
-	float3 worldTangent = normalize(mul(pin.tangent, worldMatrix));
-	float3 worldBinormal = cross(worldNormal, worldTangent);
-
-	float3 voxelAmbient = 0;
-	float globalOcclusion = 1;
-	float voxelWeight = 1.0f;
-	float fullWeight = 0.01f;
-
-	for (int idx = 0; idx < 4; idx++)
-	{
-		float3 voxelUV = (pin.wp.xyz - VoxelInfo.Voxels[idx].Offset) / VoxelInfo.Voxels[idx].SceneSize;
-		Texture3D voxelmap = GetTexture3D(VoxelInfo.Voxels[idx].TexId);
-		
-		float mipOffset = idx > 2 ? 0 : -1;
-		float4 fullTrace = ConeTraceImpl(voxelUV, worldNormal, VoxelInfo.MiddleConeRatio.x, VoxelInfo.MiddleConeRatio.y, voxelmap, VoxelSampler, mipOffset);
-		fullTrace.rgb *= 4;
-		float traceW = fullTrace.w;
-		fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal + worldTangent), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler, 0) * 1.0;
-		fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal - worldTangent), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler, 0) * 1.0;
-		fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal + worldBinormal), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler, 0) * 1.0;
-		fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal - worldBinormal), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler, 0) * 1.0;
-		fullTrace /= 5;
-		traceW = min(traceW, fullTrace.w);
-
-		if (idx < 3)
-			fullTrace *= 1 - getDistanceBlend(camDistance, VoxelInfo.Voxels[idx].SceneSize);
-
-		//if (idx >= 1)
-		voxelAmbient += fullTrace.rgb * voxelWeight;
-
-		if (idx >= 2)
-		{
-			voxelWeight = saturate(voxelWeight - traceW);
-			fullWeight += traceW;
-		}
-	}
-
-	//voxelWeight = pow(1 - voxelWeight, 2);
-	//voxelAmbient /= max(0.9f, voxelWeight);
-	fullWeight /= 4.0f;
-	fullWeight = pow(1 - fullWeight, 1);
-
-	float dotStepLighting = step(0, dot(-Sun.Direction,worldNormal));
-	float dotLighting = dot(-Sun.Direction,worldDetailNormal);
-	float3 skyAmbient = float3(0.2, 0.2, 0.3) * (0.15 + 0.5 * saturate(worldDetailNormal.y));
-
-	float voxelFarWeight = getDistanceBlend(camDistance, VoxelInfo.Voxels[3].SceneSize);
-	float3 finalAmbient = lerp(voxelAmbient, skyAmbient, voxelFarWeight);
-
-	float3 skyLighting = fullWeight * skyAmbient;
-	finalAmbient = saturate(finalAmbient + skyLighting);
-
-	float directShadow = getPssmShadow(pin.wp, camDistance, dotLighting, ShadowSampler, Sun) * dotStepLighting;
-	float directLight = abs(dotLighting) * directShadow;
-	float3 lighting = (pow(directLight, 2) * Sun.Color + finalAmbient);
-
-    float4 color1 = float4(albedo * lighting, 1);
-	color1.a = (lighting.r + lighting.g + lighting.b) / 30;
-
-	//color1.rgb = voxelAmbient;
-	//color1.rgb = skyLighting;
-	//color1.rgb = directShadow;
-	//color1.rgb = color1.rgb * 0.01 + step(0.99, pin.www);
-	
 	PSOutput output;
-    output.color = color1;
+    output.albedo = float4(albedo, 1);
 	output.normals = float4(worldDetailNormal, 1);
-
-	output.camDistance = camDistance;
-
 	output.motionVectors = float4(0, 0, 0, 0);
 
 	return output;

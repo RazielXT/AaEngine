@@ -1,7 +1,19 @@
 material TerrainBaseVCT abstract
 {
-	vertex_shader vsVoxelTracingTerrain
-	pixel_shader psVoxelTracingTerrain
+	vertex_shader
+	{
+		file voxelTracingTerrain.hlsl
+		entry VSMain
+		profile vs_6_6
+	}
+
+	pixel_shader
+	{
+		file voxelTracingTerrain.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
+
 	
 	technique Depth TerrainDepth
 	technique Voxelize VoxelizeTerrain

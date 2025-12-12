@@ -146,6 +146,8 @@ void VoxelizeSceneTask::run(RenderContext& renderCtx, CommandsData& syncCommands
 
 void VoxelizeSceneTask::runCompute(RenderContext& ctx, CommandsData& computeCommands, CompositorPass& pass)
 {
+	CommandsMarker marker(computeCommands.commandList, "VoxelBounces", PixColor::LightBlue);
+
 	auto cameraPosition = ctx.camera->getPosition();
 
 	Vector3 diff[CascadesCount];

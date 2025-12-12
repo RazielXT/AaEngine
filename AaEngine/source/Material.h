@@ -120,6 +120,7 @@ public:
 	~MaterialInstance();
 
 	void SetTexture(ShaderTextureView& texture, UINT slot);
+	void SetTexture(ShaderTextureView& texture, const std::string& name);
 	ShaderTextureView* GetTexture(UINT slot) const;
 
 	void SetUAV(ID3D12Resource* uav, UINT slot);

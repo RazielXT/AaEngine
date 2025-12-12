@@ -25,6 +25,9 @@ material WaterLake
 	{
 		file caustics.dds
 	}
+	texture WaterInfoTexture
+	{
+	}
 
 	technique Depth skip
 	technique Voxelize skip

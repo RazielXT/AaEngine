@@ -15,3 +15,10 @@ public:
 
 	void dispatch(ID3D12GraphicsCommandList* commandList, UINT water, UINT w, UINT h, ID3D12Resource* vertexBuffer);
 };
+
+class WaterTextureToTextureCS : public ComputeShader
+{
+public:
+
+	void dispatch(ID3D12GraphicsCommandList* commandList, UINT water, UINT w, UINT h, D3D12_GPU_DESCRIPTOR_HANDLE output);
+};

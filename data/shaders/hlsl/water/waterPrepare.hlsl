@@ -1,7 +1,8 @@
 #include "../VoxelConeTracingCommon.hlsl"
 #include "../postprocess/WorldReconstruction.hlsl"
 
-float4x4 WorldViewProjectionMatrix;
+float4x4 WorldMatrix;
+float4x4 ViewProjectionMatrix;
 float4x4 InvViewProjectionMatrix;
 
 float2 ViewportSizeInverse;
@@ -11,6 +12,7 @@ uint TexIdNormal;
 uint TexIdHeight;
 uint TexIdSceneDepthHigh;
 uint TexIdCaustics;
+uint TexIdWaterInfoTexture;
 //uint TexIdSceneDepthLow;
 //uint TexIdSceneDepthVeryLow;
 //uint TexIdSceneColor;
@@ -26,11 +28,6 @@ cbuffer SceneVoxelInfo : register(b1)
 };
 
 Texture2D<float4> GetTexture(uint index)
-{
-    return ResourceDescriptorHeap[index];
-}
-
-TextureCube<float4> GetTextureCube(uint index)
 {
     return ResourceDescriptorHeap[index];
 }
@@ -56,6 +53,7 @@ struct PSInput
 	float4 position : SV_POSITION;
 	float3 normal : NORMAL;
 	float2 uv : TEXCOORD0;
+	float4 worldPosition : TEXCOORD1;
 };
 
 // Function to decode a float2 packed normal back to float3
@@ -99,7 +97,7 @@ PSInput VSMain(VSInput input, uint vertexID : SV_VertexID)
     float4 objPosition;
     objPosition.x = inputUv.x * cellSize;
     objPosition.z = inputUv.y * cellSize;
-    objPosition.y = input.height; // height from VB
+    //objPosition.y = input.height; // height from VB
 	objPosition.w = 1;
 
     // Generate UV based on grid coordinates
@@ -108,8 +106,12 @@ PSInput VSMain(VSInput input, uint vertexID : SV_VertexID)
 	//float waveSize = GetWavesSize(texUv) * 0.01;
 	//objPosition.y += waveSize;
 
-	result.position = mul(objPosition, WorldViewProjectionMatrix);
-	result.normal = DecodeNormalOctahedral(input.normal);//normalize(mul(input.normal, (float3x3)WorldMatrix));
+	float3 waterInfo = GetTexture(TexIdWaterInfoTexture).SampleLevel(LinearWrapSampler, inputUv, 0).xyz;
+	objPosition.y = waterInfo.x;
+
+	result.worldPosition = mul(objPosition, WorldMatrix);
+	result.position = mul(result.worldPosition, ViewProjectionMatrix);
+	result.normal = DecodeNormalOctahedral(waterInfo.yz);//normalize(mul(input.normal, (float3x3)WorldMatrix));
 	result.uv = texUv / 10;
 
 	return result;
@@ -136,20 +138,19 @@ PSOutput PSMain(PSInput input)
 {
 	float2 ScreenUV = input.position.xy * ViewportSizeInverse;
 
-	float3 worldPosition = float3(0,0,0);
 	Texture2D DepthBufferHigh = GetTexture(TexIdSceneDepthHigh);
 	float groundZ = DepthBufferHigh.Sample(LinearWrapSampler, ScreenUV).r;
 	float3 groundPosition = ReconstructWorldPosition(ScreenUV, groundZ, InvViewProjectionMatrix);
-	float groundDistance = length(worldPosition.xyz - groundPosition);
+	float groundDistance = length(input.worldPosition.xyz - groundPosition);
 
-	const float FadeDistance = 0.1;
+	const float FadeDistance = 2;
 	float fade = groundDistance / FadeDistance;
 
 	float4 albedo = GetWaves(input.uv);
 	albedo.a = albedo.r * 0.2 + fade;
 	albedo.rgb *= float3(0.2,0.8, 0.6);
 
-	float3 voxelUV = (worldPosition.xyz-VoxelInfo.FarVoxels.Offset)/VoxelInfo.FarVoxels.SceneSize;
+	float3 voxelUV = (input.worldPosition.xyz-VoxelInfo.FarVoxels.Offset)/VoxelInfo.FarVoxels.SceneSize;
 	Texture3D voxelmap = ResourceDescriptorHeap[VoxelInfo.FarVoxels.TexId];
 	albedo.rgb *= max(0.3, (voxelmap.SampleLevel(LinearWrapSampler, voxelUV, 3).rgb + voxelmap.SampleLevel(LinearWrapSampler, voxelUV, 4).rgb * 2) * 10);
 
@@ -168,7 +169,7 @@ PSOutput PSMain(PSInput input)
 	float projScale = 0.02;
 	float projection = GetTexture(TexIdCaustics).Sample(LinearWrapSampler, (groundPosition.xy+groundPosition.z+projOffset)*projScale).r;
 	projection *= GetTexture(TexIdCaustics).Sample(LinearWrapSampler, (groundPosition.xy+groundPosition.z+ float2(0.5,0.5) + projOffset*1.11)*projScale).r;
-	output.caustics = projection * (worldPosition.y - groundPosition.y) / FadeDistance;
+	output.caustics = projection * (input.worldPosition.y - groundPosition.y) / FadeDistance;
 
 	return output;
 }
@@ -186,7 +187,7 @@ PSOutputId PSMainEntityId(PSInput input)
 {
 	PSOutputId output;
 	output.id = uint4(EntityId, 0, 0, 0);
-	output.position = float4(input.worldPosition.xyz, 0);
+	output.position = input.worldPosition;
 	output.normal = float4(input.normal.xyz, 0);
 	return output;
 }

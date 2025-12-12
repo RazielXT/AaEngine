@@ -21,13 +21,16 @@ public:
 	void updateCompute(RenderSystem& renderSystem, ID3D12GraphicsCommandList* commandList, float dt, UINT frameIdx);
 	void clear();
 
+	void prepareForRendering(ID3D12GraphicsCommandList* commandList);
+	void prepareAfterRendering(ID3D12GraphicsCommandList* commandList);
+
 private:
 
 	WaterSimContinuityComputeShader continuityComputeShader;
 	WaterSimMomentumComputeShader momentumComputeShader;
 
 	TextureToMeshCS textureToMeshCS;
-	WaterTextureToMeshCS waterToMeshCS;
+	WaterTextureToTextureCS waterToTextureCS;
 
 	CopyTexturesCS copyTexturesCS;
 	WaterMeshTextureCS meshTextureCS;
@@ -38,7 +41,7 @@ private:
 	GpuTexture2D waterHeight[FrameCount];
 	GpuTexture2D waterVelocity[FrameCount];
 
-	GpuTexture2D meshColorTexture;
+	GpuTexture2D waterInfoTexture;
 
 	ComPtr<ID3D12Resource> srcWater;
 	ComPtr<ID3D12Resource> srcVelocity;

@@ -1,25 +1,22 @@
 uint width, height;
 uint ResIdWaterMap;
+uint ResIdTerrainMap;
 
-#ifndef DIRECT_LOAD
 SamplerState LinearSampler : register(s0);
-#endif
 
 RWTexture2D<float4> WaterInfoMap : register(u0);
 
-#ifdef DIRECT_LOAD
-float readHeight(int3 coord)
-{
-    Texture2D<float> Heightmap = ResourceDescriptorHeap[ResIdWaterMap];
-	return Heightmap.Load(coord);
-}
-#else
 float readHeight(float2 uv)
 {
     Texture2D<float> Heightmap = ResourceDescriptorHeap[ResIdWaterMap];
 	return Heightmap.SampleLevel(LinearSampler, uv, 0);
 }
-#endif
+
+float readTerrainHeight(float2 uv)
+{
+    Texture2D<float> Heightmap = ResourceDescriptorHeap[ResIdTerrainMap];
+	return Heightmap.SampleLevel(LinearSampler, uv, 0) * 50;
+}
 
 // Function to encode a float3 normal into a float2 (Octahedral)
 float2 EncodeNormalOctahedral(float3 n)
@@ -51,28 +48,18 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
     if (DTid.x >= width || DTid.y >= height)
         return;
 
-    // --- Height sampling ---
-    float heightValue;
-#ifdef DIRECT_LOAD
-    int3 coord = int3(DTid.xy, 0);
-    heightValue = readHeight(coord);
-#else
     float2 uv = float2(DTid.x / (float)width, DTid.y / (float)height);
-    heightValue = readHeight(uv);
-#endif
+    float heightValue = readHeight(uv);
 
 	float stepWidth = 0.05f;
+	float heightOffset = 0;
 
-#ifdef DIRECT_LOAD
-    float3 tangent = float3(0.0f, readHeight(coord + int3(1,0,0)) - heightValue, stepWidth);
-    float3 binormal = float3(stepWidth, readHeight(coord + int3(0,1,0)) - heightValue, 0.0f);
-#else
+	if (readTerrainHeight(uv) > heightValue)
+		heightOffset -= 0.001f ;
+
     float3 tangent = float3(0.0f, readHeight(uv + float2(1 / (float)width, 0)) - heightValue, stepWidth);
     float3 binormal = float3(stepWidth, readHeight(uv + float2(0, 1 / (float)height)) - heightValue, 0.0f);
-#endif
-
-    // Calculate normal using cross product
     float3 normal = normalize(cross(tangent, binormal));
 
-	WaterInfoMap[DTid.xy] = float4(heightValue, EncodeNormalOctahedral(normal), 0);
+	WaterInfoMap[DTid.xy] = float4(heightValue + heightOffset, normal);
 }

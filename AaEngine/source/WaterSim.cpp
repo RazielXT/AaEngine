@@ -11,7 +11,9 @@ WaterSim::~WaterSim()
 }
 
 const UINT TextureSize = 1024;
-const UINT TerrainSize = TextureSize / 4;
+const UINT WaterModelChucks = 16;
+const UINT WaterModelChuckSize = TextureSize / WaterModelChucks;
+const UINT TerrainModelSize = TextureSize - WaterModelChucks + 1;
 
 void WaterSim::initializeGpuResources(RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch, SceneManager& sceneMgr)
 {
@@ -43,7 +45,6 @@ void WaterSim::initializeGpuResources(RenderSystem& renderSystem, GraphicsResour
 	}
 	srcVelocity = TextureUtils::CreateUploadTexture(renderSystem.core.device, batch, velocityData.data(), TextureSize, TextureSize, DXGI_FORMAT_R32G32_FLOAT, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
-	const UINT WaterModelChuckSize = TextureSize / 16;
 	//waterModel.addLayoutElement(DXGI_FORMAT_R32_FLOAT, VertexElementSemantic::TEXCOORD);
 	//waterModel.addLayoutElement(DXGI_FORMAT_R32G32_FLOAT, VertexElementSemantic::NORMAL);
 	waterModel.CreateIndexBuffer(renderSystem.core.device, &batch, WaterModelChuckSize, WaterModelChuckSize);
@@ -81,7 +82,6 @@ void WaterSim::initializeGpuResources(RenderSystem& renderSystem, GraphicsResour
 		}
 		//waterModel.CreateVertexBuffer(renderSystem.core.device, &batch, vertices.data(), vertices.size(), sizeof(WaterVertex));
 		//waterModel.calculateBounds();
-		waterModel.bbox.Extents = { 30, 30, 30 };
 	}
 
 	struct Vertex
@@ -93,38 +93,40 @@ void WaterSim::initializeGpuResources(RenderSystem& renderSystem, GraphicsResour
 	terrainModel.addLayoutElement(DXGI_FORMAT_R32G32B32_FLOAT, VertexElementSemantic::POSITION);
 	terrainModel.addLayoutElement(DXGI_FORMAT_R32G32B32_FLOAT, VertexElementSemantic::NORMAL);
 	terrainModel.addLayoutElement(DXGI_FORMAT_R32G32_FLOAT, VertexElementSemantic::TEXCOORD);
-	terrainModel.CreateIndexBuffer(renderSystem.core.device, &batch, TerrainSize, TerrainSize);
+	terrainModel.CreateIndexBuffer(renderSystem.core.device, &batch, TerrainModelSize, TerrainModelSize);
 
 	{
 		std::vector<Vertex> vertices;
-		vertices.reserve(TerrainSize* TerrainSize);
+		vertices.reserve(TerrainModelSize* TerrainModelSize);
 
-		for (UINT y = 0; y < TerrainSize; ++y)
+		for (UINT y = 0; y < TerrainModelSize; ++y)
 		{
-			for (UINT x = 0; x < TerrainSize; ++x)
+			for (UINT x = 0; x < TerrainModelSize; ++x)
 			{
 				Vertex v;
 
 				// Flat grid position (z = 0 for now)
 				v.position = DirectX::XMFLOAT3(
-					static_cast<float>(x) * 0.1f * TextureSize / TerrainSize,
+					static_cast<float>(x) * 0.1f * TextureSize / TerrainModelSize,
 					0.0f,
-					static_cast<float>(y) * 0.1f * TextureSize / TerrainSize);
+					static_cast<float>(y) * 0.1f * TextureSize / TerrainModelSize);
 
 				v.normal = { 0, 1, 0 };
 
 				// Normalized UVs
 				v.uv = DirectX::XMFLOAT2(
-					static_cast<float>(x) / (TerrainSize - 1),
-					static_cast<float>(y) / (TerrainSize - 1));
+					static_cast<float>(x) / (TerrainModelSize - 1),
+					static_cast<float>(y) / (TerrainModelSize - 1));
 
 				vertices.push_back(v);
 			}
 		}
 		terrainModel.CreateVertexBuffer(renderSystem.core.device, &batch, vertices.data(), vertices.size(), sizeof(Vertex));
 		terrainModel.calculateBounds();
-		terrainModel.bbox.Extents = { 30, 30, 30 };
+		terrainModel.bbox.Extents.y = 50;
 	}
+
+	waterModel.bbox = terrainModel.bbox;
 
 	terrainHeight.InitUAV(renderSystem.core.device, TextureSize, TextureSize, DXGI_FORMAT_R32_FLOAT, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	terrainHeight.SetName("WaterSimTerrainHeight");
@@ -164,7 +166,7 @@ void WaterSim::initializeGpuResources(RenderSystem& renderSystem, GraphicsResour
 	auto e2 = sceneMgr.createEntity("WaterSim", Order::Transparent);
 	e2->geometry.fromModel(waterModel);
 	e2->geometry.vertexCount = WaterModelChuckSize * WaterModelChuckSize;
-	e2->geometry.instanceCount = 16 * 16;
+	e2->geometry.instanceCount = WaterModelChucks * WaterModelChucks;
 	e2->setBoundingBox(waterModel.bbox);
 	e2->material = resources.materials.getMaterial("WaterLake", batch);
 	e2->material->SetTexture(waterInfoTexture.view, "WaterInfoTexture");
@@ -250,7 +252,7 @@ void WaterSim::update(RenderSystem& renderSystem, ID3D12GraphicsCommandList* com
 		b2 = CD3DX12_RESOURCE_BARRIER::Transition(terrainTexture->texture.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 		commandList->ResourceBarrier(1, &b2);
 
-		textureToMeshCS.dispatch(commandList, terrainHeight.view.srvHeapIndex, TerrainSize, TerrainSize, 50, terrainModel.vertexBuffer);
+		textureToMeshCS.dispatch(commandList, terrainHeight.view.srvHeapIndex, TerrainModelSize, TerrainModelSize, 50, terrainModel.vertexBuffer);
 	}
 }
 
@@ -332,7 +334,7 @@ void WaterSim::updateCompute(RenderSystem& renderSystem, ID3D12GraphicsCommandLi
 	}
 
 	waterHeight[frameIdx].Transition(computeList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-	waterToTextureCS.dispatch(computeList, waterHeight[frameIdx].view.srvHeapIndex, TextureSize, TextureSize, waterInfoTexture.view.uavHandles);
+	waterToTextureCS.dispatch(computeList, waterHeight[frameIdx].view.srvHeapIndex, terrainHeight.view.srvHeapIndex, TextureSize, TextureSize, waterInfoTexture.view.uavHandles);
 	waterHeight[frameIdx].Transition(computeList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
 	frameIdx = (frameIdx + 1) % FrameCount;

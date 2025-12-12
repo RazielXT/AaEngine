@@ -20,5 +20,5 @@ class WaterTextureToTextureCS : public ComputeShader
 {
 public:
 
-	void dispatch(ID3D12GraphicsCommandList* commandList, UINT water, UINT w, UINT h, D3D12_GPU_DESCRIPTOR_HANDLE output);
+	void dispatch(ID3D12GraphicsCommandList* commandList, UINT water, UINT terrain, UINT w, UINT h, D3D12_GPU_DESCRIPTOR_HANDLE output);
 };

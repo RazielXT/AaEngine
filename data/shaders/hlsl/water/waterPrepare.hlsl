@@ -35,6 +35,7 @@ Texture2D<float4> GetTexture(uint index)
 SamplerState LinearWrapSampler : register(s0);
 SamplerState DepthSampler : register(s1);
 SamplerState PointSampler : register(s2);
+SamplerState LinearSampler : register(s3);
 
 float GetWavesSize(float2 uv)
 {
@@ -132,13 +133,13 @@ PSInput VSMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
 	//float waveSize = GetWavesSize(texUv) * 0.01;
 	//objPosition.y += waveSize;
 
-	float3 waterInfo = GetTexture(TexIdWaterInfoTexture).SampleLevel(LinearWrapSampler, inputUv, 0).xyz;
+	float4 waterInfo = GetTexture(TexIdWaterInfoTexture).SampleLevel(LinearSampler, inputUv, 0);
 	objPosition.y = waterInfo.x;
 
     PSInput result;
 	result.worldPosition = mul(objPosition, WorldMatrix);
 	result.position = mul(result.worldPosition, ViewProjectionMatrix);
-	result.normal = DecodeNormalOctahedral(waterInfo.yz);//normalize(mul(input.normal, (float3x3)WorldMatrix));
+	result.normal = waterInfo.yzx;//normalize(mul(input.normal, (float3x3)WorldMatrix));
 	result.uv = texUv / 10;
 
 	return result;
@@ -170,7 +171,7 @@ PSOutput PSMain(PSInput input)
 	float3 groundPosition = ReconstructWorldPosition(ScreenUV, groundZ, InvViewProjectionMatrix);
 	float groundDistance = length(input.worldPosition.xyz - groundPosition);
 
-	const float FadeDistance = 0.5f;
+	const float FadeDistance = 1.5f;
 	float fade = groundDistance / FadeDistance;
 
 	float4 albedo = GetWaves(input.uv);

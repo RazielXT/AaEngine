@@ -548,6 +548,8 @@ void MaterialInstance::UpdatePerFrame(MaterialDataStorage& data, const ShaderCon
 			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&data.rootParams[p.bufferOffset], XMMatrixTranspose(info.getInverseViewMatrix()));
 		else if (p.type == ResourcesInfo::AutoParam::INV_PROJ_MATRIX)
 			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&data.rootParams[p.bufferOffset], XMMatrixTranspose(info.getInverseProjectionMatrix()));
+		else if (p.type == ResourcesInfo::AutoParam::WVP_MATRIX)
+			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&data.rootParams[p.bufferOffset], XMMatrixMultiplyTranspose(info.getWorldMatrix(), info.getViewProjectionMatrix()));
 		else if (p.type == ResourcesInfo::AutoParam::Z_MAGIC)
 			data.rootParams[p.bufferOffset] = info.camera.getCameraZ();
 	}

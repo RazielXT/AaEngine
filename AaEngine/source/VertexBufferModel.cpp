@@ -295,6 +295,38 @@ void VertexBufferModel::CreateIndexBuffer(ID3D12Device* device, ResourceUploadBa
 	CreateIndexBuffer(device, memory, indices.data(), indices.size());
 }
 
+void VertexBufferModel::CreateIndexBufferStrip(ID3D12Device* device, ResourceUploadBatch* memory, UINT width, UINT height)
+{
+	std::vector<uint32_t> indices;
+	indices.reserve((width - 1) * (height - 1) * 6);
+
+	// Set primitive topology to D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP
+	for (UINT y = 0; y < height - 1; ++y)
+	{
+		// Process the row (strip)
+		for (UINT x = 0; x < width; ++x) // Note: width, not width - 1
+		{
+			// Add indices for the current row (y) and the row below (y+1)
+			indices.push_back(y * width + x);
+			indices.push_back((y + 1) * width + x);
+		}
+
+		// Stitching (Degenerate Triangles)
+		// If not the last row, insert two indices to jump to the next row's start
+		if (y < height - 2)
+		{
+			// Duplicate the last two indices of the current row strip
+			// This creates two zero-area (degenerate) triangles:
+			// 1. (last, last, next_start) -> ignored
+			// 2. (last, next_start, next_start) -> ignored
+			indices.push_back((y + 1) * width + (width - 1)); // End of current strip
+			indices.push_back((y + 1) * width + (width - 1)); // Repeat
+		}
+	}
+
+	CreateIndexBuffer(device, memory, indices.data(), indices.size());
+}
+
 void VertexBufferModel::calculateBounds(const std::vector<float>& positionsBuffer)
 {
 	BoundingBoxVolume volume;

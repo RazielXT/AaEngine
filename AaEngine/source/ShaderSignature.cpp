@@ -409,6 +409,8 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData(GraphicsResour
 					type = ResourcesInfo::AutoParam::VP_MATRIX;
 				else if (p.Name == "ViewMatrix")
 					type = ResourcesInfo::AutoParam::VIEW_MATRIX;
+				else if (p.Name == "WorldViewProjectionMatrix")
+					type = ResourcesInfo::AutoParam::WVP_MATRIX;
 				else if (p.Name == "ProjectionMatrix")
 					type = ResourcesInfo::AutoParam::PROJ_MATRIX;
 				else if (p.Name == "InvViewProjectionMatrix")

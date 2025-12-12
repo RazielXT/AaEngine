@@ -43,12 +43,12 @@ void WaterSim::initializeGpuResources(RenderSystem& renderSystem, GraphicsResour
 	srcVelocity = TextureUtils::CreateUploadTexture(renderSystem.core.device, batch, velocityData.data(), TextureSize, TextureSize, DXGI_FORMAT_R32G32_FLOAT, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 	waterModel.addLayoutElement(DXGI_FORMAT_R32_FLOAT, VertexElementSemantic::TEXCOORD);
-	waterModel.addLayoutElement(DXGI_FORMAT_R32G32B32_FLOAT, VertexElementSemantic::NORMAL);
-	waterModel.CreateIndexBuffer(renderSystem.core.device, &batch, TextureSize, TextureSize);
+	waterModel.addLayoutElement(DXGI_FORMAT_R32G32_FLOAT, VertexElementSemantic::NORMAL);
+	waterModel.CreateIndexBufferStrip(renderSystem.core.device, &batch, TextureSize, TextureSize);
 	struct WaterVertex
 	{
 		float height; // x,y,z
-		DirectX::XMFLOAT3 normal; // x,y,z
+		XMFLOAT2 normal; // x,y,z
 	};
 	{
 		std::vector<WaterVertex> vertices;
@@ -58,7 +58,7 @@ void WaterSim::initializeGpuResources(RenderSystem& renderSystem, GraphicsResour
 		{
 			for (UINT x = 0; x < TextureSize; ++x)
 			{
-				WaterVertex v;
+				WaterVertex v{};
 
 				// Flat grid position (z = 0 for now)
 				v.height = 0;
@@ -67,7 +67,7 @@ void WaterSim::initializeGpuResources(RenderSystem& renderSystem, GraphicsResour
 // 					0.0f,
 // 					static_cast<float>(y) * 0.1f);
 
-				v.normal = { 0, 1, 0 };
+//				v.normal = { 0, 1, 0 };
 
 				// Normalized UVs
 // 				v.uv = DirectX::XMFLOAT2(
@@ -159,6 +159,7 @@ void WaterSim::initializeGpuResources(RenderSystem& renderSystem, GraphicsResour
 
 	auto e2 = sceneMgr.createEntity("WaterSim", Order::Transparent);
 	e2->geometry.fromModel(waterModel);
+	e2->geometry.topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
 	e2->setBoundingBox(waterModel.bbox);
 	e2->material = resources.materials.getMaterial("WaterLake", batch);
 	e2->setPosition({ -20, -20, 30 });

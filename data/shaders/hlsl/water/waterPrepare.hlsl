@@ -1,8 +1,7 @@
 #include "../VoxelConeTracingCommon.hlsl"
 #include "../postprocess/WorldReconstruction.hlsl"
 
-float4x4 WorldMatrix;
-float4x4 ViewProjectionMatrix;
+float4x4 WorldViewProjectionMatrix;
 float4x4 InvViewProjectionMatrix;
 
 float2 ViewportSizeInverse;
@@ -49,7 +48,7 @@ float GetWavesSize(float2 uv)
 struct VSInput
 {
 	float height : TEXCOORD0;
-	float3 normal : NORMAL;
+	float2 normal : NORMAL;
 };
 
 struct PSInput
@@ -57,8 +56,31 @@ struct PSInput
 	float4 position : SV_POSITION;
 	float3 normal : NORMAL;
 	float2 uv : TEXCOORD0;
-	float4 worldPosition : TEXCOORD1;
 };
+
+// Function to decode a float2 packed normal back to float3
+float3 DecodeNormalOctahedral(float2 p)
+{
+    // 1. Calculate the magnitude of the projection onto the XY plane (L1-norm)
+    float abs_p_sum = abs(p.x) + abs(p.y);
+    
+    // 2. Calculate Z component: Z = 1 - L1-norm
+    float z = 1.0f - abs_p_sum;
+
+    // 3. Reconstruct the vector components (handling the reflection/back face)
+    float3 n = float3(p.x, p.y, z);
+
+    // 4. Handle the sign swap from the reflection step:
+    // If Z < 0, then we must restore the sign of the X and Y components.
+    // This is mathematically equivalent to:
+    if (z < 0.0f)
+    {
+		n.xy = (1.0f - abs(n.yx)) * select(n.xy >= 0.0f, 1.0f, -1.0f); // CORRECTED
+    }
+    
+    // 5. Final normalization is often required due to minor precision loss:
+    return normalize(n);
+}
 
 PSInput VSMain(VSInput input, uint vertexID : SV_VertexID)
 {
@@ -83,12 +105,11 @@ PSInput VSMain(VSInput input, uint vertexID : SV_VertexID)
     // Generate UV based on grid coordinates
 	float2 texUv = inputUv * 0.5 - Time / 18;
 	
-	float waveSize = GetWavesSize(texUv) * 0.01;
-	objPosition.y += waveSize;
+	//float waveSize = GetWavesSize(texUv) * 0.01;
+	//objPosition.y += waveSize;
 
-	result.worldPosition = mul(objPosition, WorldMatrix);
-	result.position = mul(result.worldPosition, ViewProjectionMatrix);
-	result.normal = input.normal;//normalize(mul(input.normal, (float3x3)WorldMatrix));
+	result.position = mul(objPosition, WorldViewProjectionMatrix);
+	result.normal = DecodeNormalOctahedral(input.normal);//normalize(mul(input.normal, (float3x3)WorldMatrix));
 	result.uv = texUv / 10;
 
 	return result;
@@ -115,10 +136,11 @@ PSOutput PSMain(PSInput input)
 {
 	float2 ScreenUV = input.position.xy * ViewportSizeInverse;
 
+	float3 worldPosition = float3(0,0,0);
 	Texture2D DepthBufferHigh = GetTexture(TexIdSceneDepthHigh);
 	float groundZ = DepthBufferHigh.Sample(LinearWrapSampler, ScreenUV).r;
 	float3 groundPosition = ReconstructWorldPosition(ScreenUV, groundZ, InvViewProjectionMatrix);
-	float groundDistance = length(input.worldPosition.xyz - groundPosition);
+	float groundDistance = length(worldPosition.xyz - groundPosition);
 
 	const float FadeDistance = 0.1;
 	float fade = groundDistance / FadeDistance;
@@ -127,7 +149,7 @@ PSOutput PSMain(PSInput input)
 	albedo.a = albedo.r * 0.2 + fade;
 	albedo.rgb *= float3(0.2,0.8, 0.6);
 
-	float3 voxelUV = (input.worldPosition.xyz-VoxelInfo.FarVoxels.Offset)/VoxelInfo.FarVoxels.SceneSize;
+	float3 voxelUV = (worldPosition.xyz-VoxelInfo.FarVoxels.Offset)/VoxelInfo.FarVoxels.SceneSize;
 	Texture3D voxelmap = ResourceDescriptorHeap[VoxelInfo.FarVoxels.TexId];
 	albedo.rgb *= max(0.3, (voxelmap.SampleLevel(LinearWrapSampler, voxelUV, 3).rgb + voxelmap.SampleLevel(LinearWrapSampler, voxelUV, 4).rgb * 2) * 10);
 
@@ -146,7 +168,7 @@ PSOutput PSMain(PSInput input)
 	float projScale = 0.02;
 	float projection = GetTexture(TexIdCaustics).Sample(LinearWrapSampler, (groundPosition.xy+groundPosition.z+projOffset)*projScale).r;
 	projection *= GetTexture(TexIdCaustics).Sample(LinearWrapSampler, (groundPosition.xy+groundPosition.z+ float2(0.5,0.5) + projOffset*1.11)*projScale).r;
-	output.caustics = projection * (input.worldPosition.y - groundPosition.y) / FadeDistance;
+	output.caustics = projection * (worldPosition.y - groundPosition.y) / FadeDistance;
 
 	return output;
 }

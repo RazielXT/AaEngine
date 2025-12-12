@@ -43,9 +43,10 @@ void WaterSim::initializeGpuResources(RenderSystem& renderSystem, GraphicsResour
 	}
 	srcVelocity = TextureUtils::CreateUploadTexture(renderSystem.core.device, batch, velocityData.data(), TextureSize, TextureSize, DXGI_FORMAT_R32G32_FLOAT, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
-	waterModel.addLayoutElement(DXGI_FORMAT_R32_FLOAT, VertexElementSemantic::TEXCOORD);
-	waterModel.addLayoutElement(DXGI_FORMAT_R32G32_FLOAT, VertexElementSemantic::NORMAL);
-	waterModel.CreateIndexBuffer(renderSystem.core.device, &batch, TextureSize, TextureSize);
+	const UINT WaterModelChuckSize = TextureSize / 16;
+	//waterModel.addLayoutElement(DXGI_FORMAT_R32_FLOAT, VertexElementSemantic::TEXCOORD);
+	//waterModel.addLayoutElement(DXGI_FORMAT_R32G32_FLOAT, VertexElementSemantic::NORMAL);
+	waterModel.CreateIndexBuffer(renderSystem.core.device, &batch, WaterModelChuckSize, WaterModelChuckSize);
 	struct WaterVertex
 	{
 		float height; // x,y,z
@@ -78,8 +79,9 @@ void WaterSim::initializeGpuResources(RenderSystem& renderSystem, GraphicsResour
 				vertices.push_back(v);
 			}
 		}
-		waterModel.CreateVertexBuffer(renderSystem.core.device, &batch, vertices.data(), vertices.size(), sizeof(WaterVertex));
-		waterModel.calculateBounds();
+		//waterModel.CreateVertexBuffer(renderSystem.core.device, &batch, vertices.data(), vertices.size(), sizeof(WaterVertex));
+		//waterModel.calculateBounds();
+		waterModel.bbox.Extents = { 30, 30, 30 };
 	}
 
 	struct Vertex
@@ -121,7 +123,7 @@ void WaterSim::initializeGpuResources(RenderSystem& renderSystem, GraphicsResour
 		}
 		terrainModel.CreateVertexBuffer(renderSystem.core.device, &batch, vertices.data(), vertices.size(), sizeof(Vertex));
 		terrainModel.calculateBounds();
-		terrainModel.bbox.Extents = { 20, 20, 20 };
+		terrainModel.bbox.Extents = { 30, 30, 30 };
 	}
 
 	terrainHeight.InitUAV(renderSystem.core.device, TextureSize, TextureSize, DXGI_FORMAT_R32_FLOAT, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
@@ -161,6 +163,8 @@ void WaterSim::initializeGpuResources(RenderSystem& renderSystem, GraphicsResour
 
 	auto e2 = sceneMgr.createEntity("WaterSim", Order::Transparent);
 	e2->geometry.fromModel(waterModel);
+	e2->geometry.vertexCount = WaterModelChuckSize * WaterModelChuckSize;
+	e2->geometry.instanceCount = 16 * 16;
 	e2->setBoundingBox(waterModel.bbox);
 	e2->material = resources.materials.getMaterial("WaterLake", batch);
 	e2->material->SetTexture(waterInfoTexture.view, "WaterInfoTexture");

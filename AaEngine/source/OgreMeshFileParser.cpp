@@ -556,7 +556,7 @@ void readSubMesh(std::ifstream& stream, MeshInfo& info, ModelParseOptions o)
 			std::vector<uint16_t> data;
 			data.resize(submesh.model->indexCount);
 			readData(stream, data.data(), submesh.model->indexCount);
-			submesh.model->CreateIndexBuffer(o.device, o.batch, data);
+			submesh.model->CreateIndexBuffer(o.device, o.batch, data.data(), data.size());
 		}
 	}
 

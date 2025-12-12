@@ -80,24 +80,50 @@ float3 DecodeNormalOctahedral(float2 p)
     return normalize(n);
 }
 
-PSInput VSMain(VSInput input, uint vertexID : SV_VertexID)
+PSInput VSMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
 {
-	PSInput result;
+	const uint GlobalGridSize = 1024;
+    const uint ChunksPerSide = 16;
+    const uint ChunkSize = GlobalGridSize / ChunksPerSide;
+    const float cellSize = GlobalGridSize * 0.1f;
 
-	const uint gridSize = 1024;
-	const float cellSize = gridSize * 0.1f;
+    // --- 2. Compute Local Coordinates (Within the 128x128 chunk) ---
+    // x_local: 0 to 127
+    uint x_local = vertexID % ChunkSize;
+    // y_local: 0 to 127
+    uint y_local = vertexID / ChunkSize;
+    
+    // Compute normalized UV for the local chunk (0 to 1.0)
+    // We use (ChunkSize - 1) because the 128x128 vertices define 127x127 quads.
+    float2 localUv = float2((float)x_local / (ChunkSize - 1), (float)y_local / (ChunkSize - 1));
+    
+    // --- 3. Compute Instance Offset (Where the 128x128 chunk starts globally) ---
+    
+    // i_chunk: Instance column (0 to 7)
+    uint i_chunk = instanceID % ChunksPerSide;
+    // j_chunk: Instance row (0 to 7)
+    uint j_chunk = instanceID / ChunksPerSide;
+    
+    // Global UV Offset (Normalized position where this chunk starts globally)
+    // Each chunk occupies 1/8th of the normalized UV space (1.0 / 8 = 0.125)
+    float2 globalUvOffset = float2((float)i_chunk / ChunksPerSide, 
+                                   (float)j_chunk / ChunksPerSide);
 
-    // Compute 2D grid coordinates from vertexID
-    uint x = vertexID % gridSize;
-    uint y = vertexID / gridSize;
+    // --- 4. Compute Global Coordinates ---
+    
+    // Global UV: normalized coordinate across the entire 1024x1024 grid (0 to 1.0)
+    // The local UV [0, 1] is mapped to the chunk's 1/8th slot.
+    float2 inputUv = globalUvOffset + (localUv * (1.0f / ChunksPerSide));
 
-    float2 inputUv = float2((float)x / (gridSize - 1), (float)y / (gridSize - 1));
-
-    // Generate world-space position
+    // Compute Global Vertex Indices (0 to 1023) if needed for wave function:
+    // uint x_global = i_chunk * (ChunkSize - 1) + x_local;
+    // uint y_global = j_chunk * (ChunkSize - 1) + y_local;
+    
+    // --- 5. Generate World-Space Position (Using the original logic) ---
+    
     float4 objPosition;
-    objPosition.x = inputUv.x * cellSize;
-    objPosition.z = inputUv.y * cellSize;
-    //objPosition.y = input.height; // height from VB
+    objPosition.x = inputUv.x * cellSize; // Global X position
+    objPosition.z = inputUv.y * cellSize; // Global Z position
 	objPosition.w = 1;
 
     // Generate UV based on grid coordinates
@@ -109,6 +135,7 @@ PSInput VSMain(VSInput input, uint vertexID : SV_VertexID)
 	float3 waterInfo = GetTexture(TexIdWaterInfoTexture).SampleLevel(LinearWrapSampler, inputUv, 0).xyz;
 	objPosition.y = waterInfo.x;
 
+    PSInput result;
 	result.worldPosition = mul(objPosition, WorldMatrix);
 	result.position = mul(result.worldPosition, ViewProjectionMatrix);
 	result.normal = DecodeNormalOctahedral(waterInfo.yz);//normalize(mul(input.normal, (float3x3)WorldMatrix));
@@ -143,7 +170,7 @@ PSOutput PSMain(PSInput input)
 	float3 groundPosition = ReconstructWorldPosition(ScreenUV, groundZ, InvViewProjectionMatrix);
 	float groundDistance = length(input.worldPosition.xyz - groundPosition);
 
-	const float FadeDistance = 2;
+	const float FadeDistance = 0.5f;
 	float fade = groundDistance / FadeDistance;
 
 	float4 albedo = GetWaves(input.uv);

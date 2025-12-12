@@ -43,9 +43,10 @@ public:
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 	uint32_t vertexCount = 0;
 
-	void CreateIndexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, const std::vector<uint16_t>& data);
+	void CreateIndexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, const uint16_t* data, size_t dataCount);
 	void CreateIndexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, const uint32_t* data, size_t dataCount);
 	void CreateIndexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, UINT width, UINT height);
+	void CreateIndexBuffer16(ID3D12Device* device, ResourceUploadBatch* memory, UINT width, UINT height);
 	void CreateIndexBufferStrip(ID3D12Device* device, ResourceUploadBatch* memory, UINT width, UINT height);
 	void CreateIndexBuffer(ID3D12Resource* buffer, uint32_t dataCount);
 	ID3D12Resource* indexBuffer{};

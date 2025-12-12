@@ -212,22 +212,22 @@ void VertexBufferModel::CreateVertexBuffer(ID3D12Resource* buffer, UINT vc, UINT
 	vertexBufferView.StrideInBytes = vertexSize;
 }
 
-void VertexBufferModel::CreateIndexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, const std::vector<uint16_t>& data)
+void VertexBufferModel::CreateIndexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, const uint16_t* data, size_t dataCount)
 {
-	indexCount = (uint32_t)data.size();
+	indexCount = (uint32_t)dataCount;
 
 	auto hr = CreateStaticBuffer(device, *memory,
-		data,
+		data, dataCount,
 		D3D12_RESOURCE_STATE_INDEX_BUFFER, &indexBuffer);
 
 	// Create the index buffer view
 	indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
-	indexBufferView.SizeInBytes = static_cast<UINT>(data.size()) * sizeof(uint16_t);
+	indexBufferView.SizeInBytes = static_cast<UINT>(dataCount) * sizeof(uint16_t);
 	indexBufferView.Format = DXGI_FORMAT_R16_UINT;
 	indexBuffer->SetName(L"IB");
 
-	indices.resize(data.size());
-	for (size_t i = 0; i < data.size(); i++)
+	indices.resize(dataCount);
+	for (size_t i = 0; i < dataCount; i++)
 	{
 		indices[i] = data[i];
 	}
@@ -268,6 +268,12 @@ void VertexBufferModel::CreateIndexBuffer(ID3D12Resource* buffer, uint32_t dataC
 
 void VertexBufferModel::CreateIndexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, UINT width, UINT height)
 {
+	if (width * height <= 0xffff)
+	{
+		CreateIndexBuffer16(device, memory, width, height);
+		return;
+	}
+
 	std::vector<uint32_t> indices;
 	indices.reserve((width - 1) * (height - 1) * 6);
 
@@ -275,10 +281,39 @@ void VertexBufferModel::CreateIndexBuffer(ID3D12Device* device, ResourceUploadBa
 	{
 		for (UINT x = 0; x < width - 1; ++x)
 		{
-			UINT v0 = y * width + x;
-			UINT v1 = v0 + 1;
-			UINT v2 = v0 + width;
-			UINT v3 = v2 + 1;
+			uint32_t v0 = y * width + x;
+			uint32_t v1 = v0 + 1;
+			uint32_t v2 = v0 + width;
+			uint32_t v3 = v2 + 1;
+
+			// First triangle
+			indices.push_back(v0);
+			indices.push_back(v2);
+			indices.push_back(v1);
+
+			// Second triangle
+			indices.push_back(v1);
+			indices.push_back(v2);
+			indices.push_back(v3);
+		}
+	}
+
+	CreateIndexBuffer(device, memory, indices.data(), indices.size());
+}
+
+void VertexBufferModel::CreateIndexBuffer16(ID3D12Device* device, ResourceUploadBatch* memory, UINT width, UINT height)
+{
+	std::vector<uint16_t> indices;
+	indices.reserve((width - 1) * (height - 1) * 6);
+
+	for (uint16_t y = 0; y < height - 1; ++y)
+	{
+		for (uint16_t x = 0; x < width - 1; ++x)
+		{
+			uint16_t v0 = y * width + x;
+			uint16_t v1 = v0 + 1;
+			uint16_t v2 = v0 + width;
+			uint16_t v3 = v2 + 1;
 
 			// First triangle
 			indices.push_back(v0);

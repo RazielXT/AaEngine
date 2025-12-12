@@ -20,7 +20,7 @@ VertexBufferModel* BinaryModelLoader::load(std::string filename, ModelParseOptio
 	if (info.indexCount)
 	{
 		model->indexCount = info.indexCount;
-		model->CreateIndexBuffer(options.device, options.batch, info.indices);
+		model->CreateIndexBuffer(options.device, options.batch, info.indices.data(), info.indices.size());
 	}
 
 	if (!info.positions.empty())

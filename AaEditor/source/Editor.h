@@ -18,14 +18,13 @@ public:
 struct DebugState
 {
 	bool reloadShaders = false;
-	int TexturePreviewIndex = -1;
 
 	const char* changeScene{};
 
 	int DlssMode = (int)UpscaleMode::Off;
 	int FsrMode = (int)UpscaleMode::Off;
 
-	bool limitFrameRate = true;
+	bool limitFrameRate = false;
 };
 
 class Editor

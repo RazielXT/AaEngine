@@ -48,14 +48,14 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
     if (DTid.x >= width || DTid.y >= height)
         return;
 
-    float2 uv = float2(DTid.x / (float)width, DTid.y / (float)height);
+    float2 uv = float2(DTid.x / (float)(width - 1), DTid.y / (float)(height - 1));
     float heightValue = readHeight(uv);
 
 	float stepWidth = 0.05f;
 	float heightOffset = 0;
 
 	if (readTerrainHeight(uv) > heightValue)
-		heightOffset -= 0.001f ;
+		heightOffset -= 0.01f ;
 
     float3 tangent = float3(0.0f, readHeight(uv + float2(1 / (float)width, 0)) - heightValue, stepWidth);
     float3 binormal = float3(stepWidth, readHeight(uv + float2(0, 1 / (float)height)) - heightValue, 0.0f);

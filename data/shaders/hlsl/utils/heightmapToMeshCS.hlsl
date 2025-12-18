@@ -25,7 +25,7 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
     if (DTid.x >= width || DTid.y >= height)
         return;
 
-    float2 uv = float2(DTid.x / (float)width, DTid.y / (float)height);
+	float2 uv = float2(DTid.x / (float)(width - 1), DTid.y / (float)(height - 1));
     float heightValue = readHeight(uv);
 
     uint vertexIndex = DTid.y * width + DTid.x;

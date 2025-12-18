@@ -81,6 +81,9 @@ ExampleDescriptorHeapAllocator g_pd3dSrvDescHeapAlloc;
 
 Editor::Editor(ApplicationCore& a, ImguiPanelViewport& v) : app(a), renderer(a.renderSystem.core), renderPanelViewport(v)
 {
+#ifdef _DEBUG
+	state.limitFrameRate = true;
+#endif
 }
 
 void Editor::initialize(TargetWindow& v)

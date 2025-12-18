@@ -88,10 +88,6 @@ void FrameCompositor::reloadPasses()
 			{
 				pass.task = std::make_shared<UpscaleTask>(provider, sceneMgr);
 			}
-			else if (pass.info.task == "UpscalePrepare")
-			{
-				pass.task = std::make_shared<UpscalePrepareTask>(provider, sceneMgr);
-			}
 			else if (pass.info.task == "Test")
 			{
 				pass.task = std::make_shared<SceneTestTask>(provider, sceneMgr);
@@ -119,8 +115,8 @@ void FrameCompositor::reloadPasses()
 
 	for (auto& pass : passes)
 	{
-		if (!pass.info.material.empty() && pass.target.texture)
-			pass.material = provider.resources.materials.getMaterial(pass.info.material)->Assign({}, { pass.target.texture->format });
+		if (!pass.info.material.empty() && pass.targets.size() == 1)
+			pass.material = provider.resources.materials.getMaterial(pass.info.material)->Assign({}, { pass.targets.front().texture->format });
 	}
 
 	initializeCommands();
@@ -175,7 +171,7 @@ void FrameCompositor::reloadTextures()
 
 
 			{
-				auto lastState = lastTextureStates[name];
+				auto lastState = initialTextureStates[name];
 
 				GpuTexture2D& tex = textures[name];
 				tex.depthOrArraySize = t.arraySize;
@@ -184,7 +180,6 @@ void FrameCompositor::reloadTextures()
 					tex.InitDepth(provider.renderSystem.core.device, w, h, rtvHeap, lastState);
 				else
 				{
-
 					UINT flags = t.uav ? GpuTexture2D::AllowUAV : GpuTexture2D::AllowRenderTarget;
 					tex.Init(provider.renderSystem.core.device, w, h, rtvHeap, t.format, lastState, flags);
 				}
@@ -220,34 +215,37 @@ void FrameCompositor::reloadTextures()
 			p.inputs[i++].texture = &textures[name];
 		}
 
-		if (!p.info.targets.empty())
+		for (UINT i = 0; auto& [name, _] : p.info.targets)
 		{
-			if (config.renderToBackbuffer && p.info.targets.front().name == "Output")
+			auto& target = p.targets[i++];
+
+			if (config.renderToBackbuffer && name == "Output")
 			{
-				p.target.texture = &provider.renderSystem.core.backbuffer[0];
-				p.target.backbuffer = true;
+				target.texture = &provider.renderSystem.core.backbuffer[0];
+				p.backbuffer = true;
 			}
 			else
 			{
-				p.target.texture = &textures[p.info.targets.front().name];
+				target.texture = &textures[name];
 			}
-			
-			if (p.target.textureSet)
+		}
+
+		if (p.mrt)
+		{
+			std::vector<GpuTexture2D*> mrtTex;
+			GpuTexture2D* mrtDepth{};
+
+			for (int c = 0; auto& [name, _] : p.info.targets)
 			{
-				auto textureSet = p.target.textureSet.get();
+				auto t = &textures[name];
 
-				for (int c = 0; auto& [targetName,_] : p.info.targets)
-				{
-					auto t = &textures[targetName];
-
-					if (targetName.ends_with(":Depth"))
-						textureSet->depthState.texture = t;
-					else
-						textureSet->texturesState[c++].texture = t;
-				}
-
-				textureSet->Init(provider.renderSystem.core.device);
+				if (name.ends_with(":Depth"))
+					mrtDepth = t;
+				else
+					mrtTex.push_back(t);
 			}
+
+			p.mrt->Init(provider.renderSystem.core.device, mrtTex, mrtDepth);
 		}
 
 		if (p.task)
@@ -259,15 +257,16 @@ void FrameCompositor::reloadTextures()
 
 void FrameCompositor::renderQuad(PassData& pass, RenderContext& ctx, ID3D12GraphicsCommandList* commandList)
 {
-	pass.target.texture->PrepareAsRenderTarget(commandList, pass.target.previousState);
+	auto& target = pass.targets.front();
+	target.texture->PrepareAsRenderTarget(commandList, target.previousState);
+	GpuTextureStates::Transition(commandList, pass.inputs);
 
-	for (UINT i = 0; auto & input : pass.inputs)
+	for (UINT i = 0; auto& input : pass.inputs)
 	{
-		input.texture->PrepareAsView(commandList, input.previousState);
 		pass.material->SetTexture(input.texture->view, i++);
 	}
 
-	ShaderConstantsProvider constants(provider.params, {}, *ctx.camera, *pass.target.texture);
+	ShaderConstantsProvider constants(provider.params, {}, *ctx.camera, *target.texture);
 	MaterialDataStorage storage;
 
 	auto material = pass.material;
@@ -287,36 +286,45 @@ void FrameCompositor::render(RenderContext& ctx)
 {
 	for (auto& pass : passes)
 	{
-		auto& syncCommands = pass.generalCommands;
+		auto& syncCommands = pass.syncCommands;
 		if (pass.startCommands)
-		{
-			provider.renderSystem.core.StartCommandListNoMarker(syncCommands);
-
-			if (pass.computeCommands)
-				provider.renderSystem.core.StartCommandListNoMarker(*pass.computeCommands);
-		}
-		if (pass.target.backbuffer)
-			pass.target.texture = &provider.renderSystem.core.backbuffer[provider.renderSystem.core.frameIndex];
+			provider.renderSystem.core.StartCommandListNoMarker(*syncCommands);
+		if (pass.startComputeCommands)
+			provider.renderSystem.core.StartCommandListNoMarker(*pass.computeCommands);
+		if (pass.backbuffer)
+			pass.targets.front().texture = &provider.renderSystem.core.backbuffer[provider.renderSystem.core.frameIndex];
 
 		if (pass.material)
 		{
-			CommandsMarker marker(syncCommands.commandList, pass.info.name.c_str(), PixColor::Compositor);
- 			renderQuad(pass, ctx, syncCommands.commandList);
+			CommandsMarker marker(syncCommands->commandList, pass.info.name.c_str(), PixColor::Compositor);
+ 			renderQuad(pass, ctx, syncCommands->commandList);
 		}
 		else if (pass.task)
 		{
-			pass.task->run(ctx, syncCommands, pass);
-
-			if (pass.computeCommands)
+			if (syncCommands)
+				pass.task->run(ctx, *syncCommands, pass);
+			else if (pass.computeCommands)
 				pass.task->runCompute(ctx, *pass.computeCommands, pass);
+			else
+				pass.task->run(ctx, pass);
 		}
 
-		if (pass.target.present)
+		if (pass.present)
 		{
+			auto& target = pass.targets.front();
+
 			if (config.renderToBackbuffer)
-				pass.target.texture->PrepareToPresent(syncCommands.commandList, pass.target.previousState);
+				target.texture->PrepareToPresent(syncCommands->commandList, target.previousState);
 			else
-				pass.target.texture->PrepareAsView(syncCommands.commandList, pass.target.previousState);
+				target.texture->PrepareAsView(syncCommands->commandList, target.previousState);
+		}
+
+		if (!pass.postTransition.empty() && syncCommands)
+		{
+			TextureTransitions<5> tr;
+			for (auto& pt : pass.postTransition)
+				tr.add(pt->texture, pt->state, pt->nextState);
+			tr.push(syncCommands->commandList);
 		}
 	}
 	executeCommands();
@@ -354,7 +362,7 @@ void FrameCompositor::executeCommands()
 	for (auto& t : tasks)
 	{
 		for (auto& f : t.syncWait)
-			renderer.commandQueue->Wait(f->fence.Get(), f->value++);
+			f.first->Wait(f.second->fence.Get(), f.second->value++);
 
 		if (t.finishEvents.empty())
 		{
@@ -377,6 +385,6 @@ void FrameCompositor::executeCommands()
 		}
 
 		for (auto& f : t.syncSignal)
-			renderer.computeQueue->Signal(f->fence.Get(), f->value);
+			f.first->Signal(f.second->fence.Get(), f.second->value);
 	}
 }

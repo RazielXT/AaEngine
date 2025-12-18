@@ -104,7 +104,7 @@ void EntityPicker::scheduleReadback(ID3D12GraphicsCommandList* commandList)
 	UINT y = scheduled->y;
 	CD3DX12_BOX srcBox(x, y, 0, x + 1, y + 1, 1); // Box to specify the region
 
-	CD3DX12_RESOURCE_BARRIER barriers[_countof(readbackBuffer)];
+	CD3DX12_RESOURCE_BARRIER barriers[_countof(readbackBuffer)]{};
 	for (int i = 0; auto & t : rtt.textures)
 		barriers[i++] = CD3DX12_RESOURCE_BARRIER::Transition(t.texture.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_SOURCE);
 	commandList->ResourceBarrier(_countof(barriers), barriers);

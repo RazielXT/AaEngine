@@ -48,9 +48,13 @@ protected:
 		AssignedMaterial* material{};
 		std::shared_ptr<CompositorTask> task;
 
-		CommandsData generalCommands;
-		std::optional<CommandsData> computeCommands;
+		std::optional<CommandsData> syncCommands;
 		bool startCommands = false;
+
+		std::optional<CommandsData> computeCommands;
+		bool startComputeCommands = false;
+
+		std::vector<GpuTextureStates*> postTransition;
 	};
 	std::vector<PassData> passes;
 
@@ -58,6 +62,7 @@ protected:
 
 	struct FenceInfo
 	{
+		std::string name;
 		ComPtr<ID3D12Fence> fence;
 		UINT value = 1;
 	};
@@ -67,16 +72,16 @@ protected:
 	{
 		std::vector<HANDLE> finishEvents;
 		std::vector<CommandsData> data;
-		std::vector<CompositorPassInfo*> pass;
+		std::vector<CompositorPassInfo*> passes;
 
-		std::vector<FenceInfo*> syncWait;
-		std::vector<FenceInfo*> syncSignal;
+		std::vector<std::pair<ID3D12CommandQueue*,FenceInfo*>> syncWait;
+		std::vector<std::pair<ID3D12CommandQueue*, FenceInfo*>> syncSignal;
 	};
 	std::vector<TasksGroup> tasks;
 
 	void initializeCommands();
 	void initializeTextureStates();
-	std::map<std::string, D3D12_RESOURCE_STATES> lastTextureStates;
+	std::map<std::string, D3D12_RESOURCE_STATES> initialTextureStates;
 
 	void executeCommands();
 

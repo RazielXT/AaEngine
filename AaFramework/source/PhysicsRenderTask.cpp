@@ -19,11 +19,11 @@ void PhysicsRenderTask::run(RenderContext& ctx, CommandsData& syncCommands, Comp
 {
 	if (mode != Off)
 	{
-		ShaderConstantsProvider constants(provider.params, {}, *ctx.camera, *pass.target.texture);
+		ShaderConstantsProvider constants(provider.params, {}, *ctx.camera, *pass.mrt);
 
-		pass.target.textureSet->PrepareAsTarget(syncCommands.commandList, false, TransitionFlags::DepthContinue);
+		pass.mrt->PrepareAsTarget(syncCommands.commandList, pass.targets, false, TransitionFlags::DepthContinue);
 
-		physicsMgr.drawDebugRender(syncCommands.commandList, &constants, pass.target.textureSet->formats, mode == Wireframe);
+		physicsMgr.drawDebugRender(syncCommands.commandList, &constants, pass.mrt->formats, mode == Wireframe);
 	}
 }
 

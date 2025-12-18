@@ -15,23 +15,35 @@ AsyncTasksInfo UpscaleTask::initialize(CompositorPass& pass)
 
 void UpscaleTask::run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass)
 {
+	if (pass.info.entry == "Prepare")
+	{
+		prepare(ctx);
+		return;
+	}
+
 	CommandsMarker marker(syncCommands.commandList, "Upscale", PixColor::Upscale);
 
 	std::vector<CD3DX12_RESOURCE_BARRIER> barriers;
-	barriers.resize(pass.inputs.size());
+	barriers.resize(pass.inputs.size() + 1);
 	int b = 0;
-
-	auto last = &pass.inputs.back();
 
 	for (auto& input : pass.inputs)
 	{
-		auto targetState = &input == last ? D3D12_RESOURCE_STATE_UNORDERED_ACCESS : D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+		auto targetState = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
 
-		if (input.previousState != targetState)
+		if (!(input.previousState & targetState))
 			barriers[b++] = CD3DX12_RESOURCE_BARRIER::Transition(
 			input.texture->texture.Get(),
 			input.previousState,
 				targetState);
+	}
+	{
+		auto& target = pass.targets.front();
+
+		barriers[b++] = CD3DX12_RESOURCE_BARRIER::Transition(
+			target.texture->texture.Get(),
+			target.previousState,
+			D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	}
 
 	syncCommands.commandList->ResourceBarrier(b, barriers.data());
@@ -43,7 +55,7 @@ void UpscaleTask::run(RenderContext& ctx, CommandsData& syncCommands, Compositor
 		input.unresolvedColorResource = pass.inputs[0].texture->texture.Get();
 		input.motionVectorsResource = pass.inputs[1].texture->texture.Get();
 		input.depthResource = pass.inputs[2].texture->texture.Get();
-		input.resolvedColorResource = pass.inputs[3].texture->texture.Get();
+		input.resolvedColorResource = pass.targets.front().texture->texture.Get();
 		input.tslf = provider.params.timeDelta;
 		dlss.upscale(syncCommands.commandList, input);
 	}
@@ -54,7 +66,7 @@ void UpscaleTask::run(RenderContext& ctx, CommandsData& syncCommands, Compositor
 		input.unresolvedColorResource = pass.inputs[0].texture->texture.Get();
 		input.motionVectorsResource = pass.inputs[1].texture->texture.Get();
 		input.depthResource = pass.inputs[2].texture->texture.Get();
-		input.resolvedColorResource = pass.inputs[3].texture->texture.Get();
+		input.resolvedColorResource = pass.targets.front().texture->texture.Get();
 		input.tslf = provider.params.timeDelta;
 		fsr.upscale(syncCommands.commandList, input, *ctx.camera);
 	}
@@ -65,20 +77,7 @@ void UpscaleTask::run(RenderContext& ctx, CommandsData& syncCommands, Compositor
 	syncCommands.commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 }
 
-UpscalePrepareTask::UpscalePrepareTask(RenderProvider provider, SceneManager& s) : CompositorTask(provider, s)
-{
-}
-
-UpscalePrepareTask::~UpscalePrepareTask()
-{
-}
-
-AsyncTasksInfo UpscalePrepareTask::initialize(CompositorPass& pass)
-{
-	return {};
-}
-
-void UpscalePrepareTask::run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass)
+void UpscaleTask::prepare(RenderContext& ctx)
 {
 	// Assuming view and viewPrevious are pointers to View instances
 	XMMATRIX viewMatrixCurrent = ctx.camera->getViewMatrix();

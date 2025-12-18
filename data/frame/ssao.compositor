@@ -23,27 +23,30 @@ compositor SSAO
 
 	extern depthTexture
 
-	task SSAO (compute_shader)
+	task SSAO (async_compute)
 	{
-		input depthTexture
-		input linearDepth
-		input linearDepthDownsample2
-		input linearDepthDownsampleAtlas2
-		input linearDepthDownsample4
-		input linearDepthDownsampleAtlas4
-		input linearDepthDownsample8
-		input linearDepthDownsampleAtlas8
-		input linearDepthDownsample16
-		input linearDepthDownsampleAtlas16
+		sync_wait Depth
+		sync_signal SSAO
 
-		input occlusionInterleaved8
-		input occlusion8
-		input occlusionInterleaved4
-		input occlusion4
-		input occlusionInterleaved2
-		
-		input aoSmooth4
-		input aoSmooth2
-		input aoSmooth
+		in depthTexture
+		outin linearDepth
+		outin linearDepthDownsample2
+		outin linearDepthDownsampleAtlas2
+		outin linearDepthDownsample4
+		outin linearDepthDownsampleAtlas4
+		outin linearDepthDownsample8
+		outin linearDepthDownsampleAtlas8
+		outin linearDepthDownsample16
+		outin linearDepthDownsampleAtlas16
+
+		outin occlusionInterleaved8
+		outin occlusion8
+		outin occlusionInterleaved4
+		outin occlusion4
+		outin occlusionInterleaved2
+
+		outin aoSmooth4
+		outin aoSmooth2
+		out aoSmooth
 	}
 }

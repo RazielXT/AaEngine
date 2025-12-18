@@ -36,6 +36,6 @@ public:
 
 private:
 
-	std::vector<TextureStatePair> inputs;
+	std::vector<GpuTextureStates> inputs;
 	DownsampleDepthCS cs;
 };

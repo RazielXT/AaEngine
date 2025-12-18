@@ -57,7 +57,7 @@ AsyncTasksInfo SceneRenderTask::initialize(CompositorPass& pass)
 	}
 	else if (pass.info.entry == "Opaque")
 	{
-		sceneQueue = sceneMgr.createQueue(pass.target.textureSet->formats, MaterialTechnique::NoDepthWrite);
+			sceneQueue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::NoDepthWrite);
 
 		scene.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
 		scene.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -77,7 +77,7 @@ AsyncTasksInfo SceneRenderTask::initialize(CompositorPass& pass)
 	}
 	else if (pass.info.entry == "Transparent")
 	{
-		transparent.transparentQueue = sceneMgr.createQueue(pass.target.textureSet->formats, MaterialTechnique::Default, Order::Transparent);
+		transparent.transparentQueue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::Default, Order::Transparent);
 
 		transparent.work.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
 		transparent.work.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -97,7 +97,7 @@ AsyncTasksInfo SceneRenderTask::initialize(CompositorPass& pass)
 	}
 	else if (pass.info.entry == "Wireframe")
 	{
-		wireframeQueue = sceneMgr.createQueue(pass.target.textureSet->formats, MaterialTechnique::Wireframe, Order::Normal);
+		wireframeQueue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::Wireframe, Order::Normal);
 	}
 
 	return tasks;
@@ -124,7 +124,7 @@ AsyncTasksInfo SceneRenderTask::initializeEarlyZ(CompositorPass& pass)
 	return { { earlyZ.eventFinish, earlyZ.commands } };
 }
 
-void SceneRenderTask::run(RenderContext& renderCtx, CommandsData& cmd, CompositorPass& pass)
+void SceneRenderTask::run(RenderContext& renderCtx, CompositorPass& pass)
 {
 	if (pass.info.entry == "EarlyZ")
 	{
@@ -139,7 +139,11 @@ void SceneRenderTask::run(RenderContext& renderCtx, CommandsData& cmd, Composito
 	{
 		SetEvent(transparent.work.eventBegin);
 	}
-	else if (pass.info.entry == "Editor")
+}
+
+void SceneRenderTask::run(RenderContext& renderCtx, CommandsData& cmd, CompositorPass& pass)
+{
+	if (pass.info.entry == "Editor")
 	{
 		renderEditor(pass, cmd);
 	}
@@ -178,12 +182,12 @@ void SceneRenderTask::renderScene(CompositorPass& pass)
 
 	auto marker = provider.renderSystem.core.StartCommandList(scene.commands);
 
-	pass.target.textureSet->PrepareAsTarget(scene.commands.commandList, true, TransitionFlags::DepthPrepareRead);
+	pass.mrt->PrepareAsTarget(scene.commands.commandList, pass.targets, true, TransitionFlags::DepthPrepareRead);
 
 	if (enabledWireframe)
 		return;
 
-	ShaderConstantsProvider constants(provider.params, sceneVisibility, *ctx.camera, *pass.target.texture);
+	ShaderConstantsProvider constants(provider.params, sceneVisibility, *ctx.camera, *pass.mrt);
 
 	sceneMgr.skybox.render(scene.commands.commandList, constants);
 	
@@ -194,11 +198,13 @@ void SceneRenderTask::renderEarlyZ(CompositorPass& pass)
 {
 	auto marker = provider.renderSystem.core.StartCommandList(earlyZ.commands);
 
-	auto depthBuffer = pass.target.texture;
-	depthBuffer->PrepareAsDepthTarget(earlyZ.commands.commandList, pass.target.previousState);
+	auto& depth = pass.targets.front();
+	depth.texture->PrepareAsDepthTarget(earlyZ.commands.commandList, depth.previousState);
 
-	ShaderConstantsProvider constants(provider.params, sceneVisibility, *ctx.camera, *depthBuffer);
+	ShaderConstantsProvider constants(provider.params, sceneVisibility, *ctx.camera, *depth.texture);
 	depthQueue->renderObjects(constants, earlyZ.commands.commandList);
+
+	depth.texture->Transition(earlyZ.commands.commandList, depth.state, depth.nextState);
 }
 
 void SceneRenderTask::renderTransparentScene(CompositorPass& pass)
@@ -209,15 +215,12 @@ void SceneRenderTask::renderTransparentScene(CompositorPass& pass)
 
 	auto marker = provider.renderSystem.core.StartCommandList(transparent.work.commands);
 
-	for (auto& i : pass.inputs)
-	{
-		i.texture->PrepareAsView(commandList, i.previousState);
-	}
+	TextureTransitions<5>(pass.inputs, commandList);
 
 	// first lets copy input opaque depth to separate depth buffer
 	{
 		auto opaqueDepth = pass.inputs[0];
-		auto& ourDepth = pass.target.textureSet->depthState;
+		auto& ourDepth = pass.targets.back();
 
 		CD3DX12_RESOURCE_BARRIER barriers[] =
 		{
@@ -254,9 +257,9 @@ void SceneRenderTask::renderTransparentScene(CompositorPass& pass)
 
 	sceneMgr.water.prepareForRendering(commandList);
 
-	pass.target.textureSet->PrepareAsTarget(commandList, true, TransitionFlags::UseDepth);
+	pass.mrt->PrepareAsTarget(commandList, pass.targets, true, TransitionFlags::UseDepth);
 
-	ShaderConstantsProvider constants(provider.params, transparent.sceneVisibility, *ctx.camera, *pass.target.texture);
+	ShaderConstantsProvider constants(provider.params, transparent.sceneVisibility, *ctx.camera, *pass.targets.front().texture);
 	transparent.transparentQueue->renderObjects(constants, commandList);
 
 	sceneMgr.water.prepareAfterRendering(commandList);
@@ -266,13 +269,13 @@ void SceneRenderTask::renderEditor(CompositorPass& pass, CommandsData& cmd)
 {
 	picker.update(cmd.commandList, provider, *ctx.camera, sceneMgr);
 
-	pass.target.textureSet->PrepareAsTarget(cmd.commandList, false, TransitionFlags::DepthPrepareRead);
+	pass.mrt->PrepareAsTarget(cmd.commandList, pass.targets, false, TransitionFlags::DepthPrepareRead);
 
 	if (!picker.active.empty())
 	{
-		BoundingBoxDraw bboxDraw(provider.resources, { pass.target.texture->format });
+		BoundingBoxDraw bboxDraw(provider.resources, { pass.targets.front().texture->format });
 
-		ShaderConstantsProvider constants(provider.params, {}, *ctx.camera, *pass.target.texture);
+		ShaderConstantsProvider constants(provider.params, {}, *ctx.camera, *pass.targets.front().texture);
 
 		for (auto selectedId : picker.active)
 		{
@@ -289,16 +292,16 @@ void SceneRenderTask::renderWireframe(CompositorPass& pass, CommandsData& cmd)
 	if (!enabledWireframe)
 		return;
 
-	pass.target.textureSet->PrepareAsTarget(cmd.commandList, true, TransitionFlags::DepthContinue);
+	pass.mrt->PrepareAsTarget(cmd.commandList, pass.targets, true, TransitionFlags::DepthContinue);
 
-	ShaderConstantsProvider constants(provider.params, sceneVisibility, *ctx.camera, *pass.target.texture);
+	ShaderConstantsProvider constants(provider.params, sceneVisibility, *ctx.camera, *pass.targets.front().texture);
 
 	wireframeQueue->renderObjects(constants, cmd.commandList);
 }
 
 void SceneRenderTask::renderDebug(CompositorPass& pass, CommandsData& cmd)
 {
-	pass.target.textureSet->PrepareAsTarget(cmd.commandList, false, TransitionFlags::NoDepth);
+	pass.mrt->PrepareAsTarget(cmd.commandList, pass.targets, false, TransitionFlags::NoDepth);
 
 	if (!showVoxelsEnabled)
 		return;
@@ -309,9 +312,9 @@ void SceneRenderTask::renderDebug(CompositorPass& pass, CommandsData& cmd)
 
 	showVoxelsUpdate(entity, *ctx.camera);
 
-	ShaderConstantsProvider constants(provider.params, visibility, *ctx.camera, *pass.target.texture);
+	ShaderConstantsProvider constants(provider.params, visibility, *ctx.camera, *pass.targets.front().texture);
 
-	RenderQueue queue{ pass.target.textureSet->formats, MaterialTechnique::Default };
+	RenderQueue queue{ pass.mrt->formats, MaterialTechnique::Default };
 	queue.update({ EntityChange::Add, Order::Normal, &entity }, provider.resources);
 	queue.renderObjects(constants, cmd.commandList);
 }

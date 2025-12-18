@@ -12,73 +12,73 @@ compositor Bloom
 	pass BloomDownscale
 	{
 		material PassThrough
-		input sceneDownscale4
-		target bloomTexture3
+		in sceneDownscale4
+		out bloomTexture3
 	}
 	pass BloomDownscale
 	{
 		material PassThrough
-		input bloomTexture3
-		target bloomTexture4
+		in bloomTexture3
+		out bloomTexture4
 	}
 	pass BloomBlurX
 	{
 		material BloomBlurX
-		input bloomTexture4
-		input exposure
-		target bloomTexture5
+		in bloomTexture4
+		in exposure
+		out bloomTexture5
 	}
 	pass BloomBlurY
 	{
 		material BloomBlurY
-		input bloomTexture5
-		input exposure
-		target bloomTexture4
+		in bloomTexture5
+		in exposure
+		out bloomTexture4
 	}
 	pass BloomBlurX
 	{
 		material BloomBlurX
-		input bloomTexture4
-		input exposure
-		target bloomTexture5
+		in bloomTexture4
+		in exposure
+		out bloomTexture5
 	}
 	pass BloomBlurY
 	{
 		material BloomBlurY
-		input bloomTexture5
-		input exposure
-		target bloomTexture4
+		in bloomTexture5
+		in exposure
+		out bloomTexture4
 	}
 	pass BloomBlurX
 	{
 		material BloomBlurX
-		input bloomTexture4
-		input exposure
-		target bloomTexture5
+		in bloomTexture4
+		in exposure
+		out bloomTexture5
 	}
 	pass BloomBlurY
 	{
 		material BloomBlurY
-		input bloomTexture5
-		input exposure
-		target bloomTexture4
+		in bloomTexture5
+		in exposure
+		out bloomTexture4
 	}
 	pass BloomUpscale
 	{
 		material PutBlurThrough
-		input bloomTexture4
-		target bloomTexture3
+		in bloomTexture4
+		out bloomTexture3
 	}
 	pass BloomUpscale
 	{
 		material PutBlurThrough
-		input bloomTexture3
-		target bloomTexture2
+		in bloomTexture3
+		out bloomTexture2
 	}
 	pass BloomUpscale
 	{
 		material PutBlurThrough
-		input bloomTexture2
-		target bloomTexture
+		in bloomTexture2
+		out bloomTexture
 	}
 }

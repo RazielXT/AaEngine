@@ -130,7 +130,7 @@ AsyncTasksInfo ShadowsRenderTask::initialize(CompositorPass&)
 	return tasks;
 }
 
-void ShadowsRenderTask::run(RenderContext& renderCtx, CommandsData&, CompositorPass&)
+void ShadowsRenderTask::run(RenderContext& renderCtx, CompositorPass&)
 {
 	ctx = renderCtx;
 

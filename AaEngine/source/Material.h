@@ -55,7 +55,7 @@ private:
 
 	void CreateResourcesData(MaterialInstance& instance, GraphicsResources& r, ResourceUploadBatch& batch) const;
 
-	const LoadedShader* shaders[ShaderType_COUNT]{};
+	const LoadedShader* shaders[(int)ShaderType::COUNT]{};
 
 	ID3D12RootSignature* rootSignature{};
 	ID3D12Device& device;

@@ -62,22 +62,31 @@ static DXGI_FORMAT StringToFormat(const std::string& str)
 	return DXGI_FORMAT_UNKNOWN;
 }
 
-static UINT parseFlags(const Config::Object& member)
+static Compositor::UsageFlags parseFlags(const Config::Object& member)
 {
 	UINT flags = 0;
 	for (auto& p : member.params)
 	{
 		if (p.starts_with('(') && p.ends_with(')'))
 		{
-			if (p == "(compute_shader)")
+			if (p == "(compute)")
 				flags |= Compositor::ComputeShader;
+			else if (p == "(async_compute)")
+				flags |= Compositor::ComputeShader | Compositor::Async;
 			else if (p == "(depth_read)")
 				flags |= Compositor::DepthRead;
-			else if (p == "(read)")
-				flags |= Compositor::Read;
 		}
 	}
-	return flags;
+	if (member.type == "in" || member.type == "inout" || member.type == "outin")
+		flags |= Compositor::Read;
+	if (member.type == "out" || member.type == "inout" || member.type == "outin")
+		flags |= Compositor::Write;
+	if (member.type == "outin")
+		flags |= Compositor::WriteFirst;
+	if (member.type == "task" && !(flags & Compositor::ComputeShader))
+		flags |= Compositor::PixelShader;
+
+	return Compositor::UsageFlags(flags);
 }
 
 struct ParseContext
@@ -89,9 +98,9 @@ struct ParseContext
 
 static std::vector<CompositorTextureSlot> parseCompositorTextureSlot(const Config::Object& param, const CompositorInfo& info, const ParseContext& ctx, UINT flags = 0)
 {
-	flags |= parseFlags(param);
-	if (!flags)
-		flags = Compositor::PixelShader;
+	UINT textureFlags = parseFlags(param);
+	UINT depthFlags = textureFlags & Compositor::DepthRead;
+	textureFlags &= ~Compositor::DepthRead;
 
 	std::vector<CompositorTextureSlot> textures;
 
@@ -125,6 +134,11 @@ static std::vector<CompositorTextureSlot> parseCompositorTextureSlot(const Confi
 			t.name = it->second;
 		else if (t.name.find('.') == std::string::npos)
 			t.name = ctx.scope + t.name;
+
+		if (t.name.ends_with("Depth") && depthFlags)
+			t.flags = Compositor::UsageFlags(flags | depthFlags);
+		else
+			t.flags = Compositor::UsageFlags(flags | textureFlags);
 	}
 
 	return textures;
@@ -274,20 +288,29 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 				{
 					CompositorPassInfo pass;
 					pass.name = member.value;
+					pass.flags = Compositor::PixelShader;
 
 					for (auto& param : member.children)
 					{
-						if (param.type == "target")
+						if (param.type == "out")
 						{
-							pass.targets = parseCompositorTextureSlot(param, info, ctx);
+							pass.targets = parseCompositorTextureSlot(param, info, ctx, Compositor::PixelShader);
 						}
 						else if (param.type == "material")
 						{
 							pass.material = param.value;
 						}
-						else if (param.type == "input")
+						else if (param.type == "in")
 						{
-							pass.inputs.push_back(parseCompositorTextureSlot(param, info, ctx).front());
+							pass.inputs.push_back(parseCompositorTextureSlot(param, info, ctx, Compositor::PixelShader).front());
+						}
+						else if (param.type == "sync_wait")
+						{
+							pass.sync.emplace_back(param.value, false, false);
+						}
+						else if (param.type == "sync_signal")
+						{
+							pass.sync.emplace_back(param.value, true, false);
 						}
 					}
 
@@ -306,13 +329,14 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 					else
 						pass.task = pass.name;
 
-					UINT flags = parseFlags(member);
+					pass.flags = parseFlags(member);
 
 					for (auto& param : member.children)
 					{
-						if (param.type == "target")
+						if (param.type == "out")
 						{
-							pass.targets = parseCompositorTextureSlot(param, info, ctx, flags);
+							pass.targets = parseCompositorTextureSlot(param, info, ctx, pass.flags);
+							pass.mrt = pass.targets.size() > 1;
 						}
 						else if (param.type == "after")
 						{
@@ -320,15 +344,15 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 						}
 						else if (param.type == "sync_wait")
 						{
-							pass.syncWait = param.value;
+							pass.sync.emplace_back(param.value, false, pass.flags& Compositor::Async);
 						}
 						else if (param.type == "sync_signal")
 						{
-							pass.syncSignal = param.value;
+							pass.sync.emplace_back(param.value, true, pass.flags & Compositor::Async);
 						}
-						else if (param.type == "input")
+						else if (param.type == "in" || param.type == "inout" || param.type == "outin")
 						{
-							pass.inputs.push_back(parseCompositorTextureSlot(param, info, ctx, flags).front());
+							pass.inputs.push_back(parseCompositorTextureSlot(param, info, ctx, pass.flags).front());
 						}
 					}
 

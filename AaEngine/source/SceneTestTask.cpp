@@ -11,7 +11,7 @@ SceneTestTask::~SceneTestTask()
 AsyncTasksInfo SceneTestTask::initialize(CompositorPass& pass)
 {
 	tmpQueue = sceneMgr.createManualQueue();
-	tmpQueue.targets = pass.target.textureSet->formats;
+	tmpQueue.targets = pass.mrt->formats;
 
 	heap.InitRtv(provider.renderSystem.core.device, tmpQueue.targets.size(), L"testRttHeap");
 	textures.Init(provider.renderSystem.core.device, 512, 512, heap, tmpQueue.targets, D3D12_RESOURCE_STATE_RENDER_TARGET);

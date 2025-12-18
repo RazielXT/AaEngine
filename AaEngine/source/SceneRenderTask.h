@@ -17,6 +17,8 @@ public:
 	~SceneRenderTask();
 
 	AsyncTasksInfo initialize(CompositorPass& pass) override;
+
+	void run(RenderContext& ctx, CompositorPass& pass) override;
 	void run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
 
 	bool forceTaskOrder() const override { return true; }
@@ -79,6 +81,4 @@ private:
 
 	bool showVoxelsEnabled = false;
 	void showVoxelsUpdate(SceneEntity& debugVoxel, Camera& camera);
-	void showVoxels();
-	void hideVoxels();
 };

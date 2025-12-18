@@ -5,9 +5,9 @@
 
 D3D12_SHADER_VISIBILITY SignatureInfo::getVisibility(ShaderType t)
 {
-	if (t == ShaderTypeVertex)
+	if (t == ShaderType::Vertex)
 		return D3D12_SHADER_VISIBILITY_VERTEX;
-	if (t == ShaderTypePixel)
+	if (t == ShaderType::Pixel)
 		return D3D12_SHADER_VISIBILITY_PIXEL;
 
 	return D3D12_SHADER_VISIBILITY_ALL;
@@ -23,7 +23,7 @@ void SignatureInfo::addVisibility(D3D12_SHADER_VISIBILITY& v, ShaderType t)
 
 void SignatureInfo::add(const LoadedShader& shader, ShaderType type)
 {
-	if (type == ShaderTypeVertex)
+	if (type == ShaderType::Vertex)
 	{
 		hasVertexInput = !shader.desc.inputLayout.empty();
 
@@ -33,7 +33,7 @@ void SignatureInfo::add(const LoadedShader& shader, ShaderType type)
 		flags &= ~D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS;
 	}
 
-	if (type == ShaderTypePixel)
+	if (type == ShaderType::Pixel)
 	{
 		textureTargets = shader.desc.outputTargets;
 		flags &= ~D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
@@ -279,6 +279,13 @@ ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device& device, co
 			sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
 			sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
 			sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
+		}
+		else if (samplers[i].info.Name == "DepthClampSampler")
+		{
+			sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+			sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+			sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+			sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 		}
 		else if (samplers[i].info.Name == "ShadowSampler")
 		{

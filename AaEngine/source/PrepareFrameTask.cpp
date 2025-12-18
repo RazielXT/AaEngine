@@ -55,3 +55,13 @@ void PrepareFrameTask::runCompute(RenderContext& ctx, CommandsData& cmd, Composi
 {
 	sceneMgr.water.updateCompute(provider.renderSystem, cmd.commandList, provider.params.timeDelta, provider.params.frameIndex);
 }
+
+bool PrepareFrameTask::writesSyncCommands(CompositorPass& pass) const
+{
+	return pass.info.entry.empty();
+}
+
+bool PrepareFrameTask::writesSyncComputeCommands(CompositorPass& pass) const
+{
+	return pass.info.entry == "Water";
+}

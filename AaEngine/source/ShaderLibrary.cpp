@@ -19,7 +19,7 @@ void ShaderLibrary::loadShaderReferences(std::string directory, bool subDirector
 
 void ShaderLibrary::addShaderReferences(const shaderRefMaps& maps)
 {
-	for (int type = 0; type < ShaderType_COUNT; type++)
+	for (int type = 0; type < (int)ShaderType::COUNT; type++)
 	{
 		auto& map = maps.shaderRefs[type];
 
@@ -59,9 +59,9 @@ void ShaderLibrary::addShaderReferences(const shaderRefMaps& maps)
 
 const LoadedShader* ShaderLibrary::getShader(const std::string& name, ShaderType type)
 {
-	auto it = loadedShaders[type].find(name);
+	auto it = loadedShaders[(int)type].find(name);
 
-	if (it == loadedShaders[type].end())
+	if (it == loadedShaders[(int)type].end())
 		return nullptr;
 
 	if (!it->second->blob)
@@ -75,7 +75,7 @@ const LoadedShader* ShaderLibrary::getShader(const std::string& name, ShaderType
 
 const LoadedShader* ShaderLibrary::getShader(const std::string& name, ShaderType type, const ShaderRef& ref)
 {
-	auto& info = loadedShaders[type][name];
+	auto& info = loadedShaders[(int)type][name];
 	if (info == nullptr)
 	{
 		info = std::make_unique<LoadedShader>();
@@ -89,7 +89,7 @@ std::vector<const LoadedShader*> ShaderLibrary::reloadShadersChangedFiles()
 {
 	std::vector<const LoadedShader*> changed;
 
-	for (int type = 0; type < ShaderType_COUNT; ++type)
+	for (int type = 0; type < (int)ShaderType::COUNT; ++type)
 	{
 		auto& shadersType = loadedShaders[type];
 
@@ -141,7 +141,7 @@ std::vector<const LoadedShader*> ShaderLibrary::reloadShadersWithDefine(const st
 {
 	std::vector<const LoadedShader*> changed;
 
-	for (int type = 0; type < ShaderType_COUNT; ++type)
+	for (int type = 0; type < (int)ShaderType::COUNT; ++type)
 	{
 		auto& shadersType = loadedShaders[type];
 

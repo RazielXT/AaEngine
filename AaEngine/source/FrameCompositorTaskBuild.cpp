@@ -1,110 +1,277 @@
 #include "FrameCompositor.h"
 #include <set>
 #include <algorithm>
+#include <ranges>
 
 void FrameCompositor::initializeTextureStates()
 {
 	//find last backbuffer write
 	for (auto it = passes.rbegin(); it != passes.rend(); ++it)
 	{
-		if (!it->info.targets.empty() && it->info.targets.front().name == "Output")
+		if (it->info.targets.size() == 1 && it->info.targets.front().name == "Output")
 		{
-			it->target.present = true;
+			it->present = true;
 			break;
 		}
 	}
 
-	//iterate to get last states first
-	for (auto& pass : passes)
-	{
-		for (auto& [name, flags] : pass.info.inputs)
+	using PassStartCb = std::function<void(FrameCompositor::PassData&)>;
+	const PassStartCb EmptyPassStartCb = [](FrameCompositor::PassData&) {};
+	using TextureStateCb = std::function<void(const std::string& name, Compositor::UsageFlags flags, GpuTextureStates& t, D3D12_RESOURCE_STATES state, D3D12_RESOURCE_STATES stateOut)>;
+	const TextureStateCb EmptyTextureStateCb = [](const std::string&, Compositor::UsageFlags, GpuTextureStates&, D3D12_RESOURCE_STATES, D3D12_RESOURCE_STATES) {};
+
+	auto iteratePasses = [this](TextureStateCb setTextureState, PassStartCb passStart)
 		{
-			auto& state = lastTextureStates[name];
-			if (flags & Compositor::PixelShader)
-				state = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-			else if (flags & Compositor::ComputeShader && info.textures[name].uav && !(flags & Compositor::Read))
-				state = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-			else
-				state = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
-		}
-		for (auto& [name, flags] : pass.info.targets)
-		{
-			auto& state = lastTextureStates[name];
-			if (pass.target.present)
-				state = config.renderToBackbuffer ? D3D12_RESOURCE_STATE_PRESENT : D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-			else if (name.ends_with(":Depth"))
+			for (auto& pass : passes)
 			{
-				if (flags & Compositor::DepthRead)
-					state = D3D12_RESOURCE_STATE_DEPTH_READ;
-				else
-					state = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+				passStart(pass);
+
+				for (UINT idx = 0; auto& [name, flags] : pass.info.inputs)
+				{
+					if (flags & Compositor::PixelShader)
+						setTextureState(name, flags, pass.inputs[idx++], D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON);
+					else if (flags & Compositor::ComputeShader && info.textures[name].uav && flags & Compositor::Write)
+					{
+						if (!(flags & Compositor::Read))
+							setTextureState(name, flags, pass.inputs[idx++], D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON);
+						else if (flags & Compositor::WriteFirst)
+							setTextureState(name, flags, pass.inputs[idx++], D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+						else
+							setTextureState(name, flags, pass.inputs[idx++], D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+					}
+					else
+						setTextureState(name, flags, pass.inputs[idx++], D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON);
+				}
+				for (UINT idx = 0; auto& [name, flags] : pass.info.targets)
+				{
+					if (flags & Compositor::ComputeShader)
+						setTextureState(name, flags, pass.targets[idx++], D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON);
+					else if (flags & Compositor::PixelShader)
+					{
+						if (name.ends_with(":Depth"))
+						{
+							if (flags & Compositor::DepthRead)
+								setTextureState(name, flags, pass.targets[idx++], D3D12_RESOURCE_STATE_DEPTH_READ, D3D12_RESOURCE_STATE_COMMON);
+							else
+								setTextureState(name, flags, pass.targets[idx++], D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COMMON);
+						}
+						else if (pass.present)
+							setTextureState(name, flags, pass.targets[idx++], config.renderToBackbuffer ? D3D12_RESOURCE_STATE_PRESENT : D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON);
+						else
+							setTextureState(name, flags, pass.targets[idx++], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON);
+					}
+				}
 			}
-			else
-				state = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		};
+	auto isReadState = [](D3D12_RESOURCE_STATES state)
+		{
+			const D3D12_RESOURCE_STATES ReadFlags = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_DEPTH_READ;
+			return (state & ~ReadFlags) == 0;
+		};
+	auto isCompatibleState = [isReadState](D3D12_RESOURCE_STATES state, D3D12_RESOURCE_STATES state2)
+		{
+			return isReadState(state) && isReadState(state2);
+		};
+
+	//---------------------------------------------------
+	{
+		// initialize data storage
+		for (auto& pass : passes)
+		{
+			pass.inputs.resize(pass.info.inputs.size());
+			pass.targets.resize(pass.info.targets.size());
+
+			if (pass.info.mrt)
+				pass.mrt = std::make_unique<RenderTargetTexturesView>();
 		}
 	}
-
-	for (auto& pass : passes)
+	//---------------------------------------------------
 	{
-		pass.inputs.resize(pass.info.inputs.size());
-		for (UINT idx = 0; auto & [name, flags] : pass.info.inputs)
+		struct AccumulatedTextureInfo
 		{
-			auto& tState = lastTextureStates[name];
-			pass.inputs[idx++].previousState = tState;
+			Compositor::UsageFlags lastFlags{};
+			std::set<std::string> signals;
+		};
+		std::map<std::string, AccumulatedTextureInfo> texturesInfo;
+		std::set<std::string> waits;
 
-			if (flags & Compositor::PixelShader)
-				tState = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-			else if (flags & Compositor::ComputeShader && info.textures[name].uav && !(flags & Compositor::Read))
-				tState = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-			else
-				tState = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
-		}
-
-		if (!pass.info.targets.empty())
+		// validate access across queues, identify missing synchronization
+		for (auto& pass : passes)
 		{
-			auto& [targetName, flags] = pass.info.targets[0];
-			auto& lastState = lastTextureStates[targetName];
-			pass.target.previousState = lastState;
-
-			if (pass.info.targets.size() == 1)
+			for (auto& sync : pass.info.sync)
 			{
-				if (pass.target.present)
-					lastState = config.renderToBackbuffer ? D3D12_RESOURCE_STATE_PRESENT : D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-				else if (targetName.ends_with(":Depth"))
+				if (!sync.signal)
+					waits.insert(sync.name);
+			}
+
+			auto validateTexture = [&](const std::string& name, Compositor::UsageFlags flags)
 				{
-					if (flags & Compositor::DepthRead)
-						lastState = D3D12_RESOURCE_STATE_DEPTH_READ;
-					else
-						lastState = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+					auto& info = texturesInfo[name];
+
+					if (info.lastFlags)
+					{
+						if ((info.lastFlags & Compositor::Async) != (flags & Compositor::Async))
+						{
+							bool isSynced = false;
+							for (auto& sync : info.signals)
+								isSynced |= waits.contains(sync);
+
+							if (!isSynced)
+								__debugbreak(); // unsynced cross queue access
+
+							// brand new sync will be needed for next cross queue access
+							info.signals.clear();
+						}
+					}
+
+					info.lastFlags = flags;
+
+					for (auto& sync : pass.info.sync)
+					{
+						if (sync.signal)
+							info.signals.insert(sync.name);
+					}
+				};
+
+			for (auto& [name, flags] : pass.info.inputs)
+				validateTexture(name, flags);
+			for (auto& [name, flags] : pass.info.targets)
+				validateTexture(name, flags);
+
+			// all previous textures in same queue get behind new signals
+			for (auto& sync : pass.info.sync)
+			{
+				if (sync.signal)
+				{
+					for (auto& t : texturesInfo)
+					{
+						if ((t.second.lastFlags & Compositor::Async) == (pass.info.flags & Compositor::Async))
+							t.second.signals.insert(sync.name);
+					}
+				}
+			}
+		}
+	}
+	//---------------------------------------------------
+	{
+		struct TextureUseInfo
+		{
+			Compositor::UsageFlags flags;
+			GpuTextureStates* states;
+			FrameCompositor::PassData* pass{};
+			bool forceTransition = false;
+		};
+		std::map<std::string, std::vector<TextureUseInfo>> textureUsage;
+
+		FrameCompositor::PassData* currentPass{};
+		auto passStart = [&](FrameCompositor::PassData& pass) { currentPass = &pass; };
+		auto setInitialTextureState = [&](const std::string& name, Compositor::UsageFlags f, GpuTextureStates& t, D3D12_RESOURCE_STATES state, D3D12_RESOURCE_STATES stateOut)
+			{
+				t.state = state;
+				t.nextState = stateOut;
+
+				textureUsage[name].emplace_back(f, &t, currentPass);
+			};
+		iteratePasses(setInitialTextureState, passStart);
+
+		for (auto& [name, usage] : textureUsage)
+		{
+			std::vector<std::pair<D3D12_RESOURCE_STATES, std::vector<TextureUseInfo>>> mergedTextureStates;
+
+			// flag if async compute transition will be needed, cant allow outside PS states inside async compute then
+			for (size_t i = 0; i < usage.size(); i++)
+			{
+				if (usage[i].flags & Compositor::Async)
+				{
+					bool transition = false;
+					size_t j = i;
+
+					for (; j < usage.size(); j++)
+					{
+						if (!(usage[j].flags & Compositor::Async))
+							break;
+
+						if (!isCompatibleState(usage[i].states->state, usage[j].states->state) || usage[i].states->nextState != D3D12_RESOURCE_STATE_COMMON)
+							transition = true;
+					}
+
+					usage[i].forceTransition = transition;
+					i = j;
+				}
+			}
+
+			// merge compatible states
+			for (auto& t : usage)
+			{
+				if (!mergedTextureStates.empty() && !t.forceTransition && isCompatibleState(mergedTextureStates.back().first, t.states->state))
+				{
+					mergedTextureStates.back().first |= t.states->state;
+					mergedTextureStates.back().second.push_back(t);
 				}
 				else
-					lastState = D3D12_RESOURCE_STATE_RENDER_TARGET;
+					mergedTextureStates.push_back({ t.states->state, { t } });
 			}
-			else
+
+			// merge end-begin
+			if (mergedTextureStates.size() > 1 && isCompatibleState(mergedTextureStates.front().first, mergedTextureStates.back().first))
 			{
-				pass.target.textureSet = std::make_unique<RenderTargetTexturesView>();
-				auto textureSet = pass.target.textureSet.get();
+				mergedTextureStates.front().first |= mergedTextureStates.back().first;
+				mergedTextureStates.back().first = mergedTextureStates.front().first;
+			}
 
-				for (auto& [targetName, flags] : pass.info.targets)
+			// assign back merged states
+			for (auto& [mergedState, usage] : mergedTextureStates)
+			{
+				for (auto& u : usage)
+					u.states->state = mergedState;
+			}
+
+			// prev / next
+			for (size_t i = 0; i < usage.size(); i++)
+			{
+				if (i == 0)
+					usage[i].states->previousState = usage.back().states->nextState ? usage.back().states->nextState : usage.back().states->state;
+				else
+					usage[i].states->previousState = usage[i - 1].states->nextState ? usage[i - 1].states->nextState : usage[i - 1].states->state;
+			}
+			for (size_t i = 0; i < usage.size(); i++)
+			{
+				if (!usage[i].states->nextState)
 				{
-					auto& lastState = lastTextureStates[targetName];
-
-					if (targetName.ends_with(":Depth"))
-					{
-						textureSet->depthState.previousState = lastState;
-
-						if (flags & Compositor::DepthRead)
-							lastState = D3D12_RESOURCE_STATE_DEPTH_READ;
-						else
-							lastState = D3D12_RESOURCE_STATE_DEPTH_WRITE;
-					}
+					if (i == usage.size() - 1)
+						usage[i].states->nextState = usage.front().states->state;
 					else
-					{
-						textureSet->texturesState.push_back({ nullptr, lastState });
-						lastState = D3D12_RESOURCE_STATE_RENDER_TARGET;
-					}
+						usage[i].states->nextState = usage[i + 1].states->state;
 				}
 			}
+
+			// if state is used/shared with async compute, change to this state at the end last state usage (presuming before signal sync)
+			// compute also cant transition non compute states so needs to be outside
+			if (mergedTextureStates.size() > 1)
+				for (size_t i = 0; i < mergedTextureStates.size(); i++)
+				{
+					auto& usages = mergedTextureStates[i].second;
+					bool asyncShared = false;
+
+					for (auto& usage : usages)
+						asyncShared |= bool(usage.flags & Compositor::Async);
+
+					if (asyncShared)
+					{
+						auto& prev = (i == 0) ? mergedTextureStates.back() : mergedTextureStates[i - 1];
+						auto& prevStateLastUsage = prev.second.back();
+						prevStateLastUsage.pass->postTransition.push_back(prevStateLastUsage.states);
+
+						// presume its already transitioned
+						auto& stateFirstUsage = usages.front();
+						stateFirstUsage.states->previousState = stateFirstUsage.states->state;
+					}
+				}
+		}
+
+		for (auto& [name, usage] : textureUsage)
+		{
+			initialTextureStates[name] = usage.front().states->previousState;
 		}
 	}
 }
@@ -122,17 +289,18 @@ void FrameCompositor::initializeCommands()
 	auto initFence = [this](const std::string& name)
 		{
 			if (auto& f = taskFences[name]; !f.fence)
-				 provider.renderSystem.core.device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&f.fence));
+			{
+				provider.renderSystem.core.device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&f.fence));
+				f.name = name;
+			}
 		};
 	for (auto& pass : passes)
 	{
-		if (!pass.info.syncSignal.empty())
-			initFence(pass.info.syncSignal);
-		if (!pass.info.syncWait.empty())
-			initFence(pass.info.syncWait);
+		for (auto& s : pass.info.sync)
+			initFence(s.name);
 	}
 
-	CommandsData syncCommands{};
+	std::optional<CommandsData> syncCommands{};
 	std::optional<CommandsData> syncComputeCommands{};
 	std::vector<CompositorPassInfo*> syncPasses;
 	AsyncTasksInfo asyncTasks;
@@ -141,27 +309,35 @@ void FrameCompositor::initializeCommands()
 	auto buildLastTasksFences = [&]()
 		{
 			auto& t = tasks.back();
-			for (auto pass : t.pass)
+			for (auto pass : t.passes)
 			{
-				if (!pass->syncSignal.empty())
-					t.syncSignal.push_back(&taskFences[pass->syncSignal]);
-				if (!pass->syncWait.empty())
-					t.syncWait.push_back(&taskFences[pass->syncWait]);
+				for (auto& s : pass->sync)
+				{
+					auto queue = s.compute ? provider.renderSystem.core.computeQueue : provider.renderSystem.core.commandQueue;
+					if (s.signal)
+						t.syncSignal.emplace_back(queue, &taskFences[s.name]);
+					else
+						t.syncWait.emplace_back(queue, &taskFences[s.name]);
+				}
 			}
 		};
 	auto buildSyncCommands = [&]()
 		{
-			if (syncCommands.commandList)
+			if (syncCommands || syncComputeCommands)
 			{
-				tasks.push_back({ {}, { syncCommands }, std::move(syncPasses) });
-				
+				auto& taskData = tasks.emplace_back();
+				taskData.passes = std::move(syncPasses);
+
+				if (syncCommands)
+					taskData.data.push_back(*syncCommands);
 				if (syncComputeCommands)
-					tasks.back().data.push_back(*syncComputeCommands);
+					taskData.data.push_back(*syncComputeCommands);
+
+				buildLastTasksFences();
 			}
 
-			syncCommands = {};
+			syncCommands.reset();
 			syncComputeCommands.reset();
-			buildLastTasksFences();
 		};
 	auto buildAsyncCommands = [&]()
 		{
@@ -174,7 +350,7 @@ void FrameCompositor::initializeCommands()
 				group.data.push_back(t.commands);
 				group.finishEvents.push_back(t.finishEvent);
 			}
-			group.pass = std::move(asyncPasses);
+			group.passes = std::move(asyncPasses);
 			asyncTasks.clear();
 			buildLastTasksFences();
 		};
@@ -202,21 +378,28 @@ void FrameCompositor::initializeCommands()
 		};
 	auto pushSyncCommands = [&](FrameCompositor::PassData& passData)
 		{
-			if (!syncCommands.commandList)
+			if (!syncCommands && (!passData.task || passData.task->writesSyncCommands(passData)))
 			{
 				syncCommands = generalCommandsArray.emplace_back(provider.renderSystem.core.CreateCommandList(L"Compositor", PixColor::Compositor));
 				passData.startCommands = true;
 			}
-			if (passData.task && passData.task->writesSyncComputeCommands(passData))
+			if (!syncComputeCommands && passData.task && passData.task->writesSyncComputeCommands(passData))
 			{
 				syncComputeCommands = generalCommandsArray.emplace_back(provider.renderSystem.core.CreateCommandList(L"CompositorCompute", PixColor::Compositor, D3D12_COMMAND_LIST_TYPE_COMPUTE));
+				passData.startComputeCommands = true;
 			}
-			passData.generalCommands = syncCommands;
+			passData.syncCommands = syncCommands;
 			passData.computeCommands = syncComputeCommands;
 			syncPasses.push_back(&passData.info);
 		};
 	auto dependsOnPreviousPass = [](const CompositorPassInfo& pass, const std::vector<CompositorPassInfo*>& passes, bool forceTargetOrder = false)
 		{
+			for (auto& s : pass.sync)
+			{
+				if (!s.signal) //wait
+					return true;
+			}
+
 			for (auto& target : passes)
 			{
 				if (pass.after == target->name)
@@ -270,6 +453,15 @@ void FrameCompositor::initializeCommands()
 
 		if (isSync)
 			pushSyncCommands(pass);
+
+		for (auto& s : pass.info.sync)
+		{
+			if (s.signal)
+			{
+				buildAsyncCommands();
+				buildSyncCommands();
+			}
+		}
 	}
 
 	buildAsyncCommands();

@@ -89,7 +89,7 @@ bool ShaderCompiler::reflectShaderInfo(IDxcResult* compiledShaderBuffer, ShaderD
 	D3D12_SHADER_DESC shaderDesc{};
 	shaderReflection->GetDesc(&shaderDesc);
 
-	if (type == ShaderTypeVertex)
+	if (type == ShaderType::Vertex)
 	{
 		description.inputLayout.reserve(shaderDesc.InputParameters);
 
@@ -111,7 +111,7 @@ bool ShaderCompiler::reflectShaderInfo(IDxcResult* compiledShaderBuffer, ShaderD
 				});
 		}
 	}
-	if (type == ShaderTypePixel)
+	if (type == ShaderType::Pixel)
 	{
 		description.outputTargets = shaderDesc.OutputParameters;
 	}

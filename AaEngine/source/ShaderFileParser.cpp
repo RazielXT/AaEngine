@@ -3,7 +3,7 @@
 #include <filesystem>
 #include "ConfigParser.h"
 
-using ParsedObjects = std::map<std::string, const Config::Object*>[ShaderType_COUNT];
+using ParsedObjects = std::map<std::string, const Config::Object*>[(int)ShaderType::COUNT];
 
 void ShaderFileParser::ParseShaderParams(ShaderRef& shader, const Config::Object& obj)
 {
@@ -57,7 +57,7 @@ static void ParseShaderParams(ShaderRef& shader, ShaderType type, const Config::
 			auto parentName = obj.params[i];
 			if (!parentName.empty())
 			{
-				for (auto& [name, parent] : previous[type])
+				for (auto& [name, parent] : previous[(int)type])
 				{
 					if (name == parentName)
 						ParseShaderParams(shader, type, *parent, previous);
@@ -71,13 +71,13 @@ static void ParseShaderParams(ShaderRef& shader, ShaderType type, const Config::
 
 ShaderType ShaderFileParser::ParseShaderType(const std::string& t)
 {
-	ShaderType type = ShaderTypeNone;
+	ShaderType type = ShaderType::None;
 	if (t == "vertex_shader")
-		type = ShaderTypeVertex;
+		type = ShaderType::Vertex;
 	else if (t == "pixel_shader")
-		type = ShaderTypePixel;
+		type = ShaderType::Pixel;
 	else if (t == "compute_shader")
-		type = ShaderTypeCompute;
+		type = ShaderType::Compute;
 
 	return type;
 }
@@ -91,13 +91,13 @@ void parseShaderFile(shaderRefMaps& shds, const std::string& file)
 	{
 		auto type = ShaderFileParser::ParseShaderType(obj.type);
 		
-		if (type != ShaderTypeNone)
+		if (type != ShaderType::None)
 		{
 			ShaderRef shader;
 			ParseShaderParams(shader, type, obj, parsed);
 
-			shds.shaderRefs[type][obj.value] = shader;
-			parsed[type][obj.value] = &obj;
+			shds.shaderRefs[(int)type][obj.value] = shader;
+			parsed[(int)type][obj.value] = &obj;
 		}
 	}
 }

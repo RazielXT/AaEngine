@@ -10,7 +10,7 @@ DownsampleDepthTask::~DownsampleDepthTask()
 
 AsyncTasksInfo DownsampleDepthTask::initialize(CompositorPass& pass)
 {
-	auto shader = provider.resources.shaders.getShader(pass.info.name, ShaderTypeCompute, ShaderRef{ "DepthDownsampleCS.hlsl", "main", "cs_6_6" });
+	auto shader = provider.resources.shaders.getShader(pass.info.name, ShaderType::Compute, ShaderRef{ "DepthDownsampleCS.hlsl", "main", "cs_6_6" });
 
 	cs.init(*provider.renderSystem.core.device, *shader);
 
@@ -24,21 +24,20 @@ void DownsampleDepthTask::resize(CompositorPass& pass)
 	cs.data.depthOutputIdx2 = pass.inputs[2].texture->view.uavHeapIndex;
 	cs.inputSize = { pass.inputs[0].texture->width, pass.inputs[0].texture->height };
 
-	for (auto& i : pass.inputs)
-		inputs.push_back(i);
+	inputs = pass.inputs;
 }
 
-void DownsampleDepthTask::run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass)
+void DownsampleDepthTask::run(RenderContext& ctx, CommandsData& commands, CompositorPass& pass)
 {
-	CommandsMarker marker(syncCommands.commandList, "DownsampleDepthHiZ", PixColor::Compositor2);
+	CommandsMarker marker(commands.commandList, "DownsampleDepthHiZ", PixColor::Compositor2);
 
-	RenderTargetTransitions<3> tr;
-	tr.addConst(inputs[0], D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-	tr.addConst(inputs[1], D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-	tr.addConst(inputs[2], D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-	tr.push(syncCommands.commandList);
+	TextureTransitions<3> tr;
+	tr.add(inputs[0]);
+	tr.add(inputs[1]);
+	tr.add(inputs[2]);
+	tr.push(commands.commandList);
 
-	cs.dispatch(syncCommands.commandList);
+	cs.dispatch(commands.commandList);
 }
 
 void DownsampleDepthCS::dispatch(ID3D12GraphicsCommandList* commandList)

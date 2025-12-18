@@ -9,7 +9,7 @@
 
 namespace Compositor
 {
-	enum UsageFlags { PixelShader = 1, ComputeShader = 2, DepthRead = 4, Read = 8 };
+	enum UsageFlags : UINT { PixelShader = 1, ComputeShader = 2, DepthRead = 4, Read = 8, Write = 16, WriteFirst = 32, Async = 64 };
 };
 
 struct CompositorTextureInfo
@@ -38,13 +38,20 @@ struct CompositorPassInfo
 
 	std::vector<CompositorTextureSlot> inputs;
 	std::vector<CompositorTextureSlot> targets;
+	bool mrt{};
 
 	std::string material;
 	std::string entry;
 	std::string after;
+	Compositor::UsageFlags flags;
 
-	std::string syncWait;
-	std::string syncSignal;
+	struct Sync
+	{
+		std::string name;
+		bool signal{};
+		bool compute{};
+	};
+	std::vector<Sync> sync;
 };
 
 struct CompositorInfo

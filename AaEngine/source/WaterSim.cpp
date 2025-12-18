@@ -172,22 +172,22 @@ void WaterSim::initializeGpuResources(RenderSystem& renderSystem, GraphicsResour
 	e2->material->SetTexture(waterInfoTexture.view, "WaterInfoTexture");
 	e2->setPosition({ -20, -20, 30 });
 
-	auto csShader = resources.shaders.getShader("momentumComputeShader", ShaderTypeCompute, ShaderRef{ "waterSim/frenzySimMomentumCS.hlsl", "CS_Momentum", "cs_6_6" }); //frenzySimMomentumCS
+	auto csShader = resources.shaders.getShader("momentumComputeShader", ShaderType::Compute, ShaderRef{ "waterSim/frenzySimMomentumCS.hlsl", "CS_Momentum", "cs_6_6" }); //frenzySimMomentumCS
 	momentumComputeShader.init(*renderSystem.core.device, *csShader);
 
-	csShader = resources.shaders.getShader("continuityComputeShader", ShaderTypeCompute, ShaderRef{ "waterSim/frenzySimContinuityCS.hlsl", "CS_Continuity", "cs_6_6" }); //frenzySimContinuityCS
+	csShader = resources.shaders.getShader("continuityComputeShader", ShaderType::Compute, ShaderRef{ "waterSim/frenzySimContinuityCS.hlsl", "CS_Continuity", "cs_6_6" }); //frenzySimContinuityCS
 	continuityComputeShader.init(*renderSystem.core.device, *csShader);
 
-	csShader = resources.shaders.getShader("textureToMeshCS", ShaderTypeCompute, ShaderRef{ "utils/heightmapToMeshCS.hlsl", "CSMain", "cs_6_6" });
+	csShader = resources.shaders.getShader("textureToMeshCS", ShaderType::Compute, ShaderRef{ "utils/heightmapToMeshCS.hlsl", "CSMain", "cs_6_6" });
 	textureToMeshCS.init(*renderSystem.core.device, *csShader);
 
-	csShader = resources.shaders.getShader("watermapToTextureCS", ShaderTypeCompute, ShaderRef{ "utils/watermapToTextureCS.hlsl", "CSMain", "cs_6_6" });
+	csShader = resources.shaders.getShader("watermapToTextureCS", ShaderType::Compute, ShaderRef{ "utils/watermapToTextureCS.hlsl", "CSMain", "cs_6_6" });
 	waterToTextureCS.init(*renderSystem.core.device, *csShader);
 
-	csShader = resources.shaders.getShader("copyTexturesCS", ShaderTypeCompute, ShaderRef{ "utils/copyTexturesCS.hlsl", "CSMain", "cs_6_6" });
+	csShader = resources.shaders.getShader("copyTexturesCS", ShaderType::Compute, ShaderRef{ "utils/copyTexturesCS.hlsl", "CSMain", "cs_6_6" });
 	copyTexturesCS.init(*renderSystem.core.device, *csShader);
 
-	csShader = resources.shaders.getShader("meshTextureCS", ShaderTypeCompute, ShaderRef{ "waterSim/colorWaterSimTexture.hlsl", "CSMain", "cs_6_6" });
+	csShader = resources.shaders.getShader("meshTextureCS", ShaderType::Compute, ShaderRef{ "waterSim/colorWaterSimTexture.hlsl", "CSMain", "cs_6_6" });
 	meshTextureCS.init(*renderSystem.core.device, *csShader);
 }
 

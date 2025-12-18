@@ -13,51 +13,51 @@ compositor Water
 	{
 		sync_wait Water
 
-		input depthTexture
-		input sceneColorTexture
-		input depthDownsample2
-		target sceneTransparentTextures
+		in depthTexture
+		in sceneColorTexture
+		in depthDownsample2
+		out sceneTransparentTextures
 	}
 
 	pass TraceReflections
 	{
 		material TraceReflections
-		input sceneColorTexture
-		input depthDownsample2
-		input sceneTransparentTextures:Color
-		input sceneTransparentTextures:Normal
-		input sceneTransparentTextures:Depth
-		target sceneReflectionsTexture
+		in sceneColorTexture
+		in depthDownsample2
+		in sceneTransparentTextures:Color
+		in sceneTransparentTextures:Normal
+		in sceneTransparentTextures:Depth
+		out sceneReflectionsTexture
 	}
 
 	pass BlurReflections
 	{
 		material PutBlurThrough
-		input sceneReflectionsTexture
-		target sceneReflectionsTexture2
+		in sceneReflectionsTexture
+		out sceneReflectionsTexture2
 	}
 	pass BlurReflections
 	{
 		material PutBlurThrough
-		input sceneReflectionsTexture2
-		target sceneReflectionsTexture
+		in sceneReflectionsTexture2
+		out sceneReflectionsTexture
 	}
 	//pass BlurReflections
 	//{
 	//	material WaterBlur
-	//	input sceneReflectionsTexture
-	//	input sceneTransparentTextures:Normal
-	//	target sceneReflectionsTexture2
+	//	in sceneReflectionsTexture
+	//	in sceneTransparentTextures:Normal
+	//	out sceneReflectionsTexture2
 	//}
 
 	pass ApplySceneWater
 	{
 		material ApplySceneWater
-		input sceneColorTexture
-		input sceneTransparentTextures:Color
-		input sceneReflectionsTexture
-		input sceneTransparentTextures:Normal
-		input sceneTransparentTextures:Caustics
-		target sceneFinalColorTexture
+		in sceneColorTexture
+		in sceneTransparentTextures:Color
+		in sceneReflectionsTexture
+		in sceneTransparentTextures:Normal
+		in sceneTransparentTextures:Caustics
+		out sceneFinalColorTexture
 	}
 }

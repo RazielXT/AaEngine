@@ -29,77 +29,83 @@ compositor Frame
 
 	task PrepareFrame
 	{
+	}
+
+	task SceneRender.EarlyZ
+	{
+		out sceneTexture:Depth
+
+		sync_signal Depth
+	}
+
+	task VoxelScene.Bounces (async_compute)
+	{
+		sync_signal Voxels
+	}
+
+	task PrepareFrame.Water (async_compute)
+	{
 		sync_signal Water
 	}
+
+	ref SSAO(sceneTexture:Depth)
 
 	task Shadows
 	{
 		after PrepareFrame
 	}
 
-	task VoxelScene.Bounces (compute_shader)
-	{
-		after Shadows
-
-		sync_signal Voxels
-	}
-
 	task VoxelScene.Voxelize
 	{
-		target voxelDummy
-	}
+		after Shadows
+		sync_wait Voxels
 
-	task SceneRender.EarlyZ
-	{
-		target sceneTexture:Depth
-
-		//sync_signal Depth
+		out voxelDummy
 	}
 
 	task SceneRender.Opaque
 	{
-		target sceneTexture (depth_read)
-	}
+		sync_wait SSAO
 
-	ref SSAO(sceneTexture:Depth)
+		out sceneTexture (depth_read)
+	}
 
 	pass DeferredVCT
 	{
 		after VoxelScene.Voxelize
-		sync_wait Voxels
 
 		material DeferredVCT
-		input sceneTexture:Normal
-		input sceneTexture:Depth
-		target sceneVCTLow
+		in sceneTexture:Normal
+		in sceneTexture:Depth
+		out sceneVCTLow
 	}
 
 	pass UpsampleDeferredVCT
 	{
 		material UpsampleDepthAware
-		input sceneVCTLow
-		input SSAO.linearDepth
-		input SSAO.linearDepthDownsample2
-		input sceneTexture:Normal
-		target sceneVCT
+		in sceneVCTLow
+		in SSAO.linearDepth
+		in SSAO.linearDepthDownsample2
+		in sceneTexture:Normal
+		out sceneVCT
 	}
 
 	pass DeferredLighting
 	{
 		material DeferredLighting
-		input sceneTexture:Albedo
-		input sceneTexture:Normal
-		input sceneTexture:Depth
-		input SSAO.aoSmooth
-		input sceneVCT
-		target sceneTextureTmp
+		in sceneTexture:Albedo
+		in sceneTexture:Normal
+		in sceneTexture:Depth
+		in SSAO.aoSmooth
+		in sceneVCT
+		out sceneTextureTmp
 	}
 
 	pass DepthDownsample
 	{
 		material LoadThrough
-		input sceneTexture:Depth
-		target depthDownsample2
+		in sceneTexture:Depth
+		out depthDownsample2
 	}
 
 	ref Water(sceneTextureTmp,sceneTexture:Depth,depthDownsample2,sceneTextureTmp2)
@@ -107,19 +113,19 @@ compositor Frame
 	pass SceneDownsample
 	{
 		material PassThrough
-		input sceneTextureTmp2
-		target sceneDownscale2
+		in sceneTextureTmp2
+		out sceneDownscale2
 	}
 	pass SceneDownsample
 	{
 		material PassThrough
-		input sceneDownscale2
-		target sceneDownscale4
+		in sceneDownscale2
+		out sceneDownscale4
 	}
 
 	task SceneRender.Debug
 	{
-		target sceneTextureTmp2 sceneTexture:MotionVectors
+		out sceneTextureTmp2 sceneTexture:MotionVectors
 	}
 
 	ref Exposure(sceneTextureTmp2)
@@ -128,26 +134,26 @@ compositor Frame
 
 	task SceneRender.Editor
 	{
-		target sceneTextureTmp2 sceneTexture:Depth (depth_read)
+		out sceneTextureTmp2 sceneTexture:Depth (depth_read)
 	}
 
 #if UPSCALE
-	task UpscalePrepare
+	task Upscale.Prepare
 
 	pass MotionVectors
 	{
 		material MotionVectors
-		input sceneTexture:Depth
-		input sceneTexture:MotionVectors
-		target motionVectors
+		in sceneTexture:Depth
+		in sceneTexture:MotionVectors
+		out motionVectors
 	}
 
-	task Upscale (compute_shader)
+	task Upscale (compute)
 	{
-		input sceneTextureTmp2
-		input motionVectors
-		input sceneTexture:Depth
-		input sceneTextureTmp_upscaled
+		in sceneTextureTmp2
+		in motionVectors
+		in sceneTexture:Depth
+		out sceneTextureTmp_upscaled
 	}
 
 	ref Godray(sceneTextureTmp_upscaled,sceneTexture:Depth)
@@ -155,11 +161,11 @@ compositor Frame
 	pass ToneMapping
 	{
 		material ToneMappingNoLuma
-		input sceneTextureTmp_upscaled
-		input Bloom.bloomTexture
-		input Exposure.exposure
-		input Godray.godray
-		target Output
+		in sceneTextureTmp_upscaled
+		in Bloom.bloomTexture
+		in Exposure.exposure
+		in Godray.godray
+		out Output
 	}
 #else
 	ref Godray(sceneTextureTmp2,sceneTexture:Depth)
@@ -167,23 +173,25 @@ compositor Frame
 	pass ToneMapping
 	{
 		material ToneMapping
-		input sceneTextureTmp2
-		input Bloom.bloomTexture
-		input Exposure.exposure
-		input Godray.godray
-		target sceneTextureTmpOut
+		in sceneTextureTmp2
+		in Bloom.bloomTexture
+		in Exposure.exposure
+		in Godray.godray
+		out sceneTextureTmpOut
 	}
 
 	pass Fxaa
  	{
 		material FXAA
-		input sceneTextureTmpOut
- 		target Output
+		in sceneTextureTmpOut
+ 		out Output
  	}
 #endif
 
 	task DebugOverlay
 	{
-		target Output
+		out Output
 	}
+
+	task VoxelScene.EndFrame
 }

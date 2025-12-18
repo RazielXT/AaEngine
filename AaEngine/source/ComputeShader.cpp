@@ -27,7 +27,7 @@ ComputeShader::~ComputeShader()
 
 void ComputeShader::init(ID3D12Device& device, const std::string& name, ShaderLibrary& shaders)
 {
-	return init(device, *shaders.getShader(name, ShaderType::ShaderTypeCompute));
+	return init(device, *shaders.getShader(name, ShaderType::Compute));
 }
 
 void ComputeShader::init(ID3D12Device& device, const LoadedShader& shader)
@@ -35,7 +35,7 @@ void ComputeShader::init(ID3D12Device& device, const LoadedShader& shader)
 	csShader = &shader;
 
 	SignatureInfo info;
-	info.add(shader, ShaderTypeCompute);
+	info.add(shader, ShaderType::Compute);
 	info.finish();
 
 	if (volatileTextures)

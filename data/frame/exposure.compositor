@@ -12,38 +12,38 @@ compositor Exposure
 	pass ExposureDownsample
 	{
 		material PassThroughAvg
-		input sceneTexture
-		target exposureDs
+		in sceneTexture
+		out exposureDs
 	}
 	pass ExposureDownsample2
 	{
 		material Downsample3x3
-		input exposureDs
-		target exposureDs2
+		in exposureDs
+		out exposureDs2
 	}
 	pass ExposureDownsample3
 	{
 		material Downsample3x3
-		input exposureDs2
-		target exposureDs3
+		in exposureDs2
+		out exposureDs3
 	}
 	pass ExposureDownsample4
 	{
 		material Downsample3x3
-		input exposureDs3
-		target exposureDs4
+		in exposureDs3
+		out exposureDs4
 	}
 	pass ExposureDownsample5
 	{
 		material Downsample3x3Exposure
-		input exposureDs4
-		input exposure
-		target exposureDs5
+		in exposureDs4
+		in exposure
+		out exposureDs5
 	}
 	pass ExposureDownsampleFinal
 	{
 		material PassThrough
-		input exposureDs5
-		target exposure
+		in exposureDs5
+		out exposure
 	}
 }

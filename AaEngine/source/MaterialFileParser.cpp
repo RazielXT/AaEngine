@@ -65,7 +65,7 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 						auto generatedName = *refNamePtr = member.type + "_" + mat.name;
 						auto shaderType = ShaderFileParser::ParseShaderType(member.type);
 
-						auto& ref = shaders.shaderRefs[shaderType][generatedName];
+						auto& ref = shaders.shaderRefs[(int)shaderType][generatedName];
 						ShaderFileParser::ParseShaderParams(ref, member);
 					}
 				}
@@ -79,7 +79,7 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 					{
 						auto customizedName = sourceShader + "_" + mat.name;
 
-						auto& customization = shaders.shaderCustomizations[type][customizedName];
+						auto& customization = shaders.shaderCustomizations[(int)type][customizedName];
 
 						if (customization.sourceName.empty())
 						{
@@ -91,8 +91,8 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 					}
 				};
 
-			addCustomizationDefines(mat.pipeline.vs_ref, ShaderTypeVertex);
-			addCustomizationDefines(mat.pipeline.ps_ref, ShaderTypePixel);
+			addCustomizationDefines(mat.pipeline.vs_ref, ShaderType::Vertex);
+			addCustomizationDefines(mat.pipeline.ps_ref, ShaderType::Pixel);
 		}
 		else if (member.type == "depth")
 		{

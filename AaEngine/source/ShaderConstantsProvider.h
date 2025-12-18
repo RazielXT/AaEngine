@@ -8,7 +8,7 @@ struct RenderObjectsVisibilityData;
 class SceneEntity;
 class Camera;
 class GpuTexture2D;
-class RenderTargetTextures;
+class RenderTargetTexturesView;
 struct FrameParameters;
 
 class ShaderConstantsProvider
@@ -17,7 +17,7 @@ public:
 
 	ShaderConstantsProvider(const FrameParameters& params, const RenderObjectsVisibilityData& info, const Camera& camera, const GpuTexture2D& target);
 	ShaderConstantsProvider(const FrameParameters& params, const RenderObjectsVisibilityData& info, const Camera& camera, const Camera& mainCamera, const GpuTexture2D& target);
-	ShaderConstantsProvider(const FrameParameters& params, const RenderObjectsVisibilityData& info, const Camera& camera, const RenderTargetTextures& targets);
+	ShaderConstantsProvider(const FrameParameters& params, const RenderObjectsVisibilityData& info, const Camera& camera, const RenderTargetTexturesView& targets);
 
 	XMFLOAT2 inverseViewportSize;
 	XMUINT2 viewportSize;

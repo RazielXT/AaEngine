@@ -14,7 +14,7 @@ public:
 	~ShadowsRenderTask();
 
 	AsyncTasksInfo initialize(CompositorPass& pass) override;
-	void run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
+	void run(RenderContext& ctx, CompositorPass& pass) override;
 
 private:
 

@@ -8,9 +8,10 @@ ShaderConstantsProvider::ShaderConstantsProvider(const FrameParameters& p, const
 	viewportSize = { target.width, target.height };
 }
 
-ShaderConstantsProvider::ShaderConstantsProvider(const FrameParameters& params, const RenderObjectsVisibilityData& info, const Camera& camera, const RenderTargetTextures& targets) :
-	ShaderConstantsProvider(params, info, camera, camera, targets.textures.front())
+ShaderConstantsProvider::ShaderConstantsProvider(const FrameParameters& p, const RenderObjectsVisibilityData& i, const Camera& c, const RenderTargetTexturesView& targets) : info(i), camera(c), mainCamera(c), params(p)
 {
+	inverseViewportSize = { 1.f / targets.width, 1.f / targets.height };
+	viewportSize = { targets.width, targets.height };
 }
 
 ShaderConstantsProvider::ShaderConstantsProvider(const FrameParameters& params, const RenderObjectsVisibilityData& info, const Camera& camera, const GpuTexture2D& target) :

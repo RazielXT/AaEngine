@@ -61,7 +61,11 @@ public:
 	~VoxelizeSceneTask();
 
 	AsyncTasksInfo initialize(CompositorPass& pass) override;
+
+	void run(RenderContext& ctx, CompositorPass& pass) override;
+
 	void run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
+	bool writesSyncCommands(CompositorPass&) const override;
 
 	void runCompute(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
 	bool writesSyncComputeCommands(CompositorPass&) const override;
@@ -117,10 +121,10 @@ private:
 	void updateCBufferCascade(SceneVoxelChunkInfo& info, Vector3 diff, SceneVoxelsCascade& chunk);
 	void updateCBuffer(UINT frameIndex);
 
-	void voxelizeCascades(PassTarget& viewportOutput);
-	void voxelizeCascade(TextureStatePair& voxelScene, TextureStatePair& prevVoxelScene, PassTarget& viewportOutput, SceneVoxelsCascade& chunk);
+	void voxelizeCascades(GpuTextureStates& viewportOutput);
+	void voxelizeCascade(TextureStatePair& voxelScene, TextureStatePair& prevVoxelScene, GpuTextureStates& viewportOutput, SceneVoxelsCascade& chunk);
 
-	void bounceCascade(CommandsData& commands, PassTarget& viewportOutput, SceneVoxelsCascade& chunk);
+	void bounceCascade(CommandsData& commands, SceneVoxelsCascade& chunk);
 
 	UINT buildCounter[CascadesCount];
 	bool reset = false;

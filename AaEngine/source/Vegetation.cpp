@@ -8,10 +8,10 @@ Vegetation::Vegetation()
 
 void Vegetation::initialize(RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch)
 {
-	auto csShader = resources.shaders.getShader("vegetationFindCS", ShaderTypeCompute, ShaderRef{ "vegetationFindCS.hlsl", "main", "cs_6_6" });
+	auto csShader = resources.shaders.getShader("vegetationFindCS", ShaderType::Compute, ShaderRef{ "vegetationFindCS.hlsl", "main", "cs_6_6" });
 	vegetationFindCS.init(*renderSystem.core.device, *csShader);
 
-	csShader = resources.shaders.getShader("vegetationUpdateCS", ShaderTypeCompute, ShaderRef{ "vegetationUpdateCS.hlsl", "main", "cs_6_6" });
+	csShader = resources.shaders.getShader("vegetationUpdateCS", ShaderType::Compute, ShaderRef{ "vegetationUpdateCS.hlsl", "main", "cs_6_6" });
 	vegetationUpdateCS.init(*renderSystem.core.device, *csShader);
 
 	createBillboardIndexBuffer(renderSystem, batch);

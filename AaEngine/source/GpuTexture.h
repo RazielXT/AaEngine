@@ -28,10 +28,12 @@ public:
 };
 
 class RenderTargetTexturesView;
+class RenderTargetTextures;
 
 class GpuTexture2D : public GpuTextureResource
 {
 	friend RenderTargetTexturesView;
+	friend RenderTargetTextures;
 public:
 
 	enum Flags { AllowRenderTarget = 1, AllowUAV = 2 };
@@ -63,10 +65,14 @@ public:
 	std::vector<ShaderUAV> uav;
 };
 
-struct RenderTargetTextureState
+struct GpuTextureStates
 {
 	GpuTexture2D* texture{};
 	D3D12_RESOURCE_STATES previousState{};
+	D3D12_RESOURCE_STATES state{};
+	D3D12_RESOURCE_STATES nextState{};
+
+	static void Transition(ID3D12GraphicsCommandList* commandList, const std::vector<GpuTextureStates>&);
 };
 
 namespace TransitionFlags
@@ -88,27 +94,19 @@ class RenderTargetTexturesView
 {
 public:
 
-	void Init(ID3D12Device* device);
+	void Init(ID3D12Device* device, std::vector<GpuTexture2D*> t, GpuTexture2D* d);
 
-	std::vector<RenderTargetTextureState> texturesState;
-	RenderTargetTextureState depthState;
-
-	void PrepareAsTarget(ID3D12GraphicsCommandList* commandList, bool clear = true, UINT flags = TransitionFlags::DepthPrepareClearWrite);
-	void PrepareAsTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from, bool clear = true, UINT flags = TransitionFlags::DepthPrepareClearWrite);
-
-	void TransitionFromTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES to, bool depth = true);
-	void PrepareAsView(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from);
-	void PrepareToPresent(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from);
+	void PrepareAsTarget(ID3D12GraphicsCommandList* commandList, const std::vector<GpuTextureStates>&, bool clear = true, UINT flags = TransitionFlags::DepthPrepareClearWrite);
 
 	std::vector<DXGI_FORMAT> formats;
-
-private:
-
-	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtvHandles;
-
 	UINT width;
 	UINT height;
+
+protected:
+
+	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtvHandles;
 	bool contiguous{};
+	bool depth{};
 };
 
 class RenderTargetTextures : public RenderTargetTexturesView
@@ -118,6 +116,10 @@ public:
 	void Init(ID3D12Device* device, UINT width, UINT height, RenderTargetHeap& heap, const std::vector<DXGI_FORMAT>& format, D3D12_RESOURCE_STATES state, bool depthBuffer = true, D3D12_RESOURCE_STATES initialDepthState = D3D12_RESOURCE_STATE_DEPTH_WRITE);
 	void SetName(const std::string& name);
 
+	void PrepareAsTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from, bool clear = true, UINT flags = TransitionFlags::DepthPrepareClearWrite);
+	void TransitionFromTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES to, bool depth = true);
+	void PrepareAsView(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from);
+
 	std::vector<GpuTexture2D> textures;
 	GpuTexture2D depth;
 };
@@ -125,7 +127,7 @@ public:
 struct TextureStatePair
 {
 	TextureStatePair() = default;
-	TextureStatePair(const RenderTargetTextureState& s) : texture(s.texture), currentState(s.previousState) {}
+	TextureStatePair(const GpuTextureStates& s) : texture(s.texture), currentState(s.previousState) {}
 	TextureStatePair(GpuTextureResource* s, D3D12_RESOURCE_STATES state) : texture(s), currentState(state) {}
 
 	GpuTextureResource* texture{};
@@ -135,26 +137,44 @@ struct TextureStatePair
 };
 
 template<UINT MAX>
-struct RenderTargetTransitions
+struct TextureTransitions
 {
 	UINT c = 0;
 	CD3DX12_RESOURCE_BARRIER barriers[MAX];
 
-	void addConst(const TextureStatePair& state, D3D12_RESOURCE_STATES to)
+	TextureTransitions() = default;
+	TextureTransitions(const std::vector<GpuTextureStates>& states, ID3D12GraphicsCommandList* commandList)
 	{
-		if (state.currentState == to)
+		for (auto& state : states)
+			add(state);
+		push(commandList);
+	}
+	TextureTransitions(const std::vector<GpuTextureStates*>& states, ID3D12GraphicsCommandList* commandList)
+	{
+		for (auto& state : states)
+			add(*state);
+		push(commandList);
+	}
+
+	void add(GpuTextureResource* texture, D3D12_RESOURCE_STATES from, D3D12_RESOURCE_STATES to)
+	{
+		if (from == to)
 			return;
 
 		barriers[c] = CD3DX12_RESOURCE_BARRIER::Transition(
-			state.texture->texture.Get(),
-			state.currentState,
+			texture->texture.Get(),
+			from,
 			to);
 
 		c++;
 	}
+	void add(const GpuTextureStates& state)
+	{
+		add(state.texture, state.previousState, state.state);
+	}
 	void add(TextureStatePair& state, D3D12_RESOURCE_STATES to)
 	{
-		addConst(state, to);
+		add(state.texture, state.currentState, to);
 
 		state.currentState = to;
 	}

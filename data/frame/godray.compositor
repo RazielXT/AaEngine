@@ -10,33 +10,33 @@ compositor Godray
 	pass SkyDownsample
 	{
 		material SkyPassThrough
-		input sceneTexture
-		input depthTexture
-		target tmpColorDownsample2
+		in sceneTexture
+		in depthTexture
+		out tmpColorDownsample2
 	}
 
 	pass SkyDownsample
 	{
 		material PassThrough
-		input tmpColorDownsample2
-		target godray2
+		in tmpColorDownsample2
+		out godray2
 	}
 	pass TraceGodray
 	{
 		material TraceGodray
-		input godray2
-		target godray
+		in godray2
+		out godray
 	}
 	pass TraceGodray
 	{
 		material TraceGodray
-		input godray
-		target godray2
+		in godray
+		out godray2
 	}
 	pass TraceGodray
 	{
 		material TraceGodray
-		input godray2
-		target godray
+		in godray2
+		out godray
 	}
 }

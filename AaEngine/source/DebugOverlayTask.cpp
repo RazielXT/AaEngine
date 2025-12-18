@@ -15,20 +15,20 @@ DebugOverlayTask::~DebugOverlayTask()
 
 AsyncTasksInfo DebugOverlayTask::initialize(CompositorPass& pass)
 {
-	material = provider.resources.materials.getMaterial("TexturePreview")->Assign({}, { pass.target.texture->format });
+	material = provider.resources.materials.getMaterial("TexturePreview")->Assign({}, { pass.targets.front().texture->format });
 
 	return {};
 }
 
 void DebugOverlayTask::resize(CompositorPass& pass)
 {
-	screenSize = { (float)pass.target.texture->width, (float)pass.target.texture->height };
+	screenSize = { (float)pass.targets.front().texture->width, (float)pass.targets.front().texture->height };
 	updateQuad();
 }
 
 void DebugOverlayTask::run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass)
 {
-	pass.target.texture->PrepareAsRenderTarget(syncCommands.commandList, pass.target.previousState);
+	pass.targets.front().texture->PrepareAsRenderTarget(syncCommands.commandList, pass.targets.front().previousState);
 
 	auto idx = currentIdx();
 
@@ -38,7 +38,7 @@ void DebugOverlayTask::run(RenderContext& ctx, CommandsData& syncCommands, Compo
 
 		quad.data.textureIndex = UINT(idx);
 
-		quad.Render(material, *pass.target.texture, provider, ctx, syncCommands.commandList);
+		quad.Render(material, *pass.targets.front().texture, provider, ctx, syncCommands.commandList);
 	}
 }
 

@@ -5,13 +5,13 @@
 #include <vector>
 #include "ConfigParser.h"
 
-enum ShaderType
+enum class ShaderType
 {
-	ShaderTypeVertex,
-	ShaderTypePixel,
-	ShaderTypeCompute,
-	ShaderType_COUNT,
-	ShaderTypeNone
+	Vertex,
+	Pixel,
+	Compute,
+	COUNT,
+	None
 };
 
 struct ConstantDefault
@@ -30,14 +30,14 @@ struct ShaderRef
 
 struct shaderRefMaps
 {
-	std::map<std::string, ShaderRef> shaderRefs[ShaderType_COUNT];
+	std::map<std::string, ShaderRef> shaderRefs[(int)ShaderType::COUNT];
 
 	struct ShaderCustomization
 	{
 		std::string sourceName;
 		ShaderRef customization;
 	};
-	std::map<std::string, ShaderCustomization> shaderCustomizations[ShaderType_COUNT];
+	std::map<std::string, ShaderCustomization> shaderCustomizations[(int)ShaderType::COUNT];
 };
 
 namespace ShaderFileParser

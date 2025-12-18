@@ -44,6 +44,11 @@ bool VoxelizeSceneTask::writesSyncComputeCommands(CompositorPass& pass) const
 	return pass.info.entry == "Bounces";
 }
 
+bool VoxelizeSceneTask::writesSyncCommands(CompositorPass& pass) const
+{
+	return pass.info.entry == "EndFrame";
+}
+
 void VoxelizeSceneTask::revoxelize()
 {
 	for (auto& b : buildCounter)
@@ -89,13 +94,13 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 
 	computeMips.init(*provider.renderSystem.core.device, "generateMipmaps", provider.resources.shaders);
 
-	auto bouncesShader = provider.resources.shaders.getShader("voxelBouncesCS", ShaderTypeCompute, ShaderRef{"voxelBouncesCS.hlsl", "main", "cs_6_6"});
+	auto bouncesShader = provider.resources.shaders.getShader("voxelBouncesCS", ShaderType::Compute, ShaderRef{"voxelBouncesCS.hlsl", "main", "cs_6_6"});
 	bouncesCS.init(*provider.renderSystem.core.device, *bouncesShader);
 
-	auto clearBufferShader = provider.resources.shaders.getShader("clearBufferCS", ShaderTypeCompute, ShaderRef{ "utils/clearBufferCS.hlsl", "main", "cs_6_6" });
+	auto clearBufferShader = provider.resources.shaders.getShader("clearBufferCS", ShaderType::Compute, ShaderRef{ "utils/clearBufferCS.hlsl", "main", "cs_6_6" });
 	clearBufferCS.init(*provider.renderSystem.core.device, *clearBufferShader);
 
-	sceneQueue = sceneMgr.createQueue({ pass.target.texture->format }, MaterialTechnique::Voxelize);
+	sceneQueue = sceneMgr.createQueue({ pass.targets.front().texture->format }, MaterialTechnique::Voxelize);
 
 	AsyncTasksInfo tasks;
 	eventBegin = CreateEvent(nullptr, FALSE, FALSE, nullptr);
@@ -106,7 +111,7 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 		{
 			while (WaitForSingleObject(eventBegin, INFINITE) == WAIT_OBJECT_0 && running)
 			{
-				voxelizeCascades(pass.target);
+				voxelizeCascades(pass.targets.front());
 				
 				SetEvent(eventFinish);
 			}
@@ -121,7 +126,7 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 
 void VoxelizeSceneTask::run(RenderContext& renderCtx, CommandsData& syncCommands, CompositorPass& pass)
 {
-	if (pass.info.entry == "Bounces")
+	if (pass.info.entry == "EndFrame")
 	{
 		//get ready for compute queue
 		for ( auto& voxel : voxelCascades)
@@ -131,7 +136,10 @@ void VoxelizeSceneTask::run(RenderContext& renderCtx, CommandsData& syncCommands
 		}
 		return;
 	}
+}
 
+void VoxelizeSceneTask::run(RenderContext& renderCtx, CompositorPass& pass)
+{
 	{
 		auto m = XMMatrixMultiplyTranspose(renderCtx.camera->getViewMatrix(), renderCtx.camera->getProjectionMatrixNoReverse());
 		Matrix data;
@@ -172,7 +180,7 @@ void VoxelizeSceneTask::runCompute(RenderContext& ctx, CommandsData& computeComm
 		{
 		}
 		else if (evenFrame == (i % 2))
-			bounceCascade(computeCommands, pass.target, voxel);
+			bounceCascade(computeCommands, voxel);
 
 		i++;
 	}
@@ -214,7 +222,7 @@ void VoxelizeSceneTask::updateCBuffer(UINT frameIndex)
 	memcpy(cbufferResource.Memory(), &cbufferData, sizeof(cbufferData));
 }
 
-void VoxelizeSceneTask::voxelizeCascades(PassTarget& viewportOutput)
+void VoxelizeSceneTask::voxelizeCascades(GpuTextureStates& viewportOutput)
 {
 	auto marker = provider.renderSystem.core.StartCommandList(voxelizeCommands);
 	constexpr UINT VoxelizeInterations = 1;
@@ -242,7 +250,7 @@ void VoxelizeSceneTask::voxelizeCascades(PassTarget& viewportOutput)
 	marker.close();
 }
 
-void VoxelizeSceneTask::voxelizeCascade(TextureStatePair& voxelScene, TextureStatePair& prevVoxelScene, PassTarget& viewportOutput, SceneVoxelsCascade& cascade)
+void VoxelizeSceneTask::voxelizeCascade(TextureStatePair& voxelScene, TextureStatePair& prevVoxelScene, GpuTextureStates& viewportOutput, SceneVoxelsCascade& cascade)
 {
 	viewportOutput.texture->PrepareAsRenderTarget(voxelizeCommands.commandList, viewportOutput.previousState, true);
 
@@ -302,7 +310,7 @@ void VoxelizeSceneTask::voxelizeCascade(TextureStatePair& voxelScene, TextureSta
 	voxelizeCommands.commandList->ResourceBarrier(1, &b2);
 }
 
-void VoxelizeSceneTask::bounceCascade(CommandsData& commands, PassTarget& viewportOutput, SceneVoxelsCascade& cascade)
+void VoxelizeSceneTask::bounceCascade(CommandsData& commands, SceneVoxelsCascade& cascade)
 {
 	TextureStatePair voxelSceneTexture_state = { &cascade.voxelSceneTexture, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE };
 	TextureStatePair voxelPreviousSceneTexture_state = { &cascade.voxelPreviousSceneTexture, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE };

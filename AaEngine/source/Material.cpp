@@ -37,11 +37,11 @@ void MaterialBase::Load(ShaderLibrary& shaderLib)
 		return;
 
 	if (!ref.pipeline.vs_ref.empty())
-		shaders[ShaderTypeVertex] = shaderLib.getShader(ref.pipeline.vs_ref, ShaderTypeVertex);
+		shaders[(int)ShaderType::Vertex] = shaderLib.getShader(ref.pipeline.vs_ref, ShaderType::Vertex);
 	if (!ref.pipeline.ps_ref.empty())
-		shaders[ShaderTypePixel] = shaderLib.getShader(ref.pipeline.ps_ref, ShaderTypePixel);
+		shaders[(int)ShaderType::Pixel] = shaderLib.getShader(ref.pipeline.ps_ref, ShaderType::Pixel);
 
-	for (int i = 0; i < ShaderType_COUNT; i++)
+	for (int i = 0; i < (int)ShaderType::COUNT; i++)
 		if (shaders[i])
 			info.add(*shaders[i], (ShaderType)i);
 
@@ -108,10 +108,10 @@ ID3D12PipelineState* MaterialBase::CreatePipelineState(const std::vector<D3D12_I
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 	psoDesc.InputLayout = { layout.empty() ? nullptr : layout.data(), (UINT)layout.size() };
 	psoDesc.pRootSignature = rootSignature;
-	if (shaders[ShaderTypeVertex])
-		psoDesc.VS = { shaders[ShaderTypeVertex]->blob->GetBufferPointer(), shaders[ShaderTypeVertex]->blob->GetBufferSize() };
-	if (shaders[ShaderTypePixel])
-		psoDesc.PS = { shaders[ShaderTypePixel]->blob->GetBufferPointer(), shaders[ShaderTypePixel]->blob->GetBufferSize() };
+	if (shaders[(int)ShaderType::Vertex])
+		psoDesc.VS = { shaders[(int)ShaderType::Vertex]->blob->GetBufferPointer(), shaders[(int)ShaderType::Vertex]->blob->GetBufferSize() };
+	if (shaders[(int)ShaderType::Pixel])
+		psoDesc.PS = { shaders[(int)ShaderType::Pixel]->blob->GetBufferPointer(), shaders[(int)ShaderType::Pixel]->blob->GetBufferSize() };
 	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	psoDesc.RasterizerState.CullMode = ref.pipeline.culling;
 	psoDesc.RasterizerState.FillMode = ref.pipeline.fill;
@@ -121,7 +121,7 @@ ID3D12PipelineState* MaterialBase::CreatePipelineState(const std::vector<D3D12_I
 	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	if (!shaders[ShaderTypePixel] || target.empty())
+	if (!shaders[(int)ShaderType::Pixel] || target.empty())
 	{
 		psoDesc.NumRenderTargets = 0;
 		psoDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;

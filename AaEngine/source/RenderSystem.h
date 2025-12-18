@@ -14,9 +14,9 @@ using namespace DirectX;
 struct CommandsData
 {
 	ID3D12GraphicsCommandList* commandList{};
-	ID3D12CommandAllocator* commandAllocators[FrameCount];
+	ID3D12CommandAllocator* commandAllocators[FrameCount]{};
 	std::string name;
-	PixColor color;
+	PixColor color{};
 
 	void deinit();
 };

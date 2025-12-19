@@ -259,7 +259,7 @@ void SceneRenderTask::renderTransparentScene(CompositorPass& pass)
 
 	pass.mrt->PrepareAsTarget(commandList, pass.targets, true, TransitionFlags::UseDepth);
 
-	ShaderConstantsProvider constants(provider.params, transparent.sceneVisibility, *ctx.camera, *pass.targets.front().texture);
+	ShaderConstantsProvider constants(provider.params, transparent.sceneVisibility, *ctx.camera, *pass.mrt);
 	transparent.transparentQueue->renderObjects(constants, commandList);
 
 	sceneMgr.water.prepareAfterRendering(commandList);
@@ -273,9 +273,9 @@ void SceneRenderTask::renderEditor(CompositorPass& pass, CommandsData& cmd)
 
 	if (!picker.active.empty())
 	{
-		BoundingBoxDraw bboxDraw(provider.resources, { pass.targets.front().texture->format });
+		BoundingBoxDraw bboxDraw(provider.resources, { pass.mrt->formats });
 
-		ShaderConstantsProvider constants(provider.params, {}, *ctx.camera, *pass.targets.front().texture);
+		ShaderConstantsProvider constants(provider.params, {}, *ctx.camera, *pass.mrt);
 
 		for (auto selectedId : picker.active)
 		{
@@ -290,11 +290,14 @@ void SceneRenderTask::renderEditor(CompositorPass& pass, CommandsData& cmd)
 void SceneRenderTask::renderWireframe(CompositorPass& pass, CommandsData& cmd)
 {
 	if (!enabledWireframe)
+	{
+		pass.mrt->PrepareAsTarget(cmd.commandList, pass.targets, false, TransitionFlags::UseDepth);
 		return;
+	}
 
-	pass.mrt->PrepareAsTarget(cmd.commandList, pass.targets, true, TransitionFlags::DepthContinue);
+	pass.mrt->PrepareAsTarget(cmd.commandList, pass.targets, true, TransitionFlags::DepthPrepareClearWrite);
 
-	ShaderConstantsProvider constants(provider.params, sceneVisibility, *ctx.camera, *pass.targets.front().texture);
+	ShaderConstantsProvider constants(provider.params, sceneVisibility, *ctx.camera, *pass.mrt);
 
 	wireframeQueue->renderObjects(constants, cmd.commandList);
 }
@@ -312,7 +315,7 @@ void SceneRenderTask::renderDebug(CompositorPass& pass, CommandsData& cmd)
 
 	showVoxelsUpdate(entity, *ctx.camera);
 
-	ShaderConstantsProvider constants(provider.params, visibility, *ctx.camera, *pass.targets.front().texture);
+	ShaderConstantsProvider constants(provider.params, visibility, *ctx.camera, *pass.mrt);
 
 	RenderQueue queue{ pass.mrt->formats, MaterialTechnique::Default };
 	queue.update({ EntityChange::Add, Order::Normal, &entity }, provider.resources);

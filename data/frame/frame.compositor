@@ -70,6 +70,12 @@ compositor Frame
 		out sceneTexture (depth_read)
 	}
 
+	task SceneRender.Wireframe
+	{
+		after SceneRender.Opaque
+		out sceneTexture
+	}
+
 	pass DeferredVCT
 	{
 		after VoxelScene.Voxelize

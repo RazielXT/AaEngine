@@ -37,7 +37,7 @@ void SsaoComputeTask::runCompute(RenderContext& ctx, CommandsData& commands, Com
 
 		auto textures = this->textures;
 		tr.add(textures.linearDepth, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-		tr.add(textures.linearDepthDownsample16, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+		//tr.add(textures.linearDepthDownsample16, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 		tr.add(textures.linearDepthDownsample8, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 		tr.add(textures.linearDepthDownsample4, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 		tr.add(textures.linearDepthDownsample2, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
@@ -46,7 +46,7 @@ void SsaoComputeTask::runCompute(RenderContext& ctx, CommandsData& commands, Com
 		tr.add(textures.occlusionInterleaved4, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 		tr.add(textures.occlusion4, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 		tr.add(textures.occlusionInterleaved2, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-		tr.add(textures.linearDepthDownsampleAtlas16, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+		//tr.add(textures.linearDepthDownsampleAtlas16, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 		tr.add(textures.linearDepthDownsampleAtlas8, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 		tr.add(textures.linearDepthDownsampleAtlas4, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 		tr.add(textures.linearDepthDownsampleAtlas2, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);

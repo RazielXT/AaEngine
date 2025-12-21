@@ -57,7 +57,7 @@ AsyncTasksInfo SceneRenderTask::initialize(CompositorPass& pass)
 	}
 	else if (pass.info.entry == "Opaque")
 	{
-			sceneQueue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::NoDepthWrite);
+			sceneQueue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::Default);
 
 		scene.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
 		scene.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -182,7 +182,7 @@ void SceneRenderTask::renderScene(CompositorPass& pass)
 
 	auto marker = provider.renderSystem.core.StartCommandList(scene.commands);
 
-	pass.mrt->PrepareAsTarget(scene.commands.commandList, pass.targets, true, TransitionFlags::DepthPrepareRead);
+	pass.mrt->PrepareAsTarget(scene.commands.commandList, pass.targets, true, TransitionFlags::UseDepth);
 
 	if (enabledWireframe)
 		return;
@@ -295,7 +295,7 @@ void SceneRenderTask::renderWireframe(CompositorPass& pass, CommandsData& cmd)
 		return;
 	}
 
-	pass.mrt->PrepareAsTarget(cmd.commandList, pass.targets, true, TransitionFlags::DepthPrepareClearWrite);
+	pass.mrt->PrepareAsTarget(cmd.commandList, pass.targets, true, TransitionFlags::UseDepth);
 
 	ShaderConstantsProvider constants(provider.params, sceneVisibility, *ctx.camera, *pass.mrt);
 

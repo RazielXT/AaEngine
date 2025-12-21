@@ -67,7 +67,7 @@ compositor Frame
 	{
 		sync_wait SSAO
 
-		out sceneTexture (depth_read)
+		out sceneTexture
 	}
 
 	task SceneRender.Wireframe

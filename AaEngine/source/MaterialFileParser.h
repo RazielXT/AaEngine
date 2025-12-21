@@ -57,7 +57,6 @@ enum class MaterialTechnique
 	EntityId,
 	TerrainScan,
 	Wireframe,
-	NoDepthWrite,
 	COUNT
 };
 

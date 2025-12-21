@@ -80,14 +80,6 @@ void MaterialResources::loadMaterials(std::string directory, bool subDirectories
 			wMat.base = wMat.name = info.name + "_WIRE";
 			info.techniqueMaterial[int(MaterialTechnique::Wireframe)] = wMat.name;
 		}
-		if (!info.abstract && info.pipeline.depth.write && !info.techniqueMaterial[int(MaterialTechnique::NoDepthWrite)])
-		{
-			auto& wMat = knownMaterials.emplace_back(info);
-			wMat.pipeline.depth.write = false;
-
-			wMat.base = wMat.name = info.name + "_NO_D";
-			info.techniqueMaterial[int(MaterialTechnique::NoDepthWrite)] = wMat.name;
-		}
 	}
 
 	for (const MaterialRef& info : knownMaterials)

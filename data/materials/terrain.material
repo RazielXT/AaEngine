@@ -14,7 +14,6 @@ material TerrainBaseVCT abstract
 		profile ps_6_6
 	}
 
-	
 	technique Depth TerrainDepth
 	technique Voxelize VoxelizeTerrain
 	technique TerrainScan TerrainScanMaterial

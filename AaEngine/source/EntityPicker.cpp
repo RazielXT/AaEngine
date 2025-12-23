@@ -191,64 +191,48 @@ void EntityPicker::update(ID3D12GraphicsCommandList* commandList, RenderProvider
 
 	rtt.PrepareAsTarget(commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-	//render only needed pixel
+	//render only selected pixel
 	auto rect = CD3DX12_RECT(scheduled->x, scheduled->y, scheduled->x + 1, scheduled->y + 1);
 	commandList->RSSetScissorRects(1, &rect);
 
 	CommandsMarker marker(commandList, "EntityPicker", PixColor::Debug);
 	RenderQueue idQueue = createRenderQueue();
-	{
-		auto opaqueRenderables = sceneMgr.getRenderables(Order::Normal);
 
-		RenderObjectsVisibilityData opaqueVisibility;
-		opaqueVisibility.visibility.resize(opaqueRenderables->objectsData.objects.size(), false);
-		opaqueRenderables->updateVisibility(camera, opaqueVisibility);
-
-		opaqueRenderables->iterateObjects([this, &idQueue, &opaqueVisibility, &provider](RenderObject& obj)
-			{
-				if (obj.isVisible(opaqueVisibility.visibility))
-				{
-					idQueue.update({ EntityChange::Add, Order::Normal, (SceneEntity*)&obj }, provider.resources);
-				}
-			});
-
-		ShaderConstantsProvider constants(provider.params, opaqueVisibility, camera, rtt);
-		idQueue.renderObjects(constants, commandList);
-	}
-	idQueue.reset();
-
-	auto pickTransparent = [this]()
+	auto renderItems = [&](Order order)
 		{
-			auto currentPickTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-			constexpr auto transparentSkipMaxDelay = std::chrono::milliseconds(500);
-			static auto lastPickTime = currentPickTime - transparentSkipMaxDelay;
+			auto renderables = sceneMgr.getRenderables(order);
 
-			bool pick = !(currentPickTime - lastPickTime < transparentSkipMaxDelay && lastPickWasTransparent());
+			RenderObjectsVisibilityData visibilityData;
+			visibilityData.visibility.resize(renderables->objectsData.objects.size(), false);
+			renderables->updateVisibility(camera, visibilityData);
 
-			lastPickTime = currentPickTime;
+			renderables->iterateObjects([this, &idQueue, &visibilityData, &provider](RenderObject& obj)
+				{
+					if (obj.isVisible(visibilityData.visibility))
+						idQueue.update({ EntityChange::Add, Order::Normal, (SceneEntity*)&obj }, provider.resources);
+				});
+
+			ShaderConstantsProvider constants(provider.params, visibilityData, camera, rtt);
+			idQueue.renderObjects(constants, commandList);
+			idQueue.reset();
+		};
+
+	bool pickTransparent = [this]()
+		{
+			const auto currentTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+			const auto transparentSkipMaxDelay = std::chrono::milliseconds(500);
+			static auto lastPickTime = currentTime - transparentSkipMaxDelay;
+
+			bool pick = !(currentTime - lastPickTime < transparentSkipMaxDelay && lastPickWasTransparent());
+
+			lastPickTime = currentTime;
 			return pick;
 		}();
 
+	renderItems(Order::Normal);
+
 	if (pickTransparent)
-	{
-		auto transparentRenderables = sceneMgr.getRenderables(Order::Transparent);
-
-		RenderObjectsVisibilityData transparentVisibility;
-		transparentVisibility.visibility.resize(transparentRenderables->objectsData.objects.size(), false);
-		transparentRenderables->updateVisibility(camera, transparentVisibility);
-
-		idQueue.reset();
-		transparentRenderables->iterateObjects([this, &idQueue, &transparentVisibility, &provider](RenderObject& obj)
-			{
-				if (obj.isVisible(transparentVisibility.visibility))
-				{
-					idQueue.update({ EntityChange::Add, Order::Normal, (SceneEntity*)&obj }, provider.resources);
-				}
-			});
-
-		ShaderConstantsProvider constants(provider.params, transparentVisibility, camera, rtt);
-		idQueue.renderObjects(constants, commandList);
-	}
+		renderItems(Order::Transparent);
 
 	scheduleReadback(commandList);
 	nextPickPrepared = true;

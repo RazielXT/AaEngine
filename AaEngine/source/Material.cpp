@@ -377,7 +377,6 @@ void MaterialInstance::SetUAV(ID3D12Resource* uav, UINT slot)
 	u.uav = uav;
 }
 
-
 std::unique_ptr<MaterialPropertiesOverride> MaterialInstance::CreateParameterOverride(const MaterialPropertiesOverrideDescription& description) const
 {
 	auto output = std::make_unique<MaterialPropertiesOverride>();
@@ -386,21 +385,48 @@ std::unique_ptr<MaterialPropertiesOverride> MaterialInstance::CreateParameterOve
 	{
 		for (auto& d : description.params)
 		{
-			for (const auto& p : base.info.rootBuffer->info.Params)
-			{
-				if (p.Name == d.name)
-				{
-					auto& param = output->params.emplace_back();
-					param.offsetFloats = p.StartOffset / sizeof(float);
-					param.sizeBytes = d.sizeBytes;
-					memcpy(output->params.back().value, d.value, param.sizeBytes);
-					break;
-				}
-			}
+			AppendParameterOverride(*output, d.name, d.value, d.sizeBytes);
 		}
 	}
 
 	return output->params.empty() ? nullptr : std::move(output);
+}
+
+void MaterialInstance::AppendParameterOverride(MaterialPropertiesOverride& output, const std::string& name, const void* value, size_t sizeBytes) const
+{
+	for (const auto& p : base.info.rootBuffer->info.Params)
+	{
+		if (p.Name == name)
+		{
+			auto& param = output.params.emplace_back();
+			param.offsetFloats = p.StartOffset / sizeof(float);
+			param.sizeBytes = sizeBytes;
+			memcpy(output.params.back().value, value, param.sizeBytes);
+			break;
+		}
+	}
+}
+
+void MaterialInstance::AppendParameterOverride(MaterialPropertiesOverride& output, const std::string& name, MaterialInstance& source, float defaultValue) const
+{
+	auto& param = output.params.emplace_back();
+
+	for (auto& p : base.info.rootBuffer->info.Params)
+	{
+		if (p.Name == name)
+		{
+			param.offsetFloats = p.StartOffset / sizeof(float);
+			param.sizeBytes = p.Size;
+
+			if (!source.GetParameter(name, param.value))
+			{
+				for (auto& d : param.value)
+					d = defaultValue;
+			}
+
+			break;
+		}
+	}
 }
 
 void MaterialInstance::ApplyParametersOverride(MaterialPropertiesOverride& data, MaterialDataStorage& output) const
@@ -473,7 +499,7 @@ void MaterialInstance::SetParameter(FastParam id, const void* value, MaterialDat
 	}
 }
 
-void MaterialInstance::GetParameter(const std::string& name, float* output) const
+bool MaterialInstance::GetParameter(const std::string& name, float* output) const
 {
 	if (base.info.rootBuffer)
 	{
@@ -482,10 +508,12 @@ void MaterialInstance::GetParameter(const std::string& name, float* output) cons
 			if (p.Name == name)
 			{
 				memcpy(output, resources->rootBuffer.defaultData.data() + p.StartOffset / sizeof(float), p.Size);
-				return;
+				return true;
 			}
 		}
 	}
+
+	return false;
 }
 
 void MaterialInstance::GetParameter(FastParam id, float* output) const

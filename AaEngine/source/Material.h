@@ -126,11 +126,14 @@ public:
 	void SetUAV(ID3D12Resource* uav, UINT slot);
 
 	std::unique_ptr<MaterialPropertiesOverride> CreateParameterOverride(const MaterialPropertiesOverrideDescription& description) const;
+	void AppendParameterOverride(MaterialPropertiesOverride & override, const std::string& name, const void* value, size_t sizeBytes) const;
+	void AppendParameterOverride(MaterialPropertiesOverride & override, const std::string& name, MaterialInstance& source, float defaultValue) const;
+
 	void ApplyParametersOverride(MaterialPropertiesOverride& data, MaterialDataStorage& output) const;
 
 	void SetParameter(const std::string& name, const void* value, size_t count);
 	void SetParameter(const std::string& name, float* buffer, const void* value, size_t count) const;
-	void GetParameter(const std::string& name, float* output) const;
+	bool GetParameter(const std::string& name, float* output) const;
 
 	void SetParameter(ResourcesInfo::AutoParam, const void* value, size_t count);
 	void SetParameter(ResourcesInfo::AutoParam, const void* value, size_t count, MaterialDataStorage& data);

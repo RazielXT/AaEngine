@@ -270,6 +270,7 @@ void VoxelizeSceneTask::voxelizeCascade(TextureStatePair& voxelScene, TextureSta
 	auto& renderables = *sceneMgr.getRenderables(Order::Normal);
 
 	ShaderConstantsProvider constants(provider.params, sceneInfo, camera, *viewportOutput.texture);
+	constants.uavBarrier = cascade.dataBuffer.Get();
 
 	sceneQueue->iterateMaterials([&cascade](AssignedMaterial* material)
 		{
@@ -300,7 +301,6 @@ void VoxelizeSceneTask::voxelizeCascade(TextureStatePair& voxelScene, TextureSta
 	// mipmaps
 	voxelScene.Transition(voxelizeCommands.commandList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 	computeMips.dispatch(voxelizeCommands.commandList, cascade.voxelSceneTexture);
-
 	{
 		auto uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(cascade.dataBuffer.Get());
 		voxelizeCommands.commandList->ResourceBarrier(1, &uavBarrier);

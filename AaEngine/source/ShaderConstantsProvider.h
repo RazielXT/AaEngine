@@ -23,6 +23,7 @@ public:
 	XMUINT2 viewportSize;
 
 	SceneEntity* entity{};
+	ID3D12Resource* uavBarrier{};
 
 	XMMATRIX getWorldMatrix() const;
 	XMMATRIX getPreviousWorldMatrix() const;

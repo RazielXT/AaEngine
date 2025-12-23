@@ -31,7 +31,7 @@ struct RenderQueue
 		SceneEntity* entity{};
 
 		EntityEntry() = default;
-		EntityEntry(SceneEntity*, AssignedMaterial*);
+		EntityEntry(SceneEntity*, AssignedMaterial*, MaterialTechnique);
 
 		bool operator<(const EntityEntry& other) const
 		{

@@ -30,7 +30,7 @@ void RenderQueue::update(const EntityChangeDescritpion& changeInfo, GraphicsReso
 			}
 		}
 
-		auto entry = EntityEntry{ entity, matInstance->Assign(entity->geometry.layout ? *entity->geometry.layout : std::vector<D3D12_INPUT_ELEMENT_DESC>{}, targets, technique) };
+		auto entry = EntityEntry(entity, matInstance->Assign(entity->geometry.layout ? *entity->geometry.layout : std::vector<D3D12_INPUT_ELEMENT_DESC>{}, targets, technique), technique);
 
 		auto it = std::lower_bound(entities.begin(), entities.end(), entry);
 		entities.insert(it, std::move(entry));
@@ -136,34 +136,14 @@ void RenderQueue::renderObjects(ShaderConstantsProvider& constants, ID3D12Graphi
 		if (entry.materialOverride)
 			entry.material->ApplyParametersOverride(*entry.materialOverride, storage);
 
-		if (technique == MaterialTechnique::Voxelize)
-		{
-			entry.material->CopyParameter(FastParam::Emission, *entry.entity->material, storage, 0.0f);
-			entry.material->CopyParameter(FastParam::MaterialColor, *entry.entity->material, storage, 1.0f);
-			entry.material->CopyParameter(FastParam::TexIdDiffuse, *entry.entity->material, storage, 0.0f);
-		}
-		if (technique == MaterialTechnique::EntityId)
-		{
-			if (entry.entity->geometry.type == EntityGeometry::Type::Instancing)
-			{
-				auto group = (InstanceGroup*)entry.entity->geometry.source;
-				entry.material->SetParameter("ResIdIdsBuffer", storage.rootParams.data(), &group->gpuIdsBufferHeapIdx, 1);
-			}
-			else
-			{
-				UINT id = entry.entity->getGlobalId().value;
-				entry.material->SetParameter("EntityId", storage.rootParams.data(), &id, 1);
-			}
-		}
-
 		entry.material->UpdatePerObject(storage, constants);
 		entry.material->BindConstants(commandList, storage, constants);
 
 		RenderObject(commandList, entry.entity->geometry, constants.params.frameIndex);
 
-		if (technique == MaterialTechnique::Voxelize)
+		if (constants.uavBarrier)
 		{
-			auto uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(nullptr);
+			auto uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(constants.uavBarrier);
 			commandList->ResourceBarrier(1, &uavBarrier);
 		}
 
@@ -186,7 +166,7 @@ void RenderQueue::iterateMaterials(std::function<void(AssignedMaterial*)> func)
 	}
 }
 
-RenderQueue::EntityEntry::EntityEntry(SceneEntity* e, AssignedMaterial* m)
+RenderQueue::EntityEntry::EntityEntry(SceneEntity* e, AssignedMaterial* m, MaterialTechnique technique)
 {
 	entity = e;
 	material = m;
@@ -194,4 +174,31 @@ RenderQueue::EntityEntry::EntityEntry(SceneEntity* e, AssignedMaterial* m)
 
 	if (e->materialOverride)
 		materialOverride = material->CreateParameterOverride(*e->materialOverride);
+
+	if (technique == MaterialTechnique::EntityId)
+	{
+		if (!materialOverride)
+			materialOverride = std::make_unique<MaterialPropertiesOverride>();
+
+		if (entity->geometry.type == EntityGeometry::Type::Instancing)
+		{
+			auto group = (InstanceGroup*)entity->geometry.source;
+			material->AppendParameterOverride(*materialOverride, "ResIdIdsBuffer", &group->gpuIdsBufferHeapIdx, sizeof(UINT));
+		}
+		else
+		{
+			UINT id = entity->getGlobalId().value;
+			material->AppendParameterOverride(*materialOverride, "EntityId", &id, sizeof(UINT));
+		}
+	}
+
+	if (technique == MaterialTechnique::Voxelize)
+	{
+		if (!materialOverride)
+			materialOverride = std::make_unique<MaterialPropertiesOverride>();
+
+		material->AppendParameterOverride(*materialOverride, "Emission", *entity->material, 0.0f);
+		material->AppendParameterOverride(*materialOverride, "MaterialColor", *entity->material, 1.0f);
+		material->AppendParameterOverride(*materialOverride, "TexIdDiffuse", *entity->material, 0.0f);
+	}
 }

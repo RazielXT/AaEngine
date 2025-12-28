@@ -166,12 +166,12 @@ RenderQueue::EntityEntry::EntityEntry(SceneEntity* e, AssignedMaterial* m, Mater
 		if (!materialOverride)
 			materialOverride = std::make_unique<MaterialPropertiesOverride>();
 
-		if (entity->geometry.type == EntityGeometry::Type::Instancing)
-		{
-			auto group = (InstanceGroup*)entity->geometry.source;
-			material->AppendParameterOverride(*materialOverride, "ResIdIdsBuffer", &group->gpuIdsBufferHeapIdx, sizeof(UINT));
-		}
-		else
+// 		if (entity->geometry.type == EntityGeometry::Type::Instancing)
+// 		{
+// 			auto group = (InstanceGroup*)entity->geometry.source;
+// 			material->AppendParameterOverride(*materialOverride, "ResIdIdsBuffer", &group->gpuIdsBufferHeapIdx, sizeof(UINT));
+// 		}
+// 		else
 		{
 			UINT id = entity->getGlobalId().value;
 			material->AppendParameterOverride(*materialOverride, "EntityId", &id, sizeof(UINT));

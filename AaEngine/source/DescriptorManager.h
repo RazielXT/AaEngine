@@ -21,7 +21,7 @@ public:
 	void initializeSamplers(float MipLODBias);
 
 	void createTextureView(FileTexture& texture);
-	void createTextureView(GpuTextureResource& texture);
+	void createTextureView(GpuTextureResource& texture, UINT mipLevels = 1);
 	void createTextureView(GpuTexture3D& texture);
 	void createTextureView(RenderTargetTextures& textures);
 	void createUAVView(GpuTexture3D& texture);
@@ -35,7 +35,7 @@ public:
 	void removeDescriptorIndex(UINT idx);
 	void removeTextureView(RenderTargetTextures& textures);
 	void removeTextureView(GpuTextureResource& texture);
-	void removeUAVView(GpuTextureResource& texture);
+	void removeUAV(GpuTextureResource& texture);
 private:
 
 	struct DescriptorInfo

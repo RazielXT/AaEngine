@@ -180,8 +180,10 @@ void FrameCompositor::reloadTextures()
 					tex.InitDepth(provider.renderSystem.core.device, w, h, rtvHeap, lastState);
 				else
 				{
-					UINT flags = t.uav ? GpuTexture2D::AllowUAV : GpuTexture2D::AllowRenderTarget;
-					tex.Init(provider.renderSystem.core.device, w, h, rtvHeap, t.format, lastState, flags);
+					if (t.uav)
+						tex.InitUAV(provider.renderSystem.core.device, w, h, t.format, lastState);
+					else
+						tex.InitRenderTarget(provider.renderSystem.core.device, w, h, rtvHeap, t.format, lastState);
 				}
 
 				tex.SetName(name);

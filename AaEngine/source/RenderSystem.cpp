@@ -238,7 +238,7 @@ void RenderCore::initializeSwapChain(const TargetWindow& window)
 
 	for (int i = 0; auto & b : backbuffer)
 	{
-		b.InitExisting(swapChainTextures[i++], device, width, height, rtvHeap, DXGI_FORMAT_R8G8B8A8_UNORM);
+		b.InitExistingRenderTarget(swapChainTextures[i++], device, width, height, rtvHeap, DXGI_FORMAT_R8G8B8A8_UNORM);
 		b.SetName("Backbuffer");
 	}
 }
@@ -264,7 +264,7 @@ void RenderCore::resize(UINT width, UINT height)
 
 	for (int i = 0; auto& b : backbuffer)
 	{
-		b.InitExisting(swapChainTextures[i++], device, width, height, rtvHeap, DXGI_FORMAT_R8G8B8A8_UNORM);
+		b.InitExistingRenderTarget(swapChainTextures[i++], device, width, height, rtvHeap, DXGI_FORMAT_R8G8B8A8_UNORM);
 		b.SetName("Backbuffer");
 	}
 

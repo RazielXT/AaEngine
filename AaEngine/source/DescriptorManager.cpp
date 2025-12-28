@@ -74,7 +74,7 @@ void DescriptorManager::createTextureView(FileTexture& texture)
 	texture.srvHeapIndex = index;
 }
 
-void DescriptorManager::createTextureView(GpuTextureResource& texture)
+void DescriptorManager::createTextureView(GpuTextureResource& texture, UINT mipLevels)
 {
 	if (texture.view.srvHandles.ptr)
 		return;
@@ -88,13 +88,13 @@ void DescriptorManager::createTextureView(GpuTextureResource& texture)
 
 	if (texture.depthOrArraySize > 1)
 	{
-		srvDesc.Texture2D.MipLevels = 1;
+		srvDesc.Texture2D.MipLevels = mipLevels;
 		srvDesc.Texture2DArray.ArraySize = texture.depthOrArraySize;
 		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
 	}
 	else
 	{
-		srvDesc.Texture2D.MipLevels = 1;
+		srvDesc.Texture2D.MipLevels = mipLevels;
 		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	}
 
@@ -276,7 +276,7 @@ void DescriptorManager::removeTextureView(RenderTargetTextures& rtt)
 	}
 }
 
-void DescriptorManager::removeUAVView(GpuTextureResource& texture)
+void DescriptorManager::removeUAV(GpuTextureResource& texture)
 {
 	removeDescriptorIndex(texture.view.uavHeapIndex);
 	texture.view.uavHandles = {};

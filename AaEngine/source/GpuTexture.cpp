@@ -2,28 +2,30 @@
 #include "DescriptorManager.h"
 #include "StringUtils.h"
 #include <DirectXMath.h>
+#include "FileLogger.h"
 
 static const DirectX::XMFLOAT4 ClearColor = { 0.0f, 0.0f, 0.0f, 0.0f };
 
-void GpuTexture2D::Init(ID3D12Device* device, UINT w, UINT h, RenderTargetHeap& heap, DXGI_FORMAT f, D3D12_RESOURCE_STATES state, UINT flags)
+void GpuTexture2D::InitRenderTarget(ID3D12Device* device, UINT w, UINT h, RenderTargetHeap& heap, DXGI_FORMAT f, D3D12_RESOURCE_STATES state, InitParams&& params)
 {
 	width = w;
 	height = h;
 	format = f;
 
-	CreateTextureBuffer(device, state, flags);
+	params.flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+	CreateTextureBuffer(device, state, params);
 
-	if (flags & AllowRenderTarget)
-		heap.CreateRenderTargetHandle(device, texture, view);
+	heap.CreateRenderTargetHandle(device, texture, view);
 }
 
-void GpuTexture2D::InitUAV(ID3D12Device* device, UINT w, UINT h, DXGI_FORMAT f, D3D12_RESOURCE_STATES state)
+void GpuTexture2D::InitUAV(ID3D12Device* device, UINT w, UINT h, DXGI_FORMAT f, D3D12_RESOURCE_STATES state, InitParams&& params)
 {
 	width = w;
 	height = h;
 	format = f;
 
-	CreateTextureBuffer(device, state, AllowUAV);
+	params.flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+	CreateTextureBuffer(device, state, params);
 }
 
 void GpuTexture2D::InitDepth(ID3D12Device* device, UINT w, UINT h, RenderTargetHeap& heap, D3D12_RESOURCE_STATES initialState, float clearValue)
@@ -38,7 +40,7 @@ void GpuTexture2D::InitDepth(ID3D12Device* device, UINT w, UINT h, RenderTargetH
 	heap.CreateDepthTargetHandle(device, texture, view.handle);
 }
 
-void GpuTexture2D::InitExisting(ID3D12Resource* textureSource, ID3D12Device* device, UINT w, UINT h, RenderTargetHeap& heap, DXGI_FORMAT f)
+void GpuTexture2D::InitExistingRenderTarget(ID3D12Resource* textureSource, ID3D12Device* device, UINT w, UINT h, RenderTargetHeap& heap, DXGI_FORMAT f)
 {
 	width = w;
 	height = h;
@@ -119,34 +121,30 @@ void GpuTexture2D::CreateDepthBuffer(ID3D12Device* device, D3D12_RESOURCE_STATES
 	);
 }
 
-void GpuTexture2D::CreateTextureBuffer(ID3D12Device* device, D3D12_RESOURCE_STATES state, UINT flags)
+void GpuTexture2D::CreateTextureBuffer(ID3D12Device* device, D3D12_RESOURCE_STATES state, const InitParams& params)
 {
 	D3D12_RESOURCE_DESC textureDesc = {};
 	textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	textureDesc.Width = width;
 	textureDesc.Height = height;
 	textureDesc.DepthOrArraySize = depthOrArraySize;
-	textureDesc.MipLevels = 1;
+	textureDesc.MipLevels = params.mipLevels;
 	textureDesc.Format = format;
 	textureDesc.SampleDesc.Count = 1;
 	textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	textureDesc.Flags = params.flags;
 
 	D3D12_CLEAR_VALUE clearValue = {};
 	clearValue.Format = format;
 	memcpy(clearValue.Color, &ClearColor, sizeof(ClearColor));
-	auto clearValuePtr = &clearValue;
 
-	if (flags & AllowRenderTarget)
-		textureDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-	if (flags & AllowUAV)
-	{
-		textureDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+	auto clearValuePtr = &clearValue;
+	if (params.flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS)
 		clearValuePtr = nullptr;
-	}
 
 	auto heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
-	device->CreateCommittedResource(
+	auto hr = device->CreateCommittedResource(
 		&heapProps,
 		D3D12_HEAP_FLAG_NONE,
 		&textureDesc,
@@ -154,6 +152,9 @@ void GpuTexture2D::CreateTextureBuffer(ID3D12Device* device, D3D12_RESOURCE_STAT
 		clearValuePtr,
 		IID_PPV_ARGS(&texture)
 	);
+
+	if (FAILED(hr))
+		FileLogger::logErrorD3D("CreateTextureBuffer", hr);
 }
 
 void GpuTexture2D::PrepareAsDepthTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from, bool clearDepth)
@@ -315,7 +316,7 @@ void RenderTargetTextures::Init(ID3D12Device* device, UINT w, UINT h, RenderTarg
 
 	for (auto& f : formats)
 	{
-		textures.emplace_back().Init(device, w, h, heap, f, initialState);
+		textures.emplace_back().InitRenderTarget(device, w, h, heap, f, initialState);
 		t.push_back(&textures.back());
 	}
 
@@ -341,7 +342,7 @@ void RenderTargetTextures::SetName(const std::string& name)
 GpuTextureResource::~GpuTextureResource()
 {
 	DescriptorManager::get().removeTextureView(*this);
-	DescriptorManager::get().removeUAVView(*this);
+	DescriptorManager::get().removeUAV(*this);
 }
 
 void GpuTextureResource::SetName(const std::string& n)

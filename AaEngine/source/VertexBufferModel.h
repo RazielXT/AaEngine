@@ -45,8 +45,7 @@ public:
 
 	void CreateIndexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, const uint16_t* data, size_t dataCount);
 	void CreateIndexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, const uint32_t* data, size_t dataCount);
-	void CreateIndexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, UINT width, UINT height);
-	void CreateIndexBuffer16(ID3D12Device* device, ResourceUploadBatch* memory, UINT width, UINT height);
+	void CreateIndexBufferGrid(ID3D12Device* device, ResourceUploadBatch* memory, UINT width, bool alternating = true);
 	void CreateIndexBufferStrip(ID3D12Device* device, ResourceUploadBatch* memory, UINT width, UINT height);
 	void CreateIndexBuffer(ID3D12Resource* buffer, uint32_t dataCount);
 	ID3D12Resource* indexBuffer{};

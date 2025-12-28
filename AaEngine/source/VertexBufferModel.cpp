@@ -266,25 +266,60 @@ void VertexBufferModel::CreateIndexBuffer(ID3D12Resource* buffer, uint32_t dataC
 	indexBufferView.Format = DXGI_FORMAT_R16_UINT;
 }
 
-void VertexBufferModel::CreateIndexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, UINT width, UINT height)
+template<typename T>
+std::vector<T> CreateGridAlternatingIndices(UINT width)
 {
-	if (width * height <= 0xffff)
-	{
-		CreateIndexBuffer16(device, memory, width, height);
-		return;
-	}
+	std::vector<T> data;
+	data.resize((width - 1) * (width - 1) * 6);
 
-	std::vector<uint32_t> indices;
-	indices.reserve((width - 1) * (height - 1) * 6);
+	for (UINT x = 0; x < width - 1; x++)
+		for (UINT y = 0; y < width - 1; y++)
+		{
+			int baseIndex = x + y * width;
+			int indexOffset = 6 * (x + y * (width - 1));
 
-	for (UINT y = 0; y < height - 1; ++y)
+			bool flip = (x + y) % 2 == 0;
+
+			if (flip)
+			{
+				// Triangle pattern: |/
+				data[indexOffset + 0] = (T)baseIndex;
+				data[indexOffset + 1] = (T)baseIndex + width + 1;
+				data[indexOffset + 2] = (T)baseIndex + 1;
+
+				data[indexOffset + 3] = (T)baseIndex;
+				data[indexOffset + 4] = (T)baseIndex + width;
+				data[indexOffset + 5] = (T)baseIndex + width + 1;
+			}
+			else
+			{
+				// Triangle pattern: |\,
+				data[indexOffset + 0] = (T)baseIndex;
+				data[indexOffset + 1] = (T)baseIndex + width;
+				data[indexOffset + 2] = (T)baseIndex + 1;
+
+				data[indexOffset + 3] = (T)baseIndex + 1;
+				data[indexOffset + 4] = (T)baseIndex + width;
+				data[indexOffset + 5] = (T)baseIndex + width + 1;
+			}
+		}
+	return data;
+}
+
+template<typename T>
+std::vector<T> CreateGridIndices(UINT width)
+{
+	std::vector<T> indices;
+	indices.reserve((width - 1) * (width - 1) * 6);
+
+	for (UINT y = 0; y < width - 1; ++y)
 	{
 		for (UINT x = 0; x < width - 1; ++x)
 		{
-			uint32_t v0 = y * width + x;
-			uint32_t v1 = v0 + 1;
-			uint32_t v2 = v0 + width;
-			uint32_t v3 = v2 + 1;
+			T v0 = (T)y * width + x;
+			T v1 = (T)v0 + 1;
+			T v2 = (T)v0 + width;
+			T v3 = (T)v2 + 1;
 
 			// First triangle
 			indices.push_back(v0);
@@ -297,37 +332,21 @@ void VertexBufferModel::CreateIndexBuffer(ID3D12Device* device, ResourceUploadBa
 			indices.push_back(v3);
 		}
 	}
-
-	CreateIndexBuffer(device, memory, indices.data(), indices.size());
+	return indices;
 }
 
-void VertexBufferModel::CreateIndexBuffer16(ID3D12Device* device, ResourceUploadBatch* memory, UINT width, UINT height)
+void VertexBufferModel::CreateIndexBufferGrid(ID3D12Device* device, ResourceUploadBatch* memory, UINT width, bool alternating)
 {
-	std::vector<uint16_t> indices;
-	indices.reserve((width - 1) * (height - 1) * 6);
-
-	for (uint16_t y = 0; y < height - 1; ++y)
+	if (width * width <= 0xffff)
 	{
-		for (uint16_t x = 0; x < width - 1; ++x)
-		{
-			uint16_t v0 = y * width + x;
-			uint16_t v1 = v0 + 1;
-			uint16_t v2 = v0 + width;
-			uint16_t v3 = v2 + 1;
-
-			// First triangle
-			indices.push_back(v0);
-			indices.push_back(v2);
-			indices.push_back(v1);
-
-			// Second triangle
-			indices.push_back(v1);
-			indices.push_back(v2);
-			indices.push_back(v3);
-		}
+		auto indices = alternating ? CreateGridAlternatingIndices<uint16_t>(width) : CreateGridIndices<uint16_t>(width);
+		CreateIndexBuffer(device, memory, indices.data(), indices.size());
 	}
-
-	CreateIndexBuffer(device, memory, indices.data(), indices.size());
+	else
+	{
+		auto indices = alternating ? CreateGridAlternatingIndices<uint32_t>(width) : CreateGridIndices<uint32_t>(width);
+		CreateIndexBuffer(device, memory, indices.data(), indices.size());
+	}
 }
 
 void VertexBufferModel::CreateIndexBufferStrip(ID3D12Device* device, ResourceUploadBatch* memory, UINT width, UINT height)

@@ -8,6 +8,24 @@
 
 struct InstanceGroup;
 
+class EntityMaterialInterface
+{
+public:
+
+	EntityMaterialInterface(MaterialPropertiesOverrideDescription&);
+
+	template<typename T>
+	void setParam(const std::string& name, const T& value)
+	{
+		setParam(name, &value, sizeof(T));
+	}
+
+	void setParam(const std::string& name, const void* data, UINT sizeBytes);
+
+private:
+	MaterialPropertiesOverrideDescription& storage;
+};
+
 class SceneEntity : public RenderObject
 {
 public:
@@ -19,6 +37,8 @@ public:
 	const char* name;
 
 	MaterialInstance* material{};
+
+	EntityMaterialInterface Material();
 	MaterialPropertiesOverrideDescription* materialOverride{};
 
 	EntityGeometry geometry;

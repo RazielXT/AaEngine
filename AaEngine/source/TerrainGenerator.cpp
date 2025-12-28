@@ -45,9 +45,10 @@ void TerrainGenerator::createTerrain(ID3D12GraphicsCommandList* commandList, Ren
 	constexpr float GridBlendOffset_Units = QuadSize_Units * StepLodScale_Quads;
 
 	float halfWidthLod = GridHalfWidthLod0_Units;
-	for (auto& m : lodMatOverrides)
+	float lodBlendDistance[TerrainGrid::LodsCount];
+	for (auto& m : lodBlendDistance)
 	{
-		m.params.push_back({ "BlendDistance", sizeof(float), { halfWidthLod - GridBlendOffset_Units } });
+		m = halfWidthLod - GridBlendOffset_Units;
 		halfWidthLod *= 2;
 	}
 
@@ -64,7 +65,7 @@ void TerrainGenerator::createTerrain(ID3D12GraphicsCommandList* commandList, Ren
 					entity->geometry.fromModel(cell.chunk->model);
 					entity->material = terrainMaterial;
 					entity->setBoundingBox(cell.chunk->model.bbox);
-					entity->materialOverride = &lodMatOverrides[idx];
+					entity->Material().setParam("BlendDistance", lodBlendDistance[idx]);
 					cell.entity = entity;
 				}
 		};

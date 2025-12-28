@@ -35,7 +35,6 @@ public:
 	TerrainGrid grid;
 
 	MaterialInstance* terrainMaterial{};
-	MaterialPropertiesOverrideDescription lodMatOverrides[TerrainGrid::LodsCount];
 
 	UINT heightmap{};
 

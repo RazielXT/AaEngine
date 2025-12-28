@@ -18,3 +18,21 @@ SceneEntity::SceneEntity(RenderObjectsStorage& r, SceneEntity& source) : RenderO
 SceneEntity::~SceneEntity()
 {
 }
+
+EntityMaterialInterface SceneEntity::Material()
+{
+	if (!materialOverride)
+		materialOverride = new MaterialPropertiesOverrideDescription();
+
+	return { *materialOverride };
+}
+
+EntityMaterialInterface::EntityMaterialInterface(MaterialPropertiesOverrideDescription& s) : storage(s)
+{
+}
+
+void EntityMaterialInterface::setParam(const std::string& name, const void* data, UINT sizeBytes)
+{
+	auto& param = storage.params.emplace_back(name, sizeBytes);
+	memcpy(param.value, data, sizeBytes);
+}

@@ -58,3 +58,22 @@ void WaterTextureToTextureCS::dispatch(ID3D12GraphicsCommandList* commandList, U
 
 	commandList->Dispatch(data.width / 8, data.height / 8, 1);
 }
+
+void GenerateHeightmapNormalsCS::dispatch(ID3D12GraphicsCommandList* commandList, UINT terrain, UINT normals, UINT w, UINT h, float heightScale, float worldSize)
+{
+	commandList->SetPipelineState(pipelineState.Get());
+	commandList->SetComputeRootSignature(signature);
+
+	struct Input
+	{
+		UINT ResIdHeightMap;
+		UINT ResIdNormalMap;
+		float HeightScale;
+		float UnitSize;
+	}
+	data = { terrain, normals, heightScale, worldSize / w };
+
+	commandList->SetComputeRoot32BitConstants(0, sizeof(data) / sizeof(float), &data, 0);
+
+	commandList->Dispatch(w / 8, h / 8, 1);
+}

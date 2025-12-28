@@ -22,3 +22,10 @@ public:
 
 	void dispatch(ID3D12GraphicsCommandList* commandList, UINT water, UINT terrain, UINT w, UINT h, D3D12_GPU_DESCRIPTOR_HANDLE output);
 };
+
+class GenerateHeightmapNormalsCS : public ComputeShader
+{
+public:
+
+	void dispatch(ID3D12GraphicsCommandList* commandList, UINT terrain, UINT normals, UINT w, UINT h, float heightScale, float worldSize);
+};

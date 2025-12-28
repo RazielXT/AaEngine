@@ -1,22 +1,21 @@
 #include "../VoxelConeTracingCommon.hlsl"
 #include "../postprocess/WorldReconstruction.hlsl"
+#include "../utils/normalReconstruction.hlsl"
+#include "../grid/heightmapGridReconstruction.hlsl"
 
-float4x4 WorldMatrix;
 float4x4 ViewProjectionMatrix;
 float4x4 InvViewProjectionMatrix;
+float3 WorldPosition;
+float3 CameraPosition;
 
-float2 ViewportSizeInverse;
 float Time;
+float2 ViewportSizeInverse;
+uint TexIdHeightmap;
 uint TexIdDiffuse;
 uint TexIdNormal;
-uint TexIdHeight;
 uint TexIdSceneDepthHigh;
 uint TexIdCaustics;
-uint TexIdWaterInfoTexture;
-//uint TexIdSceneDepthLow;
-//uint TexIdSceneDepthVeryLow;
-//uint TexIdSceneColor;
-//uint TexIdSkybox;
+uint TexIdNormalmap;
 
 #ifdef ENTITY_ID
 uint EntityId;
@@ -24,12 +23,12 @@ uint EntityId;
 
 cbuffer SceneVoxelInfo : register(b1)
 {
-    SceneVoxelCbuffer VoxelInfo;
+	SceneVoxelCbuffer VoxelInfo;
 };
 
 Texture2D<float4> GetTexture(uint index)
 {
-    return ResourceDescriptorHeap[index];
+	return ResourceDescriptorHeap[index];
 }
 
 SamplerState LinearWrapSampler : register(s0);
@@ -37,111 +36,31 @@ SamplerState DepthSampler : register(s1);
 SamplerState PointSampler : register(s2);
 SamplerState LinearSampler : register(s3);
 
-float GetWavesSize(float2 uv)
-{
-	float4 albedo = GetTexture(TexIdHeight).SampleLevel(LinearWrapSampler, uv, 5);
-	return albedo.r;
-}
-
-struct VSInput
-{
-	float height : TEXCOORD0;
-	float2 normal : NORMAL;
-};
-
 struct PSInput
 {
 	float4 position : SV_POSITION;
-	float3 normal : NORMAL;
-	float2 uv : TEXCOORD0;
-	float4 worldPosition : TEXCOORD1;
+	float4 worldPosition : TEXCOORD0;
+	float2 uv : TEXCOORD1;
 };
 
-// Function to decode a float2 packed normal back to float3
-float3 DecodeNormalOctahedral(float2 p)
-{
-    // 1. Calculate the magnitude of the projection onto the XY plane (L1-norm)
-    float abs_p_sum = abs(p.x) + abs(p.y);
-    
-    // 2. Calculate Z component: Z = 1 - L1-norm
-    float z = 1.0f - abs_p_sum;
-
-    // 3. Reconstruct the vector components (handling the reflection/back face)
-    float3 n = float3(p.x, p.y, z);
-
-    // 4. Handle the sign swap from the reflection step:
-    // If Z < 0, then we must restore the sign of the X and Y components.
-    // This is mathematically equivalent to:
-    if (z < 0.0f)
-    {
-		n.xy = (1.0f - abs(n.yx)) * select(n.xy >= 0.0f, 1.0f, -1.0f); // CORRECTED
-    }
-    
-    // 5. Final normalization is often required due to minor precision loss:
-    return normalize(n);
-}
+StructuredBuffer<GridTileData> InstancingBuffer : register(t0);
 
 PSInput VSMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
 {
-	const uint GlobalGridSize = 1024;
-    const uint ChunksPerSide = 16;
-    const uint ChunkSize = GlobalGridSize / ChunksPerSide;
-    const float cellSize = GlobalGridSize * 0.1f;
+	GridRuntimeParams p;
+	p.cameraPos = CameraPosition;
+	p.worldPos = WorldPosition;
+	p.heightScale = 1.f;
+	p.gridSize = 102.4f;
+	p.tilesWidth = 16;
+	p.tileResolution = 33;
 
-    // --- 2. Compute Local Coordinates (Within the 128x128 chunk) ---
-    // x_local: 0 to 127
-    uint x_local = vertexID % ChunkSize;
-    // y_local: 0 to 127
-    uint y_local = vertexID / ChunkSize;
-    
-    // Compute normalized UV for the local chunk (0 to 1.0)
-    // We use (ChunkSize - 1) because the 128x128 vertices define 127x127 quads.
-    float2 localUv = float2((float)x_local / (ChunkSize - 1), (float)y_local / (ChunkSize - 1));
-    
-    // --- 3. Compute Instance Offset (Where the 128x128 chunk starts globally) ---
-    
-    // i_chunk: Instance column (0 to 7)
-    uint i_chunk = instanceID % ChunksPerSide;
-    // j_chunk: Instance row (0 to 7)
-    uint j_chunk = instanceID / ChunksPerSide;
-    
-    // Global UV Offset (Normalized position where this chunk starts globally)
-    // Each chunk occupies 1/8th of the normalized UV space (1.0 / 8 = 0.125)
-    float2 globalUvOffset = float2((float)i_chunk / ChunksPerSide, 
-                                   (float)j_chunk / ChunksPerSide);
+	GridVertexInfo info = ReadGridVertexInfo(InstancingBuffer[instanceID], vertexID, ResourceDescriptorHeap[TexIdHeightmap], LinearSampler, p);
 
-    // --- 4. Compute Global Coordinates ---
-    
-    // Global UV: normalized coordinate across the entire 1024x1024 grid (0 to 1.0)
-    // The local UV [0, 1] is mapped to the chunk's 1/8th slot.
-    float2 inputUv = globalUvOffset + (localUv * (1.0f / ChunksPerSide));
-
-    // Compute Global Vertex Indices (0 to 1023) if needed for wave function:
-    // uint x_global = i_chunk * (ChunkSize - 1) + x_local;
-    // uint y_global = j_chunk * (ChunkSize - 1) + y_local;
-    
-    // --- 5. Generate World-Space Position (Using the original logic) ---
-    
-    float4 objPosition;
-    objPosition.x = inputUv.x * cellSize; // Global X position
-    objPosition.z = inputUv.y * cellSize; // Global Z position
-	objPosition.w = 1;
-
-    // Generate UV based on grid coordinates
-	float2 texUv = inputUv * 0.5 - Time / 18;
-	
-	//float waveSize = GetWavesSize(texUv) * 0.01;
-	//objPosition.y += waveSize;
-
-	float4 waterInfo = GetTexture(TexIdWaterInfoTexture).SampleLevel(LinearSampler, inputUv, 0);
-	objPosition.y = waterInfo.x;
-
-    PSInput result;
-	result.worldPosition = mul(objPosition, WorldMatrix);
+	PSInput result;
+	result.worldPosition = info.position;
 	result.position = mul(result.worldPosition, ViewProjectionMatrix);
-	result.normal = waterInfo.yzx;//normalize(mul(input.normal, (float3x3)WorldMatrix));
-	result.uv = texUv / 10;
-
+	result.uv = info.uv;
 	return result;
 }
 
@@ -153,6 +72,24 @@ float4 GetWaves(float2 uv)
 	albedo += GetTexture(TexIdDiffuse).Sample(LinearWrapSampler, uv);
 
 	return albedo / 2;
+}
+
+float2 SampleBlurred(Texture2D<float2> tex, SamplerState samp, float2 uv, float invResHalf)
+{
+	float2 s1 = tex.Sample(samp, uv + float2( invResHalf, 0));
+	float2 s2 = tex.Sample(samp, uv + float2(-invResHalf, 0));
+	float2 s3 = tex.Sample(samp, uv + float2(0,  invResHalf));
+	float2 s4 = tex.Sample(samp, uv + float2(0, -invResHalf));
+
+	return (s1 + s2 + s3 + s4) * 0.25;
+}
+
+float3 ReadNormal(float2 uv)
+{
+	Texture2D<float2> NormalMap = ResourceDescriptorHeap[TexIdNormalmap];
+	float2 normalXZ = SampleBlurred(NormalMap, LinearSampler, uv, 0.5f/1024);//NormalMap.Sample(LinearSampler, uv);
+
+	return DecodeNormalSNORM(normalXZ).xzy;
 }
 
 struct PSOutput
@@ -186,7 +123,7 @@ PSOutput PSMain(PSInput input)
 	normalTex += 0.5 * (GetTexture(TexIdNormal).Sample(LinearWrapSampler,input.uv * 0.7).rgr * 2.0f - 1.0f);
 	normalTex.z  = sqrt(saturate(1.0f - dot(normalTex.xy, normalTex.xy)));
 
-	float3 normal = lerp(input.normal, normalize(normalTex), 0.1);
+	float3 normal = ReadNormal(input.uv);//lerp(float3(0,1,0), normalize(normalTex), 0.1);
 
 	PSOutput output;
 	output.color = albedo;
@@ -206,8 +143,8 @@ PSOutput PSMain(PSInput input)
 
 struct PSOutputId
 {
-    uint4 id : SV_Target0;
-    float4 position : SV_Target1;
+	uint4 id : SV_Target0;
+	float4 position : SV_Target1;
 	float4 normal : SV_Target2;
 };
 
@@ -216,7 +153,7 @@ PSOutputId PSMainEntityId(PSInput input)
 	PSOutputId output;
 	output.id = uint4(EntityId, 0, 0, 0);
 	output.position = input.worldPosition;
-	output.normal = float4(input.normal.xyz, 0);
+	output.normal = float4(ReadNormal(input.uv), 0);
 	return output;
 }
 

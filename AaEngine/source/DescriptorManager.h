@@ -26,6 +26,7 @@ public:
 	void createTextureView(RenderTargetTextures& textures);
 	void createUAVView(GpuTexture3D& texture);
 	UINT createUAVView(GpuTextureResource& texture);
+	std::vector<ShaderUAV> createUAVMips(GpuTextureResource& texture);
 	UINT createBufferView(ID3D12Resource* resource, UINT stride, UINT elements);
 
 	UINT nextDescriptor(UINT offset, D3D12_SRV_DIMENSION) const;
@@ -36,6 +37,8 @@ public:
 	void removeTextureView(RenderTargetTextures& textures);
 	void removeTextureView(GpuTextureResource& texture);
 	void removeUAV(GpuTextureResource& texture);
+	void removeUAV(const std::vector<ShaderUAV>&);
+
 private:
 
 	struct DescriptorInfo

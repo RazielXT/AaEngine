@@ -5,6 +5,9 @@ material WaterLake
 
 	culling none
 
+	texture Height
+	{
+	}
 	texture Diffuse
 	{
 		file water.dds
@@ -12,10 +15,6 @@ material WaterLake
 	texture Normal
 	{
 		file water_NORM.dds
-	}
-	texture Height
-	{
-		file waterHeight.dds
 	}
 	texture Depth
 	{

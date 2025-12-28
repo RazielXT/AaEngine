@@ -25,7 +25,7 @@ void PrepareFrameTask::run(RenderContext& ctx, CommandsData& cmd, CompositorPass
 	if (fsr.enabled())
 		ctx.camera->setPixelOffset(fsr.getJitter(), fsr.getRenderSize());
 
-	sceneMgr.water.update(provider.renderSystem, cmd.commandList, provider.params.timeDelta, provider.params.frameIndex);
+	sceneMgr.water.update(provider.renderSystem, cmd.commandList, provider.params.timeDelta, provider.params.frameIndex, ctx.camera->getPosition());
 
 //	sceneMgr.terrain.update(cmd.commandList, sceneMgr, ctx.camera->getPosition());
 

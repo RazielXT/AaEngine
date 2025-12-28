@@ -3,13 +3,22 @@
 #include "ComputeShader.h"
 
 class GpuTexture3D;
-class DescriptorManager;
+class ShaderUAV;
 
-class GenerateMipsComputeShader : public ComputeShader
+class Generate3DMips3xCS : public ComputeShader
 {
 public:
 
-	GenerateMipsComputeShader();
+	Generate3DMips3xCS();
 
 	void dispatch(ID3D12GraphicsCommandList* commandList, GpuTexture3D& texture);
+};
+
+class GenerateNormalMips4xCS : public ComputeShader
+{
+public:
+
+	GenerateNormalMips4xCS() = default;
+
+	void dispatch(ID3D12GraphicsCommandList* commandList, UINT textureSize, const std::vector<ShaderUAV>& uav);
 };

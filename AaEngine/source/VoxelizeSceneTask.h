@@ -130,7 +130,7 @@ private:
 	bool reset = false;
 
 	BounceVoxelsCS bouncesCS;
-	GenerateMipsComputeShader computeMips;
+	Generate3DMips3xCS computeMips;
 	ClearBufferComputeShader clearBufferCS;
 
 	ShadowMaps& shadowMaps;

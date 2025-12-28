@@ -92,7 +92,7 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 	cbuffer = provider.resources.shaderBuffers.CreateCbufferResource(sizeof(cbufferData), "SceneVoxelInfo");
 	frameCbuffer = provider.resources.shaderBuffers.CreateCbufferResource(sizeof(Matrix), "FrameInfo");
 
-	computeMips.init(*provider.renderSystem.core.device, "generateMipmaps", provider.resources.shaders);
+	computeMips.init(*provider.renderSystem.core.device, "generate3DMipmaps3x", provider.resources.shaders);
 
 	auto bouncesShader = provider.resources.shaders.getShader("voxelBouncesCS", ShaderType::Compute, ShaderRef{"voxelBouncesCS.hlsl", "main", "cs_6_6"});
 	bouncesCS.init(*provider.renderSystem.core.device, *bouncesShader);

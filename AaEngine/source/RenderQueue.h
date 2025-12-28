@@ -30,7 +30,6 @@ struct RenderQueue
 		std::unique_ptr<MaterialPropertiesOverride> materialOverride{};
 		SceneEntity* entity{};
 
-		EntityEntry() = default;
 		EntityEntry(SceneEntity*, AssignedMaterial*, MaterialTechnique);
 
 		bool operator<(const EntityEntry& other) const
@@ -48,7 +47,6 @@ struct RenderQueue
 	void update(const EntityChangeDescritpion&, GraphicsResources& resources);
 	void reset();
 
-	std::vector<UINT> createEntityFilter() const;
 	void renderObjects(ShaderConstantsProvider& info, ID3D12GraphicsCommandList* commandList);
 
 	void iterateMaterials(std::function<void(AssignedMaterial*)>);

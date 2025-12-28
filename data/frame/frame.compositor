@@ -33,6 +33,8 @@ compositor Frame
 
 	task SceneRender.EarlyZ
 	{
+		after PrepareFrame
+
 		out sceneTexture:Depth
 
 		sync_signal Depth

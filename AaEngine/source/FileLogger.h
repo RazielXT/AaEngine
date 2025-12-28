@@ -34,8 +34,7 @@ public:
 
 	static void logErrorD3D(std::string text, HRESULT result)
 	{
-		log("D3D " + text + "\n" + GetErrorMessage(result), Severity::Error);
-		MessageBoxA(0, text.c_str(), "Error", MB_OK | MB_ICONERROR);
+		logError("D3D " + text + "\n" + GetErrorMessage(result));
 	}
 
 	static void log(std::string text, Severity severity = Severity::Info)

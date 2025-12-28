@@ -60,20 +60,6 @@ void RenderQueue::reset()
 	entities.clear();
 }
 
-std::vector<UINT> RenderQueue::createEntityFilter() const
-{
-	std::vector<UINT> out;
-
-	for (auto& entry : entities)
-	{
-		out.push_back(entry.entity->getId());
-	}
-
-	std::sort(out.begin(), out.end());
-
-	return out;
-}
-
 static void RenderObject(ID3D12GraphicsCommandList* commandList, EntityGeometry& geometry, UINT frameIndex)
 {
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY(geometry.topology));

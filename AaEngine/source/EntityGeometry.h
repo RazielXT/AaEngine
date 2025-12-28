@@ -37,6 +37,7 @@ struct EntityGeometry
 
 	void fromModel(VertexBufferModel& model);
 	void fromInstancedModel(VertexBufferModel& model, InstanceGroup& group);
+	void fromInstancedModel(VertexBufferModel& model, UINT count, D3D12_GPU_VIRTUAL_ADDRESS instancingBuffer);
 	void fromGrass(GrassArea& grass);
 
 	VertexBufferModel* getModel() const;

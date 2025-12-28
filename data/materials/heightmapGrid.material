@@ -1,0 +1,63 @@
+material HeightmapGrid abstract
+{
+	vertex_shader
+	{
+		file heightmapGridShading.hlsl
+		entry VSMain
+		profile vs_6_6
+	}
+
+	pixel_shader
+	{
+		file heightmapGridShading.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
+
+	texture Diffuse
+	{
+		file white.png
+	}
+	texture Heightmap
+	{
+	}
+
+	default_params
+	{
+		float MaterialColor 1 1 1
+	}
+
+	technique Voxelize skip
+	technique EntityId HeightmapGridEntityId
+	technique Depth HeightmapGridDepth
+}
+
+material HeightmapGridEntityId : HeightmapGrid
+{
+	pixel_shader
+	{
+		file heightmapGridShading.hlsl
+		entry PSMainEntityId
+		profile ps_6_6
+	}
+
+	shader_defines ENTITY_ID
+}
+
+material HeightmapGridDepth
+{
+	vertex_shader
+	{
+		file heightmapGridShading.hlsl
+		entry VSMain
+		profile vs_6_6
+	}
+}
+
+material DarkGreenGrid : HeightmapGrid
+{
+	default_params
+	{
+		color MaterialColor 0x025020
+	}
+}

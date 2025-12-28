@@ -22,11 +22,16 @@ void EntityGeometry::fromModel(VertexBufferModel& model)
 
 void EntityGeometry::fromInstancedModel(VertexBufferModel& model, InstanceGroup& group)
 {
-	fromModel(model);
-	instanceCount = group.count;
-	geometryCustomBuffer = group.gpuBuffer->GetGPUVirtualAddress();
-	type = Type::Instancing;
+	fromInstancedModel(model, group.count, group.gpuBuffer->GetGPUVirtualAddress());
 	source = &group;
+}
+
+void EntityGeometry::fromInstancedModel(VertexBufferModel& model, UINT count, D3D12_GPU_VIRTUAL_ADDRESS instancingBuffer)
+{
+	fromModel(model);
+	instanceCount = count;
+	geometryCustomBuffer = instancingBuffer;
+	type = Type::Instancing;
 }
 
 void EntityGeometry::fromGrass(GrassArea& grass)

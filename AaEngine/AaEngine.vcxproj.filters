@@ -585,6 +585,9 @@
     <ClInclude Include="source\RenderTargetHeap.h">
       <Filter>Source Files\RenderCore</Filter>
     </ClInclude>
+    <ClInclude Include="source\GridMesh.h">
+      <Filter>Source Files\RenderObject</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

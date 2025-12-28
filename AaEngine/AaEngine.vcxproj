@@ -183,6 +183,7 @@
     <ClInclude Include="source\CopyTexturesCS.h" />
     <ClInclude Include="source\DrawPrimitives.h" />
     <ClInclude Include="source\EntityPicker.h" />
+    <ClInclude Include="source\GridMesh.h" />
     <ClInclude Include="source\MeshUtils.h" />
     <ClInclude Include="source\ObjectId.h" />
     <ClInclude Include="source\PixColor.h" />

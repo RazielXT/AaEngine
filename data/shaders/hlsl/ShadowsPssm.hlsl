@@ -75,7 +75,7 @@ float getPssmShadowLow(float4 wp, float cameraDistance, float dotView, SamplerSt
 		ShadowIndex = 2;
 	}
 
-	float shadow = getCascadeShadowLow(wp, ShadowIndex, ShadowBias[ShadowIndex] * biasSlopeAdjust, sampler, params);
+	float shadow = getCascadeShadow(wp, ShadowIndex, ShadowBias[ShadowIndex] * biasSlopeAdjust, sampler, params);
 
 	return shadow;
 }

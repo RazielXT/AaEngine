@@ -48,15 +48,18 @@ public:
 		}
 	}
 
-	void BuildLOD(const Vector3& cameraPos)
+	void BuildLOD(const Vector3& cameraPos, XMINT2 offset)
 	{
 		m_renderList.clear();
+
+		auto worldSize = m_smallestTileSize * TilesWidth;
+		Vector3 cameraPosCentered = cameraPos - Vector3(offset.x * worldSize, 0, offset.y * worldSize);
 
 		// Iterate through all Root Blocks
 		for (uint32_t bx = 0; bx < numBlocksX; ++bx) {
 			for (uint32_t by = 0; by < numBlocksY; ++by) {
 				// Each root is a TilesWidth x TilesWidth unit block
-				RecursiveSubdivide(bx * TilesWidth, by * TilesWidth, TilesWidth, 0, cameraPos);
+				RecursiveSubdivide(bx * TilesWidth, by * TilesWidth, TilesWidth, 0, cameraPosCentered);
 			}
 		}
 	}

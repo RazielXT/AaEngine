@@ -52,7 +52,7 @@ PSInput VSMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
 	p.worldPos = WorldPosition;
 	p.heightScale = 1.f;
 	p.gridSize = 102.4f;
-	p.tilesWidth = 16;
+	p.tilesWidth = 64;
 	p.tileResolution = 33;
 
 	GridVertexInfo info = ReadGridVertexInfo(InstancingBuffer[instanceID], vertexID, ResourceDescriptorHeap[TexIdHeightmap], LinearSampler, p);

@@ -12,6 +12,7 @@ groupshared float2 sharedNormals[10][10];
 float LoadHeight(int2 p)
 {
 	Texture2D<float> HeightMap = ResourceDescriptorHeap[ResIdHeightMap];
+	p = p % 1024;
 	return HeightMap.Load(int3(p, 0)) * HeightScale;
 }
 

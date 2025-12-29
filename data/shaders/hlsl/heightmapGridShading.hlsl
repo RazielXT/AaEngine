@@ -18,7 +18,7 @@ uint EntityId;
 StructuredBuffer<GridTileData> InstancingBuffer : register(t0);
 
 SamplerState LinearSampler : register(s0);
-SamplerState PointSampler : register(s1);
+SamplerState LinearWrapSampler : register(s1);
 
 struct PSInput
 {
@@ -37,10 +37,10 @@ PSInput VSMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
 	p.worldPos = WorldPosition;
 	p.heightScale = 50.f;
 	p.gridSize = 102.4f;
-	p.tilesWidth = 16;
+	p.tilesWidth = 64;
 	p.tileResolution = 33;
 
-	GridVertexInfo info = ReadGridVertexInfo(InstancingBuffer[instanceID], vertexID, ResourceDescriptorHeap[TexIdHeightmap], LinearSampler, p);
+	GridVertexInfo info = ReadGridVertexInfo(InstancingBuffer[instanceID], vertexID, ResourceDescriptorHeap[TexIdHeightmap], LinearWrapSampler, p);
 
 	PSInput result;
 	result.worldPosition = info.position;
@@ -78,7 +78,7 @@ float2 SampleBlurred(Texture2D<float2> tex, SamplerState samp, float2 uv, float 
 float3 ReadNormal(float2 uv)
 {
 	Texture2D<float2> NormalMap = ResourceDescriptorHeap[TexIdNormalmap];
-	float2 normalXZ = SampleBlurred(NormalMap, LinearSampler, uv, 0.5f/1024);//NormalMap.Sample(LinearSampler, uv);
+	float2 normalXZ = SampleBlurred(NormalMap, LinearWrapSampler, uv, 0.5f/1024);//NormalMap.Sample(LinearSampler, uv);
 
 	return DecodeNormalSNORM(normalXZ).xzy;
 }

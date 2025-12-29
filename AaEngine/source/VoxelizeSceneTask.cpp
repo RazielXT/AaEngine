@@ -171,7 +171,7 @@ void VoxelizeSceneTask::runCompute(RenderContext& ctx, CommandsData& computeComm
 
 	updateCBuffer(provider.renderSystem.core.frameIndex);
 
-	static bool evenFrame = false;
+	static UINT idx = 0;
 	constexpr UINT VoxelizeInterations = 1;
 
 	for (UINT i = 0; auto& voxel : voxelCascades)
@@ -179,13 +179,13 @@ void VoxelizeSceneTask::runCompute(RenderContext& ctx, CommandsData& computeComm
 		if (buildCounter[i] < VoxelizeInterations)
 		{
 		}
-		else if (evenFrame == (i % 2))
+		else if (i == (idx % 4))
 			bounceCascade(computeCommands, voxel);
 
 		i++;
 	}
 
-	evenFrame = !evenFrame;
+	idx++;
 }
 
 void VoxelizeSceneTask::updateCBufferCascade(SceneVoxelChunkInfo& info, Vector3 diff, SceneVoxelsCascade& cascade)

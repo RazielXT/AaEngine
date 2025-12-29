@@ -188,7 +188,6 @@ void WaterSim::updateCompute(RenderSystem& renderSystem, ID3D12GraphicsCommandLi
 		return;
 	}
 
-	static UINT frameIdx = 0;
 	const float DtPerUpdate = 1 / 60.f;
 	static float updateDt = DtPerUpdate;
 
@@ -199,68 +198,71 @@ void WaterSim::updateCompute(RenderSystem& renderSystem, ID3D12GraphicsCommandLi
 	while (updateDt >= DtPerUpdate)
 		updateDt -= DtPerUpdate;
 
-	const UINT prevFrameIdx = (frameIdx == 0) ? (FrameCount - 1) : (frameIdx - 1);
+	const UINT WaterComputeIterations = 2;
+	static UINT waterCurrentIdx = 0;
+	const UINT waterPrevIdx = (waterCurrentIdx == 0) ? (WaterComputeIterations - 1) : (waterCurrentIdx - 1);
+	const UINT waterResultIdx = (waterPrevIdx + WaterComputeIterations) % 2;
 
 	WaterSimTextures t =
 	{
 		terrainHeight.view.srvHeapIndex,
-		waterHeight[prevFrameIdx].view.uavHeapIndex,
-		waterVelocity[prevFrameIdx].view.uavHeapIndex,
-		waterHeight[frameIdx].view.uavHeapIndex,
-		waterVelocity[frameIdx].view.uavHeapIndex
+		waterHeight[waterPrevIdx].view.uavHeapIndex,
+		waterVelocity[waterPrevIdx].view.uavHeapIndex,
+		waterHeight[waterCurrentIdx].view.uavHeapIndex,
+		waterVelocity[waterCurrentIdx].view.uavHeapIndex
 	};
 	WaterSimTextures t2 =
 	{
 		terrainHeight.view.srvHeapIndex,
-		waterVelocity[prevFrameIdx].view.uavHeapIndex,
-		waterHeight[prevFrameIdx].view.uavHeapIndex,
-		waterVelocity[frameIdx].view.uavHeapIndex,
-		waterHeight[frameIdx].view.uavHeapIndex
+		waterHeight[waterCurrentIdx].view.uavHeapIndex,
+		waterVelocity[waterCurrentIdx].view.uavHeapIndex,
+		waterHeight[waterPrevIdx].view.uavHeapIndex,
+		waterVelocity[waterPrevIdx].view.uavHeapIndex
 	};
 
-	auto safeTime = DtPerUpdate * 0.5f;// SmoothDtTau(dt);
+	auto safeTime = DtPerUpdate * 0.5f;
 	const float gridSpacing = 0.1f;
 
 	{
 		momentumComputeShader.dispatch(computeList, TextureSize, safeTime, gridSpacing, t);
 
-		auto uavb = CD3DX12_RESOURCE_BARRIER::UAV(waterVelocity[frameIdx].texture.Get());
+		auto uavb = CD3DX12_RESOURCE_BARRIER::UAV(waterVelocity[waterCurrentIdx].texture.Get());
 		computeList->ResourceBarrier(1, &uavb);
 
 		continuityComputeShader.dispatch(computeList, TextureSize, safeTime, gridSpacing, t);
 
-		uavb = CD3DX12_RESOURCE_BARRIER::UAV(waterHeight[frameIdx].texture.Get());
+		uavb = CD3DX12_RESOURCE_BARRIER::UAV(waterHeight[waterCurrentIdx].texture.Get());
 		computeList->ResourceBarrier(1, &uavb);
 	}
 	{
 		momentumComputeShader.dispatch(computeList, TextureSize, safeTime, gridSpacing, t2);
 
-		auto uavb = CD3DX12_RESOURCE_BARRIER::UAV(waterVelocity[prevFrameIdx].texture.Get());
+		auto uavb = CD3DX12_RESOURCE_BARRIER::UAV(waterVelocity[waterPrevIdx].texture.Get());
 		computeList->ResourceBarrier(1, &uavb);
 
 		continuityComputeShader.dispatch(computeList, TextureSize, safeTime, gridSpacing, t2);
 
-		uavb = CD3DX12_RESOURCE_BARRIER::UAV(waterHeight[prevFrameIdx].texture.Get());
+		uavb = CD3DX12_RESOURCE_BARRIER::UAV(waterHeight[waterPrevIdx].texture.Get());
 		computeList->ResourceBarrier(1, &uavb);
 	}
-	{
-		momentumComputeShader.dispatch(computeList, TextureSize, safeTime, gridSpacing, t);
+// 	{
+// 		momentumComputeShader.dispatch(computeList, TextureSize, safeTime, gridSpacing, t);
+// 
+// 		auto uavb = CD3DX12_RESOURCE_BARRIER::UAV(waterVelocity[waterCurrentIdx].texture.Get());
+// 		computeList->ResourceBarrier(1, &uavb);
+// 
+// 		continuityComputeShader.dispatch(computeList, TextureSize, safeTime, gridSpacing, t);
+// 
+// 		uavb = CD3DX12_RESOURCE_BARRIER::UAV(waterHeight[waterCurrentIdx].texture.Get());
+// 		computeList->ResourceBarrier(1, &uavb);
+// 	}
 
-		auto uavb = CD3DX12_RESOURCE_BARRIER::UAV(waterVelocity[frameIdx].texture.Get());
-		computeList->ResourceBarrier(1, &uavb);
-
-		continuityComputeShader.dispatch(computeList, TextureSize, safeTime, gridSpacing, t);
-
-		uavb = CD3DX12_RESOURCE_BARRIER::UAV(waterHeight[frameIdx].texture.Get());
-		computeList->ResourceBarrier(1, &uavb);
-	}
-
-	waterHeight[frameIdx].Transition(computeList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-	waterToTextureCS.dispatch(computeList, waterHeight[frameIdx].view.srvHeapIndex, terrainHeight.view.srvHeapIndex, TextureSize, TextureSize, waterNormalTexture.view.uavHandles);
+	waterHeight[waterResultIdx].Transition(computeList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	waterToTextureCS.dispatch(computeList, waterHeight[waterResultIdx].view.srvHeapIndex, terrainHeight.view.srvHeapIndex, TextureSize, TextureSize, waterNormalTexture.view.uavHandles);
 	generateNormalMipsCS.dispatch(computeList, TextureSize, waterNormalTextureMips);
-	waterHeight[frameIdx].Transition(computeList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	waterHeight[waterResultIdx].Transition(computeList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
-	frameIdx = (frameIdx + 1) % FrameCount;
+	waterCurrentIdx = (waterCurrentIdx + 1) % WaterComputeIterations;
 }
 
 void WaterSim::clear()

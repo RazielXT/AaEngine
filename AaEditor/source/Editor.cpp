@@ -591,13 +591,6 @@ void Editor::prepareElements(Camera& camera)
 		ImGui::Text("Selection pos %f %f %f", selectionPosition.x, selectionPosition.y, selectionPosition.z);
 	}
 
-	ImGui::Checkbox("Add Tree", &addTree);
-	if (addTree)
-		ImGui::Checkbox("Add Tree on normals", &addTreeNormals);
-
-	if (ImGui::Button("Swap Tree lod"))
-		app.sceneMgr.terrain.trees.swapLods();
-
 	ImGui::NewLine();
 
 	if (ImGui::Button("Reload shaders"))
@@ -629,6 +622,24 @@ void Editor::prepareElements(Camera& camera)
 					app.resources.shaderDefines.removeDefine(value);
 			}
 		}
+	}
+
+	if (ImGui::CollapsingHeader("Terrain"))
+	{
+		ImGui::Checkbox("Add Tree", &addTree);
+		if (addTree)
+			ImGui::Checkbox("Add Tree on normals", &addTreeNormals);
+
+		if (ImGui::Button("Swap Tree lod"))
+			app.sceneMgr.terrain.trees.swapLods();
+
+		static bool updateGrid = true;
+		if (ImGui::Checkbox("Update grid LOD", &updateGrid))
+			app.sceneMgr.water.enableLodUpdating(updateGrid);
+
+		static bool updateWater = true;
+		if (ImGui::Checkbox("Update water", &updateWater))
+			app.sceneMgr.water.enableWaterUpdating(updateWater);
 	}
 
 	if (ImGui::CollapsingHeader("Physics"))

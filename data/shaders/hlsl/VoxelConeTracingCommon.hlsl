@@ -1,38 +1,38 @@
 struct SceneVoxelChunkInfo
 {
-    float3 Offset;
-    float Density;
-    float3 BouncesOffset;
-    float SceneSize;
-    float LerpFactor;
-    uint TexId;
-    uint TexIdBounces;
+	float3 Offset;
+	float Density;
+	float3 BouncesOffset;
+	float SceneSize;
+	float LerpFactor;
+	uint TexId;
+	uint TexIdBounces;
 	uint ResIdData;
 };
 
 struct SceneVoxelCbuffer
 {
-    float2 MiddleConeRatio;
-    float2 SideConeRatio;
-    float SteppingBounces;
-    float SteppingDiffuse;
-    float VoxelizeLighting;
-    float Padding;
+	float2 MiddleConeRatio;
+	float2 SideConeRatio;
+	float SteppingBounces;
+	float SteppingDiffuse;
+	float VoxelizeLighting;
+	float Padding;
 
-    SceneVoxelChunkInfo NearVoxels;
-    SceneVoxelChunkInfo FarVoxels;
+	SceneVoxelChunkInfo NearVoxels;
+	SceneVoxelChunkInfo FarVoxels;
 };
 
 struct SceneVoxelCbufferIndexed
 {
-    float2 MiddleConeRatio;
-    float2 SideConeRatio;
-    float SteppingBounces;
-    float SteppingDiffuse;
-    float VoxelizeLighting;
-    float Padding;
+	float2 MiddleConeRatio;
+	float2 SideConeRatio;
+	float SteppingBounces;
+	float SteppingDiffuse;
+	float VoxelizeLighting;
+	float Padding;
 
-    SceneVoxelChunkInfo Voxels[4];
+	SceneVoxelChunkInfo Voxels[4];
 };
 
 float4 SampleVoxel(Texture3D cmap, SamplerState sampl, float3 pos, float3 dir, float lod)
@@ -42,92 +42,93 @@ float4 SampleVoxel(Texture3D cmap, SamplerState sampl, float3 pos, float3 dir, f
 #endif
 
 	const float voxDim = 128.0f;
-    const float sampOff = 1;
+	const float sampOff = 1;
 
-    float4 sampleX = dir.x < 0.0 ? cmap.SampleLevel(sampl, pos - float3(sampOff, 0, 0) / voxDim, lod) : cmap.SampleLevel(sampl, pos + float3(sampOff, 0, 0) / voxDim, lod);
-    float4 sampleY = dir.y < 0.0 ? cmap.SampleLevel(sampl, pos - float3(0, sampOff, 0) / voxDim, lod) : cmap.SampleLevel(sampl, pos + float3(0, sampOff, 0) / voxDim, lod);
-    float4 sampleZ = dir.z < 0.0 ? cmap.SampleLevel(sampl, pos - float3(0, 0, sampOff) / voxDim, lod) : cmap.SampleLevel(sampl, pos + float3(0, 0, sampOff) / voxDim, lod);
+	float4 sampleX = dir.x < 0.0 ? cmap.SampleLevel(sampl, pos - float3(sampOff, 0, 0) / voxDim, lod) : cmap.SampleLevel(sampl, pos + float3(sampOff, 0, 0) / voxDim, lod);
+	float4 sampleY = dir.y < 0.0 ? cmap.SampleLevel(sampl, pos - float3(0, sampOff, 0) / voxDim, lod) : cmap.SampleLevel(sampl, pos + float3(0, sampOff, 0) / voxDim, lod);
+	float4 sampleZ = dir.z < 0.0 ? cmap.SampleLevel(sampl, pos - float3(0, 0, sampOff) / voxDim, lod) : cmap.SampleLevel(sampl, pos + float3(0, 0, sampOff) / voxDim, lod);
 
-    float3 wts = abs(dir);
+	float3 wts = abs(dir);
 
-    float invSampleMag = 1.0 / (wts.x + wts.y + wts.z + 0.0001);
-    wts *= invSampleMag;
+	float invSampleMag = 1.0 / (wts.x + wts.y + wts.z + 0.0001);
+	wts *= invSampleMag;
 
-    float4 filtered;
-    filtered.xyz = (sampleX.xyz * wts.x + sampleY.xyz * wts.y + sampleZ.xyz * wts.z);
-    filtered.w = (sampleX.w * wts.x + sampleY.w * wts.y + sampleZ.w * wts.z);
+	float4 filtered;
+	filtered.xyz = (sampleX.xyz * wts.x + sampleY.xyz * wts.y + sampleZ.xyz * wts.z);
+	filtered.w = (sampleX.w * wts.x + sampleY.w * wts.y + sampleZ.w * wts.z);
 
-    return filtered;
+	return filtered;
 }
 
-float4 ConeTraceImpl(float3 o, float3 d, float coneRatio, float maxDist, Texture3D voxelTexture, SamplerState sampl, float lodOffset)
+float4 ConeTraceImpl(float3 o, float3 d, float coneRatio, float maxDist, Texture3D voxelTexture, SamplerState sampl)
 {
 	const float voxDim = 128.0f;
-    const float minDiam = 1.0 / voxDim;
-    const float startDist = minDiam * 2;
-    float dist = startDist;
-    float3 samplePos = o;
-    float4 accum = float4(0, 0, 0, 0);
+	const float minDiam = 1.0 / voxDim;
+	const float startDist = minDiam * 2;
+	float dist = startDist;
+	float3 samplePos = o;
+	float4 accum = float4(0, 0, 0, 0);
 
-    while (dist <= maxDist && accum.w < 1.0)
-    {
-        float sampleDiam = max(minDiam, coneRatio * dist);
-        float sampleLOD = max(0, log2(sampleDiam * voxDim) + lodOffset);
-        float3 samplePos = o + d * dist;
-        float4 sampleVal = SampleVoxel(voxelTexture, sampl, samplePos, -d, sampleLOD);
+	[loop]
+	while (dist <= maxDist && accum.w < 1.0)
+	{
+		float sampleDiam = max(minDiam, coneRatio * dist);
+		float sampleLOD = max(0, log2(sampleDiam * voxDim));
+		float3 samplePos = o + d * dist;
+		float4 sampleVal = SampleVoxel(voxelTexture, sampl, samplePos, -d, sampleLOD);
 
-        float lodChange = max(0, sampleLOD * sampleLOD);
-        float insideVal = sampleVal.w;
-        sampleVal.rgb *= lodChange;
+		float lodChange = max(0, sampleLOD * sampleLOD);
+		float insideVal = sampleVal.w;
+		sampleVal.rgb *= lodChange;
 
-        lodChange = max(0, sampleLOD);
-        sampleVal.w = saturate(lodChange * insideVal);
+		lodChange = max(0, sampleLOD);
+		sampleVal.w = saturate(lodChange * insideVal);
 
-        float sampleWt = (1.0 - accum.w);
-        accum += sampleVal * sampleWt;
+		float sampleWt = (1.0 - accum.w);
+		accum += sampleVal * sampleWt;
 
-        dist += sampleDiam;
-    }
+		dist += sampleDiam;
+	}
 
-    accum.xyz *= accum.w;
+	accum.xyz *= accum.w;
 
-    return accum;
+	return accum;
 }
 
 
 float4 ConeTraceNear(float3 o, float3 d, float coneRatio, float maxDist, Texture3D voxelTexture, SamplerState sampl)
 {
-	return ConeTraceImpl(o, d, coneRatio, maxDist, voxelTexture, sampl, -1);
+	return ConeTraceImpl(o, d, coneRatio, maxDist, voxelTexture, sampl);//, -1);
 }
 
 float4 ConeTrace(float3 o, float3 d, float coneRatio, float maxDist, Texture3D voxelTexture, SamplerState sampl)
 {
-	return ConeTraceImpl(o, d, coneRatio, maxDist, voxelTexture, sampl, 0);
+	return ConeTraceImpl(o, d, coneRatio, maxDist, voxelTexture, sampl);
 }
 
 float4 DebugConeTrace(float3 o, float3 d, float coneRatio, float maxDist, Texture3D voxelTexture, SamplerState sampl, int idx)
 {
 	int i = 0;
 	const float voxDim = 128.0f;
-    const float minDiam = 1.0 / voxDim;
-    const float startDist = minDiam * 3;
-    float dist = startDist;
-    float3 samplePos = o;
-    float4 accum = float4(0, 0, 0, 0);
+	const float minDiam = 1.0 / voxDim;
+	const float startDist = minDiam * 3;
+	float dist = startDist;
+	float3 samplePos = o;
+	float4 accum = float4(0, 0, 0, 0);
 
-    while (dist <= maxDist && accum.w < 1.0)
-    {
-        float sampleDiam = max(minDiam, coneRatio * dist);
-        float sampleLOD = max(0, log2(sampleDiam * voxDim) - 1);
-        float3 samplePos = o + d * dist;
-        float4 sampleVal = SampleVoxel(voxelTexture, sampl, samplePos, -d, sampleLOD);
+	while (dist <= maxDist && accum.w < 1.0)
+	{
+		float sampleDiam = max(minDiam, coneRatio * dist);
+		float sampleLOD = max(0, log2(sampleDiam * voxDim) - 1);
+		float3 samplePos = o + d * dist;
+		float4 sampleVal = SampleVoxel(voxelTexture, sampl, samplePos, -d, sampleLOD);
 
-        float lodChange = max(0, sampleLOD * sampleLOD);
-        float insideVal = sampleVal.w;
-        sampleVal.rgb *= lodChange;
+		float lodChange = max(0, sampleLOD * sampleLOD);
+		float insideVal = sampleVal.w;
+		sampleVal.rgb *= lodChange;
 
-        lodChange = max(0, sampleLOD);
-        sampleVal.w = saturate(lodChange * insideVal);
+		lodChange = max(0, sampleLOD);
+		sampleVal.w = saturate(lodChange * insideVal);
 
 
 		if (i == idx)
@@ -135,15 +136,15 @@ float4 DebugConeTrace(float3 o, float3 d, float coneRatio, float maxDist, Textur
 
 		idx++;
 
-        float sampleWt = (1.0 - accum.w);
-        accum += sampleVal * sampleWt;
+		float sampleWt = (1.0 - accum.w);
+		accum += sampleVal * sampleWt;
 
-        dist += sampleDiam;
-    }
+		dist += sampleDiam;
+	}
 
-    accum.xyz *= accum.w;
+	accum.xyz *= accum.w;
 
-    return accum;
+	return accum;
 }
 
 struct VoxelSceneData

@@ -43,11 +43,11 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 		Texture3D voxelmap = GetTexture3D(VoxelInfo.Voxels[idx].TexId);
 		
 		float mipOffset = idx == 3 ? 0 : -1;
-		float4 fullTrace = ConeTraceImpl(voxelUV, worldNormal, VoxelInfo.MiddleConeRatio.x, VoxelInfo.MiddleConeRatio.y, voxelmap, VoxelSampler, mipOffset);
-		fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal + worldTangent), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler, 0) * 1.0;
-		fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal - worldTangent), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler, 0) * 1.0;
-		fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal + worldBinormal), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler, 0) * 1.0;
-		fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal - worldBinormal), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler, 0) * 1.0;
+		float4 fullTrace = ConeTraceImpl(voxelUV, worldNormal, VoxelInfo.MiddleConeRatio.x, VoxelInfo.MiddleConeRatio.y, voxelmap, VoxelSampler);
+		fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal + worldTangent), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler) * 1.0;
+		fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal - worldTangent), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler) * 1.0;
+		fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal + worldBinormal), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler) * 1.0;
+		fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal - worldBinormal), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler) * 1.0;
 		fullTrace /= 5;
 
 		voxelAmbient += fullTrace.rgb * voxelWeight;

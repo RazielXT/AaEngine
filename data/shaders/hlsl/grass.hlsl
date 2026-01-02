@@ -198,7 +198,7 @@ PSOutput PSMain(PSInput input)
 			Texture3D voxelmap = GetTexture3D(VoxelInfo.Voxels[idx].TexId);
 			
 			float mipOffset = idx == 3 ? 0 : -1;
-			float4 fullTrace = ConeTraceImpl(voxelUV, worldNormal, VoxelInfo.MiddleConeRatio.x, VoxelInfo.MiddleConeRatio.y, voxelmap, VoxelSampler, mipOffset);
+			float4 fullTrace = ConeTraceImpl(voxelUV, worldNormal, VoxelInfo.MiddleConeRatio.x, VoxelInfo.MiddleConeRatio.y, voxelmap, VoxelSampler);
 
 			if (idx < 3)
 				fullTrace *= 1 - getDistanceBlend(camDistance, VoxelInfo.Voxels[idx].SceneSize);

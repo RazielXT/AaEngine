@@ -1,4 +1,3 @@
-#include "utils/normalReconstruction.hlsl"
 #include "grid/heightmapGridReconstruction.hlsl"
 
 float4x4 ViewProjectionMatrix;
@@ -18,7 +17,6 @@ uint EntityId;
 StructuredBuffer<GridTileData> InstancingBuffer : register(t0);
 
 SamplerState LinearSampler : register(s0);
-SamplerState LinearWrapSampler : register(s1);
 
 struct PSInput
 {
@@ -40,7 +38,7 @@ PSInput VSMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
 	p.tilesWidth = 64;
 	p.tileResolution = 33;
 
-	GridVertexInfo info = ReadGridVertexInfo(InstancingBuffer[instanceID], vertexID, ResourceDescriptorHeap[TexIdHeightmap], LinearWrapSampler, p);
+	GridVertexInfo info = ReadGridVertexInfo(InstancingBuffer[instanceID], vertexID, ResourceDescriptorHeap[TexIdHeightmap], LinearSampler, p);
 
 	PSInput result;
 	result.worldPosition = info.position;
@@ -65,24 +63,6 @@ struct PSOutput
 	float4 motionVectors : SV_Target2;
 };
 
-float2 SampleBlurred(Texture2D<float2> tex, SamplerState samp, float2 uv, float invResHalf)
-{
-	float2 s1 = tex.Sample(samp, uv + float2( invResHalf, 0));
-	float2 s2 = tex.Sample(samp, uv + float2(-invResHalf, 0));
-	float2 s3 = tex.Sample(samp, uv + float2(0,  invResHalf));
-	float2 s4 = tex.Sample(samp, uv + float2(0, -invResHalf));
-
-	return (s1 + s2 + s3 + s4) * 0.25;
-}
-
-float3 ReadNormal(float2 uv)
-{
-	Texture2D<float2> NormalMap = ResourceDescriptorHeap[TexIdNormalmap];
-	float2 normalXZ = SampleBlurred(NormalMap, LinearWrapSampler, uv, 0.5f/1024);//NormalMap.Sample(LinearSampler, uv);
-
-	return DecodeNormalSNORM(normalXZ).xzy;
-}
-
 PSOutput PSMain(PSInput input)
 {
 	SamplerState sampler = SamplerDescriptorHeap[0];
@@ -96,7 +76,7 @@ PSOutput PSMain(PSInput input)
 
 	PSOutput output;
 	output.albedo = float4(albedo,1);
-	output.normals = float4(ReadNormal(input.uv), 1);
+	output.normals = float4(ReadGridNormal(ResourceDescriptorHeap[TexIdNormalmap], LinearSampler, input.uv), 1);
 	output.motionVectors = float4(0, 0, 0, 0);
 	return output;
 }
@@ -115,7 +95,7 @@ PSOutputId PSMainEntityId(PSInput input)
 	PSOutputId output;
 	output.id = uint4(EntityId, 0, 0, 0);
 	output.position = input.worldPosition;
-	output.normal = float4(ReadNormal(input.uv), 0);
+	output.normal = float4(ReadGridNormal(ResourceDescriptorHeap[TexIdNormalmap], LinearSampler, input.uv), 0);
 	return output;
 }
 

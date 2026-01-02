@@ -1,6 +1,7 @@
+#define GRID_PADDING
+
 #include "../VoxelConeTracingCommon.hlsl"
 #include "../postprocess/WorldReconstruction.hlsl"
-#include "../utils/normalReconstruction.hlsl"
 #include "../grid/heightmapGridReconstruction.hlsl"
 
 float4x4 ViewProjectionMatrix;
@@ -74,24 +75,6 @@ float4 GetWaves(float2 uv)
 	return albedo / 2;
 }
 
-float2 SampleBlurred(Texture2D<float2> tex, SamplerState samp, float2 uv, float invResHalf)
-{
-	float2 s1 = tex.Sample(samp, uv + float2( invResHalf, 0));
-	float2 s2 = tex.Sample(samp, uv + float2(-invResHalf, 0));
-	float2 s3 = tex.Sample(samp, uv + float2(0,  invResHalf));
-	float2 s4 = tex.Sample(samp, uv + float2(0, -invResHalf));
-
-	return (s1 + s2 + s3 + s4) * 0.25;
-}
-
-float3 ReadNormal(float2 uv)
-{
-	Texture2D<float2> NormalMap = ResourceDescriptorHeap[TexIdNormalmap];
-	float2 normalXZ = SampleBlurred(NormalMap, LinearSampler, uv, 0.5f/1024);//NormalMap.Sample(LinearSampler, uv);
-
-	return DecodeNormalSNORM(normalXZ).xzy;
-}
-
 struct PSOutput
 {
 	float4 color : SV_Target0;
@@ -123,7 +106,7 @@ PSOutput PSMain(PSInput input)
 	normalTex += 0.5 * (GetTexture(TexIdNormal).Sample(LinearWrapSampler,input.uv * 0.7).rgr * 2.0f - 1.0f);
 	normalTex.z  = sqrt(saturate(1.0f - dot(normalTex.xy, normalTex.xy)));
 
-	float3 normal = ReadNormal(input.uv);//lerp(float3(0,1,0), normalize(normalTex), 0.1);
+	float3 normal = ReadGridNormal(ResourceDescriptorHeap[TexIdMeshNormal], LinearSampler, input.uv);//lerp(float3(0,1,0), normalize(normalTex), 0.1);
 
 	PSOutput output;
 	output.color = albedo;
@@ -153,7 +136,7 @@ PSOutputId PSMainEntityId(PSInput input)
 	PSOutputId output;
 	output.id = uint4(EntityId, 0, 0, 0);
 	output.position = input.worldPosition;
-	output.normal = float4(ReadNormal(input.uv), 0);
+	output.normal = float4(ReadGridNormal(ResourceDescriptorHeap[TexIdMeshNormal], LinearSampler, input.uv), 0);
 	return output;
 }
 

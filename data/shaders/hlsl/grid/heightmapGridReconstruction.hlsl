@@ -1,3 +1,5 @@
+#include "../utils/normalReconstruction.hlsl"
+
 struct GridTileData
 {
 	uint x;
@@ -5,6 +7,19 @@ struct GridTileData
 	uint lod;
 	float range;
 };
+
+float2 RemapGridTextureUV(float2 gridUV)
+{
+#ifdef GRID_PADDING
+	// We want to skip 32 pixels on the left, and use the next 960 pixels
+	float margin = 32.0f / 1024.0f; // 0.03125
+	float content = 960.0f / 1024.0f; // 0.9375
+
+	return margin + (gridUV * content);
+#else
+	return gridUV;
+#endif
+}
 
 struct GridRuntimeParams
 {
@@ -16,7 +31,6 @@ struct GridRuntimeParams
 	uint tilesWidth;
 	uint tileResolution;
 };
-
 
 struct GridVertexInfo
 {
@@ -74,9 +88,26 @@ GridVertexInfo ReadGridVertexInfo(GridTileData tile, uint vertexID, Texture2D<fl
 
 	float2 uv = gridPosition.xz / (TilesWidth * SmallestLodTileSize);
 
-	gridPosition.y = heightMap.SampleLevel(sampler, uv, 0) * HeightScale;
+	gridPosition.y = heightMap.SampleLevel(sampler, RemapGridTextureUV(uv), 0) * HeightScale;
 	gridPosition.xyz += WorldPosition;
 
 	GridVertexInfo info = { gridPosition, uv };
 	return info;
+}
+
+float2 SampleGridNormalBlurred(Texture2D<float2> tex, SamplerState samp, float2 uv, float invResHalf)
+{
+	float2 s1 = tex.Sample(samp, uv + float2( invResHalf, 0));
+	float2 s2 = tex.Sample(samp, uv + float2(-invResHalf, 0));
+	float2 s3 = tex.Sample(samp, uv + float2(0,  invResHalf));
+	float2 s4 = tex.Sample(samp, uv + float2(0, -invResHalf));
+
+	return (s1 + s2 + s3 + s4) * 0.25;
+}
+
+float3 ReadGridNormal(Texture2D<float2> texture, SamplerState sampler, float2 uv)
+{
+	float2 normalXZ = SampleGridNormalBlurred(texture, sampler, RemapGridTextureUV(uv), 0.5f/1024);//NormalMap.Sample(LinearSampler, uv);
+
+	return DecodeNormalSNORM(normalXZ).xzy;
 }

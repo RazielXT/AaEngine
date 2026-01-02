@@ -1,7 +1,6 @@
 #include "ShadowsRenderTask.h"
 #include "RenderObject.h"
 #include "SceneManager.h"
-#include "ShadowMaps.h"
 
 ShadowsRenderTask::ShadowsRenderTask(RenderProvider p, SceneManager& s, ShadowMaps& shadows) : shadowMaps(shadows), CompositorTask(p, s)
 {
@@ -54,31 +53,11 @@ AsyncTasksInfo ShadowsRenderTask::initialize(CompositorPass&)
 			{
 				auto& shadow = cascades[idx];
 				auto& cascade = shadowMaps.cascades[idx];
-				UINT counter = 0;
 
 				while (WaitForSingleObject(shadow.eventBegin, INFINITE) == WAIT_OBJECT_0 && running)
 				{
-					auto marker = provider.renderSystem.core.StartCommandList(shadow.commands);
+					prepareShadowCascade(shadow, cascade);
 
-					if (!cascade.update)
-					{
-						marker.close();
-						SetEvent(shadow.eventFinish);
-						continue;
-					}
-
-					auto& sceneInfo = shadow.renderablesData;
-
-					shadow.renderables->updateVisibility(cascade.camera, sceneInfo);
-
-					cascade.texture.PrepareAsDepthTarget(shadow.commands.commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-
-					ShaderConstantsProvider constants(provider.params, sceneInfo, cascade.camera, *ctx.camera, cascade.texture);
-					depthQueue->renderObjects(constants, shadow.commands.commandList);
-
-					cascade.texture.PrepareAsView(shadow.commands.commandList, D3D12_RESOURCE_STATE_DEPTH_WRITE);
-
-					marker.close();
 					SetEvent(shadow.eventFinish);
 				}
 			});
@@ -95,31 +74,11 @@ AsyncTasksInfo ShadowsRenderTask::initialize(CompositorPass&)
 			{
 				auto& shadow = maxShadow;
 				auto& cascade = shadowMaps.maxShadow;
-				UINT counter = 0;
 
 				while (WaitForSingleObject(shadow.eventBegin, INFINITE) == WAIT_OBJECT_0 && running)
 				{
-					auto marker = provider.renderSystem.core.StartCommandList(shadow.commands);
+					prepareShadowCascade(shadow, cascade);
 
-					if (!cascade.update)
-					{
-						marker.close();
-						SetEvent(shadow.eventFinish);
-						continue;
-					}
-
-					auto& sceneInfo = shadow.renderablesData;
-
-					shadow.renderables->updateVisibility(cascade.camera, sceneInfo);
-
-					cascade.texture.PrepareAsDepthTarget(shadow.commands.commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-
-					ShaderConstantsProvider constants(provider.params, sceneInfo, cascade.camera, *ctx.camera, cascade.texture);
-					depthQueue->renderObjects(constants, shadow.commands.commandList);
-
-					cascade.texture.PrepareAsView(shadow.commands.commandList, D3D12_RESOURCE_STATE_DEPTH_WRITE);
-
-					marker.close();
 					SetEvent(shadow.eventFinish);
 				}
 			});
@@ -139,4 +98,26 @@ void ShadowsRenderTask::run(RenderContext& renderCtx, CompositorPass&)
 		SetEvent(shadow.eventBegin);
 	}
 	SetEvent(maxShadow.eventBegin);
+}
+
+void ShadowsRenderTask::prepareShadowCascade(ShadowWork& shadow, ShadowMaps::ShadowData& cascade)
+{
+	if (!cascade.update)
+	{
+		SetEvent(shadow.eventFinish);
+		return;
+	}
+
+	auto marker = provider.renderSystem.core.StartCommandList(shadow.commands);
+
+	auto& sceneInfo = shadow.renderablesData;
+
+	shadow.renderables->updateVisibility(cascade.camera, sceneInfo);
+
+	cascade.texture.PrepareAsDepthTarget(shadow.commands.commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+
+	ShaderConstantsProvider constants(provider.params, sceneInfo, cascade.camera, *ctx.camera, cascade.texture);
+	depthQueue->renderObjects(constants, shadow.commands.commandList);
+
+	cascade.texture.PrepareAsView(shadow.commands.commandList, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 }

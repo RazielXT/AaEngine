@@ -2,9 +2,8 @@
 
 #include "CompositorTask.h"
 #include "RenderQueue.h"
+#include "ShadowMaps.h"
 #include <thread>
-
-class ShadowMaps;
 
 class ShadowsRenderTask : public CompositorTask
 {
@@ -31,6 +30,8 @@ private:
 
 	ShadowWork cascades[3];
 	ShadowWork maxShadow;
+
+	void prepareShadowCascade(ShadowWork& work, ShadowMaps::ShadowData& data);
 
 	bool running = true;
 

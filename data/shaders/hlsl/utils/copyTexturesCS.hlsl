@@ -3,7 +3,7 @@ uint width, height;
 Texture2D<float4> InputTexture : register(t0);
 
 #ifndef DIRECT_LOAD
-SamplerState LinearSampler : register(s0);
+SamplerState LinearWrapSampler : register(s0);
 #endif
 
 RWTexture2D<float4> OutputTexture : register(u0);
@@ -19,6 +19,13 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
 	OutputTexture[DTid.xy] = InputTexture.Load(coord);
 #else
 	float2 uv = float2(DTid.x / (float)width, DTid.y / (float)height);
-	OutputTexture[DTid.xy] = InputTexture.SampleLevel(LinearSampler, uv, 0);
+
+	#ifdef BORDER_OFFSET
+		float margin = 32.0f / 1024.0f; // 0.03125
+		float content = 960.0f / 1024.0f; // 0.9375
+		uv = (uv - margin) / content;
+	#endif
+
+	OutputTexture[DTid.xy] = InputTexture.SampleLevel(LinearWrapSampler, uv, 0);
 #endif
 }

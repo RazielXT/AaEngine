@@ -16,7 +16,7 @@ uint TexIdDiffuse;
 uint TexIdNormal;
 uint TexIdSceneDepthHigh;
 uint TexIdCaustics;
-uint TexIdNormalmap;
+uint TexIdMeshNormal;
 
 #ifdef ENTITY_ID
 uint EntityId;
@@ -65,20 +65,10 @@ PSInput VSMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
 	return result;
 }
 
-float4 GetWaves(float2 uv)
-{
-	//uv.xy -= Time * 0.025;
-	float4 albedo = GetTexture(TexIdDiffuse).Sample(LinearWrapSampler, uv);
-	uv.xy -= Time * 0.007;
-	albedo += GetTexture(TexIdDiffuse).Sample(LinearWrapSampler, uv);
-
-	return albedo / 2;
-}
-
 struct PSOutput
 {
 	float4 color : SV_Target0;
-	float4 normal : SV_Target1;
+	float2 normal : SV_Target1;
 	float caustics : SV_Target2;
 };
 
@@ -94,7 +84,7 @@ PSOutput PSMain(PSInput input)
 	const float FadeDistance = 1.5f;
 	float fade = groundDistance / FadeDistance;
 
-	float4 albedo = GetWaves(input.uv);
+	float4 albedo = GetTexture(TexIdDiffuse).Sample(LinearWrapSampler, input.uv * 0.1);
 	albedo.a = albedo.r * 0.2 + fade;
 	albedo.rgb *= float3(0.2,0.8, 0.6);
 
@@ -110,15 +100,15 @@ PSOutput PSMain(PSInput input)
 
 	PSOutput output;
 	output.color = albedo;
-	output.normal = float4(normal,1);
+	output.normal = normal.xy;
 
 	float2 projSpeed = float2(-1,-1);
-	float2 projOffset = Time*projSpeed * 8;
-	float projScale = 0.02;
+	float2 projOffset = Time*projSpeed * 2;
+	float projScale = 0.1;
 	float projection = GetTexture(TexIdCaustics).Sample(LinearWrapSampler, (groundPosition.xy+groundPosition.z+projOffset)*projScale).r;
 	projection *= GetTexture(TexIdCaustics).Sample(LinearWrapSampler, (groundPosition.xy+groundPosition.z+ float2(0.5,0.5) + projOffset*1.11)*projScale).r;
 	output.caustics = projection * (input.worldPosition.y - groundPosition.y) / FadeDistance;
-
+	//output.caustics = 30*abs(GetTexture(TexIdHeightmap).Sample(LinearWrapSampler, input.uv + 0.005f).r - GetTexture(TexIdHeightmap).Sample(LinearWrapSampler, input.uv).r) * fade;
 	return output;
 }
 

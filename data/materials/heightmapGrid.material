@@ -27,6 +27,8 @@ material HeightmapGrid abstract
 		float MaterialColor 1 1 1
 	}
 
+	shader_defines GRID_PADDING
+
 	technique Voxelize skip
 	technique EntityId HeightmapGridEntityId
 	technique Depth HeightmapGridDepth
@@ -52,6 +54,8 @@ material HeightmapGridDepth
 		entry VSMain
 		profile vs_6_6
 	}
+
+	shader_defines GRID_PADDING
 }
 
 material DarkGreenGrid : HeightmapGrid

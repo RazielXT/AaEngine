@@ -7,6 +7,7 @@
 #include "TextureToMeshCS.h"
 #include "CopyTexturesCS.h"
 #include "GenerateMipsComputeShader.h"
+#include "TerrainGenerationCS.h"
 
 class SceneManager;
 
@@ -21,6 +22,9 @@ public:
 	void update(RenderSystem& renderSystem, ID3D12GraphicsCommandList* commandList, float dt, UINT frameIdx, Vector3 cameraPos);
 	void updateCompute(RenderSystem& renderSystem, ID3D12GraphicsCommandList* commandList, float dt, UINT frameIdx);
 	void clear();
+
+	void enableLodUpdating(bool enable);
+	void enableWaterUpdating(bool enable);
 
 	void prepareForRendering(ID3D12GraphicsCommandList* commandList);
 	void prepareAfterRendering(ID3D12GraphicsCommandList* commandList);
@@ -48,6 +52,7 @@ private:
 	GpuTexture2D waterVelocity[FrameCount];
 
 	GpuTexture2D waterNormalTexture;
+	GpuTexture2D waterHeightMeshTexture;
 	std::vector<ShaderUAV> waterNormalTextureMips;
 
 	ComPtr<ID3D12Resource> srcWater;
@@ -55,4 +60,13 @@ private:
 
 	VertexBufferModel waterModel;
 	VertexBufferModel terrainModel;
+
+	GpuTexture2D terrainGridHeight[5][5];
+	GpuTexture2D terrainGridNormal[5][5];
+	std::vector<ShaderUAV> terrainGridNormalMips[5][5];
+
+	TerrainHeightmapCS generateHeightmapCS;
+
+	bool updateLod = true;
+	bool updateWater = true;
 };

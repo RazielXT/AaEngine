@@ -39,7 +39,7 @@ void WaterTextureToMeshCS::dispatch(ID3D12GraphicsCommandList* commandList, UINT
 	commandList->Dispatch(data.width / 8, data.height / 8, 1);
 }
 
-void WaterTextureToTextureCS::dispatch(ID3D12GraphicsCommandList* commandList, UINT water, UINT terrain, UINT w, UINT h, D3D12_GPU_DESCRIPTOR_HANDLE output)
+void WaterTextureToTextureCS::dispatch(ID3D12GraphicsCommandList* commandList, UINT water, UINT terrain, UINT w, UINT h, D3D12_GPU_DESCRIPTOR_HANDLE outputNormal, D3D12_GPU_DESCRIPTOR_HANDLE outputHeight, Vector3 camPos)
 {
 	commandList->SetPipelineState(pipelineState.Get());
 	commandList->SetComputeRootSignature(signature);
@@ -50,11 +50,13 @@ void WaterTextureToTextureCS::dispatch(ID3D12GraphicsCommandList* commandList, U
 		UINT height;
 		UINT water;
 		UINT terrain;
+		XMFLOAT2 camPos;
 	}
-	data = { w, h, water };
+	data = { w, h, water, terrain, {camPos.x, camPos.z} };
 
 	commandList->SetComputeRoot32BitConstants(0, sizeof(data) / sizeof(float), &data, 0);
-	commandList->SetComputeRootDescriptorTable(1, output);
+	commandList->SetComputeRootDescriptorTable(1, outputNormal);
+	commandList->SetComputeRootDescriptorTable(2, outputHeight);
 
 	commandList->Dispatch(data.width / 8, data.height / 8, 1);
 }

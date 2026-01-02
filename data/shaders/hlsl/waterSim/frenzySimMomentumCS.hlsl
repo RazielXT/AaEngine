@@ -88,7 +88,7 @@ void CS_Momentum(uint3 id : SV_DispatchThreadID)
 	// 3) VISCOSITY (shock capturing)
 	// ========================================================================
 	// tweak this value for look/performance
-	float nu = 0.1;
+	float nu = 0.2;
 
 	// laplacian
 	float2 lap = (uL + uR + uD + uU - 4.0 * uC) / (cellSize * cellSize);

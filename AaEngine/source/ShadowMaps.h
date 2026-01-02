@@ -23,8 +23,8 @@ public:
 		bool update = true;
 	};
 
-	ShadowData cascades[3];
-	ShadowData maxShadow;
+	ShadowData cascades[4];
+	ShadowData& maxShadow;
 
 	SceneLights::Light& sun;
 	void update(UINT frameIndex, Camera& camera);

@@ -28,8 +28,7 @@ private:
 		RenderObjectsStorage* renderables;
 	};
 
-	ShadowWork cascades[3];
-	ShadowWork maxShadow;
+	ShadowWork cascades[4];
 
 	void prepareShadowCascade(ShadowWork& work, ShadowMaps::ShadowData& data);
 

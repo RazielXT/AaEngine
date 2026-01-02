@@ -3,9 +3,9 @@
 #include "directx\d3dx12.h"
 #include <format>
 
-const UINT shadowMapSize = 1024;
+const UINT ShadowMapSize = 1024;
 
-ShadowMaps::ShadowMaps(SceneLights::Light& l,	PssmParameters& d) : sun(l), data(d)
+ShadowMaps::ShadowMaps(SceneLights::Light& l,	PssmParameters& d) : sun(l), data(d), maxShadow(cascades[3])
 {
 	for (int i = 0; auto c : cascadeInfo.cascadePartitionsZeroToOne)
 	{
@@ -16,25 +16,18 @@ ShadowMaps::ShadowMaps(SceneLights::Light& l,	PssmParameters& d) : sun(l), data(
 void ShadowMaps::init(RenderSystem& renderSystem, GraphicsResources& resources)
 {
 	const UINT count = std::size(cascades);
-	targetHeap.InitDsv(renderSystem.core.device, count + 1, L"ShadowMapsDSV");
+	targetHeap.InitDsv(renderSystem.core.device, count, L"ShadowMapsDSV");
 
-	for (UINT i = 0; i < count; i++)
+	for (int i = 0; auto& cascade : cascades)
 	{
-		cascades[i].texture.InitDepth(renderSystem.core.device, shadowMapSize, shadowMapSize, targetHeap, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, 1.f);
-		cascades[i].texture.SetName("ShadowMapCascade" + std::to_string(i));
+		cascade.texture.InitDepth(renderSystem.core.device, ShadowMapSize, ShadowMapSize, targetHeap, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, 1.f);
+		cascade.texture.SetName("ShadowMapCascade" + std::to_string(i++));
 
-		DescriptorManager::get().createTextureView(cascades[i].texture);
-	}
-
-	{
-		maxShadow.texture.InitDepth(renderSystem.core.device, shadowMapSize, shadowMapSize, targetHeap, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, 1.f);
-		maxShadow.texture.SetName("ShadowMapMax");
-
-		DescriptorManager::get().createTextureView(maxShadow.texture);
+		DescriptorManager::get().createTextureView(cascade.texture);
 	}
 
 	data.TexIdShadowOffsetStart = cascades[0].texture.view.srvHeapIndex;
-	data.ShadowMapSize = shadowMapSize;
+	data.ShadowMapSize = ShadowMapSize;
 	data.ShadowMapSizeInv = 1 / data.ShadowMapSize;
 
 	cbuffer = resources.shaderBuffers.CreateCbufferResource(sizeof(data), "PSSMShadows");
@@ -43,8 +36,6 @@ void ShadowMaps::init(RenderSystem& renderSystem, GraphicsResources& resources)
 	tmp.setPerspectiveCamera(60, 1, 1, 100);
 	update(renderSystem.core.frameIndex, tmp);
 }
-
-#include <format>
 
 void ShadowMaps::update(UINT frameIndex, Camera& mainCamera)
 {
@@ -56,32 +47,23 @@ void ShadowMaps::update(UINT frameIndex, Camera& mainCamera)
 	cascades[0].camera.lookTo(lightEye, lightTarget);
 
 	Vector2 nearFarPlane{};
-	cascadeInfo.update(cascades[0].camera, mainCamera, LightRange, nearFarPlane, shadowMapSize);
+	cascadeInfo.update(cascades[0].camera, mainCamera, LightRange, nearFarPlane, ShadowMapSize);
 
-	for (int i = 0; auto& cascade : cascades)
+	for (int i = 0; auto& proj : cascadeInfo.matShadowProj)
 	{
-// 		if (i == 2 && counter % 2 != 0)
-// 		{
-// 			cascade.update = false;
-// 			continue;
-// 		}
-
+		auto& cascade = cascades[i++];
 		cascade.camera.lookTo(lightEye, lightTarget);
-		cascade.camera.setOrthographicProjection(cascadeInfo.matShadowProj[i++]);
+		cascade.camera.setOrthographicProjection(proj);
 		cascade.update = true;
 	}
 
-// 	if (counter != 0)
-// 	{
-// 		maxShadow.update = false;
-// 	}
-// 	else
+	// max shadow cascade is centered around camera
 	{
 		maxShadow.camera.lookTo(lightEye, lightTarget);
 
 		float extends = 6000;
 
-		float fWorldUnitsPerTexel = extends * 2 / shadowMapSize;
+		float fWorldUnitsPerTexel = extends * 2 / ShadowMapSize;
 		auto vWorldUnitsPerTexel = XMVectorSet(fWorldUnitsPerTexel, fWorldUnitsPerTexel, 0.0f, 0.0f);
 
 		XMVECTOR myPos = mainCamera.getPosition();
@@ -117,8 +99,7 @@ void ShadowMaps::update(UINT frameIndex, Camera& mainCamera)
 	{
 		XMStoreFloat4x4(&data.ShadowMatrix[i], XMMatrixTranspose(cascades[i].camera.getViewProjectionMatrix()));
 	}
-	XMStoreFloat4x4(&data.MaxShadowMatrix, XMMatrixTranspose(maxShadow.camera.getViewProjectionMatrix()));
-	data.ShadowMatrix[3] = data.MaxShadowMatrix;
+	data.MaxShadowMatrix = data.ShadowMatrix[3];
 
 	data.SunDirection = sun.direction;
 	data.SunColor = sun.color;
@@ -139,36 +120,17 @@ static Vector3 SnapToGrid(Vector3 position, float gridStep)
 
 void ShadowMaps::clear(ID3D12GraphicsCommandList* commandList)
 {
-	CD3DX12_RESOURCE_BARRIER barriers[_countof(cascades) + 1];
+	TextureTransitions<_countof(cascades)> tr;
 	for (int i = 0; auto& c : cascades)
-	{
-		barriers[i++] = CD3DX12_RESOURCE_BARRIER::Transition(
-			c.texture.texture.Get(),
-			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-			D3D12_RESOURCE_STATE_DEPTH_WRITE);
-	}
-	barriers[_countof(cascades)] = CD3DX12_RESOURCE_BARRIER::Transition(
-		maxShadow.texture.texture.Get(),
-		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-		D3D12_RESOURCE_STATE_DEPTH_WRITE);
-	commandList->ResourceBarrier(_countof(barriers), barriers);
+		tr.add(c.texture.texture.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+	tr.push(commandList);
 
 	for (auto& c : cascades)
 		c.texture.ClearDepth(commandList);
-	maxShadow.texture.ClearDepth(commandList);
 
 	for (int i = 0; auto& c : cascades)
-	{
-		barriers[i++] = CD3DX12_RESOURCE_BARRIER::Transition(
-			c.texture.texture.Get(),
-			D3D12_RESOURCE_STATE_DEPTH_WRITE,
-			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-	}
-	barriers[_countof(cascades)] = CD3DX12_RESOURCE_BARRIER::Transition(
-		maxShadow.texture.texture.Get(),
-		D3D12_RESOURCE_STATE_DEPTH_WRITE,
-		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-	commandList->ResourceBarrier(_countof(barriers), barriers);
+		tr.add(c.texture.texture.Get(), D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	tr.push(commandList);
 
 	counter = 0;
 }

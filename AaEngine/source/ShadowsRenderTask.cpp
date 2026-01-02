@@ -8,7 +8,6 @@ ShadowsRenderTask::ShadowsRenderTask(RenderProvider p, SceneManager& s, ShadowMa
 	{
 		shadow.renderables = sceneMgr.getRenderables(Order::Normal);
 	}
-	maxShadow.renderables = sceneMgr.getRenderables(Order::Normal);
 }
 
 ShadowsRenderTask::~ShadowsRenderTask()
@@ -25,15 +24,6 @@ ShadowsRenderTask::~ShadowsRenderTask()
 			CloseHandle(shadow.eventBegin);
 			CloseHandle(shadow.eventFinish);
 		}
-	}
-
-	if (maxShadow.eventBegin)
-	{
-		SetEvent(maxShadow.eventBegin);
-		maxShadow.worker.join();
-		maxShadow.commands.deinit();
-		CloseHandle(maxShadow.eventBegin);
-		CloseHandle(maxShadow.eventFinish);
 	}
 }
 
@@ -65,27 +55,6 @@ AsyncTasksInfo ShadowsRenderTask::initialize(CompositorPass&)
 		tasks.emplace_back(shadow.eventFinish, shadow.commands);
 	}
 
-	{
-		maxShadow.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
-		maxShadow.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
-		maxShadow.commands = provider.renderSystem.core.CreateCommandList(L"MaxShadows", PixColor::Shadows);
-
-		maxShadow.worker = std::thread([this]
-			{
-				auto& shadow = maxShadow;
-				auto& cascade = shadowMaps.maxShadow;
-
-				while (WaitForSingleObject(shadow.eventBegin, INFINITE) == WAIT_OBJECT_0 && running)
-				{
-					prepareShadowCascade(shadow, cascade);
-
-					SetEvent(shadow.eventFinish);
-				}
-			});
-
-		tasks.emplace_back(maxShadow.eventFinish, maxShadow.commands);
-	}
-
 	return tasks;
 }
 
@@ -97,7 +66,6 @@ void ShadowsRenderTask::run(RenderContext& renderCtx, CompositorPass&)
 	{
 		SetEvent(shadow.eventBegin);
 	}
-	SetEvent(maxShadow.eventBegin);
 }
 
 void ShadowsRenderTask::prepareShadowCascade(ShadowWork& shadow, ShadowMaps::ShadowData& cascade)

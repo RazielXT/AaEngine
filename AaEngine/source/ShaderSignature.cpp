@@ -446,8 +446,6 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData(GraphicsResour
 					type = ResourcesInfo::AutoParam::SUN_COLOR;
 				else if (p.Name == "CameraPosition")
 					type = ResourcesInfo::AutoParam::CAMERA_POSITION;
-				else if (p.Name == "MainCameraPosition")
-					type = ResourcesInfo::AutoParam::MAIN_CAMERA_POSITION;
 				else if (p.Name == "ZMagic")
 					type = ResourcesInfo::AutoParam::Z_MAGIC;
 

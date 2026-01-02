@@ -11,7 +11,6 @@ float Time;
 
 #ifdef VERTEX_WAVE
 float Time;
-float3 MainCameraPosition;
 #endif
 
 #ifdef ALPHA_TEST

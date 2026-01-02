@@ -1,6 +1,6 @@
 float4x4 ViewProjectionMatrix;
 float4x4 WorldMatrix;
-float3 MainCameraPosition;
+float3 CameraPosition;
 float BlendDistance;
 uint2 ViewportSize;
 uint TexIdDiffuse;
@@ -54,7 +54,7 @@ PS_Input VSMain(VS_Input vin)
 
     vsOut.wp = mul(vin.p, WorldMatrix);
 
-	float camDistance = length(MainCameraPosition.xz - vsOut.wp.xz);
+	float camDistance = length(CameraPosition.xz - vsOut.wp.xz);
 	float distanceLerp = getDistanceBlend2(camDistance, BlendDistance);
 	vsOut.wp.y -= vin.nhLod.w * distanceLerp;
 	vsOut.www = distanceLerp;
@@ -166,7 +166,7 @@ struct PSOutput
 PSOutput PSMain(PS_Input pin)
 {
 	SamplerState diffuse_sampler = SamplerDescriptorHeap[0];
-	float3 cameraView = MainCameraPosition - pin.wp.xyz;
+	float3 cameraView = CameraPosition - pin.wp.xyz;
 	float camDistance = length(cameraView);
 
 	float3 inNormal = pin.normal;

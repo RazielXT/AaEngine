@@ -5,7 +5,7 @@ float4x4 PreviousWorldMatrix;
 float4x4 WorldMatrix;
 float3 MaterialColor;
 uint TexIdDiffuse;
-float3 MainCameraPosition;
+float3 CameraPosition;
 uint2 ViewportSize;
 #ifdef VERTEX_WAVE
 float Time;
@@ -72,7 +72,7 @@ PSInput VSMain(VSInput input)
 #ifdef INSTANCED
 	result.worldPosition = mul(input.position, InstancingBuffer[input.instanceID]);
 	#ifdef VERTEX_WAVE
-		float waveWeight = saturate(1 - length(MainCameraPosition - result.worldPosition.xyz)/400) * (1-input.uv.y);
+		float waveWeight = saturate(1 - length(CameraPosition - result.worldPosition.xyz)/400) * (1-input.uv.y);
 		ComputeBaseBend(input.position, result.worldPosition, waveWeight);
 		float4 worldPositionNoWave = result.worldPosition;
 		result.worldPosition.xyz = WindWave(result.worldPosition.xyz, waveWeight, Time);

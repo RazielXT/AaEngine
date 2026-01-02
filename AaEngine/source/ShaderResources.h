@@ -89,7 +89,6 @@ struct ResourcesInfo
 		VIEWPORT_SIZE_INV,
 		VIEWPORT_SIZE,
 		CAMERA_POSITION,
-		MAIN_CAMERA_POSITION,
 	};
 	struct AutoParamInfo
 	{

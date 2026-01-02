@@ -114,13 +114,13 @@ void DescriptorManager::createTextureView(RenderTargetTextures& rtt)
 {
 	for (auto& t : rtt.textures)
 	{
-		createTextureView(t);
+		createTextureView(t, 1);
 	}
 
-	createTextureView(rtt.depth);
+	createTextureView(rtt.depth, 1);
 }
 
-void DescriptorManager::createTextureView(GpuTexture3D& texture)
+void DescriptorManager::createTextureView(GpuTexture3D& texture, UINT mipLevels)
 {
 	if (texture.view.srvHandles.ptr)
 		return;
@@ -133,7 +133,7 @@ void DescriptorManager::createTextureView(GpuTexture3D& texture)
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.ViewDimension = dimension;
-	srvDesc.Texture2D.MipLevels = -1;
+	srvDesc.Texture2D.MipLevels = mipLevels;
 	srvDesc.Format = texture.texture->GetDesc().Format;
 	device.CreateShaderResourceView(texture.texture.Get(), &srvDesc, handle);
 

@@ -21,8 +21,8 @@ public:
 	void initializeSamplers(float MipLODBias);
 
 	void createTextureView(FileTexture& texture);
-	void createTextureView(GpuTextureResource& texture, UINT mipLevels = 1);
-	void createTextureView(GpuTexture3D& texture);
+	void createTextureView(GpuTextureResource& texture, UINT mipLevels = -1);
+	void createTextureView(GpuTexture3D& texture, UINT mipLevels = -1);
 	void createTextureView(RenderTargetTextures& textures);
 	void createUAVView(GpuTexture3D& texture);
 	UINT createUAVView(GpuTextureResource& texture);

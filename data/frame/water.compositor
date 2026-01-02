@@ -42,13 +42,6 @@ compositor Water
 		in sceneReflectionsTexture2
 		out sceneReflectionsTexture
 	}
-	//pass BlurReflections
-	//{
-	//	material WaterBlur
-	//	in sceneReflectionsTexture
-	//	in sceneTransparentTextures:Normal
-	//	out sceneReflectionsTexture2
-	//}
 
 	pass ApplySceneWater
 	{

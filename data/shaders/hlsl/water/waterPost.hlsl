@@ -30,33 +30,3 @@ float4 PSWaterApply(VS_OUTPUT input) : SV_TARGET
 
 	return color;
 }
-
-float4 PSWaterBlur(VS_OUTPUT input) : SV_TARGET
-{
-    float3 centerColor = sceneTexture.Sample(LinearWrapSampler, input.TexCoord).rgb;
-    float3 centerNormal = waterTexture.Sample(LinearWrapSampler, input.TexCoord).xyz;
-
-    float4 sum = 0;
-    float totalWeight = 0;
-	const float sigma = 1;
-
-    // 3x3 kernel example
-    [unroll]
-    for (int x = -2; x <= 2; x++)
-    {
-        for (int y = -2; y <= 2; y++)
-        {
-            float2 offset = input.TexCoord + float2(x, y) * ViewportSizeInverse * 2;
-            float4 sampleColor = sceneTexture.Sample(LinearWrapSampler, offset);
-            float3 sampleNormal = waterTexture.Sample(LinearWrapSampler, offset).xyz;
-
-            // Weight by normal similarity
-            float normalWeight = max(0.0, pow(dot(centerNormal, sampleNormal), 1));
-
-            sum += sampleColor * normalWeight;
-            totalWeight += normalWeight;
-        }
-    }
-
-    return (sum / max(totalWeight, 1e-5));
-}

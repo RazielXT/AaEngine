@@ -45,17 +45,3 @@ material ApplySceneWater
 		profile ps_6_6
 	}
 }
-
-material WaterBlur
-{
-	vertex_shader vsQuad
-
-	depth off
-
-	pixel_shader
-	{
-		file water/waterPost.hlsl
-		entry PSWaterBlur
-		profile ps_6_6
-	}
-}

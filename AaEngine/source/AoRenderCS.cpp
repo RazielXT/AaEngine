@@ -9,8 +9,8 @@ void AoRenderCS::dispatch(UINT width, UINT height, UINT arraySize, float TanHalf
 
 	setupData(width, height, arraySize, TanHalfFovH);
 	commandList->SetComputeRoot32BitConstants(0, sizeof(SsaoCB) / sizeof(float), &SsaoCB, 0);
-	commandList->SetComputeRootDescriptorTable(1, input.srvHandles);
-	commandList->SetComputeRootDescriptorTable(2, output.uavHandles);
+	commandList->SetComputeRootDescriptorTable(1, input.srvHandle);
+	commandList->SetComputeRootDescriptorTable(2, output.uavHandle);
 
 	const UINT threadSize = arraySize == 1 ? 16 : 8;
 	const uint32_t bufferWidth = (width + threadSize - 1) / threadSize;

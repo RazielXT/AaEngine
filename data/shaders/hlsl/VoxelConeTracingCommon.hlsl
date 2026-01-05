@@ -4,7 +4,6 @@ struct SceneVoxelChunkInfo
 	float Density;
 	float3 BouncesOffset;
 	float SceneSize;
-	float LerpFactor;
 	uint TexId;
 	uint TexIdBounces;
 	uint ResIdData;

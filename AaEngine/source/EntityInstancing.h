@@ -2,6 +2,7 @@
 
 #include "ShaderDataBuffers.h"
 #include "RenderObject.h"
+#include "ResourcesView.h"
 #include <vector>
 
 class SceneManager;
@@ -31,7 +32,7 @@ struct InstanceGroup
 	void updateBbox();
 	ComPtr<ID3D12Resource> gpuBuffer;
 	ComPtr<ID3D12Resource> gpuIdsBuffer;
-	UINT gpuIdsBufferHeapIdx{};
+	ShaderViewUAV gpuIdsBufferView{};
 
 	UINT count{};
 	SceneEntity* entity{};

@@ -15,7 +15,7 @@ void Generate3DMips3xCS::dispatch(ID3D12GraphicsCommandList* commandList, GpuTex
 	commandList->SetPipelineState(pipelineState.Get());
 	commandList->SetComputeRootSignature(signature);
 
-	commandList->SetComputeRootDescriptorTable(1, texture.view.srvHandles);
+	commandList->SetComputeRootDescriptorTable(1, texture.view.srvHandle);
 
 	struct
 	{
@@ -33,9 +33,9 @@ void Generate3DMips3xCS::dispatch(ID3D12GraphicsCommandList* commandList, GpuTex
 	for (UINT mip = 1; (mip + 2) < texture.uav.size(); mip += 3)
 	{
 		//target UAV
-		commandList->SetComputeRootDescriptorTable(2, texture.uav[mip].uavHandles);
-		commandList->SetComputeRootDescriptorTable(3, texture.uav[mip + 1].uavHandles);
-		commandList->SetComputeRootDescriptorTable(4, texture.uav[mip + 2].uavHandles);
+		commandList->SetComputeRootDescriptorTable(2, texture.uav[mip].handle);
+		commandList->SetComputeRootDescriptorTable(3, texture.uav[mip + 1].handle);
+		commandList->SetComputeRootDescriptorTable(4, texture.uav[mip + 2].handle);
 
 		constants.SrcMipIndex = mip - 1;
 		constants.InvOutTexelSize = DirectX::XMFLOAT3(1 / float(outSize), 1 / float(outSize), 1 / float(outSize));
@@ -54,7 +54,7 @@ void Generate3DMips3xCS::dispatch(ID3D12GraphicsCommandList* commandList, GpuTex
 	commandList->ResourceBarrier(1, &barrier);
 }
 
-void GenerateNormalMips4xCS::dispatch(ID3D12GraphicsCommandList* commandList, UINT textureSize, const std::vector<ShaderUAV>& uav)
+void GenerateNormalMips4xCS::dispatch(ID3D12GraphicsCommandList* commandList, UINT textureSize, const std::vector<ShaderTextureViewUAV>& uav)
 {
 	if (uav.size() < 5)
 		return;

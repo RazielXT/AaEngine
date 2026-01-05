@@ -5,7 +5,7 @@
 #include <array>
 
 struct ShaderTextureView;
-class ShaderUAV;
+class ShaderTextureViewUAV;
 
 constexpr const UINT BindlessTextureIndex = -1;
 

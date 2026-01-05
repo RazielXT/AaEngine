@@ -195,7 +195,7 @@ void WaterSim::update(RenderSystem& renderSystem, ID3D12GraphicsCommandList* com
 				tr.add(&terrainHeight, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 				tr.push(commandList);
 
-				generateHeightmapCS.dispatch(commandList, TextureSize, TextureSize, terrainHeight.view.uavHandles, { {x - 2,y - 2}, terrainTexture->srvHeapIndex });
+				generateHeightmapCS.dispatch(commandList, TextureSize, TextureSize, terrainHeight.view.uavHandle, { {x - 2,y - 2}, terrainTexture->srvHeapIndex });
 				heightmapToNormalCS.dispatch(commandList, terrainHeight.view.srvHeapIndex, terrainNormal.view.uavHeapIndex, TextureSize, TextureSize, 50, 102.4f);
 
 				auto uavb = CD3DX12_RESOURCE_BARRIER::UAV(terrainNormal.texture.Get());
@@ -312,7 +312,7 @@ void WaterSim::updateCompute(RenderSystem& renderSystem, ID3D12GraphicsCommandLi
 // 	}
 
 	waterHeight[waterResultIdx].Transition(computeList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-	waterToTextureCS.dispatch(computeList, waterHeight[waterResultIdx].view.srvHeapIndex, terrainHeight.view.srvHeapIndex, TextureSize, TextureSize, waterNormalTexture.view.uavHandles, waterHeightMeshTexture.view.uavHandles, lastCameraPos);
+	waterToTextureCS.dispatch(computeList, waterHeight[waterResultIdx].view.srvHeapIndex, terrainHeight.view.srvHeapIndex, TextureSize, TextureSize, waterNormalTexture.view.uavHandle, waterHeightMeshTexture.view.uavHandle, lastCameraPos);
 	generateNormalMipsCS.dispatch(computeList, TextureSize, waterNormalTextureMips);
 	waterHeight[waterResultIdx].Transition(computeList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 

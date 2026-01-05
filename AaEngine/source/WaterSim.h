@@ -45,7 +45,7 @@ private:
 
 	GpuTexture2D terrainHeight;
 	GpuTexture2D terrainNormal;
-	std::vector<ShaderUAV> terrainNormalMips;
+	std::vector<ShaderTextureViewUAV> terrainNormalMips;
 	GenerateNormalMips4xCS generateNormalMipsCS;
 
 	GpuTexture2D waterHeight[FrameCount];
@@ -53,7 +53,7 @@ private:
 
 	GpuTexture2D waterNormalTexture;
 	GpuTexture2D waterHeightMeshTexture;
-	std::vector<ShaderUAV> waterNormalTextureMips;
+	std::vector<ShaderTextureViewUAV> waterNormalTextureMips;
 
 	ComPtr<ID3D12Resource> srcWater;
 	ComPtr<ID3D12Resource> srcVelocity;
@@ -63,7 +63,7 @@ private:
 
 	GpuTexture2D terrainGridHeight[5][5];
 	GpuTexture2D terrainGridNormal[5][5];
-	std::vector<ShaderUAV> terrainGridNormalMips[5][5];
+	std::vector<ShaderTextureViewUAV> terrainGridNormalMips[5][5];
 
 	TerrainHeightmapCS generateHeightmapCS;
 

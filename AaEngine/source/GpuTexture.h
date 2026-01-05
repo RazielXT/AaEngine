@@ -68,7 +68,7 @@ public:
 
 	void Init(ID3D12Device* device, UINT width, UINT height, UINT depth, DXGI_FORMAT format);
 
-	std::vector<ShaderUAV> uav;
+	std::vector<ShaderTextureViewUAV> uav;
 };
 
 struct GpuTextureStates

@@ -200,12 +200,7 @@ void VoxelizeSceneTask::updateCBufferCascade(SceneVoxelChunkInfo& info, Vector3 
 	info.diff = diff;
 	info.texId = cascade.voxelSceneTexture.view.srvHeapIndex;
 	info.texIdBounces = cascade.voxelPreviousSceneTexture.view.srvHeapIndex;
-	info.resIdDataBuffer = cascade.dataBufferHeapIdx;
-
-// 	float deltaTime = provider.params.timeDelta;
-// 	deltaTime += deltaTime - deltaTime * deltaTime;
-// 	deltaTime = max(deltaTime, 1.0f);
-// 	info.lerpFactor = deltaTime;
+	info.resIdDataBuffer = cascade.dataBufferView.heapIndex;
 }
 
 void VoxelizeSceneTask::updateCBuffer(UINT frameIndex)
@@ -361,7 +356,7 @@ void SceneVoxelsCascade::initialize(const std::string& n, ID3D12Device* device, 
 
 	dataBuffer = resources.shaderBuffers.CreateStructuredBuffer(DataElementSize * DataElementCount);
 	dataBuffer->SetName(as_wstring(name + "DataBuffer").c_str());
-	dataBufferHeapIdx = resources.descriptors.createBufferView(dataBuffer.Get(), DataElementSize, DataElementCount);
+	dataBufferView = resources.descriptors.createBufferView(dataBuffer.Get(), DataElementSize, DataElementCount);
 }
 
 void SceneVoxelsCascade::prepareForVoxelization(ID3D12GraphicsCommandList* commandList, TextureStatePair& voxelScene, TextureStatePair& prevVoxelScene, const GpuTexture3D& clearSceneTexture, ClearBufferComputeShader& clearBufferCS)
@@ -436,8 +431,8 @@ void BounceVoxelsCS::dispatch(ID3D12GraphicsCommandList* commandList, const std:
 
 	commandList->SetComputeRoot32BitConstants(0, data.size(), data.data(), 0);
 	commandList->SetComputeRootShaderResourceView(1, dataAddr);
-	commandList->SetComputeRootDescriptorTable(2, source.srvHandles);
-	commandList->SetComputeRootDescriptorTable(3, target.uavHandles);
+	commandList->SetComputeRootDescriptorTable(2, source.srvHandle);
+	commandList->SetComputeRootDescriptorTable(3, target.uavHandle);
 
 	const UINT threadSize = 4;
 	const auto voxelSize = UINT(VoxelSize);

@@ -588,6 +588,9 @@
     <ClInclude Include="source\GridMesh.h">
       <Filter>Source Files\RenderObject</Filter>
     </ClInclude>
+    <ClInclude Include="source\ResourcesView.h">
+      <Filter>Source Files\Resources</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

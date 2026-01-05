@@ -64,7 +64,7 @@ XM_ALIGNED_STRUCT(16) InstanceData
 InstanceGroup::~InstanceGroup()
 {
 	if (gpuIdsBuffer)
-		DescriptorManager::get().removeDescriptorIndex(gpuIdsBufferHeapIdx);
+		DescriptorManager::get().removeUAV(gpuIdsBufferView);
 }
 
 void InstanceGroup::create(const InstanceGroupDescription& description, UINT groupIdx)
@@ -89,7 +89,7 @@ void InstanceGroup::create(const InstanceGroupDescription& description, UINT gro
 		ids[i] = ObjectId(i, ObjectType::Instanced, groupIdx).value;
 	}
 	gpuIdsBuffer = ShaderDataBuffers::get().CreateUploadStructuredBuffer(ids.data(), sizeof(UINT) * ids.size());
-	gpuIdsBufferHeapIdx = DescriptorManager::get().createBufferView(gpuIdsBuffer.Get(), sizeof(UINT), count);
+	gpuIdsBufferView = DescriptorManager::get().createBufferView(gpuIdsBuffer.Get(), sizeof(UINT), count);
 }
 
 void InstanceGroup::update(UINT idx, ObjectTransformation transform)

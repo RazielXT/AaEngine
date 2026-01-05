@@ -190,6 +190,7 @@
     <ClInclude Include="source\PrepareFrameTask.h" />
     <ClInclude Include="source\RenderTargetHeap.h" />
     <ClInclude Include="source\ResourceGroup.h" />
+    <ClInclude Include="source\ResourcesView.h" />
     <ClInclude Include="source\SceneEntity.h" />
     <ClInclude Include="source\FileLogger.h" />
     <ClInclude Include="source\Material.h" />

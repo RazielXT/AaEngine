@@ -81,26 +81,16 @@ ShaderTextureView* TextureResources::getNamedTexture(std::string name)
 	return it == namedTextures.end() ? nullptr : &it->second;
 }
 
-void TextureResources::setNamedUAV(std::string name, const ShaderUAV& texture)
+void TextureResources::setNamedUAV(std::string name, const ShaderTextureViewUAV& texture)
 {
 	namedUAV[name] = texture;
 }
 
-ShaderUAV* TextureResources::getNamedUAV(std::string name)
+ShaderTextureViewUAV* TextureResources::getNamedUAV(std::string name)
 {
 	auto it = namedUAV.find(name);
 
 	return it == namedUAV.end() ? nullptr : &it->second;
-}
-
-ShaderTextureView::ShaderTextureView(D3D12_GPU_DESCRIPTOR_HANDLE* handles)
-{
-	srvHandles = *handles;
-}
-
-ShaderUAV::ShaderUAV(D3D12_GPU_DESCRIPTOR_HANDLE* handles)
-{
-	uavHandles = *handles;
 }
 
 void FileTexture::SetName(const std::string& n)

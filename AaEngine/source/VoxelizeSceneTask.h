@@ -41,9 +41,7 @@ struct SceneVoxelsCascade
 	const UINT DataElementCount = 128 * 128 * 128;
 
 	ComPtr<ID3D12Resource> dataBuffer;
-	UINT dataBufferHeapIdx{};
-	D3D12_GPU_DESCRIPTOR_HANDLE dataBufferUavHandle;
-	D3D12_CPU_DESCRIPTOR_HANDLE dataBufferUavCpuHandle;
+	ShaderViewUAV dataBufferView;
 };
 
 class BounceVoxelsCS : public ComputeShader
@@ -97,7 +95,6 @@ private:
 		float voxelDensity;
 		Vector3 diff;
 		float voxelSceneSize;
-		float lerpFactor = 0.01f;
 		UINT texId;
 		UINT texIdBounces;
 		UINT resIdDataBuffer;

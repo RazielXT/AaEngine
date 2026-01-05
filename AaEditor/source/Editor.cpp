@@ -298,7 +298,7 @@ struct ImageButtonCombo
 
 		for (UINT i = 0; i < options.size(); i++)
 		{
-			if (ImGui::ImageButton(options[i].iconName, (ImTextureID)icons[options[i].iconName]->srvHandles.ptr, ImVec2(32, 32), ImVec2(0, 0), ImVec2(1, 1), ItemBg(i)))
+			if (ImGui::ImageButton(options[i].iconName, (ImTextureID)icons[options[i].iconName]->srvHandle.ptr, ImVec2(32, 32), ImVec2(0, 0), ImVec2(1, 1), ItemBg(i)))
 			{
 				selected = i;
 			}
@@ -774,7 +774,7 @@ void Editor::initializeIconViews()
 {
 	for (auto&[name,icon] : icons)
 	{
-		g_pd3dSrvDescHeapAlloc.Alloc(&icon->handle, &icon->srvHandles);
+		g_pd3dSrvDescHeapAlloc.Alloc(&icon->handle, &icon->srvHandle);
 
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;

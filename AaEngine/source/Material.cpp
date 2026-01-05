@@ -634,7 +634,7 @@ void MaterialInstance::BindTextures(ID3D12GraphicsCommandList* commandList)
 	for (UINT i = 0; i < resources->boundTexturesCount; i++)
 	{
 		auto& t = resources->textures[i];
-		commandList->SetGraphicsRootDescriptorTable(t.rootIndex, t.texture->srvHandles);
+		commandList->SetGraphicsRootDescriptorTable(t.rootIndex, t.texture->srvHandle);
 	}
 
 	for (auto& uav : resources->uavs)

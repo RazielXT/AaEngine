@@ -6,8 +6,8 @@ void AoPrepareDepthBuffersCS::dispatch(UINT width, UINT height, const ShaderText
 	commandList->SetPipelineState(pipelineState.Get());
 	commandList->SetComputeRootSignature(signature);
 
- 	commandList->SetComputeRoot32BitConstants(0, sizeof(data) / sizeof(float), &data, 0);
- 	commandList->SetComputeRootDescriptorTable(1, input.srvHandles);
+	commandList->SetComputeRoot32BitConstants(0, sizeof(data) / sizeof(float), &data, 0);
+	commandList->SetComputeRootDescriptorTable(1, input.srvHandle);
 
 	const uint32_t bufferWidth = (width + 15) / 16;
 	const uint32_t bufferHeight = (height + 15) / 16;
@@ -21,7 +21,7 @@ void AoPrepareDepthBuffers2CS::dispatch(UINT width, UINT height, const ShaderTex
 	commandList->SetComputeRootSignature(signature);
 
 	commandList->SetComputeRoot32BitConstants(0, sizeof(data) / sizeof(float), &data, 0);
-	commandList->SetComputeRootDescriptorTable(1, input.srvHandles);
+	commandList->SetComputeRootDescriptorTable(1, input.srvHandle);
 
 	const uint32_t bufferWidth = (width + 15) / 16;
 	const uint32_t bufferHeight = (height + 15) / 16;

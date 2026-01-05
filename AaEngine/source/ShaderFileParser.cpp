@@ -76,6 +76,8 @@ ShaderType ShaderFileParser::ParseShaderType(const std::string& t)
 		type = ShaderType::Vertex;
 	else if (t == "pixel_shader")
 		type = ShaderType::Pixel;
+	else if (t == "geometry_shader")
+		type = ShaderType::Geometry;
 	else if (t == "compute_shader")
 		type = ShaderType::Compute;
 

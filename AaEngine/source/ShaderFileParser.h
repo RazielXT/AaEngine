@@ -9,6 +9,7 @@ enum class ShaderType
 {
 	Vertex,
 	Pixel,
+	Geometry,
 	Compute,
 	COUNT,
 	None

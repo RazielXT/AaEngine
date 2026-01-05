@@ -36,14 +36,14 @@ void MaterialBase::Load(ShaderLibrary& shaderLib)
 	if (rootSignature)
 		return;
 
-	if (!ref.pipeline.vs_ref.empty())
-		shaders[(int)ShaderType::Vertex] = shaderLib.getShader(ref.pipeline.vs_ref, ShaderType::Vertex);
-	if (!ref.pipeline.ps_ref.empty())
-		shaders[(int)ShaderType::Pixel] = shaderLib.getShader(ref.pipeline.ps_ref, ShaderType::Pixel);
-
 	for (int i = 0; i < (int)ShaderType::COUNT; i++)
-		if (shaders[i])
-			info.add(*shaders[i], (ShaderType)i);
+	{
+		if (auto& shaderName = ref.pipeline.shaders[i]; !shaderName.empty())
+		{
+			if (shaders[i] = shaderLib.getShader(shaderName, ShaderType(i)))
+				info.add(*shaders[i], (ShaderType)i);
+		}
+	}
 
 	info.finish();
 
@@ -112,6 +112,8 @@ ID3D12PipelineState* MaterialBase::CreatePipelineState(const std::vector<D3D12_I
 		psoDesc.VS = { shaders[(int)ShaderType::Vertex]->blob->GetBufferPointer(), shaders[(int)ShaderType::Vertex]->blob->GetBufferSize() };
 	if (shaders[(int)ShaderType::Pixel])
 		psoDesc.PS = { shaders[(int)ShaderType::Pixel]->blob->GetBufferPointer(), shaders[(int)ShaderType::Pixel]->blob->GetBufferSize() };
+	if (shaders[(int)ShaderType::Geometry])
+		psoDesc.GS = { shaders[(int)ShaderType::Geometry]->blob->GetBufferPointer(), shaders[(int)ShaderType::Geometry]->blob->GetBufferSize() };
 	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	psoDesc.RasterizerState.CullMode = ref.pipeline.culling;
 	psoDesc.RasterizerState.FillMode = ref.pipeline.fill;

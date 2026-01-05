@@ -44,32 +44,26 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 
 		if (member.type.ends_with("_shader"))
 		{
-			std::string* refNamePtr = nullptr;
-			if (member.type == "vertex_shader")
-			{
-				refNamePtr = &mat.pipeline.vs_ref;
-			}
-			else if (member.type == "pixel_shader")
-			{
-				refNamePtr = &mat.pipeline.ps_ref;
-			}
+			auto shaderType = ShaderFileParser::ParseShaderType(member.type);
 
-			if (refNamePtr)
+			if (shaderType != ShaderType::None)
 			{
+				auto& target = mat.pipeline.shaders[(int)shaderType];
+
 				if (!member.value.empty())
-					*refNamePtr = member.value;
+					target = member.value;
 				else
 				{
 					if (member.value.empty() && !member.children.empty())
 					{
-						auto generatedName = *refNamePtr = member.type + "_" + mat.name;
+						auto generatedName = target = member.type + "_" + mat.name;
 						auto shaderType = ShaderFileParser::ParseShaderType(member.type);
 
 						auto& ref = shaders.shaderRefs[(int)shaderType][generatedName];
 						ShaderFileParser::ParseShaderParams(ref, member);
 					}
 				}
-			}	
+			}
 		}
 		else if (member.type == "shader_defines")
 		{
@@ -91,8 +85,8 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 					}
 				};
 
-			addCustomizationDefines(mat.pipeline.vs_ref, ShaderType::Vertex);
-			addCustomizationDefines(mat.pipeline.ps_ref, ShaderType::Pixel);
+			for (int i = 0; i < (int)ShaderType::COUNT; i++)
+				addCustomizationDefines(mat.pipeline.shaders[i], ShaderType(i));
 		}
 		else if (member.type == "depth")
 		{

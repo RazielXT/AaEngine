@@ -39,6 +39,11 @@ void SignatureInfo::add(const LoadedShader& shader, ShaderType type)
 		flags &= ~D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
 	}
 
+	if (type == ShaderType::Geometry)
+	{
+		flags &= ~D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
+	}
+
 	for (auto& b : shader.desc.cbuffers)
 	{
 		CBuffer* buffer = nullptr;

@@ -5,6 +5,7 @@
 #include <string>
 #include <d3d12.h>
 #include "ShaderResources.h"
+#include "ShaderFileParser.h"
 #include <optional>
 
 struct MaterialDepthState
@@ -28,8 +29,7 @@ using SamplerRef = SamplerInfo;
 
 struct MaterialPipelineInfo
 {
-	std::string ps_ref;
-	std::string vs_ref;
+	std::string shaders[(int)ShaderType::COUNT];
 
 	MaterialDepthState depth;
 	MaterialBlendState blend;

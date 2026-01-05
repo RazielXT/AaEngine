@@ -64,11 +64,15 @@ void MaterialResources::loadMaterials(std::string directory, bool subDirectories
 	MaterialFileParser::parseAllMaterialFiles(knownMaterials, shaders, directory, subDirectories);
 	resources.shaders.addShaderReferences(shaders);
 
-	knownMaterials.reserve(knownMaterials.size() * 3);
+	knownMaterials.reserve(knownMaterials.size() * 2);
 
 	for (size_t i = 0; i < knownMaterials.size(); i++)
 	{
 		MaterialRef& info = knownMaterials[i];
+
+		// post process
+		if (info.pipeline.shaders[(int)ShaderType::Vertex] == "vsQuad")
+			continue;
 
 		if (!info.abstract && info.pipeline.fill == D3D12_FILL_MODE_SOLID && !info.techniqueMaterial[int(MaterialTechnique::Wireframe)])
 		{

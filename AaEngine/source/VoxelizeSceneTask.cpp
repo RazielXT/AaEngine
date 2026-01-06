@@ -207,8 +207,6 @@ void VoxelizeSceneTask::updateCBuffer(UINT frameIndex)
 {
 	auto& state = imgui::DebugWindow::state;
 
-	cbufferData.steppingBounces = state.voxelSteppingBounces;
-	cbufferData.steppingDiffuse = state.voxelSteppingDiffuse;
 	cbufferData.middleConeRatioDistance = state.middleConeRatioDistance;
 	cbufferData.sideConeRatioDistance = state.sideConeRatioDistance;
 	cbufferData.voxelizeLighting = 0.0f;

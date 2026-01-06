@@ -162,7 +162,7 @@ struct TextureTransitions
 		push(commandList);
 	}
 
-	void add(GpuTextureResource* texture, D3D12_RESOURCE_STATES from, D3D12_RESOURCE_STATES to)
+	void add(const GpuTextureResource* texture, D3D12_RESOURCE_STATES from, D3D12_RESOURCE_STATES to)
 	{
 		if (from == to)
 			return;
@@ -171,6 +171,10 @@ struct TextureTransitions
 			texture->texture.Get(),
 			from,
 			to);
+	}
+	void add(const GpuTextureResource& texture, D3D12_RESOURCE_STATES from, D3D12_RESOURCE_STATES to)
+	{
+		add(&texture, from, to);
 	}
 	void add(ID3D12Resource* texture, D3D12_RESOURCE_STATES from, D3D12_RESOURCE_STATES to)
 	{
@@ -181,10 +185,6 @@ struct TextureTransitions
 			texture,
 			from,
 			to);
-	}
-	void add(CD3DX12_RESOURCE_BARRIER b)
-	{
-		barriers[c++] = b;
 	}
 	void add(const GpuTextureStates& state)
 	{

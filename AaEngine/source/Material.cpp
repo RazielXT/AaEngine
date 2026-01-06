@@ -240,12 +240,20 @@ const char* MaterialBase::GetTechniqueOverride(MaterialTechnique technique) cons
 	return m ? m->c_str() : nullptr;
 }
 
-static void SetDefaultParameter(const ShaderReflection::CBuffer::Parameter& param, const MaterialRef& ref, std::vector<float>& data)
+static void SetDefaultParameters(ResourcesInfo& resources, const MaterialRef& ref)
 {
-	auto it = ref.resources.defaultParams.find(param.Name);
-	if (it != ref.resources.defaultParams.end())
+	auto& data = resources.rootBuffer.defaultData;
+
+	for (const auto& defaultParam : ref.resources.defaultParams)
 	{
-		memcpy(data.data() + param.StartOffset / sizeof(float), it->second.data(), it->second.size() * sizeof(float));
+		for (const auto& p : resources.params)
+		{
+			if (p.name == defaultParam.first)
+			{
+				memcpy(&data[p.offset], defaultParam.second.data(), p.size);
+				break;
+			}
+		}
 	}
 }
 
@@ -256,12 +264,8 @@ void MaterialBase::CreateResourcesData(MaterialInstance& instance, GraphicsResou
 	if (info.rootBuffer)
 	{
 		auto& buffer = instance.resources->rootBuffer;
-		for (const auto& p : info.rootBuffer->info.Params)
-		{
-			SetDefaultParameter(p, ref, buffer.defaultData);
-			SetDefaultParameter(p, instance.ref, buffer.defaultData);
-			instance.resources->params.emplace_back(p.Name.c_str(), p.Size, p.StartOffset / (UINT)sizeof(float));
-		}
+		SetDefaultParameters(*instance.resources, ref);
+		SetDefaultParameters(*instance.resources, instance.ref);
 	}
 
 	UINT texSlot = 0;

@@ -121,6 +121,7 @@ struct ResourcesInfo
 
 	struct ParamInfo
 	{
+		std::string name;
 		ParamId id;
 		UINT size{};
 		UINT offset{};

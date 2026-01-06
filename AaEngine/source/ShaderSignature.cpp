@@ -455,6 +455,8 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData(GraphicsResour
 
 				if (type != ResourcesInfo::AutoParam::None)
 					resources->frameAutoParams.emplace_back(type, (UINT)(p.StartOffset / sizeof(float)));
+				else
+					resources->params.emplace_back(p.Name, p.Name.c_str(), p.Size, p.StartOffset / (UINT)sizeof(float));
 			}
 		}
 		else

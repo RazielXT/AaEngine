@@ -28,6 +28,7 @@ public:
 
 	static void logError(std::string text)
 	{
+		OutputDebugStringA(text.c_str());
 		log(text, Severity::Error);
 		MessageBoxA(0, text.c_str(), "Error", MB_OK | MB_ICONERROR);
 	}

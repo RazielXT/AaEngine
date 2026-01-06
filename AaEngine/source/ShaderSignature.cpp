@@ -358,7 +358,6 @@ ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device& device, co
 	D3D12SerializeVersionedRootSignature(&rootSignatureDesc, &signature, &error);
 	if (error && error->GetBufferSize() > 0)
 	{
-		OutputDebugStringA((const char*)error->GetBufferPointer());
 		FileLogger::logError((const char*)error->GetBufferPointer());
 		return nullptr;
 	}

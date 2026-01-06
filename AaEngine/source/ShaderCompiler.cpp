@@ -346,7 +346,7 @@ ComPtr<IDxcBlob> ShaderCompiler::compileShader(const ShaderRef& ref, ShaderDescr
 	auto hr = pCompiler->Compile(&sourceBuffer, arguments.data(), (uint32_t)arguments.size(), &includeHandler, IID_PPV_ARGS(pCompileResult.GetAddressOf()));
 	if (FAILED(hr))
 	{
-		FileLogger::logErrorD3D("compileShader " + ref.entry, hr);
+		FileLogger::logErrorD3D("compileShader " + ref.file, hr);
 		return nullptr;
 	}
 
@@ -360,17 +360,13 @@ ComPtr<IDxcBlob> ShaderCompiler::compileShader(const ShaderRef& ref, ShaderDescr
 	pCompileResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&pErrors), nullptr);
 	if (pErrors && pErrors->GetStringLength() > 0)
 	{
-		OutputDebugStringA(pErrors->GetStringPointer());
-		FileLogger::logWarning(pErrors->GetStringPointer());
-
-		__debugbreak();
-
+		FileLogger::logError(ref.file + "\n" + pErrors->GetStringPointer());
 		return nullptr;
 	}
 
 	if (!reflectShaderInfo(pCompileResult.Get(), description, type))
 	{
-		FileLogger::logError("compileShader no reflection " + ref.entry);
+		FileLogger::logError("compileShader no reflection " + ref.file);
 		return nullptr;
 	}
 

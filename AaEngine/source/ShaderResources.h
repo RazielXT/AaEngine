@@ -27,6 +27,26 @@ enum class GpuBufferType
 	COUNT
 };
 
+constexpr UINT HashConstexpr(std::string_view s)
+{
+	UINT hash = 2166136261u;
+	for (char c : s)
+	{
+		hash ^= static_cast<UINT>(c);
+		hash *= 16777619u;
+	}
+	return hash;
+}
+
+struct ParamId
+{
+	UINT value;
+
+	constexpr ParamId(const char* name) : value(HashConstexpr(name)) {}
+
+	bool operator==(const ParamId&) const = default;
+};
+
 struct ResourcesInfo
 {
 	struct RootGpuBuffer
@@ -98,23 +118,14 @@ struct ResourcesInfo
 	std::vector<AutoParamInfo> frameAutoParams;
 	std::vector<AutoParamInfo> objectAutoParams;
 	std::vector<AutoParamInfo> resourceAutoParams;
-};
 
-enum class FastParam
-{
-	MaterialColor,
-	TexIdDiffuse,
-	Emission,
-	VoxelIdx,
-	COUNT
-};
-
-constexpr std::array<std::string_view, (int)FastParam::COUNT> FastParamNames =
-{
-	"MaterialColor",
-	"TexIdDiffuse",
-	"Emission",
-	"VoxelIdx",
+	struct ParamInfo
+	{
+		ParamId id;
+		UINT size{};
+		UINT offset{};
+	};
+	std::vector<ParamInfo> params{};
 };
 
 struct PssmParameters

@@ -154,15 +154,12 @@ namespace imgui
 			if (ImGui::Button(state.stopUpdatingVoxel ? "startUpdatingVoxel" : "stopUpdatingVoxel"))
 				state.stopUpdatingVoxel = !state.stopUpdatingVoxel;
 
-			ImGui::SliderFloat("GI weight", &state.voxelSteppingBounces, 0.0f, 0.15f);
-			ImGui::SliderFloat("Diffuse weight", &state.voxelSteppingDiffuse, 0.0f, 0.5f);
-
-			static float voxelLightPower = [&] { float f; materials.getMaterial("WhiteVCTLight")->GetParameter(FastParam::Emission, &f); return f; }();
-
-			if (ImGui::SliderFloat("Light power", &voxelLightPower, 0.0f, 10.f))
-			{
-				materials.getMaterial("WhiteVCTLight")->SetParameter(FastParam::Emission, &voxelLightPower);
-			}
+// 			static float voxelLightPower = [&] { float f; materials.getMaterial("WhiteVCTLight")->GetParameter(FastParam::Emission, &f); return f; }();
+//
+// 			if (ImGui::SliderFloat("Light power", &voxelLightPower, 0.0f, 10.f))
+// 			{
+// 				materials.getMaterial("WhiteVCTLight")->SetParameter(FastParam::Emission, &voxelLightPower);
+// 			}
 
 // 			ImGui::SliderFloat("middleConeRatio", &state.middleConeRatioDistance.x, 0.0f, 5.f);
 // 			ImGui::SliderFloat("middleConeDistance", &state.middleConeRatioDistance.y, 0.0f, 5.f);

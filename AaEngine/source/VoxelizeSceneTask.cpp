@@ -270,7 +270,7 @@ void VoxelizeSceneTask::voxelizeCascade(TextureStatePair& voxelScene, TextureSta
 	sceneQueue->iterateMaterials([&cascade](AssignedMaterial* material)
 		{
 			material->SetUAV(cascade.dataBuffer.Get(), 0);
-			material->SetParameter(FastParam::VoxelIdx, &cascade.idx);
+			material->SetParameter("VoxelIdx", &cascade.idx);
 		});
 
 	//from all 3 axes

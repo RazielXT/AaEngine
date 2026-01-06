@@ -126,7 +126,7 @@ void PhysicsRenderer::DrawGeometry(RMat44Arg inModelMatrix, const AABox& inWorld
 	}
 
 	auto matColor = inModelColor.ToVec4();
-	material->SetParameter(FastParam::MaterialColor, &matColor, renderCtx.storage);
+	material->SetParameter("MaterialColor", &matColor, renderCtx.storage);
 	auto matrixW = XMMatrixTranspose(XMLoadFloat4x4((XMFLOAT4X4*) &inModelMatrix));
 	material->SetParameter(ResourcesInfo::AutoParam::WORLD_MATRIX, &matrixW, 16, renderCtx.storage);
 	material->SetParameter(ResourcesInfo::AutoParam::PREV_WORLD_MATRIX, &matrixW, 16, renderCtx.storage);

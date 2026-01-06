@@ -115,7 +115,6 @@ public:
 	MaterialInstance(const MaterialInstance& other) : base(other.base), ref(other.ref)
 	{
 		resources = other.resources;
-		paramsTable = other.paramsTable;
 	}
 	~MaterialInstance();
 
@@ -138,10 +137,8 @@ public:
 	void SetParameter(ResourcesInfo::AutoParam, const void* value, size_t count);
 	void SetParameter(ResourcesInfo::AutoParam, const void* value, size_t count, MaterialDataStorage& data);
 
-	void SetParameter(FastParam param, const void* value);
-	void SetParameter(FastParam param, const void* value, MaterialDataStorage& data);
-	void GetParameter(FastParam param, float* output) const;
-	void CopyParameter(FastParam param, MaterialInstance& source, MaterialDataStorage& data, float defaultValue);
+	void SetParameter(ParamId param, const void* value);
+	void SetParameter(ParamId param, const void* value, MaterialDataStorage& data);
 
 	void LoadMaterialConstants(MaterialDataStorage& buffers) const;
 	void UpdatePerFrame(MaterialDataStorage& data, const ShaderConstantsProvider& info);
@@ -165,16 +162,6 @@ protected:
 	const MaterialRef& ref;
 
 	std::shared_ptr<ResourcesInfo> resources;
-
-	struct FastParamInfo
-	{
-		float* data{};
-		UINT Size{};
-		UINT Offset{};
-	};
-	std::array<FastParamInfo, (int)FastParam::COUNT> paramsTable{};
-
-	void SetFastTableParameter(const std::string& name, float* data, UINT size, UINT offset);
 
 	void UpdateBindlessTexture(const ResourcesInfo::Texture& texture);
 };

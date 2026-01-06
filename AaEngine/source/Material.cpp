@@ -240,15 +240,6 @@ const char* MaterialBase::GetTechniqueOverride(MaterialTechnique technique) cons
 	return m ? m->c_str() : nullptr;
 }
 
-void MaterialInstance::SetFastTableParameter(const std::string& name, float* data, UINT size, UINT offset)
-{
-	for (size_t i = 0; i < FastParamNames.size(); i++)
-	{
-		if (name == FastParamNames[i])
-			paramsTable[i] = { data, size, offset / UINT(sizeof(float))};
-	}
-}
-
 static void SetDefaultParameter(const ShaderReflection::CBuffer::Parameter& param, const MaterialRef& ref, std::vector<float>& data)
 {
 	auto it = ref.resources.defaultParams.find(param.Name);
@@ -269,7 +260,7 @@ void MaterialBase::CreateResourcesData(MaterialInstance& instance, GraphicsResou
 		{
 			SetDefaultParameter(p, ref, buffer.defaultData);
 			SetDefaultParameter(p, instance.ref, buffer.defaultData);
-			instance.SetFastTableParameter(p.Name, buffer.defaultData.data() + p.StartOffset / sizeof(float), p.Size, p.StartOffset);
+			instance.resources->params.emplace_back(p.Name.c_str(), p.Size, p.StartOffset / (UINT)sizeof(float));
 		}
 	}
 
@@ -459,15 +450,6 @@ void MaterialInstance::SetParameter(const std::string& name, float* output, cons
 	}
 }
 
-void MaterialInstance::SetParameter(FastParam id, const void* value)
-{
-	auto& param = paramsTable[(int)id];
-	if (param.data)
-	{
-		memcpy(param.data, value, param.Size);
-	}
-}
-
 void MaterialInstance::SetParameter(ResourcesInfo::AutoParam type, const void* value, size_t count)
 {
 	for (auto p : resources->objectAutoParams)
@@ -492,12 +474,27 @@ void MaterialInstance::SetParameter(ResourcesInfo::AutoParam type, const void* v
 	}
 }
 
-void MaterialInstance::SetParameter(FastParam id, const void* value, MaterialDataStorage& data)
+void MaterialInstance::SetParameter(ParamId id, const void* value)
 {
-	auto& param = paramsTable[(int)id];
-	if (param.data)
+	for (auto& p : resources->params)
 	{
-		memcpy(data.rootParams.data() + param.Offset, value, param.Size);
+		if (p.id == id)
+		{
+			memcpy(&resources->rootBuffer.defaultData[p.offset], value, p.size);
+			return;
+		}
+	}
+}
+
+void MaterialInstance::SetParameter(ParamId id, const void* value, MaterialDataStorage& data)
+{
+	for (auto& p : resources->params)
+	{
+		if (p.id == id)
+		{
+			memcpy(&data.rootParams[p.offset], value, p.size);
+			return;
+		}
 	}
 }
 
@@ -516,31 +513,6 @@ bool MaterialInstance::GetParameter(const std::string& name, float* output) cons
 	}
 
 	return false;
-}
-
-void MaterialInstance::GetParameter(FastParam id, float* output) const
-{
-	auto& param = paramsTable[(int)id];
-	if (param.data)
-	{
-		memcpy(output, param.data, param.Size);
-	}
-}
-
-void MaterialInstance::CopyParameter(FastParam id, MaterialInstance& source, MaterialDataStorage& data, float defaultValue)
-{
-	auto& targetInfo = paramsTable[(int)id];
-	auto& sourceInfo = source.paramsTable[(int)id];
-
-	if (sourceInfo.data)
-	{
-		memcpy(data.rootParams.data() + targetInfo.Offset, sourceInfo.data, sourceInfo.Size);
-	}
-	else
-	{
-		for (UINT i = 0; i < targetInfo.Size / sizeof(float); i++)
-			data.rootParams[i + targetInfo.Offset] = defaultValue;
-	}
 }
 
 void MaterialInstance::LoadMaterialConstants(MaterialDataStorage& data) const

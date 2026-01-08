@@ -253,7 +253,13 @@ public:
 	{
 		ComPtr<IDxcBlobEncoding> pEncoding;
 
-		if (IncludedFiles.find(pFilename) != IncludedFiles.end())
+		std::wstring fullpath = pFilename;
+		if (fullpath.starts_with(L".\\hlsl\\"))
+			fullpath = as_wstring(SHADER_HLSL_DIRECTORY) + (pFilename + 7);
+		else if (fullpath.starts_with(L".\\"))
+			fullpath = localPath + (pFilename + 2);
+
+		if (IncludedFiles.find(fullpath) != IncludedFiles.end())
 		{
 			// Return empty string blob if this file has been included before
 			static const char nullStr[] = " ";
@@ -262,7 +268,6 @@ public:
 			return S_OK;
 		}
 
-		auto fullpath = localPath + pFilename;
 		HRESULT hr = pUtils->LoadFile(fullpath.c_str(), nullptr, pEncoding.GetAddressOf());
 
 		auto defines = FindDefineUsages(pEncoding);
@@ -270,7 +275,7 @@ public:
 
 		if (SUCCEEDED(hr))
 		{
-			IncludedFiles.insert(pFilename);
+			IncludedFiles.insert(fullpath);
 			*ppIncludeSource = pEncoding.Detach();
 		}
 		return hr;
@@ -299,14 +304,15 @@ static std::vector<std::wstring> MakeDefines(const ShaderRef& ref, const std::un
 	return out;
 }
 
-ComPtr<IDxcBlob> ShaderCompiler::compileShader(const ShaderRef& ref, ShaderDescription& description, ShaderType type, const ShaderDefines& globalDefines)
+ComPtr<IDxcBlob> ShaderCompiler::compileShader(const ShaderRef& ref, ShaderDescription& outDescription, ShaderType type, const ShaderDefines& globalDefines)
 {
+	ShaderDescription description;
 	auto path = SHADER_HLSL_DIRECTORY + ref.file;
- 	auto wfile = as_wstring(path);
+ 	auto wpath = as_wstring(path);
 
 	// Load shader source code from file
 	ComPtr<IDxcBlobEncoding> pSourceBlob;
-	pUtils->LoadFile(wfile.c_str(), nullptr, &pSourceBlob);
+	pUtils->LoadFile(wpath.c_str(), nullptr, &pSourceBlob);
 
 	if (!pSourceBlob)
 	{
@@ -339,7 +345,7 @@ ComPtr<IDxcBlob> ShaderCompiler::compileShader(const ShaderRef& ref, ShaderDescr
 	sourceBuffer.Encoding = 0;
 
 	CustomIncludeHandler includeHandler{ description };
-	includeHandler.localPath = wfile.substr(0, wfile.find_last_of('/') + 1);
+	includeHandler.localPath = wpath.substr(0, wpath.find_last_of('/') + 1);
 	includeHandler.pUtils = pUtils.Get();
 
 	ComPtr<IDxcResult> pCompileResult;
@@ -372,6 +378,8 @@ ComPtr<IDxcBlob> ShaderCompiler::compileShader(const ShaderRef& ref, ShaderDescr
 
 	ComPtr<IDxcBlob> pShaderBlob;
 	hr = pCompileResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&pShaderBlob), nullptr);
+
+	outDescription = std::move(description);
 
 	return pShaderBlob;
 }

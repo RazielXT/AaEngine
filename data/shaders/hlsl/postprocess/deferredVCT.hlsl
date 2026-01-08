@@ -1,6 +1,6 @@
 #include "PostProcessCommon.hlsl"
 #include "WorldReconstruction.hlsl"
-#include "../VoxelConeTracingCommon.hlsl"
+#include "hlsl/VoxelConeTracingCommon.hlsl"
 
 float4x4 InvViewProjectionMatrix;
 float ResId;

@@ -1,4 +1,4 @@
-#include "../postprocess/PostProcessCommon.hlsl"
+#include "hlsl/postprocess/PostProcessCommon.hlsl"
 
 float2 ViewportSizeInverse;
 

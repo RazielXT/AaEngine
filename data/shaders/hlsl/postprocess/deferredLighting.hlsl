@@ -1,6 +1,6 @@
 #include "PostProcessCommon.hlsl"
 #include "WorldReconstruction.hlsl"
-#include "../ShadowsPssm.hlsl"
+#include "hlsl/ShadowsPssm.hlsl"
 
 float4x4 InvViewProjectionMatrix;
 float3 CameraPosition;

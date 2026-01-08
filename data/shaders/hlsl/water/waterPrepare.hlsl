@@ -1,8 +1,8 @@
 #define GRID_PADDING
 
-#include "../VoxelConeTracingCommon.hlsl"
-#include "../postprocess/WorldReconstruction.hlsl"
-#include "../grid/heightmapGridReconstruction.hlsl"
+#include "hlsl/VoxelConeTracingCommon.hlsl"
+#include "hlsl/postprocess/WorldReconstruction.hlsl"
+#include "hlsl/grid/heightmapGridReconstruction.hlsl"
 
 float4x4 ViewProjectionMatrix;
 float4x4 InvViewProjectionMatrix;

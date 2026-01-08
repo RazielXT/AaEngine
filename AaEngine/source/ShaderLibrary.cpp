@@ -105,18 +105,9 @@ std::vector<const LoadedShader*> ShaderLibrary::reloadShadersChangedFiles()
 					if (stat((SHADER_HLSL_DIRECTORY + shader->ref.file).c_str(), &attrib) == 0 && attrib.st_mtime > shader->filetime)
 						return true;
 
-					auto extractPath = [&]() -> std::string
-						{
-							size_t pos = shader->ref.file.find_last_of("\\/");
-							if (pos == std::string::npos)
-								return "";
-
-							return shader->ref.file.substr(0, pos + 1);
-						}();
-
 					for (auto& i : shader->desc.compiledIncludes)
 					{
-						if (stat((SHADER_HLSL_DIRECTORY + extractPath + i).c_str(), &attrib) == 0 && attrib.st_mtime > shader->filetime)
+						if (stat(i.c_str(), &attrib) == 0 && attrib.st_mtime > shader->filetime)
 							return true;
 					}
 
@@ -125,11 +116,13 @@ std::vector<const LoadedShader*> ShaderLibrary::reloadShadersChangedFiles()
 
 			if (fileChanged)
 			{
-				shader->desc = {};
-				shader->blob = compiler.compileShader(shader->ref, shader->desc, (ShaderType)type, defines);
-				shader->filetime = std::time(nullptr);
+				if (auto blob = compiler.compileShader(shader->ref, shader->desc, (ShaderType)type, defines))
+				{
+					shader->blob = blob;
+					shader->filetime = std::time(nullptr);
 
-				changed.push_back(shader.get());
+					changed.push_back(shader.get());
+				}
 			}
 		}
 	}
@@ -152,7 +145,6 @@ std::vector<const LoadedShader*> ShaderLibrary::reloadShadersWithDefine(const st
 
 			if (shader->desc.allDefines.contains(define))
 			{
-				shader->desc = {};
 				shader->blob = compiler.compileShader(shader->ref, shader->desc, (ShaderType)type, defines);
 				shader->filetime = std::time(nullptr);
 

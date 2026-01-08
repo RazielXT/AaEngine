@@ -1,6 +1,6 @@
-#include "../VoxelConeTracingCommon.hlsl"
-#include "../postprocess/WorldReconstruction.hlsl"
-#include "../postprocess/PostProcessCommon.hlsl"
+#include "hlsl/VoxelConeTracingCommon.hlsl"
+#include "hlsl/postprocess/WorldReconstruction.hlsl"
+#include "hlsl/postprocess/PostProcessCommon.hlsl"
 
 float4x4 WorldMatrix;
 float4x4 ViewProjectionMatrix;

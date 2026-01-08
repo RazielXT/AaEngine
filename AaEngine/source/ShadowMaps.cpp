@@ -26,7 +26,7 @@ void ShadowMaps::init(RenderSystem& renderSystem, GraphicsResources& resources)
 		DescriptorManager::get().createTextureView(cascade.texture);
 	}
 
-	data.TexIdShadowOffsetStart = cascades[0].texture.view.srvHeapIndex;
+	data.TexIdShadowMap0 = cascades[0].texture.view.srvHeapIndex;
 	data.ShadowMapSize = ShadowMapSize;
 	data.ShadowMapSizeInv = 1 / data.ShadowMapSize;
 
@@ -99,7 +99,6 @@ void ShadowMaps::update(UINT frameIndex, Camera& mainCamera)
 	{
 		XMStoreFloat4x4(&data.ShadowMatrix[i], XMMatrixTranspose(cascades[i].camera.getViewProjectionMatrix()));
 	}
-	data.MaxShadowMatrix = data.ShadowMatrix[3];
 
 	data.SunDirection = sun.direction;
 	data.SunColor = sun.color;

@@ -132,9 +132,8 @@ struct ResourcesInfo
 struct PssmParameters
 {
 	XMFLOAT4X4 ShadowMatrix[4];
-	XMFLOAT4X4 MaxShadowMatrix;
 	XMFLOAT3 SunDirection;
-	UINT TexIdShadowOffsetStart;
+	UINT TexIdShadowMap0;
 	XMFLOAT3 SunColor;
 	float ShadowMapSize;
 	float ShadowMapSizeInv;

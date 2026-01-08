@@ -2,7 +2,7 @@
 
 float getCascadeShadow(float4 wp, uint ShadowIndex, float ShadowBias, SamplerState sampler, SunParams params)
 {
-	Texture2D<float> shadowmap = ResourceDescriptorHeap[params.TexIdShadowOffset + ShadowIndex];
+	Texture2D<float> shadowmap = ResourceDescriptorHeap[params.TexIdShadowMap0 + ShadowIndex];
     float4 sunLookPos = mul(wp, params.ShadowMatrix[ShadowIndex]);
     sunLookPos.xy = sunLookPos.xy / sunLookPos.w;
 	sunLookPos.xy /= float2(2, -2);
@@ -45,7 +45,7 @@ float getPssmShadow(float4 wp, float cameraDistance, float dotView, SamplerState
 
 float getCascadeShadowLow(float4 wp, uint ShadowIndex, float ShadowBias, SamplerState sampler, SunParams params)
 {
-	Texture2D<float> shadowmap = ResourceDescriptorHeap[params.TexIdShadowOffset + ShadowIndex];
+	Texture2D<float> shadowmap = ResourceDescriptorHeap[params.TexIdShadowMap0 + ShadowIndex];
     float4 sunLookPos = mul(wp, params.ShadowMatrix[ShadowIndex]);
     sunLookPos.xy = sunLookPos.xy / sunLookPos.w;
 	sunLookPos.xy /= float2(2, -2);

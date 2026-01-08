@@ -99,8 +99,8 @@ float readShadowmap(Texture2D shadowmap, float2 shadowCoord)
 
 float getShadow(float4 wp)
 {
-	Texture2D shadowmap = GetTexture(Sun.TexIdShadowOffset + 3);
-    float4 sunLookPos = mul(wp, Sun.MaxShadowMatrix);
+	Texture2D shadowmap = GetTexture(Sun.TexIdShadowMap0 + 3);
+    float4 sunLookPos = mul(wp, Sun.ShadowMatrix[3]);
     sunLookPos.xy = sunLookPos.xy / sunLookPos.w;
 	sunLookPos.xy /= float2(2, -2);
     sunLookPos.xy += 0.5;

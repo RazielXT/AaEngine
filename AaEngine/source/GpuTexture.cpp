@@ -123,6 +123,8 @@ void GpuTexture2D::CreateDepthBuffer(ID3D12Device* device, D3D12_RESOURCE_STATES
 
 void GpuTexture2D::CreateTextureBuffer(ID3D12Device* device, D3D12_RESOURCE_STATES state, const InitParams& params)
 {
+	view = {};
+
 	D3D12_RESOURCE_DESC textureDesc = {};
 	textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	textureDesc.Width = width;

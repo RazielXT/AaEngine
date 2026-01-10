@@ -2,6 +2,7 @@
 #include <set>
 #include <algorithm>
 #include <ranges>
+#include "StringUtils.h"
 
 void FrameCompositor::initializeTextureStates()
 {
@@ -291,6 +292,7 @@ void FrameCompositor::initializeCommands()
 			if (auto& f = taskFences[name]; !f.fence)
 			{
 				provider.renderSystem.core.device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&f.fence));
+				f.fence->SetName(as_wstring(name).c_str());
 				f.name = name;
 			}
 		};

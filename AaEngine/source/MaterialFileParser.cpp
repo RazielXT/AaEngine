@@ -6,7 +6,7 @@
 
 static bool parseToggleValue(const std::string& value)
 {
-	return value == "on" || value == "1";
+	return value == "on" || value == "1" || value.empty();
 }
 
 using ParsedObjects = std::map<std::string, const Config::Object*>;
@@ -97,6 +97,13 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 		else if (member.type == "depth_check")
 		{
 			mat.pipeline.depth.check = parseToggleValue(member.value);
+		}
+		else if (member.type == "conservative_rasterization")
+		{
+			if (parseToggleValue(member.value))
+				mat.pipeline.conservativeRasterization = D3D12_CONSERVATIVE_RASTERIZATION_MODE_ON;
+			else
+				mat.pipeline.conservativeRasterization = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 		}
 		else if (member.type == "culling")
 		{

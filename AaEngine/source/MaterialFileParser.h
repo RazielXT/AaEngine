@@ -37,6 +37,7 @@ struct MaterialPipelineInfo
 	D3D12_FILL_MODE fill = D3D12_FILL_MODE_SOLID;
 	float slopeScaledDepthBias = 0.0f;
 	int depthBias = 0;
+	D3D12_CONSERVATIVE_RASTERIZATION_MODE conservativeRasterization = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 };
 
 struct MaterialResourcesInfo

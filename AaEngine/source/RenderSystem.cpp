@@ -94,6 +94,15 @@ RenderCore::RenderCore()
 			throw std::invalid_argument(err);
 		}
 
+		D3D12_FEATURE_DATA_D3D12_OPTIONS opts = {};
+		device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS, &opts, sizeof(opts));
+		if (opts.ConservativeRasterizationTier == D3D12_CONSERVATIVE_RASTERIZATION_TIER_NOT_SUPPORTED)
+		{
+			auto err = "D3D12Device D3D12_CONSERVATIVE_RASTERIZATION_TIER_NOT_SUPPORTED";
+			FileLogger::logError(err);
+			throw std::invalid_argument(err);
+		}
+
 #ifndef NDEBUG
 		ComPtr<ID3D12InfoQueue> pInfoQueue;
 		device->QueryInterface(IID_PPV_ARGS(&pInfoQueue));

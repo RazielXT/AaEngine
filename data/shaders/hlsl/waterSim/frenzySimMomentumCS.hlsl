@@ -118,7 +118,7 @@ void CS_Momentum(uint3 id : SV_DispatchThreadID)
 	// 4) Clamp (optional)
 	// ========================================================================
 	float mag = length(u);
-	float maxVel = 1.0; // raise if needed for big waves
+	float maxVel = 2.0; // raise if needed for big waves
 
 	if (mag > maxVel) {
 		u *= maxVel / mag;

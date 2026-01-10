@@ -85,7 +85,7 @@ PSOutput PSMain(PSInput input)
 {
 	SamplerState colorSampler = SamplerDescriptorHeap[0];
 	float4 albedo = GetTexture(TexIdDiffuse).Sample(colorSampler, input.uv);
-	albedo.rgb *= float3(0.6, 0.6, 0.8);
+	//albedo.rgb *= float3(0.6, 0.6, 0.8);
 
 	if (albedo.a < AlphaThreshold) discard;
 
@@ -100,7 +100,7 @@ PSOutput PSMain(PSInput input)
 	float3 binormal = cross(worldNormal, tangent);
 	float3x3 tbn = float3x3(tangent, binormal, worldNormal);
 	float3 normalTex = GetTexture(TexIdNormal).Sample(colorSampler, 1 - input.uv.yx).rgb;
-	normalTex.b = 1;
+	//normalTex.b = 1;
 	worldNormal = mul(normalTex.xyz * 2 - 1, tbn);
 
 	PSOutput output;

@@ -114,32 +114,32 @@ void WaterSim::initializeGpuResources(RenderSystem& renderSystem, GraphicsResour
 			resources.descriptors.createTextureView(terrainNormal);
 			terrainNormalMips = resources.descriptors.createUAVMips(terrainNormal);
 
-			auto e = sceneMgr.createEntity("WaterSimTerrain" + std::format("{}{}",x,y), Order::Normal);
-			terrainGridMesh[x][y].create(64 * 64 * 4 * 4);
-			terrainGridMesh[x][y].entity = e;
-			e->geometry.fromInstancedModel(terrainModel, 0, terrainGridMesh[x][y].gpuBuffer.data[0].GpuAddress());
-			e->setBoundingBox(terrainModel.bbox);
-			e->material = resources.materials.getMaterial("DarkGreenGrid", batch);
-			e->Material().setParam("TexIdHeightmap", terrainHeight.view.srvHeapIndex);
-			e->Material().setParam("TexIdNormalmap", terrainNormal.view.srvHeapIndex);
-
-			Vector3 pos = terrainCenterPosition;
-			pos.x += (x - 2) * gridTileSize.x;
-			pos.z += (y - 2) * gridTileSize.y;
-			e->setPosition(pos);
+// 			auto e = sceneMgr.createEntity("WaterSimTerrain" + std::format("{}{}",x,y), Order::Normal);
+// 			terrainGridMesh[x][y].create(64 * 64 * 4 * 4);
+// 			terrainGridMesh[x][y].entity = e;
+// 			e->geometry.fromInstancedModel(terrainModel, 0, terrainGridMesh[x][y].gpuBuffer.data[0].GpuAddress());
+// 			e->setBoundingBox(terrainModel.bbox);
+// 			e->material = resources.materials.getMaterial("DarkGreenGrid", batch);
+// 			e->Material().setParam("TexIdHeightmap", terrainHeight.view.srvHeapIndex);
+// 			e->Material().setParam("TexIdNormalmap", terrainNormal.view.srvHeapIndex);
+// 
+// 			Vector3 pos = terrainCenterPosition;
+// 			pos.x += (x - 2) * gridTileSize.x;
+// 			pos.z += (y - 2) * gridTileSize.y;
+// 			e->setPosition(pos);
 		}
 
 	terrainGridTiles.Initialize(gridTileSize, terrainCenterPosition, 7);
 
-	auto e2 = sceneMgr.createEntity("WaterSim", Order::Transparent);
-	waterGridMesh.create(64 * 64 * 4 * 4);
-	waterGridMesh.entity = e2;
-	e2->geometry.fromInstancedModel(waterModel, 0, waterGridMesh.gpuBuffer.data[0].GpuAddress());
-	e2->setBoundingBox(waterModel.bbox);
-	e2->material = resources.materials.getMaterial("WaterLake", batch);
-	e2->Material().setParam("TexIdHeightmap", waterHeightMeshTexture.view.srvHeapIndex);
-	e2->Material().setParam("TexIdMeshNormal", waterNormalTexture.view.srvHeapIndex);
-	e2->setPosition({ -20, -20, 30 });
+// 	auto e2 = sceneMgr.createEntity("WaterSim", Order::Transparent);
+// 	waterGridMesh.create(64 * 64 * 4 * 4);
+// 	waterGridMesh.entity = e2;
+// 	e2->geometry.fromInstancedModel(waterModel, 0, waterGridMesh.gpuBuffer.data[0].GpuAddress());
+// 	e2->setBoundingBox(waterModel.bbox);
+// 	e2->material = resources.materials.getMaterial("WaterLake", batch);
+// 	e2->Material().setParam("TexIdHeightmap", waterHeightMeshTexture.view.srvHeapIndex);
+// 	e2->Material().setParam("TexIdMeshNormal", waterNormalTexture.view.srvHeapIndex);
+// 	e2->setPosition({ -20, -20, 30 });
 
 	auto csShader = resources.shaders.getShader("momentumComputeShader", ShaderType::Compute, ShaderRef{ "waterSim/frenzySimMomentumCS.hlsl", "CS_Momentum", "cs_6_6" }); //frenzySimMomentumCS
 	momentumComputeShader.init(*renderSystem.core.device, *csShader);
@@ -210,20 +210,20 @@ void WaterSim::update(RenderSystem& renderSystem, ID3D12GraphicsCommandList* com
 			}
 	}
 
-	if (updateLod)
-	{
-		for (int x = 0; x < 5; x++)
-			for (int y = 0; y < 5; y++)
-			{
-				terrainGridTiles.BuildLOD(cameraPos, { x - 2, y - 2 });
-				terrainGridMesh[x][y].update((UINT)terrainGridTiles.m_renderList.size(), terrainGridTiles.m_renderList.data(), (UINT)terrainGridTiles.m_renderList.size() * sizeof(TileData), frameIdx);
-			}
-
-		terrainGridTiles.BuildLOD(cameraPos, {});
-		waterGridMesh.update((UINT)terrainGridTiles.m_renderList.size(), terrainGridTiles.m_renderList.data(), (UINT)terrainGridTiles.m_renderList.size() * sizeof(TileData), frameIdx);
-
-		lastCameraPos = cameraPos;
-	}
+// 	if (updateLod)
+// 	{
+// 		for (int x = 0; x < 5; x++)
+// 			for (int y = 0; y < 5; y++)
+// 			{
+// 				terrainGridTiles.BuildLOD(cameraPos, { x - 2, y - 2 });
+// 				terrainGridMesh[x][y].update((UINT)terrainGridTiles.m_renderList.size(), terrainGridTiles.m_renderList.data(), (UINT)terrainGridTiles.m_renderList.size() * sizeof(TileData), frameIdx);
+// 			}
+// 
+// 		terrainGridTiles.BuildLOD(cameraPos, {});
+// 		waterGridMesh.update((UINT)terrainGridTiles.m_renderList.size(), terrainGridTiles.m_renderList.data(), (UINT)terrainGridTiles.m_renderList.size() * sizeof(TileData), frameIdx);
+// 
+// 		lastCameraPos = cameraPos;
+// 	}
 }
 
 void WaterSim::updateCompute(RenderSystem& renderSystem, ID3D12GraphicsCommandList* computeList, float dt, UINT)

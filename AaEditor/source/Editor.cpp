@@ -561,6 +561,14 @@ void Editor::prepareElements(Camera& camera)
 					newTransform.position = gizmoCenter + offCenter;
 				}
 
+				if (m_GizmoType == ImGuizmo::OPERATION::SCALE)
+				{
+					auto offCenter = newTransform.position - gizmoCenter;
+					offCenter = objTransformation.scale * offCenter;
+
+					newTransform.position = gizmoCenter + offCenter;
+				}
+
 				s.obj.setTransformation(newTransform);
 			}
 		}

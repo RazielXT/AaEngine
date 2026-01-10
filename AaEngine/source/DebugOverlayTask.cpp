@@ -32,7 +32,7 @@ void DebugOverlayTask::run(RenderContext& ctx, CommandsData& syncCommands, Compo
 
 	auto idx = currentIdx();
 
-	if (idx >= 0)
+	if (enabled && idx >= 0)
 	{
 		CommandsMarker marker(syncCommands.commandList, "DebugOverlay", PixColor::Debug);
 
@@ -45,6 +45,11 @@ void DebugOverlayTask::run(RenderContext& ctx, CommandsData& syncCommands, Compo
 bool DebugOverlayTask::writesSyncCommands(CompositorPass&) const
 {
 	return true;
+}
+
+void DebugOverlayTask::enable(bool e)
+{
+	enabled = e;
 }
 
 DebugOverlayTask& DebugOverlayTask::Get()

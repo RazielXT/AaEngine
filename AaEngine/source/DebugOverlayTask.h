@@ -18,6 +18,8 @@ public:
 
 	bool writesSyncCommands(CompositorPass&) const override;
 
+	void enable(bool enabled);
+
 	static DebugOverlayTask& Get();
 	void changeIdx(int idx);
 	int currentIdx() const;
@@ -36,4 +38,5 @@ private:
 	ScreenQuad quad;
 
 	int current = 70;
+	bool enabled = false;
 };

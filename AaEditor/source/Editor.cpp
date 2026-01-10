@@ -650,6 +650,15 @@ void Editor::prepareElements(Camera& camera)
 			app.sceneMgr.water.enableWaterUpdating(updateWater);
 	}
 
+	if (ImGui::CollapsingHeader("VCT"))
+	{
+		auto& state = VoxelizeSceneTask::Get().params;
+		ImGui::SliderFloat("middleConeRatio", &state.middleConeRatioDistance.x, 0.0f, 5.f);
+		ImGui::SliderFloat("middleConeDistance", &state.middleConeRatioDistance.y, 0.0f, 5.f);
+		ImGui::SliderFloat("sideConeRatio", &state.sideConeRatioDistance.x, 0.0f, 5.f);
+		ImGui::SliderFloat("sideConeDistance", &state.sideConeRatioDistance.y, 0.0f, 5.f);
+	}
+
 	if (ImGui::CollapsingHeader("Physics"))
 	{
 		const char* physicsDraw[] = {
@@ -677,22 +686,29 @@ void Editor::prepareElements(Camera& camera)
 	if (ImGui::Combo("Scene", &currentScene, scenes, std::size(scenes)))
 		state.changeScene = scenes[currentScene];
 
+	if (ImGui::CollapsingHeader("Texture overlay"))
 	{
 		auto& overlayTask = DebugOverlayTask::Get();
+		static bool enabledTexture = false;
+		if (ImGui::Checkbox("Enable texture overlay", &enabledTexture))
+			overlayTask.enable(enabledTexture);
 
-		int next = overlayTask.currentIdx();
-		if (ImGui::InputInt("Texture preview", &next))
-			overlayTask.changeIdx(next);
-
-		if (next >= 0)
+		if (enabledTexture)
 		{
-			bool f = overlayTask.isFullscreen();
-			if (ImGui::Checkbox("Texture preview fullscreen", &f))
-				overlayTask.setFullscreen(f);
-		}
+			int next = overlayTask.currentIdx();
+			if (ImGui::InputInt("Texture idx", &next))
+				overlayTask.changeIdx(next);
 
-		if (auto name = overlayTask.getCurrentIdxName())
-			ImGui::Text("Texture: %s", name);
+			if (next >= 0)
+			{
+				bool f = overlayTask.isFullscreen();
+				if (ImGui::Checkbox("Texture preview fullscreen", &f))
+					overlayTask.setFullscreen(f);
+
+				if (auto name = overlayTask.getCurrentIdxName())
+					ImGui::Text("Texture: %s", name);
+			}
+		}
 	}
 
 	static bool showVoxels = false;

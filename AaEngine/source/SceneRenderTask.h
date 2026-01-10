@@ -31,7 +31,7 @@ public:
 
 	bool enabledWireframe = false;
 
-	void showVoxelsInfo(bool show);
+	void showVoxels(bool show);
 
 private:
 
@@ -80,5 +80,5 @@ private:
 	void renderDebug(CompositorPass& pass, CommandsData& cmd);
 
 	bool showVoxelsEnabled = false;
-	void showVoxelsUpdate(SceneEntity& debugVoxel, Camera& camera);
+	void updateVoxelsDebugView(SceneEntity& debugVoxel, Camera& camera);
 };

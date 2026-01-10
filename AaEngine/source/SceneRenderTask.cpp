@@ -304,7 +304,8 @@ void SceneRenderTask::renderWireframe(CompositorPass& pass, CommandsData& cmd)
 
 void SceneRenderTask::renderDebug(CompositorPass& pass, CommandsData& cmd)
 {
-	pass.mrt->PrepareAsTarget(cmd.commandList, pass.targets, false, TransitionFlags::NoDepth);
+	auto& target = pass.targets.front();
+	target.texture->PrepareAsRenderTarget(cmd.commandList, target.previousState);
 
 	if (!showVoxelsEnabled)
 		return;
@@ -313,21 +314,21 @@ void SceneRenderTask::renderDebug(CompositorPass& pass, CommandsData& cmd)
 	SceneEntity entity(tmpStorage, "");
 	RenderObjectsVisibilityData visibility{ { true } };
 
-	showVoxelsUpdate(entity, *ctx.camera);
+	updateVoxelsDebugView(entity, *ctx.camera);
 
-	ShaderConstantsProvider constants(provider.params, visibility, *ctx.camera, *pass.mrt);
+	ShaderConstantsProvider constants(provider.params, visibility, *ctx.camera, *target.texture);
 
-	RenderQueue queue{ pass.mrt->formats, MaterialTechnique::Default };
+	RenderQueue queue{ { target.texture->format }, MaterialTechnique::Default };
 	queue.update({ EntityChange::Add, Order::Normal, &entity }, provider.resources);
 	queue.renderObjects(constants, cmd.commandList);
 }
 
-void SceneRenderTask::showVoxelsInfo(bool show)
+void SceneRenderTask::showVoxels(bool show)
 {
 	showVoxelsEnabled = show;
 }
 
-void SceneRenderTask::showVoxelsUpdate(SceneEntity& debugVoxel, Camera& camera)
+void SceneRenderTask::updateVoxelsDebugView(SceneEntity& debugVoxel, Camera& camera)
 {
 	auto orientation = camera.getOrientation();
 	auto pos = camera.getPosition() - orientation * Vector3(0, 5.f, 0) + camera.getCameraDirection() * 1.75;

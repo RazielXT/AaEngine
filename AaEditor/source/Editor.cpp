@@ -681,6 +681,9 @@ void Editor::prepareElements(Camera& camera)
 		"voxelRoom",
 		"voxelOutside",
 		"voxelOutsideBig",
+		"sponza",
+		"voxelRoom",
+		"tmp"
 	};
 	static int currentScene = 0;
 	if (ImGui::Combo("Scene", &currentScene, scenes, std::size(scenes)))
@@ -713,7 +716,7 @@ void Editor::prepareElements(Camera& camera)
 
 	static bool showVoxels = false;
 	if (ImGui::Checkbox("Show voxels", &showVoxels))
-		SceneRenderTask::Get().showVoxelsInfo(showVoxels);
+		SceneRenderTask::Get().showVoxels(showVoxels);
 
 	if (showVoxels)
 	{

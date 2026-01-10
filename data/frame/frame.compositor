@@ -131,11 +131,6 @@ compositor Frame
 		out sceneDownscale4
 	}
 
-	task SceneRender.Debug
-	{
-		out sceneTextureTmp2 sceneTexture:MotionVectors
-	}
-
 	ref Exposure(sceneTextureTmp2)
 
 	ref Bloom(sceneDownscale4,Exposure.exposure)
@@ -195,6 +190,11 @@ compositor Frame
  		out Output
  	}
 #endif
+
+	task SceneRender.Debug
+	{
+		out Output
+	}
 
 	task DebugOverlay
 	{

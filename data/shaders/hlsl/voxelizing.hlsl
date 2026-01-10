@@ -130,7 +130,7 @@ float4 PS_Main(PS_Input pin) : SV_TARGET
 	float3 diffuse = MaterialColor * GetTexture(TexIdDiffuse).Sample(LinearWrapSampler, pin.uv).rgb;
 #endif
 
-	Texture3D SceneVoxelBounces = GetTexture3D(VoxelInfo.Voxels[VoxelIdx].TexIdBounces);
+	Texture3D SceneVoxelBounces = GetTexture3D(VoxelInfo.Voxels[VoxelIdx].TexIdPrev);
 
 //	float shadow = 0;
 //	if (dot(Sun.Direction,worldNormal) < 0)
@@ -142,8 +142,8 @@ float4 PS_Main(PS_Input pin) : SV_TARGET
 	float3 voxelWorldPos = (pin.wp.xyz - VoxelInfo.Voxels[VoxelIdx].Offset);
     float3 posUV = voxelWorldPos * VoxelInfo.Voxels[VoxelIdx].Density;
 
-	const float StepSize = 32.f;
-	float4 prev = SceneVoxelBounces.Load(float4(posUV - VoxelInfo.Voxels[VoxelIdx].BouncesOffset * StepSize, 0));
+	const float StepSize = 2.f;
+	float4 prev = SceneVoxelBounces.Load(float4(posUV - VoxelInfo.Voxels[VoxelIdx].MoveOffset * StepSize, 0));
 
 	RWTexture3D<float4> SceneVoxel = ResourceDescriptorHeap[VoxelInfo.Voxels[VoxelIdx].TexId];
 	SceneVoxel[posUV] = float4(prev.rgb, prev.w);
@@ -164,11 +164,11 @@ float4 PS_Main(PS_Input pin) : SV_TARGET
 		int newCheckValue = shadow * 100;
 		
 		int previousCheckValue = 0;
-		InterlockedMax(SceneVoxelData[linearIndex].Max, newCheckValue, previousCheckValue);
+		InterlockedMax(SceneVoxelData[linearIndex].Shadow, newCheckValue, previousCheckValue);
 
 		//if (previousCheckValue <= newCheckValue)
 		{
-			SceneVoxelData[linearIndex].Diffuse = float4(diffuse, shadow);
+			SceneVoxelData[linearIndex].Diffuse = diffuse;
 			SceneVoxelData[linearIndex].Normal = worldNormal;
 			SceneVoxelData[linearIndex].Occupy = 1;
 		}

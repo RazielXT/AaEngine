@@ -194,14 +194,14 @@ PSOutput PSMain(PSInput input)
 
 		for (int idx = 0; idx < 4; idx++)
 		{
-			float3 voxelUV = (input.worldPosition.xyz - VoxelInfo.Voxels[idx].Offset) / VoxelInfo.Voxels[idx].SceneSize;
+			float3 voxelUV = (input.worldPosition.xyz - VoxelInfo.Voxels[idx].Offset) / VoxelInfo.Voxels[idx].WorldSize;
 			Texture3D voxelmap = GetTexture3D(VoxelInfo.Voxels[idx].TexId);
 			
 			float mipOffset = idx == 3 ? 0 : -1;
 			float4 fullTrace = ConeTraceImpl(voxelUV, worldNormal, VoxelInfo.MiddleConeRatio.x, VoxelInfo.MiddleConeRatio.y, voxelmap, VoxelSampler);
 
 			if (idx < 3)
-				fullTrace *= 1 - getDistanceBlend(camDistance, VoxelInfo.Voxels[idx].SceneSize);
+				fullTrace *= 1 - getDistanceBlend(camDistance, VoxelInfo.Voxels[idx].WorldSize);
 
 			voxelAmbient += fullTrace.rgb * voxelWeight;
 			{

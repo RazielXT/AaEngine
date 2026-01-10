@@ -35,29 +35,29 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 
 	float3 voxelAmbient = 0;
 	float voxelWeight = 1.0f;
-	float fullWeight = 0.01f;
+	float occlusion = 1.0f;
 
 	for (int idx = 0; idx < 4; idx++)
 	{
-		float3 voxelUV = (worldPosition - VoxelInfo.Voxels[idx].Offset) / VoxelInfo.Voxels[idx].SceneSize;
+		float3 voxelUV = (worldPosition - VoxelInfo.Voxels[idx].Offset) / VoxelInfo.Voxels[idx].WorldSize;
 		Texture3D voxelmap = GetTexture3D(VoxelInfo.Voxels[idx].TexId);
-		
-		float mipOffset = idx == 3 ? 0 : -1;
+
 		float4 fullTrace = ConeTraceImpl(voxelUV, worldNormal, VoxelInfo.MiddleConeRatio.x, VoxelInfo.MiddleConeRatio.y, voxelmap, VoxelSampler);
-		fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal + worldTangent), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler) * 1.0;
-		fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal - worldTangent), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler) * 1.0;
-		fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal + worldBinormal), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler) * 1.0;
-		fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal - worldBinormal), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler) * 1.0;
-		fullTrace /= 5;
+
+		//if (idx < 2)
+		{
+			fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal + worldTangent), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler);
+			fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal - worldTangent), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler);
+			fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal + worldBinormal), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler);
+			fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal - worldBinormal), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler);
+			fullTrace /= 5;
+		}
 
 		voxelAmbient += fullTrace.rgb * voxelWeight;
-
-		//if (idx >= 2)
-		{
-			voxelWeight = saturate(voxelWeight - fullTrace.w);
-			fullWeight += fullTrace.w;
-		}
+		voxelWeight = saturate(voxelWeight - fullTrace.w);
+		occlusion = min(occlusion, 1 - fullTrace.w);
 	}
+
 
 	return float4(voxelAmbient, 1);
 }

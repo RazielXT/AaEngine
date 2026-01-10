@@ -79,11 +79,12 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 		return {};
 
 	constexpr float CascadeDistances[CascadesCount] = { 200, 600, 2000, 6000 };
-	for (UINT i = 0; auto& voxels : voxelCascades)
+	for (UINT i = 0; i < CascadesCount; i++)
 	{
+		auto& voxels = voxelCascades[i];
 		voxels.initialize("VoxelCascade" + std::to_string(i), provider.renderSystem.core.device, provider.resources);
 		voxels.settings.extends = CascadeDistances[i];
-		voxels.idx = i++;
+		voxels.idx = i;
 	}
 
 	clearSceneTexture.Init(provider.renderSystem.core.device, VoxelSize, VoxelSize, VoxelSize, VoxelFormat);
@@ -128,13 +129,16 @@ void VoxelizeSceneTask::run(RenderContext& renderCtx, CommandsData& syncCommands
 {
 	if (pass.info.entry == "EndFrame")
 	{
+		TextureTransitions<2 * CascadesCount> tr;
+
 		//get ready for compute queue
-		for ( auto& voxel : voxelCascades)
+		for (auto& voxel : voxelCascades)
 		{
-			voxel.voxelSceneTexture.Transition(syncCommands.commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-			voxel.voxelPreviousSceneTexture.Transition(syncCommands.commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+			tr.add(voxel.voxelSceneTexture, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+			tr.add(voxel.voxelPreviousSceneTexture, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 		}
-		return;
+
+		tr.push(syncCommands.commandList);
 	}
 }
 
@@ -158,37 +162,30 @@ void VoxelizeSceneTask::runCompute(RenderContext& ctx, CommandsData& computeComm
 
 	auto cameraPosition = ctx.camera->getPosition();
 
-	Vector3 diff[CascadesCount];
-	for (UINT i = 0; auto& voxel : voxelCascades)
+	for (UINT i = 0; i < CascadesCount; i++)
 	{
-		diff[i] = voxel.update(cameraPosition);
-		if (diff[i].x != 0 || diff[i].y != 0 || diff[i].z != 0)
+		auto& voxel = voxelCascades[i];
+		Vector3 movement = voxel.update(cameraPosition);
+		if (movement != Vector3::Zero)
 			buildCounter[i] = 0;
 
-		updateCBufferCascade(cbufferData.cascadeInfo[i], diff[i], voxel);
-		i++;
+		updateCBufferCascade(cbufferData.cascadeInfo[i], movement, voxel);
 	}
 
 	updateCBuffer(provider.renderSystem.core.frameIndex);
 
 	static UINT idx = 0;
-	constexpr UINT VoxelizeInterations = 1;
 
-	for (UINT i = 0; auto& voxel : voxelCascades)
+	for (UINT i = 0; i < CascadesCount; i++)
 	{
-		if (buildCounter[i] < VoxelizeInterations)
-		{
-		}
-		else if (i == (idx % 4))
-			bounceCascade(computeCommands, voxel);
-
-		i++;
+		if (buildCounter[i] && i == (idx % 4))
+			bounceCascade(computeCommands, voxelCascades[i]);
 	}
 
 	idx++;
 }
 
-void VoxelizeSceneTask::updateCBufferCascade(SceneVoxelChunkInfo& info, Vector3 diff, SceneVoxelsCascade& cascade)
+void VoxelizeSceneTask::updateCBufferCascade(SceneVoxelChunkInfo& info, Vector3 moveOffset, SceneVoxelsCascade& cascade)
 {
 	info.voxelSceneSize = cascade.settings.extends * 2;
 
@@ -197,19 +194,16 @@ void VoxelizeSceneTask::updateCBufferCascade(SceneVoxelChunkInfo& info, Vector3 
 
 	info.voxelOffset = cascade.settings.center - Vector3(cascade.settings.extends);
 
-	info.diff = diff;
+	info.moveOffset = moveOffset;
 	info.texId = cascade.voxelSceneTexture.view.srvHeapIndex;
-	info.texIdBounces = cascade.voxelPreviousSceneTexture.view.srvHeapIndex;
-	info.resIdDataBuffer = cascade.dataBufferView.heapIndex;
+	info.texIdPrev = cascade.voxelPreviousSceneTexture.view.srvHeapIndex;
+	info.resIdDataBuffer = cascade.voxelInfoBuffer.view.heapIndex;
 }
 
 void VoxelizeSceneTask::updateCBuffer(UINT frameIndex)
 {
-	auto& state = imgui::DebugWindow::state;
-
-	cbufferData.middleConeRatioDistance = state.middleConeRatioDistance;
-	cbufferData.sideConeRatioDistance = state.sideConeRatioDistance;
-	cbufferData.voxelizeLighting = 0.0f;
+	cbufferData.middleConeRatioDistance = params.middleConeRatioDistance;
+	cbufferData.sideConeRatioDistance = params.sideConeRatioDistance;
 
 	auto& cbufferResource = *cbuffer.data[frameIndex];
 	memcpy(cbufferResource.Memory(), &cbufferData, sizeof(cbufferData));
@@ -218,27 +212,29 @@ void VoxelizeSceneTask::updateCBuffer(UINT frameIndex)
 void VoxelizeSceneTask::voxelizeCascades(GpuTextureStates& viewportOutput)
 {
 	auto marker = provider.renderSystem.core.StartCommandList(voxelizeCommands);
-	constexpr UINT VoxelizeInterations = 1;
 
 	if (reset)
 		clear(voxelizeCommands.commandList);
 
-	for (UINT i = 0; auto& cascade : voxelCascades)
+	TextureTransitions<2 * CascadesCount> tr;
+
+	for (UINT i = 0; i < CascadesCount; i++)
 	{
+		auto& cascade = voxelCascades[i];
 		TextureStatePair voxelSceneTexture_state = { &cascade.voxelSceneTexture, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE };
 		TextureStatePair voxelPreviousSceneTexture_state = { &cascade.voxelPreviousSceneTexture, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE };
 
-		if (buildCounter[i] < VoxelizeInterations)
+		if (!buildCounter[i])
 		{
 			buildCounter[i]++;
 			voxelizeCascade(voxelSceneTexture_state, voxelPreviousSceneTexture_state, viewportOutput, cascade);
 		}
 
-		voxelSceneTexture_state.Transition(voxelizeCommands.commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-		voxelPreviousSceneTexture_state.Transition(voxelizeCommands.commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-
-		i++;
+		tr.add(voxelSceneTexture_state, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+		tr.add(voxelPreviousSceneTexture_state, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	}
+
+	tr.push(voxelizeCommands.commandList);
 
 	marker.close();
 }
@@ -248,7 +244,7 @@ void VoxelizeSceneTask::voxelizeCascade(TextureStatePair& voxelScene, TextureSta
 	viewportOutput.texture->PrepareAsRenderTarget(voxelizeCommands.commandList, viewportOutput.previousState, true);
 
 	cascade.prepareForVoxelization(voxelizeCommands.commandList, voxelScene, prevVoxelScene, clearSceneTexture, clearBufferCS);
-	auto b = CD3DX12_RESOURCE_BARRIER::Transition(cascade.dataBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	auto b = CD3DX12_RESOURCE_BARRIER::Transition(cascade.voxelInfoBuffer.data.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	voxelizeCommands.commandList->ResourceBarrier(1, &b);
 
 	auto center = cascade.settings.center;
@@ -263,43 +259,40 @@ void VoxelizeSceneTask::voxelizeCascade(TextureStatePair& voxelScene, TextureSta
 	auto& renderables = *sceneMgr.getRenderables(Order::Normal);
 
 	ShaderConstantsProvider constants(provider.params, sceneInfo, camera, *viewportOutput.texture);
-	constants.uavBarrier = cascade.dataBuffer.Get();
+	constants.uavBarrier = cascade.voxelInfoBuffer.data.Get();
 
 	sceneQueue->iterateMaterials([&cascade](AssignedMaterial* material)
 		{
-			material->SetUAV(cascade.dataBuffer.Get(), 0);
+			material->SetUAV(cascade.voxelInfoBuffer.data.Get(), 0);
 			material->SetParameter("VoxelIdx", &cascade.idx);
 		});
 
-	//from all 3 axes
 	//Z
 	camera.setPosition({ center.x, center.y, center.z - orthoHalfSize - NearClipDistance });
 	camera.setDirection({ 0, 0, 1 });
 	camera.updateMatrix();
 	renderables.updateVisibility(camera, sceneInfo);
-	sceneQueue->renderObjects(constants, voxelizeCommands.commandList);
+ 	sceneQueue->renderObjects(constants, voxelizeCommands.commandList);
 	//X
-	camera.setPosition({ center.x - orthoHalfSize - NearClipDistance, center.y, center.z });
-	camera.setDirection({ 1, 0, 0 });
-	camera.updateMatrix();
-	//renderables.updateVisibility(camera, sceneInfo);
-	sceneQueue->renderObjects(constants, voxelizeCommands.commandList);
+//	camera.setPosition({ center.x - orthoHalfSize - NearClipDistance, center.y, center.z });
+//	camera.setDirection({ 1, 0, 0 });
+//	camera.updateMatrix();
+// 	sceneQueue->renderObjects(constants, voxelizeCommands.commandList);
 	//Y
-	camera.setPosition({ center.x, center.y - orthoHalfSize - NearClipDistance, center.z });
-	camera.pitch(XM_PIDIV2);
-	camera.updateMatrix();
-	//renderables.updateVisibility(camera, sceneInfo);
-	sceneQueue->renderObjects(constants, voxelizeCommands.commandList);
+//	camera.setPosition({ center.x, center.y - orthoHalfSize - NearClipDistance, center.z });
+//	camera.pitch(XM_PIDIV2);
+//	camera.updateMatrix();
+//	sceneQueue->renderObjects(constants, voxelizeCommands.commandList);
 
 	// mipmaps
 	voxelScene.Transition(voxelizeCommands.commandList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 	computeMips.dispatch(voxelizeCommands.commandList, cascade.voxelSceneTexture);
 	{
-		auto uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(cascade.dataBuffer.Get());
+		auto uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(cascade.voxelInfoBuffer.data.Get());
 		voxelizeCommands.commandList->ResourceBarrier(1, &uavBarrier);
 	}
 
-	auto b2 = CD3DX12_RESOURCE_BARRIER::Transition(cascade.dataBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	auto b2 = CD3DX12_RESOURCE_BARRIER::Transition(cascade.voxelInfoBuffer.data.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 	voxelizeCommands.commandList->ResourceBarrier(1, &b2);
 }
 
@@ -308,31 +301,36 @@ void VoxelizeSceneTask::bounceCascade(CommandsData& commands, SceneVoxelsCascade
 	TextureStatePair voxelSceneTexture_state = { &cascade.voxelSceneTexture, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE };
 	TextureStatePair voxelPreviousSceneTexture_state = { &cascade.voxelPreviousSceneTexture, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE };
 
-	voxelSceneTexture_state.Transition(commands.commandList, D3D12_RESOURCE_STATE_COPY_SOURCE);
-	voxelPreviousSceneTexture_state.Transition(commands.commandList, D3D12_RESOURCE_STATE_COPY_DEST);
+	TextureTransitions<2> tr;
+	tr.add(voxelSceneTexture_state, D3D12_RESOURCE_STATE_COPY_SOURCE);
+	tr.add(voxelPreviousSceneTexture_state, D3D12_RESOURCE_STATE_COPY_DEST);
+	tr.push(commands.commandList);
 
 	commands.commandList->CopyResource(cascade.voxelPreviousSceneTexture.texture.Get(), cascade.voxelSceneTexture.texture.Get());
 
-	voxelSceneTexture_state.Transition(commands.commandList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-	voxelPreviousSceneTexture_state.Transition(commands.commandList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	tr.add(voxelSceneTexture_state, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	tr.add(voxelPreviousSceneTexture_state, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	tr.push(commands.commandList);
 
-	XM_ALIGNED_STRUCT(16)
+	struct
 	{
-		Vector3 cameraPosition;
+		Vector3 CameraPosition;
 		float padding;
 		Vector3 VoxelsOffset;
 		float padding2;
 		Vector3 VoxelsSceneSize;
 	}
-	data = { ctx.camera->getPosition(), {}, cascade.settings.center - Vector3(cascade.settings.extends), {}, Vector3(cascade.settings.extends * 2) };
+	data = {
+		.CameraPosition = ctx.camera->getPosition(),
+		.VoxelsOffset = cascade.settings.center - Vector3(cascade.settings.extends),
+		.VoxelsSceneSize = Vector3(cascade.settings.extends * 2),
+	};
 
-	bouncesCS.dispatch(commands.commandList, std::span{ (float*) & data, 11 }, cascade.voxelSceneTexture.view, cascade.voxelPreviousSceneTexture.view, cascade.dataBuffer->GetGPUVirtualAddress());
+	bouncesCS.dispatch(commands.commandList, std::span{ (float*) & data, sizeof(data) / sizeof(float)}, cascade.voxelSceneTexture.view, cascade.voxelPreviousSceneTexture.view, cascade.voxelInfoBuffer.data->GetGPUVirtualAddress());
 
 	voxelSceneTexture_state.Transition(commands.commandList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
 	computeMips.dispatch(commands.commandList, cascade.voxelSceneTexture);
-
-	//voxelSceneTexture_state.Transition(commands.commandList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 }
 
 void SceneVoxelsCascade::initialize(const std::string& n, ID3D12Device* device, GraphicsResources& resources)
@@ -341,59 +339,63 @@ void SceneVoxelsCascade::initialize(const std::string& n, ID3D12Device* device, 
 
 	voxelSceneTexture.Init(device, VoxelSize, VoxelSize, VoxelSize, VoxelFormat);
 	voxelSceneTexture.SetName(name.c_str());
-	resources.descriptors.createUAVView(voxelSceneTexture);
-	resources.textures.setNamedUAV(name, voxelSceneTexture.uav.front());
 	resources.descriptors.createTextureView(voxelSceneTexture);
-	resources.textures.setNamedTexture(name, voxelSceneTexture.view);
+	resources.descriptors.createUAVView(voxelSceneTexture);
 
-	auto bounceName = name + "Bounces";
+	auto prevName = name + "Previous";
 	voxelPreviousSceneTexture.Init(device, VoxelSize, VoxelSize, VoxelSize, VoxelFormat);
-	voxelPreviousSceneTexture.SetName(bounceName.c_str());
+	voxelPreviousSceneTexture.SetName(prevName.c_str());
 	resources.descriptors.createTextureView(voxelPreviousSceneTexture);
-	resources.textures.setNamedTexture(bounceName, voxelPreviousSceneTexture.view);
 
-	dataBuffer = resources.shaderBuffers.CreateStructuredBuffer(DataElementSize * DataElementCount);
-	dataBuffer->SetName(as_wstring(name + "DataBuffer").c_str());
-	dataBufferView = resources.descriptors.createBufferView(dataBuffer.Get(), DataElementSize, DataElementCount);
+	voxelInfoBuffer.data = resources.shaderBuffers.CreateStructuredBuffer(DataElementSize * DataElementCount);
+	voxelInfoBuffer.data->SetName(as_wstring(name + "DataBuffer").c_str());
+	voxelInfoBuffer.view = resources.descriptors.createBufferView(voxelInfoBuffer.data.Get(), DataElementSize, DataElementCount);
 }
 
 void SceneVoxelsCascade::prepareForVoxelization(ID3D12GraphicsCommandList* commandList, TextureStatePair& voxelScene, TextureStatePair& prevVoxelScene, const GpuTexture3D& clearSceneTexture, ClearBufferComputeShader& clearBufferCS)
 {
-	clearBufferCS.dispatch(commandList, dataBuffer.Get(), DataElementSize * DataElementCount / sizeof(float));
+	//std::swap(currentBuffer, previousBuffer);
+	clearBufferCS.dispatch(commandList, voxelInfoBuffer.data.Get(), DataElementSize * DataElementCount / sizeof(float));
 
-	voxelScene.Transition(commandList, D3D12_RESOURCE_STATE_COPY_SOURCE);
-	prevVoxelScene.Transition(commandList, D3D12_RESOURCE_STATE_COPY_DEST);
+	TextureTransitions<2> tr;
+	tr.add(voxelScene, D3D12_RESOURCE_STATE_COPY_SOURCE);
+	tr.add(prevVoxelScene, D3D12_RESOURCE_STATE_COPY_DEST);
+	tr.push(commandList);
+
 	commandList->CopyResource(voxelPreviousSceneTexture.texture.Get(), voxelSceneTexture.texture.Get());
 
 	//fast clear
 	voxelScene.Transition(commandList, D3D12_RESOURCE_STATE_COPY_DEST);
 	commandList->CopyResource(voxelSceneTexture.texture.Get(), clearSceneTexture.texture.Get());
-//	commandList->CopyResource(voxelPreviousSceneTexture.texture.Get(), clearSceneTexture.texture.Get());
 
-	auto uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(dataBuffer.Get());
+	auto uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(voxelInfoBuffer.data.Get());
 	commandList->ResourceBarrier(1, &uavBarrier);
 
-	voxelScene.Transition(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-	prevVoxelScene.Transition(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	tr.add(voxelScene, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	tr.add(prevVoxelScene, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	tr.push(commandList);
 }
 
 void SceneVoxelsCascade::clearAll(ID3D12GraphicsCommandList* commandList, const GpuTexture3D& clearSceneTexture, ClearBufferComputeShader& clearBufferCS)
 {
-	clearBufferCS.dispatch(commandList, dataBuffer.Get(), DataElementSize * DataElementCount / sizeof(float));
+	clearBufferCS.dispatch(commandList, voxelInfoBuffer.data.Get(), DataElementSize * DataElementCount / sizeof(float));
 
-	voxelSceneTexture.Transition(commandList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
-	voxelPreviousSceneTexture.Transition(commandList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
+	TextureTransitions<2> tr;
+	tr.add(voxelSceneTexture, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
+	tr.add(voxelPreviousSceneTexture, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
+	tr.push(commandList);
 
 	commandList->CopyResource(voxelSceneTexture.texture.Get(), clearSceneTexture.texture.Get());
 	commandList->CopyResource(voxelPreviousSceneTexture.texture.Get(), clearSceneTexture.texture.Get());
 
 	{
-		auto uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(dataBuffer.Get());
+		auto uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(voxelInfoBuffer.data.Get());
 		commandList->ResourceBarrier(1, &uavBarrier);
 	}
 
-	voxelSceneTexture.Transition(commandList, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-	voxelPreviousSceneTexture.Transition(commandList, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	tr.add(voxelSceneTexture, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	tr.add(voxelPreviousSceneTexture, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	tr.push(commandList);
 }
 
 static Vector3 SnapToGrid(Vector3 position, float gridStep)
@@ -415,9 +417,6 @@ Vector3 SceneVoxelsCascade::update(const Vector3& cameraPosition)
 
 	auto diff = (settings.lastCenter - settings.center) / step;
 	settings.lastCenter = settings.center;
-
-// 	std::string logg = std::format("diff {} {} {} \n", diff.x, diff.y, diff.z);
-// 	OutputDebugStringA(logg.c_str());
 
 	return diff;
 }

@@ -2,10 +2,10 @@ struct SceneVoxelChunkInfo
 {
 	float3 Offset;
 	float Density;
-	float3 BouncesOffset;
-	float SceneSize;
+	float3 MoveOffset;
+	float WorldSize;
 	uint TexId;
-	uint TexIdBounces;
+	uint TexIdPrev;
 	uint ResIdData;
 };
 
@@ -13,10 +13,6 @@ struct SceneVoxelCbuffer
 {
 	float2 MiddleConeRatio;
 	float2 SideConeRatio;
-	float SteppingBounces;
-	float SteppingDiffuse;
-	float VoxelizeLighting;
-	float Padding;
 
 	SceneVoxelChunkInfo NearVoxels;
 	SceneVoxelChunkInfo FarVoxels;
@@ -26,44 +22,20 @@ struct SceneVoxelCbufferIndexed
 {
 	float2 MiddleConeRatio;
 	float2 SideConeRatio;
-	float SteppingBounces;
-	float SteppingDiffuse;
-	float VoxelizeLighting;
-	float Padding;
 
 	SceneVoxelChunkInfo Voxels[4];
 };
 
-float4 SampleVoxel(Texture3D cmap, SamplerState sampl, float3 pos, float3 dir, float lod)
+float4 SampleVoxel(Texture3D cmap, SamplerState sampl, float3 pos, float lod)
 {
-#ifndef GI_MAX
 	return cmap.SampleLevel(sampl, pos, lod);
-#endif
-
-	const float voxDim = 128.0f;
-	const float sampOff = 1;
-
-	float4 sampleX = dir.x < 0.0 ? cmap.SampleLevel(sampl, pos - float3(sampOff, 0, 0) / voxDim, lod) : cmap.SampleLevel(sampl, pos + float3(sampOff, 0, 0) / voxDim, lod);
-	float4 sampleY = dir.y < 0.0 ? cmap.SampleLevel(sampl, pos - float3(0, sampOff, 0) / voxDim, lod) : cmap.SampleLevel(sampl, pos + float3(0, sampOff, 0) / voxDim, lod);
-	float4 sampleZ = dir.z < 0.0 ? cmap.SampleLevel(sampl, pos - float3(0, 0, sampOff) / voxDim, lod) : cmap.SampleLevel(sampl, pos + float3(0, 0, sampOff) / voxDim, lod);
-
-	float3 wts = abs(dir);
-
-	float invSampleMag = 1.0 / (wts.x + wts.y + wts.z + 0.0001);
-	wts *= invSampleMag;
-
-	float4 filtered;
-	filtered.xyz = (sampleX.xyz * wts.x + sampleY.xyz * wts.y + sampleZ.xyz * wts.z);
-	filtered.w = (sampleX.w * wts.x + sampleY.w * wts.y + sampleZ.w * wts.z);
-
-	return filtered;
 }
 
 float4 ConeTraceImpl(float3 o, float3 d, float coneRatio, float maxDist, Texture3D voxelTexture, SamplerState sampl)
 {
 	const float voxDim = 128.0f;
 	const float minDiam = 1.0 / voxDim;
-	const float startDist = minDiam * 2;
+	const float startDist = minDiam * 1.5f;
 	float dist = startDist;
 	float3 samplePos = o;
 	float4 accum = float4(0, 0, 0, 0);
@@ -74,17 +46,10 @@ float4 ConeTraceImpl(float3 o, float3 d, float coneRatio, float maxDist, Texture
 		float sampleDiam = max(minDiam, coneRatio * dist);
 		float sampleLOD = max(0, log2(sampleDiam * voxDim));
 		float3 samplePos = o + d * dist;
-		float4 sampleVal = SampleVoxel(voxelTexture, sampl, samplePos, -d, sampleLOD);
-
-		float lodChange = max(0, sampleLOD * sampleLOD);
-		float insideVal = sampleVal.w;
-		sampleVal.rgb *= lodChange;
-
-		lodChange = max(0, sampleLOD);
-		sampleVal.w = saturate(lodChange * insideVal);
+		float4 voxel = SampleVoxel(voxelTexture, sampl, samplePos, sampleLOD);
 
 		float sampleWt = (1.0 - accum.w);
-		accum += sampleVal * sampleWt;
+		accum += voxel * sampleWt;
 
 		dist += sampleDiam;
 	}
@@ -120,7 +85,7 @@ float4 DebugConeTrace(float3 o, float3 d, float coneRatio, float maxDist, Textur
 		float sampleDiam = max(minDiam, coneRatio * dist);
 		float sampleLOD = max(0, log2(sampleDiam * voxDim) - 1);
 		float3 samplePos = o + d * dist;
-		float4 sampleVal = SampleVoxel(voxelTexture, sampl, samplePos, -d, sampleLOD);
+		float4 sampleVal = SampleVoxel(voxelTexture, sampl, samplePos, sampleLOD);
 
 		float lodChange = max(0, sampleLOD * sampleLOD);
 		float insideVal = sampleVal.w;
@@ -148,8 +113,68 @@ float4 DebugConeTrace(float3 o, float3 d, float coneRatio, float maxDist, Textur
 
 struct VoxelSceneData
 {
-	float4 Diffuse;
-	float3 Normal;
-	int Max;
-	float Occupy;
+	uint Diffuse;
+	uint Normal;
 };
+
+// Pack float4 [-1..1] into signed R10G10B10A2 (SNORM)
+uint PackRGB10A2_SNORM(float4 c)
+{
+    // Clamp to SNORM range
+    c = clamp(c, -1.0, 1.0);
+
+    // Convert to signed integers
+    int r = (int)(c.r * 511.0 + (c.r >= 0 ? 0.5 : -0.5));   // 10-bit signed
+    int g = (int)(c.g * 511.0 + (c.g >= 0 ? 0.5 : -0.5));
+    int b = (int)(c.b * 511.0 + (c.b >= 0 ? 0.5 : -0.5));
+    int a = (int)(c.a *   1.0 + (c.a >= 0 ? 0.5 : -0.5));   // 2-bit signed
+
+    // Reinterpret as unsigned for packing
+    uint ur = (uint)(r & 0x3FF);
+    uint ug = (uint)(g & 0x3FF);
+    uint ub = (uint)(b & 0x3FF);
+    uint ua = (uint)(a & 0x003);
+
+    return ur | (ug << 10) | (ub << 20) | (ua << 30);
+}
+
+// Unpack signed R10G10B10A2_SNORM back into float4 [-1..1]
+float4 UnpackRGB10A2_SNORM(uint v)
+{
+    // Extract raw bits
+    int r = (int)(v        & 0x3FF);
+    int g = (int)((v >> 10) & 0x3FF);
+    int b = (int)((v >> 20) & 0x3FF);
+    int a = (int)((v >> 30) & 0x003);
+
+    // Sign‑extend 10‑bit and 2‑bit values
+    r = (r << 22) >> 22;   // 10‑bit sign extend
+    g = (g << 22) >> 22;
+    b = (b << 22) >> 22;
+    a = (a << 30) >> 30;   // 2‑bit sign extend
+
+    float4 c;
+    c.r = r / 511.0;
+    c.g = g / 511.0;
+    c.b = b / 511.0;
+    c.a = a /   1.0;
+    return c;
+}
+
+// Pack float4 [0..1] into RGBA8 uint
+uint PackRGBA8(float4 c)
+{
+    uint4 u = (uint4)(saturate(c) * 255.0 + 0.5);
+    return (u.r) | (u.g << 8) | (u.b << 16) | (u.a << 24);
+}
+
+// Unpack RGBA8 uint back into float4 [0..1]
+float4 UnpackRGBA8(uint v)
+{
+    float4 c;
+    c.r = (v        & 0xFF) / 255.0;
+    c.g = ((v >> 8) & 0xFF) / 255.0;
+    c.b = ((v >> 16) & 0xFF) / 255.0;
+    c.a = ((v >> 24) & 0xFF) / 255.0;
+    return c;
+}

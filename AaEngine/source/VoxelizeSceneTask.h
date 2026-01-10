@@ -37,11 +37,16 @@ struct SceneVoxelsCascade
 
 	Vector3 update(const Vector3& cameraPosition);
 
-	const UINT DataElementSize = sizeof(float) * 9;
+	const UINT DataElementSize = sizeof(UINT) * 2;
 	const UINT DataElementCount = 128 * 128 * 128;
 
-	ComPtr<ID3D12Resource> dataBuffer;
-	ShaderViewUAV dataBufferView;
+	struct DataBuffer
+	{
+		ComPtr<ID3D12Resource> data;
+		ShaderViewUAV view;
+	};
+
+	DataBuffer voxelInfoBuffer;
 };
 
 class BounceVoxelsCS : public ComputeShader
@@ -49,6 +54,14 @@ class BounceVoxelsCS : public ComputeShader
 public:
 
 	void dispatch(ID3D12GraphicsCommandList* commandList, const std::span<float>& data, const ShaderTextureView&, const ShaderTextureView&, D3D12_GPU_VIRTUAL_ADDRESS);
+};
+
+struct VoxelTracingParams
+{
+	float voxelSteppingBounces = 0.075f;
+	float voxelSteppingDiffuse = 0.0f;
+	Vector2 middleConeRatioDistance = { 1.05f, 1.5f };
+	Vector2 sideConeRatioDistance = { 2.2f, 5.f };
 };
 
 class VoxelizeSceneTask : public CompositorTask
@@ -74,13 +87,15 @@ public:
 	void clear();
 	void clear(ID3D12GraphicsCommandList* c);
 
+	VoxelTracingParams params;
+
 private:
 
 	static constexpr UINT CascadesCount = 4;
 
 	CommandsData voxelizeCommands;
 	HANDLE eventBegin{};
-	HANDLE eventFinish;
+	HANDLE eventFinish{};
 	std::thread worker;
 
 	bool running = true;
@@ -93,10 +108,10 @@ private:
 	{
 		Vector3 voxelOffset;
 		float voxelDensity;
-		Vector3 diff;
+		Vector3 moveOffset;
 		float voxelSceneSize;
 		UINT texId;
-		UINT texIdBounces;
+		UINT texIdPrev;
 		UINT resIdDataBuffer;
 	};
 
@@ -104,10 +119,6 @@ private:
 	{
 		Vector2 middleConeRatioDistance = { 1, 0.9f };
 		Vector2 sideConeRatioDistance = { 2, 0.8f };
-		float steppingBounces = 0.07f;
-		float steppingDiffuse = 0.03f;
-		float voxelizeLighting = 0.0f;
-		float padding;
 
 		SceneVoxelChunkInfo cascadeInfo[CascadesCount];
 	}
@@ -123,7 +134,7 @@ private:
 
 	void bounceCascade(CommandsData& commands, SceneVoxelsCascade& chunk);
 
-	UINT buildCounter[CascadesCount];
+	UINT buildCounter[CascadesCount]{};
 	bool reset = false;
 
 	BounceVoxelsCS bouncesCS;

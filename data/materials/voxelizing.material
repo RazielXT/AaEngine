@@ -1,7 +1,25 @@
 material Voxelize
 {
-	vertex_shader voxelizeVS
-	pixel_shader voxelizePS
+	vertex_shader
+	{
+		file voxelizing2.hlsl
+		entry VS_Main
+		profile vs_6_6
+	}
+
+	geometry_shader
+	{
+		file voxelizing2.hlsl
+		entry GS_Main
+		profile gs_6_6
+	}
+
+	pixel_shader
+	{
+		file voxelizing2.hlsl
+		entry PS_Main
+		profile ps_6_6
+	}
 
 	culling none
 	depth off
@@ -14,12 +32,11 @@ material Voxelize
 
 material VoxelizeInstancing : Voxelize
 {
-	vertex_shader voxelizeVSInstancing
-	pixel_shader voxelizePSInstancing
+	shader_defines INSTANCED
 }
 
 material VoxelizeTerrain : Voxelize
 {
-	vertex_shader voxelizeVSTerrain
-	pixel_shader voxelizePSTerrain
+	conservative_rasterization
+	shader_defines TERRAIN
 }

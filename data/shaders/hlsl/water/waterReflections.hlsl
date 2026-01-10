@@ -207,7 +207,7 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 			stepSize += 1 / 16.f;
 
 			// Convert to UVW coordinates (range [0, 1])
-			float3 voxelUV = (rayPos - Voxels.Offset) / Voxels.SceneSize;
+			float3 voxelUV = (rayPos - Voxels.Offset) / Voxels.WorldSize;
 
 			if (voxelUV.x <= 0 || voxelUV.x >= 1 || voxelUV.y <= 0 || voxelUV.y >= 1 || voxelUV.z <= 0 || voxelUV.z >= 1)
 			{
@@ -226,7 +226,7 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 				for (int i = 4; i >= 0; i--)
 				{
 					float3 rayPosDetail = rayPos - rayDir * i * detailStepSize + jjj;
-					float3 voxelUV = (rayPosDetail - Voxels.Offset) / Voxels.SceneSize;
+					float3 voxelUV = (rayPosDetail - Voxels.Offset) / Voxels.WorldSize;
 					nearVoxel = voxelmap.SampleLevel(PointSampler, voxelUV, 0);
 					
 					if (nearVoxel.a > 0.f)

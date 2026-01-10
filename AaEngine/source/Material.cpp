@@ -36,12 +36,12 @@ void MaterialBase::Load(ShaderLibrary& shaderLib)
 	if (rootSignature)
 		return;
 
-	for (int i = 0; i < (int)ShaderType::COUNT; i++)
+	for (auto type : ShaderTypes())
 	{
-		if (auto& shaderName = ref.pipeline.shaders[i]; !shaderName.empty())
+		if (auto& shaderName = ref.pipeline.shaders[type]; !shaderName.empty())
 		{
-			if (shaders[i] = shaderLib.getShader(shaderName, ShaderType(i)))
-				info.add(*shaders[i], (ShaderType)i);
+			if (shaders[type] = shaderLib.getShader(shaderName, type))
+				info.add(*shaders[type], type);
 		}
 	}
 
@@ -108,22 +108,23 @@ ID3D12PipelineState* MaterialBase::CreatePipelineState(const std::vector<D3D12_I
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 	psoDesc.InputLayout = { layout.empty() ? nullptr : layout.data(), (UINT)layout.size() };
 	psoDesc.pRootSignature = rootSignature;
-	if (shaders[(int)ShaderType::Vertex])
-		psoDesc.VS = { shaders[(int)ShaderType::Vertex]->blob->GetBufferPointer(), shaders[(int)ShaderType::Vertex]->blob->GetBufferSize() };
-	if (shaders[(int)ShaderType::Pixel])
-		psoDesc.PS = { shaders[(int)ShaderType::Pixel]->blob->GetBufferPointer(), shaders[(int)ShaderType::Pixel]->blob->GetBufferSize() };
-	if (shaders[(int)ShaderType::Geometry])
-		psoDesc.GS = { shaders[(int)ShaderType::Geometry]->blob->GetBufferPointer(), shaders[(int)ShaderType::Geometry]->blob->GetBufferSize() };
+	if (shaders[ShaderType::Vertex])
+		psoDesc.VS = { shaders[ShaderType::Vertex]->blob->GetBufferPointer(), shaders[ShaderType::Vertex]->blob->GetBufferSize() };
+	if (shaders[ShaderType::Pixel])
+		psoDesc.PS = { shaders[ShaderType::Pixel]->blob->GetBufferPointer(), shaders[ShaderType::Pixel]->blob->GetBufferSize() };
+	if (shaders[ShaderType::Geometry])
+		psoDesc.GS = { shaders[ShaderType::Geometry]->blob->GetBufferPointer(), shaders[ShaderType::Geometry]->blob->GetBufferSize() };
 	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	psoDesc.RasterizerState.CullMode = ref.pipeline.culling;
 	psoDesc.RasterizerState.FillMode = ref.pipeline.fill;
 	psoDesc.RasterizerState.DepthBias = ref.pipeline.depthBias;
 	psoDesc.RasterizerState.SlopeScaledDepthBias = technique.slopeScaledDepthBias;
+	psoDesc.RasterizerState.ConservativeRaster = ref.pipeline.conservativeRasterization;
 
 	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	if (!shaders[(int)ShaderType::Pixel] || target.empty())
+	if (!shaders[ShaderType::Pixel] || target.empty())
 	{
 		psoDesc.NumRenderTargets = 0;
 		psoDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
@@ -214,7 +215,7 @@ void MaterialBase::ReloadPipeline(ShaderLibrary& shaderLib)
 
 bool MaterialBase::ContainsShader(const LoadedShader* shader) const
 {
-	for (auto s : shaders)
+	for (auto s : shaders.data)
 	{
 		if (s == shader)
 			return true;

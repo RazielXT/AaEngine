@@ -112,6 +112,7 @@
     <ClCompile Include="source\MathUtils.cpp" />
     <ClCompile Include="source\SceneSkybox.cpp" />
     <ClCompile Include="source\ShaderDefines.cpp" />
+    <ClCompile Include="source\ShaderType.cpp" />
     <ClCompile Include="source\SystemUtils.cpp" />
     <ClCompile Include="source\TerrainGenerationCS.cpp" />
     <ClCompile Include="source\TerrainGenerator.cpp" />
@@ -208,6 +209,7 @@
     <ClInclude Include="source\GrassInitComputeShader.h" />
     <ClInclude Include="source\SceneSkybox.h" />
     <ClInclude Include="source\ShaderDefines.h" />
+    <ClInclude Include="source\ShaderType.h" />
     <ClInclude Include="source\StringUtils.h" />
     <ClInclude Include="source\ImguiDebugWindowTask.h" />
     <ClInclude Include="source\AoPrepareDepthBuffersCS.h" />

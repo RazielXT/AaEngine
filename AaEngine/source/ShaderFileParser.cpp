@@ -3,7 +3,7 @@
 #include <filesystem>
 #include "ConfigParser.h"
 
-using ParsedObjects = std::map<std::string, const Config::Object*>[(int)ShaderType::COUNT];
+using ParsedObjects = ShaderTypesArray<std::map<std::string, const Config::Object*>>;
 
 void ShaderFileParser::ParseShaderParams(ShaderRef& shader, const Config::Object& obj)
 {
@@ -57,7 +57,7 @@ static void ParseShaderParams(ShaderRef& shader, ShaderType type, const Config::
 			auto parentName = obj.params[i];
 			if (!parentName.empty())
 			{
-				for (auto& [name, parent] : previous[(int)type])
+				for (auto& [name, parent] : previous[type])
 				{
 					if (name == parentName)
 						ParseShaderParams(shader, type, *parent, previous);
@@ -69,21 +69,6 @@ static void ParseShaderParams(ShaderRef& shader, ShaderType type, const Config::
 	ShaderFileParser::ParseShaderParams(shader, obj);
 }
 
-ShaderType ShaderFileParser::ParseShaderType(const std::string& t)
-{
-	ShaderType type = ShaderType::None;
-	if (t == "vertex_shader")
-		type = ShaderType::Vertex;
-	else if (t == "pixel_shader")
-		type = ShaderType::Pixel;
-	else if (t == "geometry_shader")
-		type = ShaderType::Geometry;
-	else if (t == "compute_shader")
-		type = ShaderType::Compute;
-
-	return type;
-}
-
 void parseShaderFile(shaderRefMaps& shds, const std::string& file)
 {
 	auto objects = Config::Parse(file);
@@ -91,15 +76,15 @@ void parseShaderFile(shaderRefMaps& shds, const std::string& file)
 	ParsedObjects parsed;
 	for (auto& obj : objects)
 	{
-		auto type = ShaderFileParser::ParseShaderType(obj.type);
+		auto type = ShaderTypeString::Parse(obj.type);
 		
 		if (type != ShaderType::None)
 		{
 			ShaderRef shader;
 			ParseShaderParams(shader, type, obj, parsed);
 
-			shds.shaderRefs[(int)type][obj.value] = shader;
-			parsed[(int)type][obj.value] = &obj;
+			shds.shaderRefs[type][obj.value] = shader;
+			parsed[type][obj.value] = &obj;
 		}
 	}
 }
@@ -130,7 +115,7 @@ shaderRefMaps ShaderFileParser::parseAllShaderFiles(std::string directory, bool 
 	parseAllShaderFiles(shaders, directory, subFolders);
 
 	size_t c = 0;
-	for (const auto& s : shaders.shaderRefs)
+	for (const auto& s : shaders.shaderRefs.data)
 		c += s.size();
 
 	FileLogger::log("Total shaders found: " + std::to_string(c));

@@ -29,7 +29,7 @@ using SamplerRef = SamplerInfo;
 
 struct MaterialPipelineInfo
 {
-	std::string shaders[(int)ShaderType::COUNT];
+	ShaderTypesArray<std::string> shaders;
 
 	MaterialDepthState depth;
 	MaterialBlendState blend;

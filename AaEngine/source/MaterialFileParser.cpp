@@ -44,11 +44,11 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 
 		if (member.type.ends_with("_shader"))
 		{
-			auto shaderType = ShaderFileParser::ParseShaderType(member.type);
+			auto shaderType = ShaderTypeString::Parse(member.type);
 
 			if (shaderType != ShaderType::None)
 			{
-				auto& target = mat.pipeline.shaders[(int)shaderType];
+				auto& target = mat.pipeline.shaders[shaderType];
 
 				if (!member.value.empty())
 					target = member.value;
@@ -56,10 +56,8 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 				{
 					if (member.value.empty() && !member.children.empty())
 					{
-						auto generatedName = target = member.type + "_" + mat.name;
-						auto shaderType = ShaderFileParser::ParseShaderType(member.type);
-
-						auto& ref = shaders.shaderRefs[(int)shaderType][generatedName];
+						auto generatedName = target = ShaderTypeString::ShortName(shaderType) + "_" + mat.name;
+						auto& ref = shaders.shaderRefs[shaderType][generatedName];
 						ShaderFileParser::ParseShaderParams(ref, member);
 					}
 				}
@@ -73,7 +71,7 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 					{
 						auto customizedName = sourceShader + "_" + mat.name;
 
-						auto& customization = shaders.shaderCustomizations[(int)type][customizedName];
+						auto& customization = shaders.shaderCustomizations[type][customizedName];
 
 						if (customization.sourceName.empty())
 						{
@@ -85,8 +83,8 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 					}
 				};
 
-			for (int i = 0; i < (int)ShaderType::COUNT; i++)
-				addCustomizationDefines(mat.pipeline.shaders[i], ShaderType(i));
+			for (auto type : ShaderTypes())
+				addCustomizationDefines(mat.pipeline.shaders[type], type);
 		}
 		else if (member.type == "depth")
 		{

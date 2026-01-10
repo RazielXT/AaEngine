@@ -4,16 +4,7 @@
 #include <string>
 #include <vector>
 #include "ConfigParser.h"
-
-enum class ShaderType
-{
-	Vertex,
-	Pixel,
-	Geometry,
-	Compute,
-	COUNT,
-	None
-};
+#include "ShaderType.h"
 
 struct ConstantDefault
 {
@@ -31,21 +22,20 @@ struct ShaderRef
 
 struct shaderRefMaps
 {
-	std::map<std::string, ShaderRef> shaderRefs[(int)ShaderType::COUNT];
+	ShaderTypesArray<std::map<std::string, ShaderRef>> shaderRefs;
 
 	struct ShaderCustomization
 	{
 		std::string sourceName;
 		ShaderRef customization;
 	};
-	std::map<std::string, ShaderCustomization> shaderCustomizations[(int)ShaderType::COUNT];
+	ShaderTypesArray<std::map<std::string, ShaderCustomization>> shaderCustomizations;
 };
 
 namespace ShaderFileParser
 {
 	void ParseShaderParams(ShaderRef& ref, const Config::Object& obj);
 	void ParseShaderDefines(ShaderRef& ref, const Config::Object& obj);
-	ShaderType ParseShaderType(const std::string& type);
 
 	shaderRefMaps parseAllShaderFiles(std::string directory, bool subFolders = false);
 };

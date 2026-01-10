@@ -34,7 +34,7 @@ public:
 
 private:
 
-	std::map<std::string, std::unique_ptr<LoadedShader>> loadedShaders[(int)ShaderType::COUNT];
+	ShaderTypesArray<std::map<std::string, std::unique_ptr<LoadedShader>>> loadedShaders;
 
 	ShaderCompiler compiler;
 

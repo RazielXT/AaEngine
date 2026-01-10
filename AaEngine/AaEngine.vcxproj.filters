@@ -313,6 +313,9 @@
     <ClCompile Include="source\RenderTargetHeap.cpp">
       <Filter>Source Files\RenderCore</Filter>
     </ClCompile>
+    <ClCompile Include="source\ShaderType.cpp">
+      <Filter>Source Files\Resources\Shader</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\TargetWindow.h">
@@ -590,6 +593,9 @@
     </ClInclude>
     <ClInclude Include="source\ResourcesView.h">
       <Filter>Source Files\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ShaderType.h">
+      <Filter>Source Files\Resources\Shader</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

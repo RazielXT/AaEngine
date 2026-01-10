@@ -35,47 +35,16 @@ float getPssmShadow(float4 wp, float cameraDistance, float dotView, SamplerState
 		lerpPoint = (cameraDistance - params.ShadowCascadeDistance1) / (params.ShadowCascadeDistance2 - params.ShadowCascadeDistance1);
 	}
 
+#ifdef CFG_SHADOW_HIGH
 	float shadow = getCascadeShadow(wp, ShadowIndex, ShadowBias[ShadowIndex] * biasSlopeAdjust, sampler, params);
 	float nextShadow = getCascadeShadow(wp, ShadowIndex + 1, ShadowBias[ShadowIndex + 1] * biasSlopeAdjust, sampler, params);
 
-	shadow = lerp(shadow, nextShadow, saturate(lerpPoint));
-
-	return shadow;
-}
-
-float getCascadeShadowLow(float4 wp, uint ShadowIndex, float ShadowBias, SamplerState sampler, SunParams params)
-{
-	Texture2D<float> shadowmap = ResourceDescriptorHeap[params.TexIdShadowMap0 + ShadowIndex];
-    float4 sunLookPos = mul(wp, params.ShadowMatrix[ShadowIndex]);
-    sunLookPos.xy = sunLookPos.xy / sunLookPos.w;
-	sunLookPos.xy /= float2(2, -2);
-    sunLookPos.xy += 0.5;
-
-	sunLookPos.z -= ShadowBias;
-
-	return CalcShadowTermSoftPCF(shadowmap, sampler, sunLookPos.z, sunLookPos.xy, 3, params.ShadowMapSize, params.ShadowMapSizeInv);
-}
-
-float getPssmShadowLow(float4 wp, float cameraDistance, float dotView, SamplerState sampler, SunParams params)
-{
-	float biasSlopeAdjust = 1;
-
-	if (dotView < 0.5)
-		biasSlopeAdjust += (0.5 - dotView) * 5;
-
-	uint ShadowIndex = 0;
-	float ShadowBias[4] = { 0.0001, 0.0002, 0.001, 0.003 };
-
-	if (params.ShadowCascadeDistance0 < cameraDistance)
+	return lerp(shadow, nextShadow, saturate(lerpPoint));
+#else
+	if (params.ShadowCascadeDistance2 < cameraDistance)
 	{
-		ShadowIndex = 1;
+		ShadowIndex = 3;
 	}
-	if (params.ShadowCascadeDistance1 < cameraDistance)
-	{
-		ShadowIndex = 2;
-	}
-
-	float shadow = getCascadeShadow(wp, ShadowIndex, ShadowBias[ShadowIndex] * biasSlopeAdjust, sampler, params);
-
-	return shadow;
+	return getCascadeShadow(wp, ShadowIndex, ShadowBias[ShadowIndex] * biasSlopeAdjust, sampler, params);
+#endif
 }

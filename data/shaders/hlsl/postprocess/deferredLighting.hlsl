@@ -33,11 +33,7 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	float4 worldPosition = float4(ReconstructWorldPosition(input.TexCoord, depth, InvViewProjectionMatrix), 1);
 	float camDistance = length(CameraPosition - worldPosition.xyz);
 
-#ifdef CFG_SHADOW_HIGH
 	float directShadow = getPssmShadow(worldPosition, camDistance, dotLighting, ShadowSampler, Sun);
-#else
-	float directShadow = getPssmShadowLow(worldPosition, camDistance, dotLighting, ShadowSampler, Sun);
-#endif
 
 	float3 vctLighting = vctMap.Load(int3(input.Position.xy, 0)).rgb;
 	float3 lighting = dotLighting * Sun.Color * directShadow + vctLighting;

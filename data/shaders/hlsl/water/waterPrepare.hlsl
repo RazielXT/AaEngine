@@ -17,6 +17,7 @@ uint TexIdNormal;
 uint TexIdSceneDepthHigh;
 uint TexIdCaustics;
 uint TexIdMeshNormal;
+float2 GridHeightWidth;
 
 #ifdef ENTITY_ID
 uint EntityId;
@@ -51,8 +52,8 @@ PSInput VSMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
 	GridRuntimeParams p;
 	p.cameraPos = CameraPosition;
 	p.worldPos = WorldPosition;
-	p.heightScale = 1.f;
-	p.gridSize = 102.4f;
+	p.heightScale = GridHeightWidth.x;
+	p.gridSize = GridHeightWidth.y;
 	p.tilesWidth = 64;
 	p.tileResolution = 33;
 
@@ -81,7 +82,7 @@ PSOutput PSMain(PSInput input)
 	float3 groundPosition = ReconstructWorldPosition(ScreenUV, groundZ, InvViewProjectionMatrix);
 	float groundDistance = length(input.worldPosition.xyz - groundPosition);
 
-	const float FadeDistance = 1.5f;
+	const float FadeDistance = 200;
 	float fade = groundDistance / FadeDistance;
 
 	float4 albedo = GetTexture(TexIdDiffuse).Sample(LinearWrapSampler, input.uv * 0.1);

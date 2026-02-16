@@ -26,7 +26,7 @@ material Voxelize
 
 	texture Diffuse
 	{
-		file white.png
+		file white.dds
 	}
 }
 
@@ -35,8 +35,8 @@ material VoxelizeInstancing : Voxelize
 	shader_defines INSTANCED
 }
 
-material VoxelizeTerrain : Voxelize
+material VoxelizeGridTerrain : Voxelize
 {
 	conservative_rasterization
-	shader_defines TERRAIN
+	shader_defines GRID
 }

@@ -62,12 +62,13 @@ PSOutput PSMain(PS_Input pin)
 	SamplerState diffuse_sampler = SamplerDescriptorHeap[0];
 
 	float4 albedo = GetTexture(TexIdDiffuse).Sample(diffuse_sampler, pin.uv);
+
 #ifdef ALPHA_TEST
 	if (albedo.a < 0.37f)
 		discard;
 #endif
-	albedo.rgb *= MaterialColor;
 
+	albedo.rgb *= MaterialColor;
 
 	float3 normalTex = float3(GetTexture(TexIdNormal).Sample(diffuse_sampler, pin.uv).rg, 1);
 
@@ -79,7 +80,7 @@ PSOutput PSMain(PS_Input pin)
 	float3 worldNormal = mul(normalTex.xyz * 2 - 1, tbn);
 
 	PSOutput output;
-	output.albedo = albedo;
+	output.albedo = float4(albedo.rgb, 0);
 	output.normals = float4(worldNormal, 1);
 
 	output.motionVectors = float4((pin.previousPosition.xy / pin.previousPosition.w - pin.currentPosition.xy / pin.currentPosition.w) * ViewportSize, 0, 0);

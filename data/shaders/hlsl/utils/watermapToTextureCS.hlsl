@@ -45,8 +45,8 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
 
 	WaterNormal[DTid.xy] = normal.xz;
 
-	float2 worldPosOffset = { -20, 30 };
-	float worldScale = 102.4 / 1024;
+	float2 worldPosOffset = { 0, 0 };
+	float worldScale = 8000.0f / 1024;
 	float2 worldPos = worldScale * DTid.xy + worldPosOffset;
 
 	for (int x = -1; x <= 1; x++)

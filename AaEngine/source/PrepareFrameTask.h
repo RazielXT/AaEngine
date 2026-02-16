@@ -13,6 +13,5 @@ public:
 	void run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
 	void runCompute(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
 
-	bool writesSyncCommands(CompositorPass&) const override;
-	bool writesSyncComputeCommands(CompositorPass&) const override;
+	RunType getRunType(CompositorPass&) const override;
 };

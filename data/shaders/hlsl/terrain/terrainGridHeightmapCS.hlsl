@@ -30,5 +30,5 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
 
 	//OutHeightmap[DTid.xy] = lerp(heightDetail2 * smoothstep(0.4,1,heightDetail), height2 * smoothstep(0,0.5,saturate(height)), 0.98f) * 1.65f - 0.5f;
 
-	OutHeightmap[DTid.xy] = lerp(heightDetail2 * smoothstep(0.4,1,heightDetail), height2 * smoothstep(0,0.8,saturate(height)), 0.98f) * 1.0;
+	OutHeightmap[DTid.xy] = height;//lerp(heightDetail2 * smoothstep(0.4,1,heightDetail), height2 * smoothstep(0,0.8,saturate(height)), 0.98f) * 1.0;
 }

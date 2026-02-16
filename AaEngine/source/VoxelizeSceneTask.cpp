@@ -17,6 +17,8 @@ VoxelizeSceneTask::~VoxelizeSceneTask()
 {
 	running = false;
 
+	shadowMaps.removeShadowMap(shadowMap);
+
 	if (eventBegin)
 	{
 		SetEvent(eventBegin);
@@ -39,14 +41,14 @@ void VoxelizeSceneTask::clear()
 	reset = true;
 }
 
-bool VoxelizeSceneTask::writesSyncComputeCommands(CompositorPass& pass) const
+CompositorTask::RunType VoxelizeSceneTask::getRunType(CompositorPass& pass) const
 {
-	return pass.info.entry == "Bounces";
-}
+	if (pass.info.entry == "EndFrame")
+		return RunType::SyncCommands;
+	if (pass.info.entry == "Bounces")
+		return RunType::SyncComputeCommands;
 
-bool VoxelizeSceneTask::writesSyncCommands(CompositorPass& pass) const
-{
-	return pass.info.entry == "EndFrame";
+	return RunType::Generic;
 }
 
 void VoxelizeSceneTask::revoxelize()
@@ -78,7 +80,11 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 	if (pass.info.entry != "Voxelize")
 		return {};
 
-	constexpr float CascadeDistances[CascadesCount] = { 200, 600, 2000, 6000 };
+	shadowMaps.createShadowMap(shadowMap, 256, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, "VoxelShadowMap");
+	shadowRenderables = sceneMgr.getRenderables(Order::Normal);
+	shadowQueue = sceneMgr.createQueue({}, MaterialTechnique::DepthShadowmap);
+
+	constexpr float CascadeDistances[CascadesCount] = { 200, 400, 800, 1600 };
 	for (UINT i = 0; i < CascadesCount; i++)
 	{
 		auto& voxels = voxelCascades[i];
@@ -241,6 +247,8 @@ void VoxelizeSceneTask::voxelizeCascades(GpuTextureStates& viewportOutput)
 
 void VoxelizeSceneTask::voxelizeCascade(TextureStatePair& voxelScene, TextureStatePair& prevVoxelScene, GpuTextureStates& viewportOutput, SceneVoxelsCascade& cascade)
 {
+	renderShadowMap(voxelizeCommands.commandList, cascade.settings.extends);
+
 	viewportOutput.texture->PrepareAsRenderTarget(voxelizeCommands.commandList, viewportOutput.previousState, true);
 
 	cascade.prepareForVoxelization(voxelizeCommands.commandList, voxelScene, prevVoxelScene, clearSceneTexture, clearBufferCS);
@@ -261,10 +269,14 @@ void VoxelizeSceneTask::voxelizeCascade(TextureStatePair& voxelScene, TextureSta
 	ShaderConstantsProvider constants(provider.params, sceneInfo, camera, *viewportOutput.texture);
 	constants.uavBarrier = cascade.voxelInfoBuffer.data.Get();
 
-	sceneQueue->iterateMaterials([&cascade](AssignedMaterial* material)
+	auto shadowMatrix = XMMatrixTranspose(shadowMap.camera.getViewProjectionMatrix());
+
+	sceneQueue->iterateMaterials([&](AssignedMaterial* material)
 		{
 			material->SetUAV(cascade.voxelInfoBuffer.data.Get(), 0);
 			material->SetParameter("VoxelIdx", &cascade.idx);
+			material->SetParameter("ShadowMatrix", &shadowMatrix);
+			material->SetParameter("ShadowMapIdx", &shadowMap.texture.view.srvHeapIndex);
 		});
 
 	//Z
@@ -331,6 +343,22 @@ void VoxelizeSceneTask::bounceCascade(CommandsData& commands, SceneVoxelsCascade
 	voxelSceneTexture_state.Transition(commands.commandList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
 	computeMips.dispatch(commands.commandList, cascade.voxelSceneTexture);
+}
+
+void VoxelizeSceneTask::renderShadowMap(ID3D12GraphicsCommandList* commandList, float extends)
+{
+	shadowMaps.updateShadowMap(shadowMap, ctx.camera->getPosition(), extends * 1.5f);
+
+	CommandsMarker marker(commandList, "VoxelShadowMap", PixColor::DarkTurquoise);
+
+	shadowRenderables->updateVisibility(shadowMap.camera, shadowRenderablesData);
+
+	shadowMap.texture.PrepareAsDepthTarget(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+
+	ShaderConstantsProvider constants(provider.params, shadowRenderablesData, shadowMap.camera, *ctx.camera, shadowMap.texture);
+	shadowQueue->renderObjects(constants, commandList);
+
+	shadowMap.texture.PrepareAsView(commandList, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 }
 
 void SceneVoxelsCascade::initialize(const std::string& n, ID3D12Device* device, GraphicsResources& resources)

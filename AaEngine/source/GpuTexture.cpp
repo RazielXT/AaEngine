@@ -11,6 +11,7 @@ void GpuTexture2D::InitRenderTarget(ID3D12Device* device, UINT w, UINT h, Render
 	width = w;
 	height = h;
 	format = f;
+	depthOrArraySize = params.arraySize;
 
 	params.flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 	CreateTextureBuffer(device, state, params);
@@ -23,6 +24,7 @@ void GpuTexture2D::InitUAV(ID3D12Device* device, UINT w, UINT h, DXGI_FORMAT f, 
 	width = w;
 	height = h;
 	format = f;
+	depthOrArraySize = params.arraySize;
 
 	params.flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 	CreateTextureBuffer(device, state, params);
@@ -37,7 +39,7 @@ void GpuTexture2D::InitDepth(ID3D12Device* device, UINT w, UINT h, RenderTargetH
 
 	CreateDepthBuffer(device, initialState);
 
-	heap.CreateDepthTargetHandle(device, texture, view.handle);
+	heap.CreateDepthTargetHandle(device, texture, view);
 }
 
 void GpuTexture2D::InitExistingRenderTarget(ID3D12Resource* textureSource, ID3D12Device* device, UINT w, UINT h, RenderTargetHeap& heap, DXGI_FORMAT f)
@@ -47,7 +49,7 @@ void GpuTexture2D::InitExistingRenderTarget(ID3D12Resource* textureSource, ID3D1
 	format = f;
 
 	texture.Attach(textureSource);
-	heap.CreateRenderTargetHandle(device, texture, view);
+	heap.CreateRenderTargetHandle(device, texture, view, f);
 }
 
 void GpuTexture2D::PrepareAsRenderTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from, bool clear)
@@ -233,6 +235,16 @@ void RenderTargetTexturesView::PrepareAsTarget(ID3D12GraphicsCommandList* comman
 		for (size_t i = 0; i < states.size() - depth; i++)
 			commandList->ClearRenderTargetView(rtvHandles[i], &ClearColor.x, 0, nullptr);
 	}
+}
+
+void RenderTargetTexturesView::PrepareSubrangeAsTarget(ID3D12GraphicsCommandList* commandList, UINT count, UINT offset, GpuTexture2D* depth)
+{
+	auto vp = CD3DX12_VIEWPORT(0.0f, 0.0f, width, height);
+	commandList->RSSetViewports(1, &vp);
+	auto rect = CD3DX12_RECT(0, 0, width, height);
+	commandList->RSSetScissorRects(1, &rect);
+
+	commandList->OMSetRenderTargets(count, rtvHandles.data() + offset, contiguous, depth ? &depth->view.handle : nullptr);
 }
 
 void GpuTextureStates::Transition(ID3D12GraphicsCommandList* commandList, const std::vector<GpuTextureStates>& states)

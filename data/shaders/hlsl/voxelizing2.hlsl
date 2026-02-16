@@ -1,9 +1,24 @@
 #include "VoxelConeTracingCommon.hlsl"
 #include "ShadowsCommon.hlsl"
 
+#ifdef GRID
+#define GRID_PADDING
+#include "grid/heightmapGridReconstruction.hlsl"
+#endif
+
+float4x4 ShadowMatrix;
+#ifdef GRID
+float3 WorldPosition;
+uint TexIdHeightmap;
+uint TexIdNormalmap;
+float3 CameraPosition;
+float2 GridHeightWidth;
+#else
 float4x4 WorldMatrix;
 float3 MaterialColor;
+#endif
 uint TexIdDiffuse;
+uint ShadowMapIdx;
 uint VoxelIdx;
 
 cbuffer SceneVoxelInfo : register(b1)
@@ -18,34 +33,54 @@ cbuffer PSSMShadows : register(b2)
 
 RWStructuredBuffer<VoxelSceneData> SceneVoxelData : register(u0);
 
-struct VS_Input
-{
-	float4 p : POSITION;
-	float3 normal : NORMAL;
-
-#ifndef TERRAIN
-	float2 uv : TEXCOORD0;
-#endif
-};
+SamplerState LinearSampler : register(s0);
+SamplerState ShadowSampler : register(s1);
 
 struct GS_Input
 {
-	float3 wp : POSITION;   // world position
-	float3 normal  : NORMAL;
-#ifndef TERRAIN
+	float3 wp : POSITION;
 	float2 uv : TEXCOORD0;
+#ifndef GRID
+	float3 normal  : NORMAL;
 #endif
 };
 
 struct PS_Input
 {
-	float4 pos : SV_POSITION;   // voxel projection position
+	float4 pos : SV_POSITION; // voxel projection position
 	float4 wp : TEXCOORD1;
-	float3 normal : NORMAL;
-
-#ifndef TERRAIN
 	float2 uv : TEXCOORD0;
+#ifndef GRID
+	float3 normal : NORMAL;
 #endif
+};
+
+#ifdef GRID
+StructuredBuffer<GridTileData> InstancingBuffer : register(t0);
+
+GS_Input VS_Main(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
+{
+	GridRuntimeParams p;
+	p.cameraPos = CameraPosition;
+	p.worldPos = WorldPosition;
+	p.heightScale = GridHeightWidth.x;
+	p.gridSize = GridHeightWidth.y;
+	p.tilesWidth = 512;
+	p.tileResolution = 33;
+
+	GridVertexInfo info = ReadGridVertexInfo(InstancingBuffer[instanceID], vertexID, ResourceDescriptorHeap[TexIdHeightmap], LinearSampler, p);
+
+	GS_Input result;
+	result.wp = info.position.xyz;
+	result.uv = info.uv;
+	return result;
+}
+#else
+struct VS_Input
+{
+	float4 p : POSITION;
+	float3 normal : NORMAL;
+	float2 uv : TEXCOORD0;
 };
 
 GS_Input VS_Main(VS_Input vin)
@@ -53,13 +88,12 @@ GS_Input VS_Main(VS_Input vin)
 	GS_Input o;
 	o.wp = mul(vin.p, WorldMatrix).xyz;
 	o.normal  = mul(vin.normal, (float3x3)WorldMatrix);
-
-#ifndef TERRAIN
 	o.uv = vin.uv;
-#endif
 
 	return o;
 }
+#endif
+
 
 [maxvertexcount(3)]
 void GS_Main(triangle GS_Input input[3], inout TriangleStream<PS_Input> triStream)
@@ -108,10 +142,10 @@ void GS_Main(triangle GS_Input input[3], inout TriangleStream<PS_Input> triStrea
 		}
 
 		o.pos = float4(clipPos.xy * 2.0f - 1.0f, clipPos.z, 1.0f);
-		o.normal = input[i].normal;
 		o.wp = float4(wp, 1.0f);
-	#ifndef TERRAIN
 		o.uv = input[i].uv;
+	#ifndef GRID
+		o.normal = input[i].normal;
 	#endif
 
 		triStream.Append(o);
@@ -128,9 +162,6 @@ Texture3D<float4> GetTexture3D(uint index)
 	return ResourceDescriptorHeap[index];
 }
 
-SamplerState LinearWrapSampler : register(s0);
-SamplerState ShadowSampler : register(s1);
-
 float readShadowmap(Texture2D shadowmap, float2 shadowCoord)
 {
 	return shadowmap.SampleLevel(ShadowSampler, shadowCoord, 0).r;
@@ -138,8 +169,8 @@ float readShadowmap(Texture2D shadowmap, float2 shadowCoord)
 
 float getShadow(float4 wp)
 {
-	Texture2D shadowmap = GetTexture(Sun.TexIdShadowMap0 + 1);
-	float4 sunLookPos = mul(wp, Sun.ShadowMatrix[1]);
+	Texture2D shadowmap = GetTexture(ShadowMapIdx);
+	float4 sunLookPos = mul(wp, ShadowMatrix);
 	sunLookPos.xy = sunLookPos.xy / sunLookPos.w;
 	sunLookPos.xy /= float2(2, -2);
 	sunLookPos.xy += 0.5;
@@ -151,15 +182,18 @@ float getShadow(float4 wp)
 
 float4 PS_Main(PS_Input pin) : SV_TARGET
 {
-	float3x3 worldMatrix = (float3x3)WorldMatrix;
-	float3 worldNormal = normalize(mul(pin.normal, worldMatrix));
+	SamplerState sampler = SamplerDescriptorHeap[0];
 
-#ifdef TERRAIN
+#ifdef GRID
+	float3 worldNormal = ReadGridNormal(ResourceDescriptorHeap[TexIdNormalmap], LinearSampler, pin.uv);
 	float3 diffuse = float3(0.6, 0.6, 0.6);
 	float3 green = float3(0.5, 0.55, 0.3);
 	diffuse = lerp(diffuse, green, step(0.9,worldNormal.y));
 #else
-	float3 diffuse = MaterialColor * GetTexture(TexIdDiffuse).Sample(LinearWrapSampler, pin.uv).rgb;
+	float3x3 worldMatrix = (float3x3)WorldMatrix;
+	float3 worldNormal = normalize(mul(pin.normal, worldMatrix));
+
+	float3 diffuse = MaterialColor * GetTexture(TexIdDiffuse).Sample(sampler, pin.uv).rgb;
 #endif
 
 	float shadow = getShadow(pin.wp);

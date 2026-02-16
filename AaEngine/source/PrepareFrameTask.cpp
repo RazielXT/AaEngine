@@ -26,8 +26,10 @@ void PrepareFrameTask::run(RenderContext& ctx, CommandsData& cmd, CompositorPass
 		ctx.camera->setPixelOffset(fsr.getJitter(), fsr.getRenderSize());
 
 	sceneMgr.water.update(provider.renderSystem, cmd.commandList, provider.params.timeDelta, provider.params.frameIndex, ctx.camera->getPosition());
+	sceneMgr.newTerrain.update(cmd.commandList, ctx.camera->getPosition(), provider.params.frameIndex);
+	sceneMgr.vegetation.update(cmd.commandList, sceneMgr.newTerrain.terrainGridHeight[2][2].view.srvHeapIndex);
 
-	sceneMgr.terrain.update(cmd.commandList, sceneMgr, ctx.camera->getPosition());
+//	sceneMgr.terrain.update(cmd.commandList, sceneMgr, ctx.camera->getPosition());
 
 // 	static int c = 0;
 // 	if (c == 0)
@@ -56,12 +58,10 @@ void PrepareFrameTask::runCompute(RenderContext& ctx, CommandsData& cmd, Composi
 	sceneMgr.water.updateCompute(provider.renderSystem, cmd.commandList, provider.params.timeDelta, provider.params.frameIndex);
 }
 
-bool PrepareFrameTask::writesSyncCommands(CompositorPass& pass) const
+CompositorTask::RunType PrepareFrameTask::getRunType(CompositorPass& pass) const
 {
-	return pass.info.entry.empty();
-}
-
-bool PrepareFrameTask::writesSyncComputeCommands(CompositorPass& pass) const
-{
-	return pass.info.entry == "Water";
+	if (pass.info.entry == "Water")
+		return RunType::SyncComputeCommands;
+	else
+		return RunType::SyncCommands;
 }

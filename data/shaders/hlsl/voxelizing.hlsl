@@ -16,7 +16,7 @@ uint VoxelIdx;
 
 cbuffer SceneVoxelInfo : register(b1)
 {
-    SceneVoxelCbufferIndexed VoxelInfo;
+	SceneVoxelCbufferIndexed VoxelInfo;
 };
 
 cbuffer PSSMShadows : register(b2)
@@ -75,19 +75,19 @@ PS_Input VS_Main(VS_Input vin)
 	vsOut.wp = mul(vin.p, WorldMatrix);
 #endif
 
-    vsOut.pos = mul(vsOut.wp, ViewProjectionMatrix);
+	vsOut.pos = mul(vsOut.wp, ViewProjectionMatrix);
 
-    return vsOut;
+	return vsOut;
 }
 
 Texture2D<float4> GetTexture(uint index)
 {
-    return ResourceDescriptorHeap[index];
+	return ResourceDescriptorHeap[index];
 }
 
 Texture3D<float4> GetTexture3D(uint index)
 {
-    return ResourceDescriptorHeap[index];
+	return ResourceDescriptorHeap[index];
 }
 
 SamplerState ShadowSampler : register(s2);

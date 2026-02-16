@@ -62,6 +62,9 @@
     <Filter Include="Source Files\RenderCore">
       <UniqueIdentifier>{e35fea04-fa32-4bb9-84d0-cf2298b22539}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\RenderObject\Terrain2">
+      <UniqueIdentifier>{727402fa-5524-440f-a723-0047ab5b9c37}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\TargetWindow.cpp">
@@ -315,6 +318,9 @@
     </ClCompile>
     <ClCompile Include="source\ShaderType.cpp">
       <Filter>Source Files\Resources\Shader</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ProgressiveTerrain.cpp">
+      <Filter>Source Files\RenderObject\Terrain2</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -588,14 +594,17 @@
     <ClInclude Include="source\RenderTargetHeap.h">
       <Filter>Source Files\RenderCore</Filter>
     </ClInclude>
-    <ClInclude Include="source\GridMesh.h">
-      <Filter>Source Files\RenderObject</Filter>
-    </ClInclude>
     <ClInclude Include="source\ResourcesView.h">
       <Filter>Source Files\Resources</Filter>
     </ClInclude>
     <ClInclude Include="source\ShaderType.h">
       <Filter>Source Files\Resources\Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ProgressiveTerrain.h">
+      <Filter>Source Files\RenderObject\Terrain2</Filter>
+    </ClInclude>
+    <ClInclude Include="source\GridMesh.h">
+      <Filter>Source Files\RenderObject\Terrain2</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

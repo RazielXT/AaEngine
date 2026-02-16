@@ -63,7 +63,8 @@ void SsaoComputeTask::runCompute(RenderContext& ctx, CommandsData& commands, Com
 		}
 		{
 			auto& input = textures.linearDepthDownsample4;
-			tr.addAndPush(input, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, commands.commandList);
+			tr.add(input, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+			tr.push(commands.commandList);
 
 			prepareDepthBuffers2CS.dispatch(input.texture->width, input.texture->height, input.texture->view, commands.commandList);
 		}
@@ -71,7 +72,8 @@ void SsaoComputeTask::runCompute(RenderContext& ctx, CommandsData& commands, Com
 		//occlusion
 		auto renderAo = [&](TextureStatePair& input, TextureStatePair& output, AoRenderCS& aoRenderCS)
 			{
-				tr.addAndPush(input, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, commands.commandList);
+				tr.add(input, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+				tr.push(commands.commandList);
 
 				aoRenderCS.dispatch(input.texture->width, input.texture->height, input.texture->depthOrArraySize, TanHalfFovH, input.texture->view, output.texture->view, commands.commandList);
 			};
@@ -90,7 +92,8 @@ void SsaoComputeTask::runCompute(RenderContext& ctx, CommandsData& commands, Com
 		tr.add(textures.occlusion8, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 		tr.add(textures.occlusionInterleaved4, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 		tr.add(textures.occlusion4, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-		tr.addAndPush(textures.occlusionInterleaved2, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, commands.commandList);
+		tr.add(textures.occlusionInterleaved2, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+		tr.push(commands.commandList);
 		{
 			aoBlurAndUpsampleCS.data.ResIdLoResDB = textures.linearDepthDownsample8.texture->view.uavHeapIndex;
 			aoBlurAndUpsampleCS.data.ResIdHiResDB = textures.linearDepthDownsample4.texture->view.uavHeapIndex;
@@ -103,7 +106,8 @@ void SsaoComputeTask::runCompute(RenderContext& ctx, CommandsData& commands, Com
 				commands.commandList);
 		}
 
-		tr.addAndPush(textures.aoSmooth4, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, commands.commandList);
+		tr.add(textures.aoSmooth4, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+		tr.push(commands.commandList);
 		{
 			aoBlurAndUpsampleCS.data.ResIdLoResDB = textures.linearDepthDownsample4.texture->view.uavHeapIndex;
 			aoBlurAndUpsampleCS.data.ResIdHiResDB = textures.linearDepthDownsample2.texture->view.uavHeapIndex;
@@ -116,7 +120,8 @@ void SsaoComputeTask::runCompute(RenderContext& ctx, CommandsData& commands, Com
 				commands.commandList);
 		}
 
-		tr.addAndPush(textures.aoSmooth2, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, commands.commandList);
+		tr.add(textures.aoSmooth2, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+		tr.push(commands.commandList);
 		{
 			aoBlurAndUpsampleFinalCS.data.ResIdLoResDB = textures.linearDepthDownsample2.texture->view.uavHeapIndex;
 			aoBlurAndUpsampleFinalCS.data.ResIdHiResDB = textures.linearDepth.texture->view.uavHeapIndex;

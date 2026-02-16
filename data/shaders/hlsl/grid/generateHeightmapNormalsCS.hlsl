@@ -47,11 +47,11 @@ void CSMain(uint3 id : SV_DispatchThreadID, uint3 groupThreadId : SV_GroupThread
 	GroupMemoryBarrierWithGroupSync();
 
 	// Calculate tangents and binormals
-	float3 tangent = float3(0.0f, sharedHeights[sharedX + 1][sharedY] - height, UnitSize / HeightScale);
-	float3 binormal = float3(UnitSize / HeightScale, sharedHeights[sharedX][sharedY + 1] - height, 0.0f);
+	float3 tangent = float3(0.0f, sharedHeights[sharedX + 1][sharedY] - height, 0.5f * UnitSize / HeightScale);
+	float3 binormal = float3(0.5f * UnitSize / HeightScale, sharedHeights[sharedX][sharedY + 1] - height, 0.0f);
 	//float3 tangent = float3(0.0f, sharedHeights[sharedX + 1][sharedY] - sharedHeights[sharedX - 1][sharedY], UnitSize * 2);
 	//float3 binormal = float3(UnitSize * 2, sharedHeights[sharedX][sharedY + 1] - sharedHeights[sharedX][sharedY - 1], 0.0f);
 	float3 normal = normalize(cross(tangent, binormal));
 
-	NormalMap[p] = normal.xz;
+	NormalMap[p] = normal.zx;
 }

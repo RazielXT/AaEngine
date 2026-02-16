@@ -12,14 +12,13 @@ struct PSInput
 	float3 uv : TEXCOORD0;
 };
 
-PSInput VSMain(VSInput input) // uint vertexIdx : SV_VertexId
+PSInput VSMain(VSInput input)
 {
 	PSInput result;
 
-	//float3 vertexPosition = vertices[indices[vertexIdx]];
 	float3 vertexPosition = input.position.xyz;
 	vertexPosition.y -= 0.5;
-	vertexPosition *= 1000;
+	vertexPosition *= 10000;
 	result.uv = normalize(-vertexPosition);
 
 	vertexPosition += CameraPosition;

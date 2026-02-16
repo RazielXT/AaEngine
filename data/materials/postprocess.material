@@ -8,12 +8,22 @@ material PostProcess abstract
 
 material PassThrough : PostProcess
 {
-	pixel_shader psPassThrough
+	pixel_shader
+	{
+		file postprocess/postprocess.hlsl
+		entry PSPassThrough
+		profile ps_6_6
+	}
 }
 
-material PassThroughIllumination : PostProcess
+material PassDownsample2x : PostProcess
 {
-	pixel_shader psPassThroughIllumination
+	pixel_shader
+	{
+		file postprocess/postprocess.hlsl
+		entry PSPassDownsample2x
+		profile ps_6_6
+	}
 }
 
 material PassThroughAvg : PostProcess
@@ -26,14 +36,14 @@ material PutBlurThrough : PostProcess
 	pixel_shader psPutBlurThrough
 }
 
-material AddThrough : PostProcess
+material BloomUpscale : PostProcess
 {
-	pixel_shader psAddThrough
-}
-
-material AddThroughNoLuma : PostProcess
-{
-	pixel_shader psAddThroughNoLuma
+	pixel_shader
+	{
+		file postprocess/postprocess.hlsl
+		entry PSBloomUpscale
+		profile ps_6_6
+	}
 }
 
 material CombineLighting : PostProcess
@@ -56,14 +66,24 @@ material BlurY : PostProcess
 	pixel_shader psBlurY
 }
 
-material Darken : PostProcess
-{
-	pixel_shader psDarken
-}
-
 material FXAA : PostProcess
 {
-	pixel_shader psFXAA
+	pixel_shader
+	{
+		file postprocess/fxaa.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
+}
+
+material FXAA_Luma : PostProcess
+{
+	pixel_shader
+	{
+		file postprocess/luma.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
 }
 
 material LoadThrough : PostProcess
@@ -121,9 +141,10 @@ material BloomBlurX : PostProcess
 	pixel_shader
 	{
 		file postprocess/bloom.hlsl
-		entry PSBloomBlurX
+		entry PSBloomBlur
 		profile ps_6_6
 	}
+	shader_defines BLUR_X
 }
 
 material BloomBlurY : PostProcess
@@ -131,9 +152,10 @@ material BloomBlurY : PostProcess
 	pixel_shader
 	{
 		file postprocess/bloom.hlsl
-		entry PSBloomBlurY
+		entry PSBloomBlur
 		profile ps_6_6
 	}
+	shader_defines BLUR_Y
 }
 
 material MotionVectors : PostProcess

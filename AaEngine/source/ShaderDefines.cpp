@@ -5,16 +5,12 @@ ShaderDefines::ShaderDefines(GraphicsResources& r) : resources(r)
 {
 }
 
-void ShaderDefines::setDefine(const std::string& d)
+void ShaderDefines::setDefine(const std::string& d, bool enabled)
 {
-	defines.insert(d);
-	resources.materials.reloadShadersWithDefine(d);
-}
+	bool changed = (enabled && defines.insert(d).second) || (!enabled && defines.erase(d));
 
-void ShaderDefines::removeDefine(const std::string& d)
-{
-	defines.erase(d);
-	resources.materials.reloadShadersWithDefine(d);
+	if (changed)
+		resources.materials.reloadShadersWithDefine(d);
 }
 
 const std::unordered_set<std::string>& ShaderDefines::getDefines() const

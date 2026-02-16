@@ -5,12 +5,12 @@ material Color abstract
 
 	texture Diffuse
 	{
-		file white.png
+		file white.dds
 	}
 
 	default_params
 	{
-		float MaterialColor 1 1 1
+		color MaterialColor 1 1 1
 	}
 }
 
@@ -30,7 +30,7 @@ material Yellow : Color
 {
 	default_params
 	{
-		float MaterialColor 1 1 0
+		color MaterialColor 1 1 0
 	}
 }
 
@@ -40,7 +40,7 @@ material Blue : Color
 {
 	default_params
 	{
-		float MaterialColor 0.2 0.2 1
+		color MaterialColor 0.2 0.2 1
 	}
 }
 
@@ -66,7 +66,7 @@ material Red : Color
 {
 	default_params
 	{
-		float MaterialColor 1 0.2 0.2
+		color MaterialColor 1 0.2 0.2
 	}
 }
 
@@ -76,7 +76,7 @@ material Green : Color
 {
 	default_params
 	{
-		float MaterialColor 0.2 0.8 0.2
+		color MaterialColor 0.2 0.8 0.2
 	}
 }
 
@@ -84,7 +84,7 @@ material Green : Color
 {
 	default_params
 	{
-		float MaterialColor 0.2 0.8 0.2
+		color MaterialColor 0.2 0.8 0.2
 	}
 }
 
@@ -94,6 +94,16 @@ material WaterSim : Color
 	{
 		name WaterColorTexture
 	}
+}
+
+material TriplanarTest : Color
+{
+	texture Diffuse
+	{
+		file SilveryBlue.dds
+	}
+
+	shader_defines TRIPLANAR
 }
 
 material grassBlade : Color

@@ -25,6 +25,9 @@ struct DebugState
 	int FsrMode = (int)UpscaleMode::Off;
 
 	bool limitFrameRate = false;
+
+	bool wireframe = false;
+	bool wireframeChange = false;
 };
 
 class Editor
@@ -33,7 +36,8 @@ public:
 
 	Editor(ApplicationCore&, ImguiPanelViewport&);
 
-	void initialize(TargetWindow&);
+	void initializeUi(const TargetWindow&);
+	void initializeRenderer(DXGI_FORMAT);
 
 	void updateViewportSize();
 	void resetViewportOutput();

@@ -42,11 +42,6 @@ void DebugOverlayTask::run(RenderContext& ctx, CommandsData& syncCommands, Compo
 	}
 }
 
-bool DebugOverlayTask::writesSyncCommands(CompositorPass&) const
-{
-	return true;
-}
-
 void DebugOverlayTask::enable(bool e)
 {
 	enabled = e;

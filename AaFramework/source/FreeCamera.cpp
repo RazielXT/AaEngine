@@ -33,7 +33,7 @@ void FreeCamera::update(float time)
 
 		float speed = 40 * time;
 		if (turbo)
-			speed *= 10;
+			speed *= 20;
 		else if (slow)
 			speed /= 5;
 

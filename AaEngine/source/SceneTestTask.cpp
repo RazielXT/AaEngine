@@ -11,10 +11,10 @@ SceneTestTask::~SceneTestTask()
 AsyncTasksInfo SceneTestTask::initialize(CompositorPass& pass)
 {
 	tmpQueue = sceneMgr.createManualQueue();
-	tmpQueue.targets = pass.mrt->formats;
+	tmpQueue.targetFormats = pass.mrt->formats;
 
-	heap.InitRtv(provider.renderSystem.core.device, tmpQueue.targets.size(), L"testRttHeap");
-	textures.Init(provider.renderSystem.core.device, 512, 512, heap, tmpQueue.targets, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	heap.InitRtv(provider.renderSystem.core.device, tmpQueue.targetFormats.size(), L"testRttHeap");
+	textures.Init(provider.renderSystem.core.device, 512, 512, heap, tmpQueue.targetFormats, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	textures.SetName("testRtt");
 
 	DescriptorManager::get().createTextureView(textures);
@@ -50,9 +50,4 @@ void SceneTestTask::run(RenderContext& ctx, CommandsData& commands, CompositorPa
 	tmpQueue.renderObjects(constants, commands.commandList);
 
 	//textures.PrepareAsView(commands.commandList, D3D12_RESOURCE_STATE_COMMON);
-}
-
-bool SceneTestTask::writesSyncCommands(CompositorPass&) const
-{
-	return true;
 }

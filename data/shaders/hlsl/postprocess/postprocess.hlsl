@@ -1,5 +1,7 @@
 #include "PostProcessCommon.hlsl"
 
+float2 ViewportSizeInverse;
+
 // Vertex shader: self-created quad.
 VS_OUTPUT VSQuad(uint vI : SV_VertexId)
 {
@@ -13,9 +15,8 @@ VS_OUTPUT VSQuad(uint vI : SV_VertexId)
     return vout;
 }
 
-static const float BlurSize = 0.002;
-
 Texture2D colorMap : register(t0);
+Texture2D colorMap2 : register(t1);
 SamplerState LinearSampler : register(s0);
 
 float4 PSPassThrough(VS_OUTPUT input) : SV_TARGET
@@ -23,29 +24,86 @@ float4 PSPassThrough(VS_OUTPUT input) : SV_TARGET
     return colorMap.Sample(LinearSampler, input.TexCoord);
 }
 
-float4 PSPassThroughIllumination(VS_OUTPUT input) : SV_TARGET
+float4 PSPassDownsample2x(VS_OUTPUT input) : SV_TARGET
 {
-	float4 sample = colorMap.Sample(LinearSampler, input.TexCoord);
-    return sample * sample.a * 2;
+	float offset = 0.25;
+
+	float4 color = 0;
+	color = colorMap.Sample(LinearSampler, input.TexCoord + ViewportSizeInverse * float2(offset, offset));
+	color += colorMap.Sample(LinearSampler, input.TexCoord + ViewportSizeInverse * float2(-offset,offset));
+	color += colorMap.Sample(LinearSampler, input.TexCoord + ViewportSizeInverse * float2(offset,-offset));
+	color += colorMap.Sample(LinearSampler, input.TexCoord + ViewportSizeInverse * float2(-offset,-offset));
+
+    return color / 4;
 }
 
 float4 PSPassThroughAvg(VS_OUTPUT input) : SV_TARGET
 {
 	float4 color = colorMap.Sample(LinearSampler, input.TexCoord);
-	float avg = length(color.rgb)/1.5; //color.r + color.g + color.b / 3;
+	float avg = length(color.rgb)/1.5; //dot(color.rgb, float3( 0.2126, 0.7152, 0.0722 ));//color.r + color.g + color.b / 3;
     return float4(avg.rrr, color.a);
+}
+
+static const float BlurSize = 1;
+
+float4 Gaussian3x3(Texture2D InputTex, float2 uv, float2 t)
+{
+    float4 c00 = InputTex.Sample(LinearSampler, uv + float2(-t.x, -t.y));
+    float4 c10 = InputTex.Sample(LinearSampler, uv + float2( 0.0f, -t.y));
+    float4 c20 = InputTex.Sample(LinearSampler, uv + float2( t.x, -t.y));
+
+    float4 c01 = InputTex.Sample(LinearSampler, uv + float2(-t.x,  0.0f));
+    float4 c11 = InputTex.Sample(LinearSampler, uv);
+    float4 c21 = InputTex.Sample(LinearSampler, uv + float2( t.x,  0.0f));
+
+    float4 c02 = InputTex.Sample(LinearSampler, uv + float2(-t.x,  t.y));
+    float4 c12 = InputTex.Sample(LinearSampler, uv + float2( 0.0f,  t.y));
+    float4 c22 = InputTex.Sample(LinearSampler, uv + float2( t.x,  t.y));
+
+    float4 result =
+          (c00 + c20 + c02 + c22) * 1.0f   // corners
+        + (c10 + c01 + c21 + c12) * 2.0f   // edges
+        +  c11 * 4.0f;                     // center
+
+    return result * (1.0f / 16.0f);
 }
 
 float4 PSPutBlurThrough(VS_OUTPUT input) : SV_TARGET
 {
-	float4 color = colorMap.Sample(LinearSampler, input.TexCoord);
-	float offset = BlurSize;
-	color += colorMap.Sample(LinearSampler, input.TexCoord + float2(offset, offset));
-	color += colorMap.Sample(LinearSampler, input.TexCoord + float2(-offset,offset));
-	color += colorMap.Sample(LinearSampler, input.TexCoord + float2(offset,-offset));
-	color += colorMap.Sample(LinearSampler, input.TexCoord + float2(-offset,-offset));
+	/*float offset = BlurSize;
 
-    return color / 5;
+	float4 color = 0;//colorMap.Sample(LinearSampler, input.TexCoord);
+	color = colorMap.Sample(LinearSampler, input.TexCoord + ViewportSizeInverse * float2(offset, offset));
+	color += colorMap.Sample(LinearSampler, input.TexCoord + ViewportSizeInverse * float2(-offset,offset));
+	color += colorMap.Sample(LinearSampler, input.TexCoord + ViewportSizeInverse * float2(offset,-offset));
+	color += colorMap.Sample(LinearSampler, input.TexCoord + ViewportSizeInverse * float2(-offset,-offset));
+
+    return color / 4;*/
+
+	return Gaussian3x3(colorMap, input.TexCoord, ViewportSizeInverse);
+}
+
+float4 PSBloomUpscale(VS_OUTPUT input) : SV_TARGET
+{
+	/*float offset = BlurSize;
+
+	float4 color = 0;// = colorMap.Sample(LinearSampler, input.TexCoord);
+	color += colorMap.Sample(LinearSampler, input.TexCoord + ViewportSizeInverse * float2(offset, offset));
+	color += colorMap.Sample(LinearSampler, input.TexCoord + ViewportSizeInverse * float2(-offset,offset));
+	color += colorMap.Sample(LinearSampler, input.TexCoord + ViewportSizeInverse * float2(offset,-offset));
+	color += colorMap.Sample(LinearSampler, input.TexCoord + ViewportSizeInverse * float2(-offset,-offset));
+
+	float4 color2 = 0;// = colorMap2.Sample(LinearSampler, input.TexCoord);
+	color2 += colorMap2.Sample(LinearSampler, input.TexCoord + ViewportSizeInverse * float2(offset, offset));
+	color2 += colorMap2.Sample(LinearSampler, input.TexCoord + ViewportSizeInverse * float2(-offset,offset));
+	color2 += colorMap2.Sample(LinearSampler, input.TexCoord + ViewportSizeInverse * float2(offset,-offset));
+	color2 += colorMap2.Sample(LinearSampler, input.TexCoord + ViewportSizeInverse * float2(-offset,-offset));
+
+    return max(color, color2) / 4;*/
+
+	float4 color = Gaussian3x3(colorMap, input.TexCoord, ViewportSizeInverse * 2);
+	float4 color2 = Gaussian3x3(colorMap2, input.TexCoord, ViewportSizeInverse);
+	return max(color, color2);
 }
 
 float4 PSBlurX(VS_OUTPUT input) : SV_TARGET
@@ -76,62 +134,6 @@ float4 PSBlurY(VS_OUTPUT input) : SV_TARGET
     return color / (1 + samples * 2);
 }
 
-Texture2D colorMap2 : register(t1);
-Texture2D godrayMap : register(t2);
-Texture2D exposureMap : register(t3);
-
-float3 Uncharted2Tonemap(float3 x, float Brightness) {
-	//float Brightness = 0.28;
-	x *= Brightness;
-	float A = 0.28;
-	float B = 0.29;		
-	float C = 0.10;
-	float D = 0.2;
-	float E = 0.025;
-	float F = 0.35;
-	return ((x*(A*x+C*B)+D*E)/(x*(A*x+B)+D*F))-E/F;
-}
-
-float3 unchartedTonemapping(float3 color, float Brightness)
-{
-	float3 curr = Uncharted2Tonemap(color*4.7, Brightness);
-	color = curr/Uncharted2Tonemap(15.2, Brightness);	
-	return color;
-}
-
-float4 PSAddThrough(VS_OUTPUT input) : SV_TARGET
-{
-	float4 original = colorMap.Sample(LinearSampler, input.TexCoord);
-	float exposure = 1 - exposureMap.Load(int3(0, 0, 0)).r;
-
-	float3 bloom = colorMap2.Sample(LinearSampler, input.TexCoord).rgb;
-	bloom *= bloom;
-	bloom *= exposure * exposure;
-
-#ifdef NO_LUMA
-	original.w = 1;
-#else
-	float luma = dot(original.rgb, float3(0.299, 0.587, 0.114));
-	original.w = luma;
-#endif
-
-	original.rgb *= 1 + exposure * exposure;
-	//original.rgb = unchartedTonemapping(original.rgb, exposure);
-	
-	original.rgb += bloom;
-	original.rgb += godrayMap.Sample(LinearSampler, input.TexCoord).rgb * exposure;
-
-    return original;
-}
-
-float4 PSDarken(VS_OUTPUT input) : SV_TARGET
-{
-	float4 color = colorMap.Sample(LinearSampler, input.TexCoord);
-	color.rgb *= lerp(colorMap2.Sample(LinearSampler, input.TexCoord).r, 1, saturate(color.a));
-
-    return color;
-}
-
 float4 PSSkyPassThrough(VS_OUTPUT input) : SV_TARGET
 {
 	if (colorMap2.Sample(LinearSampler, input.TexCoord).r > 0)
@@ -139,7 +141,7 @@ float4 PSSkyPassThrough(VS_OUTPUT input) : SV_TARGET
 
 	float4 color = colorMap.Sample(LinearSampler, input.TexCoord);
 
-	color = color * 2;
+	color = pow(color, 3);
 
 	return color;
 }

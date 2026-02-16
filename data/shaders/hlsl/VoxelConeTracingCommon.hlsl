@@ -35,7 +35,7 @@ float4 ConeTraceImpl(float3 o, float3 d, float coneRatio, float maxDist, Texture
 {
 	const float voxDim = 128.0f;
 	const float minDiam = 1.0 / voxDim;
-	const float startDist = minDiam * 1.5f;
+	const float startDist = minDiam;
 	float dist = startDist;
 	float3 samplePos = o;
 	float4 accum = float4(0, 0, 0, 0);
@@ -51,7 +51,7 @@ float4 ConeTraceImpl(float3 o, float3 d, float coneRatio, float maxDist, Texture
 		float sampleWt = (1.0 - accum.w);
 		accum += voxel * sampleWt;
 
-		dist += sampleDiam;
+		dist += sampleDiam * 0.5;
 	}
 
 	accum.xyz *= accum.w;

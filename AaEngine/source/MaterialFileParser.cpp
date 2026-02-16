@@ -51,7 +51,7 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 				auto& target = mat.pipeline.shaders[shaderType];
 
 				if (!member.value.empty())
-					target = member.value;
+					target = member.value == "skip" ? "" : member.value;
 				else
 				{
 					if (member.value.empty() && !member.children.empty())
@@ -151,13 +151,17 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 					continue;
 
 				std::vector<float> values;
+				enum class Type { Floats, Color } type = Type::Floats;
+				if (param.type == "color")
+					type = Type::Color;
+
 				for (auto& value : param.params)
 				{
 					if (value.starts_with("0x"))
 					{
 						auto hexStr = value.substr(2);
 
-						if (param.type == "color")
+						if (type == Type::Color)
 						{
 							for (size_t i = 0; i < hexStr.size(); i += 2)
 							{
@@ -170,6 +174,13 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 					}
 					else
 						values.push_back(std::stof(value));
+				}
+
+				if (type == Type::Color)
+				{
+					// interpret as srgb, convert to linear
+					for (auto& f : values)
+						f = pow(f, 2.233333333);//from: max(1.055 * pow(f, 0.416666667) - 0.055, 0);
 				}
 
 				mat.resources.defaultParams[param.value] = values;

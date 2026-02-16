@@ -39,8 +39,3 @@ material ToneMapping
 		profile ps_6_6
 	}
 }
-
-material ToneMappingNoLuma : ToneMapping
-{
-	shader_defines NO_LUMA
-}

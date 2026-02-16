@@ -30,7 +30,7 @@ void RenderQueue::update(const EntityChangeDescritpion& changeInfo, GraphicsReso
 			}
 		}
 
-		auto entry = EntityEntry(entity, matInstance->Assign(entity->geometry.layout ? *entity->geometry.layout : std::vector<D3D12_INPUT_ELEMENT_DESC>{}, targets, technique), technique);
+		auto entry = EntityEntry(entity, matInstance->Assign(entity->geometry.layout ? *entity->geometry.layout : std::vector<D3D12_INPUT_ELEMENT_DESC>{}, targetFormats, technique), technique);
 
 		auto it = std::lower_bound(entities.begin(), entities.end(), entry);
 		entities.insert(it, std::move(entry));
@@ -72,6 +72,10 @@ static void RenderObject(ID3D12GraphicsCommandList* commandList, EntityGeometry&
 		}
 
 		((IndirectEntityGeometry*)geometry.source)->draw(commandList, frameIndex);
+	}
+	else if (geometry.type == EntityGeometry::Type::Mesh)
+	{
+		((ID3D12GraphicsCommandList6*)commandList)->DispatchMesh(geometry.instanceCount, 1, 1);
 	}
 	else
 	{

@@ -130,7 +130,7 @@ PSOutput PSMain(PS_Input pin)
 		discard;
 
 	PSOutput output;
-	output.color = float4(nearVoxel.rgb, 1);
+	output.color = float4(nearVoxel.rgb + 0.05 + i / 256.f, 1);
 
 	return output;
 }

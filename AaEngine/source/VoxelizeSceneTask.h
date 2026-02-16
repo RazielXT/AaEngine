@@ -9,6 +9,7 @@
 #include "ShadowMaps.h"
 #include "ClearBufferCS.h"
 #include <span>
+#include "RenderObject.h"
 
 struct RenderQueue;
 class SceneManager;
@@ -74,12 +75,8 @@ public:
 	AsyncTasksInfo initialize(CompositorPass& pass) override;
 
 	void run(RenderContext& ctx, CompositorPass& pass) override;
-
 	void run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
-	bool writesSyncCommands(CompositorPass&) const override;
-
 	void runCompute(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
-	bool writesSyncComputeCommands(CompositorPass&) const override;
 
 	static VoxelizeSceneTask& Get();
 
@@ -88,6 +85,8 @@ public:
 	void clear(ID3D12GraphicsCommandList* c);
 
 	VoxelTracingParams params;
+
+	RunType getRunType(CompositorPass&) const override;
 
 private:
 
@@ -146,4 +145,10 @@ private:
 	GpuTexture3D clearSceneTexture;
 
 	SceneVoxelsCascade voxelCascades[CascadesCount];
+
+	ShadowMap shadowMap;
+	RenderObjectsVisibilityData shadowRenderablesData;
+	RenderObjectsStorage* shadowRenderables{};
+	RenderQueue* shadowQueue{};
+	void renderShadowMap(ID3D12GraphicsCommandList* commandList, float extends);
 };

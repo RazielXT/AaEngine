@@ -7,11 +7,15 @@ material Billboard
 
 	texture Diffuse
 	{
-		file treeBillboard.dds
+		file fir.dds //treeBillboard.dds
 	}
 	texture Normal
 	{
-		file roundNormal.dds
+		file fir_norm2.png
+	}
+	texture Edges
+	{
+		file fir_edges.png
 	}
 
 	technique Depth BillboardDepth

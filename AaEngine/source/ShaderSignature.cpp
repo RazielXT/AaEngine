@@ -43,6 +43,14 @@ void SignatureInfo::add(const LoadedShader& shader, ShaderType type)
 	{
 		flags &= ~D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
 	}
+	if (type == ShaderType::Amplification)
+	{
+		flags &= ~D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS;
+	}
+	if (type == ShaderType::Mesh)
+	{
+		flags &= ~D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS;
+	}
 
 	for (auto& b : shader.desc.cbuffers)
 	{
@@ -430,8 +438,6 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData(GraphicsResour
 					type = ResourcesInfo::AutoParam::INV_VIEW_MATRIX;
 				else if (p.Name == "InvProjectionMatrix")
 					type = ResourcesInfo::AutoParam::INV_PROJ_MATRIX;
-				else if (p.Name == "ShadowMatrix")
-					type = ResourcesInfo::AutoParam::SHADOW_MATRIX;
 				else if (p.Name == "ShadowMapSize")
 					type = ResourcesInfo::AutoParam::SHADOW_MAP_SIZE;
 				else if (p.Name == "ShadowMapSizeInv")
@@ -450,6 +456,12 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData(GraphicsResour
 					type = ResourcesInfo::AutoParam::SUN_COLOR;
 				else if (p.Name == "CameraPosition")
 					type = ResourcesInfo::AutoParam::CAMERA_POSITION;
+				else if (p.Name == "CameraDirection")
+					type = ResourcesInfo::AutoParam::CAMERA_DIRECTION;
+				else if (p.Name == "ViewCameraPosition")
+					type = ResourcesInfo::AutoParam::VIEW_CAMERA_POSITION;
+				else if (p.Name == "ViewCameraDirection")
+					type = ResourcesInfo::AutoParam::VIEW_CAMERA_DIRECTION;
 				else if (p.Name == "ZMagic")
 					type = ResourcesInfo::AutoParam::Z_MAGIC;
 

@@ -17,17 +17,22 @@ HRESULT LoadTextureFromFile(ResourceUploadBatch& resourceUpload, ID3D12Device& d
 		hr = DirectX::CreateDDSTextureFromFileEx(
 			&device,
 			resourceUpload,
-			as_wstring(filename).c_str(), -1, D3D12_RESOURCE_FLAG_NONE, DX12::DDS_LOADER_DEFAULT,
+			as_wstring(filename).c_str(),
+			0,
+			D3D12_RESOURCE_FLAG_NONE,
+			DDS_LOADER_FORCE_SRGB,
 			texture);
 	}
 	else
 	{
-		hr = CreateWICTextureFromFile(
+		hr = CreateWICTextureFromFileEx(
 			&device,
 			resourceUpload,
 			as_wstring(filename).c_str(),
-			texture,
-			true);
+			0,
+			D3D12_RESOURCE_FLAG_NONE,
+			WIC_LOADER_MIP_AUTOGEN,
+			texture);
 	}
 
 	if (FAILED(hr))

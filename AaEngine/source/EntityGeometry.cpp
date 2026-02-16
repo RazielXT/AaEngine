@@ -34,6 +34,13 @@ void EntityGeometry::fromInstancedModel(VertexBufferModel& model, UINT count, D3
 	type = Type::Instancing;
 }
 
+void EntityGeometry::fromMeshInstancedModel(UINT count, D3D12_GPU_VIRTUAL_ADDRESS instancingBuffer)
+{
+	instanceCount = count;
+	geometryCustomBuffer = instancingBuffer;
+	type = Type::Mesh;
+}
+
 void EntityGeometry::fromGrass(GrassArea& grass)
 {
 	geometryCustomBuffer = grass.gpuBuffer->GetGPUVirtualAddress();

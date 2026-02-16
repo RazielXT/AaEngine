@@ -20,7 +20,7 @@ public:
 	void init(UINT maxDescriptors);
 	void initializeSamplers(float MipLODBias);
 
-	void createTextureView(FileTexture& texture);
+	UINT createTextureView(FileTexture& texture);
 	void createTextureView(GpuTextureResource& texture, UINT mipLevels = -1);
 	void createTextureView(GpuTexture3D& texture, UINT mipLevels = -1);
 	void createTextureView(RenderTargetTextures& textures);

@@ -22,8 +22,3 @@ void ImguiDebugWindowTask::run(RenderContext& ctx, CommandsData& syncCommands, C
 
 	imgui::DebugWindow::Get().draw(syncCommands.commandList, provider.resources.materials);
 }
-
-bool ImguiDebugWindowTask::writesSyncCommands(CompositorPass&) const
-{
-	return true;
-}

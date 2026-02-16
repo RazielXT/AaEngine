@@ -10,7 +10,7 @@ enum class UpscaleMode
 	Off
 };
 
-static const char* UpscaleModeNames[6] = {
+static const char* UpscaleModeNames[] = {
 	"UltraPerformance",
 	"Performance",
 	"Balanced",

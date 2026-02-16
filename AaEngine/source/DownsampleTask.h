@@ -32,7 +32,7 @@ public:
 	void resize(CompositorPass& pass) override;
 	void run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
 
-	bool writesSyncCommands(CompositorPass&) const override { return true; }
+	RunType getRunType(CompositorPass&) const override { return RunType::SyncCommands; }
 
 private:
 

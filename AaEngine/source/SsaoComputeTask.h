@@ -20,10 +20,7 @@ public:
 
 	void runCompute(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
 
-	bool writesSyncComputeCommands(CompositorPass&) const override
-	{
-		return true;
-	}
+	RunType getRunType(CompositorPass&) const override { return RunType::SyncComputeCommands; }
 
 private:
 

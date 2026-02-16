@@ -10,15 +10,18 @@
 #include "FileLogger.h"
 #include "StringUtils.h"
 
-ComPtr<IDXGIAdapter1> GetHardwareAdapter(IDXGIFactory4* pFactory, enum D3D_FEATURE_LEVEL level)
+ComPtr<IDXGIAdapter1> GetHardwareAdapter(enum D3D_FEATURE_LEVEL level)
 {
+	ComPtr<IDXGIFactory4> factory;
+	CreateDXGIFactory1(IID_PPV_ARGS(&factory));
+
 	ComPtr<IDXGIAdapter1> bestAdapter;
 	ComPtr<IDXGIAdapter1> fallbackAdapter;
 
 	for (UINT adapterIndex = 0; ; ++adapterIndex)
 	{
 		ComPtr<IDXGIAdapter1> pAdapter;
-		if (DXGI_ERROR_NOT_FOUND == pFactory->EnumAdapters1(adapterIndex, &pAdapter))
+		if (DXGI_ERROR_NOT_FOUND == factory->EnumAdapters1(adapterIndex, &pAdapter))
 		{
 			break;
 		}
@@ -54,7 +57,6 @@ ComPtr<IDXGIAdapter1> GetHardwareAdapter(IDXGIFactory4* pFactory, enum D3D_FEATU
 	}
 }
 
-
 RenderCore::RenderCore()
 {
 	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
@@ -64,11 +66,8 @@ RenderCore::RenderCore()
 		return;
 	}
 
-	ComPtr<IDXGIFactory4> factory;
-	CreateDXGIFactory1(IID_PPV_ARGS(&factory));
-
 	{
-		auto hardwareAdapter = GetHardwareAdapter(factory.Get(), D3D_FEATURE_LEVEL_12_1);
+		hardwareAdapter = GetHardwareAdapter(D3D_FEATURE_LEVEL_12_1);
 		if (!hardwareAdapter)
 		{
 			auto err = "GetHardwareAdapter failed";
@@ -99,6 +98,15 @@ RenderCore::RenderCore()
 		if (opts.ConservativeRasterizationTier == D3D12_CONSERVATIVE_RASTERIZATION_TIER_NOT_SUPPORTED)
 		{
 			auto err = "D3D12Device D3D12_CONSERVATIVE_RASTERIZATION_TIER_NOT_SUPPORTED";
+			FileLogger::logError(err);
+			throw std::invalid_argument(err);
+		}
+
+		D3D12_FEATURE_DATA_D3D12_OPTIONS7 opts7 = {};
+		device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &opts7, sizeof(opts7));
+		if (opts7.MeshShaderTier == D3D12_MESH_SHADER_TIER_NOT_SUPPORTED)
+		{
+			auto err = "D3D12Device D3D12_MESH_SHADER_TIER_NOT_SUPPORTED";
 			FileLogger::logError(err);
 			throw std::invalid_argument(err);
 		}
@@ -210,7 +218,39 @@ void RenderSystem::onScreenResize(UINT width, UINT height)
 	core.resize(width, height);
 }
 
-void RenderCore::initializeSwapChain(const TargetWindow& window)
+bool RenderCore::IsDisplayHDR() const
+{
+	auto desc = GetDisplayDesc();
+
+	return desc.ColorSpace == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020;
+}
+
+DXGI_OUTPUT_DESC1 RenderCore::GetDisplayDesc() const
+{
+	IDXGIOutput* output = nullptr;
+	if (SUCCEEDED(hardwareAdapter->EnumOutputs(0, &output)))
+	{
+		auto desc = [output]() -> DXGI_OUTPUT_DESC1
+			{
+				IDXGIOutput6* output6 = nullptr;
+				if (FAILED(output->QueryInterface(IID_PPV_ARGS(&output6))))
+					return {};
+
+				DXGI_OUTPUT_DESC1 desc = {};
+				output6->GetDesc1(&desc);
+				output6->Release();
+				return desc;
+			}();
+
+		output->Release();
+
+		return desc;
+	}
+
+	return {};
+}
+
+void RenderCore::initializeSwapChain(const TargetWindow& window, ColorSpace colorSpace)
 {
 	auto width = window.getWidth();
 	auto height = window.getHeight();
@@ -219,7 +259,7 @@ void RenderCore::initializeSwapChain(const TargetWindow& window)
 	swapChainDesc.BufferCount = FrameCount;
 	swapChainDesc.Width = width;
 	swapChainDesc.Height = height;
-	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	swapChainDesc.Format = colorSpace.outputFormat;
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	swapChainDesc.SampleDesc.Count = 1;
@@ -227,7 +267,7 @@ void RenderCore::initializeSwapChain(const TargetWindow& window)
 	ComPtr<IDXGIFactory4> factory;
 	CreateDXGIFactory1(IID_PPV_ARGS(&factory));
 
-	factory->CreateSwapChainForHwnd(
+	auto hr = factory->CreateSwapChainForHwnd(
 		commandQueue,
 		window.getHwnd(),
 		&swapChainDesc,
@@ -235,6 +275,17 @@ void RenderCore::initializeSwapChain(const TargetWindow& window)
 		nullptr,
 		(IDXGISwapChain1**)&swapChain
 	);
+
+	if (!swapChain)
+		FileLogger::logErrorD3D("CreateSwapChainForHwnd", hr);
+
+	if (colorSpace.type == ColorSpace::HDR10)
+	{
+		ComPtr<IDXGISwapChain4> swapChain4;
+		swapChain->QueryInterface(IID_PPV_ARGS(&swapChain4));
+
+		swapChain4->SetColorSpace1(DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020);
+	}
 
 	frameIndex = swapChain->GetCurrentBackBufferIndex();
 
@@ -247,7 +298,7 @@ void RenderCore::initializeSwapChain(const TargetWindow& window)
 
 	for (int i = 0; auto & b : backbuffer)
 	{
-		b.InitExistingRenderTarget(swapChainTextures[i++], device, width, height, rtvHeap, DXGI_FORMAT_R8G8B8A8_UNORM);
+		b.InitExistingRenderTarget(swapChainTextures[i++], device, width, height, rtvHeap, colorSpace.outputFormat);
 		b.SetName("Backbuffer");
 	}
 }

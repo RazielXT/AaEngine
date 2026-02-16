@@ -1,84 +1,113 @@
 compositor Bloom
 {
-	texture bloomTexture target_size_scaled 0.5 DXGI_FORMAT_R10G10B10A2_UNORM
-	texture bloomTexture2 target_size_scaled 0.25 DXGI_FORMAT_R10G10B10A2_UNORM
-	texture bloomTexture3 target_size_scaled 0.125 DXGI_FORMAT_R10G10B10A2_UNORM
-	texture bloomTexture4 target_size_scaled 0.0625 DXGI_FORMAT_R10G10B10A2_UNORM
-	texture bloomTexture5 target_size_scaled 0.0625 DXGI_FORMAT_R10G10B10A2_UNORM
+	texture bloomTexture_d target_size_div 2 DXGI_FORMAT_R11G11B10_FLOAT
+	texture bloomTexture2_d target_size_div 4 DXGI_FORMAT_R11G11B10_FLOAT
+	texture bloomTexture3_d target_size_div 8 DXGI_FORMAT_R11G11B10_FLOAT
+	texture bloomTexture4_d target_size_div 16 DXGI_FORMAT_R11G11B10_FLOAT
+	texture bloomTexture5_d target_size_div 16 DXGI_FORMAT_R11G11B10_FLOAT
 
-	extern sceneDownscale4
+	texture bloomTexture target_size_div 2 DXGI_FORMAT_R11G11B10_FLOAT
+	texture bloomTexture2 target_size_div 4 DXGI_FORMAT_R11G11B10_FLOAT
+	texture bloomTexture3 target_size_div 8 DXGI_FORMAT_R11G11B10_FLOAT
+
+	texture bloom target_size DXGI_FORMAT_R11G11B10_FLOAT
+
+	extern sceneColor
 	extern exposure
 
 	pass BloomDownscale
 	{
-		material PassThrough
-		in sceneDownscale4
-		out bloomTexture3
+		material PassDownsample2x
+		in sceneColor
+		out bloomTexture_d
 	}
 	pass BloomDownscale
 	{
-		material PassThrough
-		in bloomTexture3
-		out bloomTexture4
+		material PassDownsample2x
+		in bloomTexture_d
+		out bloomTexture2_d
 	}
+	pass BloomDownscale
+	{
+		material PassDownsample2x
+		in bloomTexture2_d
+		out bloomTexture3_d
+	}
+	pass BloomDownscale
+	{
+		material PassDownsample2x
+		in bloomTexture3_d
+		out bloomTexture4_d
+	}
+
 	pass BloomBlurX
 	{
 		material BloomBlurX
-		in bloomTexture4
+		in bloomTexture4_d
 		in exposure
-		out bloomTexture5
+		out bloomTexture5_d
 	}
 	pass BloomBlurY
 	{
 		material BloomBlurY
-		in bloomTexture5
+		in bloomTexture5_d
 		in exposure
-		out bloomTexture4
+		out bloomTexture4_d
 	}
 	pass BloomBlurX
 	{
 		material BloomBlurX
-		in bloomTexture4
+		in bloomTexture4_d
 		in exposure
-		out bloomTexture5
+		out bloomTexture5_d
 	}
 	pass BloomBlurY
 	{
 		material BloomBlurY
-		in bloomTexture5
+		in bloomTexture5_d
 		in exposure
-		out bloomTexture4
+		out bloomTexture4_d
 	}
 	pass BloomBlurX
 	{
 		material BloomBlurX
-		in bloomTexture4
+		in bloomTexture4_d
 		in exposure
-		out bloomTexture5
+		out bloomTexture5_d
 	}
 	pass BloomBlurY
 	{
 		material BloomBlurY
-		in bloomTexture5
+		in bloomTexture5_d
 		in exposure
-		out bloomTexture4
+		out bloomTexture4_d
 	}
+
 	pass BloomUpscale
 	{
-		material PutBlurThrough
-		in bloomTexture4
+		material BloomUpscale
+		in bloomTexture4_d
+		in bloomTexture3_d
 		out bloomTexture3
 	}
 	pass BloomUpscale
 	{
-		material PutBlurThrough
+		material BloomUpscale
 		in bloomTexture3
+		in bloomTexture2_d
 		out bloomTexture2
 	}
 	pass BloomUpscale
 	{
-		material PutBlurThrough
+		material BloomUpscale
 		in bloomTexture2
+		in bloomTexture_d
 		out bloomTexture
+	}
+	pass BloomUpscale
+	{
+		material PutBlurThrough
+		in bloomTexture
+		out bloom
 	}
 }

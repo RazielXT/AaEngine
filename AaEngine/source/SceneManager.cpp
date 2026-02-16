@@ -22,7 +22,8 @@ void SceneManager::initialize(RenderSystem& renderSystem)
 	batch.Begin();
 
 	grass.initializeGpuResources(renderSystem, resources, batch);
-	terrain.initialize(renderSystem, resources, batch);
+	//terrain.initialize(renderSystem, resources, batch);
+	vegetation.initialize(renderSystem, resources, batch);
 
 	auto uploadResourcesFinished = batch.End(renderSystem.core.commandQueue);
 	uploadResourcesFinished.wait();
@@ -128,14 +129,20 @@ RenderQueue* SceneManager::createQueue(const std::vector<DXGI_FORMAT>& targets, 
 {
 	for (auto& q : queues)
 	{
-		if (q->targets == targets && q->technique == technique && q->targetOrder == order)
+		if (q->targetFormats == targets && q->technique == technique && q->targetOrder == order)
 			return q.get();
 	}
 
 	auto queue = std::make_unique<RenderQueue>();
-	queue->targets = targets;
+	queue->targetFormats = targets;
 	queue->technique = technique;
 	queue->targetOrder = order;
+
+	auto r = getRenderables(order);
+	r->iterateObjects([&](RenderObject& obj)
+		{
+			queue->update({ EntityChange::Add, order, (SceneEntity*) &obj}, resources);
+		});
 
 	return queues.emplace_back(std::move(queue)).get();
 }
@@ -151,17 +158,6 @@ RenderQueue* SceneManager::getQueue(MaterialTechnique technique /*= MaterialTech
 	return nullptr;
 }
 
-std::vector<DXGI_FORMAT> SceneManager::getQueueTargetFormats(MaterialTechnique technique, Order order) const
-{
-	for (auto& q : queues)
-	{
-		if (q->technique == technique && q->targetOrder == order)
-			return q->targets;
-	}
-
-	return {};
-}
-
 RenderQueue SceneManager::createManualQueue(MaterialTechnique technique, Order order)
 {
 	for (auto& q : queues)
@@ -170,7 +166,7 @@ RenderQueue SceneManager::createManualQueue(MaterialTechnique technique, Order o
 		{
 			RenderQueue queue;
 			queue.technique = technique;
-			queue.targets = q->targets;
+			queue.targetFormats = q->targetFormats;
 			queue.targetOrder = order;
 
 			return queue;

@@ -156,13 +156,15 @@ bool DLSS::selectMode(UpscaleMode m)
 	DlssCreateParams.Feature.InPerfQualityValue = selectedInfo.type;
 	DlssCreateParams.InFeatureCreateFlags = DlssCreateFeatureFlags;
 
-	// Select render preset (DL weights)
-	const int renderPreset = NVSDK_NGX_DLSS_Hint_Render_Preset_K; // NVSDK_NGX_DLSS_Hint_Render_Preset_J;
-	NVSDK_NGX_Parameter_SetUI(ngxParameters, NVSDK_NGX_Parameter_DLSS_Hint_Render_Preset_DLAA, renderPreset);              // will remain the chosen weights after OTA
-	NVSDK_NGX_Parameter_SetUI(ngxParameters, NVSDK_NGX_Parameter_DLSS_Hint_Render_Preset_Quality, renderPreset);           // ^
-	NVSDK_NGX_Parameter_SetUI(ngxParameters, NVSDK_NGX_Parameter_DLSS_Hint_Render_Preset_Balanced, renderPreset);          // ^
-	NVSDK_NGX_Parameter_SetUI(ngxParameters, NVSDK_NGX_Parameter_DLSS_Hint_Render_Preset_Performance, renderPreset);       // ^
-	NVSDK_NGX_Parameter_SetUI(ngxParameters, NVSDK_NGX_Parameter_DLSS_Hint_Render_Preset_UltraPerformance, renderPreset);  // ^
+	// Select render preset DLSS 4.5
+	const int renderPreset = NVSDK_NGX_DLSS_Hint_Render_Preset_K;
+	const int perfRenderPreset = NVSDK_NGX_DLSS_Hint_Render_Preset_M;
+	const int ultraRenderPreset = NVSDK_NGX_DLSS_Hint_Render_Preset_L;
+	NVSDK_NGX_Parameter_SetUI(ngxParameters, NVSDK_NGX_Parameter_DLSS_Hint_Render_Preset_DLAA, renderPreset);
+	NVSDK_NGX_Parameter_SetUI(ngxParameters, NVSDK_NGX_Parameter_DLSS_Hint_Render_Preset_Quality, renderPreset);
+	NVSDK_NGX_Parameter_SetUI(ngxParameters, NVSDK_NGX_Parameter_DLSS_Hint_Render_Preset_Balanced, renderPreset);
+	NVSDK_NGX_Parameter_SetUI(ngxParameters, NVSDK_NGX_Parameter_DLSS_Hint_Render_Preset_Performance, perfRenderPreset);
+	NVSDK_NGX_Parameter_SetUI(ngxParameters, NVSDK_NGX_Parameter_DLSS_Hint_Render_Preset_UltraPerformance, ultraRenderPreset);
 
 	{
 		auto commands = renderSystem.core.CreateCommandList(L"DLSS", PixColor::Nvidia);

@@ -17,6 +17,7 @@
 ApplicationCore::ApplicationCore(TargetViewport& viewport) : renderSystem(viewport), resources(renderSystem), sceneMgr(resources)
 {
 	viewport.listeners.push_back(this);
+	Vector3(-1, -1, -1).Normalize(lights.directionalLight.direction);
 }
 
 ApplicationCore::~ApplicationCore()
@@ -32,14 +33,18 @@ void ApplicationCore::initialize(const TargetWindow& window, const InitParams& a
 	if (!std::filesystem::exists(DATA_DIRECTORY) || !std::filesystem::is_directory(DATA_DIRECTORY))
 		FileLogger::logError("Missing directory " + std::filesystem::absolute(DATA_DIRECTORY).string());
 
-	renderSystem.core.initializeSwapChain(window);
+	resources.shaderDefines.setDefine("CFG_SHADOW_HIGH", true);
 
-	Vector3(-1, -1, -1).Normalize(lights.directionalLight.direction);
+	ColorSpace colorSpace{};
+	if (renderSystem.core.IsDisplayHDR())
+		colorSpace = { .outputFormat = DXGI_FORMAT_R10G10B10A2_UNORM, .type = ColorSpace::HDR10 };
+	renderSystem.core.initializeSwapChain(window, colorSpace);
 
-	shadowMap = new ShadowMaps(lights.directionalLight, params.sun);
-	shadowMap->init(renderSystem, resources);
+	shadowMap = new ShadowMaps(renderSystem, lights.directionalLight, params.sun);
+	shadowMap->init(resources);
 
 	compositor = new FrameCompositor(appParams.compositor, { params, renderSystem, resources }, sceneMgr, *shadowMap);
+	compositor->setColorSpace(colorSpace);
 	compositor->registerTask("RenderPhysics", [this](RenderProvider& provider, SceneManager& sceneMgr)
 	{
 		return std::make_shared<PhysicsRenderTask>(provider, sceneMgr, physicsMgr);
@@ -172,6 +177,18 @@ void ApplicationCore::loadScene(const char* scene)
 // 			planes.CreatePlanesVertexBuffer(renderSystem, batch, { { {0,0,250}, 500 }, { {500,0,250}, 500 } }, 0.01f, true);
 // 			planes.CreateEntity("testPlane", sceneMgr, resources.materials.getMaterial("terrainGrass", batch));
 // 		}
+
+		auto e = sceneMgr.createEntity("basicClouds", Order::Post);
+		e->material = resources.materials.getMaterial("BasicClouds", batch);
+
+		static VertexBufferModel model;
+		model.CreateIndexBufferGrid(renderSystem.core.device, &batch, 256);
+		model.bbox.Extents = { 50000, 10000, 50000 };
+
+		//auto model = resources.models.getLoadedModel("Plane001.mesh", ResourceGroup::Core);
+		e->geometry.fromModel(model);
+		e->setBoundingBox(model.bbox);
+		e->setFlag(RenderObjectFlag::NoShadow);
 	}
 
 	auto commands = renderSystem.core.CreateCommandList(L"loadScene", PixColor::Load);
@@ -197,8 +214,11 @@ void ApplicationCore::loadScene(const char* scene)
 		VoxelizeSceneTask::Get().clear(commands.commandList);
 
  		marker.move("loadSceneTerrain", commands.color);
-		sceneMgr.terrain.createTerrain(commands.commandList, renderSystem, sceneMgr, resources, batch);
-		sceneMgr.water.initializeGpuResources(renderSystem, resources, batch, sceneMgr);
+		//sceneMgr.terrain.createTerrain(commands.commandList, renderSystem, sceneMgr, resources, batch);
+		sceneMgr.water.initializeGpuResources(renderSystem, resources, batch);
+		sceneMgr.newTerrain.initialize(renderSystem, resources, batch, sceneMgr);
+		sceneMgr.vegetation.createDrawObject(sceneMgr, renderSystem, *resources.materials.getMaterial("Billboard", batch), batch, resources);
+		sceneMgr.water.initializeTarget(sceneMgr.newTerrain.terrainGridHeight[2][2], sceneMgr, {}, {});
 	}
 
 	auto uploadResourcesFinished = batch.End(renderSystem.core.commandQueue);

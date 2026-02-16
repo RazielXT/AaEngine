@@ -1,21 +1,33 @@
 struct SunParams
 {
 	float4x4 ShadowMatrix[4];
+
 	float3 Direction;
 	uint TexIdShadowMap0;
-	float3 Color;
-	float ShadowMapSize;
-	float ShadowMapSizeInv;
+
 	float ShadowCascadeDistance0;
 	float ShadowCascadeDistance1;
 	float ShadowCascadeDistance2;
+	float ShadowCascadeDistance3;
+
+	float3 Color;
+	float ShadowMapSize;
+
+	float ShadowMapSizeInv;
+	uint TexIdSunZenith;
+	uint TexIdViewZenith;
+	uint TexIdSunView;
+
+	float CloudsAmount;
+	float CloudsDensity;
+	float CloudsSpeed;
 };
 
 float readShadowmap(Texture2D<float> shadowmap, SamplerState sampler, float2 shadowCoord)
 {
 	return shadowmap.SampleLevel(sampler, shadowCoord, 0).r;
 	
-//	int2 texCoord = int2(shadowCoord * 512);
+//	int2 texCoord = int2(shadowCoord * 1024);
 //	return shadowmap.Load(int3(texCoord, 0)).r;
 }
 
@@ -59,31 +71,6 @@ float CalcShadowTermSoftPCF(Texture2D<float> shadowmap, SamplerState sampler, fl
 	fShadowTerm *= 1.55f;
 
 	return fShadowTerm;
-}
-
-float CalculatePCFPercentLit(Texture2D<float> shadowmap, SamplerComparisonState sampler, float fLightDepth, float2 vShadowTexCoord, float ShadowMapSizeInv) 
-{
-    float fPercentLit = 0.0f;
-    // This loop could be unrolled, and texture immediate offsets could be used if the kernel size were fixed.
-    // This would be performance improvment.
-	int m_iPCFBlurForLoopStart = -2;
-	int m_iPCFBlurForLoopEnd = 3;
-
-    for( int x = m_iPCFBlurForLoopStart; x < m_iPCFBlurForLoopEnd; ++x ) 
-    {
-        for( int y = m_iPCFBlurForLoopStart; y < m_iPCFBlurForLoopEnd; ++y ) 
-        {
-            fPercentLit += shadowmap.SampleCmpLevelZero(sampler, 
-                float2( 
-                    vShadowTexCoord.x + ( ( (float) x ) * ShadowMapSizeInv / 3 ) , 
-                    vShadowTexCoord.y + ( ( (float) y ) * ShadowMapSizeInv ) 
-                    ), 
-                fLightDepth);
-        }
-    }
-    fPercentLit /= (float)5*5;
-	
-	return fPercentLit;
 }
 
 float ShadowPCF(Texture2D<float> shadowmap, SamplerState sampler, float4 shadowCoord, float ShadowMapSizeInv)

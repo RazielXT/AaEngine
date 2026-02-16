@@ -6,6 +6,7 @@
 enum class Order
 {
 	Normal = 5,
+	Post = 6,
 	Transparent = 10,
 };
 

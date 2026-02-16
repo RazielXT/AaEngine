@@ -70,7 +70,7 @@ Texture2D GetTexture(uint index)
     return ResourceDescriptorHeap[index];
 }
 
-float2 ParallaxMapping(float2 texCoords, float3 viewDir)
+float2 ParallaxMapping(float2 texCoords, float3 viewDir, Texture2D heightmap)
 {
 	const float minLayers = 8.0;
 	const float maxLayers = 64.0;
@@ -86,15 +86,14 @@ float2 ParallaxMapping(float2 texCoords, float3 viewDir)
     float2 deltaTexCoords = P / numLayers;
 
 	SamplerState samplerState = SamplerDescriptorHeap[0];
-    Texture2D depthMap = GetTexture(TexIdHeightMap);
 
     float2 currentTexCoords = texCoords;
-    float currentDepthMapValue = depthMap.Sample(samplerState, currentTexCoords).r;
+    float currentDepthMapValue = heightmap.Sample(samplerState, currentTexCoords).r;
 
     while (currentLayerDepth < currentDepthMapValue)
     {
         currentTexCoords -= deltaTexCoords;
-        currentDepthMapValue = depthMap.Sample(samplerState, currentTexCoords).r;
+        currentDepthMapValue = heightmap.Sample(samplerState, currentTexCoords).r;
         currentLayerDepth += layerDepth;
     }
 
@@ -105,7 +104,7 @@ float2 ParallaxMapping(float2 texCoords, float3 viewDir)
 
 	// get depth after and before collision for linear interpolation
 	float afterDepth  = currentDepthMapValue - currentLayerDepth;
-	float beforeDepth = depthMap.Sample(samplerState, prevTexCoords).r - currentLayerDepth + layerDepth;
+	float beforeDepth = heightmap.Sample(samplerState, prevTexCoords).r - currentLayerDepth + layerDepth;
 
 	// interpolation of texture coordinates
 	float weight = afterDepth / (afterDepth - beforeDepth);
@@ -145,7 +144,7 @@ PSOutput PSMain(VSOutput input)
     float3 tangentViewDir = normalize(TangentCamPos - TangentWorldPos);
 	tangentViewDir.x *= -1;
 
-    float2 texCoords = ParallaxMapping(input.TexCoords, tangentViewDir);
+    float2 texCoords = ParallaxMapping(input.TexCoords, tangentViewDir, GetTexture(TexIdHeightMap));
 
 	SamplerState samplerState = SamplerDescriptorHeap[0];
     float3 albedo = GetTexture(TexIdAlbedo).Sample(samplerState, texCoords).rgb;

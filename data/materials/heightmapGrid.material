@@ -14,22 +14,12 @@ material HeightmapGrid abstract
 		profile ps_6_6
 	}
 
-	texture Diffuse
-	{
-		file white.png
-	}
 	texture Heightmap
-	{
-	}
-
-	default_params
-	{
-		float MaterialColor 1 1 1
-	}
+	texture Normalmap
 
 	shader_defines GRID_PADDING
 
-	technique Voxelize skip
+	technique Voxelize VoxelizeGridTerrain
 	technique EntityId HeightmapGridEntityId
 	technique Depth HeightmapGridDepth
 }
@@ -46,7 +36,7 @@ material HeightmapGridEntityId : HeightmapGrid
 	shader_defines ENTITY_ID
 }
 
-material HeightmapGridDepth
+material HeightmapGridDepth : HeightmapGrid
 {
 	vertex_shader
 	{
@@ -55,13 +45,46 @@ material HeightmapGridDepth
 		profile vs_6_6
 	}
 
+	pixel_shader skip
+
+	texture Diffuse
+	{
+		file SilveryBlue.dds
+	}
+
+	texture Grass
+	{
+		file grass.dds
+	}
+
 	shader_defines GRID_PADDING
+	culling none //long distance shadows
 }
 
 material DarkGreenGrid : HeightmapGrid
 {
-	default_params
+	texture Diffuse
 	{
-		color MaterialColor 0x025020
+		file SilveryBlue.dds
+	}
+
+	texture Grass
+	{
+		file grass.dds
+	}
+
+	texture Normal
+	{
+		file SilveryBlue_NRM.png
+	}
+	
+	texture NormalGrass
+	{
+		file grass_NRM.png
+	}
+
+	texture Spread
+	{
+		file spread.png
 	}
 }

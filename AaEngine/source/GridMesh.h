@@ -3,6 +3,7 @@
 #include "MathUtils.h"
 #include <vector>
 #include "ShaderDataBuffers.h"
+#include "SceneEntity.h"
 
 // Data sent to the StructuredBuffer
 struct TileData
@@ -19,9 +20,11 @@ public:
 
 	std::vector<TileData> m_renderList;
 
-	void Initialize(Vector2 gridWorldSize, Vector3 gridOrigin, UINT lodsCount = 5)
+	UINT TilesWidth;
+
+	void Initialize(Vector2 gridWorldSize, Vector3 gridOrigin, UINT lodsCount)
 	{
-		TilesWidth = pow(2, lodsCount - 1);
+		TilesWidth = (UINT)pow(2, lodsCount - 1);
 		lodsLevels = lodsCount;
 
 		// How many tiles across (etc) until next LOD transition
@@ -40,7 +43,7 @@ public:
 		numBlocksY = (uint32_t)std::round(gridWorldSize.y / shorterSide);
 
 		// 3. Pre-calculate thresholds
-		for (int i = 0; i < lodsCount; ++i) {
+		for (UINT i = 0; i < lodsCount; ++i) {
 			float levelTileSize = (TilesWidth >> i) * m_smallestTileSize * LodLevelTilesCount;
 			float limit = levelTileSize * 1.25f;
 			m_subdivideThresholdsSq.push_back(limit * limit);
@@ -99,7 +102,6 @@ private:
 	float m_smallestTileSize; // The world size of a 1 / TilesWidth th tile
 	Vector3 m_gridOrigin;     // World space position of tile (0,0)
 	UINT lodsLevels;
-	UINT TilesWidth;
 	uint32_t numBlocksX;
 	uint32_t numBlocksY;
 };
@@ -109,9 +111,9 @@ struct GridInstanceMesh
 	GridInstanceMesh() = default;
 	~GridInstanceMesh() = default;
 
-	void create(UINT bufferMaxSize)
+	void create(UINT tilesResolution)
 	{
-		gpuBuffer = ShaderDataBuffers::get().CreateCbufferResource(bufferMaxSize);
+		gpuBuffer = ShaderDataBuffers::get().CreateCbufferResource(tilesResolution * tilesResolution * sizeof(TileData));
 	}
 
 	void update(UINT count, void* data, UINT dataSize, UINT frameIdx)

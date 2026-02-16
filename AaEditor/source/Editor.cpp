@@ -86,7 +86,7 @@ Editor::Editor(ApplicationCore& a, ImguiPanelViewport& v) : app(a), renderer(a.r
 #endif
 }
 
-void Editor::initialize(TargetWindow& v)
+void Editor::initializeUi(const TargetWindow& v)
 {
 	renderPanelViewport.set(v.getHwnd(), 640, 480);
 	lastViewportPanelSize = viewportPanelSize = { renderPanelViewport.getWidth(), renderPanelViewport.getHeight() };
@@ -117,12 +117,15 @@ void Editor::initialize(TargetWindow& v)
 	initializeIconViews();
 
 	ImGui_ImplWin32_Init(v.getHwnd());
+}
 
+void Editor::initializeRenderer(DXGI_FORMAT format)
+{
 	ImGui_ImplDX12_InitInfo init_info = {};
 	init_info.Device = renderer.device;
 	init_info.CommandQueue = renderer.commandQueue;
 	init_info.NumFramesInFlight = FrameCount;
-	init_info.RTVFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+	init_info.RTVFormat = format;
 	init_info.DSVFormat = DXGI_FORMAT_UNKNOWN;
 	init_info.SrvDescriptorHeap = g_pd3dSrvDescHeap;
 	init_info.SrvDescriptorAllocFn = [](ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE* out_cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE* out_gpu_handle) { return g_pd3dSrvDescHeapAlloc.Alloc(out_cpu_handle, out_gpu_handle); };
@@ -411,14 +414,20 @@ void Editor::prepareElements(Camera& camera)
 			{
 				ObjectTransformation tr;
 				tr.position = pickInfo.position;
-				tr.position.y -= 2;
-				tr.orientation = Quaternion::CreateFromYawPitchRoll(getRandomFloat(0, XM_2PI), 0, 0);
-				tr.scale = Vector3(getRandomFloat(1.8f, 2.2f));
+				tr.position.y += 2;
+				tr.orientation = Quaternion::Identity; // Quaternion::CreateFromYawPitchRoll(getRandomFloat(0, XM_2PI), 0, 0);
+				tr.scale = Vector3(5); // Vector3(getRandomFloat(1.8f, 2.2f));
 
 				if (addTreeNormals)
 					tr.orientation *= Quaternion::FromToRotation(Vector3::UnitY, pickInfo.normal);
 
-				app.sceneMgr.terrain.trees.addTree(tr);
+				static int idx = 0;
+
+				auto sphereMaterial = app.resources.materials.getMaterial("Fireball"); //TriplanarTest
+				auto sphereModel = app.resources.models.getLoadedModel("sphere.mesh", { ResourceGroup::Core });
+
+				auto tree = app.sceneMgr.createEntity("editorEntity" + std::to_string(idx++), tr, *sphereModel);
+				tree->material = sphereMaterial;
 			}
 			else
 			{
@@ -530,9 +539,11 @@ void Editor::prepareElements(Camera& camera)
 		XMFLOAT4X4 transformDelta{};
 
 		static bool manipulated{};
-		manipulated |= ImGuizmo::Manipulate(&cameraView._11, &cameraProjection._11,
+		bool currentlyManipulated = ImGuizmo::Manipulate(&cameraView._11, &cameraProjection._11,
 			m_GizmoType, selection.size() == 1 ? ImGuizmo::LOCAL : ImGuizmo::WORLD, &transform._11,
 			&transformDelta._11, nullptr);
+
+		//ImGui::Text("ImGuizmo manipulated %d", currentlyManipulated);
 
 		if (gizmoActive)
 		{
@@ -575,12 +586,12 @@ void Editor::prepareElements(Camera& camera)
 
 		bool wasActive = gizmoActive;
 		gizmoActive = ImGuizmo::IsOver();
+		//ImGui::Text("ImGuizmo gizmoActive %d", gizmoActive);
 
-		if (!gizmoActive && wasActive && manipulated)
+		if (!currentlyManipulated && manipulated)
 			VoxelizeSceneTask::Get().revoxelize();
 
-		if (gizmoActive)
-			manipulated = false;
+		manipulated = currentlyManipulated;
 	}
 
 	ImGui::End();
@@ -601,14 +612,25 @@ void Editor::prepareElements(Camera& camera)
 
 	ImGui::NewLine();
 
+	const char* scenes[] = {
+		"basic",
+		"cubesTower",
+		"testCubes",
+		"voxelRoom",
+		"voxelOutside",
+		"voxelOutsideBig",
+		"sponza",
+		"voxelRoom",
+		"tmp"
+	};
+	static int currentScene = 0;
+	if (ImGui::Combo("Scene", &currentScene, scenes, std::size(scenes)))
+		state.changeScene = scenes[currentScene];
+
 	if (ImGui::Button("Reload shaders"))
 		state.reloadShaders = true;
 
-	if (ImGui::Button("Rebuild terrain"))
-		app.sceneMgr.terrain.rebuild();
-
-	auto& renderTask = SceneRenderTask::Get();
-	ImGui::Checkbox("Render wireframe", &renderTask.enabledWireframe);
+	state.wireframeChange = ImGui::Checkbox("Render wireframe", &state.wireframe);
 
 	ImGui::Combo("DLSS", &state.DlssMode, UpscaleModeNames, std::size(UpscaleModeNames));
 	ImGui::Combo("FSR", &state.FsrMode, UpscaleModeNames, std::size(UpscaleModeNames));
@@ -624,16 +646,19 @@ void Editor::prepareElements(Camera& camera)
 
 			if (ImGui::Checkbox(value.c_str(), &isActive))
 			{
-				if (isActive)
-					app.resources.shaderDefines.setDefine(value);
-				else
-					app.resources.shaderDefines.removeDefine(value);
+				app.resources.shaderDefines.setDefine(value, isActive);
 			}
 		}
 	}
 
 	if (ImGui::CollapsingHeader("Terrain"))
 	{
+		if (ImGui::Button("Rebuild terrain"))
+		{
+			app.sceneMgr.terrain.rebuild();
+			app.sceneMgr.newTerrain.updateTerrain = true;
+		}
+
 		ImGui::Checkbox("Add Tree", &addTree);
 		if (addTree)
 			ImGui::Checkbox("Add Tree on normals", &addTreeNormals);
@@ -643,7 +668,10 @@ void Editor::prepareElements(Camera& camera)
 
 		static bool updateGrid = true;
 		if (ImGui::Checkbox("Update grid LOD", &updateGrid))
+		{
 			app.sceneMgr.water.enableLodUpdating(updateGrid);
+			app.sceneMgr.newTerrain.updateLod = updateGrid;
+		}
 
 		static bool updateWater = true;
 		if (ImGui::Checkbox("Update water", &updateWater))
@@ -652,6 +680,29 @@ void Editor::prepareElements(Camera& camera)
 
 	if (ImGui::CollapsingHeader("VCT"))
 	{
+		static bool showVoxels = false;
+		if (ImGui::Checkbox("Show voxels", &showVoxels))
+			SceneRenderTask::Get().showVoxels(showVoxels);
+
+		if (showVoxels)
+		{
+			static int showVoxelsIndex = 0;
+			if (ImGui::InputInt("Show voxels index", &showVoxelsIndex))
+			{
+				showVoxelsIndex = std::clamp(showVoxelsIndex, 0, 3);
+				app.resources.materials.getMaterial("VisualizeVoxelTexture")->SetParameter("VoxelIndex", &showVoxelsIndex, 1);
+			}
+			static int showVoxelsMip = 0;
+			if (ImGui::InputInt("Show voxels MIP", &showVoxelsMip))
+			{
+				showVoxelsMip = std::clamp(showVoxelsMip, 0, 7);
+				app.resources.materials.getMaterial("VisualizeVoxelTexture")->SetParameter("VoxelMip", &showVoxelsMip, 1);
+			}
+		}
+
+		if (ImGui::Button("Regenerate voxels"))
+			VoxelizeSceneTask::Get().revoxelize();
+
 		auto& state = VoxelizeSceneTask::Get().params;
 		ImGui::SliderFloat("middleConeRatio", &state.middleConeRatioDistance.x, 0.0f, 5.f);
 		ImGui::SliderFloat("middleConeDistance", &state.middleConeRatioDistance.y, 0.0f, 5.f);
@@ -673,21 +724,6 @@ void Editor::prepareElements(Camera& camera)
 		if (ImGui::Button("Big physics"))
 			app.physicsMgr.test();
 	}
-
-	const char* scenes[] = {
-		"basic",
-		"cubesTower",
-		"testCubes",
-		"voxelRoom",
-		"voxelOutside",
-		"voxelOutsideBig",
-		"sponza",
-		"voxelRoom",
-		"tmp"
-	};
-	static int currentScene = 0;
-	if (ImGui::Combo("Scene", &currentScene, scenes, std::size(scenes)))
-		state.changeScene = scenes[currentScene];
 
 	if (ImGui::CollapsingHeader("Texture overlay"))
 	{
@@ -714,36 +750,13 @@ void Editor::prepareElements(Camera& camera)
 		}
 	}
 
-	static bool showVoxels = false;
-	if (ImGui::Checkbox("Show voxels", &showVoxels))
-		SceneRenderTask::Get().showVoxels(showVoxels);
-
-	if (showVoxels)
-	{
-		static int showVoxelsIndex = 0;
-		if (ImGui::InputInt("Show voxels index", &showVoxelsIndex))
-		{
-			showVoxelsIndex = std::clamp(showVoxelsIndex, 0, 3);
-			app.resources.materials.getMaterial("VisualizeVoxelTexture")->SetParameter("VoxelIndex", &showVoxelsIndex, 1);
-		}
-		static int showVoxelsMip = 0;
-		if (ImGui::InputInt("Show voxels MIP", &showVoxelsMip))
-		{
-			showVoxelsMip = std::clamp(showVoxelsMip, 0, 7);
-			app.resources.materials.getMaterial("VisualizeVoxelTexture")->SetParameter("VoxelMip", &showVoxelsMip, 1);
-		}
-	}
-
-	if (ImGui::Button("Regenerate voxels"))
-		VoxelizeSceneTask::Get().revoxelize();
-
-	if (ImGui::CollapsingHeader("Sun"))
+	if (ImGui::CollapsingHeader("Sky"))
 	{
 		static float sunYaw = std::atan2(app.lights.directionalLight.direction.x, app.lights.directionalLight.direction.z);
 		static float sunPitch = std::asin(app.lights.directionalLight.direction.y);
 
-		bool change = ImGui::SliderFloat("Yaw", &sunYaw, -XM_PI, XM_PI);
-		change |= ImGui::SliderFloat("Pitch", &sunPitch, -XM_PI, 0);
+		bool change = ImGui::SliderFloat("Sun Yaw", &sunYaw, -XM_PI, XM_PI);
+		change |= ImGui::SliderFloat("Sun Pitch", &sunPitch, -XM_PI, 0);
 
 		if (change)
 		{
@@ -756,10 +769,14 @@ void Editor::prepareElements(Camera& camera)
 			VoxelizeSceneTask::Get().revoxelize();
 		}
 
-		if (ImGui::ColorEdit3("Color", &app.lights.directionalLight.color.x))
+		if (ImGui::ColorEdit3("Sun Color", &app.lights.directionalLight.color.x))
 		{
 			VoxelizeSceneTask::Get().revoxelize();
 		}
+
+		ImGui::SliderFloat("Clouds amount", &app.params.sun.CloudsAmount, -1, 1);
+		ImGui::SliderFloat("Clouds density", &app.params.sun.CloudsDensity, 0, 1);
+		ImGui::SliderFloat("Clouds speed", &app.params.sun.CloudsSpeed, 0, 0.02f);
 	}
 	{
 		ImGui::Checkbox("Limit framerate", &state.limitFrameRate);

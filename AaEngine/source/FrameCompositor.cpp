@@ -26,9 +26,33 @@ FrameCompositor::~FrameCompositor()
 		c.deinit();
 }
 
+void FrameCompositor::setDefine(const std::string& name, bool enabled)
+{
+	bool changed = (enabled && globalDefines.insert(name).second) || (!enabled && globalDefines.erase(name));
+
+	if (changed && !passes.empty())
+		reloadPasses();
+}
+
+void FrameCompositor::setColorSpace(ColorSpace s)
+{
+	if (colorSpace.type != s.type)
+	{
+		colorSpace = s;
+		provider.resources.shaderDefines.setDefine("CFG_HDR", colorSpace.type == ColorSpace::HDR10);
+
+		setDefine("HDR", colorSpace.type == ColorSpace::HDR10);
+	}
+}
+
+ColorSpace FrameCompositor::getColorSpace() const
+{
+	return colorSpace;
+}
+
 void FrameCompositor::reloadPasses()
 {
-	std::set<std::string> defines;
+	std::set<std::string> defines = globalDefines;
 	auto& upscale = provider.renderSystem.upscale;
 	if (upscale.dlss.enabled()) defines.insert("DLSS");
 	if (upscale.fsr.enabled()) defines.insert("FSR");
@@ -42,7 +66,7 @@ void FrameCompositor::reloadPasses()
 		outputTexture.name = "Output";
 		outputTexture.outputScale = true;
 		outputTexture.height = outputTexture.width = 1.0f;
-		outputTexture.format = config.outputFormat;
+		outputTexture.format = colorSpace.outputFormat;
 	}
 
 	passes.clear();
@@ -169,21 +193,19 @@ void FrameCompositor::reloadTextures()
 			w = max(w, 1);
 			h = max(h, 1);
 
-
 			{
 				auto lastState = initialTextureStates[name];
 
 				GpuTexture2D& tex = textures[name];
-				tex.depthOrArraySize = t.arraySize;
 
 				if (name.ends_with(":Depth"))
 					tex.InitDepth(provider.renderSystem.core.device, w, h, rtvHeap, lastState);
 				else
 				{
 					if (t.uav)
-						tex.InitUAV(provider.renderSystem.core.device, w, h, t.format, lastState);
+						tex.InitUAV(provider.renderSystem.core.device, w, h, t.format, lastState, { .arraySize = t.arraySize });
 					else
-						tex.InitRenderTarget(provider.renderSystem.core.device, w, h, rtvHeap, t.format, lastState);
+						tex.InitRenderTarget(provider.renderSystem.core.device, w, h, rtvHeap, t.format, lastState, { .arraySize = t.arraySize });
 				}
 
 				tex.SetName(name);

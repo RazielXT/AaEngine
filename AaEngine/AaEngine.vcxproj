@@ -104,6 +104,7 @@
     <ClCompile Include="source\MeshUtils.cpp" />
     <ClCompile Include="source\ObjectId.cpp" />
     <ClCompile Include="source\PrepareFrameTask.cpp" />
+    <ClCompile Include="source\ProgressiveTerrain.cpp" />
     <ClCompile Include="source\RenderTargetHeap.cpp" />
     <ClCompile Include="source\SceneEntity.cpp" />
     <ClCompile Include="source\Material.cpp" />
@@ -189,6 +190,7 @@
     <ClInclude Include="source\ObjectId.h" />
     <ClInclude Include="source\PixColor.h" />
     <ClInclude Include="source\PrepareFrameTask.h" />
+    <ClInclude Include="source\ProgressiveTerrain.h" />
     <ClInclude Include="source\RenderTargetHeap.h" />
     <ClInclude Include="source\ResourceGroup.h" />
     <ClInclude Include="source\ResourcesView.h" />

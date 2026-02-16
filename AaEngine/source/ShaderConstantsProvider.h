@@ -36,7 +36,9 @@ public:
 
 	XMFLOAT3 getWorldPosition() const;
 	XMFLOAT3 getCameraPosition() const;
+	XMFLOAT3 getCameraDirection() const;
 	XMFLOAT3 getMainCameraPosition() const;
+	XMFLOAT3 getMainCameraDirection() const;
 
 	D3D12_GPU_VIRTUAL_ADDRESS getGeometryBuffer() const;
 

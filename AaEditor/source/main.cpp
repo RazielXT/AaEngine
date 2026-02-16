@@ -19,7 +19,7 @@ public:
 
 		InputHandler::registerWindow(window->getHwnd());
 
-		editorUi.initialize(*window);
+		editorUi.initializeUi(*window);
 
 		window->eventHandler = [](HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) -> bool
 			{
@@ -33,6 +33,8 @@ public:
 		ApplicationCore::InitParams params;
 		params.compositor.renderToBackbuffer = false;
 		app.initialize(*window, params);
+
+		editorUi.initializeRenderer(app.compositor->getColorSpace().outputFormat);
 
 		freeCamera.bind(renderPanelViewport);
 		freeCamera.camera.setPosition(XMFLOAT3(0, 0, 0));
@@ -112,6 +114,11 @@ public:
 			app.renderSystem.upscale.fsr.selectMode((UpscaleMode)editorUi.state.FsrMode);
 			app.compositor->reloadPasses();
 
+			editorUi.resetViewportOutput();
+		}
+		if (editorUi.state.wireframeChange)
+		{
+			app.compositor->setDefine("WIREFRAME", editorUi.state.wireframe);
 			editorUi.resetViewportOutput();
 		}
 	}

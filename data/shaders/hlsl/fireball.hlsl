@@ -2,6 +2,7 @@ float4x4 WorldMatrix;
 float4x4 ViewProjectionMatrix;
 float Time;
 float3 CameraPosition;
+float3 WorldPosition;
 uint TexIdFire;
 float3 Direction;
 
@@ -105,7 +106,7 @@ PSOut PSMain(VOut IN)
 {
     PSOut OUT;
 
-    float time = Time + 5.0f;
+    float time = Time + (WorldPosition.x + WorldPosition.y + WorldPosition.z) / 10.f;
     time *= 0.13f * Speed;
 
     float3 fireDir = normalize(Direction);

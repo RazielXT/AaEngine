@@ -102,14 +102,14 @@ RenderCore::RenderCore()
 			throw std::invalid_argument(err);
 		}
 
-		D3D12_FEATURE_DATA_D3D12_OPTIONS7 opts7 = {};
-		device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &opts7, sizeof(opts7));
-		if (opts7.MeshShaderTier == D3D12_MESH_SHADER_TIER_NOT_SUPPORTED)
-		{
-			auto err = "D3D12Device D3D12_MESH_SHADER_TIER_NOT_SUPPORTED";
-			FileLogger::logError(err);
-			throw std::invalid_argument(err);
-		}
+// 		D3D12_FEATURE_DATA_D3D12_OPTIONS7 opts7 = {};
+// 		device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &opts7, sizeof(opts7));
+// 		if (opts7.MeshShaderTier == D3D12_MESH_SHADER_TIER_NOT_SUPPORTED)
+// 		{
+// 			auto err = "D3D12Device D3D12_MESH_SHADER_TIER_NOT_SUPPORTED";
+// 			FileLogger::logError(err);
+// 			throw std::invalid_argument(err);
+// 		}
 
 #ifndef NDEBUG
 		ComPtr<ID3D12InfoQueue> pInfoQueue;

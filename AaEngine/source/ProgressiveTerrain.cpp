@@ -62,24 +62,24 @@ void ProgressiveTerrain::initialize(RenderSystem& renderSystem, GraphicsResource
 		}
 
 
-	struct GridInstanceInfo
-	{
-		Vector3 WorldPosition;
-		Vector2 WorldSize;
-	}
-	grids[2] = { { Vector3(0,0,0), Vector2(100,100) }, { Vector3(0,100,0), Vector2(200,200) } };
-
-	static auto gpuBuffer = ShaderDataBuffers::get().CreateCbufferResource(sizeof(grids));
-	for (auto& buf : gpuBuffer.data)
-		memcpy(buf.Memory(), grids, sizeof(grids));
-
-	auto e = sceneMgr.createEntity("TerrainMesh", Order::Normal);
-	e->geometry.fromMeshInstancedModel(2, gpuBuffer.data[0].GpuAddress());
-	e->setBoundingBox(terrainModel.bbox);
-	e->material = resources.materials.getMaterial("TerrainMesh", batch);
-	e->Material().setParam("TexIdHeightmap", terrainGridHeight[0][0].view.srvHeapIndex);
-	e->Material().setParam("TexIdNormalmap", terrainGridNormal[0][0].view.srvHeapIndex);
-	e->setPosition({ 0, 100, 0 });
+// 	struct GridInstanceInfo
+// 	{
+// 		Vector3 WorldPosition;
+// 		Vector2 WorldSize;
+// 	}
+// 	grids[2] = { { Vector3(0,0,0), Vector2(100,100) }, { Vector3(0,100,0), Vector2(200,200) } };
+// 
+// 	static auto gpuBuffer = ShaderDataBuffers::get().CreateCbufferResource(sizeof(grids));
+// 	for (auto& buf : gpuBuffer.data)
+// 		memcpy(buf.Memory(), grids, sizeof(grids));
+// 
+// 	auto e = sceneMgr.createEntity("TerrainMesh", Order::Normal);
+// 	e->geometry.fromMeshInstancedModel(2, gpuBuffer.data[0].GpuAddress());
+// 	e->setBoundingBox(terrainModel.bbox);
+// 	e->material = resources.materials.getMaterial("TerrainMesh", batch);
+// 	e->Material().setParam("TexIdHeightmap", terrainGridHeight[0][0].view.srvHeapIndex);
+// 	e->Material().setParam("TexIdNormalmap", terrainGridNormal[0][0].view.srvHeapIndex);
+// 	e->setPosition({ 0, 100, 0 });
 
 	auto csShader = resources.shaders.getShader("generateHeightmapNormalsCS", ShaderType::Compute, ShaderRef{ "grid/generateHeightmapNormalsCS.hlsl", "CSMain", "cs_6_6" });
 	heightmapToNormalCS.init(*renderSystem.core.device, *csShader);

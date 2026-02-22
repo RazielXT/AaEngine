@@ -76,10 +76,10 @@ PSOutput PSMain(VSOut input)
 
 	float3 sunZenithColor = GetTexture(Sun.TexIdSunZenith).Sample(LinearSampler, float2(sunZenithDot01, 0.5)).rgb * 0.5;
 
-	float3 viewZenithColor = GetTexture(Sun.TexIdViewZenith).Sample(LinearSampler, float2(sunZenithDot01, 0.5)).rgb * 0.5;
+	float3 viewZenithColor = GetTexture(Sun.TexIdViewZenith).Sample(LinearSampler, float2(sunZenithDot01, 0.5)).rgb * 0.5 * float3(1,0.5,0.5);
 	float vzMask = pow(saturate(1.0 - skyDir.y), 4);
 
-	float3 sunViewColor = GetTexture(Sun.TexIdSunView).Sample(LinearSampler, float2(sunZenithDot01, 0.5)).rgb;
+	float3 sunViewColor = GetTexture(Sun.TexIdSunView).Sample(LinearSampler, float2(sunZenithDot01, 0.5)).rgb * float3(1,0.5,0.5);
 	float svMask = pow(saturate(sunDot), 4);
 
 	float3 skyColor = SrgbToLinear(sunZenithColor + vzMask * viewZenithColor + svMask * sunViewColor);
@@ -92,7 +92,7 @@ PSOutput PSMain(VSOut input)
 	// Sun core
 	float coreSize = 0.999;
 	float core = smoothstep(coreSize, 1.0, sunDot);
-	float3 sunColor = core * 30 * Sun.Color;
+	float3 sunColor = core * 50 * Sun.Color;
 
 	PSOutput output;
 	output.albedo = float4(saturate(skyColor) + sunColor, 0);

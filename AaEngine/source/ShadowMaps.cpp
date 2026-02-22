@@ -73,7 +73,7 @@ void ShadowMaps::update(UINT frameIndex, Camera& mainCamera)
 	}
 
 	data.SunDirection = sun.direction;
-	data.SunColor = Vector3::Lerp(Vector3(1,0.3,0.1), sun.color, min(1, abs(sun.direction.y * 1.4f)));
+	data.SunColor = Vector3::Lerp(Vector3(1,0.2,0.05), sun.color, min(1, abs(sun.direction.y * 1.4f)));
 
 	auto& cbufferResource = *cbuffer.data[frameIndex];
 	memcpy(cbufferResource.Memory(), &data, sizeof(data));

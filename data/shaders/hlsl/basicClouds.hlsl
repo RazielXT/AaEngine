@@ -152,9 +152,10 @@ PSOutput PSMain(PSInput input)
 
 	float faceLighting = dot(Sun.Direction, finalNormal);
 	float lighting = saturate(faceLighting);
-	float globeLighting = saturate(-dot(Sun.Direction, globeNormal));
+	float globeLighting = saturate(-dot(Sun.Direction, cameraDirection));
 	float fullLighting = faceLighting * 0.5 + 0.5;
-	float edgesLighting = pow(globeLighting * normalDot * (1 - weight), 2);
+	float edgesLighting = normalDot * normalDot * (1 - weight);
+	edgesLighting = lerp(edgesLighting, edgesLighting*edgesLighting, Sun.CloudsDensity);
 
 	float3 cloudAlbedo = lerp(1, float3(0.17,0.21,0.3), Sun.CloudsDensity);
 
@@ -162,7 +163,7 @@ PSOutput PSMain(PSInput input)
 	{
 		float3 cloudAmbient = lerp(fullLighting*fullLighting, fullLighting, abs(Sun.Direction.y));
 		
-		float ambientTerm = abs(Sun.Direction.y) * 0.3;
+		float ambientTerm = abs(Sun.Direction.y) * (0.2 + 0.5 * normalDot * normalDot);
 		cloudAmbient = ambientTerm + cloudAmbient * (1 - ambientTerm);
 		cloudAmbient += edgesLighting * (1 - ambientTerm);
 

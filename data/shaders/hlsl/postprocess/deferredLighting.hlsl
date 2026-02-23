@@ -60,7 +60,7 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 
 	float directShadow = getPssmShadow(worldPosition, camDistance, dotLighting, ShadowSampler, Sun);
 
-	float3 vctLighting = vctMap.Load(int3(input.Position.xy, 0)).rgb * 0.5;// + worldNormal.y * float3(0.1,0.2,0.3) * 0.2;// * saturate(dot(Sun.Direction, worldNormal) + 0.5);
+	float3 vctLighting = vctMap.Load(int3(input.Position.xy, 0)).rgb + worldNormal.y * Sun.Color * 0.1;// * saturate(dot(Sun.Direction, worldNormal) + 0.5);
 	float3 lighting = dotLighting * Sun.Color * directShadow + vctLighting + emmisive * 10;
 	lighting *= lerp(ssaoMap.Sample(LinearSampler, input.TexCoord).r, 1, saturate((lighting.r + lighting.g + lighting.b) / 3));
 

@@ -144,6 +144,7 @@ PSOutput PSMain(PSInput input)
 	normal.y -= saturate(weight) * 0.001;
 	normal = -normalize(normal);
 
+	float sunAmbientTerm = lerp(0.02, 0.5, 1 - saturate(Sun.Direction.y * 5));
 	float3 cameraDirection = normalize(CameraPosition - input.worldPosition);
 	float normalDot = saturate(dot(cameraDirection, -normal) * 0.5 + 0.5);
 	float3 globeNormal = input.normal;
@@ -155,7 +156,7 @@ PSOutput PSMain(PSInput input)
 	float globeLighting = saturate(-dot(Sun.Direction, cameraDirection));
 	float fullLighting = faceLighting * 0.5 + 0.5;
 	float edgesLighting = normalDot * normalDot * (1 - weight);
-	edgesLighting = lerp(edgesLighting, edgesLighting*edgesLighting, Sun.CloudsDensity);
+	//edgesLighting = lerp(edgesLighting, edgesLighting*edgesLighting, Sun.CloudsDensity);
 
 	float3 cloudAlbedo = lerp(1, float3(0.17,0.21,0.3), Sun.CloudsDensity);
 
@@ -163,7 +164,7 @@ PSOutput PSMain(PSInput input)
 	{
 		float3 cloudAmbient = lerp(fullLighting*fullLighting, fullLighting, abs(Sun.Direction.y));
 		
-		float ambientTerm = abs(Sun.Direction.y) * (0.2 + 0.5 * normalDot * normalDot);
+		float ambientTerm = sunAmbientTerm * (0.2 + 0.5 * normalDot * normalDot);
 		cloudAmbient = ambientTerm + cloudAmbient * (1 - ambientTerm);
 		cloudAmbient += edgesLighting * (1 - ambientTerm);
 
@@ -177,9 +178,9 @@ PSOutput PSMain(PSInput input)
 
 	float alphaTex = weight;
 
-	float3 finalColor = cloudsColor * 0.5;
+	float3 finalColor = cloudsColor * sunAmbientTerm;
 	//finalColor = Sun.Color * lerp((abs(Sun.Direction.y) * fullLighting * 0.5 + 0.2) * cloudAlbedo, cloudAlbedo, saturate(edgesLighting + lighting));
-	//finalColor = globeLighting.xxx;
+	//finalColor = fullLighting.xxx;
 
 	PSOutput output;
 	output.albedo = float4(finalColor, smoothstep(0,0.5,alphaTex));

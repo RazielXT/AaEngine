@@ -752,19 +752,61 @@ void Editor::prepareElements(Camera& camera)
 
 	if (ImGui::CollapsingHeader("Sky"))
 	{
-		static float sunYaw = std::atan2(app.lights.directionalLight.direction.x, app.lights.directionalLight.direction.z);
-		static float sunPitch = std::asin(app.lights.directionalLight.direction.y);
+// 		static float sunYaw = std::atan2(app.lights.directionalLight.direction.x, app.lights.directionalLight.direction.z);
+// 		static float sunPitch = std::asin(app.lights.directionalLight.direction.y);
+// 
+// 		bool change = ImGui::SliderFloat("Sun Yaw", &sunYaw, -XM_PI, XM_PI);
+// 		change |= ImGui::SliderFloat("Sun Pitch", &sunPitch, -XM_PI, 0);
+// 
+// 		if (change)
+// 		{
+// 			Vector3& direction = app.lights.directionalLight.direction;
+// 			direction.x = std::cos(sunPitch) * std::sin(sunYaw);
+// 			direction.y = std::sin(sunPitch);
+// 			direction.z = std::cos(sunPitch) * std::cos(sunYaw);
+// 			direction.Normalize();
+// 
+// 			VoxelizeSceneTask::Get().revoxelize();
+// 		}
 
-		bool change = ImGui::SliderFloat("Sun Yaw", &sunYaw, -XM_PI, XM_PI);
-		change |= ImGui::SliderFloat("Sun Pitch", &sunPitch, -XM_PI, 0);
+		static float latitude = 0.4f;    // ~45 degrees North
+		static float timeOfDay = 8.0f;   // 0.0 to 24.0
+		static int dayOfYear = 172;       // Summer Solstice (June 21)
+
+		bool change = ImGui::SliderFloat("Time of Day", &timeOfDay, 0.0f, 24.0f);
+		change |= ImGui::SliderFloat("Latitude", &latitude, -XM_PIDIV2, XM_PIDIV2);
+		change |= ImGui::SliderInt("Day of Year", &dayOfYear, 1, 365);
 
 		if (change)
 		{
-			Vector3& direction = app.lights.directionalLight.direction;
-			direction.x = std::cos(sunPitch) * std::sin(sunYaw);
-			direction.y = std::sin(sunPitch);
-			direction.z = std::cos(sunPitch) * std::cos(sunYaw);
-			direction.Normalize();
+			// 1. Seasonal Declination
+			float declination = XMConvertToRadians(-23.44f) * std::cos(XM_2PI / 365.0f * (dayOfYear + 10));
+
+			// 2. Hour Angle (H) 
+			// At 12.0 (Noon), H = 0. At 0.0 (Midnight), H = -PI.
+			float hourAngle = (timeOfDay - 12.0f) * (XM_PI / 12.0f);
+
+			// 3. Solar Altitude (Angle above horizon)
+			float sinAlt = std::sin(latitude) * std::sin(declination) +
+				std::cos(latitude) * std::cos(declination) * std::cos(hourAngle);
+			float altitude = std::asin(std::clamp(sinAlt, -1.0f, 1.0f));
+
+			// 4. Solar Azimuth (Compass direction)
+			float cosAz = (std::sin(declination) - std::sin(altitude) * std::sin(latitude)) /
+				(std::cos(altitude) * std::cos(latitude));
+
+			float azimuth = std::acos(std::clamp(cosAz, -1.0f, 1.0f));
+			if (hourAngle > 0) azimuth = XM_2PI - azimuth;
+
+			// 5. Final Light Direction (The vector the light travels)
+			// We negate the position to get the direction: Sun is at (x, y, z), light shines toward (-x, -y, -z)
+			Vector3 sunPos;
+			sunPos.x = std::cos(altitude) * std::sin(azimuth);
+			sunPos.y = std::sin(altitude);
+			sunPos.z = std::cos(altitude) * std::cos(azimuth);
+
+			app.lights.directionalLight.direction = -sunPos;
+			app.lights.directionalLight.direction.Normalize();
 
 			VoxelizeSceneTask::Get().revoxelize();
 		}

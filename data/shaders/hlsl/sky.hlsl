@@ -64,6 +64,34 @@ Texture2D<float4> GetTexture(uint index)
 	return ResourceDescriptorHeap[index];
 }
 
+float hash(float3 p)
+{
+    p = frac(p * 0.3183099 + 0.1);
+    p *= 17.0;
+    return frac(p.x * p.y * p.z * (p.x + p.y + p.z));
+}
+
+float StarField(float3 dir)
+{
+    // Use azimuth + dir.y for uniform spherical distribution
+    float az = atan2(dir.z, dir.x);   // -PI..PI
+    float v  = dir.y;                 // -1..1, uniformly distributed
+
+    float2 uv = float2(az, v) * 400.0; // adjust density here
+
+    float2 cell = floor(uv);
+    float rnd = hash(float3(cell, 0.0));
+
+    // Star probability
+    float star = step(0.996, rnd);
+
+    // Soft sparkle
+    float sparkle = pow(frac(rnd * 123.45), 18.0);
+
+    return star * sparkle;
+}
+
+
 PSOutput PSMain(VSOut input)
 {
 	float3 skyDir = ComputeSkyDir(input.ndc);
@@ -82,10 +110,14 @@ PSOutput PSMain(VSOut input)
 	float3 sunViewColor = GetTexture(Sun.TexIdSunView).Sample(LinearSampler, float2(sunZenithDot01, 0.5)).rgb * float3(1,0.5,0.5);
 	float svMask = pow(saturate(sunDot), 4);
 
-	float3 skyColor = SrgbToLinear(sunZenithColor + vzMask * viewZenithColor + svMask * sunViewColor);
+	// Night factor: fade stars in when sun is below horizon
+	float night = saturate(Sun.Direction.y * 2.0);
+	float stars = StarField(skyDir) * night;
+
+	float3 skyColor = SrgbToLinear(stars + sunZenithColor + vzMask * viewZenithColor + svMask * sunViewColor);
 
 	float noise = BlueNoise(input.pos.xy);
-	float ditherStrength = 2.0 / 255.0;
+	float ditherStrength = 2.0 * (1 - night) / 255.0;
 	// Add noise before tone mapping
 	skyColor += noise * ditherStrength;
 

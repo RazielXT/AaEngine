@@ -59,6 +59,7 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	float camDistance = length(CameraPosition - worldPosition.xyz);
 
 	float directShadow = getPssmShadow(worldPosition, camDistance, dotLighting, ShadowSampler, Sun);
+	directShadow *= saturate(-10 * Sun.Direction.y);
 
 	float3 vctLighting = vctMap.Load(int3(input.Position.xy, 0)).rgb + worldNormal.y * Sun.Color * 0.1;// * saturate(dot(Sun.Direction, worldNormal) + 0.5);
 	float3 lighting = dotLighting * Sun.Color * directShadow + vctLighting + emmisive * 10;

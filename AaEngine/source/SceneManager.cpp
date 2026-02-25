@@ -35,12 +35,12 @@ void SceneManager::update()
 	updateTransformations();
 }
 
-SceneEntity* SceneManager::createEntity(const std::string& name, Order order)
+SceneEntity* SceneManager::createEntity(const std::string& name, Order order, int suborder)
 {
 	auto nameIt = entityMap.try_emplace(name, nullptr).first;
 	auto ent = nameIt->second = new SceneEntity(*getRenderables(order), nameIt->first);
 
-	changes.emplace_back(EntityChange::Add, order, ent);
+	changes.emplace_back(EntityChange::Add, order, ent, suborder);
 
 	return ent;
 }
@@ -58,7 +58,7 @@ SceneEntity* SceneManager::createEntity(const std::string& name, const ObjectTra
 void SceneManager::removeEntity(SceneEntity* entity)
 {
 	entityMap.erase(entity->name);
-	changes.emplace_back(EntityChange::Delete, getOrder(entity), entity);
+	changes.emplace_back(EntityChange::Delete, getOrder(entity), entity, 0);
 
 	delete entity;
 }

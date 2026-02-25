@@ -5,7 +5,7 @@
 
 void RenderQueue::update(const EntityChangeDescritpion& changeInfo, GraphicsResources& resources)
 {
-	auto& [change, order, entity] = changeInfo;
+	auto& [change, order, entity, suborder] = changeInfo;
 
 	if (change == EntityChange::Add)
 	{
@@ -30,7 +30,7 @@ void RenderQueue::update(const EntityChangeDescritpion& changeInfo, GraphicsReso
 			}
 		}
 
-		auto entry = EntityEntry(entity, matInstance->Assign(entity->geometry.layout ? *entity->geometry.layout : std::vector<D3D12_INPUT_ELEMENT_DESC>{}, targetFormats, technique), technique);
+		auto entry = EntityEntry(entity, matInstance->Assign(entity->geometry.layout ? *entity->geometry.layout : std::vector<D3D12_INPUT_ELEMENT_DESC>{}, targetFormats, technique), technique, suborder);
 
 		auto it = std::lower_bound(entities.begin(), entities.end(), entry);
 		entities.insert(it, std::move(entry));
@@ -156,11 +156,12 @@ void RenderQueue::iterateMaterials(std::function<void(AssignedMaterial*)> func)
 	}
 }
 
-RenderQueue::EntityEntry::EntityEntry(SceneEntity* e, AssignedMaterial* m, MaterialTechnique technique)
+RenderQueue::EntityEntry::EntityEntry(SceneEntity* e, AssignedMaterial* m, MaterialTechnique technique, int o)
 {
 	entity = e;
 	material = m;
 	base = material->GetBase();
+	suborder = o;
 
 	if (e->materialOverride)
 		materialOverride = material->CreateParameterOverride(*e->materialOverride);

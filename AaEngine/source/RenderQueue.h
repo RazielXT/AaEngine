@@ -17,6 +17,7 @@ struct EntityChangeDescritpion
 	EntityChange type;
 	Order order;
 	SceneEntity* entity{};
+	int suborder;
 };
 
 using EntityChanges = std::vector<EntityChangeDescritpion>;
@@ -29,11 +30,13 @@ struct RenderQueue
 		AssignedMaterial* material{};
 		std::unique_ptr<MaterialPropertiesOverride> materialOverride{};
 		SceneEntity* entity{};
+		int suborder;
 
-		EntityEntry(SceneEntity*, AssignedMaterial*, MaterialTechnique);
+		EntityEntry(SceneEntity*, AssignedMaterial*, MaterialTechnique, int suborder);
 
 		bool operator<(const EntityEntry& other) const
 		{
+			if (suborder != other.suborder) return suborder < other.suborder;
 			if (base != other.base) return base < other.base;
 			return material < other.material || (material == other.material && materialOverride < other.materialOverride);
 		}

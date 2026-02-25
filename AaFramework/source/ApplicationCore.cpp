@@ -189,6 +189,15 @@ void ApplicationCore::loadScene(const char* scene)
 		e->geometry.fromModel(model);
 		e->setBoundingBox(model.bbox);
 		e->setFlag(RenderObjectFlag::NoShadow);
+
+		{
+			auto moon = sceneMgr.createEntity("moon", Order::Post, -1);
+			moon->material = resources.materials.getMaterial("Moon", batch);
+			moon->geometry.type = EntityGeometry::Type::Manual;
+			moon->geometry.vertexCount = 6;
+			moon->geometry.instanceCount = 1;
+			moon->setBoundingBox({ {}, { 10000,10000,10000 } });
+		}
 	}
 
 	auto commands = renderSystem.core.CreateCommandList(L"loadScene", PixColor::Load);

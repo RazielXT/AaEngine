@@ -71,24 +71,53 @@ float hash(float3 p)
     return frac(p.x * p.y * p.z * (p.x + p.y + p.z));
 }
 
+// Helper to rotate a 2D point (like X and Z) by an angle
+float2 rotate(float2 p, float angle)
+{
+    float s = sin(angle);
+    float c = cos(angle);
+    return float2(p.x * c - p.y * s, p.x * s + p.y * c);
+}
+
 float StarField(float3 dir)
 {
-    // Use azimuth + dir.y for uniform spherical distribution
-    float az = atan2(dir.z, dir.x);   // -PI..PI
-    float v  = dir.y;                 // -1..1, uniformly distributed
+	// 1. Build a rotation matrix based on the Sun's current direction
+    float3 forward = Sun.Direction;
+    
+    // We need a temporary 'up' to start. If the sun is at the very top, 
+    // we use 'forward' as 'up', so we swap to 'z' to avoid a math error.
+    float3 tempUp = abs(forward.y) > 0.99 ? float3(0, 0, 1) : float3(0, 1, 0);
+    
+    float3 right = normalize(cross(tempUp, forward));
+    float3 actualUp = cross(forward, right);
 
-    float2 uv = float2(az, v) * 400.0; // adjust density here
+    // 2. Create the matrix and transform your view direction.
+    // This "locks" the star coordinates to the Sun's orientation.
+    float3x3 sunSyncMatrix = float3x3(right, actualUp, forward);
+    float3 rotatedDir = mul(sunSyncMatrix, dir);
 
-    float2 cell = floor(uv);
-    float rnd = hash(float3(cell, 0.0));
+    // 1. Scale the direction vector to define star density.
+    // Instead of a 2D grid, we use a 3D cube grid wrapped around the sphere.
+    float density = 300.0; 
+    float3 uvw = rotatedDir * density;
+
+    // 2. Determine which 3D "cell" this direction falls into.
+    float3 cell = floor(uvw);
+
+    // 3. Use hash on the 3D cell coordinate.
+    float rnd = hash(cell);
 
     // Star probability
-    float star = step(0.996, rnd);
+    float star = step(0.99, rnd);
 
     // Soft sparkle
-    float sparkle = pow(frac(rnd * 123.45), 18.0);
+    float sparkle = pow(frac(rnd * 43758.5453), 12.0);
 
-    return star * sparkle;
+	float3 g = frac(uvw) - 0.5;
+	float dist = length(g);
+	float starShape = smoothstep(0.5, 0.2, dist); // Creates a soft circle in the cell
+
+	return starShape * star * sparkle;
 }
 
 
@@ -117,9 +146,9 @@ PSOutput PSMain(VSOut input)
 	float3 skyColor = SrgbToLinear(stars + sunZenithColor + vzMask * viewZenithColor + svMask * sunViewColor);
 
 	float noise = BlueNoise(input.pos.xy);
-	float ditherStrength = 2.0 * (1 - night) / 255.0;
+	float ditherStrength = (2 - night) / 255.0;
 	// Add noise before tone mapping
-	skyColor += noise * ditherStrength;
+	skyColor += (noise - 0.5) * ditherStrength;
 
 	// Sun core
 	float coreSize = 0.999;

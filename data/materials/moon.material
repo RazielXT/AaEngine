@@ -1,0 +1,30 @@
+material Moon
+{
+	vertex_shader
+	{
+		file moon.hlsl
+		entry VSMain
+		profile vs_6_6
+	}
+	pixel_shader
+	{
+		file moon.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
+
+	texture
+	{
+		file moon.png
+	}
+	texture
+	{
+		file moon_norm.png
+	}
+
+	depth_write off
+	culling none
+
+	technique Voxelize skip
+	technique EntityId skip
+}

@@ -769,8 +769,8 @@ void Editor::prepareElements(Camera& camera)
 // 			VoxelizeSceneTask::Get().revoxelize();
 // 		}
 
-		static float latitude = 0.4f;    // ~45 degrees North
-		static float timeOfDay = 8.0f;   // 0.0 to 24.0
+		static float latitude = 0.0f;    // ~45 degrees North
+		static float timeOfDay = 9.0f;   // 0.0 to 24.0
 		static int dayOfYear = 172;       // Summer Solstice (June 21)
 
 		bool change = ImGui::SliderFloat("Time of Day", &timeOfDay, 0.0f, 24.0f);
@@ -814,6 +814,13 @@ void Editor::prepareElements(Camera& camera)
 		if (ImGui::ColorEdit3("Sun Color", &app.lights.directionalLight.color.x))
 		{
 			VoxelizeSceneTask::Get().revoxelize();
+		}
+
+		static float moonPhase = 0;
+		if (ImGui::SliderFloat("Moon phase", &moonPhase, -1, 1))
+		{
+			auto material = app.resources.materials.getMaterial("Moon");
+			material->SetParameter("MoonPhase", &moonPhase, 1);
 		}
 
 		ImGui::SliderFloat("Clouds amount", &app.params.sun.CloudsAmount, -1, 1);

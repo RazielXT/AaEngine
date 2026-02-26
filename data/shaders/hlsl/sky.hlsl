@@ -71,15 +71,48 @@ float hash(float3 p)
     return frac(p.x * p.y * p.z * (p.x + p.y + p.z));
 }
 
-// Helper to rotate a 2D point (like X and Z) by an angle
-float2 rotate(float2 p, float angle)
+float3 hash3(float3 p)
 {
-    float s = sin(angle);
-    float c = cos(angle);
-    return float2(p.x * c - p.y * s, p.x * s + p.y * c);
+    p = frac(p * 0.1031);
+    p += dot(p, p.yzx + 33.33);
+    return frac(float3(
+        p.x * p.y,
+        p.y * p.z,
+        p.z * p.x
+    ));
 }
 
-float StarField(float3 dir)
+float3 StarColor(float rnd)
+{
+    // Use rnd to pick a spectral class
+    // Weighted distribution (approximate real star population)
+    float t = rnd;
+
+    float3 color;
+
+    if (t < 0.70) {
+        // White (G/F type)
+        color = float3(1.0, 0.95, 0.90);
+    }
+    else if (t < 0.90) {
+        // Yellow / Orange (K type)
+        color = float3(1.0, 0.85, 0.65);
+    }
+    else if (t < 0.95) {
+        // Blue (O/B type)
+        color = float3(0.65, 0.75, 1.0);
+    }
+    else {
+        // Red (M type)
+        color = float3(1.0, 0.55, 0.55);
+    }
+
+    // Slight random brightness variation
+    float brightness = lerp(0.8, 1.3, frac(rnd * 53.123));
+    return color * brightness;
+}
+
+float3 StarField(float3 dir)
 {
 	// 1. Build a rotation matrix based on the Sun's current direction
     float3 forward = Sun.Direction;
@@ -87,7 +120,6 @@ float StarField(float3 dir)
     // We need a temporary 'up' to start. If the sun is at the very top, 
     // we use 'forward' as 'up', so we swap to 'z' to avoid a math error.
     float3 tempUp = abs(forward.y) > 0.99 ? float3(0, 0, 1) : float3(0, 1, 0);
-    
     float3 right = normalize(cross(tempUp, forward));
     float3 actualUp = cross(forward, right);
 
@@ -106,18 +138,21 @@ float StarField(float3 dir)
 
     // 3. Use hash on the 3D cell coordinate.
     float rnd = hash(cell);
+	float3 rnd3 = hash3(cell);
 
     // Star probability
-    float star = step(0.99, rnd);
+    float star = step(0.995, rnd3.x);
 
     // Soft sparkle
-    float sparkle = pow(frac(rnd * 43758.5453), 12.0);
+    float sparkle = pow(frac(rnd3.y * 43758.5453), 12.0);
+
+	float3 color = StarColor(rnd3.z);
 
 	float3 g = frac(uvw) - 0.5;
 	float dist = length(g);
-	float starShape = smoothstep(0.5, 0.2, dist); // Creates a soft circle in the cell
+	float starShape = smoothstep(0.35, 0.2, dist); // Creates a soft circle in the cell
 
-	return starShape * star * sparkle;
+	return color * starShape * star * sparkle;
 }
 
 
@@ -141,7 +176,7 @@ PSOutput PSMain(VSOut input)
 
 	// Night factor: fade stars in when sun is below horizon
 	float night = saturate(Sun.Direction.y * 2.0);
-	float stars = StarField(skyDir) * night;
+	float3 stars = StarField(skyDir) * night;
 
 	float3 skyColor = SrgbToLinear(stars + sunZenithColor + vzMask * viewZenithColor + svMask * sunViewColor);
 

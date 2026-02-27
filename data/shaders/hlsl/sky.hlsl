@@ -168,10 +168,10 @@ PSOutput PSMain(VSOut input)
 
 	float3 sunZenithColor = GetTexture(Sun.TexIdSunZenith).Sample(LinearSampler, float2(sunZenithDot01, 0.5)).rgb * 0.5;
 
-	float3 viewZenithColor = GetTexture(Sun.TexIdViewZenith).Sample(LinearSampler, float2(sunZenithDot01, 0.5)).rgb * 0.5 * float3(1,0.5,0.5);
+	float3 viewZenithColor = GetTexture(Sun.TexIdViewZenith).Sample(LinearSampler, float2(sunZenithDot01, 0.5)).rgb * 0.5;
 	float vzMask = pow(saturate(1.0 - skyDir.y), 4);
 
-	float3 sunViewColor = GetTexture(Sun.TexIdSunView).Sample(LinearSampler, float2(sunZenithDot01, 0.5)).rgb * float3(1,0.5,0.5);
+	float3 sunViewColor = GetTexture(Sun.TexIdSunView).Sample(LinearSampler, float2(sunZenithDot01, 0.5)).rgb;
 	float svMask = pow(saturate(sunDot), 4);
 
 	// Night factor: fade stars in when sun is below horizon

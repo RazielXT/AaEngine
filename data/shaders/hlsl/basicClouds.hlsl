@@ -101,7 +101,7 @@ float3 getFogColor(float3 dir)
 
 	float3 sunZenithColor = GetTexture(Sun.TexIdSunZenith).Sample(LinearWrapSampler, float2(sunZenithDot01, 0.5)).rgb;
 
-	float3 viewZenithColor = GetTexture(Sun.TexIdViewZenith).Sample(LinearWrapSampler, float2(sunZenithDot01, 0.5)).rgb * float3(1,0.5,0.5);;
+	float3 viewZenithColor = GetTexture(Sun.TexIdViewZenith).Sample(LinearWrapSampler, float2(sunZenithDot01, 0.5)).rgb;
 	float vzMask = pow(saturate(1.0 - dir.y), 4);
 
 	return SrgbToLinear(sunZenithColor + viewZenithColor * vzMask);

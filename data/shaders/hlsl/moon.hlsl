@@ -29,38 +29,38 @@ static const float2 coords[4] = {
 
 PSInput VSMain(uint vertexIdx : SV_VertexID)
 {
-	PSInput output;
+    PSInput output;
 
-	// --- UV and quad coordinates ---
-	float2 uv = coords[IndexBuffer[vertexIdx]];
+    // --- UV and quad coordinates ---
+    float2 uv = coords[IndexBuffer[vertexIdx]];
+    float2 centered = uv - 0.5f;
+    float scale = 100000.0f;
+    float3 localPos = float3(centered.x, centered.y, 0.0f) * scale;
 
-	// Convert UV [0,1] → centered quad [-0.5, 0.5]
-	float2 centered = uv - 0.5f;
+    // --- Fixed Celestial Orientation ---
+    // 1. Define the direction to the moon
+    float3 moonDir = Sun.Direction; 
+    
+    // 2. Define a stable "Up" (The North Celestial Pole or just World Up)
+    float3 worldUp = float3(0.0001f, 1.0f, 0.0001f);
 
-	// Billboard size
-	float scale = 100000.0f;
+    // 3. Calculate stable Right and Up vectors
+    // We use the cross product to find a vector perpendicular to the direction and world up
+    float3 moonRight = normalize(cross(worldUp, moonDir));
+    float3 moonUp    = cross(moonDir, moonRight);
 
-	// Local quad position (square, centered)
-	float3 localPos = float3(centered.x, centered.y, 0.0f) * scale;
+    // Build world position using our new stable basis
+    float3 worldPos = (localPos.x * moonRight) + (localPos.y * moonUp);
 
-	// --- Billboard orientation using camera basis ---
-	float3 camRight = normalize(InvViewMatrix[0].xyz);
-	float3 camUp    = normalize(InvViewMatrix[1].xyz);
+    // Push billboard far away
+    worldPos += moonDir * scale * 10;
 
-	// Build transform matrix (no forward axis needed)
-	float3 worldPos =
-		localPos.x * camRight +
-		localPos.y * camUp;
+    // Output
+    output.worldPosition = float4(worldPos, 1.0f);
+    output.position = mul(output.worldPosition, ViewProjectionMatrix);
+    output.uv = uv;
 
-	// Push billboard far away in sun direction
-	worldPos += Sun.Direction * scale * 10;
-
-	// Output
-	output.worldPosition = float4(worldPos, 1.0f);
-	output.position = mul(output.worldPosition, ViewProjectionMatrix);
-	output.uv = uv;
-
-	return output;
+    return output;
 }
 
 Texture2D<float4> GetTexture(uint index)

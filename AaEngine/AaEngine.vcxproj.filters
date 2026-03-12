@@ -65,6 +65,9 @@
     <Filter Include="Source Files\RenderObject\Terrain2">
       <UniqueIdentifier>{727402fa-5524-440f-a723-0047ab5b9c37}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\RenderObject\TerrainScan">
+      <UniqueIdentifier>{b6826923-fe1e-4205-a5b4-1868c3bd8659}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\TargetWindow.cpp">
@@ -321,6 +324,9 @@
     </ClCompile>
     <ClCompile Include="source\ProgressiveTerrain.cpp">
       <Filter>Source Files\RenderObject\Terrain2</Filter>
+    </ClCompile>
+    <ClCompile Include="source\TerrainScan.cpp">
+      <Filter>Source Files\RenderObject\TerrainScan</Filter>
     </ClCompile>
     <ClCompile Include="source\GltfLoader.cpp">
       <Filter>Source Files\Resources\Model</Filter>
@@ -611,6 +617,9 @@
     </ClInclude>
     <ClInclude Include="source\GridMesh.h">
       <Filter>Source Files\RenderObject\Terrain2</Filter>
+    </ClInclude>
+    <ClInclude Include="source\TerrainScan.h">
+      <Filter>Source Files\RenderObject\TerrainScan</Filter>
     </ClInclude>
     <ClInclude Include="source\GltfLoader.h">
       <Filter>Source Files\Resources\Model</Filter>

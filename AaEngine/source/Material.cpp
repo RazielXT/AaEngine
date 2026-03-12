@@ -317,7 +317,7 @@ void MaterialBase::CreateResourcesData(MaterialInstance& instance, GraphicsResou
 	{
 		if (!t.file.empty())
 		{
-			auto texture = resources.textures.loadFile(device, batch, t.file);
+			auto texture = resources.textures.loadFile(device, batch, t.file, { .forceSrgb = t.forceSrgb });
 			resources.descriptors.createTextureView(*texture);
 
 			instance.SetTexture(*texture, texSlot);

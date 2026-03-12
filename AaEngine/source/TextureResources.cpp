@@ -8,7 +8,7 @@
 
 using namespace DirectX;
 
-HRESULT LoadTextureFromFile(ResourceUploadBatch& resourceUpload, ID3D12Device& device, const std::string& filename, ID3D12Resource** texture)
+HRESULT LoadTextureFromFile(ResourceUploadBatch& resourceUpload, ID3D12Device& device, const std::string& filename, ID3D12Resource** texture, TextureFileLoadOptions options)
 {
 	HRESULT hr;
 
@@ -25,13 +25,17 @@ HRESULT LoadTextureFromFile(ResourceUploadBatch& resourceUpload, ID3D12Device& d
 	}
 	else
 	{
+		auto flags = WIC_LOADER_MIP_AUTOGEN;
+		if (options.forceSrgb)
+			flags |= WIC_LOADER_FORCE_SRGB;
+
 		hr = CreateWICTextureFromFileEx(
 			&device,
 			resourceUpload,
 			as_wstring(filename).c_str(),
 			0,
 			D3D12_RESOURCE_FLAG_NONE,
-			WIC_LOADER_MIP_AUTOGEN,
+			flags,
 			texture);
 	}
 
@@ -52,7 +56,7 @@ TextureResources::~TextureResources()
 {
 }
 
-FileTexture* TextureResources::loadFile(ID3D12Device& device, ResourceUploadBatch& resourceUpload, std::string file)
+FileTexture* TextureResources::loadFile(ID3D12Device& device, ResourceUploadBatch& resourceUpload, std::string file, TextureFileLoadOptions options)
 {
 	if (file.front() != '.')
 		file = TEXTURE_DIRECTORY + file;
@@ -62,7 +66,7 @@ FileTexture* TextureResources::loadFile(ID3D12Device& device, ResourceUploadBatc
 	if (!t)
 	{
 		ID3D12Resource* resultTex = nullptr;
-		if (LoadTextureFromFile(resourceUpload, device, file, &resultTex) == S_OK && resultTex)
+		if (LoadTextureFromFile(resourceUpload, device, file, &resultTex, options) == S_OK && resultTex)
 		{
 			t = std::make_unique<FileTexture>();
 			t->texture = resultTex;

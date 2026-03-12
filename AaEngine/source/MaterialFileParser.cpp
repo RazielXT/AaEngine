@@ -213,6 +213,13 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 				if (param.type == "file")
 				{
 					tex.file = param.value;
+					tex.forceSrgb = false;
+
+					for (auto& p : param.params)
+					{
+						if (p == "srgb")
+							tex.forceSrgb = true;
+					}
 				}
 				else if (param.type == "compositor" || param.type == "name")
 				{

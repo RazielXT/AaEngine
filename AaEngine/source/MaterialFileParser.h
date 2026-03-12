@@ -23,6 +23,7 @@ struct TextureRef
 {
 	std::string id;
 	std::string file;
+	bool forceSrgb = false;
 };
 
 using SamplerRef = SamplerInfo;

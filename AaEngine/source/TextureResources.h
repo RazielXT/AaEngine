@@ -20,6 +20,11 @@ public:
 	std::string name;
 };
 
+struct TextureFileLoadOptions
+{
+	bool forceSrgb = false;
+};
+
 class TextureResources
 {
 public:
@@ -27,7 +32,7 @@ public:
 	TextureResources();
 	~TextureResources();
 
-	FileTexture* loadFile(ID3D12Device& device, DirectX::ResourceUploadBatch& batch, std::string file);
+	FileTexture* loadFile(ID3D12Device& device, DirectX::ResourceUploadBatch& batch, std::string file, TextureFileLoadOptions options = {});
 
 	void setNamedTexture(std::string name, const ShaderTextureView& texture);
 	ShaderTextureView* getNamedTexture(std::string name);

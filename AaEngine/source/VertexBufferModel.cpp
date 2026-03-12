@@ -34,7 +34,7 @@ void VertexBufferModel::addLayoutElement(DXGI_FORMAT format, const char* semanti
 	addLayoutElement(0, getLayoutVertexSize(0), format, semantic, index);
 }
 
-static uint32_t getTypeSize(DXGI_FORMAT t)
+uint32_t VertexBufferModel::getFormatSize(DXGI_FORMAT t) const
 {
 	switch (t)
 	{
@@ -151,7 +151,7 @@ uint32_t VertexBufferModel::getLayoutVertexSize(uint16_t slot) const
 	for (const auto& e : vertexLayout)
 	{
 		if (e.InputSlot == slot)
-			sz += getTypeSize(e.Format);
+			sz += getFormatSize(e.Format);
 	}
 	return sz;
 }

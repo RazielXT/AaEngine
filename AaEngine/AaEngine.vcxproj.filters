@@ -322,6 +322,12 @@
     <ClCompile Include="source\ProgressiveTerrain.cpp">
       <Filter>Source Files\RenderObject\Terrain2</Filter>
     </ClCompile>
+    <ClCompile Include="source\GltfLoader.cpp">
+      <Filter>Source Files\Resources\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="source\SceneCollection.cpp">
+      <Filter>Source Files\Scene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\TargetWindow.h">
@@ -605,6 +611,12 @@
     </ClInclude>
     <ClInclude Include="source\GridMesh.h">
       <Filter>Source Files\RenderObject\Terrain2</Filter>
+    </ClInclude>
+    <ClInclude Include="source\GltfLoader.h">
+      <Filter>Source Files\Resources\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="source\SceneCollection.h">
+      <Filter>Source Files\Scene</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

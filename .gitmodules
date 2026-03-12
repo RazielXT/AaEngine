@@ -22,3 +22,6 @@
 [submodule "dependencies/ImGuizmo"]
 	path = dependencies/ImGuizmo
 	url = https://github.com/CedricGuillemet/ImGuizmo.git
+[submodule "dependencies/tinygltf"]
+	path = dependencies/tinygltf
+	url = https://github.com/syoyo/tinygltf.git

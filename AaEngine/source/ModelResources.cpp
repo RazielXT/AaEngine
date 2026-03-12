@@ -74,6 +74,22 @@ VertexBufferModel* ModelResources::getLoadedModel(const std::string& filename, R
 	return nullptr;
 }
 
+void ModelResources::addLoadedModel(const std::string& name, VertexBufferModel* m, ResourceGroup group)
+{
+	for (auto& g : groups)
+	{
+		if (g.groupType == group)
+		{
+			auto& model = g.models[name];
+
+			if (model)
+				FileLogger::logError("Duplicate mesh " + name);
+
+			model = m;
+		}
+	}
+}
+
 UINT ModelResources::preloadFolder(ResourceUploadBatch& batch, const ModelLoadContext& ctx)
 {
 	UINT c{};

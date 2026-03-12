@@ -21,6 +21,7 @@ public:
 
 	VertexBufferModel* getModel(const std::string& name, ResourceUploadBatch& batch, const ModelLoadContext& ctx);
 	VertexBufferModel* getLoadedModel(const std::string& name, ResourceGroup group);
+	void addLoadedModel(const std::string& name, VertexBufferModel*, ResourceGroup group = ResourceGroup::General);
 
 	UINT preloadFolder(ResourceUploadBatch& batch, const ModelLoadContext& ctx);
 

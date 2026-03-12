@@ -36,6 +36,7 @@ public:
 	void addLayoutElement(DXGI_FORMAT format, const char* semantic, unsigned short index = 0);
 	uint32_t getLayoutVertexSize(uint16_t slot) const;
 	std::vector<D3D12_INPUT_ELEMENT_DESC> vertexLayout;
+	uint32_t getFormatSize(DXGI_FORMAT t) const;
 
 	void CreateVertexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, const void* vertices, UINT vertexCount, UINT vertexSize);
 	void CreateVertexBuffer(ID3D12Resource* buffer, UINT vertexCount, UINT vertexSize);

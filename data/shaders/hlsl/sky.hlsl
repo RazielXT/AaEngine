@@ -3,7 +3,7 @@
 
 float4x4 InvViewProjectionMatrix;
 float3 CameraPosition;
-uint ResId;
+uint TexIdNightSky;
 
 cbuffer PSSMShadows : register(b1)
 {
@@ -155,6 +155,60 @@ float3 StarField(float3 dir)
 	return color * starShape * star * sparkle;
 }
 
+float2 SphericalUV(float3 d)
+{
+	float PI = 3.1416;
+    float u = atan2(d.z, d.x) / (2.0 * PI) + 0.5;
+    float v = asin(d.y) / PI + 0.5;
+    return float2(u, v);
+}
+
+float3x3 Yaw60()
+{
+    float a = radians(60.0);
+    float c = cos(a);
+    float s = sin(a);
+
+    return float3x3(
+         c, 0,  s,
+         0, 1,  0,
+        -s, 0,  c
+    );
+}
+
+float3x3 Roll60()
+{
+    float a = radians(60.0);
+    float c = cos(a);
+    float s = sin(a);
+
+    return float3x3(
+         c,  s, 0,
+        -s,  c, 0,
+         0,  0, 1
+    );
+}
+
+float3 StarFieldTexture(float3 dir)
+{
+    float3 rotated = mul(mul(Yaw60(), Roll60()), dir);
+    float2 uv = SphericalUV(rotated);
+
+    float2 dx = ddx(uv);
+    float2 dy = ddy(uv);
+
+    // Fix the horizontal wrap-around seam
+    dx.x = dx.x - round(dx.x);
+    dy.x = dy.x - round(dy.x);
+
+    // Scale down derivatives near the poles
+    // to prevent the sampler from picking a tiny, blurry mipmap.
+    float polarWeight = saturate(1.0 - abs(rotated.y));
+    dx *= polarWeight;
+    dy *= polarWeight;
+
+    return GetTexture(TexIdNightSky).SampleGrad(LinearSampler, uv, dx, dy).rgb * 0.2;
+}
 
 PSOutput PSMain(VSOut input)
 {
@@ -176,9 +230,9 @@ PSOutput PSMain(VSOut input)
 
 	// Night factor: fade stars in when sun is below horizon
 	float night = saturate(Sun.Direction.y * 2.0);
-	float3 stars = StarField(skyDir) * night;
+	float3 stars = StarFieldTexture(skyDir) * night;
 
-	float3 skyColor = SrgbToLinear(stars + sunZenithColor + vzMask * viewZenithColor + svMask * sunViewColor);
+	float3 skyColor = stars + SrgbToLinear(sunZenithColor + vzMask * viewZenithColor + svMask * sunViewColor);
 
 	float noise = BlueNoise(input.pos.xy);
 	float ditherStrength = (2 - night) / 255.0;

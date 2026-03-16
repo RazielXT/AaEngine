@@ -16,4 +16,9 @@ material Sky
 
 	culling none
 	depth_write off
+
+	texture
+	{
+		file night.dds
+	}
 }

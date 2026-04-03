@@ -13,7 +13,7 @@ WaterSim::~WaterSim()
 }
 
 const UINT TextureSize = 1024;
-const UINT WaterModelSize = 33;// TextureSize - WaterModelChucks + 1;
+const UINT WaterModelSize = 33;
 
 GridInstanceMesh waterGridMesh;
 GridLODSystem waterGridTiles;
@@ -95,7 +95,7 @@ void WaterSim::initializeTarget(const GpuTexture2D& texture, SceneManager& scene
 	e->material = waterMaterial;
 	e->Material().setParam("TexIdHeightmap", waterHeightMeshTexture.view.srvHeapIndex);
 	e->Material().setParam("TexIdMeshNormal", waterNormalTexture.view.srvHeapIndex);
-	auto GridHeightWidth = Vector2(size.x, size.x / 50.f);
+	auto GridHeightWidth = Vector2(size.x, size.x);
 	e->Material().setParam("GridHeightWidth", &GridHeightWidth, sizeof(GridHeightWidth));
 	e->setPosition(center);
 }

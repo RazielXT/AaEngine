@@ -52,7 +52,7 @@ PSInput VSMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
 	GridRuntimeParams p;
 	p.cameraPos = CameraPosition;
 	p.worldPos = WorldPosition;
-	p.heightScale = GridHeightWidth.x;
+	p.heightScale = GridHeightWidth.x * 0.01;
 	p.gridSize = GridHeightWidth.y;
 	p.tilesWidth = 64;
 	p.tileResolution = 33;

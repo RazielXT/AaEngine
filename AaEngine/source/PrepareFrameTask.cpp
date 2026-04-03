@@ -1,6 +1,5 @@
 #include "PrepareFrameTask.h"
 #include "SceneManager.h"
-#include "TerrainGenerator.h"
 #include "Camera.h"
 
 PrepareFrameTask::PrepareFrameTask(RenderProvider provider, SceneManager& s) : CompositorTask(provider, s)
@@ -28,8 +27,6 @@ void PrepareFrameTask::run(RenderContext& ctx, CommandsData& cmd, CompositorPass
 	sceneMgr.water.update(provider.renderSystem, cmd.commandList, provider.params.timeDelta, provider.params.frameIndex, ctx.camera->getPosition());
 	sceneMgr.newTerrain.update(cmd.commandList, ctx.camera->getPosition(), provider.params.frameIndex);
 	sceneMgr.vegetation.update(cmd.commandList, sceneMgr.newTerrain.terrainGridHeight[2][2].view.srvHeapIndex);
-
-//	sceneMgr.terrain.update(cmd.commandList, sceneMgr, ctx.camera->getPosition());
 
 // 	static int c = 0;
 // 	if (c == 0)

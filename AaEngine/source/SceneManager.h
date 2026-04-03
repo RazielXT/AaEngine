@@ -6,9 +6,9 @@
 #include "RenderObject.h"
 #include "GrassArea.h"
 #include "SceneSkybox.h"
-#include "TerrainGenerator.h"
 #include "WaterSim.h"
 #include "ProgressiveTerrain.h"
+#include "Vegetation.h"
 
 struct SceneObject
 {
@@ -57,8 +57,6 @@ public:
 	InstancingManager instancing;
 
 	GrassAreaGenerator grass;
-
-	TerrainGenerator terrain;
 
 	WaterSim water;
 

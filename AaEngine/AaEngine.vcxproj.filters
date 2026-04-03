@@ -50,9 +50,6 @@
     <Filter Include="Source Files\Resources\Textures">
       <UniqueIdentifier>{0e4b961a-a3dd-4b9a-8f2e-fe85ba608ebf}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\RenderObject\Terrain">
-      <UniqueIdentifier>{eb81da19-258a-4082-9d8e-11c6ddff65e4}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\RenderObject\Vegetation">
       <UniqueIdentifier>{730c7ab0-11a4-45a5-85db-0d2528dbd114}</UniqueIdentifier>
     </Filter>
@@ -62,11 +59,11 @@
     <Filter Include="Source Files\RenderCore">
       <UniqueIdentifier>{e35fea04-fa32-4bb9-84d0-cf2298b22539}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\RenderObject\Terrain2">
-      <UniqueIdentifier>{727402fa-5524-440f-a723-0047ab5b9c37}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\RenderObject\TerrainScan">
       <UniqueIdentifier>{b6826923-fe1e-4205-a5b4-1868c3bd8659}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\RenderObject\Terrain">
+      <UniqueIdentifier>{727402fa-5524-440f-a723-0047ab5b9c37}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -277,14 +274,8 @@
     <ClCompile Include="source\TerrainGenerationCS.cpp">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClCompile>
-    <ClCompile Include="source\TerrainGenerator.cpp">
-      <Filter>Source Files\RenderObject\Terrain</Filter>
-    </ClCompile>
     <ClCompile Include="source\PrepareFrameTask.cpp">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
-    </ClCompile>
-    <ClCompile Include="source\TerrainGrid.cpp">
-      <Filter>Source Files\RenderObject\Terrain</Filter>
     </ClCompile>
     <ClCompile Include="source\Vegetation.cpp">
       <Filter>Source Files\RenderObject\Vegetation</Filter>
@@ -323,7 +314,7 @@
       <Filter>Source Files\Resources\Shader</Filter>
     </ClCompile>
     <ClCompile Include="source\ProgressiveTerrain.cpp">
-      <Filter>Source Files\RenderObject\Terrain2</Filter>
+      <Filter>Source Files\RenderObject\Terrain</Filter>
     </ClCompile>
     <ClCompile Include="source\TerrainScan.cpp">
       <Filter>Source Files\RenderObject\TerrainScan</Filter>
@@ -561,14 +552,8 @@
     <ClInclude Include="source\TerrainGenerationCS.h">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClInclude>
-    <ClInclude Include="source\TerrainGenerator.h">
-      <Filter>Source Files\RenderObject\Terrain</Filter>
-    </ClInclude>
     <ClInclude Include="source\PrepareFrameTask.h">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
-    </ClInclude>
-    <ClInclude Include="source\TerrainGrid.h">
-      <Filter>Source Files\RenderObject\Terrain</Filter>
     </ClInclude>
     <ClInclude Include="source\Vegetation.h">
       <Filter>Source Files\RenderObject\Vegetation</Filter>
@@ -613,10 +598,10 @@
       <Filter>Source Files\Resources\Shader</Filter>
     </ClInclude>
     <ClInclude Include="source\ProgressiveTerrain.h">
-      <Filter>Source Files\RenderObject\Terrain2</Filter>
+      <Filter>Source Files\RenderObject\Terrain</Filter>
     </ClInclude>
     <ClInclude Include="source\GridMesh.h">
-      <Filter>Source Files\RenderObject\Terrain2</Filter>
+      <Filter>Source Files\RenderObject\Terrain</Filter>
     </ClInclude>
     <ClInclude Include="source\TerrainScan.h">
       <Filter>Source Files\RenderObject\TerrainScan</Filter>

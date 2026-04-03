@@ -118,8 +118,6 @@
     <ClCompile Include="source\ShaderType.cpp" />
     <ClCompile Include="source\SystemUtils.cpp" />
     <ClCompile Include="source\TerrainGenerationCS.cpp" />
-    <ClCompile Include="source\TerrainGenerator.cpp" />
-    <ClCompile Include="source\TerrainGrid.cpp" />
     <ClCompile Include="source\TerrainScan.cpp" />
     <ClCompile Include="source\TextureToMeshCS.cpp" />
     <ClCompile Include="source\TextureUtils.cpp" />
@@ -227,8 +225,6 @@
     <ClInclude Include="source\MaterialResources.h" />
     <ClInclude Include="source\SystemUtils.h" />
     <ClInclude Include="source\TerrainGenerationCS.h" />
-    <ClInclude Include="source\TerrainGenerator.h" />
-    <ClInclude Include="source\TerrainGrid.h" />
     <ClInclude Include="source\TerrainScan.h" />
     <ClInclude Include="source\TextureToMeshCS.h" />
     <ClInclude Include="source\TextureUtils.h" />

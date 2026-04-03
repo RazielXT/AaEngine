@@ -223,7 +223,6 @@ void ApplicationCore::loadScene(const char* scene)
 		VoxelizeSceneTask::Get().clear(commands.commandList);
 
  		marker.move("loadSceneTerrain", commands.color);
-		//sceneMgr.terrain.createTerrain(commands.commandList, renderSystem, sceneMgr, resources, batch);
 		sceneMgr.water.initializeGpuResources(renderSystem, resources, batch);
 		sceneMgr.newTerrain.initialize(renderSystem, resources, batch, sceneMgr);
 		sceneMgr.vegetation.createDrawObject(sceneMgr, renderSystem, *resources.materials.getMaterial("Billboard", batch), batch, resources);

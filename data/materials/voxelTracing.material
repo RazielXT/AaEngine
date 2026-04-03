@@ -107,7 +107,7 @@ material GrassVCT : ColorVCT
 	}
 }
 
-material TreeTrunk : ColorVCT
+material TreeTrunk_ : ColorVCT
 {
 	texture Diffuse
 	{
@@ -120,7 +120,7 @@ material TreeTrunk : ColorVCT
 	}
 }
 
-material TreeBranch : ColorVCT
+material TreeBranch_ : ColorVCT
 {
 	pixel_shader psVoxelTracingAlpha
 	shader_defines BRANCH_WAVE
@@ -136,10 +136,10 @@ material TreeBranch : ColorVCT
 	}
 
 	culling none
-	technique Depth TreeBranchDepth
+	technique Depth TreeBranchDepth_
 }
 
-material TreeBranchDepth
+material TreeBranchDepth_
 {
 	vertex_shader vsDepthWriteAlphaTest
 	pixel_shader psDepthWriteAlphaTest

@@ -1,0 +1,68 @@
+material Color abstract
+{
+	vertex_shader
+	{
+		file basicShading.hlsl
+		entry VSMain
+		profile vs_6_6
+	}
+	pixel_shader
+	{
+		file basicShading.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
+
+	texture Diffuse
+	{
+		file white.dds
+	}
+
+	default_params
+	{
+		color MaterialColor 1 1 1
+	}
+}
+
+material TreeTrunk : Color
+{
+	texture Diffuse
+	{
+		file bark.dds
+	}
+}
+
+material TreeBranch : Color
+{
+	shader_defines ALPHA_TEST
+
+	texture Diffuse
+	{
+		file treeBranchTest.dds srgb
+	}
+
+	culling none
+	technique Depth TreeBranchDepth
+}
+
+material pine-trunk : TreeTrunk
+material pine-branch : TreeTrunk
+material pine-leaf : TreeBranch
+
+
+material bark05_0Mat : TreeTrunk
+material leaf2_1Mat : TreeBranch
+
+material TreeBranchDepth
+{
+	vertex_shader vsDepthWriteAlphaTest
+	pixel_shader psDepthWriteAlphaTest
+
+	texture Diffuse
+	{
+		file treeBranchTest.png
+		srgb
+	}
+
+	culling none
+}

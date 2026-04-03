@@ -13,6 +13,7 @@
 #include <dxgidebug.h>
 #include "PhysicsRenderTask.h"
 #include <filesystem>
+#include "GltfLoader.h"
 
 ApplicationCore::ApplicationCore(TargetViewport& viewport) : renderSystem(viewport), resources(renderSystem), sceneMgr(resources)
 {
@@ -137,6 +138,10 @@ void ApplicationCore::loadScene(const char* scene)
 		GlobalQueueMarker marker(renderSystem.core.commandQueue, "SceneParser");
 
 		result = SceneParser::load(scene, { batch, sceneMgr, renderSystem, resources, physicsMgr });
+
+		SceneCollection::LoadCtx loadCtx = { batch, sceneMgr, renderSystem, resources };
+		auto scene = GltfLoader::load(SCENE_DIRECTORY + "trees/fir.gltf", loadCtx);
+		SceneCollection::loadScene(scene, loadCtx);
 
 // 		planes.CreatePlanesVertexBuffer(renderSystem, batch, { { {0,-1400,-2000}, 4000 }, { {0,-1400,2000}, 4000 } });
 // 		auto e = sceneMgr.createEntity("testPlane", Order::Transparent);

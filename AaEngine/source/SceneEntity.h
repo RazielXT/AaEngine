@@ -30,7 +30,7 @@ class SceneEntity : public RenderObject
 {
 public:
 
-	SceneEntity(RenderObjectsStorage&, std::string_view name);
+	SceneEntity(RenderObjectsStorage&, std::string_view name, uint16_t groupId = 0);
 	SceneEntity(RenderObjectsStorage&, SceneEntity& source);
 	~SceneEntity();
 

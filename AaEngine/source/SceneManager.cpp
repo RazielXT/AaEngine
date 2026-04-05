@@ -27,6 +27,8 @@ void SceneManager::initialize(RenderSystem& renderSystem)
 
 	auto uploadResourcesFinished = batch.End(renderSystem.core.commandQueue);
 	uploadResourcesFinished.wait();
+
+	resetEntityGroups();
 }
 
 void SceneManager::update()
@@ -35,19 +37,19 @@ void SceneManager::update()
 	updateTransformations();
 }
 
-SceneEntity* SceneManager::createEntity(const std::string& name, Order order, int suborder)
+SceneEntity* SceneManager::createEntity(const std::string& name, EntityCreateProperties props)
 {
 	auto nameIt = entityMap.try_emplace(name, nullptr).first;
-	auto ent = nameIt->second = new SceneEntity(*getRenderables(order), nameIt->first);
+	auto ent = nameIt->second = new SceneEntity(*getRenderables(props.order), nameIt->first, props.groupId);
 
-	changes.emplace_back(EntityChange::Add, order, ent, suborder);
+	changes.emplace_back(EntityChange::Add, props.order, ent, props.suborder);
 
 	return ent;
 }
 
-SceneEntity* SceneManager::createEntity(const std::string& name, const ObjectTransformation& transformation, VertexBufferModel& model, Order order)
+SceneEntity* SceneManager::createEntity(const std::string& name, const ObjectTransformation& transformation, VertexBufferModel& model, EntityCreateProperties props)
 {
-	auto entity = createEntity(name, order);
+	auto entity = createEntity(name, props);
 	entity->setBoundingBox(model.bbox);
 	entity->setTransformation(transformation, true);
 	entity->geometry.fromModel(model);
@@ -123,6 +125,21 @@ SceneObject SceneManager::getObject(ObjectId globalId)
 	}
 
 	return {};
+}
+
+uint16_t SceneManager::createEntityGroup(const std::string& name)
+{
+	entityGroups.emplace_back(std::make_unique<std::string>(name));
+
+	return (uint16_t)entityGroups.size() - 1;
+}
+
+const std::string& SceneManager::getEntityGroup(uint16_t id)
+{
+	if (id >= entityGroups.size())
+		__debugbreak();
+
+	return *entityGroups[id].name;
 }
 
 RenderQueue* SceneManager::createQueue(const std::vector<DXGI_FORMAT>& targets, MaterialTechnique technique, Order order)
@@ -206,6 +223,12 @@ Order SceneManager::getOrder(SceneEntity* entity)
 	return entity->getStorage().order;
 }
 
+void SceneManager::resetEntityGroups()
+{
+	entityGroups.clear();
+	entityGroups.emplace_back(std::make_unique<std::string>("root"));
+}
+
 RenderObjectsStorage* SceneManager::getRenderables(Order order)
 {
 	for (auto& r : renderables)
@@ -227,6 +250,8 @@ void SceneManager::clear()
 	}
 
 	entityMap.clear();
+
+	resetEntityGroups();
 
 	instancing.clear();
 

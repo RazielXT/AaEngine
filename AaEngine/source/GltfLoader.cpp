@@ -38,6 +38,9 @@ static SceneCollection::Data ProcessGLTF(const tinygltf::Model& data, SceneColle
 {
 	SceneCollection::Data loadInfo;
 
+	if (!data.buffers.empty())
+		loadInfo.name = data.buffers.front().uri;
+
 	for (const auto& mesh : data.meshes)
 	{
 		uint32_t idx = 0;

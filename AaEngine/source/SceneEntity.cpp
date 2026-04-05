@@ -2,11 +2,11 @@
 #include "ModelResources.h"
 #include "MaterialResources.h"
 
-SceneEntity::SceneEntity(RenderObjectsStorage& r, std::string_view n) : RenderObject(r), name(n.data())
+SceneEntity::SceneEntity(RenderObjectsStorage& r, std::string_view n, uint16_t groupId) : RenderObject(r, groupId), name(n.data())
 {
 }
 
-SceneEntity::SceneEntity(RenderObjectsStorage& r, SceneEntity& source) : RenderObject(r)
+SceneEntity::SceneEntity(RenderObjectsStorage& r, SceneEntity& source) : RenderObject(r, source.getGlobalId().getGroupId())
 {
 	name = source.name;
 	material = source.material;

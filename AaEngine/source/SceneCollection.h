@@ -26,6 +26,7 @@ namespace SceneCollection
 
 	struct Data
 	{
+		std::string name;
 		std::vector<Entity> entities;
 	};
 

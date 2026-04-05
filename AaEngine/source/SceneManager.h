@@ -29,6 +29,13 @@ struct SceneObject
 	const char* getName() const;
 };
 
+struct EntityCreateProperties
+{
+	Order order = Order::Normal;
+	uint16_t groupId = 0;
+	int suborder = 0;
+};
+
 class SceneManager
 {
 public:
@@ -41,13 +48,16 @@ public:
 	void update();
 	void clear();
 
-	SceneEntity* createEntity(const std::string& name, Order order = Order::Normal, int suborder = 0);
-	SceneEntity* createEntity(const std::string& name, const ObjectTransformation&, VertexBufferModel&, Order order = Order::Normal);
+	SceneEntity* createEntity(const std::string& name, EntityCreateProperties props = {});
+	SceneEntity* createEntity(const std::string& name, const ObjectTransformation&, VertexBufferModel&, EntityCreateProperties = {});
 	void removeEntity(SceneEntity* entity);
 
 	SceneEntity* getEntity(const std::string& name) const;
 	SceneEntity* getEntity(ObjectId globalId) const;
 	SceneObject getObject(ObjectId globalId);
+
+	uint16_t createEntityGroup(const std::string& name);
+	const std::string& getEntityGroup(uint16_t id);
 
 	RenderQueue* createQueue(const std::vector<DXGI_FORMAT>& targets, MaterialTechnique technique = MaterialTechnique::Default, Order order = Order::Normal);
 	RenderQueue* getQueue(MaterialTechnique technique = MaterialTechnique::Default, Order order = Order::Normal);
@@ -84,4 +94,11 @@ private:
 	std::unordered_map<std::string, SceneEntity*> entityMap;
 
 	std::vector<std::unique_ptr<RenderQueue>> queues;
+
+	struct EntityGroupInfo
+	{
+		std::unique_ptr<std::string> name;
+	};
+	std::vector<EntityGroupInfo> entityGroups;
+	void resetEntityGroups();
 };

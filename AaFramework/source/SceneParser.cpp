@@ -15,6 +15,8 @@ using namespace pugi;
 static SceneParser::Ctx* ctx{};
 static SceneParser::Result* parseResult{};
 static std::string loadFolder;
+static std::string sceneName;
+static uint16_t groupId;
 
 struct SceneNode
 {
@@ -246,7 +248,10 @@ void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible)
 {
 	auto name = GetStringAttribute(entityElement, "name");
 	auto mesh = GetStringAttribute(entityElement, "meshFile");
-	auto renderQueue = ParseRenderQueue(entityElement.attribute("renderQueue").value());
+
+	EntityCreateProperties props;
+	props.order = ParseRenderQueue(entityElement.attribute("renderQueue").value());
+	props.groupId = groupId;
 
 	FileLogger::log("Loading entity " + name + " with mesh file " + mesh);
 	SceneEntity* ent{};
@@ -267,10 +272,10 @@ void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible)
 			break;
 		}
 
-		if (material->IsTransparent() && renderQueue < Order::Transparent)
-			renderQueue = Order::Transparent;
+		if (material->IsTransparent() && props.order < Order::Transparent)
+			props.order = Order::Transparent;
 
-		ent = ctx->sceneMgr.createEntity(name, node->transformation, *model, renderQueue);
+		ent = ctx->sceneMgr.createEntity(name, node->transformation, *model, props);
 		ent->material = material;
 		//ent->setVisible(visible);
 
@@ -330,6 +335,8 @@ SceneParser::Result SceneParser::load(std::string name, Ctx parseCtx)
 	SceneParser::Result result;
 	parseResult = &result;
 	ctx = &parseCtx;
+
+	groupId = ctx->sceneMgr.createEntityGroup(name);
 
 	loadFolder = SCENE_DIRECTORY + name + "/";
 	auto filename = findFileWithExtension(loadFolder, ".scene");

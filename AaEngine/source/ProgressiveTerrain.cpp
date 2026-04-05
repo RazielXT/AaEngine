@@ -44,7 +44,7 @@ void ProgressiveTerrain::initialize(RenderSystem& renderSystem, GraphicsResource
 			resources.descriptors.createTextureView(terrainNormal);
 			terrainNormalMips = resources.descriptors.createUAVMips(terrainNormal);
 
-			auto e = sceneMgr.createEntity("Terrain" + std::format("{}{}",x,y), Order::Normal);
+			auto e = sceneMgr.createEntity("Terrain" + std::format("{}{}", x, y));
 			terrainGridMesh[x][y].create(terrainGridTiles.TilesWidth);
 			terrainGridMesh[x][y].entity = e;
 			e->geometry.fromInstancedModel(terrainModel, 0, terrainGridMesh[x][y].gpuBuffer.data[0].GpuAddress());

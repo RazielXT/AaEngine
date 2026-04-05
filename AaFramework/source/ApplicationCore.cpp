@@ -183,7 +183,7 @@ void ApplicationCore::loadScene(const char* scene)
 // 			planes.CreateEntity("testPlane", sceneMgr, resources.materials.getMaterial("terrainGrass", batch));
 // 		}
 
-		auto e = sceneMgr.createEntity("basicClouds", Order::Post);
+		auto e = sceneMgr.createEntity("basicClouds", EntityCreateProperties{ .order = Order::Post });
 		e->material = resources.materials.getMaterial("BasicClouds", batch);
 
 		static VertexBufferModel model;
@@ -196,7 +196,7 @@ void ApplicationCore::loadScene(const char* scene)
 		e->setFlag(RenderObjectFlag::NoShadow);
 
 		{
-			auto moon = sceneMgr.createEntity("moon", Order::Post, -1);
+			auto moon = sceneMgr.createEntity("moon", EntityCreateProperties{ .order = Order::Post, .suborder = -1 });
 			moon->material = resources.materials.getMaterial("Moon", batch);
 			moon->geometry.type = EntityGeometry::Type::Manual;
 			moon->geometry.vertexCount = 6;

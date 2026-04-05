@@ -90,7 +90,7 @@ class RenderObject
 {
 public:
 
-	RenderObject(RenderObjectsStorage&);
+	RenderObject(RenderObjectsStorage&, uint16_t groupId);
 	~RenderObject();
 
 	void setPosition(Vector3 position);
@@ -134,5 +134,6 @@ private:
 
 	UINT id;
 	RenderObjectFlags flags{};
+	uint16_t groupId{};
 	RenderObjectsStorage& source;
 };

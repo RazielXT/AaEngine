@@ -145,9 +145,10 @@ DirectX::XMMATRIX ObjectTransformation::createWorldMatrix() const
 	return affineMatrix;
 }
 
-RenderObject::RenderObject(RenderObjectsStorage& r) : source(r)
+RenderObject::RenderObject(RenderObjectsStorage& r, uint16_t g) : source(r)
 {
 	id = source.createId(this);
+	groupId = g;
 }
 
 RenderObject::~RenderObject()
@@ -285,7 +286,7 @@ UINT RenderObject::getId() const
 
 ObjectId RenderObject::getGlobalId() const
 {
-	return ObjectId(id, source.order);
+	return ObjectId(id, source.order, groupId);
 }
 
 RenderObjectsStorage& RenderObject::getStorage() const

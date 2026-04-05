@@ -86,7 +86,7 @@ void WaterSim::initializeTarget(const GpuTexture2D& texture, SceneManager& scene
 	center = { 0, -100, 0 };
 	waterGridTiles.Initialize(size, center, 7);
 
-	auto e = sceneMgr.createEntity("WaterSim", Order::Transparent);
+	auto e = sceneMgr.createEntity("WaterSim", EntityCreateProperties{ .order = Order::Transparent });
 	waterGridMesh.create(64);
 	waterGridMesh.entity = e;
 

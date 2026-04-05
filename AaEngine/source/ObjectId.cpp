@@ -3,36 +3,27 @@
 /*
  * Object ID Bit Layout (32-bit unsigned integer)
  *
- * There are two types of entity IDs: Normal and Custom.
+ * There are two types of entity IDs: Scene and Custom.
  *
  * Scene Entity:
- * 31    30       24        23             0
- * +----+---------+------------------------+
- * |  1 | Order Group  | Local Index       |
- * +----+---------+------------------------+
- *
- *  - Bit 31      : Custom Entity Flag (1 for Normal Entity)
- *  - Bits 30-24  : Order Group (7 bits, 0x7F) - max size 128
- *  - Bits 23-0   : Local Index (24 bits, 0xFFFFFF)
+ *  - Bit 31      : Custom Entity Flag (1)
+ *  - Bits 30-28  : Order (3 bits, 0x7) - 0-7
+ *  - Bits 27-16  : Group Index (12 bits, 0xFFF) - max size 4096
+ *  - Bits 15-0   : Entity Index (16 bits, 0xFFFF) - max size 65536
  *
  *
- * Group Entity:
- * 31       30       27         26          16               15             0
- * +--------+---------+---------+----------------------------+---------------+
- * |   0    | Group Type | Group Index    | Entity Index    |
- * +--------+---------+---------+----------------------------+---------------+
- *
+ * Custom Entity:
  *  - Bit 31      : Custom Entity Flag (0 for Custom Entity)
- *  - Bits 30-28  : Group Type (3 bits, 0xF) - max size 7 (reserved 0)
+ *  - Bits 30-28  : Group Type (3 bits, 0x7) - 1-7 (reserved 0)
  *  - Bits 27-16  : Group Index (12 bits, 0xFFF) - max size 4096
  *  - Bits 15-0   : Entity Index (16 bits, 0xFFFF) - max size 65536
  */
 
 constexpr UINT SceneEntityFlag = 0x80000000;
 
-ObjectId::ObjectId(UINT idx, Order order)
+ObjectId::ObjectId(UINT idx, Order order, UINT groupId)
 {
-	value = SceneEntityFlag | idx | (UINT(order) << 24);
+	value = SceneEntityFlag | (UINT(order) << 28) | (groupId << 16) | idx;
 }
 
 ObjectId::ObjectId(UINT idx, ObjectType type, UINT groupId)
@@ -47,22 +38,9 @@ ObjectId::ObjectId(UINT v) : value(v)
 Order ObjectId::getOrder() const
 {
 	if (value & SceneEntityFlag)
-		return Order((value >> 24) & 0x7F);
+		return Order((value >> 28) & 0x7);
 
 	return Order::Normal;
-}
-
-UINT ObjectId::getLocalIdx() const
-{
-	if (value & SceneEntityFlag)
-		return value & 0xFFFFFF;
-
-	return value & 0xFFFF;
-}
-
-UINT ObjectId::getGroupId() const
-{
-	return (value >> 16) & 0xFFF;
 }
 
 ObjectType ObjectId::getObjectType() const
@@ -71,4 +49,19 @@ ObjectType ObjectId::getObjectType() const
 		return ObjectType::Entity;
 
 	return ObjectType(value >> 28);
+}
+
+uint16_t ObjectId::getGroupId() const
+{
+	return uint16_t(value >> 16) & 0xFFF;
+}
+
+UINT ObjectId::getGroupMask() const
+{
+	return value & 0xFFF0000;
+}
+
+UINT ObjectId::getLocalIdx() const
+{
+	return value & 0xFFFF;
 }

@@ -122,7 +122,7 @@ SceneEntity* GrassAreaGenerator::createGrassEntity(const std::string& name, cons
 	if (defaultMaterial->IsTransparent())
 		renderQueue = Order::Transparent;
 
-	auto grassEntity = sceneMgr.createEntity(name, renderQueue);
+	auto grassEntity = sceneMgr.createEntity(name, EntityCreateProperties{ .order = renderQueue });
 	grassEntity->setBoundingBox(desc.bbox);
 	grassEntity->material = defaultMaterial;
 	grassEntity->setFlag(RenderObjectFlag::NoShadow);

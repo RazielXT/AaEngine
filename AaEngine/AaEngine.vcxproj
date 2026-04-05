@@ -113,6 +113,7 @@
     <ClCompile Include="source\MaterialFileParser.cpp" />
     <ClCompile Include="source\MaterialResources.cpp" />
     <ClCompile Include="source\MathUtils.cpp" />
+    <ClCompile Include="source\SceneGraph.cpp" />
     <ClCompile Include="source\SceneSkybox.cpp" />
     <ClCompile Include="source\ShaderDefines.cpp" />
     <ClCompile Include="source\ShaderType.cpp" />
@@ -212,6 +213,7 @@
     <ClInclude Include="source\GraphicsResources.h" />
     <ClInclude Include="source\GrassArea.h" />
     <ClInclude Include="source\GrassInitComputeShader.h" />
+    <ClInclude Include="source\SceneGraph.h" />
     <ClInclude Include="source\SceneSkybox.h" />
     <ClInclude Include="source\ShaderDefines.h" />
     <ClInclude Include="source\ShaderType.h" />

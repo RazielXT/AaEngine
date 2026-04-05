@@ -2,6 +2,7 @@
 
 #include "ApplicationCore.h"
 #include "InputHandler.h"
+#include "imgui.h"
 
 class ImguiPanelViewport : public TargetViewport
 {
@@ -67,10 +68,13 @@ private:
 
 	XMUINT2 m_ViewportBounds[2];
 	Vector3 selectionPosition{};
-	bool updateEntitySelect = false;
+	bool scenePickScheduled = false;
 	bool ctrlActive = false;
 	bool addTree = false;
 	bool addTreeNormals = false;
+
+	void selectItem(ObjectId, bool add);
+	void clearSelection();
 
 	XMUINT2 viewportPanelSize;
 	XMUINT2 lastViewportPanelSize;
@@ -84,8 +88,12 @@ private:
 		SceneObject obj;
 	};
 	std::vector<SelectionInfo> selection{};
+	std::vector<ObjectId> selectionIds{};
 
 	std::map<std::string, FileTexture*> icons;
 	void loadIcons();
 	void initializeIconViews();
+
+	void DrawSceneTree();
+	void DrawNode(SceneGraphNode& node, ImGuiTextFilter& filter, ObjectId& selectedObjectId);
 };

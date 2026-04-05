@@ -325,6 +325,9 @@
     <ClCompile Include="source\SceneCollection.cpp">
       <Filter>Source Files\Scene</Filter>
     </ClCompile>
+    <ClCompile Include="source\SceneGraph.cpp">
+      <Filter>Source Files\Scene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\TargetWindow.h">
@@ -610,6 +613,9 @@
       <Filter>Source Files\Resources\Model</Filter>
     </ClInclude>
     <ClInclude Include="source\SceneCollection.h">
+      <Filter>Source Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="source\SceneGraph.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
   </ItemGroup>

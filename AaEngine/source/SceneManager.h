@@ -9,6 +9,7 @@
 #include "WaterSim.h"
 #include "ProgressiveTerrain.h"
 #include "Vegetation.h"
+#include "SceneGraph.h"
 
 struct SceneObject
 {
@@ -53,6 +54,8 @@ public:
 	RenderQueue createManualQueue(MaterialTechnique technique = MaterialTechnique::Default, Order order = Order::Normal);
 
 	RenderObjectsStorage* getRenderables(Order order);
+
+	SceneGraph graph;
 
 	InstancingManager instancing;
 

@@ -1,4 +1,4 @@
-#include "Editor.h"
+﻿#include "Editor.h"
 #include "imgui.h"
 #include "backends/imgui_impl_win32.h"
 #include "backends/imgui_impl_dx12.h"
@@ -13,6 +13,7 @@
 #include "PhysicsRenderTask.h"
 #include "SceneRenderTask.h"
 #include "SystemUtils.h"
+#include "../data/editor/icons/IconsFontAwesome7.h"
 
 // Store frame times in a buffer
 float frameTimes[200] = { 0.0f };
@@ -99,6 +100,12 @@ void Editor::initializeUi(const TargetWindow& v)
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 	auto scaling = GetDpiForWindow(v.getHwnd()) * 0.01f;
 	io.Fonts->AddFontFromFileTTF(R"(c:\Windows\Fonts\segoeui.ttf)", 16.0f * scaling);
+
+	ImFontConfig config{};
+	config.MergeMode = true;
+	config.PixelSnapH = true;
+	const ImWchar icon_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
+	io.Fonts->AddFontFromFileTTF(R"(../data/editor/icons/Font Awesome 7 Free-Solid-900.otf)", 16.0f * scaling, &config, icon_ranges);
 
 	//ImGuiStyle& style = ImGui::GetStyle();
 
@@ -243,7 +250,7 @@ bool Editor::onClick(MouseButton button)
 		{
 			EntityPicker::Get().scheduleNextPick({ mouseX, viewportSize.y - mouseY });
 			lastScheduled = { mouseX, viewportSize.y - mouseY };
-			updateEntitySelect = true;
+			scenePickScheduled = true;
 		}
 
 		return true;
@@ -271,7 +278,7 @@ bool Editor::keyReleased(int key)
 void Editor::reset()
 {
 	selection.clear();
-	updateEntitySelect = false;
+	scenePickScheduled = false;
 }
 
 struct ImageButtonCombo
@@ -366,7 +373,13 @@ void Editor::prepareElements(Camera& camera)
 
 	ImGui::Begin("Debug");
 
-	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+	ImGui::Text("%.1f FPS (%.2f ms)", ImGui::GetIO().Framerate, 1000.0f / ImGui::GetIO().Framerate);
+	ImGui::SameLine();
+	ImGui::Checkbox("Limit framerate", &state.limitFrameRate);
+
+// 	UpdateFrameTimeBuffer();
+// 	ImGui::PlotLines("Frame Times", frameTimes, std::size(frameTimes), frameChartIndex, NULL, 0.0f, maxFrameTime);
+
 	ImGui::Text("VRAM used %uMB", GetGpuMemoryUsage());
 	ImGui::Text("RAM used %uMB", GetSystemMemoryUsage());
 
@@ -404,7 +417,7 @@ void Editor::prepareElements(Camera& camera)
 
 	ImGui::Image(ImTextureID(renderOutputTextureImguiHandleGpu.ptr), ImVec2{ (float)renderPanelViewport.getWidth(), (float)renderPanelViewport.getHeight() });
 
-	if (updateEntitySelect)
+	if (scenePickScheduled)
 	{
 		auto& pickInfo = EntityPicker::Get().getLastPick();
 
@@ -431,42 +444,15 @@ void Editor::prepareElements(Camera& camera)
 			}
 			else
 			{
-				selectionPosition = pickInfo.position;
-				bool newObject = true;
-
-				if (!ctrlActive)
-				{
-					selection.clear();
-				}
-				else
-				{
-					for (auto& s : selection)
-					{
-						if (s.obj.id == selectedId)
-							newObject = false;
-					}
-				}
-
-				if (newObject)
-				{
-					auto obj = app.sceneMgr.getObject(selectedId);
-					if (obj)
-					{
-						selection.emplace_back(obj.getTransformation(), obj);
-					}
-				}
+				selectItem(selectedId, ctrlActive);
 			}
 		}
 		else if (!ctrlActive)
-			selection.clear();
-
-		updateEntitySelect = false;
-
-		EntityPicker::Get().active.clear();
-		for (auto& s : selection)
 		{
-			EntityPicker::Get().active.push_back(s.obj.id);
+			clearSelection();
 		}
+
+		scenePickScheduled = false;
 	}
 
 	static auto m_GizmoType = ImGuizmo::OPERATION::BOUNDS;
@@ -603,37 +589,46 @@ void Editor::prepareElements(Camera& camera)
 	if (!selection.empty())
 	{
 		ImGui::Text("Selected count %d", selection.size());
-		ImGui::Text("EntityId %#010x", selection.back().obj.id);
-		ImGui::Text("Entity name %s", selection.back().obj.getName());
+
+		auto& selected = selection.back();
+		ImGui::Text("EntityId %#010x", selected.obj.id);
+		ImGui::Text("Entity name %s", selected.obj.getName());
 		ImGui::Text("Entity pos %f %f %f", objTransformation.position.x, objTransformation.position.y, objTransformation.position.z);
-		ImGui::Text("Entity vertex count %d", selection.back().obj.entity->geometry.vertexCount);
-		ImGui::Text("Selection pos %f %f %f", selectionPosition.x, selectionPosition.y, selectionPosition.z);
+		ImGui::Text("Entity vertex count %d", selected.obj.entity->geometry.vertexCount ? selected.obj.entity->geometry.vertexCount : selected.obj.entity->geometry.indexCount);
 	}
 
 	ImGui::NewLine();
 
-	const char* scenes[] = {
-		"basic",
-		"cubesTower",
-		"testCubes",
-		"voxelRoom",
-		"voxelOutside",
-		"voxelOutsideBig",
-		"sponza",
-		"voxelRoom",
-		"tmp"
-	};
-	static int currentScene = 0;
-	if (ImGui::Combo("Scene", &currentScene, scenes, std::size(scenes)))
-		state.changeScene = scenes[currentScene];
+// 	const char* scenes[] = {
+// 		"basic",
+// 		"cubesTower",
+// 		"testCubes",
+// 		"voxelRoom",
+// 		"voxelOutside",
+// 		"voxelOutsideBig",
+// 		"sponza",
+// 		"voxelRoom",
+// 		"tmp"
+// 	};
+// 	static int currentScene = 0;
+// 	if (ImGui::Combo("Scene", &currentScene, scenes, std::size(scenes)))
+// 		state.changeScene = scenes[currentScene];
 
-	if (ImGui::Button("Reload shaders"))
-		state.reloadShaders = true;
+	if (ImGui::CollapsingHeader("Rendering"))
+	{
+		if (ImGui::Button("Reload shaders"))
+			state.reloadShaders = true;
 
-	state.wireframeChange = ImGui::Checkbox("Render wireframe", &state.wireframe);
+		state.wireframeChange = ImGui::Checkbox("Render wireframe", &state.wireframe);
 
-	ImGui::Combo("DLSS", &state.DlssMode, UpscaleModeNames, std::size(UpscaleModeNames));
-	ImGui::Combo("FSR", &state.FsrMode, UpscaleModeNames, std::size(UpscaleModeNames));
+		ImGui::Combo("DLSS", &state.DlssMode, UpscaleModeNames, std::size(UpscaleModeNames));
+		ImGui::Combo("FSR", &state.FsrMode, UpscaleModeNames, std::size(UpscaleModeNames));
+	}
+
+	if (ImGui::CollapsingHeader("Scene"))
+	{
+		DrawSceneTree();
+	}
 
 	if (ImGui::CollapsingHeader("Defines"))
 	{
@@ -655,16 +650,12 @@ void Editor::prepareElements(Camera& camera)
 	{
 		if (ImGui::Button("Rebuild terrain"))
 		{
-			app.sceneMgr.terrain.rebuild();
 			app.sceneMgr.newTerrain.updateTerrain = true;
 		}
 
 		ImGui::Checkbox("Add Tree", &addTree);
 		if (addTree)
 			ImGui::Checkbox("Add Tree on normals", &addTreeNormals);
-
-		if (ImGui::Button("Swap Tree lod"))
-			app.sceneMgr.terrain.trees.swapLods();
 
 		static bool updateGrid = true;
 		if (ImGui::Checkbox("Update grid LOD", &updateGrid))
@@ -827,14 +818,51 @@ void Editor::prepareElements(Camera& camera)
 		ImGui::SliderFloat("Clouds density", &app.params.sun.CloudsDensity, 0, 1);
 		ImGui::SliderFloat("Clouds speed", &app.params.sun.CloudsSpeed, 0, 0.02f);
 	}
-	{
-		ImGui::Checkbox("Limit framerate", &state.limitFrameRate);
 
-		UpdateFrameTimeBuffer();
-
-		ImGui::PlotLines("Frame Times", frameTimes, std::size(frameTimes), frameChartIndex, NULL, 0.0f, maxFrameTime, ImVec2(0, 80));
-	}
 	ImGui::End();
+}
+
+void Editor::selectItem(ObjectId selectedId, bool add)
+{
+	bool newObject = true;
+
+	if (!add)
+	{
+		selection.clear();
+	}
+	else
+	{
+		for (auto& s : selection)
+		{
+			if (s.obj.id == selectedId)
+				newObject = false;
+		}
+	}
+
+	if (newObject)
+	{
+		auto obj = app.sceneMgr.getObject(selectedId);
+		if (obj)
+		{
+			selection.emplace_back(obj.getTransformation(), obj);
+		}
+
+		selectionIds.clear();
+		for (auto& s : selection)
+		{
+			selectionIds.push_back(s.obj.id);
+		}
+
+		EntityPicker::Get().active = selectionIds;
+	}
+}
+
+void Editor::clearSelection()
+{
+	selection.clear();
+	selectionIds.clear();
+
+	EntityPicker::Get().active.clear();
 }
 
 void Editor::loadIcons()
@@ -877,4 +905,81 @@ void Editor::initializeIconViews()
 
 		renderer.device->CreateShaderResourceView(icon->texture.Get(), &srvDesc, icon->handle);
 	}
+}
+
+static bool NodeMatchesFilter(SceneGraphNode& node, ImGuiTextFilter& filter)
+{
+	// Does this node match?
+	if (filter.PassFilter(node.name))
+		return true;
+
+	// Do any children match?
+	for (auto& child : node.children)
+		if (NodeMatchesFilter(child, filter))
+			return true;
+
+	return false;
+}
+
+void Editor::DrawNode(SceneGraphNode& node, ImGuiTextFilter& filter, ObjectId& selectedObjectId)
+{
+	if (filter.IsActive() && !NodeMatchesFilter(node, filter))
+		return;
+
+	ImGuiTreeNodeFlags flags =
+		ImGuiTreeNodeFlags_OpenOnArrow |
+		ImGuiTreeNodeFlags_OpenOnDoubleClick |
+		(node.children.empty() ? ImGuiTreeNodeFlags_Leaf : 0);
+
+	if (filter.IsActive())
+		ImGui::SetNextItemOpen(true);
+
+	// Highlight if selected
+	for (auto& id : selectionIds)
+	{
+		if (node.id == id)
+			flags |= ImGuiTreeNodeFlags_Selected;
+	}
+
+	const char* icon = !node.children.empty() ? ICON_FA_FOLDER : ICON_FA_CUBE;
+
+	bool open = ImGui::TreeNodeEx(
+		(void*)(intptr_t)node.id.value,
+		flags,
+		"%s %s", icon, node.name
+	);
+
+	// Handle selection
+	if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
+		selectedObjectId = node.id;
+
+	// Draw children
+	if (open)
+	{
+		for (auto& child : node.children)
+			DrawNode(child, filter, selectedObjectId);
+
+		ImGui::TreePop();
+	}
+}
+
+void Editor::DrawSceneTree()
+{
+	static ImGuiTextFilter filter;
+	filter.Draw("Search");
+
+	ObjectId selectedObjectId = 0xFFFFFFFF;
+
+	float height = ImGui::GetContentRegionAvail().y * 0.5f;
+	ImGui::BeginChild("SceneTreeRegion", ImVec2(0, height), true);
+
+	for (auto& node : app.sceneMgr.graph.nodes)
+	{
+		DrawNode(node, filter, selectedObjectId);
+	}
+
+	ImGui::EndChild();
+
+	if (selectedObjectId.value != 0xFFFFFFFF)
+		selectItem(selectedObjectId, ImGui::IsKeyDown(ImGuiKey_LeftCtrl));
 }

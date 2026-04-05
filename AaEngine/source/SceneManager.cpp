@@ -1,7 +1,7 @@
 #include "SceneManager.h"
 #include "MaterialResources.h"
 
-SceneManager::SceneManager(GraphicsResources& r) : resources(r), skybox(r)
+SceneManager::SceneManager(GraphicsResources& r) : resources(r), skybox(r), graph(*this)
 {
 	renderables.reserve(10); //need to be enough! distributed by ptr
 }
@@ -185,6 +185,8 @@ void SceneManager::updateQueues()
 			queue->update(c, resources);
 		}
 	}
+
+	graph.updateEntity(changes);
 
 	changes.clear();
 }

@@ -475,7 +475,7 @@ void MaterialInstance::AppendParameterOverride(MaterialPropertiesOverride& outpu
 	}
 }
 
-void MaterialInstance::ApplyParametersOverride(MaterialPropertiesOverride& data, MaterialDataStorage& output) const
+void MaterialInstance::ApplyParametersOverride(const MaterialPropertiesOverride& data, MaterialDataStorage& output) const
 {
 	for (auto& p : data.params)
 	{

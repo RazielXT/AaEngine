@@ -179,7 +179,7 @@ RenderQueue::EntityEntry::EntityEntry(SceneEntity* e, AssignedMaterial* m, Mater
 // 		else
 		{
 			UINT id = entity->getGlobalId().value;
-			material->AppendParameterOverride(*materialOverride, "EntityId", &id, sizeof(UINT));
+			material->AppendParameterOverride(*materialOverride, "EntityId", id);
 		}
 	}
 

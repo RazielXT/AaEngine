@@ -130,7 +130,13 @@ public:
 	void AppendParameterOverride(MaterialPropertiesOverride & override, const std::string& name, const void* value, size_t sizeBytes) const;
 	void AppendParameterOverride(MaterialPropertiesOverride & override, const std::string& name, MaterialInstance& source, float defaultValue) const;
 
-	void ApplyParametersOverride(MaterialPropertiesOverride& data, MaterialDataStorage& output) const;
+	template<typename T>
+	void AppendParameterOverride(MaterialPropertiesOverride & override, const std::string& name, const T& value) const
+	{
+		AppendParameterOverride(override, name , &value, sizeof(T));
+	}
+
+	void ApplyParametersOverride(const MaterialPropertiesOverride& data, MaterialDataStorage& output) const;
 
 	void SetParameter(const std::string& name, const void* value, size_t count);
 	void SetParameter(const std::string& name, float* buffer, const void* value, size_t count) const;

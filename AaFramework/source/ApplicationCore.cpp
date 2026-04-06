@@ -177,6 +177,18 @@ void ApplicationCore::loadScene(const char* scene)
 // 			planes.CreatePlanesVertexBuffer(renderSystem, batch, { { {0,0,250}, 500 }, { {500,0,250}, 500 } }, 0.01f, true);
 // 			planes.CreateEntity("testPlane", sceneMgr, resources.materials.getMaterial("terrainGrass", batch));
 // 		}
+
+		auto e = sceneMgr.createEntity("basicClouds", Order::Post);
+		e->material = resources.materials.getMaterial("BasicClouds", batch);
+
+		static VertexBufferModel model;
+		model.CreateIndexBufferGrid(renderSystem.core.device, &batch, 256);
+		model.bbox.Extents = { 50000, 10000, 50000 };
+
+		//auto model = resources.models.getLoadedModel("Plane001.mesh", ResourceGroup::Core);
+		e->geometry.fromModel(model);
+		e->setBoundingBox(model.bbox);
+		e->setFlag(RenderObjectFlag::NoShadow);
 	}
 
 	auto commands = renderSystem.core.CreateCommandList(L"loadScene", PixColor::Load);

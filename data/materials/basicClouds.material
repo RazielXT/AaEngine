@@ -1,0 +1,31 @@
+material BasicClouds
+{
+	vertex_shader
+	{
+		file basicClouds.hlsl
+		entry VSMain
+		profile vs_6_6
+	}
+	pixel_shader
+	{
+		file basicClouds.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
+
+	texture
+	{
+		file noises.png
+	}
+	texture
+	{
+		file noises_low.png
+	}
+
+	blend alpha
+	depth_write off
+	culling none
+
+	technique Voxelize skip
+	technique EntityId skip
+}

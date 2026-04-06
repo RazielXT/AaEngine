@@ -4,12 +4,13 @@
 
 SceneSkybox::SceneSkybox(GraphicsResources& r) : resources(r)
 {
-	model = resources.models.getLoadedModel("box.mesh", ResourceGroup::Core);
+	//model = resources.models.getLoadedModel("box.mesh", ResourceGroup::Core);
 }
 
 void SceneSkybox::setMaterial(const std::string& name, const std::vector<DXGI_FORMAT>& targets)
 {
-	material = resources.materials.getMaterial(name)->Assign(model->vertexLayout, targets);
+	//material = resources.materials.getMaterial(name)->Assign(model->vertexLayout, targets);
+	material = resources.materials.getMaterial(name)->Assign({}, targets);
 }
 
 void SceneSkybox::render(ID3D12GraphicsCommandList* commandList, const ShaderConstantsProvider& constants)
@@ -26,7 +27,8 @@ void SceneSkybox::render(ID3D12GraphicsCommandList* commandList, const ShaderCon
 
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	commandList->IASetVertexBuffers(0, 1, &model->vertexBufferView);
-	commandList->IASetIndexBuffer(&model->indexBufferView);
-	commandList->DrawIndexedInstanced(model->indexCount, 1, 0, 0, 0);
+	//commandList->IASetVertexBuffers(0, 1, &model->vertexBufferView);
+	//commandList->IASetIndexBuffer(&model->indexBufferView);
+	//commandList->DrawIndexedInstanced(model->indexCount, 1, 0, 0, 0);
+	commandList->DrawInstanced(3, 1, 0, 0);
 }

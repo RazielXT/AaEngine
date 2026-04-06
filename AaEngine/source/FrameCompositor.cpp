@@ -193,21 +193,19 @@ void FrameCompositor::reloadTextures()
 			w = max(w, 1);
 			h = max(h, 1);
 
-
 			{
 				auto lastState = initialTextureStates[name];
 
 				GpuTexture2D& tex = textures[name];
-				tex.depthOrArraySize = t.arraySize;
 
 				if (name.ends_with(":Depth"))
 					tex.InitDepth(provider.renderSystem.core.device, w, h, rtvHeap, lastState);
 				else
 				{
 					if (t.uav)
-						tex.InitUAV(provider.renderSystem.core.device, w, h, t.format, lastState);
+						tex.InitUAV(provider.renderSystem.core.device, w, h, t.format, lastState, { .arraySize = t.arraySize });
 					else
-						tex.InitRenderTarget(provider.renderSystem.core.device, w, h, rtvHeap, t.format, lastState);
+						tex.InitRenderTarget(provider.renderSystem.core.device, w, h, rtvHeap, t.format, lastState, { .arraySize = t.arraySize });
 				}
 
 				tex.SetName(name);

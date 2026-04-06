@@ -363,7 +363,12 @@ const char* MaterialInstance::GetTechniqueOverride(MaterialTechnique technique) 
 		return m;
 
 	if (technique == MaterialTechnique::Depth || technique == MaterialTechnique::DepthShadowmap)
+	{
+		if (!ref.pipeline.depth.write)
+			return "";
+
 		return HasInstancing() ? "DepthInstancing" : "Depth";
+	}
 	else if (technique == MaterialTechnique::Voxelize)
 		return HasInstancing() ? "VoxelizeInstancing" : "Voxelize";
 	else if (technique == MaterialTechnique::EntityId)
@@ -580,8 +585,6 @@ void MaterialInstance::UpdatePerFrame(MaterialDataStorage& data, const ShaderCon
 			*(DirectX::XMFLOAT3*)&data.rootParams[p.bufferOffset] = info.params.sun.SunDirection;
 		else if (p.type == ResourcesInfo::AutoParam::SUN_COLOR)
 			*(DirectX::XMFLOAT3*)&data.rootParams[p.bufferOffset] = info.params.sun.SunColor;
-		else if (p.type == ResourcesInfo::AutoParam::SHADOW_MATRIX)
-			*(DirectX::XMFLOAT4X4*)&data.rootParams[p.bufferOffset] = info.params.sun.ShadowMatrix[1];
 		else if (p.type == ResourcesInfo::AutoParam::SHADOW_MAP_SIZE)
 			data.rootParams[p.bufferOffset] = info.params.sun.ShadowMapSize;
 		else if (p.type == ResourcesInfo::AutoParam::SHADOW_MAP_SIZE_INV)
@@ -595,6 +598,12 @@ void MaterialInstance::UpdatePerFrame(MaterialDataStorage& data, const ShaderCon
 			*(DirectX::XMUINT2*)&data.rootParams[p.bufferOffset] = info.viewportSize;
 		else if (p.type == ResourcesInfo::AutoParam::CAMERA_POSITION)
 			*(DirectX::XMFLOAT3*)&data.rootParams[p.bufferOffset] = info.getMainCameraPosition();
+		else if (p.type == ResourcesInfo::AutoParam::CAMERA_DIRECTION)
+			*(DirectX::XMFLOAT3*)&data.rootParams[p.bufferOffset] = info.getMainCameraDirection();
+		else if (p.type == ResourcesInfo::AutoParam::VIEW_CAMERA_POSITION)
+			*(DirectX::XMFLOAT3*)&data.rootParams[p.bufferOffset] = info.getCameraPosition();
+		else if (p.type == ResourcesInfo::AutoParam::VIEW_CAMERA_DIRECTION)
+			*(DirectX::XMFLOAT3*)&data.rootParams[p.bufferOffset] = info.getCameraDirection();
 		else if (p.type == ResourcesInfo::AutoParam::VP_MATRIX)
 			XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&data.rootParams[p.bufferOffset], XMMatrixTranspose(info.getViewProjectionMatrix()));
 		else if (p.type == ResourcesInfo::AutoParam::VIEW_MATRIX)

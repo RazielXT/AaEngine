@@ -41,8 +41,8 @@ float4 PSDownsample3x3(VS_OUTPUT input) : SV_TARGET
 
 float calculateNextBrightness(float lastBrightness, float currentBrightness, float deltaTime)
 {
-    float maxChange = 0.2f * deltaTime;  // Maximum change allowed per frame
-    float change = currentBrightness - lastBrightness;
+    float maxChange = 0.4f * deltaTime;  // Maximum change allowed per frame
+    float change = pow(currentBrightness, 1.0/2.233) - lastBrightness;
 
     if (abs(change) > maxChange) {
         change = sign(change) * maxChange;  // Limit the change to maxChange

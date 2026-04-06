@@ -50,7 +50,6 @@ public:
 
 	RenderQueue* createQueue(const std::vector<DXGI_FORMAT>& targets, MaterialTechnique technique = MaterialTechnique::Default, Order order = Order::Normal);
 	RenderQueue* getQueue(MaterialTechnique technique = MaterialTechnique::Default, Order order = Order::Normal);
-	std::vector<DXGI_FORMAT> getQueueTargetFormats(MaterialTechnique technique = MaterialTechnique::Default, Order order = Order::Normal) const;
 	RenderQueue createManualQueue(MaterialTechnique technique = MaterialTechnique::Default, Order order = Order::Normal);
 
 	RenderObjectsStorage* getRenderables(Order order);

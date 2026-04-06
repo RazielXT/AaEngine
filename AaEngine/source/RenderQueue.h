@@ -39,7 +39,7 @@ struct RenderQueue
 		}
 	};
 
-	std::vector<DXGI_FORMAT> targets;
+	std::vector<DXGI_FORMAT> targetFormats;
 	MaterialTechnique technique = MaterialTechnique::Default;
 	Order targetOrder = Order::Normal;
 	std::vector<EntityEntry> entities;

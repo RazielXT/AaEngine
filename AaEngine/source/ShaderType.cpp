@@ -13,6 +13,10 @@ namespace ShaderTypeString
 			type = ShaderType::Geometry;
 		else if (t == "compute_shader")
 			type = ShaderType::Compute;
+		else if (t == "amplification_shader")
+			type = ShaderType::Amplification;
+		else if (t == "mesh_shader")
+			type = ShaderType::Mesh;
 
 		return type;
 	}
@@ -27,6 +31,11 @@ namespace ShaderTypeString
 			return "gs";
 		if (type == ShaderType::Compute)
 			return "cs";
+		if (type == ShaderType::Amplification)
+			return "as";
+		if (type == ShaderType::Mesh)
+			return "ms";
+
 		return "";
 	}
 };

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <d3d12.h>
-#include <dxgi1_4.h>
+#include <dxgi1_6.h>
 #include <DirectXMath.h>
 #include "TargetWindow.h"
 #include "GpuTexture.h"
@@ -46,6 +46,12 @@ private:
 	ID3D12GraphicsCommandList* commandList{};
 };
 
+struct ColorSpace
+{
+	DXGI_FORMAT outputFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+	enum Type { SRGB, HDR10 } type = SRGB;
+};
+
 class RenderCore
 {
 public:
@@ -76,11 +82,16 @@ public:
 	RenderTargetHeap rtvHeap;
 	GpuTexture2D backbuffer[FrameCount];
 
-	void initializeSwapChain(const TargetWindow& window);
+	bool IsDisplayHDR() const;
+	DXGI_OUTPUT_DESC1 GetDisplayDesc() const;
+
+	void initializeSwapChain(const TargetWindow& window, ColorSpace);
 
 	void resize(UINT width, UINT height);
 
 private:
+
+	ComPtr<IDXGIAdapter1> hardwareAdapter;
 
 	IDXGISwapChain3* swapChain;
 

@@ -129,6 +129,27 @@ struct PSOutput
 	float4 motionVectors : SV_Target2;
 };
 
+#ifdef TRIPLANAR
+float4 SampleTriplanar(uint texId, SamplerState sampler,  float3 worldPos, float3 worldNormal, float scale)
+{
+	float3 blend_weights = abs(worldNormal.xyz);
+	// Tighten up the blending zone:
+	blend_weights = (blend_weights - 0.2) * 7;
+	blend_weights = max(blend_weights, 0);
+	blend_weights /= (blend_weights.x + blend_weights.y + blend_weights.z ).xxx;
+
+	float2 coord1 = worldPos.yz * scale;
+	float2 coord2 = worldPos.zx * scale;
+	float2 coord3 = worldPos.xy * scale;
+
+	float4 col1 = GetTexture(texId).Sample(sampler, coord1);
+	float4 col2 = GetTexture(texId).Sample(sampler, coord2);
+	float4 col3 = GetTexture(texId).Sample(sampler, coord3);
+
+	return col1 * blend_weights.x + col2 * blend_weights.y + col3 * blend_weights.z;
+}
+#endif
+
 PSOutput PSMain(PSInput input)
 {
 	float3 normal = input.normal;
@@ -136,7 +157,13 @@ PSOutput PSMain(PSInput input)
 	SamplerState sampler = SamplerDescriptorHeap[0];
 
 #ifndef NO_TEXTURE
+
+	#ifdef TRIPLANAR
+	float4 albedoTex = SampleTriplanar(TexIdDiffuse, sampler, input.worldPosition.xyz, input.normal.xyz, 0.05);
+	#else
 	float4 albedoTex = GetTexture(TexIdDiffuse).Sample(sampler, input.uv);
+	#endif
+
 	#if defined(ALPHA_TEST) && !defined(FLAT_COLOR)
 		if (albedoTex.a < 0.37)
 			discard;
@@ -148,7 +175,7 @@ PSOutput PSMain(PSInput input)
 #endif
 
 	PSOutput output;
-	output.albedo = float4(albedo,1);
+	output.albedo = float4(albedo,0);
 	output.normals = float4(normal, 1);
 	output.motionVectors = float4((input.previousPosition.xy / input.previousPosition.w - input.currentPosition.xy / input.currentPosition.w) * ViewportSize, 0, 0);
 	output.motionVectors.xy *= 0.5;

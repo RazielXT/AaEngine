@@ -5,7 +5,7 @@ material ColorVCT abstract
 
 	texture Diffuse
 	{
-		file white.png
+		file white.dds
 	}
 
 	texture Normal
@@ -15,7 +15,7 @@ material ColorVCT abstract
 
 	default_params
 	{
-		float MaterialColor 1 1 1
+		color MaterialColor 1 1 1
 	}
 }
 
@@ -48,7 +48,7 @@ material BlueVCT : ColorVCT
 {
 	default_params
 	{
-		float MaterialColor 0.2 0.2 1
+		color MaterialColor 0.2 0.2 1
 	}
 }
 
@@ -56,7 +56,7 @@ material RedVCT : ColorVCT
 {
 	texture Diffuse
 	{
-		file nicered.png
+		file nicered.dds
 	}
 }
 
@@ -77,7 +77,7 @@ material YellowVCT : ColorVCT
 {
 	default_params
 	{
-		float MaterialColor 1 1 0.1
+		color MaterialColor 1 1 0.1
 	}
 }
 
@@ -98,12 +98,12 @@ material GrassVCT : ColorVCT
 {
 	texture Diffuse
 	{
-		file grass.png
+		file grass.dds
 	}
 
 	texture Normal
 	{
-		file rock_norm.dds
+		file grass_NRM.png
 	}
 }
 

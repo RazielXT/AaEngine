@@ -337,7 +337,7 @@ std::vector<T> CreateGridIndices(UINT width)
 
 void VertexBufferModel::CreateIndexBufferGrid(ID3D12Device* device, ResourceUploadBatch* memory, UINT width, bool alternating)
 {
-	if (width * width <= 0xffff)
+	if ((width * width - 1) <= 0xffff)
 	{
 		auto indices = alternating ? CreateGridAlternatingIndices<uint16_t>(width) : CreateGridIndices<uint16_t>(width);
 		CreateIndexBuffer(device, memory, indices.data(), indices.size());

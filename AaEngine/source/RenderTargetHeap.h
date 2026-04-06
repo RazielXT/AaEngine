@@ -14,8 +14,9 @@ public:
 	void InitDsv(ID3D12Device* device, UINT count, const wchar_t* name = nullptr);
 	void Reset();
 
-	void CreateRenderTargetHandle(ID3D12Device* device, ComPtr<ID3D12Resource>& texture, ShaderTextureView& view);
-	void CreateDepthTargetHandle(ID3D12Device* device, ComPtr<ID3D12Resource>& texture, D3D12_CPU_DESCRIPTOR_HANDLE& dsvHandle);
+	void CreateRenderTargetHandle(ID3D12Device* device, ComPtr<ID3D12Resource>& texture, ShaderTextureView& view, DXGI_FORMAT f = {});
+	void CreateDepthTargetHandle(ID3D12Device* device, ComPtr<ID3D12Resource>& texture, ShaderTextureView& view);
+	void RemoveDepthTargetHandle(ShaderTextureView& view);
 
 private:
 
@@ -23,5 +24,6 @@ private:
 	UINT rtvHandlesCount = 0;
 
 	ComPtr<ID3D12DescriptorHeap> dsvHeap;
+	std::vector<UINT> dsvFreeHandles;
 	UINT dsvHandlesCount = 0;
 };

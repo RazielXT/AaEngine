@@ -179,7 +179,7 @@ RenderQueue EntityPicker::createRenderQueue() const
 {
 	RenderQueue idQueue;
 	idQueue.technique = MaterialTechnique::EntityId;
-	idQueue.targets = formats;
+	idQueue.targetFormats = formats;
 
 	return idQueue;
 }

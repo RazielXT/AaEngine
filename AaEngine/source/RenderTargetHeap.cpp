@@ -29,25 +29,50 @@ void RenderTargetHeap::Reset()
 	rtvHandlesCount = dsvHandlesCount = 0;
 }
 
-void RenderTargetHeap::CreateRenderTargetHandle(ID3D12Device* device, ComPtr<ID3D12Resource>& texture, ShaderTextureView& view)
+void RenderTargetHeap::CreateRenderTargetHandle(ID3D12Device* device, ComPtr<ID3D12Resource>& texture, ShaderTextureView& view, DXGI_FORMAT f)
 {
 	if (view.handle.ptr)
 	{
-		view.handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(rtvHeap->GetCPUDescriptorHandleForHeapStart(), view.rtvHeapIndex, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
+		view.handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(rtvHeap->GetCPUDescriptorHandleForHeapStart(), view.heapIndex, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
 	}
 	else
 	{
 		view.handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(rtvHeap->GetCPUDescriptorHandleForHeapStart(), rtvHandlesCount, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
-		view.rtvHeapIndex = rtvHandlesCount;
+		view.heapIndex = rtvHandlesCount;
 		rtvHandlesCount++;
 	}
 
-	device->CreateRenderTargetView(texture.Get(), nullptr, view.handle);
+	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {}; 
+	rtvDesc.Format = f;
+	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+
+	device->CreateRenderTargetView(texture.Get(), f ? &rtvDesc : nullptr, view.handle);
 }
 
-void RenderTargetHeap::CreateDepthTargetHandle(ID3D12Device* device, ComPtr<ID3D12Resource>& texture, D3D12_CPU_DESCRIPTOR_HANDLE& dsvHandle)
+void RenderTargetHeap::CreateDepthTargetHandle(ID3D12Device* device, ComPtr<ID3D12Resource>& texture, ShaderTextureView& view)
 {
-	dsvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(dsvHeap->GetCPUDescriptorHandleForHeapStart(), dsvHandlesCount, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV));
-	device->CreateDepthStencilView(texture.Get(), nullptr, dsvHandle);
-	dsvHandlesCount++;
+	if (view.handle.ptr)
+	{
+		view.handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(dsvHeap->GetCPUDescriptorHandleForHeapStart(), view.heapIndex, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV));
+	}
+	else if (!dsvFreeHandles.empty())
+	{
+		view.heapIndex = dsvFreeHandles.back();
+		dsvFreeHandles.pop_back();
+		view.handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(dsvHeap->GetCPUDescriptorHandleForHeapStart(), view.heapIndex, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV));
+	}
+	else
+	{
+		view.handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(dsvHeap->GetCPUDescriptorHandleForHeapStart(), dsvHandlesCount, device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV));
+		view.heapIndex = dsvHandlesCount;
+		dsvHandlesCount++;
+	}
+
+	device->CreateDepthStencilView(texture.Get(), nullptr, view.handle);
+}
+
+void RenderTargetHeap::RemoveDepthTargetHandle(ShaderTextureView& view)
+{
+	if (view.handle.ptr)
+		dsvFreeHandles.push_back(view.heapIndex);
 }

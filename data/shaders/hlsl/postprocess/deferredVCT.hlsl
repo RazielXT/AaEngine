@@ -3,6 +3,7 @@
 #include "hlsl/VoxelConeTracingCommon.hlsl"
 
 float4x4 InvViewProjectionMatrix;
+float3 CameraPosition;
 float ResId;
 
 cbuffer SceneVoxelInfo : register(b1)
@@ -52,6 +53,8 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 			fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal - worldBinormal), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler);
 			fullTrace /= 5;
 		}
+
+		//fullTrace = ConeTraceImpl(voxelUV, reflect(normalize(worldPosition-CameraPosition), worldNormal), 0.01f, VoxelInfo.MiddleConeRatio.y, voxelmap, VoxelSampler);
 
 		voxelAmbient += fullTrace.rgb * voxelWeight;
 		voxelWeight = saturate(voxelWeight - fullTrace.w);

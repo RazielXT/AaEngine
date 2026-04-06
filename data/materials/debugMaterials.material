@@ -5,7 +5,7 @@ material DebugMaterialBase abstract
 
 	default_params
 	{
-		float MaterialColor 1 1 1
+		color MaterialColor 1 1 1
 	}
 }
 

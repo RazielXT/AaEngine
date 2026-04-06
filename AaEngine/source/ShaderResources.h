@@ -99,7 +99,6 @@ struct ResourcesInfo
 		INV_VIEW_MATRIX,
 		INV_PROJ_MATRIX,
 		Z_MAGIC,
-		SHADOW_MATRIX,
 		SHADOW_MAP_SIZE,
 		SHADOW_MAP_SIZE_INV,
 		SUN_DIRECTION,
@@ -109,6 +108,9 @@ struct ResourcesInfo
 		VIEWPORT_SIZE_INV,
 		VIEWPORT_SIZE,
 		CAMERA_POSITION,
+		CAMERA_DIRECTION,
+		VIEW_CAMERA_POSITION,
+		VIEW_CAMERA_DIRECTION,
 	};
 	struct AutoParamInfo
 	{
@@ -134,10 +136,16 @@ struct PssmParameters
 	XMFLOAT4X4 ShadowMatrix[4];
 	XMFLOAT3 SunDirection;
 	UINT TexIdShadowMap0;
+	float ShadowCascadeDistance[4];
 	XMFLOAT3 SunColor;
 	float ShadowMapSize;
 	float ShadowMapSizeInv;
-	float ShadowCascadeDistance[3];
+	UINT TexIdSunZenith;
+	UINT TexIdViewZenith;
+	UINT TexIdSunView;
+	float CloudsAmount{};
+	float CloudsDensity = 0.5f;
+	float CloudsSpeed = 0.003f;
 };
 
 struct FrameParameters

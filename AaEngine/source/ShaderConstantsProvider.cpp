@@ -69,9 +69,19 @@ XMFLOAT3 ShaderConstantsProvider::getCameraPosition() const
 	return camera.getPosition();
 }
 
+DirectX::XMFLOAT3 ShaderConstantsProvider::getCameraDirection() const
+{
+	return camera.getCameraDirection();
+}
+
 DirectX::XMFLOAT3 ShaderConstantsProvider::getMainCameraPosition() const
 {
 	return mainCamera.getPosition();
+}
+
+DirectX::XMFLOAT3 ShaderConstantsProvider::getMainCameraDirection() const
+{
+	return mainCamera.getCameraDirection();
 }
 
 D3D12_GPU_VIRTUAL_ADDRESS ShaderConstantsProvider::getGeometryBuffer() const

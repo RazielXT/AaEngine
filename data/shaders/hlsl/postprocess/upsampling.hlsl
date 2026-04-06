@@ -17,7 +17,7 @@ float4 BilateralUpsample(
     float3 LowNormals[4],
     float4 LowColors[4])
 {
-    const float NoiseFilterStrength = 0.0;
+    const float NoiseFilterStrength = 0.01;
     const float kUpsampleTolerance  = 1e-6;
 
     // Depth weights
@@ -35,7 +35,7 @@ float4 BilateralUpsample(
 
     float TotalWeight = dot(weights, 1.0) + NoiseFilterStrength;
 
-    float4 WeightedSum = NoiseFilterStrength;
+    float4 WeightedSum = 0;
     WeightedSum += LowColors[0] * weights.x;
     WeightedSum += LowColors[1] * weights.y;
     WeightedSum += LowColors[2] * weights.z;

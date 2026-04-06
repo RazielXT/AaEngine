@@ -52,5 +52,5 @@ float4 PSTraceGodray(VS_OUTPUT input) : SV_TARGET
 		illuminationDecay *= decay;
 	}
 
-	return float4(col * 0.03, 1);
+	return float4(col * 0.02, 1);
 }

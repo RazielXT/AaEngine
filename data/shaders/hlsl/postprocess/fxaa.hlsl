@@ -986,7 +986,7 @@ struct VS_OUTPUT
     float2 TexCoord : TEXCOORD0;
 };
 
-float4 PS_FXAA(
+float4 PSMain(
     VS_OUTPUT input
 ) : SV_TARGET
 {

@@ -30,7 +30,7 @@ void RenderQueue::update(const EntityChangeDescritpion& changeInfo, GraphicsReso
 			}
 		}
 
-		auto entry = EntityEntry(entity, matInstance->Assign(entity->geometry.layout ? *entity->geometry.layout : std::vector<D3D12_INPUT_ELEMENT_DESC>{}, targets, technique), technique);
+		auto entry = EntityEntry(entity, matInstance->Assign(entity->geometry.layout ? *entity->geometry.layout : std::vector<D3D12_INPUT_ELEMENT_DESC>{}, targetFormats, technique), technique);
 
 		auto it = std::lower_bound(entities.begin(), entities.end(), entry);
 		entities.insert(it, std::move(entry));

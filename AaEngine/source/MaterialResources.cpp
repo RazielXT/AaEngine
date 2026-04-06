@@ -71,7 +71,7 @@ void MaterialResources::loadMaterials(std::string directory, bool subDirectories
 		MaterialRef& info = knownMaterials[i];
 
 		// post process
-		if (info.pipeline.shaders[ShaderType::Vertex] == "vsQuad")
+		if (info.pipeline.shaders[ShaderType::Vertex] == "vsQuad" || info.pipeline.shaders[ShaderType::Pixel].ends_with("Depth") || info.pipeline.shaders[ShaderType::Pixel].empty())
 			continue;
 
 		if (!info.abstract && info.pipeline.fill == D3D12_FILL_MODE_SOLID && !info.techniqueMaterial[int(MaterialTechnique::Wireframe)])

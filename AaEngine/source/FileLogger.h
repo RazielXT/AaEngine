@@ -4,6 +4,7 @@
 #include <ctime>
 #include <string>
 #include <windows.h>
+#include <filesystem>
 
 class FileLogger
 {
@@ -28,9 +29,25 @@ public:
 
 	static void logError(std::string text)
 	{
+		logError(text, "");
+	}
+
+	static void logError(std::string text, std::string path)
+	{
 		OutputDebugStringA(text.c_str());
 		log(text, Severity::Error);
-		MessageBoxA(0, text.c_str(), "Error", MB_OK | MB_ICONERROR);
+
+		if (path.empty())
+		{
+			MessageBoxA(0, text.c_str(), "Error", MB_OK | MB_ICONERROR);
+		}
+		else
+		{
+			int r = MessageBoxA(0, text.c_str(), "Error", MB_RETRYCANCEL | MB_ICONERROR);
+
+			if (r == IDRETRY)
+				ShellExecuteA(nullptr, "open", (std::filesystem::absolute(path).string()).c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+		}
 	}
 
 	static void logErrorD3D(std::string text, HRESULT result)

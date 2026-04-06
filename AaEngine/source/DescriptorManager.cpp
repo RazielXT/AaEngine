@@ -39,10 +39,10 @@ void DescriptorManager::init(UINT maxDescriptors)
 	mainDescriptorHeap->SetName(L"CBV_SRV_UAV");
 }
 
-void DescriptorManager::createTextureView(FileTexture& texture)
+UINT DescriptorManager::createTextureView(FileTexture& texture)
 {
 	if (texture.srvHandle.ptr)
-		return;
+		return texture.srvHeapIndex;
 
 	auto desc = texture.texture->GetDesc();
 	auto dimension = D3D12_SRV_DIMENSION_TEXTURE2D;
@@ -72,6 +72,8 @@ void DescriptorManager::createTextureView(FileTexture& texture)
 	texture.srvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart(), index
 		, device.GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 	texture.srvHeapIndex = index;
+
+	return texture.srvHeapIndex;
 }
 
 void DescriptorManager::createTextureView(GpuTextureResource& texture, UINT mipLevels)

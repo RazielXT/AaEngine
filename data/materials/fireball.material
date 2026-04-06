@@ -1,0 +1,28 @@
+material Fireball
+{
+	vertex_shader
+	{
+		file fireball.hlsl
+		entry VSMain
+		profile vs_6_6
+	}
+
+	pixel_shader
+	{
+		file fireball.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
+
+	texture
+	{
+		file fire.dds
+	}
+
+	default_params
+	{
+		float Direction 0 1 0
+	}
+	
+	technique Depth skip
+}

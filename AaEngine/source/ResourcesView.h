@@ -9,7 +9,7 @@ struct ShaderTextureView
 	D3D12_CPU_DESCRIPTOR_HANDLE handle{};
 	D3D12_GPU_DESCRIPTOR_HANDLE srvHandle{};
 	D3D12_GPU_DESCRIPTOR_HANDLE uavHandle{};
-	UINT rtvHeapIndex{};
+	UINT heapIndex{};
 	UINT srvHeapIndex{};
 	UINT uavHeapIndex{};
 };

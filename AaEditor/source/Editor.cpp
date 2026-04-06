@@ -630,7 +630,7 @@ void Editor::prepareElements(Camera& camera)
 	if (ImGui::Button("Reload shaders"))
 		state.reloadShaders = true;
 
-	ImGui::Checkbox("Render wireframe", &renderTask.enabledWireframe);
+	state.wireframeChange = ImGui::Checkbox("Render wireframe", &state.wireframe);
 
 	ImGui::Combo("DLSS", &state.DlssMode, UpscaleModeNames, std::size(UpscaleModeNames));
 	ImGui::Combo("FSR", &state.FsrMode, UpscaleModeNames, std::size(UpscaleModeNames));

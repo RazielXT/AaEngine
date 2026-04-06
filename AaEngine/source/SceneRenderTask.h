@@ -25,13 +25,11 @@ public:
 
 	void resize(CompositorPass& pass) override;
 
-	bool writesSyncCommands(CompositorPass&) const override;
-
 	static SceneRenderTask& Get();
 
-	bool enabledWireframe = false;
-
 	void showVoxels(bool show);
+
+	RunType getRunType(CompositorPass&) const override;
 
 private:
 
@@ -53,11 +51,15 @@ private:
 	RenderObjectsVisibilityData sceneVisibility;
 	RenderObjectsStorage* renderables;
 
+	RenderObjectsVisibilityData sceneForwardVisibility;
+	RenderObjectsStorage* forwardRenderables;
+
 	void renderScene(CompositorPass& pass);
 	void renderEarlyZ(CompositorPass& pass);
 
 	RenderQueue* depthQueue{};
 	RenderQueue* sceneQueue{};
+	RenderQueue* sceneForwardQueue{};
 
 	struct 
 	{
@@ -75,10 +77,13 @@ private:
 	void renderEditor(CompositorPass& pass, CommandsData& cmd);
 
 	RenderQueue* wireframeQueue{};
-	void renderWireframe(CompositorPass& pass, CommandsData& cmd);
+	RenderQueue* wireframeForwardQueue{};
+	void renderWireframe(CompositorPass& pass);
 
 	void renderDebug(CompositorPass& pass, CommandsData& cmd);
 
 	bool showVoxelsEnabled = false;
 	void updateVoxelsDebugView(SceneEntity& debugVoxel, Camera& camera);
+
+	void renderForward(CompositorPass& pass, CommandsData& cmd);
 };

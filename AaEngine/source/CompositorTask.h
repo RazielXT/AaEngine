@@ -27,12 +27,11 @@ public:
 	virtual AsyncTasksInfo initialize(CompositorPass& pass) = 0;
 	virtual void resize(CompositorPass& pass) {};
 
+	enum class RunType { Generic, SyncCommands, SyncComputeCommands };
+	virtual RunType getRunType(CompositorPass&) const = 0;
+
 	virtual void run(RenderContext& ctx, CompositorPass& pass) {};
-
-	virtual bool writesSyncCommands(CompositorPass&) const { return false; }
 	virtual void run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) {};
-
-	virtual bool writesSyncComputeCommands(CompositorPass&) const { return false; }
 	virtual void runCompute(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) {};
 
 	virtual bool forceTaskOrder() const { return false; }

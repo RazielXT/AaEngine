@@ -14,10 +14,10 @@ public:
 	AsyncTasksInfo initialize(CompositorPass& pass) override;
 	void run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
 
-	bool writesSyncCommands(CompositorPass&) const override;
-
 	enum Mode{ Off, Wireframe, Solid };
 	void setMode(Mode);
+
+	RunType getRunType(CompositorPass&) const override { return RunType::SyncCommands; }
 
 private:
 

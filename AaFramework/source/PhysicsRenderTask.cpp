@@ -27,11 +27,6 @@ void PhysicsRenderTask::run(RenderContext& ctx, CommandsData& syncCommands, Comp
 	}
 }
 
-bool PhysicsRenderTask::writesSyncCommands(CompositorPass&) const
-{
-	return true;
-}
-
 void PhysicsRenderTask::setMode(Mode m)
 {
 	mode = m;

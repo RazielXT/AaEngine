@@ -15,6 +15,8 @@ public:
 	AsyncTasksInfo initialize(CompositorPass& pass) override;
 	void run(RenderContext& ctx, CompositorPass& pass) override;
 
+	RunType getRunType(CompositorPass&) const override { return RunType::Generic; }
+
 private:
 
 	struct ShadowWork

@@ -10,6 +10,7 @@ SceneRenderTask* instance = nullptr;
 SceneRenderTask::SceneRenderTask(RenderProvider p, SceneManager& s) : CompositorTask(p, s), picker(p.renderSystem)
 {
 	renderables = sceneMgr.getRenderables(Order::Normal);
+	forwardRenderables = sceneMgr.getRenderables(Order::Post);
 	transparent.renderables = sceneMgr.getRenderables(Order::Transparent);
 	instance = this;
 }
@@ -57,11 +58,11 @@ AsyncTasksInfo SceneRenderTask::initialize(CompositorPass& pass)
 	}
 	else if (pass.info.entry == "Opaque")
 	{
-			sceneQueue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::Default);
+		sceneQueue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::Default);
 
 		scene.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
 		scene.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
-		scene.commands = provider.renderSystem.core.CreateCommandList(L"Scene", PixColor::SceneRender);
+		scene.commands = provider.renderSystem.core.CreateCommandList(L"SceneRender", PixColor::SceneRender);
 
 		scene.worker = std::thread([this, &pass]
 			{
@@ -81,7 +82,7 @@ AsyncTasksInfo SceneRenderTask::initialize(CompositorPass& pass)
 
 		transparent.work.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
 		transparent.work.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
-		transparent.work.commands = provider.renderSystem.core.CreateCommandList(L"SceneTransparent", PixColor::SceneTransparent);
+		transparent.work.commands = provider.renderSystem.core.CreateCommandList(L"SceneRenderTransparent", PixColor::SceneTransparent);
 
 		transparent.work.worker = std::thread([this, &pass]
 			{
@@ -97,7 +98,34 @@ AsyncTasksInfo SceneRenderTask::initialize(CompositorPass& pass)
 	}
 	else if (pass.info.entry == "Wireframe")
 	{
-		wireframeQueue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::Wireframe, Order::Normal);
+		if (sceneQueue)
+			__debugbreak();
+
+		sceneQueue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::Default);
+		wireframeQueue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::Wireframe);
+
+		sceneForwardQueue = sceneMgr.createQueue({ pass.mrt->formats.front() }, MaterialTechnique::Default, Order::Post);
+		wireframeForwardQueue = sceneMgr.createQueue({ pass.mrt->formats.front() }, MaterialTechnique::Wireframe, Order::Post);
+
+		scene.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
+		scene.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
+		scene.commands = provider.renderSystem.core.CreateCommandList(L"Wireframe", PixColor::SceneRender);
+
+		scene.worker = std::thread([this, &pass]
+			{
+				while (WaitForSingleObject(scene.eventBegin, INFINITE) == WAIT_OBJECT_0 && running)
+				{
+					renderWireframe(pass);
+
+					SetEvent(scene.eventFinish);
+				}
+			});
+
+		tasks = { { scene.eventFinish, scene.commands } };
+	}
+	else if (pass.info.entry == "Forward")
+	{
+		sceneForwardQueue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::Default, Order::Post);
 	}
 
 	return tasks;
@@ -131,7 +159,7 @@ void SceneRenderTask::run(RenderContext& renderCtx, CompositorPass& pass)
 		//just init, early z starts from Opaque thread
 		ctx = renderCtx;
 	}
-	else if (pass.info.entry == "Opaque")
+	else if (pass.info.entry == "Opaque" || pass.info.entry == "Wireframe")
 	{
 		SetEvent(scene.eventBegin);
 	}
@@ -147,13 +175,13 @@ void SceneRenderTask::run(RenderContext& renderCtx, CommandsData& cmd, Composito
 	{
 		renderEditor(pass, cmd);
 	}
-	else if (pass.info.entry == "Wireframe")
-	{
-		renderWireframe(pass, cmd);
-	}
 	else if (pass.info.entry == "Debug")
 	{
 		renderDebug(pass, cmd);
+	}
+	else if (pass.info.entry == "Forward")
+	{
+		renderForward(pass, cmd);
 	}
 }
 
@@ -163,14 +191,35 @@ void SceneRenderTask::resize(CompositorPass& pass)
 		picker.initializeGpuResources();
 }
 
-bool SceneRenderTask::writesSyncCommands(CompositorPass& pass) const
-{
-	return pass.info.entry == "Editor" || pass.info.entry == "Wireframe" || pass.info.entry == "Debug";
-}
-
 SceneRenderTask& SceneRenderTask::Get()
 {
 	return *instance;
+}
+
+void SceneRenderTask::renderWireframe(CompositorPass& pass)
+{
+	renderables->updateVisibility(*ctx.camera, sceneVisibility);
+
+	if (earlyZ.eventBegin)
+		SetEvent(earlyZ.eventBegin);
+
+	auto marker = provider.renderSystem.core.StartCommandList(scene.commands);
+
+	pass.mrt->PrepareAsTarget(scene.commands.commandList, pass.targets, true, TransitionFlags::UseDepth);
+
+	ShaderConstantsProvider constants(provider.params, sceneVisibility, *ctx.camera, *pass.mrt);
+
+	wireframeQueue->renderObjects(constants, scene.commands.commandList);
+
+	{
+		forwardRenderables->updateVisibility(*ctx.camera, sceneForwardVisibility);
+
+		pass.mrt->PrepareSubrangeAsTarget(scene.commands.commandList, 1, 0, pass.targets.back().texture);
+
+		ShaderConstantsProvider constants(provider.params, sceneForwardVisibility, *ctx.camera, *pass.mrt);
+
+		wireframeForwardQueue->renderObjects(constants, scene.commands.commandList);
+	}
 }
 
 void SceneRenderTask::renderScene(CompositorPass& pass)
@@ -184,14 +233,24 @@ void SceneRenderTask::renderScene(CompositorPass& pass)
 
 	pass.mrt->PrepareAsTarget(scene.commands.commandList, pass.targets, true, TransitionFlags::UseDepth);
 
-	if (enabledWireframe)
-		return;
-
 	ShaderConstantsProvider constants(provider.params, sceneVisibility, *ctx.camera, *pass.mrt);
 
-	sceneMgr.skybox.render(scene.commands.commandList, constants);
-	
 	sceneQueue->renderObjects(constants, scene.commands.commandList);
+}
+
+void SceneRenderTask::renderForward(CompositorPass& pass, CommandsData& cmd)
+{
+	CommandsMarker marker(cmd.commandList, "SceneRenderForward", PixColor::SceneRender);
+
+	forwardRenderables->updateVisibility(*ctx.camera, sceneForwardVisibility);
+
+	pass.mrt->PrepareAsTarget(cmd.commandList, pass.targets, false, TransitionFlags::UseDepth);
+
+	ShaderConstantsProvider constants(provider.params, sceneForwardVisibility, *ctx.camera, *pass.mrt);
+
+	sceneMgr.skybox.render(cmd.commandList, constants);
+
+	sceneForwardQueue->renderObjects(constants, cmd.commandList);
 }
 
 void SceneRenderTask::renderEarlyZ(CompositorPass& pass)
@@ -287,21 +346,6 @@ void SceneRenderTask::renderEditor(CompositorPass& pass, CommandsData& cmd)
 	}
 }
 
-void SceneRenderTask::renderWireframe(CompositorPass& pass, CommandsData& cmd)
-{
-	if (!enabledWireframe)
-	{
-		pass.mrt->PrepareAsTarget(cmd.commandList, pass.targets, false, TransitionFlags::UseDepth);
-		return;
-	}
-
-	pass.mrt->PrepareAsTarget(cmd.commandList, pass.targets, true, TransitionFlags::UseDepth);
-
-	ShaderConstantsProvider constants(provider.params, sceneVisibility, *ctx.camera, *pass.mrt);
-
-	wireframeQueue->renderObjects(constants, cmd.commandList);
-}
-
 void SceneRenderTask::renderDebug(CompositorPass& pass, CommandsData& cmd)
 {
 	auto& target = pass.targets.front();
@@ -326,6 +370,14 @@ void SceneRenderTask::renderDebug(CompositorPass& pass, CommandsData& cmd)
 void SceneRenderTask::showVoxels(bool show)
 {
 	showVoxelsEnabled = show;
+}
+
+CompositorTask::RunType SceneRenderTask::getRunType(CompositorPass& pass) const
+{
+	if (pass.info.entry == "Editor" || pass.info.entry == "Debug" || pass.info.entry == "Forward")
+		return RunType::SyncCommands;
+	else
+		return RunType::Generic;
 }
 
 void SceneRenderTask::updateVoxelsDebugView(SceneEntity& debugVoxel, Camera& camera)

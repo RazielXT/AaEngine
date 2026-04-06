@@ -7,29 +7,25 @@ import water.Water
 compositor Frame
 {
 	texture sceneTexture target_size Albedo:DXGI_FORMAT_R8G8B8A8_UNORM Normal:DXGI_FORMAT_R16G16B16A16_SNORM MotionVectors:DXGI_FORMAT_R16G16_FLOAT Depth
-	texture sceneVCT target_size DXGI_FORMAT_R8G8B8A8_UNORM
+
+
+	texture sceneVCT target_size DXGI_FORMAT_R16G16B16A16_FLOAT
 	alias sceneTextureTmp2 sceneVCT
-
-	texture sceneVCTLow target_size_div 2 DXGI_FORMAT_R8G8B8A8_UNORM
-	texture sceneTextureTmp target_size DXGI_FORMAT_R8G8B8A8_UNORM
-
-	texture sceneDownscale2 target_size_div 2 DXGI_FORMAT_R8G8B8A8_UNORM
-	texture sceneDownscale4 target_size_div 8 DXGI_FORMAT_R8G8B8A8_UNORM
+	texture sceneVCTLow target_size_div 2 DXGI_FORMAT_R16G16B16A16_FLOAT
+	texture sceneTextureTmp target_size DXGI_FORMAT_R16G16B16A16_FLOAT
 
 	texture depthDownsample2 target_size_div 2 DXGI_FORMAT_R32_FLOAT
 
 #if UPSCALE
 	texture motionVectors target_size DXGI_FORMAT_R16G16_FLOAT
-	rwtexture sceneTextureTmp_upscaled output_size DXGI_FORMAT_R8G8B8A8_UNORM
+	rwtexture sceneTextureTmp_upscaled output_size DXGI_FORMAT_R16G16B16A16_FLOAT
 #else
-	texture sceneTextureTmpOut output_size DXGI_FORMAT_R8G8B8A8_UNORM
+	texture sceneTextureTmpOut output_size DXGI_FORMAT_R16G16B16A16_FLOAT
 #endif
 
 	texture voxelDummy 128 128 DXGI_FORMAT_R8G8B8A8_UNORM
 
 	task PrepareFrame
-	{
-	}
 
 	task SceneRender.EarlyZ
 	{
@@ -65,16 +61,23 @@ compositor Frame
 		out voxelDummy
 	}
 
+#if WIREFRAME
+	task SceneRender.Wireframe
+	{
+		sync_wait SSAO
+		out sceneTexture
+	}
+	pass WireframePassThrough
+	{
+		material PassThrough
+		in sceneTexture:Albedo
+		out sceneTextureTmp
+	}
+#else
 	task SceneRender.Opaque
 	{
 		sync_wait SSAO
 
-		out sceneTexture
-	}
-
-	task SceneRender.Wireframe
-	{
-		after SceneRender.Opaque
 		out sceneTexture
 	}
 
@@ -109,6 +112,12 @@ compositor Frame
 		out sceneTextureTmp
 	}
 
+	task SceneRender.Forward
+	{
+		out sceneTextureTmp sceneTexture:Depth
+	}
+#endif
+
 	pass DepthDownsample
 	{
 		material LoadThrough
@@ -118,22 +127,7 @@ compositor Frame
 
 	ref Water(sceneTextureTmp,sceneTexture:Depth,depthDownsample2,sceneTextureTmp2)
 
-	pass SceneDownsample
-	{
-		material PassThrough
-		in sceneTextureTmp2
-		out sceneDownscale2
-	}
-	pass SceneDownsample
-	{
-		material PassThrough
-		in sceneDownscale2
-		out sceneDownscale4
-	}
-
 	ref Exposure(sceneTextureTmp2)
-
-	ref Bloom(sceneDownscale4,Exposure.exposure)
 
 	task SceneRender.Editor
 	{
@@ -159,36 +153,46 @@ compositor Frame
 		out sceneTextureTmp_upscaled
 	}
 
+	ref Bloom(sceneTextureTmp_upscaled,Exposure.exposure)
 	ref Godray(sceneTextureTmp_upscaled,sceneTexture:Depth)
 
 	pass ToneMapping
 	{
-		material ToneMappingNoLuma
+		material ToneMapping
 		in sceneTextureTmp_upscaled
-		in Bloom.bloomTexture
+		in Bloom.bloom
 		in Exposure.exposure
 		in Godray.godray
 		out Output
 	}
 #else
+
+	ref Bloom(sceneTextureTmp2,Exposure.exposure)
 	ref Godray(sceneTextureTmp2,sceneTexture:Depth)
+
+	pass Fxaa_Luma
+ 	{
+		material FXAA_Luma
+		in sceneTextureTmp2
+ 		out sceneTextureTmpOut
+ 	}
+	pass Fxaa
+ 	{
+		material FXAA
+		in sceneTextureTmpOut
+ 		out sceneTextureTmp2
+ 	}
 
 	pass ToneMapping
 	{
 		material ToneMapping
 		in sceneTextureTmp2
-		in Bloom.bloomTexture
+		in Bloom.bloom
 		in Exposure.exposure
 		in Godray.godray
-		out sceneTextureTmpOut
+		out Output
 	}
 
-	pass Fxaa
- 	{
-		material FXAA
-		in sceneTextureTmpOut
- 		out Output
- 	}
 #endif
 
 	task SceneRender.Debug

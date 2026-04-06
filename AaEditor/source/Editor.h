@@ -25,6 +25,9 @@ struct DebugState
 	int FsrMode = (int)UpscaleMode::Off;
 
 	bool limitFrameRate = false;
+
+	bool wireframe = false;
+	bool wireframeChange = false;
 };
 
 class Editor

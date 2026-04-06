@@ -33,6 +33,7 @@ struct VegetationInfo
 	Vector3 position;
 	float rotation;
 	float scale;
+	float random;
 };
 
 SceneEntity* Vegetation::createDrawObject(SceneManager& sceneMgr, RenderSystem& renderSystem, MaterialInstance& material, ResourceUploadBatch& batch, GraphicsResources& resources)
@@ -72,8 +73,8 @@ SceneEntity* Vegetation::createDrawObject(SceneManager& sceneMgr, RenderSystem& 
 	e->geometry.indexBufferView.SizeInBytes = e->geometry.indexCount * sizeof(uint16_t);
 	e->geometry.indexBufferView.Format = DXGI_FORMAT_R16_UINT;
 
-	e->setBoundingBox({ {}, {} }); //no culling
-	e->setFlag(RenderObjectFlag::NoShadow);
+	e->setBoundingBox({ {}, { 8000,8000,8000 } }); //no culling
+	//e->setFlag(RenderObjectFlag::NoShadow);
 
 	return e;
 }

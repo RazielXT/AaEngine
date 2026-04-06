@@ -1,4 +1,4 @@
-uint TexIdTerrainDepth;
+uint TexIdTerrainDepth; 
 float3 TerrainScale;
 float2 TerrainOffset;
 
@@ -7,6 +7,7 @@ struct VegetationInfo
     float3 position;
     float rotation;
 	float scale;
+	float random;
 };
 
 RWStructuredBuffer<VegetationInfo> infoBuffer : register(u0);
@@ -27,26 +28,40 @@ float getRandom(float x, float z)
     return frac(cos( dot(float2(x,z),K1) ) * 12345.6789 );
 }
 
+float2 RemapGridTextureUV(float2 gridUV)
+{
+	// We want to skip 32 pixels on the left, and use the next 960 pixels
+	float margin = 32.0f / 1024.0f; // 0.03125
+	float content = 960.0f / 1024.0f; // 0.9375
+
+	return margin + (gridUV * content);
+}
+
 uint getVegetationInfo(out VegetationInfo info, float2 coords)
 {
+	//coords = RemapGridTextureUV(coords);
+	float3 TerrainScaleAdj = TerrainScale;
+	TerrainScaleAdj.xz *= (1024.f + 32.f) / 1024.f;
+
 	Texture2D<float> heightmap = GetTexture(TexIdTerrainDepth);
     float height = heightmap.SampleLevel(LinearWrapSampler, coords, 1);
-    float heightRight = heightmap.SampleLevel(LinearWrapSampler, coords + float2(1 / TerrainScale.x, 0), 1);
-    float heightUp = heightmap.SampleLevel(LinearWrapSampler, coords + float2(0, 1 / TerrainScale.z), 1);
+    float heightRight = heightmap.SampleLevel(LinearWrapSampler, coords + float2(1 / TerrainScaleAdj.x, 0), 1);
+    float heightUp = heightmap.SampleLevel(LinearWrapSampler, coords + float2(0, 1 / TerrainScaleAdj.z), 1);
 
     // Calculate tangent and bitangent vectors
-    float3 tangent = float3(1.0, (heightRight - height) * TerrainScale.y, 0.0);
-    float3 bitangent = float3(0.0, (heightUp - height) * TerrainScale.y, 1.0);
+    float3 tangent = float3(1.0, (heightRight - height) * TerrainScaleAdj.y, 0.0);
+    float3 bitangent = float3(0.0, (heightUp - height) * TerrainScaleAdj.y, 1.0);
 
     // Estimate the normal vector using cross product and normalize it
     float3 normal = normalize(cross(bitangent, tangent));
 	
 	info.position.xz = coords - 0.5f;
 	info.position.y = height - 0.5f;
-	info.position *= TerrainScale;
+	info.position *= TerrainScaleAdj;
 
 	info.rotation = 0;
-	info.scale = 15 + getRandom(coords.x, coords.y) * 25;
+	info.random = getRandom(coords.x, coords.y);
+	info.scale = 25 + info.random * 35;
 
     return normal.y > 0.85f ? 1 : 0;
 }
@@ -63,6 +78,7 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 		{
 			float2 coords = (dispatchThreadID.xy * ItemsPerThread + float2(x, y)) / ItemsTotalWidth;
 			coords += getRandom(coords.x + y, coords.y + x) * 2 / ItemsTotalWidth;
+			coords /= 1.5;
 
 			if (getVegetationInfo(info, coords) != 0)
 			{

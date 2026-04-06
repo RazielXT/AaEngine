@@ -5,6 +5,9 @@ VegetationTrees::VegetationTrees(SceneManager& s) : sceneMgr(s)
 {
 }
 
+VertexBufferModel* sphereModel;
+MaterialInstance* sphereMaterial;
+
 void VegetationTrees::initialize(GraphicsResources& resources, ResourceUploadBatch& batch)
 {
 	treeData.trunkMaterial = resources.materials.getMaterial("TreeTrunk", batch);
@@ -18,6 +21,9 @@ void VegetationTrees::initialize(GraphicsResources& resources, ResourceUploadBat
 
 	treeData.lod[2].trunkModel = resources.models.getModel("treeTrunkLod2.mesh", batch, { ResourceGroup::Core });
 	treeData.lod[2].branchModel = resources.models.getModel("treeBranchLod2.mesh", batch, { ResourceGroup::Core });
+
+	sphereMaterial = resources.materials.getMaterial("TriplanarTest", batch);
+	sphereModel = resources.models.getModel("sphere.mesh", batch, { ResourceGroup::Core });
 }
 
 void VegetationTrees::clear()
@@ -29,15 +35,21 @@ void VegetationTrees::addTree(const ObjectTransformation& tr)
 {
 	static int t = 0;
 
-	auto tree = sceneMgr.createEntity("Tree" + std::to_string(t), tr, *treeData.lod[0].branchModel);
-	tree->material = treeData.branchMaterial;
+// 	auto tree = sceneMgr.createEntity("Tree" + std::to_string(t), tr, *treeData.lod[0].branchModel);
+// 	tree->material = treeData.branchMaterial;
+// 
+// 	auto treeTrunk = sceneMgr.createEntity("TreeTrunk" + std::to_string(t), tr, *treeData.lod[0].trunkModel);
+// 	treeTrunk->material = treeData.trunkMaterial;
 
-	auto treeTrunk = sceneMgr.createEntity("TreeTrunk" + std::to_string(t), tr, *treeData.lod[0].trunkModel);
-	treeTrunk->material = treeData.trunkMaterial;
+	auto tr2 = tr;
+	tr2.position.y += 20;
+	tr2.scale *= 10;
 
-	t++;
-
-	trees.emplace_back(tree, treeTrunk);
+	auto tree = sceneMgr.createEntity("SphereTest" + std::to_string(t), tr2, *sphereModel);
+	tree->material = sphereMaterial;
+ 	t++;
+// 
+// 	trees.emplace_back(tree, treeTrunk);
 }
 
 void VegetationTrees::swapLods()

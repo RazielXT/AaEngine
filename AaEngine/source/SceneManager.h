@@ -65,6 +65,8 @@ public:
 
 	ProgressiveTerrain newTerrain;
 
+	Vegetation vegetation;
+
 	SceneSkybox skybox;
 
 private:

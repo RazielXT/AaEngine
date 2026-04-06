@@ -101,6 +101,6 @@ void PSMain(VS_OUTPUT input)
 	SamplerState sampler = SamplerDescriptorHeap[0];
 	float4 albedo = GetTexture(TexIdDiffuse).Sample(sampler, input.uv);
 
-	if (albedo.a <0.37) discard;
+	if (albedo.a <0.4) discard;
 }
 #endif

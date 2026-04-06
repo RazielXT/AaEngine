@@ -60,8 +60,7 @@ material TreeBranchDepth
 
 	texture Diffuse
 	{
-		file treeBranchTest.png
-		srgb
+		file treeBranchTest.dds srgb
 	}
 
 	culling none

@@ -165,7 +165,7 @@ PSOutput PSMain(PSInput input)
 	#endif
 
 	#if defined(ALPHA_TEST) && !defined(FLAT_COLOR)
-		if (albedoTex.a < 0.37)
+		if (albedoTex.a < 0.4)
 			discard;
 	#endif
 

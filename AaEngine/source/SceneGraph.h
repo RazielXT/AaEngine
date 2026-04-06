@@ -26,6 +26,8 @@ public:
 
 protected:
 
+	bool removeNode(std::vector<SceneGraphNode>& nodes, ObjectId id);
+
 	SceneGraphNode* getParentNode(ObjectId);
 
 	void reset();

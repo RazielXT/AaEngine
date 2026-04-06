@@ -24,22 +24,29 @@ void SceneGraph::updateEntity(const std::vector<EntityChangeDescritpion>& change
 		}
 		else if (d.type == EntityChange::Delete)
 		{
-			auto& nodes = getParentNode(d.id)->children;
-
-			for (auto it = nodes.begin(); it != nodes.end(); it++)
-			{
-				if (it->id == d.id)
-				{
-					nodes.erase(it);
-					break;
-				}
-			}
+			removeNode(nodes, d.id);
 		}
 	}
 }
 
 UINT lastGroupMask{};
 SceneGraphNode* lastGroupNode{};
+
+bool SceneGraph::removeNode(std::vector<SceneGraphNode>& nodes, ObjectId id)
+{
+	bool removed = false;
+
+	for (auto it = nodes.begin(); it != nodes.end(); it++)
+	{
+		if (it->id == id || (removeNode(it->children, id) && it->children.empty()))
+		{
+			nodes.erase(it);
+			return true;
+		}
+	}
+
+	return false;
+}
 
 SceneGraphNode* SceneGraph::getParentNode(ObjectId id)
 {

@@ -65,6 +65,9 @@
     <Filter Include="Source Files\RenderObject\Terrain">
       <UniqueIdentifier>{727402fa-5524-440f-a723-0047ab5b9c37}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\RenderObject\Prefab">
+      <UniqueIdentifier>{57ce8cca-12f8-47b9-9f7e-0a387e025711}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\TargetWindow.cpp">
@@ -327,6 +330,9 @@
     </ClCompile>
     <ClCompile Include="source\SceneGraph.cpp">
       <Filter>Source Files\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="source\PrefabLoader.cpp">
+      <Filter>Source Files\RenderObject\Prefab</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -617,6 +623,9 @@
     </ClInclude>
     <ClInclude Include="source\SceneGraph.h">
       <Filter>Source Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="source\PrefabLoader.h">
+      <Filter>Source Files\RenderObject\Prefab</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

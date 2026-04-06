@@ -294,9 +294,9 @@ void loadNode(const xml_node& nodeElement, SceneNode* parentNode = nullptr)
 
 	if (!parentNode)
 	{
-		node.transformation.position = LoadXYZ(nodeElement.child("position"));
+		node.transformation.position = LoadXYZ(nodeElement.child("position")) + ctx->placement.position;
 		node.transformation.orientation = LoadRotation(nodeElement.child("rotation"));
-		node.transformation.scale = LoadXYZ(nodeElement.child("scale"));
+		node.transformation.scale = LoadXYZ(nodeElement.child("scale")) * ctx->placement.scale;
 	}
 	else
 		node = *parentNode;
@@ -317,34 +317,17 @@ void loadNode(const xml_node& nodeElement, SceneNode* parentNode = nullptr)
 	}
 }
 
-static std::string findFileWithExtension(const std::string& directoryPath, const std::string& extension)
-{
-	std::error_code ec;
-	for (const auto& entry : std::filesystem::directory_iterator(directoryPath, ec))
-	{
-		if (entry.is_regular_file() && entry.path().extension() == extension)
-		{
-			return entry.path().string();
-		}
-	}
-	return {};
-}
-
-SceneParser::Result SceneParser::load(std::string name, Ctx parseCtx)
+SceneParser::Result SceneParser::load(std::filesystem::path path, Ctx parseCtx)
 {
 	SceneParser::Result result;
 	parseResult = &result;
 	ctx = &parseCtx;
 
-	groupId = ctx->sceneMgr.createEntityGroup(name);
+	groupId = ctx->sceneMgr.createEntityGroup(path.filename().string());
 
-	loadFolder = SCENE_DIRECTORY + name + "/";
-	auto filename = findFileWithExtension(loadFolder, ".scene");
+ 	loadFolder = path.parent_path().string() + "\\";
 
-	if (filename.empty())
-		return result;
-
-	if (xml_document doc; doc.load_file(filename.c_str()))
+	if (xml_document doc; doc.load_file(path.c_str()))
 	{
 		const auto& scene = doc.child("scene");
 
@@ -353,8 +336,6 @@ SceneParser::Result SceneParser::load(std::string name, Ctx parseCtx)
 			loadNode(node);
 		}
 	}
-
-	parseCtx.sceneMgr.skybox.setMaterial("Sky", parseCtx.sceneMgr.getQueue(MaterialTechnique::Default, Order::Post)->targetFormats);
 
 	return result;
 }

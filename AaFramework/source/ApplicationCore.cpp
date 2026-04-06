@@ -133,15 +133,15 @@ void ApplicationCore::loadScene(const char* scene)
 	ResourceUploadBatch batch(renderSystem.core.device);
 	batch.Begin();
 
-	SceneParser::Result result;
+//	SceneParser::Result result;
 	{
-		GlobalQueueMarker marker(renderSystem.core.commandQueue, "SceneParser");
+// 		GlobalQueueMarker marker(renderSystem.core.commandQueue, "SceneParser");
+// 
+// 		result = SceneParser::load(scene, { batch, sceneMgr, renderSystem, resources, physicsMgr });
 
-		result = SceneParser::load(scene, { batch, sceneMgr, renderSystem, resources, physicsMgr });
-
-		SceneCollection::LoadCtx loadCtx = { batch, sceneMgr, renderSystem, resources };
-		auto scene = GltfLoader::load(SCENE_DIRECTORY + "trees/fir.gltf", loadCtx);
-		SceneCollection::loadScene(scene, loadCtx);
+// 		SceneCollection::LoadCtx loadCtx = { batch, sceneMgr, renderSystem, resources };
+// 		auto scene = GltfLoader::load(SCENE_DIRECTORY + "trees/fir.gltf", loadCtx);
+// 		SceneCollection::loadScene(scene, loadCtx);
 
 // 		planes.CreatePlanesVertexBuffer(renderSystem, batch, { { {0,-1400,-2000}, 4000 }, { {0,-1400,2000}, 4000 } });
 // 		auto e = sceneMgr.createEntity("testPlane", Order::Transparent);
@@ -183,6 +183,8 @@ void ApplicationCore::loadScene(const char* scene)
 // 			planes.CreateEntity("testPlane", sceneMgr, resources.materials.getMaterial("terrainGrass", batch));
 // 		}
 
+		sceneMgr.skybox.setMaterial("Sky", sceneMgr.getQueue(MaterialTechnique::Default, Order::Post)->targetFormats);
+
 		auto e = sceneMgr.createEntity("basicClouds", EntityCreateProperties{ .order = Order::Post });
 		e->material = resources.materials.getMaterial("BasicClouds", batch);
 
@@ -214,15 +216,15 @@ void ApplicationCore::loadScene(const char* scene)
 			shadowMap->clear(commands.commandList);
 		}
 
-		for (const auto& i : result.instanceDescriptions)
-		{
-			sceneMgr.instancing.build(sceneMgr, i.second);
-		}
-
-		for (const auto& g : result.grassTasks)
-		{
-			sceneMgr.grass.scheduleGrassCreation(g, commands.commandList, params, resources, sceneMgr);
-		}
+// 		for (const auto& i : result.instanceDescriptions)
+// 		{
+// 			sceneMgr.instancing.build(sceneMgr, i.second);
+// 		}
+// 
+// 		for (const auto& g : result.grassTasks)
+// 		{
+// 			sceneMgr.grass.scheduleGrassCreation(g, commands.commandList, params, resources, sceneMgr);
+// 		}
 
 		marker.move("loadSceneVoxels", commands.color);
 		VoxelizeSceneTask::Get().clear(commands.commandList);

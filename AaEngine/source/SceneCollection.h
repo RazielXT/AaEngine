@@ -36,6 +36,7 @@ namespace SceneCollection
 		SceneManager& sceneMgr;
 		RenderSystem& renderSystem;
 		GraphicsResources& resources;
+		ObjectTransformation placement = {};
 	};
 	void loadScene(const Data& data, LoadCtx);
 };

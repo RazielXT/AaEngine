@@ -141,6 +141,9 @@ static SceneCollection::Data ProcessGLTF(const tinygltf::Model& data, SceneColle
 			tr.position *= 40;
 			tr.scale *= 40;
 
+			tr.position += ctx.placement.position;
+			tr.scale *= ctx.placement.scale;
+
 			break;
 		}
 	}

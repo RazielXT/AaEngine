@@ -10,10 +10,16 @@
 #include "DebugOverlayTask.h"
 #include "VoxelizeSceneTask.h"
 #include <algorithm>
+#include <filesystem>
 #include "PhysicsRenderTask.h"
 #include "SceneRenderTask.h"
 #include "SystemUtils.h"
 #include "../data/editor/icons/IconsFontAwesome7.h"
+#include "Directories.h"
+#include "SceneCollection.h"
+#include "GltfLoader.h"
+#include "SceneParser.h"
+#include "PrefabLoader.h"
 
 // Store frame times in a buffer
 float frameTimes[200] = { 0.0f };
@@ -85,6 +91,8 @@ Editor::Editor(ApplicationCore& a, ImguiPanelViewport& v) : app(a), renderer(a.r
 #ifdef _DEBUG
 	state.limitFrameRate = true;
 #endif
+
+	lookupAssets();
 }
 
 void Editor::initializeUi(const TargetWindow& v)
@@ -238,20 +246,7 @@ bool Editor::onClick(MouseButton button)
 
 	if (button == MouseButton::Left)
 	{
-		auto [mx, my] = ImGui::GetMousePos();
-		mx -= m_ViewportBounds[0].x;
-		my -= m_ViewportBounds[0].y;
-		XMUINT2 viewportSize = { m_ViewportBounds[1].x - m_ViewportBounds[0].x, m_ViewportBounds[1].y - m_ViewportBounds[0].y };
-		my = viewportSize.y - my;
-		auto mouseX = (UINT)mx;
-		auto mouseY = (UINT)my;
-
-		if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
-		{
-			EntityPicker::Get().scheduleNextPick({ mouseX, viewportSize.y - mouseY });
-			lastScheduled = { mouseX, viewportSize.y - mouseY };
-			scenePickScheduled = true;
-		}
+		scheduleViewportPick();
 
 		return true;
 	}
@@ -336,6 +331,24 @@ struct ImageButtonCombo
 }
 transformButtons;
 
+void Editor::scheduleViewportPick()
+{
+	auto [mx, my] = ImGui::GetMousePos();
+	mx -= m_ViewportBounds[0].x;
+	my -= m_ViewportBounds[0].y;
+	XMUINT2 viewportSize = { m_ViewportBounds[1].x - m_ViewportBounds[0].x, m_ViewportBounds[1].y - m_ViewportBounds[0].y };
+	my = viewportSize.y - my;
+	auto mouseX = (UINT)mx;
+	auto mouseY = (UINT)my;
+
+	if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
+	{
+		EntityPicker::Get().scheduleNextPick({ mouseX, viewportSize.y - mouseY });
+		lastScheduled = { mouseX, viewportSize.y - mouseY };
+		scenePickScheduled = true;
+	}
+}
+
 void Editor::prepareElements(Camera& camera)
 {
 // 	if (ImGui::BeginMenuBar())
@@ -385,6 +398,10 @@ void Editor::prepareElements(Camera& camera)
 
 	ImGui::End();
 
+	ImGui::Begin("Assets");
+	DrawAssetBrowser(assets);
+	ImGui::End();
+
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 	ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoDecoration);
 
@@ -421,31 +438,47 @@ void Editor::prepareElements(Camera& camera)
 	{
 		auto& pickInfo = EntityPicker::Get().getLastPick();
 
-		if (auto selectedId = pickInfo.id)
+		if (!assetDrop.empty())
 		{
-			if (addTree)
+			ObjectTransformation tr;
+
+			if (pickInfo.id)
 			{
-				ObjectTransformation tr;
 				tr.position = pickInfo.position;
 				tr.position.y += 2;
-				tr.orientation = Quaternion::Identity; // Quaternion::CreateFromYawPitchRoll(getRandomFloat(0, XM_2PI), 0, 0);
-				tr.scale = Vector3(5); // Vector3(getRandomFloat(1.8f, 2.2f));
 
-				if (addTreeNormals)
-					tr.orientation *= Quaternion::FromToRotation(Vector3::UnitY, pickInfo.normal);
-
-				static int idx = 0;
-
-				auto sphereMaterial = app.resources.materials.getMaterial("Fireball"); //TriplanarTest
-				auto sphereModel = app.resources.models.getLoadedModel("sphere.mesh", { ResourceGroup::Core });
-
-				auto tree = app.sceneMgr.createEntity("editorEntity" + std::to_string(idx++), tr, *sphereModel);
-				tree->material = sphereMaterial;
+				// 				if (addTreeNormals)
+				// 					tr.orientation *= Quaternion::FromToRotation(Vector3::UnitY, pickInfo.normal);
 			}
 			else
 			{
-				selectItem(selectedId, ctrlActive);
+				tr.position = camera.getPosition() + camera.getCameraDirection() * 50;
 			}
+
+			ResourceUploadBatch batch(app.renderSystem.core.device);
+			batch.Begin();
+
+			if (assetDrop.ends_with(".gltf"))
+			{
+				SceneCollection::LoadCtx loadCtx = { batch, app.sceneMgr, app.renderSystem, app.resources, tr };
+				auto scene = GltfLoader::load(assetDrop, loadCtx);
+				SceneCollection::loadScene(scene, loadCtx);
+			}
+			else if (assetDrop.ends_with(".scene"))
+			{
+				SceneParser::load(assetDrop, { batch, app.sceneMgr, app.renderSystem, app.resources, app.physicsMgr, tr });
+			}
+			else if (assetDrop.ends_with(".prefab"))
+			{
+				PrefabLoader::load(assetDrop, { batch, app.sceneMgr, app.renderSystem, app.resources, tr });
+			}
+
+			auto uploadResourcesFinished = batch.End(app.renderSystem.core.commandQueue);
+			uploadResourcesFinished.wait();
+		}
+		else if (auto selectedId = pickInfo.id)
+		{
+			selectItem(selectedId, ctrlActive);
 		}
 		else if (!ctrlActive)
 		{
@@ -453,6 +486,18 @@ void Editor::prepareElements(Camera& camera)
 		}
 
 		scenePickScheduled = false;
+		assetDrop.clear();
+	}
+
+	if (ImGui::BeginDragDropTarget())
+	{
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_MODEL"))
+		{
+			assetDrop = (const char*)payload->Data;
+			scheduleViewportPick();
+		}
+
+		ImGui::EndDragDropTarget();
 	}
 
 	static auto m_GizmoType = ImGuizmo::OPERATION::BOUNDS;
@@ -649,10 +694,6 @@ void Editor::prepareElements(Camera& camera)
 		{
 			app.sceneMgr.newTerrain.updateTerrain = true;
 		}
-
-		ImGui::Checkbox("Add Tree", &addTree);
-		if (addTree)
-			ImGui::Checkbox("Add Tree on normals", &addTreeNormals);
 
 		static bool updateGrid = true;
 		if (ImGui::Checkbox("Update grid LOD", &updateGrid))
@@ -944,7 +985,7 @@ static bool NodeMatchesFilter(SceneGraphNode& node, ImGuiTextFilter& filter)
 	return false;
 }
 
-void Editor::DrawNode(SceneGraphNode& node, ImGuiTextFilter& filter, ObjectId& selectedObjectId)
+void Editor::DrawSceneTreeNode(SceneGraphNode& node, ImGuiTextFilter& filter, ObjectId& selectedObjectId)
 {
 	if (filter.IsActive() && !NodeMatchesFilter(node, filter))
 		return;
@@ -973,7 +1014,9 @@ void Editor::DrawNode(SceneGraphNode& node, ImGuiTextFilter& filter, ObjectId& s
 	);
 
 	// Handle selection
-	if ((ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) || ImGui::IsItemClicked(1))
+	if (ImGui::IsItemClicked(ImGuiMouseButton_Left) && !ImGui::IsItemToggledOpen())
+		selectedObjectId = node.id;
+	if (ImGui::IsItemClicked(ImGuiMouseButton_Right) && !(flags & ImGuiTreeNodeFlags_Selected)) // only select with right click, dont unselect
 		selectedObjectId = node.id;
 
 	if (ImGui::BeginPopupContextItem())
@@ -993,7 +1036,7 @@ void Editor::DrawNode(SceneGraphNode& node, ImGuiTextFilter& filter, ObjectId& s
 	if (open)
 	{
 		for (auto& child : node.children)
-			DrawNode(child, filter, selectedObjectId);
+			DrawSceneTreeNode(child, filter, selectedObjectId);
 
 		ImGui::TreePop();
 	}
@@ -1011,11 +1054,206 @@ void Editor::DrawSceneTree()
 
 	for (auto& node : app.sceneMgr.graph.nodes)
 	{
-		DrawNode(node, filter, selectedObjectId);
+		DrawSceneTreeNode(node, filter, selectedObjectId);
 	}
 
 	ImGui::EndChild();
 
 	if (selectedObjectId.value != 0xFFFFFFFF)
 		selectItem(selectedObjectId, ImGui::IsKeyDown(ImGuiKey_LeftCtrl));
+}
+
+namespace fs = std::filesystem;
+
+static std::vector<fs::path> FindFilesRecursive(const fs::path& root, const std::vector<std::string>& extensions)
+{
+	std::vector<fs::path> result;
+
+	if (!fs::exists(root) || !fs::is_directory(root))
+		return result;
+
+	for (auto& entry : fs::recursive_directory_iterator(root))
+	{
+		if (!entry.is_regular_file())
+			continue;
+
+		std::string ext = entry.path().extension().string();
+
+		// Normalize extension to lowercase
+		std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+
+		for (const auto& wanted : extensions)
+		{
+			if (ext == wanted)
+			{
+				result.push_back(entry.path());
+				break;
+			}
+		}
+	}
+
+	return result;
+}
+
+void Editor::lookupAssets()
+{
+	for (auto& file : FindFilesRecursive(SCENE_DIRECTORY, { ".scene" , ".gltf", ".prefab" }))
+	{
+		AssetItem asset;
+		asset.name = file.filename().string();
+		asset.path = file.string();
+
+		if (file.extension() == ".scene")
+			asset.type = AssetType::Scene;
+		else if (file.extension() == ".prefab")
+			asset.type = AssetType::Prefab;
+		else
+			asset.type = AssetType::Model;
+
+		assets.push_back(asset);
+	}
+}
+
+void Editor::DrawAssetBrowser(const std::vector<AssetItem>& assets)
+{
+	DrawAssetBrowserTopBar(assetsFilter);
+
+	const float padding = 10.0f;      // spacing between cells
+	const float iconSize = 32;      // size of the icon inside the cell
+	const float cellSize = iconSize * 4;      // width & height of each grid cell
+
+	float panelWidth = ImGui::GetContentRegionAvail().x;
+	int columns = (int)(panelWidth / (cellSize + padding));
+	if (columns < 1) columns = 1;
+
+	int index = 0;
+
+	for (const auto& asset : assets)
+	{
+		if (!PassesFilter(asset, assetsFilter))
+			continue;
+
+		ImGui::PushID(index);
+
+		if (index % columns != 0)
+			ImGui::SameLine();
+
+		ImGui::BeginGroup();
+
+		// Background button (full cell)
+		ImGui::Button("##bg", ImVec2(cellSize, cellSize));
+
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::BeginTooltip();
+			ImGui::TextUnformatted(asset.path.c_str());
+			ImGui::EndTooltip();
+		}
+
+		// Drag-drop source (attached to the button)
+		if (ImGui::BeginDragDropSource())
+		{
+			ImGui::SetDragDropPayload("ASSET_MODEL",
+				asset.path.c_str(),
+				asset.path.size() + 1);
+
+			ImGui::Text("Add %s", asset.name.c_str());
+			ImGui::EndDragDropSource();
+		}
+
+		// Get cell rect
+		ImVec2 cellMin = ImGui::GetItemRectMin();
+		ImVec2 cellMax = ImGui::GetItemRectMax();
+
+		// Icon position (centered horizontally, slightly above center vertically)
+		float iconY = cellMin.y + cellSize * 0.25f;
+		float iconX = cellMin.x + (cellSize - iconSize) * 0.5f;
+
+		ImGui::SetCursorScreenPos(ImVec2(iconX, iconY));
+
+		const char* icon = ICON_FA_CUBE;
+		if (asset.type == AssetType::Scene)   icon = ICON_FA_CUBES;
+		if (asset.type == AssetType::Prefab)  icon = ICON_FA_CUBES_STACKED;
+
+		ImGui::Text("%s", icon);
+
+		// Text position (centered horizontally, near bottom but not touching)
+		float textY = cellMin.y + cellSize * 0.65f;
+		float textX = cellMin.x + 4.0f;
+
+		ImGui::SetCursorScreenPos(ImVec2(textX, textY));
+		ImGui::PushTextWrapPos(cellMin.x + cellSize - 4.0f);
+		ImGui::Text("%s", asset.name.c_str());
+		ImGui::PopTextWrapPos();
+
+		ImGui::EndGroup();
+		ImGui::PopID();
+
+		index++;
+	}
+}
+
+bool Editor::PassesFilter(const AssetItem& asset, const AssetBrowserFilter& filter)
+{
+	// Category filtering
+	if (!filter.showModel && asset.type == AssetType::Model)
+		return false;
+	if (!filter.showScene && asset.type == AssetType::Scene)
+		return false;
+	if (!filter.showPrefab && asset.type == AssetType::Prefab)
+		return false;
+
+	// Search filtering
+	if (filter.search[0] != '\0')
+	{
+		std::string nameLower = asset.name;
+		std::string searchLower = filter.search;
+
+		std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), ::tolower);
+		std::transform(searchLower.begin(), searchLower.end(), searchLower.begin(), ::tolower);
+
+		if (nameLower.find(searchLower) == std::string::npos)
+			return false;
+	}
+
+	return true;
+}
+
+void Editor::DrawAssetBrowserTopBar(AssetBrowserFilter& filter)
+{
+	ImGui::BeginGroup();
+
+	// Search box
+	ImGui::SetNextItemWidth(200);
+	ImGui::InputTextWithHint("##search", "Search...", filter.search, sizeof(filter.search));
+
+	ImGui::SameLine(0, 20);
+
+	// Category toggles
+	auto ToggleButton = [&](const char* label, bool& value)
+		{
+			bool wasValue = value;
+			if (wasValue)
+			{
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.5f, 1.0f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.6f, 1.0f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.4f, 0.9f, 1.0f));
+			}
+
+			if (ImGui::Button(label))
+				value = !value;
+
+			if (wasValue)
+				ImGui::PopStyleColor(3);
+		};
+
+	ToggleButton("Model", filter.showModel);
+	ImGui::SameLine();
+	ToggleButton("Scene", filter.showScene);
+	ImGui::SameLine();
+	ToggleButton("Prefab", filter.showPrefab);
+
+	ImGui::EndGroup();
+
+	ImGui::Separator();
 }

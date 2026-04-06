@@ -2,6 +2,7 @@
 
 #include "SceneManager.h"
 #include "PhysicsManager.h"
+#include <filesystem>
 
 namespace SceneParser
 {
@@ -12,6 +13,7 @@ namespace SceneParser
 		RenderSystem& renderSystem;
 		GraphicsResources& resources;
 		PhysicsManager& physicsMgr;
+		ObjectTransformation placement = {};
 	};
 
 	struct Result
@@ -20,5 +22,5 @@ namespace SceneParser
 		std::map<MaterialInstance*, InstanceGroupDescription> instanceDescriptions;
 	};
 
-	Result load(std::string filename, Ctx ctx);
+	Result load(std::filesystem::path, Ctx ctx);
 }

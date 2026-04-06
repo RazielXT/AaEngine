@@ -60,6 +60,8 @@ public:
 
 private:
 
+	void scheduleViewportPick();
+
 	RenderCore& renderer;
 	ApplicationCore& app;
 	ImguiPanelViewport& renderPanelViewport;
@@ -70,8 +72,7 @@ private:
 	Vector3 selectionPosition{};
 	bool scenePickScheduled = false;
 	bool ctrlActive = false;
-	bool addTree = false;
-	bool addTreeNormals = false;
+	std::string assetDrop;
 
 	void selectItem(ObjectId, bool multi);
 	void deleteSelectedItem();
@@ -99,5 +100,31 @@ private:
 	void initializeIconViews();
 
 	void DrawSceneTree();
-	void DrawNode(SceneGraphNode& node, ImGuiTextFilter& filter, ObjectId& selectedObjectId);
+	void DrawSceneTreeNode(SceneGraphNode& node, ImGuiTextFilter& filter, ObjectId& selectedObjectId);
+
+	enum class AssetType { Model, Scene, Prefab };
+
+	struct AssetItem
+	{
+		std::string name;
+		std::string path;
+		AssetType type;
+	};
+	std::vector<AssetItem> assets;
+
+	void lookupAssets();
+	void DrawAssetBrowser(const std::vector<AssetItem>& assets);
+
+	struct AssetBrowserFilter
+	{
+		char search[128] = "";
+		bool showModel = true;
+		bool showScene = true;
+		bool showPrefab = true;
+	}
+	assetsFilter;
+
+	bool PassesFilter(const AssetItem& asset, const AssetBrowserFilter& filter);
+
+	void DrawAssetBrowserTopBar(AssetBrowserFilter& filter);
 };

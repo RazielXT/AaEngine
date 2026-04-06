@@ -86,7 +86,7 @@ Editor::Editor(ApplicationCore& a, ImguiPanelViewport& v) : app(a), renderer(a.r
 #endif
 }
 
-void Editor::initialize(TargetWindow& v)
+void Editor::initializeUi(const TargetWindow& v)
 {
 	renderPanelViewport.set(v.getHwnd(), 640, 480);
 	lastViewportPanelSize = viewportPanelSize = { renderPanelViewport.getWidth(), renderPanelViewport.getHeight() };
@@ -117,12 +117,15 @@ void Editor::initialize(TargetWindow& v)
 	initializeIconViews();
 
 	ImGui_ImplWin32_Init(v.getHwnd());
+}
 
+void Editor::initializeRenderer(DXGI_FORMAT format)
+{
 	ImGui_ImplDX12_InitInfo init_info = {};
 	init_info.Device = renderer.device;
 	init_info.CommandQueue = renderer.commandQueue;
 	init_info.NumFramesInFlight = FrameCount;
-	init_info.RTVFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+	init_info.RTVFormat = format;
 	init_info.DSVFormat = DXGI_FORMAT_UNKNOWN;
 	init_info.SrvDescriptorHeap = g_pd3dSrvDescHeap;
 	init_info.SrvDescriptorAllocFn = [](ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE* out_cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE* out_gpu_handle) { return g_pd3dSrvDescHeapAlloc.Alloc(out_cpu_handle, out_gpu_handle); };

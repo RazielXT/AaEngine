@@ -33,7 +33,8 @@ public:
 
 	Editor(ApplicationCore&, ImguiPanelViewport&);
 
-	void initialize(TargetWindow&);
+	void initializeUi(const TargetWindow&);
+	void initializeRenderer(DXGI_FORMAT);
 
 	void updateViewportSize();
 	void resetViewportOutput();

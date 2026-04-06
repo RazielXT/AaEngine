@@ -14,11 +14,15 @@ public:
 	{
 		std::string file = "frame";
 		bool renderToBackbuffer = true;
-		DXGI_FORMAT outputFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 	};
 
 	FrameCompositor(const InitConfig& params, RenderProvider provider, SceneManager& sceneMgr, ShadowMaps& shadows);
 	~FrameCompositor();
+
+	void setDefine(const std::string& name, bool);
+
+	void setColorSpace(ColorSpace);
+	ColorSpace getColorSpace() const;
 
 	void reloadPasses();
 	void reloadTextures();
@@ -34,6 +38,9 @@ public:
 
 protected:
 
+	std::set<std::string> globalDefines;
+
+	ColorSpace colorSpace;
 	InitConfig config;
 
 	CompositorInfo info;

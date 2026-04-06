@@ -35,12 +35,16 @@ void ApplicationCore::initialize(const TargetWindow& window, const InitParams& a
 
 	resources.shaderDefines.setDefine("CFG_SHADOW_HIGH", true);
 
-	Vector3(-1, -1, -1).Normalize(lights.directionalLight.direction);
+	ColorSpace colorSpace{};
+	if (renderSystem.core.IsDisplayHDR())
+		colorSpace = { .outputFormat = DXGI_FORMAT_R10G10B10A2_UNORM, .type = ColorSpace::HDR10 };
+	renderSystem.core.initializeSwapChain(window, colorSpace);
 
 	shadowMap = new ShadowMaps(renderSystem, lights.directionalLight, params.sun);
 	shadowMap->init(resources);
 
 	compositor = new FrameCompositor(appParams.compositor, { params, renderSystem, resources }, sceneMgr, *shadowMap);
+	compositor->setColorSpace(colorSpace);
 	compositor->registerTask("RenderPhysics", [this](RenderProvider& provider, SceneManager& sceneMgr)
 	{
 		return std::make_shared<PhysicsRenderTask>(provider, sceneMgr, physicsMgr);

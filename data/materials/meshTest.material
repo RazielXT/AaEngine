@@ -1,0 +1,44 @@
+material TerrainMeshBase abstract
+{
+	amplification_shader
+	{
+		file terrain/msGridTest.hlsl
+		entry ASMain
+		profile as_6_6
+	}
+
+	mesh_shader
+	{
+		file terrain/msGridTest.hlsl
+		entry MSMain
+		profile ms_6_6
+	}
+
+	pixel_shader
+	{
+		file terrain/msGridTest.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
+
+	texture Heightmap
+	texture Normalmap
+
+	technique Depth TerrainMeshDepth
+	technique Voxelize skip
+	technique TerrainScan skip
+	technique EntityId skip
+}
+
+material TerrainMeshDepth : TerrainMeshBase
+{
+	pixel_shader skip
+}
+
+material TerrainMesh : TerrainMeshBase
+{
+	texture Diffuse
+	{
+		file SilveryBlue.dds
+	}
+}

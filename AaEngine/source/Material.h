@@ -68,6 +68,8 @@ private:
 
 	ID3D12PipelineState* GetPipelineState(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target, MaterialTechnique);
 	ID3D12PipelineState* CreatePipelineState(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target, const TechniqueProperties&);
+	ID3D12PipelineState* CreatePipelineStateMS(const std::vector<DXGI_FORMAT>& target, const TechniqueProperties&);
+
 	struct PipelineStateData
 	{
 		size_t hashId;

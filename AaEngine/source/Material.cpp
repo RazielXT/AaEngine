@@ -103,17 +103,9 @@ ID3D12PipelineState* MaterialBase::GetPipelineState(const std::vector<D3D12_INPU
 	return pipelineState;
 }
 
-ID3D12PipelineState* MaterialBase::CreatePipelineState(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target, const TechniqueProperties& technique)
+template<typename T>
+static void fillPipelineStateDesc(T& psoDesc, const MaterialRef& ref, const MaterialBase::TechniqueProperties& technique, const std::vector<DXGI_FORMAT>& target, const SignatureInfo& info)
 {
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-	psoDesc.InputLayout = { layout.empty() ? nullptr : layout.data(), (UINT)layout.size() };
-	psoDesc.pRootSignature = rootSignature;
-	if (shaders[ShaderType::Vertex])
-		psoDesc.VS = { shaders[ShaderType::Vertex]->blob->GetBufferPointer(), shaders[ShaderType::Vertex]->blob->GetBufferSize() };
-	if (shaders[ShaderType::Pixel])
-		psoDesc.PS = { shaders[ShaderType::Pixel]->blob->GetBufferPointer(), shaders[ShaderType::Pixel]->blob->GetBufferSize() };
-	if (shaders[ShaderType::Geometry])
-		psoDesc.GS = { shaders[ShaderType::Geometry]->blob->GetBufferPointer(), shaders[ShaderType::Geometry]->blob->GetBufferSize() };
 	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	psoDesc.RasterizerState.CullMode = ref.pipeline.culling;
 	psoDesc.RasterizerState.FillMode = ref.pipeline.fill;
@@ -124,7 +116,7 @@ ID3D12PipelineState* MaterialBase::CreatePipelineState(const std::vector<D3D12_I
 	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	if (!shaders[ShaderType::Pixel] || target.empty())
+	if (target.empty())
 	{
 		psoDesc.NumRenderTargets = 0;
 		psoDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
@@ -148,16 +140,67 @@ ID3D12PipelineState* MaterialBase::CreatePipelineState(const std::vector<D3D12_I
 		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_NONE;
 		psoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN;
 	}
-	if (!ref.pipeline.depth.write || ref.pipeline.blend.alphaBlend)
+	if (!ref.pipeline.depth.write)
 		psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
-	
+
 	if (ref.pipeline.blend.alphaBlend)
 		psoDesc.BlendState = CommonStates::NonPremultiplied;
+}
+
+ID3D12PipelineState* MaterialBase::CreatePipelineState(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target, const TechniqueProperties& technique)
+{
+	if (!shaders[ShaderType::Pixel] && !target.empty())
+		FileLogger::logError("Missing PS " + ref.name);
+
+	if (shaders[ShaderType::Mesh])
+		return CreatePipelineStateMS(target, technique);
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+	psoDesc.InputLayout = { layout.empty() ? nullptr : layout.data(), (UINT)layout.size() };
+	psoDesc.pRootSignature = rootSignature;
+	if (shaders[ShaderType::Vertex])
+		psoDesc.VS = { shaders[ShaderType::Vertex]->blob->GetBufferPointer(), shaders[ShaderType::Vertex]->blob->GetBufferSize() };
+	if (shaders[ShaderType::Geometry])
+		psoDesc.GS = { shaders[ShaderType::Geometry]->blob->GetBufferPointer(), shaders[ShaderType::Geometry]->blob->GetBufferSize() };
+	if (shaders[ShaderType::Pixel])
+		psoDesc.PS = { shaders[ShaderType::Pixel]->blob->GetBufferPointer(), shaders[ShaderType::Pixel]->blob->GetBufferSize() };
+	
+	fillPipelineStateDesc(psoDesc, ref, technique, target, info);
 
 	ID3D12PipelineState* pipelineState{};
 	auto hr = device.CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState));
-	if (FAILED(hr)) {
+	if (FAILED(hr) || !pipelineState) {
 		FileLogger::logErrorD3D("Failed CreateGraphicsPipelineState", hr);
+	}
+
+	return pipelineState;
+}
+
+ID3D12PipelineState* MaterialBase::CreatePipelineStateMS(const std::vector<DXGI_FORMAT>& target, const TechniqueProperties& technique)
+{
+	D3DX12_MESH_SHADER_PIPELINE_STATE_DESC psoDesc = {};
+	psoDesc.pRootSignature = rootSignature;
+	if (shaders[ShaderType::Amplification])
+		psoDesc.AS = { shaders[ShaderType::Amplification]->blob->GetBufferPointer(), shaders[ShaderType::Amplification]->blob->GetBufferSize() };
+	if (shaders[ShaderType::Mesh])
+		psoDesc.MS = { shaders[ShaderType::Mesh]->blob->GetBufferPointer(), shaders[ShaderType::Mesh]->blob->GetBufferSize() };
+	if (shaders[ShaderType::Pixel])
+		psoDesc.PS = { shaders[ShaderType::Pixel]->blob->GetBufferPointer(), shaders[ShaderType::Pixel]->blob->GetBufferSize() };
+
+	fillPipelineStateDesc(psoDesc, ref, technique, target, info);
+
+	auto psoStream = CD3DX12_PIPELINE_MESH_STATE_STREAM(psoDesc);
+	D3D12_PIPELINE_STATE_STREAM_DESC streamDesc;
+	streamDesc.pPipelineStateSubobjectStream = &psoStream;
+	streamDesc.SizeInBytes = sizeof(psoStream);
+
+	ComPtr<ID3D12Device2> device2;
+	HRESULT hr2 = device.QueryInterface(IID_PPV_ARGS(&device2));
+
+	ID3D12PipelineState* pipelineState{};
+	auto hr = device2->CreatePipelineState(&streamDesc, IID_PPV_ARGS(&pipelineState));
+	if (FAILED(hr)) {
+		FileLogger::logErrorD3D("Failed CreatePipelineState", hr);
 	}
 
 	return pipelineState;

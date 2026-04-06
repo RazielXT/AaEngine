@@ -43,6 +43,14 @@ void SignatureInfo::add(const LoadedShader& shader, ShaderType type)
 	{
 		flags &= ~D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
 	}
+	if (type == ShaderType::Amplification)
+	{
+		flags &= ~D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS;
+	}
+	if (type == ShaderType::Mesh)
+	{
+		flags &= ~D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS;
+	}
 
 	for (auto& b : shader.desc.cbuffers)
 	{

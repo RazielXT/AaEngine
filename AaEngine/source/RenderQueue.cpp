@@ -73,6 +73,10 @@ static void RenderObject(ID3D12GraphicsCommandList* commandList, EntityGeometry&
 
 		((IndirectEntityGeometry*)geometry.source)->draw(commandList, frameIndex);
 	}
+	else if (geometry.type == EntityGeometry::Type::Mesh)
+	{
+		((ID3D12GraphicsCommandList6*)commandList)->DispatchMesh(geometry.instanceCount, 1, 1);
+	}
 	else
 	{
 		if (geometry.type != EntityGeometry::Type::Manual)

@@ -17,6 +17,7 @@
 ApplicationCore::ApplicationCore(TargetViewport& viewport) : renderSystem(viewport), resources(renderSystem), sceneMgr(resources)
 {
 	viewport.listeners.push_back(this);
+	Vector3(-1, -1, -1).Normalize(lights.directionalLight.direction);
 }
 
 ApplicationCore::~ApplicationCore()
@@ -32,12 +33,12 @@ void ApplicationCore::initialize(const TargetWindow& window, const InitParams& a
 	if (!std::filesystem::exists(DATA_DIRECTORY) || !std::filesystem::is_directory(DATA_DIRECTORY))
 		FileLogger::logError("Missing directory " + std::filesystem::absolute(DATA_DIRECTORY).string());
 
-	renderSystem.core.initializeSwapChain(window);
+	resources.shaderDefines.setDefine("CFG_SHADOW_HIGH", true);
 
 	Vector3(-1, -1, -1).Normalize(lights.directionalLight.direction);
 
-	shadowMap = new ShadowMaps(lights.directionalLight, params.sun);
-	shadowMap->init(renderSystem, resources);
+	shadowMap = new ShadowMaps(renderSystem, lights.directionalLight, params.sun);
+	shadowMap->init(resources);
 
 	compositor = new FrameCompositor(appParams.compositor, { params, renderSystem, resources }, sceneMgr, *shadowMap);
 	compositor->registerTask("RenderPhysics", [this](RenderProvider& provider, SceneManager& sceneMgr)

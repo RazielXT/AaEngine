@@ -21,7 +21,7 @@ float getPssmShadow(float4 wp, float cameraDistance, float dotView, SamplerState
 		biasSlopeAdjust += (0.5 - dotView) * 5;
 
 	uint ShadowIndex = 0;
-	float ShadowBias[4] = { 0.0001, 0.0002, 0.001, 0.003 };
+	float ShadowBias[4] = { 0.00005, 0.00005, 0.0003, 0.0003 };
 	float lerpPoint = cameraDistance / params.ShadowCascadeDistance0;
 
 	if (params.ShadowCascadeDistance0 < cameraDistance)

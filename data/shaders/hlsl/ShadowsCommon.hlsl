@@ -9,13 +9,14 @@ struct SunParams
 	float ShadowCascadeDistance0;
 	float ShadowCascadeDistance1;
 	float ShadowCascadeDistance2;
+	float ShadowCascadeDistance3;
 };
 
 float readShadowmap(Texture2D<float> shadowmap, SamplerState sampler, float2 shadowCoord)
 {
 	return shadowmap.SampleLevel(sampler, shadowCoord, 0).r;
 	
-//	int2 texCoord = int2(shadowCoord * 512);
+//	int2 texCoord = int2(shadowCoord * 1024);
 //	return shadowmap.Load(int3(texCoord, 0)).r;
 }
 

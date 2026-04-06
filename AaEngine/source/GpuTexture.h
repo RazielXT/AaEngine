@@ -40,6 +40,7 @@ public:
 	{
 		D3D12_RESOURCE_FLAGS flags;
 		UINT mipLevels = 1;
+		UINT arraySize = 1;
 	};
 	void InitUAV(ID3D12Device* device, UINT width, UINT height, DXGI_FORMAT format, D3D12_RESOURCE_STATES state, InitParams&& params = {});
 
@@ -103,6 +104,7 @@ public:
 	void Init(ID3D12Device* device, std::vector<GpuTexture2D*> t, GpuTexture2D* d);
 
 	void PrepareAsTarget(ID3D12GraphicsCommandList* commandList, const std::vector<GpuTextureStates>&, bool clear = true, UINT flags = TransitionFlags::DepthPrepareClearWrite);
+	void PrepareSubrangeAsTarget(ID3D12GraphicsCommandList* commandList, UINT count, UINT offset, GpuTexture2D* depth);
 
 	std::vector<DXGI_FORMAT> formats;
 	UINT width;
@@ -142,39 +144,20 @@ struct TextureStatePair
 	void Transition(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES to);
 };
 
-template<UINT MAX>
-struct TextureTransitions
+struct TextureTransitionsBase
 {
 	UINT c = 0;
-	CD3DX12_RESOURCE_BARRIER barriers[MAX];
+	CD3DX12_RESOURCE_BARRIER* barriers{};
 
-	TextureTransitions() = default;
-	TextureTransitions(const std::vector<GpuTextureStates>& states, ID3D12GraphicsCommandList* commandList)
-	{
-		for (auto& state : states)
-			add(state);
-		push(commandList);
-	}
-	TextureTransitions(const std::vector<GpuTextureStates*>& states, ID3D12GraphicsCommandList* commandList)
-	{
-		for (auto& state : states)
-			add(*state);
-		push(commandList);
-	}
+	TextureTransitionsBase() = default;
 
 	void add(const GpuTextureResource* texture, D3D12_RESOURCE_STATES from, D3D12_RESOURCE_STATES to)
 	{
-		if (from == to)
-			return;
-
-		barriers[c++] = CD3DX12_RESOURCE_BARRIER::Transition(
-			texture->texture.Get(),
-			from,
-			to);
+		add(texture->texture.Get(), from, to);
 	}
 	void add(const GpuTextureResource& texture, D3D12_RESOURCE_STATES from, D3D12_RESOURCE_STATES to)
 	{
-		add(&texture, from, to);
+		add(texture.texture.Get(), from, to);
 	}
 	void add(ID3D12Resource* texture, D3D12_RESOURCE_STATES from, D3D12_RESOURCE_STATES to)
 	{
@@ -196,15 +179,45 @@ struct TextureTransitions
 
 		state.currentState = to;
 	}
-	void addAndPush(TextureStatePair& state, D3D12_RESOURCE_STATES to, ID3D12GraphicsCommandList* commandList)
-	{
-		add(state, to);
-		push(commandList);
-	}
 	void push(ID3D12GraphicsCommandList* commandList)
 	{
 		if (c)
 			commandList->ResourceBarrier(c, barriers);
 		c = 0;
+	}
+};
+
+template<UINT MAX>
+struct TextureTransitions : public TextureTransitionsBase
+{
+	CD3DX12_RESOURCE_BARRIER data[MAX];
+
+	TextureTransitions()
+	{
+		barriers = data;
+	}
+
+	TextureTransitions(const std::vector<GpuTextureStates>& states, ID3D12GraphicsCommandList* commandList) : TextureTransitions()
+	{
+		for (auto& state : states)
+			add(state);
+		push(commandList);
+	}
+	TextureTransitions(const std::vector<GpuTextureStates*>& states, ID3D12GraphicsCommandList* commandList) : TextureTransitions()
+	{
+		for (auto& state : states)
+			add(*state);
+		push(commandList);
+	}
+};
+
+struct TextureTransitionsVector : public TextureTransitionsBase
+{
+	std::vector<CD3DX12_RESOURCE_BARRIER> data;
+
+	TextureTransitionsVector(UINT size)
+	{
+		data.resize(size);
+		barriers = data.data();
 	}
 };

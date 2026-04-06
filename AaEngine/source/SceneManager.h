@@ -51,6 +51,7 @@ public:
 	SceneEntity* createEntity(const std::string& name, EntityCreateProperties props = {});
 	SceneEntity* createEntity(const std::string& name, const ObjectTransformation&, VertexBufferModel&, EntityCreateProperties = {});
 	void removeEntity(SceneEntity* entity);
+	void removeEntity(ObjectId id);
 
 	SceneEntity* getEntity(const std::string& name) const;
 	SceneEntity* getEntity(ObjectId globalId) const;

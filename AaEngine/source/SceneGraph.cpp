@@ -19,18 +19,16 @@ void SceneGraph::updateEntity(const std::vector<EntityChangeDescritpion>& change
 		}
 		else if (d.type == EntityChange::Add)
 		{
-			auto id = d.entity->getGlobalId();
-			auto parent = getParentNode(id);
-			parent->children.push_back({ id, d.entity->name });
+			auto parent = getParentNode(d.id);
+			parent->children.push_back({ d.id, d.entity->name });
 		}
 		else if (d.type == EntityChange::Delete)
 		{
-			auto id = d.entity->getGlobalId();
-			auto& nodes = getParentNode(id)->children;
+			auto& nodes = getParentNode(d.id)->children;
 
 			for (auto it = nodes.begin(); it != nodes.end(); it++)
 			{
-				if (it->id == id)
+				if (it->id == d.id)
 				{
 					nodes.erase(it);
 					break;

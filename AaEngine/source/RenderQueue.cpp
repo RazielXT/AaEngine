@@ -5,7 +5,7 @@
 
 void RenderQueue::update(const EntityChangeDescritpion& changeInfo, GraphicsResources& resources)
 {
-	auto& [change, order, entity, suborder] = changeInfo;
+	auto& [change, order, entity, entityId, suborder] = changeInfo;
 
 	if (change == EntityChange::Add)
 	{

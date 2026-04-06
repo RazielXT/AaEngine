@@ -83,7 +83,7 @@ void RenderObjectsStorage::initializeTransformation(UINT id, ObjectTransformatio
 
 void RenderObjectsStorage::updateVisibility(const BoundingFrustum& frustum, RenderObjectsVisibilityState& visible) const
 {
-	visible.resize(ids.size());
+	visible.resize(ids.size() + freeIds.size());
 
 	for (auto id : ids)
 	{
@@ -93,7 +93,7 @@ void RenderObjectsStorage::updateVisibility(const BoundingFrustum& frustum, Rend
 
 void RenderObjectsStorage::updateVisibility(const BoundingOrientedBox& box, RenderObjectsVisibilityState& visible) const
 {
-	visible.resize(ids.size());
+	visible.resize(ids.size() + freeIds.size());
 
 	for (auto id : ids)
 	{
@@ -217,9 +217,7 @@ void RenderObject::roll(float roll)
 
 void RenderObject::resetRotation()
 {
-	auto& coords = source.objectsData.transformation[id];
-	coords.dirty = true;
-	coords.orientation = XMQuaternionIdentity();
+	setOrientation(XMQuaternionIdentity());
 }
 
 void RenderObject::setPositionOrientation(Vector3 position, Quaternion orientation)

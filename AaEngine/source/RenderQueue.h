@@ -17,6 +17,7 @@ struct EntityChangeDescritpion
 	EntityChange type;
 	Order order;
 	SceneEntity* entity{};
+	ObjectId id;
 	int suborder;
 };
 

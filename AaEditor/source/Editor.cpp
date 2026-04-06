@@ -584,20 +584,6 @@ void Editor::prepareElements(Camera& camera)
 	ImGui::PopStyleVar();
 
 	ImGui::Begin("Debug2");
-	ImGui::Text("Viewport size %d %d", viewportPanelSize.x, viewportPanelSize.y);
-
-	if (!selection.empty())
-	{
-		ImGui::Text("Selected count %d", selection.size());
-
-		auto& selected = selection.back();
-		ImGui::Text("EntityId %#010x", selected.obj.id);
-		ImGui::Text("Entity name %s", selected.obj.getName());
-		ImGui::Text("Entity pos %f %f %f", objTransformation.position.x, objTransformation.position.y, objTransformation.position.z);
-		ImGui::Text("Entity vertex count %d", selected.obj.entity->geometry.vertexCount ? selected.obj.entity->geometry.vertexCount : selected.obj.entity->geometry.indexCount);
-	}
-
-	ImGui::NewLine();
 
 // 	const char* scenes[] = {
 // 		"basic",
@@ -628,6 +614,17 @@ void Editor::prepareElements(Camera& camera)
 	if (ImGui::CollapsingHeader("Scene"))
 	{
 		DrawSceneTree();
+
+		if (!selection.empty())
+		{
+			ImGui::Text("Selected count %d", selection.size());
+
+			auto& selected = selection.back();
+			ImGui::Text("EntityId %#010x", selected.obj.id);
+			ImGui::Text("Entity name %s", selected.obj.getName());
+			ImGui::Text("Entity pos %f %f %f", objTransformation.position.x, objTransformation.position.y, objTransformation.position.z);
+			ImGui::Text("Entity vertex count %d", selected.obj.entity->geometry.vertexCount ? selected.obj.entity->geometry.vertexCount : selected.obj.entity->geometry.indexCount);
+		}
 	}
 
 	if (ImGui::CollapsingHeader("Defines"))
@@ -822,47 +819,73 @@ void Editor::prepareElements(Camera& camera)
 	ImGui::End();
 }
 
-void Editor::selectItem(ObjectId selectedId, bool add)
+void Editor::selectItem(ObjectId selectedId, bool multi)
 {
-	bool newObject = true;
+	bool add = true;
 
-	if (!add)
+	if (!multi)
 	{
 		selection.clear();
 	}
 	else
 	{
-		for (auto& s : selection)
+		for (auto it = selection.begin(); it != selection.end(); it++)
 		{
-			if (s.obj.id == selectedId)
-				newObject = false;
+			if (it->obj.id == selectedId)
+			{
+				selection.erase(it);
+				add = false;
+				break;
+			}
 		}
 	}
 
-	if (newObject)
+	if (add)
 	{
-		auto obj = app.sceneMgr.getObject(selectedId);
-		if (obj)
+		if (auto obj = app.sceneMgr.getObject(selectedId))
 		{
 			selection.emplace_back(obj.getTransformation(), obj);
 		}
-
-		selectionIds.clear();
-		for (auto& s : selection)
-		{
-			selectionIds.push_back(s.obj.id);
-		}
-
-		EntityPicker::Get().active = selectionIds;
 	}
+
+	refreshSelectionId();
+}
+
+void Editor::deleteSelectedItem()
+{
+	for (auto& s : selection)
+	{
+		app.sceneMgr.removeEntity(s.obj.entity);
+	}
+
+	clearSelection();
+}
+
+void Editor::deleteItem(SceneGraphNode& node)
+{
+	for (auto& child : node.children)
+	{
+		app.sceneMgr.removeEntity(child.id);
+	}
+
+	clearSelection();
+}
+
+void Editor::refreshSelectionId()
+{
+	selectionIds.clear();
+	for (auto& s : selection)
+	{
+		selectionIds.push_back(s.obj.id);
+	}
+
+	EntityPicker::Get().active = selectionIds;
 }
 
 void Editor::clearSelection()
 {
 	selection.clear();
-	selectionIds.clear();
-
-	EntityPicker::Get().active.clear();
+	refreshSelectionId();
 }
 
 void Editor::loadIcons()
@@ -950,8 +973,21 @@ void Editor::DrawNode(SceneGraphNode& node, ImGuiTextFilter& filter, ObjectId& s
 	);
 
 	// Handle selection
-	if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
+	if ((ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) || ImGui::IsItemClicked(1))
 		selectedObjectId = node.id;
+
+	if (ImGui::BeginPopupContextItem())
+	{
+		if (ImGui::MenuItem("Delete"))
+		{
+			if (node.children.empty())
+				deleteSelectedItem();
+			else
+				deleteItem(node);
+		}
+
+		ImGui::EndPopup();
+	}
 
 	// Draw children
 	if (open)

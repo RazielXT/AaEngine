@@ -42,7 +42,7 @@ SceneEntity* SceneManager::createEntity(const std::string& name, EntityCreatePro
 	auto nameIt = entityMap.try_emplace(name, nullptr).first;
 	auto ent = nameIt->second = new SceneEntity(*getRenderables(props.order), nameIt->first, props.groupId);
 
-	changes.emplace_back(EntityChange::Add, props.order, ent, props.suborder);
+	changes.emplace_back(EntityChange::Add, props.order, ent, ent->getGlobalId(), props.suborder);
 
 	return ent;
 }
@@ -59,10 +59,13 @@ SceneEntity* SceneManager::createEntity(const std::string& name, const ObjectTra
 
 void SceneManager::removeEntity(SceneEntity* entity)
 {
-	entityMap.erase(entity->name);
-	changes.emplace_back(EntityChange::Delete, getOrder(entity), entity, 0);
+	changes.emplace_back(EntityChange::Delete, getOrder(entity), entity, entity->getGlobalId(), 0);
+}
 
-	delete entity;
+void SceneManager::removeEntity(ObjectId id)
+{
+	if (auto e = getEntity(id))
+		removeEntity(e);
 }
 
 SceneEntity* SceneManager::getEntity(const std::string& name) const
@@ -205,6 +208,14 @@ void SceneManager::updateQueues()
 
 	graph.updateEntity(changes);
 
+	for (auto& c : changes)
+	{
+		if (c.type == EntityChange::Delete)
+		{
+			entityMap.erase(c.entity->name);
+			delete c.entity;
+		}
+	}
 	changes.clear();
 }
 

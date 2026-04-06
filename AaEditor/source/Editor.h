@@ -73,7 +73,11 @@ private:
 	bool addTree = false;
 	bool addTreeNormals = false;
 
-	void selectItem(ObjectId, bool add);
+	void selectItem(ObjectId, bool multi);
+	void deleteSelectedItem();
+	void deleteItem(SceneGraphNode& node);
+
+	void refreshSelectionId();
 	void clearSelection();
 
 	XMUINT2 viewportPanelSize;

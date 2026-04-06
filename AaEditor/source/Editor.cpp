@@ -634,6 +634,12 @@ void Editor::prepareElements(Camera& camera)
 
 	if (ImGui::CollapsingHeader("Terrain"))
 	{
+		if (ImGui::Button("Rebuild terrain"))
+		{
+			app.sceneMgr.terrain.rebuild();
+			app.sceneMgr.newTerrain.updateTerrain = true;
+		}
+
 		ImGui::Checkbox("Add Tree", &addTree);
 		if (addTree)
 			ImGui::Checkbox("Add Tree on normals", &addTreeNormals);
@@ -643,7 +649,10 @@ void Editor::prepareElements(Camera& camera)
 
 		static bool updateGrid = true;
 		if (ImGui::Checkbox("Update grid LOD", &updateGrid))
+		{
 			app.sceneMgr.water.enableLodUpdating(updateGrid);
+			app.sceneMgr.newTerrain.updateLod = updateGrid;
+		}
 
 		static bool updateWater = true;
 		if (ImGui::Checkbox("Update water", &updateWater))

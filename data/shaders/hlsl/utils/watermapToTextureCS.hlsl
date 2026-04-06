@@ -45,9 +45,14 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
 
 	WaterNormal[DTid.xy] = normal.xz;
 
-	float2 worldPosOffset = { -20, 30 };
-	float worldScale = 102.4 / 1024;
+	float2 worldPosOffset = { 0, 0 };
+	float worldScale = 8000.0f / 1024;
 	float2 worldPos = worldScale * DTid.xy + worldPosOffset;
+
+	for (int x = -1; x <= 1; x++)
+	for (int y = -1; y <= 1; y++)
+		heightValue += readHeightPoint(DTid.xy + int2(x,y));
+	heightValue /= 10;
 
 	float terrainHeight = readTerrainHeight(uv);
 	float cameraLodOffset = 3 * saturate((length(CameraPos - worldPos) - 10) * 0.2);

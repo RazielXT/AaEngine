@@ -22,7 +22,7 @@ void SceneManager::initialize(RenderSystem& renderSystem)
 	batch.Begin();
 
 	grass.initializeGpuResources(renderSystem, resources, batch);
-	terrain.initialize(renderSystem, resources, batch);
+	//terrain.initialize(renderSystem, resources, batch);
 
 	auto uploadResourcesFinished = batch.End(renderSystem.core.commandQueue);
 	uploadResourcesFinished.wait();

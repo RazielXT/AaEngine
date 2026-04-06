@@ -18,7 +18,9 @@ public:
 	WaterSim();
 	~WaterSim();
 
-	void initializeGpuResources(RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch, SceneManager& s);
+	void initializeGpuResources(RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch);
+	void initializeTarget(const GpuTexture2D& texture, SceneManager& s, Vector2 size, Vector3 center);
+
 	void update(RenderSystem& renderSystem, ID3D12GraphicsCommandList* commandList, float dt, UINT frameIdx, Vector3 cameraPos);
 	void updateCompute(RenderSystem& renderSystem, ID3D12GraphicsCommandList* commandList, float dt, UINT frameIdx);
 	void clear();
@@ -34,39 +36,22 @@ private:
 	WaterSimContinuityComputeShader continuityComputeShader;
 	WaterSimMomentumComputeShader momentumComputeShader;
 
-	GenerateHeightmapNormalsCS heightmapToNormalCS;
 	WaterTextureToTextureCS waterToTextureCS;
 
-	CopyTexturesCS copyTexturesCS;
-	WaterMeshTextureCS meshTextureCS;
-
-	FileTexture* terrainTexture;
-	FileTexture* terrainTexture2;
-
-	GpuTexture2D terrainHeight;
-	GpuTexture2D terrainNormal;
-	std::vector<ShaderTextureViewUAV> terrainNormalMips;
-	GenerateNormalMips4xCS generateNormalMipsCS;
-
+	const GpuTexture2D* terrainHeight{};
 	GpuTexture2D waterHeight[FrameCount];
 	GpuTexture2D waterVelocity[FrameCount];
 
-	GpuTexture2D waterNormalTexture;
 	GpuTexture2D waterHeightMeshTexture;
+	GpuTexture2D waterNormalTexture;
 	std::vector<ShaderTextureViewUAV> waterNormalTextureMips;
+	GenerateNormalMips4xCS generateNormalMipsCS;
 
 	ComPtr<ID3D12Resource> srcWater;
-	ComPtr<ID3D12Resource> srcVelocity;
 
 	VertexBufferModel waterModel;
-	VertexBufferModel terrainModel;
+	MaterialInstance* waterMaterial{};
 
-	GpuTexture2D terrainGridHeight[5][5];
-	GpuTexture2D terrainGridNormal[5][5];
-	std::vector<ShaderTextureViewUAV> terrainGridNormalMips[5][5];
-
-	TerrainHeightmapCS generateHeightmapCS;
-
-	bool updateLod = true;
 	bool updateWater = true;
+	bool updateLod = true;
 };

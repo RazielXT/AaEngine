@@ -57,10 +57,10 @@ GridVertexInfo ReadGridVertexInfo(GridTileData tile, uint vertexID, Texture2D<fl
 	float2 localPos = float2(x, z) / (float)(TileWidthQuads);
 
 	// Determine how many integer units this LOD spans
-	// Level 0 spans TilesWidth units, Level 4 spans 1 unit
+	// Level 0 spans TilesWidth units
 	uint unitsSpanned = TilesWidth >> tile.lod; 
 
-	const float2 MorphRange = float2(tile.range * 1.45f, tile.range * 0.2f);
+	const float2 MorphRange = float2(tile.range * 1.45f, 0.01f);
 
 	// 1. Calculate grid position
 	// position = (TileCoord * SmallestSize) + (LocalPlanePos * UnitsSpanned * SmallestSize)
@@ -99,7 +99,7 @@ float2 SampleGridNormalBlurred(Texture2D<float2> tex, SamplerState samp, float2 
 {
 	float2 s1 = tex.Sample(samp, uv + float2( invResHalf, 0));
 	float2 s2 = tex.Sample(samp, uv + float2(-invResHalf, 0));
-	float2 s3 = tex.Sample(samp, uv + float2(0,  invResHalf));
+	float2 s3 = tex.Sample(samp, uv + float2(0, invResHalf));
 	float2 s4 = tex.Sample(samp, uv + float2(0, -invResHalf));
 
 	return (s1 + s2 + s3 + s4) * 0.25;
@@ -109,5 +109,42 @@ float3 ReadGridNormal(Texture2D<float2> texture, SamplerState sampler, float2 uv
 {
 	float2 normalXZ = SampleGridNormalBlurred(texture, sampler, RemapGridTextureUV(uv), 0.5f/1024);//NormalMap.Sample(LinearSampler, uv);
 
-	return DecodeNormalSNORM(normalXZ).xzy;
+	return DecodeNormalSNORM(normalXZ);
+}
+
+struct GridTBN
+{
+	float3 N;
+	float3 T;
+	float3 B;
+};
+
+GridTBN ReadGridTBN(Texture2D<float2> texture, SamplerState sampler, float2 uv)
+{
+	float invResHalf = 0.5f/1024;
+	float2 texcoord = RemapGridTextureUV(uv);
+
+	float2 s1 = texture.Sample(sampler, texcoord + float2( invResHalf, 0));
+	float2 s2 = texture.Sample(sampler, texcoord + float2(-invResHalf, 0));
+	float2 s3 = texture.Sample(sampler, texcoord + float2(0, invResHalf));
+	float2 s4 = texture.Sample(sampler, texcoord + float2(0, -invResHalf));
+
+	float2 normalXZ = (s1 + s2 + s3 + s4) * 0.25;
+	float3 N = DecodeNormalSNORM(normalXZ);
+
+	float3 dNdx = normalize(DecodeNormalSNORM((s1 - s2) * 0.5));
+	float3 dNdy = normalize(DecodeNormalSNORM((s3 - s4) * 0.5));
+	// Build tangent
+	float3 T = dNdx - N * dot(N, dNdx);
+	T = normalize(T);
+
+	// Build bitangent
+	float3 B = normalize(cross(N, T));
+
+	GridTBN tbn;
+	tbn.N = N;
+	tbn.T = T;
+	tbn.B = B;
+	
+	return tbn;
 }

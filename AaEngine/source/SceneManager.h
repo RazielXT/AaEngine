@@ -8,6 +8,7 @@
 #include "SceneSkybox.h"
 #include "TerrainGenerator.h"
 #include "WaterSim.h"
+#include "ProgressiveTerrain.h"
 
 struct SceneObject
 {
@@ -61,6 +62,8 @@ public:
 	TerrainGenerator terrain;
 
 	WaterSim water;
+
+	ProgressiveTerrain newTerrain;
 
 	SceneSkybox skybox;
 

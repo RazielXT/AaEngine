@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <unordered_set>
+#include <unordered_map>
 
 struct GraphicsResources;
 
@@ -12,11 +12,12 @@ public:
 	ShaderDefines(GraphicsResources&);
 
 	void setDefine(const std::string&, bool enabled);
-	const std::unordered_set<std::string>& getDefines() const;
+	void setDefine(const std::string&, const std::string&);
+	const std::unordered_map<std::string, std::string>& getDefines() const;
 
 private:
 
-	std::unordered_set<std::string> defines;
+	std::unordered_map<std::string, std::string> defines;
 
 	GraphicsResources& resources;
 };

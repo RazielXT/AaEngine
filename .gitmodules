@@ -25,3 +25,6 @@
 [submodule "dependencies/tinygltf"]
 	path = dependencies/tinygltf
 	url = https://github.com/syoyo/tinygltf.git
+[submodule "dependencies/imnodes"]
+	path = dependencies/imnodes
+	url = https://github.com/Nelarius/imnodes.git

@@ -7,13 +7,20 @@ ShaderDefines::ShaderDefines(GraphicsResources& r) : resources(r)
 
 void ShaderDefines::setDefine(const std::string& d, bool enabled)
 {
-	bool changed = (enabled && defines.insert(d).second) || (!enabled && defines.erase(d));
+	bool changed = (enabled && defines.emplace(d, "").second) || (!enabled && defines.erase(d));
 
 	if (changed)
 		resources.materials.reloadShadersWithDefine(d);
 }
 
-const std::unordered_set<std::string>& ShaderDefines::getDefines() const
+void ShaderDefines::setDefine(const std::string& d, const std::string& value)
+{
+	defines[d] = value;
+
+	resources.materials.reloadShadersWithDefine(d);
+}
+
+const std::unordered_map<std::string, std::string>& ShaderDefines::getDefines() const
 {
 	return defines;
 }

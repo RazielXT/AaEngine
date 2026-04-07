@@ -8,6 +8,15 @@
     <Filter Include="ImGuizmo">
       <UniqueIdentifier>{40cebe37-6c26-4ae9-8182-bb71e8fab3f6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="imnodes">
+      <UniqueIdentifier>{3e32ec27-4e61-4213-885b-ec5357c9a7e7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\NodesGraph">
+      <UniqueIdentifier>{178bc2e5-42d7-433d-9257-4ad159d07b98}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\NodesGraph\Nodes">
+      <UniqueIdentifier>{083b898c-799b-4167-9704-61bb5457519c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -22,10 +31,40 @@
     <ClCompile Include="..\dependencies\ImGuizmo\ImGuizmo.cpp">
       <Filter>ImGuizmo</Filter>
     </ClCompile>
+    <ClCompile Include="..\dependencies\imnodes\imnodes.cpp">
+      <Filter>imnodes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\Editor.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Node.h">
+      <Filter>Source Files\NodesGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\imnodes\imnodes.h">
+      <Filter>imnodes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\imnodes\imnodes_internal.h">
+      <Filter>imnodes</Filter>
+    </ClInclude>
+    <ClInclude Include="source\NodeGraph.h">
+      <Filter>Source Files\NodesGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ConstantNode.h">
+      <Filter>Source Files\NodesGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="source\MathNodes.h">
+      <Filter>Source Files\NodesGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="source\OutputNode.h">
+      <Filter>Source Files\NodesGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="source\TextureNodes.h">
+      <Filter>Source Files\NodesGraph\Nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ShaderGen.h">
+      <Filter>Source Files\NodesGraph</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

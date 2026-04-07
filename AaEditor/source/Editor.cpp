@@ -20,6 +20,7 @@
 #include "GltfLoader.h"
 #include "SceneParser.h"
 #include "PrefabLoader.h"
+#include "NodeGraph.h"
 
 // Store frame times in a buffer
 float frameTimes[200] = { 0.0f };
@@ -103,6 +104,7 @@ void Editor::initializeUi(const TargetWindow& v)
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGui::StyleColorsDark();
+	ImNodes::CreateContext();
 
 	auto& io = ImGui::GetIO();
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
@@ -216,6 +218,8 @@ void Editor::deinit()
 
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
+
+	ImNodes::DestroyContext();
 	ImGui::DestroyContext();
 
 	g_pd3dSrvDescHeapAlloc.Destroy();
@@ -402,6 +406,10 @@ void Editor::prepareElements(Camera& camera)
 	DrawAssetBrowser(assets);
 	ImGui::End();
 
+	ImGui::Begin("Terrain");
+	DrawTerrainShaderGraph();
+	ImGui::End();
+
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 	ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoDecoration);
 
@@ -498,6 +506,11 @@ void Editor::prepareElements(Camera& camera)
 		}
 
 		ImGui::EndDragDropTarget();
+	}
+
+	if (ImGui::IsKeyPressed(ImGuiKey_Delete))
+	{
+		deleteSelectedItem();
 	}
 
 	static auto m_GizmoType = ImGuizmo::OPERATION::BOUNDS;
@@ -1256,4 +1269,111 @@ void Editor::DrawAssetBrowserTopBar(AssetBrowserFilter& filter)
 	ImGui::EndGroup();
 
 	ImGui::Separator();
+}
+
+void Editor::DrawTerrainShaderGraph()
+{
+	static NodeGraph graph;
+
+	static int selectedNodesCount{};
+	static int selectedLinksCount{};
+	selectedNodesCount = ImNodes::NumSelectedNodes();
+	selectedLinksCount = ImNodes::NumSelectedLinks();
+
+	ImNodes::BeginNodeEditor();
+
+	if (ImGui::BeginPopupContextWindow("node_editor_context", ImGuiPopupFlags_MouseButtonRight))
+	{
+		if (ImGui::BeginMenu("Add"))
+		{
+			int addedNodeId{};
+
+			if (ImGui::BeginMenu("Constant"))
+			{
+				if (ImGui::MenuItem("Float"))
+					addedNodeId = graph.CreateNode(std::make_unique<ConstantFloatNode>());
+				else if (ImGui::MenuItem("Swizzle"))
+					addedNodeId = graph.CreateNode(std::make_unique<SwizzleNode>());
+
+				ImGui::EndMenu();
+			}
+			if (ImGui::BeginMenu("Math"))
+			{
+				if (ImGui::MenuItem("Add"))
+					addedNodeId = graph.CreateNode(std::make_unique<AddNode>());
+				else if (ImGui::MenuItem("Multiply"))
+					addedNodeId = graph.CreateNode(std::make_unique<MulNode>());
+				else if (ImGui::MenuItem("Sin"))
+					addedNodeId = graph.CreateNode(std::make_unique<SinNode>());
+				else if (ImGui::MenuItem("Pow"))
+					addedNodeId = graph.CreateNode(std::make_unique<PowNode>());
+				else if (ImGui::MenuItem("Saturate"))
+					addedNodeId = graph.CreateNode(std::make_unique<SaturateNode>());
+
+				ImGui::EndMenu();
+			}
+			if (ImGui::MenuItem("Texture"))
+				addedNodeId = graph.CreateNode(std::make_unique<TextureSampleNode>());
+			if (ImGui::MenuItem("Output"))
+				addedNodeId = graph.CreateNode(std::make_unique<FloatOutputNode>([this](std::string func)
+					{
+						app.resources.shaderDefines.setDefine("HEIGHT_FUNC", func);
+					}));
+
+			if (addedNodeId)
+			{
+				ImNodes::SetNodeScreenSpacePos(addedNodeId, ImGui::GetWindowPos());
+				ImNodes::SnapNodeToGrid(addedNodeId);
+			}
+
+			ImGui::EndMenu();
+		}
+		if ((selectedNodesCount || selectedLinksCount ) && ImGui::MenuItem("Delete"))
+		{
+			if (selectedNodesCount)
+			{
+				std::vector<int> selection(selectedNodesCount);
+				ImNodes::GetSelectedNodes(selection.data());
+				ImNodes::ClearNodeSelection();
+
+				for (auto& s : selection)
+				{
+					graph.RemoveNode(s);
+				}
+			}
+			if (selectedLinksCount)
+			{
+				std::vector<int> selection(selectedLinksCount);
+				ImNodes::GetSelectedLinks(selection.data());
+				ImNodes::ClearLinkSelection();
+
+				for (auto& s : selection)
+				{
+					graph.DestroyLink(s);
+				}
+			}
+		}
+
+		ImGui::EndPopup();
+	}
+
+	for (auto& node : graph.nodes)
+	{
+		node.second->Draw();
+	}
+
+	for (auto& link : graph.links)
+	{
+		ImNodes::Link(link.id, link.outputPinId, link.inputPinId);
+	}
+
+	ImNodes::EndNodeEditor();
+
+	{
+		int start_attr, end_attr;
+		if (ImNodes::IsLinkCreated(&start_attr, &end_attr))
+		{
+			graph.ConnectPins(start_attr, end_attr);
+		}
+	}
 }

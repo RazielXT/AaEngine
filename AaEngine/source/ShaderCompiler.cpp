@@ -213,8 +213,8 @@ static std::unordered_set<std::string> FindDefineUsages(ComPtr<IDxcBlobEncoding>
 	size_t sourceSize = sourceBlob->GetBufferSize();
 
 	std::string_view shaderView(sourceText, sourceSize);
-	//std::regex defineRegex(R"(#\s*(ifdef|ifndef|if\s+defined)\s*\(?\s*([A-Za-z_]\w*)\s*\)?)");
-	std::regex defineRegex(R"(#\s*(ifdef|ifndef|if\s+defined)\s*\(?\s*(CFG_\w*)\s*\)?)"); // CFG_x
+	std::regex defineRegex(R"(#\s*(ifdef|ifndef|if\s+defined)\s*\(?\s*([A-Za-z_]\w*)\s*\)?)");
+	//std::regex defineRegex(R"(#\s*(ifdef|ifndef|if\s+defined)\s*\(?\s*(CFG_\w*)\s*\)?)"); // CFG_x
 
 	size_t start = 0;
 	while (start < shaderView.size())
@@ -288,7 +288,24 @@ public:
 	std::unordered_set<std::wstring> IncludedFiles;
 };
 
-static std::vector<std::wstring> MakeDefines(const ShaderRef& ref, const std::unordered_set<std::string>& defines)
+static std::string MakeDefineArg(const std::string& name, const std::string& value)
+{
+	std::string escaped;
+	escaped.reserve(value.size() * 2);
+
+	for (wchar_t c : value) {
+		switch (c) {
+		case '"':  escaped += "\\\\\\\""; break; // produces \" in macro
+		case '\n': escaped += " ";     break;
+		case '\\': escaped += "\\\\";    break;
+		default:    escaped += c;          break;
+		}
+	}
+
+	return name + "=" + escaped;
+}
+
+static std::vector<std::wstring> MakeDefines(const ShaderRef& ref, const std::unordered_map<std::string, std::string>& defines)
 {
 	std::vector<std::wstring> out;
 
@@ -296,9 +313,15 @@ static std::vector<std::wstring> MakeDefines(const ShaderRef& ref, const std::un
 	{
 		out.emplace_back(d.first.begin(), d.first.end());
 	}
-	for (auto& d : defines)
+	for (auto& [d, value] : defines)
 	{
-		out.emplace_back(d.begin(), d.end());
+		if (value.empty())
+			out.emplace_back(d.begin(), d.end());
+		else
+		{
+			auto fullDefine = MakeDefineArg(d, value);
+			out.emplace_back(fullDefine.begin(), fullDefine.end());
+		}
 	}
 
 	return out;

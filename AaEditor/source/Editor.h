@@ -127,4 +127,6 @@ private:
 	bool PassesFilter(const AssetItem& asset, const AssetBrowserFilter& filter);
 
 	void DrawAssetBrowserTopBar(AssetBrowserFilter& filter);
+
+	void DrawTerrainShaderGraph();
 };

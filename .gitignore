@@ -5,6 +5,7 @@ Debug/
 x64/
 data/scene/*
 !data/scene/core
+!data/scene/prefabs
 !data/scene/basic
 !data/scene/testCubes
 !data/scene/voxelOutside

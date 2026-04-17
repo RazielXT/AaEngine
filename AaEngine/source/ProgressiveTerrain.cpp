@@ -49,7 +49,7 @@ void ProgressiveTerrain::initialize(RenderSystem& renderSystem, GraphicsResource
 			terrainGridMesh[x][y].entity = e;
 			e->geometry.fromInstancedModel(terrainModel, 0, terrainGridMesh[x][y].gpuBuffer.data[0].GpuAddress());
 			e->setBoundingBox(terrainModel.bbox);
-			e->material = resources.materials.getMaterial("DarkGreenGrid", batch);
+			e->material = resources.materials.getMaterial("MountainTerrainGrid", batch);
 			e->Material().setParam("TexIdHeightmap", terrainHeight.view.srvHeapIndex);
 			e->Material().setParam("TexIdNormalmap", terrainNormal.view.srvHeapIndex);
 			auto GridHeightWidth = Vector2(gridTileHeight, gridTileSize);

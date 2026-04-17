@@ -1,0 +1,6 @@
+object ParallaxOcclusionBox
+{
+	scale 5
+	material BrickPom
+	model box.mesh
+}

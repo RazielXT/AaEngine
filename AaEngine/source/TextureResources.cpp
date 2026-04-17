@@ -14,13 +14,17 @@ HRESULT LoadTextureFromFile(ResourceUploadBatch& resourceUpload, ID3D12Device& d
 
 	if (filename.ends_with("dds"))
 	{
+		auto flags = DDS_LOADER_DEFAULT;
+		if (options.forceSrgb)
+			flags |= DDS_LOADER_FORCE_SRGB;
+
 		hr = DirectX::CreateDDSTextureFromFileEx(
 			&device,
 			resourceUpload,
 			as_wstring(filename).c_str(),
 			0,
 			D3D12_RESOURCE_FLAG_NONE,
-			DDS_LOADER_FORCE_SRGB,
+			flags,
 			texture);
 	}
 	else
@@ -28,6 +32,8 @@ HRESULT LoadTextureFromFile(ResourceUploadBatch& resourceUpload, ID3D12Device& d
 		auto flags = WIC_LOADER_MIP_AUTOGEN;
 		if (options.forceSrgb)
 			flags |= WIC_LOADER_FORCE_SRGB;
+		else
+			flags |= WIC_LOADER_IGNORE_SRGB;
 
 		hr = CreateWICTextureFromFileEx(
 			&device,

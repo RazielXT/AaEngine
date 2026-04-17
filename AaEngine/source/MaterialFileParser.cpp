@@ -213,7 +213,7 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 				if (param.type == "file")
 				{
 					tex.file = param.value;
-					tex.forceSrgb = false;
+					tex.forceSrgb = tex.id == "Diffuse";
 
 					for (auto& p : param.params)
 					{

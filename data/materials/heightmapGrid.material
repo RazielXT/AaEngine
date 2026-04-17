@@ -38,13 +38,6 @@ material HeightmapGridEntityId : HeightmapGrid
 
 material HeightmapGridDepth : HeightmapGrid
 {
-	vertex_shader
-	{
-		file heightmapGridShading.hlsl
-		entry VSMain
-		profile vs_6_6
-	}
-
 	pixel_shader skip
 
 	texture Diffuse
@@ -54,14 +47,14 @@ material HeightmapGridDepth : HeightmapGrid
 
 	texture Grass
 	{
-		file grass.dds
+		file grass.dds srgb
 	}
 
 	shader_defines GRID_PADDING
 	culling none //long distance shadows
 }
 
-material DarkGreenGrid : HeightmapGrid
+material MountainTerrainGrid : HeightmapGrid
 {
 	texture Diffuse
 	{
@@ -70,17 +63,17 @@ material DarkGreenGrid : HeightmapGrid
 
 	texture Grass
 	{
-		file grass.dds
+		file grass.dds srgb
 	}
 
 	texture Normal
 	{
-		file SilveryBlue_NRM.png
+		file SilveryBlue_NRM.dds
 	}
 	
 	texture NormalGrass
 	{
-		file grass_NRM.png
+		file grass_NRM.dds
 	}
 
 	texture Spread

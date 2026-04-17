@@ -13,3 +13,11 @@ float3 DecodeNormalUNORM(float2 xz)
 	float y = sqrt(saturate(1.0 - dot(nxz, nxz)));
 	return float3(nxz.x, y, nxz.y);
 }
+
+// Reconstructs a normal from UNORM-encoded XY (range 0..1)
+float3 DecodeNormalTexture(float2 xy)
+{
+	float2 nxy = xy * 2.0 - 1.0; // convert to -1..1
+	float z = sqrt(saturate(1.0 - dot(nxy, nxy)));
+	return float3(nxy.x, nxy.y, z);
+}

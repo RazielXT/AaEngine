@@ -1,3 +1,5 @@
+#include "hlsl/utils/normalReconstruction.hlsl"
+
 float4x4 ViewProjectionMatrix;
 float4x4 WorldMatrix;
 float4x4 PreviousWorldMatrix;
@@ -70,14 +72,14 @@ PSOutput PSMain(PS_Input pin)
 
 	albedo.rgb *= MaterialColor;
 
-	float3 normalTex = float3(GetTexture(TexIdNormal).Sample(diffuse_sampler, pin.uv).rg, 1);
+	float3 normalTex = DecodeNormalTexture(GetTexture(TexIdNormal).Sample(diffuse_sampler, pin.uv).rg);
 
 	float3x3 worldMatrix = (float3x3)WorldMatrix;
 	float3 worldNormalT = normalize(mul(pin.normal, worldMatrix));
 	float3 worldTangentT = normalize(mul(pin.tangent, worldMatrix));
 	float3 worldBinormalT = cross(worldNormalT, worldTangentT);
 	float3x3 tbn = float3x3(worldTangentT, worldBinormalT, worldNormalT);
-	float3 worldNormal = mul(normalTex.xyz * 2 - 1, tbn);
+	float3 worldNormal = mul(normalTex.xyz, tbn);
 
 	PSOutput output;
 	output.albedo = float4(albedo.rgb, 0);

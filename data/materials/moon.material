@@ -15,7 +15,7 @@ material Moon
 
 	texture
 	{
-		file moon.png
+		file moon.png srgb
 	}
 	texture
 	{

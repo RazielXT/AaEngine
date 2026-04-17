@@ -14,7 +14,7 @@ material Fireball
 		profile ps_6_6
 	}
 
-	texture
+	texture Diffuse
 	{
 		file fire.dds
 	}

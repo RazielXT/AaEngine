@@ -39,6 +39,10 @@ material WhiteVCT : ColorVCT
 {
 }
 
+material WhiteConcrete : ColorVCT
+{
+}
+
 material WhiteVCTLight : WhiteVCT
 {
 	default_params
@@ -114,7 +118,7 @@ material GrassVCT : ColorVCT
 
 	texture Normal
 	{
-		file grass_NRM.png
+		file grass_NRM.dds
 	}
 }
 
@@ -225,6 +229,18 @@ material PineTrunk : TreeTrunk
 {
 }
 
+material BrickPom_ : ColorVCT
+{
+	texture Diffuse
+	{
+		file brick19.dds
+	}
+
+	texture Normal
+	{
+		file brick19_NORM.png
+	}
+}
 
 material BrickPom
 {
@@ -243,16 +259,16 @@ material BrickPom
 
 	texture Diffuse
 	{
-		file brick19.jpg //SilveryBlue.dds
+		file brick19.dds
 	}
 
 	texture Normal
 	{
-		file brick19_NORM.dds //SilveryBlue_NRM.png
+		file brick19_NORM.png
 	}
 
 	texture Displacement
 	{
-		file brick19_DISP.jpg //SilveryBlue_DISP.png
+		file brick19_DISP.jpg
 	}
 }

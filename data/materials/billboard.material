@@ -17,11 +17,11 @@ material Billboard
 
 	texture Diffuse
 	{
-		file fir.dds //treeBillboard.dds
+		file fir.dds
 	}
 	texture Normal
 	{
-		file fir_norm2.png
+		file fir_norm2.dds
 	}
 	texture Edges
 	{

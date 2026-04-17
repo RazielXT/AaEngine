@@ -66,7 +66,7 @@ material TerrainVCT2 : TerrainBaseVCT
 {
 	texture Diffuse
 	{
-		file brick19.jpg
+		file brick19.dds
 	}
 
 	texture Grass

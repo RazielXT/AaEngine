@@ -21,7 +21,12 @@ material TerrainBaseVCT abstract
 
 material TerrainDepth
 {
-	vertex_shader vsVoxelTracingTerrain
+	vertex_shader
+	{
+		file voxelTracingTerrain.hlsl
+		entry VSMain
+		profile vs_6_6
+	}
 }
 
 material TerrainVCT : TerrainBaseVCT

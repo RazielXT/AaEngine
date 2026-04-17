@@ -1,7 +1,17 @@
 material Billboard
 {
-	vertex_shader vsBillboard
-	pixel_shader psBillboard
+	vertex_shader
+	{
+		file billboard.hlsl
+		entry VSMain
+		profile vs_6_6
+	}
+	pixel_shader
+	{
+		file billboard.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
 
 	culling none
 
@@ -25,11 +35,28 @@ material Billboard
 
 material BillboardDepth : Billboard
 {
-	pixel_shader psBillboardDepth
+	pixel_shader
+	{
+		file billboard.hlsl
+		entry PSMainDepth
+		profile ps_6_6
+	}
 }
 
 material BillboardEntityId : Billboard
 {
-	vertex_shader vsBillboardEntityId
-	pixel_shader psBillboardEntityId
+	vertex_shader
+	{
+		file billboard.hlsl
+		entry VSMain
+		profile vs_6_6
+		defines ENTITY_ID
+	}
+	pixel_shader
+	{
+		file billboard.hlsl
+		entry PSMainEntityId
+		profile ps_6_6
+		defines ENTITY_ID
+	}
 }

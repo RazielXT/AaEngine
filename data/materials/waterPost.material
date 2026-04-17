@@ -1,6 +1,11 @@
 material TraceReflections
 {
-	vertex_shader vsQuad
+	vertex_shader
+	{
+		file postprocess/postprocess.hlsl
+		entry VSQuad
+		profile vs_6_6
+	}
 
 	depth off
 
@@ -34,7 +39,12 @@ material TraceReflections
 
 material ApplySceneWater
 {
-	vertex_shader vsQuad
+	vertex_shader
+	{
+		file postprocess/postprocess.hlsl
+		entry VSQuad
+		profile vs_6_6
+	}
 
 	depth off
 

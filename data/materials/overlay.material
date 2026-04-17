@@ -1,7 +1,17 @@
 material TexturePreview
 {
-	vertex_shader vsCustomQuad
-	pixel_shader psTexturePreview
+	vertex_shader
+	{
+		file overlay.hlsl
+		entry VSQuad
+		profile vs_6_6
+	}
+	pixel_shader
+	{
+		file overlay.hlsl
+		entry PSTexturePreview
+		profile ps_6_6
+	}
 
 	culling none
 	depth off

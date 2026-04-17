@@ -1,7 +1,17 @@
 material WaterLake
 {
-	vertex_shader vsWaterLake
-	pixel_shader psWaterLake
+	vertex_shader
+	{
+		file water/waterPrepare.hlsl
+		entry VSMain
+		profile vs_6_6
+	}
+	pixel_shader
+	{
+		file water/waterPrepare.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
 
 	culling none
 
@@ -35,6 +45,18 @@ material WaterLake
 
 material WaterLakeEntityId : WaterLake
 {
-	vertex_shader vsWaterLakeEntityId
-	pixel_shader psWaterLakeEntityId
+	vertex_shader
+	{
+		file water/waterPrepare.hlsl
+		entry VSMain
+		profile vs_6_6
+		defines ENTITY_ID
+	}
+	pixel_shader
+	{
+		file water/waterPrepare.hlsl
+		entry PSMainEntityId
+		profile ps_6_6
+		defines ENTITY_ID
+	}
 }

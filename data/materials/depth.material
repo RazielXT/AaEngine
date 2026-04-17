@@ -1,9 +1,20 @@
 material Depth
 {
-	vertex_shader vsDepthWrite
+	vertex_shader
+	{
+		file depthWrite.hlsl
+		entry VSMain
+		profile vs_6_6
+	}
 }
 
 material DepthInstancing
 {
-	vertex_shader vsDepthWriteInstancing
+	vertex_shader
+	{
+		file depthWrite.hlsl
+		entry VSMain
+		profile vs_6_6
+		defines INSTANCED
+	}
 }

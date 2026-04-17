@@ -1,7 +1,17 @@
 material GrassLeaves
 {
-	vertex_shader vsGrassLeaves
-	pixel_shader psGrassLeaves
+	vertex_shader
+	{
+		file grass.hlsl
+		entry VSMain
+		profile vs_6_6
+	}
+	pixel_shader
+	{
+		file grass.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
 
 	culling none
 	blend none
@@ -18,13 +28,30 @@ material GrassLeaves
 
 material GrassLeavesDepth : GrassLeaves
 {
-	pixel_shader psGrassLeavesDepth
+	pixel_shader
+	{
+		file grass.hlsl
+		entry PSMainDepth
+		profile ps_6_6
+	}
 	blend none
 }
 
 material GrassLeavesEntityId : GrassLeaves
 {
-	vertex_shader vsGrassLeavesEntityId
-	pixel_shader psGrassLeavesEntityId
+	vertex_shader
+	{
+		file grass.hlsl
+		entry VSMain
+		profile vs_6_6
+		defines ENTITY_ID
+	}
+	pixel_shader
+	{
+		file grass.hlsl
+		entry PSMainEntityId
+		profile ps_6_6
+		defines ENTITY_ID
+	}
 	blend none
 }

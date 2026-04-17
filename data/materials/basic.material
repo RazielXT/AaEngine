@@ -1,7 +1,17 @@
 material Color abstract
 {
-	vertex_shader vsBasicShading
-	pixel_shader psBasicShading
+	vertex_shader
+	{
+		file basicShading.hlsl
+		entry VSMain
+		profile vs_6_6
+	}
+	pixel_shader
+	{
+		file basicShading.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
 
 	texture Diffuse
 	{
@@ -16,8 +26,20 @@ material Color abstract
 
 material ColorVc abstract
 {
-	vertex_shader vsBasicShadingVc
-	pixel_shader psBasicShadingVc
+	vertex_shader
+	{
+		file basicShading.hlsl
+		entry VSMain
+		profile vs_6_6
+		defines USE_VC
+	}
+	pixel_shader
+	{
+		file basicShading.hlsl
+		entry PSMain
+		profile ps_6_6
+		defines USE_VC
+	}
 }
 
 material White : Color
@@ -129,7 +151,12 @@ material grassBladeInstanced : grassBlade
 
 material grassBladeDepth
 {
-	vertex_shader vsBasicShading
+	vertex_shader
+	{
+		file basicShading.hlsl
+		entry VSMain
+		profile vs_6_6
+	}
 	shader_defines VERTEX_WAVE
 }
 
@@ -150,7 +177,13 @@ material terrainGrass : Color
 
 material terrainGrassInstanced : terrainGrass
 {
-	vertex_shader vsBasicShadingInstancing
+	vertex_shader
+	{
+		file basicShading.hlsl
+		entry VSMain
+		profile vs_6_6
+		defines INSTANCED
+	}
 }
 
 material bushBranchesDepth
@@ -160,8 +193,20 @@ material bushBranchesDepth
 		file bushBranches.dds
 	}
 
-	vertex_shader vsDepthWriteAlphaTest
-	pixel_shader psDepthWriteAlphaTest
+	vertex_shader
+	{
+		file depthWrite.hlsl
+		entry VSMain
+		profile vs_6_6
+		defines ALPHA_TEST
+	}
+	pixel_shader
+	{
+		file depthWrite.hlsl
+		entry PSMain
+		profile ps_6_6
+		defines ALPHA_TEST
+	}
 
 	shader_defines VERTEX_WAVE
 

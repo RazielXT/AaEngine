@@ -1,7 +1,19 @@
 material DebugMaterialBase abstract
 {
-	vertex_shader vsBasicShadingPlainVc
-	pixel_shader psBasicShadingPlainVc
+	vertex_shader
+	{
+		file basicShading.hlsl
+		entry VSMain
+		profile vs_6_6
+		defines USE_VC NO_TEXTURE
+	}
+	pixel_shader
+	{
+		file basicShading.hlsl
+		entry PSMain
+		profile ps_6_6
+		defines USE_VC NO_TEXTURE
+	}
 
 	default_params
 	{
@@ -22,6 +34,18 @@ material DebugWireframeColor : DebugColor
 
 material DebugWireframe : DebugWireframeColor
 {
-	vertex_shader vsBasicShadingPlain
-	pixel_shader psBasicShadingPlain
+	vertex_shader
+	{
+		file basicShading.hlsl
+		entry VSMain
+		profile vs_6_6
+		defines NO_TEXTURE
+	}
+	pixel_shader
+	{
+		file basicShading.hlsl
+		entry PSMain
+		profile ps_6_6
+		defines NO_TEXTURE
+	}
 }

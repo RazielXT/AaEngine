@@ -1,7 +1,18 @@
 material ColorVCT abstract
 {
-	vertex_shader vsVoxelTracing
-	pixel_shader psVoxelTracing
+	vertex_shader
+	{
+		file voxelTracing.hlsl
+		entry VSMain
+		profile vs_6_6
+	}
+
+	pixel_shader
+	{
+		file voxelTracing.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
 
 	texture Diffuse
 	{
@@ -122,7 +133,13 @@ material TreeTrunk_ : ColorVCT
 
 material TreeBranch_ : ColorVCT
 {
-	pixel_shader psVoxelTracingAlpha
+	pixel_shader
+	{
+		file voxelTracing.hlsl
+		entry PSMain
+		profile ps_6_6
+		defines ALPHA_TEST
+	}
 	shader_defines BRANCH_WAVE
 
 	texture Diffuse
@@ -141,8 +158,20 @@ material TreeBranch_ : ColorVCT
 
 material TreeBranchDepth_
 {
-	vertex_shader vsDepthWriteAlphaTest
-	pixel_shader psDepthWriteAlphaTest
+	vertex_shader
+	{
+		file depthWrite.hlsl
+		entry VSMain
+		profile vs_6_6
+		defines ALPHA_TEST
+	}
+	pixel_shader
+	{
+		file depthWrite.hlsl
+		entry PSMain
+		profile ps_6_6
+		defines ALPHA_TEST
+	}
 	shader_defines BRANCH_WAVE
 
 	texture Diffuse
@@ -170,8 +199,20 @@ material PineBranch : TreeBranch
 
 material PineBranchDepth
 {
-	vertex_shader vsDepthWriteAlphaTest
-	pixel_shader psDepthWriteAlphaTest
+	vertex_shader
+	{
+		file depthWrite.hlsl
+		entry VSMain
+		profile vs_6_6
+		defines ALPHA_TEST
+	}
+	pixel_shader
+	{
+		file depthWrite.hlsl
+		entry PSMain
+		profile ps_6_6
+		defines ALPHA_TEST
+	}
 	shader_defines BRANCH_WAVE
 
 	texture Diffuse

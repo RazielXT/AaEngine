@@ -1,7 +1,17 @@
 material BoundingBox
 {
-	vertex_shader vsBoundingBox
-	pixel_shader psBoundingBox
+	vertex_shader
+	{
+		file boundingBox.hlsl
+		entry VSMain
+		profile vs_6_6
+	}
+	pixel_shader
+	{
+		file boundingBox.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
 
 	culling none
 	depth_write off

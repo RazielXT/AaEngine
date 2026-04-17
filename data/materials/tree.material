@@ -55,8 +55,20 @@ material leaf2_1Mat : TreeBranch
 
 material TreeBranchDepth
 {
-	vertex_shader vsDepthWriteAlphaTest
-	pixel_shader psDepthWriteAlphaTest
+	vertex_shader
+	{
+		file depthWrite.hlsl
+		entry VSMain
+		profile vs_6_6
+		defines ALPHA_TEST
+	}
+	pixel_shader
+	{
+		file depthWrite.hlsl
+		entry PSMain
+		profile ps_6_6
+		defines ALPHA_TEST
+	}
 
 	texture Diffuse
 	{

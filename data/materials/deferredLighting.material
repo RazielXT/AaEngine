@@ -1,6 +1,11 @@
 material DeferredLighting
 {
-	vertex_shader vsQuad
+	vertex_shader
+	{
+		file postprocess/postprocess.hlsl
+		entry VSQuad
+		profile vs_6_6
+	}
 
 	depth off
 
@@ -14,7 +19,12 @@ material DeferredLighting
 
 material DeferredVCT
 {
-	vertex_shader vsQuad
+	vertex_shader
+	{
+		file postprocess/postprocess.hlsl
+		entry VSQuad
+		profile vs_6_6
+	}
 
 	depth off
 
@@ -28,7 +38,12 @@ material DeferredVCT
 
 material ToneMapping
 {
-	vertex_shader vsQuad
+	vertex_shader
+	{
+		file postprocess/postprocess.hlsl
+		entry VSQuad
+		profile vs_6_6
+	}
 
 	depth off
 

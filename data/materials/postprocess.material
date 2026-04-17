@@ -1,6 +1,11 @@
 material PostProcess abstract
 {
-	vertex_shader vsQuad
+	vertex_shader
+	{
+		file postprocess/postprocess.hlsl
+		entry VSQuad
+		profile vs_6_6
+	}
 	
 	depth off
 	sampler clamp bilinear
@@ -28,12 +33,22 @@ material PassDownsample2x : PostProcess
 
 material PassThroughAvg : PostProcess
 {
-	pixel_shader psPassThroughAvg
+	pixel_shader
+	{
+		file postprocess/postprocess.hlsl
+		entry PSPassThroughAvg
+		profile ps_6_6
+	}
 }
 
 material PutBlurThrough : PostProcess
 {
-	pixel_shader psPutBlurThrough
+	pixel_shader
+	{
+		file postprocess/postprocess.hlsl
+		entry PSPutBlurThrough
+		profile ps_6_6
+	}
 }
 
 material BloomUpscale : PostProcess
@@ -58,12 +73,22 @@ material CombineLighting : PostProcess
 
 material BlurX : PostProcess
 {
-	pixel_shader psBlurX
+	pixel_shader
+	{
+		file postprocess/postprocess.hlsl
+		entry PSBlurX
+		profile ps_6_6
+	}
 }
 
 material BlurY : PostProcess
 {
-	pixel_shader psBlurY
+	pixel_shader
+	{
+		file postprocess/postprocess.hlsl
+		entry PSBlurY
+		profile ps_6_6
+	}
 }
 
 material FXAA : PostProcess

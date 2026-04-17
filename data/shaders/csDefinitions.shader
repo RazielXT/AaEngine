@@ -1,3 +1,24 @@
+compute_shader grassInit
+{
+	file grassInitCS.hlsl
+	entry CSMain
+	profile cs_6_6
+}
+
+compute_shader generate3DMipmaps3x
+{
+	file utils/generate3DMips3xCS.hlsl
+	entry CSMain
+	profile cs_6_6
+}
+
+compute_shader generateNormalMipmaps4x
+{
+	file utils/generateNormalMips4xCS.hlsl
+	entry CSMain
+	profile cs_6_6
+}
+
 compute_shader AoPrepareDepthBuffers
 {
 	file AoPrepareDepthBuffers1CS.hlsl
@@ -41,4 +62,3 @@ compute_shader AoBlurAndUpsampleFinalCS
 	entry main
 	profile cs_6_6
 }
-

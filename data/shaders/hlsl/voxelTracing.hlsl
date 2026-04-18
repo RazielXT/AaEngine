@@ -52,9 +52,9 @@ SamplerState VoxelSampler : register(s0);
 
 GBufferOutput PSMain(PS_Input pin)
 {
-	SamplerState diffuse_sampler = GetDynamicMaterialSamplerLinear();
+	SamplerState diffuseSampler = GetDynamicMaterialSamplerLinear();
 
-	float4 albedo = GetTexture2D(TexIdDiffuse).Sample(diffuse_sampler, pin.uv);
+	float4 albedo = GetTexture2D(TexIdDiffuse).Sample(diffuseSampler, pin.uv);
 
 #ifdef ALPHA_TEST
 	if (albedo.a < 0.37f)
@@ -63,7 +63,7 @@ GBufferOutput PSMain(PS_Input pin)
 
 	albedo.rgb *= MaterialColor;
 
-	float3 normalTex = DecodeNormalTexture(GetTexture2D(TexIdNormal).Sample(diffuse_sampler, pin.uv).rg);
+	float3 normalTex = DecodeNormalTexture(GetTexture2D(TexIdNormal).Sample(diffuseSampler, pin.uv).rg);
 
 	float3x3 worldMatrix = (float3x3)WorldMatrix;
 	float3 worldNormalT = normalize(mul(pin.normal, worldMatrix));

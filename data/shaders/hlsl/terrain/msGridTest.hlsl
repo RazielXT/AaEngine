@@ -161,9 +161,9 @@ void MSMain(
 
 GBufferOutput PSMain(VertexOut input)
 {
-	SamplerState diffuse_sampler = GetDynamicMaterialSamplerLinear();
+	SamplerState diffuseSampler = GetDynamicMaterialSamplerLinear();
 
-	float4 albedo = GetTexture2D(TexIdDiffuse).Sample(diffuse_sampler, input.UV);
+	float4 albedo = GetTexture2D(TexIdDiffuse).Sample(diffuseSampler, input.UV);
 	//albedo.rgb *= MaterialColor;
 
 	GridTBN tbn = ReadGridTBN(ResourceDescriptorHeap[TexIdNormalmap], LinearSampler, input.UV);

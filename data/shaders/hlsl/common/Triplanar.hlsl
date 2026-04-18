@@ -5,11 +5,11 @@
 
 float4 SampleTriplanar(uint texId, SamplerState sampler, float3 worldPos, float3 worldNormal, float scale)
 {
-	float3 blend_weights = abs(worldNormal.xyz);
+	float3 blendWeights = abs(worldNormal.xyz);
 	// Tighten up the blending zone:
-	blend_weights = (blend_weights - 0.2) * 7;
-	blend_weights = max(blend_weights, 0);
-	blend_weights /= (blend_weights.x + blend_weights.y + blend_weights.z).xxx;
+	blendWeights = (blendWeights - 0.2) * 7;
+	blendWeights = max(blendWeights, 0);
+	blendWeights /= (blendWeights.x + blendWeights.y + blendWeights.z).xxx;
 
 	float2 uvX = worldPos.yz * scale;
 	float2 uvY = worldPos.zx * scale;
@@ -19,16 +19,16 @@ float4 SampleTriplanar(uint texId, SamplerState sampler, float3 worldPos, float3
 	float4 col2 = GetTexture2D(texId).Sample(sampler, uvY);
 	float4 col3 = GetTexture2D(texId).Sample(sampler, uvZ);
 
-	return col1 * blend_weights.x + col2 * blend_weights.y + col3 * blend_weights.z;
+	return col1 * blendWeights.x + col2 * blendWeights.y + col3 * blendWeights.z;
 }
 
 float3 SampleTriplanarNormal(uint texId, SamplerState sampler, float3 worldPos, float3 worldNormal, float scale)
 {
-	float3 blend_weights = abs(worldNormal.xyz);
+	float3 blendWeights = abs(worldNormal.xyz);
 	// Tighten up the blending zone:
-	blend_weights = (blend_weights - 0.2) * 7;
-	blend_weights = max(blend_weights, 0);
-	blend_weights /= (blend_weights.x + blend_weights.y + blend_weights.z).xxx;
+	blendWeights = (blendWeights - 0.2) * 7;
+	blendWeights = max(blendWeights, 0);
+	blendWeights /= (blendWeights.x + blendWeights.y + blendWeights.z).xxx;
 
 	float2 uvX = worldPos.zy * scale;
 	float2 uvY = worldPos.xz * scale;
@@ -48,9 +48,9 @@ float3 SampleTriplanarNormal(uint texId, SamplerState sampler, float3 worldPos, 
 
 	// Swizzle tangent normals to match world orientation and triblend
 	return normalize(
-		tnormalX.zyx * blend_weights.x +
-		tnormalY.xzy * blend_weights.y +
-		tnormalZ.xyz * blend_weights.z
+		tnormalX.zyx * blendWeights.x +
+		tnormalY.xzy * blendWeights.y +
+		tnormalZ.xyz * blendWeights.z
 	);
 }
 

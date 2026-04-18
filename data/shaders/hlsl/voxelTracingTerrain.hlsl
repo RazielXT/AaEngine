@@ -128,16 +128,16 @@ struct PSOutput
 
 PSOutput PSMain(PS_Input pin)
 {
-	SamplerState diffuse_sampler = GetDynamicMaterialSamplerLinear();
+	SamplerState diffuseSampler = GetDynamicMaterialSamplerLinear();
 	
-	float3 rock = GetTexture2D(TexIdDiffuse).Sample(diffuse_sampler, pin.uv).rgb;
-	float3 green = GetTexture2D(TexIdGrass).Sample(diffuse_sampler, pin.uv * 5).rgb * float3(0.9, 1, 0.9);
+	float3 rock = GetTexture2D(TexIdDiffuse).Sample(diffuseSampler, pin.uv).rgb;
+	float3 green = GetTexture2D(TexIdGrass).Sample(diffuseSampler, pin.uv * 5).rgb * float3(0.9, 1, 0.9);
 	float3 brown = float3(0.45, 0.35, 0.25) * 1.5f * rock; // Color for brown
 	
-	float spread = GetTexture2D(TexIdSpread).Sample(diffuse_sampler, pin.uv / 10).r;
-	float detailSpread = GetTexture2D(TexIdSpread).Sample(diffuse_sampler, pin.uv * 2).r * spread * spread  * 0.1;
-	float spread2 = GetTexture2D(TexIdSpread).Sample(diffuse_sampler, (pin.uv  + 0.5) / 3).r;
-	float detailSpread2 = GetTexture2D(TexIdSpread).Sample(diffuse_sampler, (pin.uv  + 0.5) * 10).r * spread2 * spread2 * 0.1;
+	float spread = GetTexture2D(TexIdSpread).Sample(diffuseSampler, pin.uv / 10).r;
+	float detailSpread = GetTexture2D(TexIdSpread).Sample(diffuseSampler, pin.uv * 2).r * spread * spread  * 0.1;
+	float spread2 = GetTexture2D(TexIdSpread).Sample(diffuseSampler, (pin.uv  + 0.5) / 3).r;
+	float detailSpread2 = GetTexture2D(TexIdSpread).Sample(diffuseSampler, (pin.uv  + 0.5) * 10).r * spread2 * spread2 * 0.1;
 	
 	float rockWeight = smoothstep(0.77 + detailSpread, 0.78 + detailSpread, pin.normal.y);
 	float3 albedoMid = lerp(rock, brown, rockWeight);
@@ -157,7 +157,7 @@ PSOutput PSMain(PS_Input pin)
 
 GBufferOutput PSMain(PS_Input pin)
 {
-	SamplerState diffuse_sampler = GetDynamicMaterialSamplerLinear();
+	SamplerState diffuseSampler = GetDynamicMaterialSamplerLinear();
 	float3 cameraView = CameraPosition - pin.wp.xyz;
 	float camDistance = length(cameraView);
 
@@ -166,10 +166,10 @@ GBufferOutput PSMain(PS_Input pin)
 	//inNormal = normalize(inNormal);
 	float3 bin = cross(inNormal, pin.tangent);
 
-	float spread = GetTexture2D(TexIdSpread).Sample(diffuse_sampler, pin.uv / 10).r;
-	float detailSpread = GetTexture2D(TexIdSpread).Sample(diffuse_sampler, pin.uv * 2).r * spread * spread  * 0.1;
-	float spread2 = GetTexture2D(TexIdSpread).Sample(diffuse_sampler, (pin.uv  + 0.5) / 3).r;
-	float detailSpread2 = GetTexture2D(TexIdSpread).Sample(diffuse_sampler, (pin.uv  + 0.5) * 10).r * spread2 * spread2 * 0.1;
+	float spread = GetTexture2D(TexIdSpread).Sample(diffuseSampler, pin.uv / 10).r;
+	float detailSpread = GetTexture2D(TexIdSpread).Sample(diffuseSampler, pin.uv * 2).r * spread * spread  * 0.1;
+	float spread2 = GetTexture2D(TexIdSpread).Sample(diffuseSampler, (pin.uv  + 0.5) / 3).r;
+	float detailSpread2 = GetTexture2D(TexIdSpread).Sample(diffuseSampler, (pin.uv  + 0.5) * 10).r * spread2 * spread2 * 0.1;
 
 	float rockWeight = smoothstep(0.77 + detailSpread, 0.78 + detailSpread, pin.normal.y);
 	float grassWeight = smoothstep(0.78 + detailSpread2, 0.8 + detailSpread2, pin.normal.y);
@@ -177,16 +177,16 @@ GBufferOutput PSMain(PS_Input pin)
 	float diffuseStepDistance[5] = { 0, 50, 500, 2000, 6000 };
 	float diffuseStepScale[5] = { 4, 2, 1.f /2, 1.f /5, 1.f /20 };
 	float3 diffuseDistanceWeights = CreateDistanceWeigths5(camDistance, diffuseStepDistance, diffuseStepScale);
-	float3 rock = ReadDistanceTexture(TexIdDiffuse, diffuse_sampler, pin.uv, diffuseDistanceWeights);
+	float3 rock = ReadDistanceTexture(TexIdDiffuse, diffuseSampler, pin.uv, diffuseDistanceWeights);
 
-	float3 green = GetTexture2D(TexIdGrass).Sample(diffuse_sampler, pin.uv * 5).rgb * float3(0.9, 1, 0.9);
+	float3 green = GetTexture2D(TexIdGrass).Sample(diffuseSampler, pin.uv * 5).rgb * float3(0.9, 1, 0.9);
 	float3 brown = float3(0.45, 0.35, 0.25) * 1.5f * rock; // Color for brown
 
 	float3 albedoMid = lerp(rock, brown, rockWeight);
 	float3 albedo = lerp(albedoMid, green, grassWeight);
 
 	uint NormalTex = rockWeight > 0.5 ? TexIdGrassNormal : TexIdNormal;
-	float3 normalTex = ReadDistanceTexture(NormalTex, diffuse_sampler, pin.uv, diffuseDistanceWeights);
+	float3 normalTex = ReadDistanceTexture(NormalTex, diffuseSampler, pin.uv, diffuseDistanceWeights);
 	normalTex.b = 1;
 
     float3x3 tbn = float3x3(pin.tangent, bin, pin.normal);

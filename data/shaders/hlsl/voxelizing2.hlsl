@@ -59,7 +59,7 @@ struct PS_Input
 #ifdef GRID
 StructuredBuffer<GridTileData> InstancingBuffer : register(t0);
 
-GS_Input VS_Main(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
+GS_Input VSMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
 {
 	GridRuntimeParams p;
 	p.cameraPos = CameraPosition;
@@ -84,7 +84,7 @@ struct VS_Input
 	float2 uv : TEXCOORD0;
 };
 
-GS_Input VS_Main(VS_Input vin)
+GS_Input VSMain(VS_Input vin)
 {
 	GS_Input o;
 	o.wp = mul(vin.p, WorldMatrix).xyz;
@@ -97,7 +97,7 @@ GS_Input VS_Main(VS_Input vin)
 
 
 [maxvertexcount(3)]
-void GS_Main(triangle GS_Input input[3], inout TriangleStream<PS_Input> triStream)
+void GSMain(triangle GS_Input input[3], inout TriangleStream<PS_Input> triStream)
 {
 	// 1. Triangle normal (world space)
 	float3 e0 = input[1].wp - input[0].wp;
@@ -171,7 +171,7 @@ float getShadow(float4 wp)
 }
 
 
-float4 PS_Main(PS_Input pin) : SV_TARGET
+float4 PSMain(PS_Input pin) : SV_TARGET
 {
 	SamplerState sampler = GetDynamicMaterialSamplerLinear();
 

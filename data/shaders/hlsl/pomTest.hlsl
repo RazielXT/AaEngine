@@ -51,13 +51,13 @@ float2 ParallaxMapping(float2 texCoords, float3 viewDir, Texture2D heightmap)
 	const float maxLayers = 64.0;
 	float numLayers = lerp(maxLayers, minLayers, max(dot(float3(0.0, 0.0, -1.0), viewDir), 0.0)); 
 
-	const float height_scale = 0.2;
+	const float heightScale = 0.2;
 	//const float numLayers = 32.0;
 
 	const float layerDepth = 1.0 / numLayers;
 	float currentLayerDepth = 0.0;
 
-	float2 P = viewDir.xy * height_scale;
+	float2 P = viewDir.xy * heightScale;
 	float2 deltaTexCoords = P / numLayers;
 
 	SamplerState samplerState = GetDynamicMaterialSamplerLinear();

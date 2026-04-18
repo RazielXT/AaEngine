@@ -1,3 +1,5 @@
+#include "hlsl/common/ShaderOutputs.hlsl"
+
 float4x4 WorldMatrix;
 float4x4 ViewProjectionMatrix;
 
@@ -46,16 +48,9 @@ VS_OUTPUT VSMain(VS_INPUT Input)
     return Output;
 }
 
-struct PSOutputId
+EntityIdOutput PSMain(VS_OUTPUT input)
 {
-    uint4 id : SV_Target0;
-    float4 position : SV_Target1;
-    float4 normal : SV_Target2;
-};
-
-PSOutputId PSMain(VS_OUTPUT input)
-{
-	PSOutputId output;
+	EntityIdOutput output;
 
 #ifdef INSTANCED		
 	uint entityId = input.entityId;

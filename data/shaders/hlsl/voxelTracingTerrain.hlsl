@@ -1,3 +1,7 @@
+#include "hlsl/common/ResourceAccess.hlsl"
+#include "hlsl/common/MotionVectors.hlsl"
+#include "hlsl/common/ShaderOutputs.hlsl"
+
 float4x4 ViewProjectionMatrix;
 float4x4 WorldMatrix;
 float3 CameraPosition;
@@ -66,11 +70,6 @@ PS_Input VSMain(VS_Input vin)
     return vsOut;
 }
 
-Texture2D<float4> GetTexture(uint index)
-{
-    return ResourceDescriptorHeap[index];
-}
-
 float3 CreateDistanceWeigths3(float camDistance, float distances[3], float scales[3])
 {
 	float lerpWeight = 1;
@@ -111,8 +110,8 @@ float3 CreateDistanceWeigths5(float camDistance, float distances[5], float scale
 
 float3 ReadDistanceTexture(uint texId, SamplerState sampler, float2 uv, float3 weights)
 {
-	float3 normalTexClose = GetTexture(texId).Sample(sampler, uv * weights.x).rgb;
-	float3 normalTex = GetTexture(texId).Sample(sampler, uv * weights.y).rgb;
+	float3 normalTexClose = GetTexture2D(texId).Sample(sampler, uv * weights.x).rgb;
+	float3 normalTex = GetTexture2D(texId).Sample(sampler, uv * weights.y).rgb;
 
 	return lerp(normalTexClose, normalTex, weights.z);
 }
@@ -129,16 +128,16 @@ struct PSOutput
 
 PSOutput PSMain(PS_Input pin)
 {
-	SamplerState diffuse_sampler = SamplerDescriptorHeap[0];
+	SamplerState diffuse_sampler = GetDynamicMaterialSamplerLinear();
 	
-	float3 rock = GetTexture(TexIdDiffuse).Sample(diffuse_sampler, pin.uv).rgb;
-	float3 green = GetTexture(TexIdGrass).Sample(diffuse_sampler, pin.uv * 5).rgb * float3(0.9, 1, 0.9);
+	float3 rock = GetTexture2D(TexIdDiffuse).Sample(diffuse_sampler, pin.uv).rgb;
+	float3 green = GetTexture2D(TexIdGrass).Sample(diffuse_sampler, pin.uv * 5).rgb * float3(0.9, 1, 0.9);
 	float3 brown = float3(0.45, 0.35, 0.25) * 1.5f * rock; // Color for brown
 	
-	float spread = GetTexture(TexIdSpread).Sample(diffuse_sampler, pin.uv / 10).r;
-	float detailSpread = GetTexture(TexIdSpread).Sample(diffuse_sampler, pin.uv * 2).r * spread * spread  * 0.1;
-	float spread2 = GetTexture(TexIdSpread).Sample(diffuse_sampler, (pin.uv  + 0.5) / 3).r;
-	float detailSpread2 = GetTexture(TexIdSpread).Sample(diffuse_sampler, (pin.uv  + 0.5) * 10).r * spread2 * spread2 * 0.1;
+	float spread = GetTexture2D(TexIdSpread).Sample(diffuse_sampler, pin.uv / 10).r;
+	float detailSpread = GetTexture2D(TexIdSpread).Sample(diffuse_sampler, pin.uv * 2).r * spread * spread  * 0.1;
+	float spread2 = GetTexture2D(TexIdSpread).Sample(diffuse_sampler, (pin.uv  + 0.5) / 3).r;
+	float detailSpread2 = GetTexture2D(TexIdSpread).Sample(diffuse_sampler, (pin.uv  + 0.5) * 10).r * spread2 * spread2 * 0.1;
 	
 	float rockWeight = smoothstep(0.77 + detailSpread, 0.78 + detailSpread, pin.normal.y);
 	float3 albedoMid = lerp(rock, brown, rockWeight);
@@ -156,16 +155,9 @@ PSOutput PSMain(PS_Input pin)
 
 #else
 
-struct PSOutput
+GBufferOutput PSMain(PS_Input pin)
 {
-	float4 albedo : SV_Target0;
-	float4 normals : SV_Target1;
-	float4 motionVectors : SV_Target2;
-};
-
-PSOutput PSMain(PS_Input pin)
-{
-	SamplerState diffuse_sampler = SamplerDescriptorHeap[0];
+	SamplerState diffuse_sampler = GetDynamicMaterialSamplerLinear();
 	float3 cameraView = CameraPosition - pin.wp.xyz;
 	float camDistance = length(cameraView);
 
@@ -174,10 +166,10 @@ PSOutput PSMain(PS_Input pin)
 	//inNormal = normalize(inNormal);
 	float3 bin = cross(inNormal, pin.tangent);
 
-	float spread = GetTexture(TexIdSpread).Sample(diffuse_sampler, pin.uv / 10).r;
-	float detailSpread = GetTexture(TexIdSpread).Sample(diffuse_sampler, pin.uv * 2).r * spread * spread  * 0.1;
-	float spread2 = GetTexture(TexIdSpread).Sample(diffuse_sampler, (pin.uv  + 0.5) / 3).r;
-	float detailSpread2 = GetTexture(TexIdSpread).Sample(diffuse_sampler, (pin.uv  + 0.5) * 10).r * spread2 * spread2 * 0.1;
+	float spread = GetTexture2D(TexIdSpread).Sample(diffuse_sampler, pin.uv / 10).r;
+	float detailSpread = GetTexture2D(TexIdSpread).Sample(diffuse_sampler, pin.uv * 2).r * spread * spread  * 0.1;
+	float spread2 = GetTexture2D(TexIdSpread).Sample(diffuse_sampler, (pin.uv  + 0.5) / 3).r;
+	float detailSpread2 = GetTexture2D(TexIdSpread).Sample(diffuse_sampler, (pin.uv  + 0.5) * 10).r * spread2 * spread2 * 0.1;
 
 	float rockWeight = smoothstep(0.77 + detailSpread, 0.78 + detailSpread, pin.normal.y);
 	float grassWeight = smoothstep(0.78 + detailSpread2, 0.8 + detailSpread2, pin.normal.y);
@@ -187,7 +179,7 @@ PSOutput PSMain(PS_Input pin)
 	float3 diffuseDistanceWeights = CreateDistanceWeigths5(camDistance, diffuseStepDistance, diffuseStepScale);
 	float3 rock = ReadDistanceTexture(TexIdDiffuse, diffuse_sampler, pin.uv, diffuseDistanceWeights);
 
-	float3 green = GetTexture(TexIdGrass).Sample(diffuse_sampler, pin.uv * 5).rgb * float3(0.9, 1, 0.9);
+	float3 green = GetTexture2D(TexIdGrass).Sample(diffuse_sampler, pin.uv * 5).rgb * float3(0.9, 1, 0.9);
 	float3 brown = float3(0.45, 0.35, 0.25) * 1.5f * rock; // Color for brown
 
 	float3 albedoMid = lerp(rock, brown, rockWeight);
@@ -203,10 +195,10 @@ PSOutput PSMain(PS_Input pin)
 	float3x3 worldMatrix = (float3x3)WorldMatrix;
 	float3 worldDetailNormal = normalize(mul(normal, worldMatrix));
 
-	PSOutput output;
+	GBufferOutput output;
     output.albedo = float4(albedo, 1);
 	output.normals = float4(worldDetailNormal, 1);
-	output.motionVectors = float4(0, 0, 0, 0);
+	output.motionVectors = ZeroMotionVector();
 
 	return output;
 }

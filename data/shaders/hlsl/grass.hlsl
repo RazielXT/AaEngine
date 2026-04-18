@@ -1,5 +1,8 @@
 #include "VoxelConeTracingCommon.hlsl"
 #include "ShadowsPssm.hlsl"
+#include "hlsl/common/ResourceAccess.hlsl"
+#include "hlsl/common/MotionVectors.hlsl"
+#include "hlsl/common/ShaderOutputs.hlsl"
 
 float4x4 ViewProjectionMatrix;
 float4x4 InvViewMatrix;
@@ -126,16 +129,6 @@ PSInput VSMain(uint vertexIdx : SV_VertexId, uint instanceId : SV_InstanceID)
     return output;
 }
 
-Texture2D<float4> GetTexture(uint index)
-{
-    return ResourceDescriptorHeap[index];
-}
-
-Texture3D<float4> GetTexture3D(uint index)
-{
-    return ResourceDescriptorHeap[index];
-}
-
 float getDistanceBlend(float dist, float sceneSize)
 {
 	sceneSize *= 0.5f;
@@ -169,8 +162,8 @@ float TransitionDepth(float uvX)
 
 PSOutput PSMain(PSInput input)
 {
-	SamplerState colorSampler = SamplerDescriptorHeap[0];
-	float4 albedo = GetTexture(TexIdDiffuse).Sample(colorSampler, input.uv);
+	SamplerState materialSampler = GetDynamicMaterialSamplerLinear();
+	float4 albedo = GetTexture2D(TexIdDiffuse).Sample(materialSampler, input.uv);
 
 	if (albedo.a < AlphaThreshold) discard;
 
@@ -230,9 +223,7 @@ PSOutput PSMain(PSInput input)
 	output.normals = float4(input.normal, 1);
 	output.camDistance = float4(camDistance, 0, 0, 0);
 
-	output.motionVectors = float4((input.previousPosition.xy / input.previousPosition.w - input.currentPosition.xy / input.currentPosition.w) * ViewportSize, 0, 0);
-	output.motionVectors.xy *= 0.5;
-	output.motionVectors.y *= -1;
+	output.motionVectors = EncodeMotionVector(input.previousPosition, input.currentPosition, ViewportSize);
 	
 	/*
     float4 adjposition = mul(input.worldPosition + float4(TransitionDepth(input.uv.x), 0,0,0), ViewProjectionMatrix);
@@ -248,8 +239,8 @@ struct PSOutputDepth
 
 void PSMainDepth(PSInput input)
 {
-	SamplerState colorSampler = SamplerDescriptorHeap[0];
-	float4 albedo = GetTexture(TexIdDiffuse).Sample(colorSampler, input.uv);
+	SamplerState materialSampler = GetDynamicMaterialSamplerLinear();
+	float4 albedo = GetTexture2D(TexIdDiffuse).Sample(materialSampler, input.uv);
 
 	if (albedo.a < AlphaThreshold) discard;
 	
@@ -267,17 +258,10 @@ void PSMainDepth(PSInput input)
 
 #ifdef ENTITY_ID
 
-struct PSOutputId
+EntityIdOutput PSMainEntityId(PSInput input)
 {
-    uint4 id : SV_Target0;
-    float4 position : SV_Target1;
-	float4 normal : SV_Target2;
-};
-
-PSOutputId PSMainEntityId(PSInput input)
-{
-	SamplerState colorSampler = SamplerDescriptorHeap[0];
-	float4 albedo = GetTexture(TexIdDiffuse).Sample(colorSampler, input.uv);
+	SamplerState materialSampler = GetDynamicMaterialSamplerLinear();
+	float4 albedo = GetTexture2D(TexIdDiffuse).Sample(materialSampler, input.uv);
 
 	if (albedo.a < AlphaThreshold) discard;
 	
@@ -286,7 +270,7 @@ PSOutputId PSMainEntityId(PSInput input)
 
 	if (albedo.a < distanceFade) discard;
 
-	PSOutputId output;
+	EntityIdOutput output;
 	output.id = uint4(EntityId, 0, 0, 0);
 	output.position = float4(input.worldPosition.xyz, 0);
 	output.normal = float4(input.normal.xyz, 0);

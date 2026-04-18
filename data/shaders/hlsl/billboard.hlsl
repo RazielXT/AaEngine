@@ -1,4 +1,7 @@
 #include "ShadowsPssm.hlsl"
+#include "hlsl/common/ResourceAccess.hlsl"
+#include "hlsl/common/MotionVectors.hlsl"
+#include "hlsl/common/ShaderOutputs.hlsl"
 
 float4x4 ViewProjectionMatrix;
 float4x4 InvViewMatrix;
@@ -77,27 +80,8 @@ PSInput VSMain(uint vertexIdx : SV_VertexId, uint instanceId : SV_InstanceID)
 	return output;
 }
 
-Texture2D<float4> GetTexture(uint index)
-{
-	return ResourceDescriptorHeap[index];
-}
-
-struct PSOutput
-{
-	float4 albedo : SV_Target0;
-	float4 normals : SV_Target1;
-	float4 motionVectors : SV_Target2;
-};
-
 static const float AlphaThreshold = 0.8f;
 static const float AlphaFadeThreshold = 5000;
-
-float3 DecodeNormalUNORM(float2 xy)
-{
-	float2 nxy = xy * 2.0 - 1.0; // convert to -1..1
-	float z = sqrt(saturate(1.0 - dot(nxy, nxy)));
-	return float3(nxy, z);
-}
 
 float Hash12(float2 p)
 {
@@ -126,10 +110,10 @@ float3 color_blend(float3 normalTex, float3 normalTex2)
 	return r;
 }
 
-PSOutput PSMain(PSInput input)
+GBufferOutput PSMain(PSInput input)
 {
-	SamplerState colorSampler = SamplerDescriptorHeap[0];
-	float4 albedo = GetTexture(TexIdDiffuse).Sample(colorSampler, input.uv);
+	SamplerState colorSampler = GetDynamicMaterialSamplerLinear();
+	float4 albedo = GetTexture2D(TexIdDiffuse).Sample(colorSampler, input.uv);
 	albedo.rgb *= ApplyTreeColorVariation(float3(0.9, 0.55, 0.35), float3(0.9, 0.35, 0.15), input.random) * saturate(0.5 + 0.5 * abs(input.random * 2 - 1));
 
 	if (albedo.a < AlphaThreshold) discard;
@@ -143,7 +127,7 @@ PSOutput PSMain(PSInput input)
 	worldNormal /= camDistance;
 	//worldNormal = -ViewCameraDirection;
 
-	float edges = GetTexture(TexIdEdges).Sample(colorSampler, input.uv.xy).r;
+	float edges = GetTexture2D(TexIdEdges).Sample(colorSampler, input.uv.xy).r;
 	//worldNormal = lerp(-Sun.Direction, worldNormal, edges);
 
 	float3 binormal = float3(0, 1, 0);
@@ -164,7 +148,7 @@ PSOutput PSMain(PSInput input)
 	// Row-major construction for mul(vector, tbn)
 	//float3x3 tbn = float3x3(T, B, N);
 
-	float3 normalTex = GetTexture(TexIdNormal).Sample(colorSampler, input.uv.xy).rgb;
+	float3 normalTex = GetTexture2D(TexIdNormal).Sample(colorSampler, input.uv.xy).rgb;
 	//normalTex = DecodeNormalUNORM(normalTex.xy);
 	//normalTex.x = 1 - saturate(lerp(normalTex.x, (input.uv.x - 0.25) * 2, 1));
 	//normalTex.y = 0.5;
@@ -180,18 +164,18 @@ PSOutput PSMain(PSInput input)
 
 	worldNormal = mul(normalTex.xyz, tbn);
 
-	PSOutput output;
+	GBufferOutput output;
 	output.albedo = float4(albedo.rgb, 0);
 	output.normals = float4(worldNormal, 1);
-	output.motionVectors = float4(0, 0, 0, 0);
+	output.motionVectors = ZeroMotionVector();
 
 	return output;
 }
 
 void PSMainDepth(PSInput input)
 {
-	SamplerState colorSampler = SamplerDescriptorHeap[0];
-	float4 albedo = GetTexture(TexIdDiffuse).Sample(colorSampler, input.uv);
+	SamplerState colorSampler = GetDynamicMaterialSamplerLinear();
+	float4 albedo = GetTexture2D(TexIdDiffuse).Sample(colorSampler, input.uv);
 
 	if (albedo.a < AlphaThreshold) discard;
 
@@ -202,17 +186,10 @@ void PSMainDepth(PSInput input)
 
 #ifdef ENTITY_ID
 
-struct PSOutputId
+EntityIdOutput PSMainEntityId(PSInput input)
 {
-    uint4 id : SV_Target0;
-    float4 position : SV_Target1;
-	float4 normal : SV_Target2;
-};
-
-PSOutputId PSMainEntityId(PSInput input)
-{
-	SamplerState colorSampler = SamplerDescriptorHeap[0];
-	float4 albedo = GetTexture(TexIdDiffuse).Sample(colorSampler, input.uv);
+	SamplerState colorSampler = GetDynamicMaterialSamplerLinear();
+	float4 albedo = GetTexture2D(TexIdDiffuse).Sample(colorSampler, input.uv);
 
 	if (albedo.a < AlphaThreshold) discard;
 
@@ -224,7 +201,7 @@ PSOutputId PSMainEntityId(PSInput input)
 
 	worldNormal /= camDistance;
 
-	PSOutputId output;
+	EntityIdOutput output;
 	output.id = uint4(EntityId, 0, 0, 0);
 	output.position = float4(input.worldPosition.xyz, 0);
 	output.normal = float4(worldNormal, 0);

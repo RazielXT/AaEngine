@@ -1,3 +1,5 @@
+#include "hlsl/common/ShaderOutputs.hlsl"
+
 float4x4 ViewProjectionMatrix;
 float3 CameraPosition;
 
@@ -28,19 +30,12 @@ PSInput VSMain(VSInput input)
 	return result;
 }
 
-struct PSOutput
-{
-	float4 albedo : SV_Target0;
-	float4 normals : SV_Target1;
-	float4 motionVectors : SV_Target2;
-};
-
 TextureCube skyboxTexture : register(t0);
 SamplerState samplerState : register(s0);
 
-PSOutput PSMain(PSInput input)
+GBufferOutput PSMain(PSInput input)
 {
-	PSOutput output;
+	GBufferOutput output;
 
 	output.albedo = float4(skyboxTexture.Sample(samplerState, input.uv).rgb, 0);
 	output.normals = 0;

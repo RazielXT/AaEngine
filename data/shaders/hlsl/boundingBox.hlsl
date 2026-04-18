@@ -41,12 +41,6 @@ PSInput VSMain(VSInput input)
     return result;
 }
 
-struct PSOutput
-{
-    float4 target0 : SV_Target0;
-    float4 target1 : SV_Target1;
-};
-
 float2 getLimit(float2 scale)
 {
 	float distScale = length(WorldPosition - CameraPosition) / 10;

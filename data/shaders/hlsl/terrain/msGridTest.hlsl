@@ -1,4 +1,5 @@
 #include "hlsl/grid/heightmapGridReconstruction.hlsl"
+#include "hlsl/common/ShaderOutputs.hlsl"
 
 float4x4 ViewProjectionMatrix;
 float3 WorldPosition;
@@ -162,14 +163,7 @@ Texture2D<float4> GetTexture(uint index)
 	return ResourceDescriptorHeap[index];
 }
 
-struct PSOutput
-{
-	float4 albedo : SV_Target0;
-	float4 normals : SV_Target1;
-	float4 motionVectors : SV_Target2;
-};
-
-PSOutput PSMain(VertexOut input)
+GBufferOutput PSMain(VertexOut input)
 {
 	SamplerState diffuse_sampler = SamplerDescriptorHeap[0];
 
@@ -178,7 +172,7 @@ PSOutput PSMain(VertexOut input)
 
 	GridTBN tbn = ReadGridTBN(ResourceDescriptorHeap[TexIdNormalmap], LinearSampler, input.UV);
 
-	PSOutput output;
+	GBufferOutput output;
 	output.albedo = float4(albedo.rgb, 0);
 	output.normals = float4(tbn.N, 1);
 	output.motionVectors = 0;

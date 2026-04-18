@@ -1,5 +1,6 @@
 #include "ShadowsPssm.hlsl"
 #include "hlsl/skyFog.hlsl"
+#include "hlsl/common/ResourceAccess.hlsl"
 
 float4x4 ViewProjectionMatrix;
 float4x4 InvViewMatrix;
@@ -64,11 +65,6 @@ PSInput VSMain(uint vertexIdx : SV_VertexID)
     return output;
 }
 
-Texture2D<float4> GetTexture(uint index)
-{
-	return ResourceDescriptorHeap[index];
-}
-
 struct PSOutput
 {
 	float4 albedo : SV_Target0;
@@ -80,9 +76,9 @@ SamplerState LinearWrapSampler : register(s0);
 
 PSOutput PSMain(PSInput input)
 {
-	SamplerState colorSampler = SamplerDescriptorHeap[0];
-	float4 albedo = GetTexture(TexIdDiffuse).Sample(colorSampler, input.uv);
-	float3 normalMap = GetTexture(TexIdNormal).Sample(colorSampler, input.uv).xyz * 2 - 1;
+	SamplerState materialSampler = GetDynamicMaterialSamplerLinear();
+	float4 albedo = GetTexture2D(TexIdDiffuse).Sample(materialSampler, input.uv);
+	float3 normalMap = GetTexture2D(TexIdNormal).Sample(materialSampler, input.uv).xyz * 2 - 1;
 
 	if (albedo.a < AlphaThreshold) discard;
 

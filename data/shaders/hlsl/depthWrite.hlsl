@@ -1,6 +1,7 @@
 #ifdef BRANCH_WAVE
 #include "TreeCommon.hlsl"
 #endif
+#include "hlsl/common/ResourceAccess.hlsl"
 
 float4x4 WorldMatrix;
 float4x4 ViewProjectionMatrix;
@@ -91,15 +92,10 @@ VS_OUTPUT VSMain(VS_INPUT Input)
 
 #ifdef ALPHA_TEST
 
-Texture2D<float4> GetTexture(uint index)
-{
-    return ResourceDescriptorHeap[index];
-}
-
 void PSMain(VS_OUTPUT input)
 {
-	SamplerState sampler = SamplerDescriptorHeap[0];
-	float4 albedo = GetTexture(TexIdDiffuse).Sample(sampler, input.uv);
+	SamplerState sampler = GetDynamicMaterialSamplerLinear();
+	float4 albedo = GetTexture2D(TexIdDiffuse).Sample(sampler, input.uv);
 
 	if (albedo.a <0.4) discard;
 }

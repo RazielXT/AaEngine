@@ -1,4 +1,7 @@
 #include "hlsl/utils/normalReconstruction.hlsl"
+#include "hlsl/common/ResourceAccess.hlsl"
+#include "hlsl/common/MotionVectors.hlsl"
+#include "hlsl/common/ShaderOutputs.hlsl"
 
 float4x4 ViewProjectionMatrix;
 float4x4 WorldMatrix;
@@ -45,25 +48,13 @@ PS_Input VSMain(VS_Input vin)
 	return vsOut;
 }
 
-Texture2D<float4> GetTexture(uint index)
-{
-	return ResourceDescriptorHeap[index];
-}
-
-struct PSOutput
-{
-	float4 albedo : SV_Target0;
-	float4 normals : SV_Target1;
-	float4 motionVectors : SV_Target2;
-};
-
 SamplerState VoxelSampler : register(s0);
 
-PSOutput PSMain(PS_Input pin)
+GBufferOutput PSMain(PS_Input pin)
 {
-	SamplerState diffuse_sampler = SamplerDescriptorHeap[0];
+	SamplerState diffuse_sampler = GetDynamicMaterialSamplerLinear();
 
-	float4 albedo = GetTexture(TexIdDiffuse).Sample(diffuse_sampler, pin.uv);
+	float4 albedo = GetTexture2D(TexIdDiffuse).Sample(diffuse_sampler, pin.uv);
 
 #ifdef ALPHA_TEST
 	if (albedo.a < 0.37f)
@@ -72,7 +63,7 @@ PSOutput PSMain(PS_Input pin)
 
 	albedo.rgb *= MaterialColor;
 
-	float3 normalTex = DecodeNormalTexture(GetTexture(TexIdNormal).Sample(diffuse_sampler, pin.uv).rg);
+	float3 normalTex = DecodeNormalTexture(GetTexture2D(TexIdNormal).Sample(diffuse_sampler, pin.uv).rg);
 
 	float3x3 worldMatrix = (float3x3)WorldMatrix;
 	float3 worldNormalT = normalize(mul(pin.normal, worldMatrix));
@@ -81,13 +72,11 @@ PSOutput PSMain(PS_Input pin)
 	float3x3 tbn = float3x3(worldTangentT, worldBinormalT, worldNormalT);
 	float3 worldNormal = mul(normalTex.xyz, tbn);
 
-	PSOutput output;
+	GBufferOutput output;
 	output.albedo = float4(albedo.rgb, 0);
 	output.normals = float4(worldNormal, 1);
 
-	output.motionVectors = float4((pin.previousPosition.xy / pin.previousPosition.w - pin.currentPosition.xy / pin.currentPosition.w) * ViewportSize, 0, 0);
-	output.motionVectors.xy *= 0.5;
-	output.motionVectors.y *= -1;
+	output.motionVectors = EncodeMotionVector(pin.previousPosition, pin.currentPosition, ViewportSize);
 
 	return output;
 }

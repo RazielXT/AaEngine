@@ -1,3 +1,5 @@
+#include "hlsl/common/ShaderOutputs.hlsl"
+
 float4x4 WorldMatrix;
 float4x4 ViewProjectionMatrix;
 float Time;
@@ -95,16 +97,9 @@ VOut VSMain(VIn IN)
 // Pixel shader
 //======================================================================
 
-struct PSOut
+GBufferOutput PSMain(VOut IN)
 {
-	float4 albedo : SV_Target0;
-	float4 normals : SV_Target1;
-	float4 motionVectors : SV_Target2;
-};
-
-PSOut PSMain(VOut IN)
-{
-    PSOut OUT;
+    GBufferOutput OUT;
 
     float time = Time + (WorldPosition.x + WorldPosition.y + WorldPosition.z) / 10.f;
     time *= 0.13f * Speed;

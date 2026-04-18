@@ -1,4 +1,4 @@
-#include "hlsl/utils/dataPacking.hlsl"
+#include "hlsl/common/DataPacking.hlsl"
 
 struct SceneVoxelChunkInfo
 {

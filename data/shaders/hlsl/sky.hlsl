@@ -1,7 +1,7 @@
 #include "ShadowsPssm.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
-#include "hlsl/utils/blueNoise.hlsl"
-#include "hlsl/utils/srgb.hlsl"
+#include "hlsl/common/BlueNoise.hlsl"
+#include "hlsl/common/Srgb.hlsl"
 
 float4x4 InvViewProjectionMatrix;
 float3 CameraPosition;

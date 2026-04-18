@@ -1,6 +1,6 @@
 #include "hlsl/ShadowsCommon.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
-#include "hlsl/utils/srgb.hlsl"
+#include "hlsl/common/Srgb.hlsl"
 
 float3 getFogColor(float3 dir, SunParams Sun, SamplerState sampler)
 {

@@ -2,7 +2,7 @@
 
 float BlueNoise(uint2 p)
 {
-	// 8×8 blue noise tile (0–63)
+	// 8x8 blue noise tile (0-63)
 	const uint bn[64] = {
 		0,32,8,40,2,34,10,42,
 		48,16,56,24,50,18,58,26,
@@ -20,7 +20,7 @@ float BlueNoise(uint2 p)
 
 float BayerNoise(uint2 p)
 {
-	// 8x8 Bayer matrix (0–63)
+	// 8x8 Bayer matrix (0-63)
 	const float bayer[64] = {
 		0,48,12,60,3,51,15,63,
 		32,16,44,28,35,19,47,31,

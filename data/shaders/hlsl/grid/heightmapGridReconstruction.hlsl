@@ -1,4 +1,4 @@
-#include "hlsl/utils/normalReconstruction.hlsl"
+#include "hlsl/common/NormalDecoding.hlsl"
 
 struct GridTileData
 {

@@ -1,4 +1,4 @@
-#include "hlsl/utils/normalReconstruction.hlsl"
+#include "hlsl/common/NormalDecoding.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
 #include "hlsl/common/MotionVectors.hlsl"
 #include "hlsl/common/ShaderOutputs.hlsl"

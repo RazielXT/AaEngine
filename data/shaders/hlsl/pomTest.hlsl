@@ -1,4 +1,4 @@
-#include "hlsl/utils/normalReconstruction.hlsl"
+#include "hlsl/common/NormalDecoding.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
 
 float4x4 ViewProjectionMatrix;

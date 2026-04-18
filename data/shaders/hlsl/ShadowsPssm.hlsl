@@ -1,5 +1,5 @@
 #include "ShadowsCommon.hlsl"
-#include "hlsl/utils/blueNoise.hlsl"
+#include "hlsl/common/BlueNoise.hlsl"
 
 float3 getCascadeShadow(float4 wp, uint ShadowIndex, float ShadowBias, SamplerState sampler, SunParams params)
 {

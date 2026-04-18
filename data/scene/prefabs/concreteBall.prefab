@@ -1,0 +1,6 @@
+object ConcreteBall
+{
+	scale 10
+	material TriplanarTest
+	model sphere.mesh
+}

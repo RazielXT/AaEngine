@@ -132,7 +132,7 @@ public:
 
 		if (key == 'F')
 		{
-			auto model = app.resources.models.getLoadedModel("sphere.mesh", ResourceGroup::Core);
+			auto model = app.resources.models.getCoreModel("sphere.mesh");
 			auto material = app.resources.materials.getMaterial("WhiteVCT");
 
 			auto pos = freeCamera.camera.getPosition();

@@ -1,0 +1,25 @@
+material TreeTrunk
+{
+	technique
+	{
+		pass
+		{
+		}
+
+	}
+
+}
+
+
+
+material TreeBranch
+{
+	technique
+	{
+		pass
+		{
+		}
+
+	}
+
+}

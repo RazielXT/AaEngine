@@ -260,7 +260,7 @@ void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible)
 	{
 		auto materialName = GetStringAttribute(element, "materialName");
 		auto material = ctx->resources.materials.getMaterial(materialName, ctx->batch);
-		auto model = ctx->resources.models.getModel(mesh, ctx->batch, { ResourceGroup::General, loadFolder });
+		auto model = ctx->resources.models.getModel(mesh, ctx->batch, { loadFolder });
 
 		if (material->HasInstancing())
 		{
@@ -326,6 +326,9 @@ SceneParser::Result SceneParser::load(std::filesystem::path path, Ctx parseCtx)
 	groupId = ctx->sceneMgr.createEntityGroup(path.filename().string());
 
  	loadFolder = path.parent_path().string() + "\\";
+
+	if (loadFolder.starts_with(SCENE_DIRECTORY))
+		loadFolder.erase(0, SCENE_DIRECTORY.length());
 
 	if (xml_document doc; doc.load_file(path.c_str()))
 	{

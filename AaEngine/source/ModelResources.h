@@ -4,40 +4,42 @@
 #include "RenderSystem.h"
 #include "VertexBufferModel.h"
 #include "ResourceUploadBatch.h"
-#include "ResourceGroup.h"
 
 struct ModelLoadContext
 {
-	ResourceGroup group = ResourceGroup::General;
 	std::string folder;
+	bool persistent = false;
 };
 
 class ModelResources
 {
 public:
 
-	ModelResources(ID3D12Device& device);
+	ModelResources(RenderSystem& rs);
 	~ModelResources();
 
 	VertexBufferModel* getModel(const std::string& name, ResourceUploadBatch& batch, const ModelLoadContext& ctx);
-	VertexBufferModel* getLoadedModel(const std::string& name, ResourceGroup group);
-	void addLoadedModel(const std::string& name, VertexBufferModel*, ResourceGroup group = ResourceGroup::General);
+	VertexBufferModel* getCoreModel(const std::string& name);
+	void addLoadedModel(const std::string& name, VertexBufferModel*, const std::string& group);
 
-	UINT preloadFolder(ResourceUploadBatch& batch, const ModelLoadContext& ctx);
-
-	void clear(ResourceGroup group = ResourceGroup::General);
+	void clear();
 
 private:
 
 	ID3D12Device& device;
+
+	UINT preloadFolder(ResourceUploadBatch& batch, const ModelLoadContext& ctx);
 
 	VertexBufferModel* loadModel(const std::string& name, ResourceUploadBatch& batch, const ModelLoadContext& ctx);
 
 	using ModelLibrary = std::map<std::string, VertexBufferModel*>;
 	struct ModelLibraryGroup
 	{
-		ResourceGroup groupType;
+		std::string name;
+		bool persistent{};
 		ModelLibrary models;
 	};
 	std::vector<ModelLibraryGroup> groups;
+
+	ModelLibrary& getGroupLibrary(const ModelLoadContext& ctx);
 };

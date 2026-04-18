@@ -197,7 +197,6 @@
     <ClInclude Include="source\PrepareFrameTask.h" />
     <ClInclude Include="source\ProgressiveTerrain.h" />
     <ClInclude Include="source\RenderTargetHeap.h" />
-    <ClInclude Include="source\ResourceGroup.h" />
     <ClInclude Include="source\ResourcesView.h" />
     <ClInclude Include="source\SceneCollection.h" />
     <ClInclude Include="source\SceneEntity.h" />

@@ -386,6 +386,6 @@ void SceneRenderTask::updateVoxelsDebugView(SceneEntity& debugVoxel, Camera& cam
 	auto pos = camera.getPosition() - orientation * Vector3(0, 5.f, 0) + camera.getCameraDirection() * 1.75;
 
 	debugVoxel.material = provider.resources.materials.getMaterial("VisualizeVoxelTexture");
-	debugVoxel.geometry.fromModel(*provider.resources.models.getLoadedModel("box.mesh", ResourceGroup::Core));
+	debugVoxel.geometry.fromModel(*provider.resources.models.getCoreModel("box.mesh"));
 	debugVoxel.setTransformation({ orientation, pos, Vector3(10, 10, 1) }, true);
 }

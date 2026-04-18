@@ -13,17 +13,18 @@ void VegetationTrees::initialize(GraphicsResources& resources, ResourceUploadBat
 	treeData.trunkMaterial = resources.materials.getMaterial("TreeTrunk", batch);
 	treeData.branchMaterial = resources.materials.getMaterial("TreeBranch", batch);
 
-	treeData.lod[0].trunkModel = resources.models.getModel("treeTrunk.mesh", batch, {ResourceGroup::Core});
-	treeData.lod[0].branchModel = resources.models.getModel("treeBranch.mesh", batch, { ResourceGroup::Core });
+	ModelLoadContext modelCtx = { .folder = "meshes/simpleTree", .persistent = true };
+	treeData.lod[0].trunkModel = resources.models.getModel("treeTrunk.mesh", batch, modelCtx);
+	treeData.lod[0].branchModel = resources.models.getModel("treeBranch.mesh", batch, modelCtx);
 
-	treeData.lod[1].trunkModel = resources.models.getModel("treeTrunkLod1.mesh", batch, { ResourceGroup::Core });
-	treeData.lod[1].branchModel = resources.models.getModel("treeBranchLod1.mesh", batch, { ResourceGroup::Core });
+	treeData.lod[1].trunkModel = resources.models.getModel("treeTrunkLod1.mesh", batch, modelCtx);
+	treeData.lod[1].branchModel = resources.models.getModel("treeBranchLod1.mesh", batch, modelCtx);
 
-	treeData.lod[2].trunkModel = resources.models.getModel("treeTrunkLod2.mesh", batch, { ResourceGroup::Core });
-	treeData.lod[2].branchModel = resources.models.getModel("treeBranchLod2.mesh", batch, { ResourceGroup::Core });
+	treeData.lod[2].trunkModel = resources.models.getModel("treeTrunkLod2.mesh", batch, modelCtx);
+	treeData.lod[2].branchModel = resources.models.getModel("treeBranchLod2.mesh", batch, modelCtx);
 
 	sphereMaterial = resources.materials.getMaterial("TriplanarTest", batch);
-	sphereModel = resources.models.getModel("sphere.mesh", batch, { ResourceGroup::Core });
+	sphereModel = resources.models.getCoreModel("sphere.mesh");
 }
 
 void VegetationTrees::clear()

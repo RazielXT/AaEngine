@@ -55,7 +55,7 @@ static SceneCollection::Data ProcessGLTF(const tinygltf::Model& data, SceneColle
 			idx++;
 
 			auto model = info.mesh.model = new VertexBufferModel();
-			ctx.resources.models.addLoadedModel(info.name, model);
+			ctx.resources.models.addLoadedModel(info.name, model, loadInfo.name);
 
 			// Vertex buffer
 			{

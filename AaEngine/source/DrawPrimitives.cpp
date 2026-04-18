@@ -5,7 +5,7 @@
 
 BoundingBoxDraw::BoundingBoxDraw(GraphicsResources& r, const std::vector<DXGI_FORMAT>& targets) : resources(r)
 {
-	model = resources.models.getLoadedModel("box.mesh", ResourceGroup::Core);
+	model = resources.models.getCoreModel("box.mesh");
 	material = resources.materials.getMaterial("BoundingBox")->Assign(model->vertexLayout, targets);
 }
 

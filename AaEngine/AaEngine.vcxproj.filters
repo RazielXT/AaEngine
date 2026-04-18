@@ -543,9 +543,6 @@
     <ClInclude Include="source\SceneSkybox.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="source\ResourceGroup.h">
-      <Filter>Source Files\Resources</Filter>
-    </ClInclude>
     <ClInclude Include="source\TextureResources.h">
       <Filter>Source Files\Resources\Textures</Filter>
     </ClInclude>

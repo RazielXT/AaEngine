@@ -8,13 +8,22 @@
 #include <filesystem>
 
 static ModelResources* instance = nullptr;
+const std::string CoreGroup = "meshes/core";
 
-ModelResources::ModelResources(ID3D12Device& d) : device(d)
+ModelResources::ModelResources(RenderSystem& rs) : device(*rs.core.device)
 {
 	if (instance)
 		throw std::exception("Duplicate AaModelResources");
 
 	instance = this;
+
+	ResourceUploadBatch batch(rs.core.device);
+	batch.Begin();
+
+	preloadFolder(batch, { CoreGroup, true });
+
+	auto uploadResourcesFinished = batch.End(rs.core.commandQueue);
+	uploadResourcesFinished.wait();
 }
 
 ModelResources::~ModelResources()
@@ -30,64 +39,38 @@ ModelResources::~ModelResources()
 
 VertexBufferModel* ModelResources::getModel(const std::string& filename, ResourceUploadBatch& batch, const ModelLoadContext& ctx)
 {
-	ModelLibraryGroup* group = nullptr;
-
-	for (auto& g : groups)
+	auto& models = getGroupLibrary(ctx);
 	{
-		if (g.groupType == ctx.group)
-		{
-			group = &g;
-		}
-	}
+		auto it = models.find(filename);
 
-	if (group)
-	{
-		auto it = group->models.find(filename);
-
-		if (it != group->models.end())
+		if (it != models.end())
 			return it->second;
-	}
-	else
-	{
-		group = &groups.emplace_back(ModelLibraryGroup{ ctx.group });
 	}
 
 	VertexBufferModel* m = loadModel(filename, batch, ctx);
 	if (m)
-		group->models[filename] = m;
+		models[filename] = m;
 
 	return m;
 }
 
-VertexBufferModel* ModelResources::getLoadedModel(const std::string& filename, ResourceGroup group)
+VertexBufferModel* ModelResources::getCoreModel(const std::string& filename)
 {
-	for (auto& g : groups)
-	{
-		if (g.groupType == group)
-		{
-			auto it = g.models.find(filename);
+	auto& models = getGroupLibrary({ CoreGroup });
+	auto it = models.find(filename);
 
-			return it == g.models.end() ? nullptr : it->second;
-		}
-	}
-
-	return nullptr;
+	return it == models.end() ? nullptr : it->second;
 }
 
-void ModelResources::addLoadedModel(const std::string& name, VertexBufferModel* m, ResourceGroup group)
+void ModelResources::addLoadedModel(const std::string& name, VertexBufferModel* m, const std::string& group)
 {
-	for (auto& g : groups)
-	{
-		if (g.groupType == group)
-		{
-			auto& model = g.models[name];
+	auto& models = getGroupLibrary({ group });
+	auto& model = models[name];
 
-			if (model)
-				FileLogger::logError("Duplicate mesh " + name);
+	if (model)
+		FileLogger::logError("Duplicate mesh " + name);
 
-			model = m;
-		}
-	}
+	model = m;
 }
 
 UINT ModelResources::preloadFolder(ResourceUploadBatch& batch, const ModelLoadContext& ctx)
@@ -95,7 +78,7 @@ UINT ModelResources::preloadFolder(ResourceUploadBatch& batch, const ModelLoadCo
 	UINT c{};
 	std::error_code ec;
 
-	for (const auto& entry : std::filesystem::directory_iterator(ctx.folder, ec))
+	for (const auto& entry : std::filesystem::directory_iterator(SCENE_DIRECTORY + ctx.folder, ec))
 	{
 		if (entry.is_regular_file())
 		{
@@ -107,11 +90,11 @@ UINT ModelResources::preloadFolder(ResourceUploadBatch& batch, const ModelLoadCo
 	return c;
 }
 
-void ModelResources::clear(ResourceGroup group)
+void ModelResources::clear()
 {
 	for (auto it = groups.begin(); it != groups.end(); it++)
 	{
-		if (it->groupType == group)
+		if (!it->persistent)
 		{
 			for (auto& m : it->models)
 				delete m.second;
@@ -128,7 +111,9 @@ VertexBufferModel* ModelResources::loadModel(const std::string& filename, Resour
 
 	FileLogger::log("Loading mesh file " + filename);
 
-	std::string filepath = ctx.folder + filename;
+	std::string filepath = SCENE_DIRECTORY + ctx.folder;
+	if (!filepath.ends_with('\\')) filepath += '\\';
+	filepath += filename;
 
 	if (filename.ends_with("mesh"))
 	{
@@ -157,4 +142,15 @@ VertexBufferModel* ModelResources::loadModel(const std::string& filename, Resour
 		FileLogger::logError("Model " + filename + " failed to load");
 
 	return model;
+}
+
+ModelResources::ModelLibrary& ModelResources::getGroupLibrary(const ModelLoadContext& ctx)
+{
+	for (auto& g : groups)
+	{
+		if (g.name == ctx.folder)
+			return g.models;
+	}
+
+	return groups.emplace_back(ctx.folder, ctx.persistent).models;
 }

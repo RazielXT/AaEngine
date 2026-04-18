@@ -32,7 +32,7 @@ void PrefabLoader::load(const std::string& path, SceneCollection::LoadCtx ctx)
 			}
 			else if (param.type == "model")
 			{
-				model = ctx.resources.models.getLoadedModel(param.value, { ResourceGroup::Core });
+				model = ctx.resources.models.getCoreModel(param.value);
 			}
 		}
 

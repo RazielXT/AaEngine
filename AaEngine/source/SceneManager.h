@@ -93,6 +93,7 @@ private:
 	std::vector<EntityChangeDescritpion> changes;
 
 	std::unordered_map<std::string, SceneEntity*> entityMap;
+	std::unordered_map<std::string, int> entityDuplicateCounterMap;
 
 	std::vector<std::unique_ptr<RenderQueue>> queues;
 

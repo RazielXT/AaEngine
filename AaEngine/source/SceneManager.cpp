@@ -39,7 +39,16 @@ void SceneManager::update()
 
 SceneEntity* SceneManager::createEntity(const std::string& name, EntityCreateProperties props)
 {
-	auto nameIt = entityMap.try_emplace(name, nullptr).first;
+	auto [nameIt, uniqueName] = entityMap.try_emplace(name, nullptr);
+
+	if (!uniqueName)
+	{
+		auto& counter = entityDuplicateCounterMap[name];
+
+		while (!uniqueName)
+			std::tie(nameIt, uniqueName) = entityMap.try_emplace(name + '_' + std::to_string(++counter), nullptr);
+	}
+
 	auto ent = nameIt->second = new SceneEntity(*getRenderables(props.order), nameIt->first, props.groupId);
 
 	changes.emplace_back(EntityChange::Add, props.order, ent, ent->getGlobalId(), props.suborder);
@@ -261,6 +270,7 @@ void SceneManager::clear()
 	}
 
 	entityMap.clear();
+	entityDuplicateCounterMap.clear();
 
 	resetEntityGroups();
 

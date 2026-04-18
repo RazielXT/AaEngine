@@ -9,7 +9,7 @@ void SceneCollection::loadScene(const Data& data, LoadCtx ctx)
 	for (const auto& e : data.entities)
 	{
 		auto material = ctx.resources.materials.getMaterial(e.materialName, ctx.batch);
-		auto model = e.mesh.model;
+		auto model = ctx.resources.models.getModel(e.mesh.name, ctx.batch, { data.path });
 
 		EntityCreateProperties props;
 		props.groupId = groupId;

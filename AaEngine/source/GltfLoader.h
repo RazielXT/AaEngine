@@ -11,5 +11,5 @@ struct GraphicsResources;
 
 namespace GltfLoader
 {
-	SceneCollection::Data load(const std::string& filename, SceneCollection::LoadCtx ctx);
+	SceneCollection::Data load(const std::string& path, SceneCollection::LoadCtx ctx);
 };

@@ -13,7 +13,7 @@ namespace SceneCollection
 {
 	struct Mesh
 	{
-		VertexBufferModel* model;
+		std::string name;
 	};
 
 	struct Entity
@@ -27,6 +27,7 @@ namespace SceneCollection
 	struct Data
 	{
 		std::string name;
+		std::string path;
 		std::vector<Entity> entities;
 	};
 

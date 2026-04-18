@@ -455,8 +455,8 @@ void Editor::prepareElements(Camera& camera)
 				tr.position = pickInfo.position;
 				tr.position.y += 2;
 
-				// 				if (addTreeNormals)
-				// 					tr.orientation *= Quaternion::FromToRotation(Vector3::UnitY, pickInfo.normal);
+// 				if (addTreeNormals)
+// 					tr.orientation *= Quaternion::FromToRotation(Vector3::UnitY, pickInfo.normal);
 			}
 			else
 			{

@@ -20,6 +20,8 @@ public:
 
 	VertexBufferModel* getModel(const std::string& name, ResourceUploadBatch& batch, const ModelLoadContext& ctx);
 	VertexBufferModel* getCoreModel(const std::string& name);
+
+	VertexBufferModel* addLoadedModel(const std::string& name, const std::string& group);
 	void addLoadedModel(const std::string& name, VertexBufferModel*, const std::string& group);
 
 	void clear();

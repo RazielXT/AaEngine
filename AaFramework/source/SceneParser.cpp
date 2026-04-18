@@ -325,7 +325,7 @@ SceneParser::Result SceneParser::load(std::filesystem::path path, Ctx parseCtx)
 
 	groupId = ctx->sceneMgr.createEntityGroup(path.filename().string());
 
- 	loadFolder = path.parent_path().string() + "\\";
+ 	loadFolder = path.parent_path().string();
 
 	if (loadFolder.starts_with(SCENE_DIRECTORY))
 		loadFolder.erase(0, SCENE_DIRECTORY.length());

@@ -11,6 +11,7 @@
 #include "GraphicsResources.h"
 #include "ObjectId.h"
 #include "SceneManager.h"
+#include "Directories.h"
 
 static std::pair<const char*, DXGI_FORMAT> ParseGltfElement(const std::string& name, int type)
 {
@@ -34,9 +35,10 @@ static std::pair<const char*, DXGI_FORMAT> ParseGltfElement(const std::string& n
 	return { semanticName, format };
 }
 
-static SceneCollection::Data ProcessGLTF(const tinygltf::Model& data, SceneCollection::LoadCtx& ctx)
+static SceneCollection::Data ProcessGLTF(const tinygltf::Model& data, const std::string& path, SceneCollection::LoadCtx& ctx)
 {
 	SceneCollection::Data loadInfo;
+	loadInfo.path = path;
 
 	if (!data.buffers.empty())
 		loadInfo.name = data.buffers.front().uri;
@@ -54,67 +56,69 @@ static SceneCollection::Data ProcessGLTF(const tinygltf::Model& data, SceneColle
 				info.name += "_" + std::to_string(idx);
 			idx++;
 
-			auto model = info.mesh.model = new VertexBufferModel();
-			ctx.resources.models.addLoadedModel(info.name, model, loadInfo.name);
+			info.mesh.name = info.name;
 
-			// Vertex buffer
+			if (auto model = ctx.resources.models.addLoadedModel(info.name, path))
 			{
-				size_t vertexCount{};
-				std::vector<const uint8_t*> dataBuffers;
-
-				for (const auto& attr : prim.attributes)
+				// Vertex buffer
 				{
-					const tinygltf::Accessor& acc = data.accessors[attr.second];
-					const tinygltf::BufferView& view = data.bufferViews[acc.bufferView];
-					const tinygltf::Buffer& buf = data.buffers[view.buffer];
+					size_t vertexCount{};
+					std::vector<const uint8_t*> dataBuffers;
 
-					auto e = ParseGltfElement(attr.first, acc.type);
-
-					if (!e.first)
-						continue;
-
-					model->addLayoutElement(e.second, e.first);
-					dataBuffers.push_back(buf.data.data() + view.byteOffset + acc.byteOffset);
-
-					vertexCount = acc.count;
-				}
-
-				const auto vertexSize = model->getLayoutVertexSize(0);
-
-				std::vector<char> vbData;
-				vbData.resize(vertexSize * vertexCount);
-
-				for (size_t i = 0; i < model->vertexLayout.size(); i++)
-				{
-					const auto& element = model->vertexLayout[i];
-					auto elementSize = model->getFormatSize(element.Format);
-					auto elementData = dataBuffers[i];
-
-					for (size_t i = 0; i < vertexCount; i++)
+					for (const auto& attr : prim.attributes)
 					{
-						memcpy(&vbData[i * vertexSize + element.AlignedByteOffset], &elementData[i * elementSize], elementSize);
+						const tinygltf::Accessor& acc = data.accessors[attr.second];
+						const tinygltf::BufferView& view = data.bufferViews[acc.bufferView];
+						const tinygltf::Buffer& buf = data.buffers[view.buffer];
+
+						auto e = ParseGltfElement(attr.first, acc.type);
+
+						if (!e.first)
+							continue;
+
+						model->addLayoutElement(e.second, e.first);
+						dataBuffers.push_back(buf.data.data() + view.byteOffset + acc.byteOffset);
+
+						vertexCount = acc.count;
 					}
+
+					const auto vertexSize = model->getLayoutVertexSize(0);
+
+					std::vector<char> vbData;
+					vbData.resize(vertexSize * vertexCount);
+
+					for (size_t i = 0; i < model->vertexLayout.size(); i++)
+					{
+						const auto& element = model->vertexLayout[i];
+						auto elementSize = model->getFormatSize(element.Format);
+						auto elementData = dataBuffers[i];
+
+						for (size_t i = 0; i < vertexCount; i++)
+						{
+							memcpy(&vbData[i * vertexSize + element.AlignedByteOffset], &elementData[i * elementSize], elementSize);
+						}
+					}
+
+					model->vertexCount = vertexCount;
+					model->CreateVertexBuffer(ctx.renderSystem.core.device, &ctx.batch, vbData.data(), vertexCount, vertexSize);
 				}
 
-				model->vertexCount = vertexCount;
-				model->CreateVertexBuffer(ctx.renderSystem.core.device, &ctx.batch, vbData.data(), vertexCount, vertexSize);
+				// Index buffer
+				{
+					const tinygltf::Accessor& idxAcc = data.accessors[prim.indices];
+					const tinygltf::BufferView& idxView = data.bufferViews[idxAcc.bufferView];
+					const tinygltf::Buffer& idxBuf = data.buffers[idxView.buffer];
+
+					model->indexCount = idxAcc.count;
+
+					auto indices = idxBuf.data.data() + idxView.byteOffset + idxAcc.byteOffset;
+
+					if (idxAcc.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT)
+						model->CreateIndexBuffer(ctx.renderSystem.core.device, &ctx.batch, (const uint16_t*)indices, idxAcc.count);
+					else
+						model->CreateIndexBuffer(ctx.renderSystem.core.device, &ctx.batch, (const uint32_t*)indices, idxAcc.count);
+				}
 			}		
-
-			// Index buffer
-			{
-				const tinygltf::Accessor& idxAcc = data.accessors[prim.indices];
-				const tinygltf::BufferView& idxView = data.bufferViews[idxAcc.bufferView];
-				const tinygltf::Buffer& idxBuf = data.buffers[idxView.buffer];
-
-				model->indexCount = idxAcc.count;
-
-				auto indices = idxBuf.data.data() + idxView.byteOffset + idxAcc.byteOffset;
-
-				if (idxAcc.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT)
-					model->CreateIndexBuffer(ctx.renderSystem.core.device, &ctx.batch, (const uint16_t*)indices, idxAcc.count);
-				else
-					model->CreateIndexBuffer(ctx.renderSystem.core.device, &ctx.batch, (const uint32_t*)indices, idxAcc.count);
-			}
 
 			if (prim.material >= 0)
 				info.materialName = data.materials[prim.material].name;
@@ -169,5 +173,10 @@ SceneCollection::Data GltfLoader::load(const std::string& path, SceneCollection:
 		return {};
 	}
 
-	return ProcessGLTF(gltfModel, ctx);
+	auto loadFolder = path;
+
+	if (loadFolder.starts_with(SCENE_DIRECTORY))
+		loadFolder.erase(0, SCENE_DIRECTORY.length());
+
+	return ProcessGLTF(gltfModel, loadFolder, ctx);
 }

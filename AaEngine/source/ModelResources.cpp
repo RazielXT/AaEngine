@@ -73,6 +73,17 @@ void ModelResources::addLoadedModel(const std::string& name, VertexBufferModel* 
 	model = m;
 }
 
+VertexBufferModel* ModelResources::addLoadedModel(const std::string& name, const std::string& group)
+{
+	auto& models = getGroupLibrary({ group });
+	auto& model = models[name];
+
+	if (model)
+		return nullptr;
+
+	return model = new VertexBufferModel();
+}
+
 UINT ModelResources::preloadFolder(ResourceUploadBatch& batch, const ModelLoadContext& ctx)
 {
 	UINT c{};
@@ -92,15 +103,16 @@ UINT ModelResources::preloadFolder(ResourceUploadBatch& batch, const ModelLoadCo
 
 void ModelResources::clear()
 {
-	for (auto it = groups.begin(); it != groups.end(); it++)
+	for (auto it = groups.begin(); it != groups.end();)
 	{
-		if (!it->persistent)
+		if (it->persistent)
+			it++;
+		else
 		{
 			for (auto& m : it->models)
 				delete m.second;
 
-			groups.erase(it);
-			return;
+			it = groups.erase(it);
 		}
 	}
 }

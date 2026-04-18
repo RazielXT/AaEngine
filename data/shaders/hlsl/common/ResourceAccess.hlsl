@@ -32,6 +32,11 @@ Texture2DArray<float> GetTexture2DArray1f(uint index)
 	return ResourceDescriptorHeap[index];
 }
 
+TextureCube<float4> GetTextureCube(uint index)
+{
+	return ResourceDescriptorHeap[index];
+}
+
 Texture3D<float4> GetTexture3D(uint index)
 {
 	return ResourceDescriptorHeap[index];

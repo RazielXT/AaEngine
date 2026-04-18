@@ -1,4 +1,5 @@
 #include "ShadowsPssm.hlsl"
+#include "hlsl/common/ResourceAccess.hlsl"
 #include "hlsl/utils/blueNoise.hlsl"
 #include "hlsl/utils/srgb.hlsl"
 
@@ -54,11 +55,6 @@ struct PSOutput
 };
 
 SamplerState LinearSampler : register(s0);
-
-Texture2D<float4> GetTexture(uint index)
-{
-	return ResourceDescriptorHeap[index];
-}
 
 float hash(float3 p)
 {
@@ -203,7 +199,7 @@ float3 StarFieldTexture(float3 dir)
     dx *= polarWeight;
     dy *= polarWeight;
 
-    return GetTexture(TexIdNightSky).SampleGrad(LinearSampler, uv, dx, dy).rgb * 0.2;
+    return GetTexture2D(TexIdNightSky).SampleGrad(LinearSampler, uv, dx, dy).rgb * 0.2;
 }
 
 PSOutput PSMain(VSOut input)
@@ -216,12 +212,12 @@ PSOutput PSMain(VSOut input)
 	float sunViewDot01 = (sunDot + 1.0) * 0.5;
 	float sunZenithDot01 = (sunZenithDot + 1.0) * 0.5;
 
-	float3 sunZenithColor = GetTexture(Sun.TexIdSunZenith).Sample(LinearSampler, float2(sunZenithDot01, 0.5)).rgb * 0.5;
+    float3 sunZenithColor = GetTexture2D(Sun.TexIdSunZenith).Sample(LinearSampler, float2(sunZenithDot01, 0.5)).rgb * 0.5;
 
-	float3 viewZenithColor = GetTexture(Sun.TexIdViewZenith).Sample(LinearSampler, float2(sunZenithDot01, 0.5)).rgb * 0.5;
+    float3 viewZenithColor = GetTexture2D(Sun.TexIdViewZenith).Sample(LinearSampler, float2(sunZenithDot01, 0.5)).rgb * 0.5;
 	float vzMask = pow(saturate(1.0 - skyDir.y), 4);
 
-	float3 sunViewColor = GetTexture(Sun.TexIdSunView).Sample(LinearSampler, float2(sunZenithDot01, 0.5)).rgb;
+    float3 sunViewColor = GetTexture2D(Sun.TexIdSunView).Sample(LinearSampler, float2(sunZenithDot01, 0.5)).rgb;
 	float svMask = pow(saturate(sunDot), 4);
 
 	// Night factor: fade stars in when sun is below horizon

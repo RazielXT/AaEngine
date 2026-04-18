@@ -2,6 +2,7 @@
 #include "WorldReconstruction.hlsl"
 #include "hlsl/ShadowsPssm.hlsl"
 #include "hlsl/skyFog.hlsl"
+#include "hlsl/common/ResourceAccess.hlsl"
 
 float4x4 InvViewProjectionMatrix;
 float3 CameraPosition;
@@ -20,11 +21,6 @@ Texture2D vctMap : register(t4);
 
 SamplerState ShadowSampler : register(s0);
 SamplerState LinearSampler : register(s1);
-
-Texture2D<float4> GetTexture(uint index)
-{
-	return ResourceDescriptorHeap[index];
-}
 
 float4 PSMain(VS_OUTPUT input) : SV_TARGET
 {

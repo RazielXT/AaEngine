@@ -1,5 +1,6 @@
 #include "VoxelConeTracingCommon.hlsl"
 #include "ShadowsCommon.hlsl"
+#include "hlsl/common/ResourceAccess.hlsl"
 
 #ifdef GRID
 #define GRID_PADDING
@@ -152,16 +153,6 @@ void GS_Main(triangle GS_Input input[3], inout TriangleStream<PS_Input> triStrea
 	}
 }
 
-Texture2D<float4> GetTexture(uint index)
-{
-	return ResourceDescriptorHeap[index];
-}
-
-Texture3D<float4> GetTexture3D(uint index)
-{
-	return ResourceDescriptorHeap[index];
-}
-
 float readShadowmap(Texture2D shadowmap, float2 shadowCoord)
 {
 	return shadowmap.SampleLevel(ShadowSampler, shadowCoord, 0).r;
@@ -169,7 +160,7 @@ float readShadowmap(Texture2D shadowmap, float2 shadowCoord)
 
 float getShadow(float4 wp)
 {
-	Texture2D shadowmap = GetTexture(ShadowMapIdx);
+	Texture2D shadowmap = GetTexture2D(ShadowMapIdx);
 	float4 sunLookPos = mul(wp, ShadowMatrix);
 	sunLookPos.xy = sunLookPos.xy / sunLookPos.w;
 	sunLookPos.xy /= float2(2, -2);
@@ -182,7 +173,7 @@ float getShadow(float4 wp)
 
 float4 PS_Main(PS_Input pin) : SV_TARGET
 {
-	SamplerState sampler = SamplerDescriptorHeap[0];
+	SamplerState sampler = GetDynamicMaterialSamplerLinear();
 
 #ifdef GRID
 	float3 worldNormal = ReadGridNormal(ResourceDescriptorHeap[TexIdNormalmap], LinearSampler, pin.uv);
@@ -193,7 +184,7 @@ float4 PS_Main(PS_Input pin) : SV_TARGET
 	float3x3 worldMatrix = (float3x3)WorldMatrix;
 	float3 worldNormal = normalize(mul(pin.normal, worldMatrix));
 
-	float3 diffuse = MaterialColor * GetTexture(TexIdDiffuse).Sample(sampler, pin.uv).rgb;
+	float3 diffuse = MaterialColor * GetTexture2D(TexIdDiffuse).Sample(sampler, pin.uv).rgb;
 #endif
 
 	float shadow = getShadow(pin.wp);

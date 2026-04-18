@@ -1,6 +1,7 @@
 #include "PostProcessCommon.hlsl"
 #include "WorldReconstruction.hlsl"
 #include "hlsl/VoxelConeTracingCommon.hlsl"
+#include "hlsl/common/ResourceAccess.hlsl"
 
 float4x4 InvViewProjectionMatrix;
 float3 CameraPosition;
@@ -16,11 +17,6 @@ Texture2D<float> depthMap : register(t1);
 
 SamplerState VoxelSampler : register(s0);
 SamplerState PointSampler : register(s1);
-
-Texture3D<float4> GetTexture3D(uint index)
-{
-	return ResourceDescriptorHeap[index];
-}
 
 float4 PSMain(VS_OUTPUT input) : SV_TARGET
 {

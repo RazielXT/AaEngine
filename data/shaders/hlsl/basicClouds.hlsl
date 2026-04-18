@@ -1,5 +1,6 @@
 #include "ShadowsPssm.hlsl"
 #include "hlsl/skyFog.hlsl"
+#include "hlsl/common/ResourceAccess.hlsl"
 
 float4x4 ViewProjectionMatrix;
 uint TexIdNoises;
@@ -22,15 +23,10 @@ struct PSInput
 
 SamplerState LinearWrapSampler : register(s0);
 
-Texture2D<float4> GetTexture(uint index)
-{
-	return ResourceDescriptorHeap[index];
-}
-
 float GetHeight(float2 uv)
 {
-    float noiseHeight  = GetTexture(TexIdNoises).SampleLevel(LinearWrapSampler, (uv + Time * Sun.CloudsSpeed), 0).x;
-    float noiseHeight2 = GetTexture(TexIdNoises).SampleLevel(LinearWrapSampler, (uv + Time * Sun.CloudsSpeed * 2.1) / 2, 0).z;
+	float noiseHeight  = GetTexture2D(TexIdNoises).SampleLevel(LinearWrapSampler, (uv + Time * Sun.CloudsSpeed), 0).x;
+	float noiseHeight2 = GetTexture2D(TexIdNoises).SampleLevel(LinearWrapSampler, (uv + Time * Sun.CloudsSpeed * 2.1) / 2, 0).z;
     return (noiseHeight + noiseHeight2 + Sun.CloudsAmount) / 2;
 }
 
@@ -104,17 +100,17 @@ float3 applyFog(float3 worldPosition, float3 baseColor)
 
 PSOutput PSMain(PSInput input)
 {
-	SamplerState sampler = SamplerDescriptorHeap[0];
+	SamplerState sampler = GetDynamicMaterialSamplerLinear();
 
 	float2 borders = input.uv;
 	float fade = borderBlend(borders, 0.2f);
 
-	float weight = GetTexture(TexIdNoises).Sample(sampler, (input.uv + Time * Sun.CloudsSpeed)).x + Sun.CloudsAmount * 0.5;
-	float weight2 = GetTexture(TexIdNoises).Sample(sampler, (input.uv + Time * Sun.CloudsSpeed * 2.1) / 2).z + Sun.CloudsAmount * 0.5;
+	float weight = GetTexture2D(TexIdNoises).Sample(sampler, (input.uv + Time * Sun.CloudsSpeed)).x + Sun.CloudsAmount * 0.5;
+	float weight2 = GetTexture2D(TexIdNoises).Sample(sampler, (input.uv + Time * Sun.CloudsSpeed * 2.1) / 2).z + Sun.CloudsAmount * 0.5;
 	weight = weight * weight2 * 3;
 
-	float weightDetail = GetTexture(TexIdNoises).Sample(sampler, (input.uv + Time * Sun.CloudsSpeed * 0.81) * 10).z;
-	weightDetail *= GetTexture(TexIdNoises).Sample(sampler, (input.uv + float2(0, 0.5) + Time * Sun.CloudsSpeed * 1.1331) * 9).z;
+	float weightDetail = GetTexture2D(TexIdNoises).Sample(sampler, (input.uv + Time * Sun.CloudsSpeed * 0.81) * 10).z;
+	weightDetail *= GetTexture2D(TexIdNoises).Sample(sampler, (input.uv + float2(0, 0.5) + Time * Sun.CloudsSpeed * 1.1331) * 9).z;
 	weight = smoothstep(0.4, 1, (weight - weightDetail * 0.3) * fade);
 
 	float eps = 0.01f;

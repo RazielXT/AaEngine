@@ -1,6 +1,8 @@
 float4 vertices[4];
 uint TextureIndex;
 
+#include "hlsl/common/ResourceAccess.hlsl"
+
 static const float2 uv[4] = {
     float2(1.0f, 1.0f),
     float2(0.0f, 1.0f),
@@ -30,13 +32,9 @@ VS_OUTPUT VSQuad(uint vIndex : SV_VertexId)
     return vout;
 }
 
-Texture2D<float4> GetTexture(uint index)
-{
-    return ResourceDescriptorHeap[index];
-}
 SamplerState LinearSampler : register(s0);
 
 float4 PSTexturePreview(VS_OUTPUT input) : SV_TARGET
 {
-    return GetTexture(TextureIndex).Sample(LinearSampler, input.uv);
+    return GetTexture2D(TextureIndex).Sample(LinearSampler, input.uv);
 }

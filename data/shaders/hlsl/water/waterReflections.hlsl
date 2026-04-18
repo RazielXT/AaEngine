@@ -1,6 +1,7 @@
 #include "hlsl/VoxelConeTracingCommon.hlsl"
 #include "hlsl/postprocess/WorldReconstruction.hlsl"
 #include "hlsl/postprocess/PostProcessCommon.hlsl"
+#include "hlsl/common/ResourceAccess.hlsl"
 
 float4x4 WorldMatrix;
 float4x4 ViewProjectionMatrix;
@@ -19,16 +20,6 @@ cbuffer SceneVoxelInfo : register(b1)
 {
 	SceneVoxelCbuffer VoxelInfo;
 };
-
-Texture2D<float4> GetTexture(uint index)
-{
-	return ResourceDescriptorHeap[index];
-}
-
-TextureCube<float4> GetTextureCube(uint index)
-{
-	return ResourceDescriptorHeap[index];
-}
 
 SamplerState LinearWrapSampler : register(s0);
 SamplerState DepthSampler : register(s1);
@@ -63,7 +54,7 @@ float4 GetReflection(
 {
 	//Texture2D DepthBufferVeryLow = GetTexture(TexIdSceneDepthVeryLow);
 	//Texture2D DepthBufferLow = GetTexture(TexIdSceneDepthLow);
-	Texture2D DepthBufferHigh = GetTexture(TexIdSceneDepthHigh);
+	Texture2D DepthBufferHigh = GetTexture2D(TexIdSceneDepthHigh);
 	float3 PrevRaySample = ScreenSpacePos;
 
 	float3 skyboxColor = GetTextureCube(TexIdSkybox).Sample(LinearWrapSampler, reflection).rgb;
@@ -136,7 +127,7 @@ float4 GetReflection(
 			}
 
 			float alpha = borderBlend(MidRaySample.xy, 0.15f);
-			float3 color = lerp(skyboxColor, GetTexture(TexIdSceneColor).Sample(LinearWrapSampler, MidRaySample.xy).rgb, alpha);
+			float3 color = lerp(skyboxColor, GetTexture2D(TexIdSceneColor).Sample(LinearWrapSampler, MidRaySample.xy).rgb, alpha);
 			return float4(color, 1);
 		}
 
@@ -163,17 +154,17 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 {
 	const float2 ScreenUV = input.TexCoord;
 
-	Texture2D WaterBuffer = GetTexture(TexIdWaterColor);
+	Texture2D WaterBuffer = GetTexture2D(TexIdWaterColor);
 	if (WaterBuffer.Sample(LinearWrapSampler, ScreenUV).a == 0)
 		return float4(0,0,0,0);
 
-	Texture2D DepthBuffer = GetTexture(TexIdWaterDepth);
+	Texture2D DepthBuffer = GetTexture2D(TexIdWaterDepth);
 	float worldZ = DepthBuffer.Sample(DepthSampler, ScreenUV).r;
 	float3 WorldPosition = ReconstructWorldPosition(ScreenUV, worldZ, InvViewProjectionMatrix);
 
 	float3 cameraVector = normalize(WorldPosition - CameraPosition);
 
-	float3 normal = GetTexture(TexIdWaterNormal).Sample(LinearWrapSampler,ScreenUV).rgb; 
+	float3 normal = GetTexture2D(TexIdWaterNormal).Sample(LinearWrapSampler,ScreenUV).rgb; 
 	float4 WorldNormal = float4(normal,1);
 
 	float4 ScreenSpacePos = float4(ScreenUV, worldZ, 1.f);

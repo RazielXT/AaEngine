@@ -1,4 +1,5 @@
 #include "hlsl/grid/heightmapGridReconstruction.hlsl"
+#include "hlsl/common/ResourceAccess.hlsl"
 #include "hlsl/common/ShaderOutputs.hlsl"
 
 float4x4 ViewProjectionMatrix;
@@ -158,16 +159,11 @@ void MSMain(
     }
 }
 
-Texture2D<float4> GetTexture(uint index)
-{
-	return ResourceDescriptorHeap[index];
-}
-
 GBufferOutput PSMain(VertexOut input)
 {
-	SamplerState diffuse_sampler = SamplerDescriptorHeap[0];
+	SamplerState diffuse_sampler = GetDynamicMaterialSamplerLinear();
 
-	float4 albedo = GetTexture(TexIdDiffuse).Sample(diffuse_sampler, input.UV);
+	float4 albedo = GetTexture2D(TexIdDiffuse).Sample(diffuse_sampler, input.UV);
 	//albedo.rgb *= MaterialColor;
 
 	GridTBN tbn = ReadGridTBN(ResourceDescriptorHeap[TexIdNormalmap], LinearSampler, input.UV);

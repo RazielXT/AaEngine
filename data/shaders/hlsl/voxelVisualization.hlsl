@@ -1,4 +1,5 @@
 #include "VoxelConeTracingCommon.hlsl"
+#include "hlsl/common/ResourceAccess.hlsl"
 
 float4x4 ViewProjectionMatrix;
 float4x4 WorldMatrix;
@@ -36,11 +37,6 @@ PS_Input VSMain(VS_Input vin)
 	vsOut.uv = vin.uv;
 
 	return vsOut;
-}
-
-Texture3D<float4> GetTexture3D(uint index)
-{
-	return ResourceDescriptorHeap[index];
 }
 
 struct PSOutput

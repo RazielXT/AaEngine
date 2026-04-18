@@ -10,15 +10,12 @@ uint TexIdTerrainColor;
 uint TexIdTerrainNormal;
 uint TexIdTerrainType;
 
+#include "hlsl/common/ResourceAccess.hlsl"
+
 struct GrassVertex { float3 start; float3 end; float3 color; float3 normal; float scale; };
 
 RWStructuredBuffer<GrassVertex> grassPos : register(u0);
 RWByteAddressBuffer counterBuffer : register(u1);
-
-Texture2D<float4> GetTexture(uint index)
-{
-    return ResourceDescriptorHeap[index];
-}
 
 SamplerState LinearSampler : register(s0);
 
@@ -62,7 +59,7 @@ void createGrassPositions(uint index, out float3 pos1, out float3 pos2)
 
 float getGrassHeight(float2 coords)
 {
-	float depth = GetTexture(TexIdTerrainDepth).SampleLevel(LinearSampler, coords, 0).r;
+	float depth = GetTexture2D(TexIdTerrainDepth).SampleLevel(LinearSampler, coords, 0).r;
 	return depth;
 
 	float z = depth * 2.0 - 1.0;
@@ -75,17 +72,17 @@ float getGrassHeight(float2 coords)
 
 float3 getGrassColor(float2 coords)
 {
-	return GetTexture(TexIdTerrainColor).SampleLevel(LinearSampler, coords, 0).rgb;
+	return GetTexture2D(TexIdTerrainColor).SampleLevel(LinearSampler, coords, 0).rgb;
 }
 
 float3 getGrassNormal(float2 coords)
 {
-	return GetTexture(TexIdTerrainNormal).SampleLevel(LinearSampler, coords, 0).rgb;
+	return GetTexture2D(TexIdTerrainNormal).SampleLevel(LinearSampler, coords, 0).rgb;
 }
 
 float3 getGrassType(float2 coords)
 {
-	return GetTexture(TexIdTerrainType).SampleLevel(LinearSampler, coords, 0).rgb;
+	return GetTexture2D(TexIdTerrainType).SampleLevel(LinearSampler, coords, 0).rgb;
 }
 
 [numthreads(128, 1, 1)]

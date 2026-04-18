@@ -2,6 +2,8 @@ uint TexIdTerrainDepth;
 float3 TerrainScale;
 float2 TerrainOffset;
 
+#include "hlsl/common/ResourceAccess.hlsl"
+
 struct VegetationInfo
 {
     float3 position;
@@ -12,11 +14,6 @@ struct VegetationInfo
 
 RWStructuredBuffer<VegetationInfo> infoBuffer : register(u0);
 RWByteAddressBuffer counterBuffer : register(u1);
-
-Texture2D<float> GetTexture(uint index)
-{
-    return ResourceDescriptorHeap[index];
-}
 SamplerState LinearWrapSampler : register(s0);
 
 float getRandom(float x, float z)
@@ -43,7 +40,7 @@ uint getVegetationInfo(out VegetationInfo info, float2 coords)
 	float3 TerrainScaleAdj = TerrainScale;
 	TerrainScaleAdj.xz *= (1024.f + 32.f) / 1024.f;
 
-	Texture2D<float> heightmap = GetTexture(TexIdTerrainDepth);
+	Texture2D<float> heightmap = GetTexture2D1f(TexIdTerrainDepth);
     float height = heightmap.SampleLevel(LinearWrapSampler, coords, 1);
     float heightRight = heightmap.SampleLevel(LinearWrapSampler, coords + float2(1 / TerrainScaleAdj.x, 0), 1);
     float heightUp = heightmap.SampleLevel(LinearWrapSampler, coords + float2(0, 1 / TerrainScaleAdj.z), 1);

@@ -1,4 +1,5 @@
 #include "hlsl/utils/normalReconstruction.hlsl"
+#include "hlsl/common/ResourceAccess.hlsl"
 
 float4x4 ViewProjectionMatrix;
 float4x4 WorldMatrix;
@@ -44,11 +45,6 @@ VSOutput VSMain(VSInput IN)
 	return vsOut;
 }
 
-Texture2D GetTexture(uint index)
-{
-	return ResourceDescriptorHeap[index];
-}
-
 float2 ParallaxMapping(float2 texCoords, float3 viewDir, Texture2D heightmap)
 {
 	const float minLayers = 8.0;
@@ -64,7 +60,7 @@ float2 ParallaxMapping(float2 texCoords, float3 viewDir, Texture2D heightmap)
 	float2 P = viewDir.xy * height_scale;
 	float2 deltaTexCoords = P / numLayers;
 
-	SamplerState samplerState = SamplerDescriptorHeap[0];
+	SamplerState samplerState = GetDynamicMaterialSamplerLinear();
 
 	float2 currentTexCoords = texCoords;
 	float currentDepthMapValue = heightmap.Sample(samplerState, currentTexCoords).r;
@@ -115,11 +111,11 @@ PSOutput PSMain(VSOutput input)
 	float3 tangentViewDir = normalize(TangentCamPos - TangentWorldPos);
 	tangentViewDir.x *= -1;
 
-	float2 texCoords = ParallaxMapping(input.TexCoords, tangentViewDir, GetTexture(TexIdHeightMap));
+	float2 texCoords = ParallaxMapping(input.TexCoords, tangentViewDir, GetTexture2D(TexIdHeightMap));
 
-	SamplerState samplerState = SamplerDescriptorHeap[0];
-	float3 albedo = GetTexture(TexIdAlbedo).Sample(samplerState, texCoords).rgb;
-	float3 normalTex = DecodeNormalTexture(GetTexture(TexIdNormalMap).Sample(samplerState, texCoords).xy);
+	SamplerState samplerState = GetDynamicMaterialSamplerLinear();
+	float3 albedo = GetTexture2D(TexIdAlbedo).Sample(samplerState, texCoords).rgb;
+	float3 normalTex = DecodeNormalTexture(GetTexture2D(TexIdNormalMap).Sample(samplerState, texCoords).xy);
 
 	float3 worldNormal = mul(TBN, normalTex.xyz);
 
@@ -132,7 +128,7 @@ PSOutput PSMain(VSOutput input)
 
 	float4 shadowPos = input.WorldPos;
 	//{
-		Texture2D depthMap = GetTexture(TexIdHeightMap);
+		Texture2D depthMap = GetTexture2D(TexIdHeightMap);
 		float offsetHeight = depthMap.Sample(samplerState, texCoords).r;
 
 		// Assuming you have the surface normal and tangent space basis
@@ -146,7 +142,7 @@ PSOutput PSMain(VSOutput input)
 */
 
 	{
-		Texture2D depthMap = GetTexture(TexIdHeightMap);
+		Texture2D depthMap = GetTexture2D(TexIdHeightMap);
 		float offsetHeight = depthMap.Sample(samplerState, texCoords).r;
 		albedo *= saturate(offsetHeight + 0.3);
 	}

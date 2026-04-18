@@ -8,6 +8,8 @@ float QuadUnitSize;
 float TerrainScale;
 uint TexIdTerrainDepth;
 
+#include "hlsl/common/ResourceAccess.hlsl"
+
 // Define the TerrainVertex structure
 struct TerrainVertex
 {
@@ -19,16 +21,11 @@ struct TerrainVertex
 };
 
 RWStructuredBuffer<TerrainVertex> vertexBuffer : register(u0);
-
-Texture2D<float> GetTexture(uint index)
-{
-    return ResourceDescriptorHeap[index];
-}
 SamplerState LinearWrapSampler : register(s0);
 
 float getTerrainHeight(float2 coords)
 {
-    float height = GetTexture(TexIdTerrainDepth).SampleLevel(LinearWrapSampler, (coords * TerrainScale) - 0.5, 1).r;
+	float height = GetTexture2D1f(TexIdTerrainDepth).SampleLevel(LinearWrapSampler, (coords * TerrainScale) - 0.5, 1).r;
     return height * HeightSize;
 }
 

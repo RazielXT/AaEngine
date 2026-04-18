@@ -1,5 +1,6 @@
 #include "VoxelConeTracingCommon.hlsl"
 #include "ShadowsCommon.hlsl"
+#include "hlsl/common/ResourceAccess.hlsl"
 
 #ifdef INSTANCED
 float4x4 ViewProjectionMatrix;
@@ -80,16 +81,6 @@ PS_Input VS_Main(VS_Input vin)
 	return vsOut;
 }
 
-Texture2D<float4> GetTexture(uint index)
-{
-	return ResourceDescriptorHeap[index];
-}
-
-Texture3D<float4> GetTexture3D(uint index)
-{
-	return ResourceDescriptorHeap[index];
-}
-
 SamplerState ShadowSampler : register(s2);
 
 float readShadowmap(Texture2D shadowmap, float2 shadowCoord)
@@ -99,7 +90,7 @@ float readShadowmap(Texture2D shadowmap, float2 shadowCoord)
 
 float getShadow(float4 wp)
 {
-	Texture2D shadowmap = GetTexture(Sun.TexIdShadowMap0 + 3);
+	Texture2D shadowmap = GetTexture2D(Sun.TexIdShadowMap0 + 3);
     float4 sunLookPos = mul(wp, Sun.ShadowMatrix[3]);
     sunLookPos.xy = sunLookPos.xy / sunLookPos.w;
 	sunLookPos.xy /= float2(2, -2);
@@ -127,7 +118,7 @@ float4 PS_Main(PS_Input pin) : SV_TARGET
 	float3 green = float3(0.5, 0.55, 0.3);
 	diffuse = lerp(diffuse, green, step(0.9,worldNormal.y));
 #else
-	float3 diffuse = MaterialColor * GetTexture(TexIdDiffuse).Sample(LinearWrapSampler, pin.uv).rgb;
+	float3 diffuse = MaterialColor * GetTexture2D(TexIdDiffuse).Sample(LinearWrapSampler, pin.uv).rgb;
 #endif
 
 	Texture3D SceneVoxelBounces = GetTexture3D(VoxelInfo.Voxels[VoxelIdx].TexIdPrev);

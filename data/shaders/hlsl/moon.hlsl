@@ -1,4 +1,5 @@
 #include "ShadowsPssm.hlsl"
+#include "hlsl/skyFog.hlsl"
 
 float4x4 ViewProjectionMatrix;
 float4x4 InvViewMatrix;
@@ -77,24 +78,6 @@ static const float AlphaThreshold = 0.8f;
 
 SamplerState LinearWrapSampler : register(s0);
 
-float3 SrgbToLinear(float3 srgbColor)
-{
-	return pow(srgbColor, 2.233333333);
-}
-
-float3 getFogColor(float3 dir)
-{
-	float sunZenithDot = -Sun.Direction.y;
-	float sunZenithDot01 = (sunZenithDot + 1.0) * 0.5;
-
-	float3 sunZenithColor = GetTexture(Sun.TexIdSunZenith).Sample(LinearWrapSampler, float2(sunZenithDot01, 0.5)).rgb;
-
-	float3 viewZenithColor = GetTexture(Sun.TexIdViewZenith).Sample(LinearWrapSampler, float2(sunZenithDot01, 0.5)).rgb;
-	float vzMask = pow(saturate(1.0 - dir.y), 4);
-
-	return SrgbToLinear(sunZenithColor + viewZenithColor * vzMask);
-}
-
 PSOutput PSMain(PSInput input)
 {
 	SamplerState colorSampler = SamplerDescriptorHeap[0];
@@ -125,7 +108,7 @@ PSOutput PSMain(PSInput input)
 		albedo.rgb *= phase;
 	}
 
-	albedo.rgb = lerp(getFogColor(Sun.Direction) * 0.25, albedo.rgb, saturate(Sun.Direction.y));
+	albedo.rgb = lerp(getFogColor(Sun.Direction, Sun, LinearWrapSampler) * 0.25, albedo.rgb, saturate(Sun.Direction.y));
 
 	PSOutput output;
 	output.albedo = float4(albedo.rgb, 1);

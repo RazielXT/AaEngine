@@ -1,5 +1,6 @@
 #include "ShadowsPssm.hlsl"
 #include "hlsl/utils/blueNoise.hlsl"
+#include "hlsl/utils/srgb.hlsl"
 
 float4x4 InvViewProjectionMatrix;
 float3 CameraPosition;
@@ -45,11 +46,6 @@ float3 ComputeSkyDir(float2 ndc)
 
 	// Ray direction from camera
 	return normalize(world.xyz - CameraPosition);
-}
-
-float3 SrgbToLinear(float3 srgbColor)
-{
-	return pow(srgbColor, 2.233333333);
 }
 
 struct PSOutput

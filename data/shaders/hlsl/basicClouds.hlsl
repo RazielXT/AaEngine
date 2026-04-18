@@ -1,4 +1,5 @@
 #include "ShadowsPssm.hlsl"
+#include "hlsl/skyFog.hlsl"
 
 float4x4 ViewProjectionMatrix;
 uint TexIdNoises;
@@ -89,29 +90,11 @@ float borderBlend(float2 uv, float edgeThreshold)
 	return alpha;
 }
 
-float3 SrgbToLinear(float3 srgbColor)
-{
-	return pow(srgbColor, 2.233333333);
-}
-
-float3 getFogColor(float3 dir)
-{
-	float sunZenithDot = -Sun.Direction.y;
-	float sunZenithDot01 = (sunZenithDot + 1.0) * 0.5;
-
-	float3 sunZenithColor = GetTexture(Sun.TexIdSunZenith).Sample(LinearWrapSampler, float2(sunZenithDot01, 0.5)).rgb;
-
-	float3 viewZenithColor = GetTexture(Sun.TexIdViewZenith).Sample(LinearWrapSampler, float2(sunZenithDot01, 0.5)).rgb;
-	float vzMask = pow(saturate(1.0 - dir.y), 4);
-
-	return SrgbToLinear(sunZenithColor + viewZenithColor * vzMask);
-}
-
 float3 applyFog(float3 worldPosition, float3 baseColor)
 {
 	float3 fogAtmDir = normalize(CameraPosition - worldPosition);
 	fogAtmDir.y = saturate(fogAtmDir.y);
-	const float3 fogColor = getFogColor(fogAtmDir) / 2;
+	const float3 fogColor = getFogColor(fogAtmDir, Sun, LinearWrapSampler) / 2;
 	float camDistance = length(CameraPosition.xz - worldPosition.xz);
 
 	float fogDensity = 0.000000001;

@@ -25,7 +25,7 @@ void main(uint3 id : SV_DispatchThreadID)
 
 	float4 diffuse = UnpackRGBA8(VoxelData[linearIndex].Diffuse);
 	float3 baseColor = diffuse.xyz;
-	float3 worldNormal = UnpackRGB10A2_SNORM(VoxelData[linearIndex].Normal).xyz;
+	float3 worldNormal = UnpackR11G10B11_SNORM(VoxelData[linearIndex].Normal).xyz;
 	float3 voxelUV = (float3(id) + 0.5f) / 128;
 
 	float4 traceSample = ConeTrace(voxelUV, worldNormal, 1.05f, 1.5f, SceneVoxelBouncesPrev, VoxelSampler);

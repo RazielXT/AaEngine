@@ -1,3 +1,5 @@
+#pragma once
+
 struct SunParams
 {
 	float4x4 ShadowMatrix[4];

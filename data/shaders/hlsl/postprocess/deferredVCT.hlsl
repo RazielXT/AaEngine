@@ -38,23 +38,23 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	float voxelWeight = 1.0f;
 	float occlusion = 1.0f;
 
-	for (int idx = 0; idx < 4; idx++)
+	for (int idx = 0; idx < 1; idx++)
 	{
 		float3 voxelUV = (worldPosition - VoxelInfo.Voxels[idx].Offset) / VoxelInfo.Voxels[idx].WorldSize;
 		Texture3D voxelmap = GetTexture3D(VoxelInfo.Voxels[idx].TexId);
 
-		float4 fullTrace = ConeTraceImpl(voxelUV, worldNormal, VoxelInfo.MiddleConeRatio.x, VoxelInfo.MiddleConeRatio.y, voxelmap, VoxelSampler);
+		float4 fullTrace = ConeTrace(voxelUV, worldNormal, VoxelInfo.MiddleConeRatio.x, VoxelInfo.MiddleConeRatio.y, voxelmap, VoxelSampler);
 
 		//if (idx < 2)
 		{
-			fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal + worldTangent), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler);
-			fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal - worldTangent), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler);
-			fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal + worldBinormal), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler);
-			fullTrace += ConeTraceImpl(voxelUV, normalize(worldNormal - worldBinormal), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler);
+			fullTrace += ConeTrace(voxelUV, normalize(worldNormal + worldTangent), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler);
+			fullTrace += ConeTrace(voxelUV, normalize(worldNormal - worldTangent), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler);
+			fullTrace += ConeTrace(voxelUV, normalize(worldNormal + worldBinormal), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler);
+			fullTrace += ConeTrace(voxelUV, normalize(worldNormal - worldBinormal), VoxelInfo.SideConeRatio.x, VoxelInfo.SideConeRatio.y, voxelmap, VoxelSampler);
 			fullTrace /= 5;
 		}
 
-		//fullTrace = ConeTraceImpl(voxelUV, reflect(normalize(worldPosition-CameraPosition), worldNormal), 0.01f, VoxelInfo.MiddleConeRatio.y, voxelmap, VoxelSampler);
+		//fullTrace = ConeTrace(voxelUV, reflect(normalize(worldPosition-CameraPosition), worldNormal), 0.01f, VoxelInfo.MiddleConeRatio.y, voxelmap, VoxelSampler);
 
 		voxelAmbient += fullTrace.rgb * voxelWeight;
 		voxelWeight = saturate(voxelWeight - fullTrace.w);
@@ -62,5 +62,5 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	}
 
 
-	return float4(voxelAmbient, 1);
+	return float4(voxelAmbient, occlusion);
 }

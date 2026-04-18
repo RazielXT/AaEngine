@@ -220,7 +220,7 @@ float4 PS_Main(PS_Input pin) : SV_TARGET
 		uint linearIndex = uint(posUV.z) * 128 * 128 + uint(posUV.y) * 128 + uint(posUV.x);
 
 		InterlockedMax(SceneVoxelData[linearIndex].Diffuse, PackRGBA8(float4(diffuse, shadow)));
-		InterlockedMax(SceneVoxelData[linearIndex].Normal, PackRGB10A2_SNORM(worldNormal.xyzz));
+		InterlockedMax(SceneVoxelData[linearIndex].Normal, PackR11G10B11_SNORM(worldNormal.xyz));
 	}
 
 	return float4(diffuse * shadow, 1);

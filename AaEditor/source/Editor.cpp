@@ -703,11 +703,6 @@ void Editor::prepareElements(Camera& camera)
 
 	if (ImGui::CollapsingHeader("Terrain"))
 	{
-		if (ImGui::Button("Rebuild terrain"))
-		{
-			app.sceneMgr.newTerrain.updateTerrain = true;
-		}
-
 		static bool updateGrid = true;
 		if (ImGui::Checkbox("Update grid LOD", &updateGrid))
 		{

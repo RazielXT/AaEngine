@@ -16,9 +16,9 @@ void ProgressiveTerrain::initialize(RenderSystem& renderSystem, GraphicsResource
 	terrainTexture = resources.textures.loadFile(*renderSystem.core.device, batch, "Mountain Range Height Map PNG.png"); //"Mountain Range Height Map PNG.png");
 	resources.descriptors.createTextureView(*terrainTexture);
 
-	float gridTileSize = 8000.f;
-	float gridTileHeight = 8000.f;
-	Vector3 terrainCenterPosition = { gridTileSize * -0.5f, gridTileHeight * -0.5f, gridTileSize * -0.5f };
+	gridTileSize = 8000.f;
+	gridTileHeight = 8000.f;
+	terrainCenterPosition = { gridTileSize * -0.5f, gridTileHeight * -0.5f, gridTileSize * -0.5f };
 
 	terrainGridTiles.Initialize({ gridTileSize, gridTileSize }, terrainCenterPosition, 10);
 
@@ -55,31 +55,19 @@ void ProgressiveTerrain::initialize(RenderSystem& renderSystem, GraphicsResource
 			auto GridHeightWidth = Vector2(gridTileHeight, gridTileSize);
 			e->Material().setParam("GridHeightWidth", &GridHeightWidth, sizeof(GridHeightWidth));
 
+			// Toroidal-consistent world coord: slot x maps to world x for x<=2, x-5 for x>2
+			// This ensures wrapIndex(worldCoord, GridsSize) == slot index
+			int wx = x > (int)GridsSize / 2 ? x - (int)GridsSize : x;
+			int wy = y > (int)GridsSize / 2 ? y - (int)GridsSize : y;
+
 			Vector3 pos = terrainCenterPosition;
-			pos.x += (x - 2) * gridTileSize;
-			pos.z += (y - 2) * gridTileSize;
+			pos.x += wx * gridTileSize;
+			pos.z += wy * gridTileSize;
 			e->setPosition(pos);
+
+			chunkWorldCoord[x][y] = { wx, wy };
+			chunkDirty[x][y] = true;
 		}
-
-
-// 	struct GridInstanceInfo
-// 	{
-// 		Vector3 WorldPosition;
-// 		Vector2 WorldSize;
-// 	}
-// 	grids[2] = { { Vector3(0,0,0), Vector2(100,100) }, { Vector3(0,100,0), Vector2(200,200) } };
-// 
-// 	static auto gpuBuffer = ShaderDataBuffers::get().CreateCbufferResource(sizeof(grids));
-// 	for (auto& buf : gpuBuffer.data)
-// 		memcpy(buf.Memory(), grids, sizeof(grids));
-// 
-// 	auto e = sceneMgr.createEntity("TerrainMesh", Order::Normal);
-// 	e->geometry.fromMeshInstancedModel(2, gpuBuffer.data[0].GpuAddress());
-// 	e->setBoundingBox(terrainModel.bbox);
-// 	e->material = resources.materials.getMaterial("TerrainMesh", batch);
-// 	e->Material().setParam("TexIdHeightmap", terrainGridHeight[0][0].view.srvHeapIndex);
-// 	e->Material().setParam("TexIdNormalmap", terrainGridNormal[0][0].view.srvHeapIndex);
-// 	e->setPosition({ 0, 100, 0 });
 
 	auto csShader = resources.shaders.getShader("generateHeightmapNormalsCS", ShaderType::Compute, ShaderRef{ "grid/generateHeightmapNormalsCS.hlsl", "CSMain", "cs_6_6" });
 	heightmapToNormalCS.init(*renderSystem.core.device, *csShader);
@@ -88,53 +76,98 @@ void ProgressiveTerrain::initialize(RenderSystem& renderSystem, GraphicsResource
 
 	csShader = resources.shaders.getShader("generateHeightmapCS", ShaderType::Compute, ShaderRef{ "terrain/terrainGridHeightmapDefinedCS.hlsl", "CSMain", "cs_6_6" });
 	generateHeightmapCS.init(*renderSystem.core.device, *csShader);
+}
 
-	updateTerrain = true;
+void ProgressiveTerrain::regenerateChunk(ID3D12GraphicsCommandList* commandList, int x, int y)
+{
+	auto& terrainHeight = terrainGridHeight[x][y];
+	auto& terrainNormal = terrainGridNormal[x][y];
+	auto& terrainNormalMips = terrainGridNormalMips[x][y];
+
+	TextureTransitions<3> tr;
+	tr.add(terrainTexture->texture.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	tr.add(&terrainNormal, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	tr.add(&terrainHeight, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	tr.push(commandList);
+
+	generateHeightmapCS.dispatch(commandList, TextureSize, TextureSize, terrainHeight.view.uavHandle, { chunkWorldCoord[x][y], terrainTexture->srvHeapIndex });
+
+	auto uavb = CD3DX12_RESOURCE_BARRIER::UAV(terrainHeight.texture.Get());
+	commandList->ResourceBarrier(1, &uavb);
+
+	heightmapToNormalCS.dispatch(commandList, terrainHeight.view.srvHeapIndex, terrainNormal.view.uavHeapIndex, TextureSize, TextureSize, 50, 102.4f);
+
+	auto uavb2 = CD3DX12_RESOURCE_BARRIER::UAV(terrainNormal.texture.Get());
+	commandList->ResourceBarrier(1, &uavb2);
+
+	generateNormalMipsCS.dispatch(commandList, TextureSize, terrainNormalMips);
+
+	tr.add(terrainTexture->texture.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	tr.add(&terrainNormal, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	tr.add(&terrainHeight, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	tr.push(commandList);
+}
+
+static int wrapIndex(int coord, int size)
+{
+	return ((coord % size) + size) % size;
 }
 
 void ProgressiveTerrain::update(ID3D12GraphicsCommandList* commandList, const Vector3& cameraPos, UINT frameIdx)
 {
-	if (updateTerrain)
-	for (int x = 0; x < GridsSize; x++)
-		for (int y = 0; y < GridsSize; y++)
+	XMINT2 cameraChunk = {
+		(int)std::floor(cameraPos.x / gridTileSize + 0.5f),
+		(int)std::floor(cameraPos.z / gridTileSize + 0.5f)
+	};
+
+	if (cameraChunk.x != gridCenterChunk.x || cameraChunk.y != gridCenterChunk.y)
+	{
+		gridCenterChunk = cameraChunk;
+
+		for (int x = 0; x < (int)GridsSize; x++)
+			for (int y = 0; y < (int)GridsSize; y++)
+			{
+				XMINT2 desired = { gridCenterChunk.x + x - 2, gridCenterChunk.y + y - 2 };
+				int ax = wrapIndex(desired.x, GridsSize);
+				int ay = wrapIndex(desired.y, GridsSize);
+
+				if (chunkWorldCoord[ax][ay].x != desired.x || chunkWorldCoord[ax][ay].y != desired.y)
+				{
+					chunkWorldCoord[ax][ay] = desired;
+					chunkDirty[ax][ay] = true;
+
+					Vector3 pos = terrainCenterPosition;
+					pos.x += desired.x * gridTileSize;
+					pos.z += desired.y * gridTileSize;
+					terrainGridMesh[ax][ay].entity->setPosition(pos);
+				}
+			}
+	}
+
+	for (int x = 0; x < (int)GridsSize; x++)
+		for (int y = 0; y < (int)GridsSize; y++)
 		{
-			auto& terrainHeight = terrainGridHeight[x][y];
-			auto& terrainNormal = terrainGridNormal[x][y];
-			auto& terrainNormalMips = terrainGridNormalMips[x][y];
-
-			TextureTransitions<3> tr;
-			tr.add(terrainTexture->texture.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-			tr.add(&terrainNormal, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-			tr.add(&terrainHeight, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-			tr.push(commandList);
-
-			generateHeightmapCS.dispatch(commandList, TextureSize, TextureSize, terrainHeight.view.uavHandle, { {x - 2,y - 2}, terrainTexture->srvHeapIndex });
-
-			auto uavb = CD3DX12_RESOURCE_BARRIER::UAV(terrainHeight.texture.Get());
-			commandList->ResourceBarrier(1, &uavb);
-
-			heightmapToNormalCS.dispatch(commandList, terrainHeight.view.srvHeapIndex, terrainNormal.view.uavHeapIndex, TextureSize, TextureSize, 50, 102.4f);
-
-			auto uavb2 = CD3DX12_RESOURCE_BARRIER::UAV(terrainNormal.texture.Get());
-			commandList->ResourceBarrier(1, &uavb2);
-
-			generateNormalMipsCS.dispatch(commandList, TextureSize, terrainNormalMips);
-
-			tr.add(terrainTexture->texture.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-			tr.add(&terrainNormal, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-			tr.add(&terrainHeight, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-			tr.push(commandList);
+			if (chunkDirty[x][y])
+			{
+				regenerateChunk(commandList, x, y);
+				chunkDirty[x][y] = false;
+			}
 		}
-
-	updateTerrain = false;
 
 	if (updateLod)
 	{
-		for (int x = 0; x < GridsSize; x++)
-			for (int y = 0; y < GridsSize; y++)
+		for (int x = 0; x < (int)GridsSize; x++)
+			for (int y = 0; y < (int)GridsSize; y++)
 			{
-				terrainGridTiles.BuildLOD(cameraPos, { x - 2, y - 2 });
+				terrainGridTiles.BuildLOD(cameraPos, chunkWorldCoord[x][y]);
 				terrainGridMesh[x][y].update((UINT)terrainGridTiles.m_renderList.size(), terrainGridTiles.m_renderList.data(), (UINT)terrainGridTiles.m_renderList.size() * sizeof(TileData), frameIdx);
 			}
 	}
+}
+
+UINT ProgressiveTerrain::getCenterHeightmapSrvIndex() const
+{
+	int ax = wrapIndex(gridCenterChunk.x, GridsSize);
+	int ay = wrapIndex(gridCenterChunk.y, GridsSize);
+	return terrainGridHeight[ax][ay].view.srvHeapIndex;
 }

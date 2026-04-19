@@ -24,7 +24,8 @@ public:
 	void update(ID3D12GraphicsCommandList* commandList, const Vector3& position, UINT frameIdx);
 
 	bool updateLod = true;
-	bool updateTerrain = true;
+
+	UINT getCenterHeightmapSrvIndex() const;
 
 //protected:
 
@@ -37,6 +38,14 @@ public:
 	GpuTexture2D terrainGridNormal[GridsSize][GridsSize];
 	std::vector<ShaderTextureViewUAV> terrainGridNormalMips[GridsSize][GridsSize];
 
+	XMINT2 gridCenterChunk = { 0, 0 };
+	XMINT2 chunkWorldCoord[GridsSize][GridsSize]{};
+	bool chunkDirty[GridsSize][GridsSize]{};
+
+	float gridTileSize = 0;
+	float gridTileHeight = 0;
+	Vector3 terrainCenterPosition;
+
 	VertexBufferModel terrainModel;
 
 	FileTexture* terrainTexture;
@@ -44,4 +53,6 @@ public:
 	TerrainHeightmapCS generateHeightmapCS;
 	GenerateHeightmapNormalsCS heightmapToNormalCS;
 	GenerateNormalMips4xCS generateNormalMipsCS;
+
+	void regenerateChunk(ID3D12GraphicsCommandList* commandList, int x, int y);
 };

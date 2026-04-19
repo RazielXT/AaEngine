@@ -1,12 +1,12 @@
 #pragma once
 
-#include "RenderSystem.h"
-#include "SceneManager.h"
-#include "FrameCompositor.h"
-#include "ShadowMaps.h"
-#include "GraphicsResources.h"
+#include "RenderCore/RenderSystem.h"
+#include "RenderCore/ShadowMaps.h"
+#include "Scene/SceneManager.h"
+#include "Scene/DrawPrimitives.h"
+#include "FrameCompositor/FrameCompositor.h"
+#include "Resources/GraphicsResources.h"
 #include "PhysicsManager.h"
-#include "DrawPrimitives.h"
 
 struct DebugReporter
 {

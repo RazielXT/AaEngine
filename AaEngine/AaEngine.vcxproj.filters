@@ -70,62 +70,53 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\TargetWindow.cpp">
+    <ClCompile Include="source\App\TargetWindow.cpp">
       <Filter>Source Files\App</Filter>
     </ClCompile>
-    <ClCompile Include="source\RenderSystem.cpp">
-      <Filter>Source Files\RenderCore</Filter>
-    </ClCompile>
-    <ClCompile Include="source\GpuTexture.cpp">
-      <Filter>Source Files\RenderCore</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Material.cpp">
+    <ClCompile Include="source\Resources\Material\Material.cpp">
       <Filter>Source Files\Resources\Material</Filter>
     </ClCompile>
-    <ClCompile Include="source\MaterialFileParser.cpp">
+    <ClCompile Include="source\Resources\Material\MaterialFileParser.cpp">
       <Filter>Source Files\Resources\Material</Filter>
     </ClCompile>
-    <ClCompile Include="source\MaterialResources.cpp">
+    <ClCompile Include="source\Resources\Material\MaterialResources.cpp">
       <Filter>Source Files\Resources\Material</Filter>
     </ClCompile>
-    <ClCompile Include="source\VertexBufferModel.cpp">
+    <ClCompile Include="source\Resources\Model\VertexBufferModel.cpp">
       <Filter>Source Files\Resources\Model</Filter>
     </ClCompile>
-    <ClCompile Include="source\ModelResources.cpp">
+    <ClCompile Include="source\Resources\Model\ModelResources.cpp">
       <Filter>Source Files\Resources\Model</Filter>
     </ClCompile>
-    <ClCompile Include="source\OgreMeshFileParser.cpp">
+    <ClCompile Include="source\Resources\Model\OgreMeshFileParser.cpp">
       <Filter>Source Files\Resources\Model</Filter>
     </ClCompile>
-    <ClCompile Include="source\ShaderCompiler.cpp">
+    <ClCompile Include="source\Resources\Shader\ShaderCompiler.cpp">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClCompile>
-    <ClCompile Include="source\ShaderFileParser.cpp">
+    <ClCompile Include="source\Resources\Shader\ShaderFileParser.cpp">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClCompile>
-    <ClCompile Include="source\ShaderLibrary.cpp">
+    <ClCompile Include="source\Resources\Shader\ShaderLibrary.cpp">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClCompile>
-    <ClCompile Include="source\DescriptorManager.cpp">
+    <ClCompile Include="source\Resources\DescriptorManager.cpp">
       <Filter>Source Files\Resources</Filter>
     </ClCompile>
-    <ClCompile Include="source\Camera.cpp">
+    <ClCompile Include="source\Scene\Camera.cpp">
       <Filter>Source Files\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="source\SceneEntity.cpp">
+    <ClCompile Include="source\Scene\SceneEntity.cpp">
       <Filter>Source Files\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="source\ConfigParser.cpp">
+    <ClCompile Include="source\Utils\ConfigParser.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="source\SceneManager.cpp">
+    <ClCompile Include="source\Scene\SceneManager.cpp">
       <Filter>Source Files\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="source\RenderObject.cpp">
+    <ClCompile Include="source\Scene\RenderObject.cpp">
       <Filter>Source Files\Scene</Filter>
-    </ClCompile>
-    <ClCompile Include="source\ShadowMaps.cpp">
-      <Filter>Source Files\RenderCore</Filter>
     </ClCompile>
     <ClCompile Include="..\dependencies\imgui\imgui.cpp">
       <Filter>Source Files\imgui</Filter>
@@ -145,268 +136,268 @@
     <ClCompile Include="..\dependencies\imgui\backends\imgui_impl_win32.cpp">
       <Filter>Source Files\imgui\backend</Filter>
     </ClCompile>
-    <ClCompile Include="source\DebugWindow.cpp">
+    <ClCompile Include="source\App\DebugWindow.cpp">
       <Filter>Source Files\App</Filter>
     </ClCompile>
-    <ClCompile Include="source\FrameCompositor.cpp">
+    <ClCompile Include="source\FrameCompositor\FrameCompositor.cpp">
       <Filter>Source Files\FrameCompositor</Filter>
     </ClCompile>
-    <ClCompile Include="source\CompositorFileParser.cpp">
+    <ClCompile Include="source\FrameCompositor\CompositorFileParser.cpp">
       <Filter>Source Files\FrameCompositor</Filter>
     </ClCompile>
-    <ClCompile Include="source\RenderQueue.cpp">
+    <ClCompile Include="source\Scene\RenderQueue.cpp">
       <Filter>Source Files\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="source\ShaderDataBuffers.cpp">
+    <ClCompile Include="source\Resources\Shader\ShaderDataBuffers.cpp">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClCompile>
-    <ClCompile Include="source\EntityInstancing.cpp">
+    <ClCompile Include="source\Scene\EntityInstancing.cpp">
       <Filter>Source Files\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="source\FrameCompositorTaskBuild.cpp">
+    <ClCompile Include="source\FrameCompositor\FrameCompositorTaskBuild.cpp">
       <Filter>Source Files\FrameCompositor</Filter>
     </ClCompile>
-    <ClCompile Include="source\BinaryModelLoader.cpp">
+    <ClCompile Include="source\Resources\Model\BinaryModelLoader.cpp">
       <Filter>Source Files\Resources\Model</Filter>
     </ClCompile>
-    <ClCompile Include="source\BinaryModelSerialization.cpp">
+    <ClCompile Include="source\Resources\Model\BinaryModelSerialization.cpp">
       <Filter>Source Files\Resources\Model</Filter>
     </ClCompile>
-    <ClCompile Include="source\ShaderSignature.cpp">
+    <ClCompile Include="source\Resources\Shader\ShaderSignature.cpp">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClCompile>
-    <ClCompile Include="source\ComputeShader.cpp">
+    <ClCompile Include="source\Resources\Compute\ComputeShader.cpp">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClCompile>
-    <ClCompile Include="source\GenerateMipsComputeShader.cpp">
+    <ClCompile Include="source\Resources\Compute\GenerateMipsComputeShader.cpp">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClCompile>
-    <ClCompile Include="source\GrassArea.cpp">
+    <ClCompile Include="source\RenderObject\GrassArea.cpp">
       <Filter>Source Files\RenderObject</Filter>
     </ClCompile>
-    <ClCompile Include="source\EntityGeometry.cpp">
+    <ClCompile Include="source\Scene\EntityGeometry.cpp">
       <Filter>Source Files\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="source\ShaderConstantsProvider.cpp">
+    <ClCompile Include="source\Resources\Shader\ShaderConstantsProvider.cpp">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClCompile>
-    <ClCompile Include="source\DebugOverlayTask.cpp">
+    <ClCompile Include="source\FrameCompositor\Tasks\DebugOverlayTask.cpp">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClCompile>
-    <ClCompile Include="source\SceneRenderTask.cpp">
+    <ClCompile Include="source\FrameCompositor\Tasks\SceneRenderTask.cpp">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClCompile>
-    <ClCompile Include="source\ShadowsRenderTask.cpp">
+    <ClCompile Include="source\FrameCompositor\Tasks\ShadowsRenderTask.cpp">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClCompile>
-    <ClCompile Include="source\VoxelizeSceneTask.cpp">
+    <ClCompile Include="source\FrameCompositor\Tasks\VoxelizeSceneTask.cpp">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClCompile>
-    <ClCompile Include="source\ScreenQuad.cpp">
-      <Filter>Source Files\RenderCore</Filter>
-    </ClCompile>
-    <ClCompile Include="source\SceneTestTask.cpp">
+    <ClCompile Include="source\FrameCompositor\Tasks\SceneTestTask.cpp">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClCompile>
-    <ClCompile Include="source\MathUtils.cpp">
+    <ClCompile Include="source\Utils\MathUtils.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="source\ImguiDebugWindowTask.cpp">
+    <ClCompile Include="source\FrameCompositor\Tasks\ImguiDebugWindowTask.cpp">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClCompile>
-    <ClCompile Include="source\TextureData.cpp">
-      <Filter>Source Files\RenderCore</Filter>
-    </ClCompile>
-    <ClCompile Include="source\GrassInitComputeShader.cpp">
+    <ClCompile Include="source\Resources\Compute\GrassInitComputeShader.cpp">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClCompile>
-    <ClCompile Include="source\SsaoComputeTask.cpp">
+    <ClCompile Include="source\FrameCompositor\Tasks\SsaoComputeTask.cpp">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClCompile>
-    <ClCompile Include="source\AoPrepareDepthBuffersCS.cpp">
+    <ClCompile Include="source\Resources\Compute\AoPrepareDepthBuffersCS.cpp">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClCompile>
-    <ClCompile Include="source\AoRenderCS.cpp">
+    <ClCompile Include="source\Resources\Compute\AoRenderCS.cpp">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClCompile>
-    <ClCompile Include="source\AoBlurAndUpsampleCS.cpp">
+    <ClCompile Include="source\Resources\Compute\AoBlurAndUpsampleCS.cpp">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClCompile>
-    <ClCompile Include="source\UpscaleTask.cpp">
+    <ClCompile Include="source\FrameCompositor\Tasks\UpscaleTask.cpp">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClCompile>
-    <ClCompile Include="source\DLSS.cpp">
-      <Filter>Source Files\RenderCore</Filter>
-    </ClCompile>
-    <ClCompile Include="source\FSR.cpp">
-      <Filter>Source Files\RenderCore</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Upscaling.cpp">
-      <Filter>Source Files\RenderCore</Filter>
-    </ClCompile>
-    <ClCompile Include="source\DownsampleTask.cpp">
+    <ClCompile Include="source\FrameCompositor\Tasks\DownsampleTask.cpp">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClCompile>
-    <ClCompile Include="source\GraphicsResources.cpp">
+    <ClCompile Include="source\Resources\GraphicsResources.cpp">
       <Filter>Source Files\Resources</Filter>
     </ClCompile>
-    <ClCompile Include="source\StringUtils.cpp">
+    <ClCompile Include="source\Utils\StringUtils.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="source\EntityPicker.cpp">
+    <ClCompile Include="source\Editor\EntityPicker.cpp">
       <Filter>Source Files\Editor</Filter>
     </ClCompile>
-    <ClCompile Include="source\ObjectId.cpp">
+    <ClCompile Include="source\Scene\ObjectId.cpp">
       <Filter>Source Files\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="source\SceneSkybox.cpp">
+    <ClCompile Include="source\Scene\SceneSkybox.cpp">
       <Filter>Source Files\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="source\TextureResources.cpp">
+    <ClCompile Include="source\Resources\Textures\TextureResources.cpp">
       <Filter>Source Files\Resources\Textures</Filter>
     </ClCompile>
-    <ClCompile Include="source\DrawPrimitives.cpp">
+    <ClCompile Include="source\Scene\DrawPrimitives.cpp">
       <Filter>Source Files\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="source\CascadedShadowMaps.cpp">
-      <Filter>Source Files\RenderCore</Filter>
-    </ClCompile>
-    <ClCompile Include="source\ClearBufferCS.cpp">
+    <ClCompile Include="source\Resources\Compute\ClearBufferCS.cpp">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClCompile>
-    <ClCompile Include="source\TerrainGenerationCS.cpp">
+    <ClCompile Include="source\Resources\Compute\TerrainGenerationCS.cpp">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClCompile>
-    <ClCompile Include="source\PrepareFrameTask.cpp">
+    <ClCompile Include="source\FrameCompositor\Tasks\PrepareFrameTask.cpp">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClCompile>
-    <ClCompile Include="source\Vegetation.cpp">
+    <ClCompile Include="source\RenderObject\Vegetation\Vegetation.cpp">
       <Filter>Source Files\RenderObject\Vegetation</Filter>
     </ClCompile>
-    <ClCompile Include="source\VegetationTrees.cpp">
+    <ClCompile Include="source\RenderObject\Vegetation\VegetationTrees.cpp">
       <Filter>Source Files\RenderObject\Vegetation</Filter>
     </ClCompile>
-    <ClCompile Include="source\SystemUtils.cpp">
+    <ClCompile Include="source\Utils\SystemUtils.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="source\ShaderDefines.cpp">
+    <ClCompile Include="source\Resources\Shader\ShaderDefines.cpp">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClCompile>
-    <ClCompile Include="source\WaterSimCS.cpp">
+    <ClCompile Include="source\Resources\Compute\WaterSimCS.cpp">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClCompile>
-    <ClCompile Include="source\WaterSim.cpp">
+    <ClCompile Include="source\RenderObject\WaterSim\WaterSim.cpp">
       <Filter>Source Files\RenderObject\WaterSim</Filter>
     </ClCompile>
-    <ClCompile Include="source\TextureUtils.cpp">
-      <Filter>Source Files\RenderCore</Filter>
-    </ClCompile>
-    <ClCompile Include="source\MeshUtils.cpp">
-      <Filter>Source Files\RenderCore</Filter>
-    </ClCompile>
-    <ClCompile Include="source\TextureToMeshCS.cpp">
+    <ClCompile Include="source\Resources\Compute\TextureToMeshCS.cpp">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClCompile>
-    <ClCompile Include="source\CopyTexturesCS.cpp">
+    <ClCompile Include="source\Resources\Compute\CopyTexturesCS.cpp">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClCompile>
-    <ClCompile Include="source\RenderTargetHeap.cpp">
-      <Filter>Source Files\RenderCore</Filter>
-    </ClCompile>
-    <ClCompile Include="source\ShaderType.cpp">
+    <ClCompile Include="source\Resources\Shader\ShaderType.cpp">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClCompile>
-    <ClCompile Include="source\ProgressiveTerrain.cpp">
+    <ClCompile Include="source\RenderObject\Terrain\ProgressiveTerrain.cpp">
       <Filter>Source Files\RenderObject\Terrain</Filter>
     </ClCompile>
-    <ClCompile Include="source\TerrainScan.cpp">
+    <ClCompile Include="source\RenderObject\TerrainScan\TerrainScan.cpp">
       <Filter>Source Files\RenderObject\TerrainScan</Filter>
     </ClCompile>
-    <ClCompile Include="source\GltfLoader.cpp">
+    <ClCompile Include="source\Resources\Model\GltfLoader.cpp">
       <Filter>Source Files\Resources\Model</Filter>
     </ClCompile>
-    <ClCompile Include="source\SceneCollection.cpp">
+    <ClCompile Include="source\Scene\SceneCollection.cpp">
       <Filter>Source Files\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="source\SceneGraph.cpp">
+    <ClCompile Include="source\Scene\SceneGraph.cpp">
       <Filter>Source Files\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="source\PrefabLoader.cpp">
+    <ClCompile Include="source\RenderObject\Prefab\PrefabLoader.cpp">
       <Filter>Source Files\RenderObject\Prefab</Filter>
+    </ClCompile>
+    <ClCompile Include="source\RenderCore\CascadedShadowMaps.cpp">
+      <Filter>Source Files\RenderCore</Filter>
+    </ClCompile>
+    <ClCompile Include="source\RenderCore\DLSS.cpp">
+      <Filter>Source Files\RenderCore</Filter>
+    </ClCompile>
+    <ClCompile Include="source\RenderCore\FSR.cpp">
+      <Filter>Source Files\RenderCore</Filter>
+    </ClCompile>
+    <ClCompile Include="source\RenderCore\GpuTexture.cpp">
+      <Filter>Source Files\RenderCore</Filter>
+    </ClCompile>
+    <ClCompile Include="source\RenderCore\MeshUtils.cpp">
+      <Filter>Source Files\RenderCore</Filter>
+    </ClCompile>
+    <ClCompile Include="source\RenderCore\RenderSystem.cpp">
+      <Filter>Source Files\RenderCore</Filter>
+    </ClCompile>
+    <ClCompile Include="source\RenderCore\RenderTargetHeap.cpp">
+      <Filter>Source Files\RenderCore</Filter>
+    </ClCompile>
+    <ClCompile Include="source\RenderCore\ScreenQuad.cpp">
+      <Filter>Source Files\RenderCore</Filter>
+    </ClCompile>
+    <ClCompile Include="source\RenderCore\ShadowMaps.cpp">
+      <Filter>Source Files\RenderCore</Filter>
+    </ClCompile>
+    <ClCompile Include="source\RenderCore\TextureData.cpp">
+      <Filter>Source Files\RenderCore</Filter>
+    </ClCompile>
+    <ClCompile Include="source\RenderCore\TextureUtils.cpp">
+      <Filter>Source Files\RenderCore</Filter>
+    </ClCompile>
+    <ClCompile Include="source\RenderCore\Upscaling.cpp">
+      <Filter>Source Files\RenderCore</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="source\TargetWindow.h">
+    <ClInclude Include="source\App\TargetWindow.h">
       <Filter>Source Files\App</Filter>
     </ClInclude>
-    <ClInclude Include="source\Directories.h">
+    <ClInclude Include="source\App\Directories.h">
       <Filter>Source Files\App</Filter>
     </ClInclude>
-    <ClInclude Include="source\RenderSystem.h">
-      <Filter>Source Files\RenderCore</Filter>
-    </ClInclude>
-    <ClInclude Include="source\GpuTexture.h">
-      <Filter>Source Files\RenderCore</Filter>
-    </ClInclude>
-    <ClInclude Include="source\Material.h">
+    <ClInclude Include="source\Resources\Material\Material.h">
       <Filter>Source Files\Resources\Material</Filter>
     </ClInclude>
-    <ClInclude Include="source\MaterialFileParser.h">
+    <ClInclude Include="source\Resources\Material\MaterialFileParser.h">
       <Filter>Source Files\Resources\Material</Filter>
     </ClInclude>
-    <ClInclude Include="source\MaterialResources.h">
+    <ClInclude Include="source\Resources\Material\MaterialResources.h">
       <Filter>Source Files\Resources\Material</Filter>
     </ClInclude>
-    <ClInclude Include="source\VertexBufferModel.h">
+    <ClInclude Include="source\Resources\Model\VertexBufferModel.h">
       <Filter>Source Files\Resources\Model</Filter>
     </ClInclude>
-    <ClInclude Include="source\ModelResources.h">
+    <ClInclude Include="source\Resources\Model\ModelResources.h">
       <Filter>Source Files\Resources\Model</Filter>
     </ClInclude>
-    <ClInclude Include="source\OgreMeshFileParser.h">
+    <ClInclude Include="source\Resources\Model\OgreMeshFileParser.h">
       <Filter>Source Files\Resources\Model</Filter>
     </ClInclude>
-    <ClInclude Include="source\ShaderCompiler.h">
+    <ClInclude Include="source\Resources\Shader\ShaderCompiler.h">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClInclude>
-    <ClInclude Include="source\ShaderFileParser.h">
+    <ClInclude Include="source\Resources\Shader\ShaderFileParser.h">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClInclude>
-    <ClInclude Include="source\ShaderLibrary.h">
+    <ClInclude Include="source\Resources\Shader\ShaderLibrary.h">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClInclude>
-    <ClInclude Include="source\DescriptorManager.h">
+    <ClInclude Include="source\Resources\DescriptorManager.h">
       <Filter>Source Files\Resources</Filter>
     </ClInclude>
-    <ClInclude Include="source\Camera.h">
+    <ClInclude Include="source\Scene\Camera.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="source\SceneEntity.h">
+    <ClInclude Include="source\Scene\SceneEntity.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="source\SceneManager.h">
+    <ClInclude Include="source\Scene\SceneManager.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="source\FileLogger.h">
+    <ClInclude Include="source\Utils\FileLogger.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="source\ConfigParser.h">
+    <ClInclude Include="source\Utils\ConfigParser.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="source\Directx.h">
+    <ClInclude Include="source\Utils\Directx.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="source\MathUtils.h">
+    <ClInclude Include="source\Utils\MathUtils.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="source\RenderObject.h">
+    <ClInclude Include="source\Scene\RenderObject.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="source\SceneLights.h">
+    <ClInclude Include="source\Scene\SceneLights.h">
       <Filter>Source Files\Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="source\ShadowMaps.h">
-      <Filter>Source Files\RenderCore</Filter>
     </ClInclude>
     <ClInclude Include="..\dependencies\imgui\imgui.h">
       <Filter>Source Files\imgui</Filter>
@@ -417,212 +408,221 @@
     <ClInclude Include="..\dependencies\imgui\backends\imgui_impl_win32.h">
       <Filter>Source Files\imgui\backend</Filter>
     </ClInclude>
-    <ClInclude Include="source\DebugWindow.h">
+    <ClInclude Include="source\App\DebugWindow.h">
       <Filter>Source Files\App</Filter>
     </ClInclude>
-    <ClInclude Include="source\FrameCompositor.h">
+    <ClInclude Include="source\FrameCompositor\FrameCompositor.h">
       <Filter>Source Files\FrameCompositor</Filter>
     </ClInclude>
-    <ClInclude Include="source\CompositorFileParser.h">
+    <ClInclude Include="source\FrameCompositor\CompositorFileParser.h">
       <Filter>Source Files\FrameCompositor</Filter>
     </ClInclude>
-    <ClInclude Include="source\RenderContext.h">
+    <ClInclude Include="source\FrameCompositor\RenderContext.h">
       <Filter>Source Files\FrameCompositor</Filter>
     </ClInclude>
-    <ClInclude Include="source\RenderQueue.h">
+    <ClInclude Include="source\Scene\RenderQueue.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="source\ShaderDataBuffers.h">
+    <ClInclude Include="source\Resources\Shader\ShaderDataBuffers.h">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClInclude>
-    <ClInclude Include="source\EntityInstancing.h">
+    <ClInclude Include="source\Scene\EntityInstancing.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="source\BinaryModelLoader.h">
+    <ClInclude Include="source\Resources\Model\BinaryModelLoader.h">
       <Filter>Source Files\Resources\Model</Filter>
     </ClInclude>
-    <ClInclude Include="source\BinaryModelSerialization.h">
+    <ClInclude Include="source\Resources\Model\BinaryModelSerialization.h">
       <Filter>Source Files\Resources\Model</Filter>
     </ClInclude>
-    <ClInclude Include="source\ModelParseOptions.h">
+    <ClInclude Include="source\Resources\Model\ModelParseOptions.h">
       <Filter>Source Files\Resources\Model</Filter>
     </ClInclude>
-    <ClInclude Include="source\ShaderResources.h">
+    <ClInclude Include="source\Resources\Shader\ShaderResources.h">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClInclude>
-    <ClInclude Include="source\ShaderSignature.h">
+    <ClInclude Include="source\Resources\Shader\ShaderSignature.h">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClInclude>
-    <ClInclude Include="source\ShaderConstantsProvider.h">
+    <ClInclude Include="source\Resources\Shader\ShaderConstantsProvider.h">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClInclude>
-    <ClInclude Include="source\GenerateMipsComputeShader.h">
+    <ClInclude Include="source\Resources\Compute\GenerateMipsComputeShader.h">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClInclude>
-    <ClInclude Include="source\ComputeShader.h">
+    <ClInclude Include="source\Resources\Compute\ComputeShader.h">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClInclude>
-    <ClInclude Include="source\GrassArea.h">
+    <ClInclude Include="source\RenderObject\GrassArea.h">
       <Filter>Source Files\RenderObject</Filter>
     </ClInclude>
-    <ClInclude Include="source\EntityGeometry.h">
+    <ClInclude Include="source\Scene\EntityGeometry.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="source\DebugOverlayTask.h">
+    <ClInclude Include="source\FrameCompositor\Tasks\DebugOverlayTask.h">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClInclude>
-    <ClInclude Include="source\SceneRenderTask.h">
+    <ClInclude Include="source\FrameCompositor\Tasks\SceneRenderTask.h">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClInclude>
-    <ClInclude Include="source\ShadowsRenderTask.h">
+    <ClInclude Include="source\FrameCompositor\Tasks\ShadowsRenderTask.h">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClInclude>
-    <ClInclude Include="source\VoxelizeSceneTask.h">
+    <ClInclude Include="source\FrameCompositor\Tasks\VoxelizeSceneTask.h">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClInclude>
-    <ClInclude Include="source\ScreenQuad.h">
-      <Filter>Source Files\RenderCore</Filter>
-    </ClInclude>
-    <ClInclude Include="source\SceneTestTask.h">
+    <ClInclude Include="source\FrameCompositor\Tasks\SceneTestTask.h">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClInclude>
-    <ClInclude Include="source\CompositorTask.h">
+    <ClInclude Include="source\FrameCompositor\Tasks\CompositorTask.h">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClInclude>
-    <ClInclude Include="source\ImguiDebugWindowTask.h">
+    <ClInclude Include="source\FrameCompositor\Tasks\ImguiDebugWindowTask.h">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClInclude>
-    <ClInclude Include="source\TextureData.h">
-      <Filter>Source Files\RenderCore</Filter>
-    </ClInclude>
-    <ClInclude Include="source\GrassInitComputeShader.h">
+    <ClInclude Include="source\Resources\Compute\GrassInitComputeShader.h">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClInclude>
-    <ClInclude Include="source\SsaoComputeTask.h">
+    <ClInclude Include="source\FrameCompositor\Tasks\SsaoComputeTask.h">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClInclude>
-    <ClInclude Include="source\AoPrepareDepthBuffersCS.h">
+    <ClInclude Include="source\Resources\Compute\AoPrepareDepthBuffersCS.h">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClInclude>
-    <ClInclude Include="source\AoRenderCS.h">
+    <ClInclude Include="source\Resources\Compute\AoRenderCS.h">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClInclude>
-    <ClInclude Include="source\AoBlurAndUpsampleCS.h">
+    <ClInclude Include="source\Resources\Compute\AoBlurAndUpsampleCS.h">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClInclude>
-    <ClInclude Include="source\UpscaleTask.h">
+    <ClInclude Include="source\FrameCompositor\Tasks\UpscaleTask.h">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClInclude>
-    <ClInclude Include="source\DLSS.h">
-      <Filter>Source Files\RenderCore</Filter>
-    </ClInclude>
-    <ClInclude Include="source\FSR.h">
-      <Filter>Source Files\RenderCore</Filter>
-    </ClInclude>
-    <ClInclude Include="source\Upscaling.h">
-      <Filter>Source Files\RenderCore</Filter>
-    </ClInclude>
-    <ClInclude Include="source\UpscaleTypes.h">
-      <Filter>Source Files\RenderCore</Filter>
-    </ClInclude>
-    <ClInclude Include="source\DownsampleTask.h">
+    <ClInclude Include="source\FrameCompositor\Tasks\DownsampleTask.h">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClInclude>
-    <ClInclude Include="source\GraphicsResources.h">
+    <ClInclude Include="source\Resources\GraphicsResources.h">
       <Filter>Source Files\Resources</Filter>
     </ClInclude>
-    <ClInclude Include="source\StringUtils.h">
+    <ClInclude Include="source\Utils\StringUtils.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="source\EntityPicker.h">
+    <ClInclude Include="source\Editor\EntityPicker.h">
       <Filter>Source Files\Editor</Filter>
     </ClInclude>
-    <ClInclude Include="source\ObjectId.h">
+    <ClInclude Include="source\Scene\ObjectId.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="source\SceneSkybox.h">
+    <ClInclude Include="source\Scene\SceneSkybox.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="source\TextureResources.h">
+    <ClInclude Include="source\Resources\Textures\TextureResources.h">
       <Filter>Source Files\Resources\Textures</Filter>
     </ClInclude>
-    <ClInclude Include="source\DrawPrimitives.h">
+    <ClInclude Include="source\Scene\DrawPrimitives.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="source\CascadedShadowMaps.h">
-      <Filter>Source Files\RenderCore</Filter>
-    </ClInclude>
-    <ClInclude Include="source\ClearBufferCS.h">
+    <ClInclude Include="source\Resources\Compute\ClearBufferCS.h">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClInclude>
-    <ClInclude Include="source\TerrainGenerationCS.h">
+    <ClInclude Include="source\Resources\Compute\TerrainGenerationCS.h">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClInclude>
-    <ClInclude Include="source\PrepareFrameTask.h">
+    <ClInclude Include="source\FrameCompositor\Tasks\PrepareFrameTask.h">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClInclude>
-    <ClInclude Include="source\Vegetation.h">
+    <ClInclude Include="source\RenderObject\Vegetation\Vegetation.h">
       <Filter>Source Files\RenderObject\Vegetation</Filter>
     </ClInclude>
-    <ClInclude Include="source\VegetationTrees.h">
+    <ClInclude Include="source\RenderObject\Vegetation\VegetationTrees.h">
       <Filter>Source Files\RenderObject\Vegetation</Filter>
     </ClInclude>
-    <ClInclude Include="source\SystemUtils.h">
+    <ClInclude Include="source\Utils\SystemUtils.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="source\PixColor.h">
-      <Filter>Source Files\RenderCore</Filter>
-    </ClInclude>
-    <ClInclude Include="source\ShaderDefines.h">
+    <ClInclude Include="source\Resources\Shader\ShaderDefines.h">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClInclude>
-    <ClInclude Include="source\WaterSimCS.h">
+    <ClInclude Include="source\Resources\Compute\WaterSimCS.h">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClInclude>
-    <ClInclude Include="source\WaterSim.h">
+    <ClInclude Include="source\RenderObject\WaterSim\WaterSim.h">
       <Filter>Source Files\RenderObject\WaterSim</Filter>
     </ClInclude>
-    <ClInclude Include="source\TextureUtils.h">
-      <Filter>Source Files\RenderCore</Filter>
-    </ClInclude>
-    <ClInclude Include="source\MeshUtils.h">
-      <Filter>Source Files\RenderCore</Filter>
-    </ClInclude>
-    <ClInclude Include="source\TextureToMeshCS.h">
+    <ClInclude Include="source\Resources\Compute\TextureToMeshCS.h">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClInclude>
-    <ClInclude Include="source\CopyTexturesCS.h">
+    <ClInclude Include="source\Resources\Compute\CopyTexturesCS.h">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClInclude>
-    <ClInclude Include="source\RenderTargetHeap.h">
-      <Filter>Source Files\RenderCore</Filter>
-    </ClInclude>
-    <ClInclude Include="source\ResourcesView.h">
+    <ClInclude Include="source\Resources\ResourcesView.h">
       <Filter>Source Files\Resources</Filter>
     </ClInclude>
-    <ClInclude Include="source\ShaderType.h">
+    <ClInclude Include="source\Resources\Shader\ShaderType.h">
       <Filter>Source Files\Resources\Shader</Filter>
     </ClInclude>
-    <ClInclude Include="source\ProgressiveTerrain.h">
+    <ClInclude Include="source\RenderObject\Terrain\ProgressiveTerrain.h">
       <Filter>Source Files\RenderObject\Terrain</Filter>
     </ClInclude>
-    <ClInclude Include="source\GridMesh.h">
+    <ClInclude Include="source\RenderObject\Terrain\GridMesh.h">
       <Filter>Source Files\RenderObject\Terrain</Filter>
     </ClInclude>
-    <ClInclude Include="source\TerrainScan.h">
+    <ClInclude Include="source\RenderObject\TerrainScan\TerrainScan.h">
       <Filter>Source Files\RenderObject\TerrainScan</Filter>
     </ClInclude>
-    <ClInclude Include="source\GltfLoader.h">
+    <ClInclude Include="source\Resources\Model\GltfLoader.h">
       <Filter>Source Files\Resources\Model</Filter>
     </ClInclude>
-    <ClInclude Include="source\SceneCollection.h">
+    <ClInclude Include="source\Scene\SceneCollection.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="source\SceneGraph.h">
+    <ClInclude Include="source\Scene\SceneGraph.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="source\PrefabLoader.h">
+    <ClInclude Include="source\RenderObject\Prefab\PrefabLoader.h">
       <Filter>Source Files\RenderObject\Prefab</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RenderCore\CascadedShadowMaps.h">
+      <Filter>Source Files\RenderCore</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RenderCore\DLSS.h">
+      <Filter>Source Files\RenderCore</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RenderCore\FSR.h">
+      <Filter>Source Files\RenderCore</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RenderCore\GpuTexture.h">
+      <Filter>Source Files\RenderCore</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RenderCore\MeshUtils.h">
+      <Filter>Source Files\RenderCore</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RenderCore\PixColor.h">
+      <Filter>Source Files\RenderCore</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RenderCore\RenderSystem.h">
+      <Filter>Source Files\RenderCore</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RenderCore\RenderTargetHeap.h">
+      <Filter>Source Files\RenderCore</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RenderCore\ScreenQuad.h">
+      <Filter>Source Files\RenderCore</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RenderCore\ShadowMaps.h">
+      <Filter>Source Files\RenderCore</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RenderCore\TextureData.h">
+      <Filter>Source Files\RenderCore</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RenderCore\TextureUtils.h">
+      <Filter>Source Files\RenderCore</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RenderCore\UpscaleTypes.h">
+      <Filter>Source Files\RenderCore</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RenderCore\Upscaling.h">
+      <Filter>Source Files\RenderCore</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

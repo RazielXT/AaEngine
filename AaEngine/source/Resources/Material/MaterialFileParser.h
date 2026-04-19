@@ -1,0 +1,89 @@
+#pragma once
+
+#include <vector>
+#include <map>
+#include <string>
+#include <d3d12.h>
+#include "Resources/Shader/ShaderResources.h"
+#include "Resources/Shader/ShaderFileParser.h"
+#include <optional>
+
+struct MaterialDepthState
+{
+	bool check = true;
+	bool write = true;
+};
+
+struct MaterialBlendState
+{
+	bool alphaBlend = false;
+};
+
+struct TextureRef
+{
+	std::string id;
+	std::string file;
+	bool forceSrgb = false;
+};
+
+using SamplerRef = SamplerInfo;
+
+struct MaterialPipelineInfo
+{
+	ShaderTypesArray<std::string> shaders;
+
+	MaterialDepthState depth;
+	MaterialBlendState blend;
+	D3D12_CULL_MODE culling = D3D12_CULL_MODE_BACK;
+	D3D12_FILL_MODE fill = D3D12_FILL_MODE_SOLID;
+	float slopeScaledDepthBias = 0.0f;
+	int depthBias = 0;
+	D3D12_CONSERVATIVE_RASTERIZATION_MODE conservativeRasterization = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+};
+
+struct MaterialResourcesInfo
+{
+	std::vector<TextureRef> textures;
+	std::vector<SamplerRef> samplers;
+	std::vector<std::string> uavs;
+
+	std::map<std::string, std::vector<float>> defaultParams;
+};
+
+enum class MaterialTechnique
+{
+	Default,
+	Depth,
+	DepthShadowmap,
+	Voxelize,
+	EntityId,
+	TerrainScan,
+	Wireframe,
+	COUNT
+};
+
+struct MaterialRef
+{
+	std::string base;
+	bool abstract = false;
+	std::string name;
+
+	MaterialPipelineInfo pipeline;
+	MaterialResourcesInfo resources;
+
+	std::array<std::optional<std::string>, int(MaterialTechnique::COUNT)> techniqueMaterial;
+
+	struct TechniqueOverride
+	{
+		MaterialTechnique technique;
+		std::string overrideMaterial;
+	};
+	std::vector<TechniqueOverride> techniqueOverrides;
+};
+
+struct shaderRefMaps;
+
+namespace MaterialFileParser
+{
+	void parseAllMaterialFiles(std::vector<MaterialRef>& mats, shaderRefMaps& shaders, std::string directory, bool subFolders = false);
+};

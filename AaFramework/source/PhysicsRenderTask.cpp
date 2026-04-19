@@ -1,6 +1,6 @@
 #include "PhysicsRenderTask.h"
-#include "ShaderConstantsProvider.h"
-#include "RenderObject.h"
+#include "Resources/Shader/ShaderConstantsProvider.h"
+#include "Scene/RenderObject.h"
 
 PhysicsRenderTask::PhysicsRenderTask(RenderProvider p, SceneManager& s, PhysicsManager& m) : CompositorTask(p, s), physicsMgr(m)
 {

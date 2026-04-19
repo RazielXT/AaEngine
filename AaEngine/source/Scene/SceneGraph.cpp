@@ -1,0 +1,80 @@
+#include "Scene/SceneGraph.h"
+#include "Scene/SceneManager.h"
+
+SceneGraph::SceneGraph(SceneManager& sm) : sceneMgr(sm)
+{
+	reset();
+}
+
+void SceneGraph::updateEntity(const std::vector<EntityChangeDescritpion>& changes)
+{
+	if (changes.empty())
+		return;
+
+	for (auto& d : changes)
+	{
+		if (d.type == EntityChange::DeleteAll)
+		{
+			reset();
+		}
+		else if (d.type == EntityChange::Add)
+		{
+			auto parent = getParentNode(d.id);
+			parent->children.push_back({ d.id, d.entity->name });
+		}
+		else if (d.type == EntityChange::Delete)
+		{
+			removeNode(nodes, d.id);
+		}
+	}
+}
+
+UINT lastGroupMask{};
+SceneGraphNode* lastGroupNode{};
+
+bool SceneGraph::removeNode(std::vector<SceneGraphNode>& nodes, ObjectId id)
+{
+	bool removed = false;
+
+	for (auto it = nodes.begin(); it != nodes.end(); it++)
+	{
+		if (it->id == id || (removeNode(it->children, id) && it->children.empty()))
+		{
+			nodes.erase(it);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+SceneGraphNode* SceneGraph::getParentNode(ObjectId id)
+{
+	auto group = id.getGroupMask();
+
+	if (lastGroupNode && group == lastGroupMask)
+		return lastGroupNode;
+
+	for (auto& node : nodes)
+	{
+		if (node.id.value == group)
+		{
+			lastGroupMask = group;
+			lastGroupNode = &node;
+			return lastGroupNode;
+		}
+	}
+
+	nodes.push_back({ group, sceneMgr.getEntityGroup(id.getGroupId()).c_str() });
+	lastGroupMask = group;
+	lastGroupNode = &nodes.back();
+	return lastGroupNode;
+}
+
+void SceneGraph::reset()
+{
+	nodes.clear();
+
+	lastGroupMask = {};
+	lastGroupNode = {};
+}

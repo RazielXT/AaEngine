@@ -1,7 +1,7 @@
 #include "InputHandler.h"
 #include <windows.h>
 #include <vector>
-#include "FileLogger.h"
+#include "Utils/FileLogger.h"
 #include "hidusage.h"
 
 struct InputInfo { uint32_t message; int wParam; int lParam; };

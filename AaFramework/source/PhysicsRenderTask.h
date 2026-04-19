@@ -1,7 +1,7 @@
 #pragma once
 
-#include "CompositorTask.h"
-#include "ScreenQuad.h"
+#include "FrameCompositor/Tasks/CompositorTask.h"
+#include "RenderCore/ScreenQuad.h"
 #include "PhysicsManager.h"
 
 class PhysicsRenderTask : public CompositorTask

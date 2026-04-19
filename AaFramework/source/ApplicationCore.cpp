@@ -1,19 +1,18 @@
 #include "ApplicationCore.h"
-#include "FileLogger.h"
-#include "Directories.h"
+#include "Utils/FileLogger.h"
+#include "App/Directories.h"
 #include "FreeCamera.h"
 #include "SceneParser.h"
-#include "ModelResources.h"
-#include "ShaderLibrary.h"
-#include "MaterialResources.h"
-#include "FrameCompositor.h"
-#include "GrassArea.h"
-#include "TextureData.h"
-#include "VoxelizeSceneTask.h"
-#include <dxgidebug.h>
+#include "Resources/Model/ModelResources.h"
+#include "Resources/Shader/ShaderLibrary.h"
+#include "Resources/Material/MaterialResources.h"
+#include "RenderObject/GrassArea.h"
+#include "RenderCore/TextureData.h"
+#include "FrameCompositor/FrameCompositor.h"
+#include "FrameCompositor/Tasks/VoxelizeSceneTask.h"
 #include "PhysicsRenderTask.h"
+#include <dxgidebug.h>
 #include <filesystem>
-#include "GltfLoader.h"
 
 ApplicationCore::ApplicationCore(TargetViewport& viewport) : renderSystem(viewport), resources(renderSystem), sceneMgr(resources)
 {

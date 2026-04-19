@@ -1,9 +1,9 @@
 #pragma once
 
 #include "SceneParser.h"
-#include "Directories.h"
-#include "FileLogger.h"
-#include "GraphicsResources.h"
+#include "App/Directories.h"
+#include "Utils/FileLogger.h"
+#include "Resources/GraphicsResources.h"
 #include <filesystem>
 #include <algorithm>
 

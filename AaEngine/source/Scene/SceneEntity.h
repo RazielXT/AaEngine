@@ -1,0 +1,45 @@
+#pragma once
+
+#include "Resources/Model/VertexBufferModel.h"
+#include "Resources/Material/Material.h"
+#include "Scene/RenderObject.h"
+#include <vector>
+#include "Scene/EntityGeometry.h"
+
+struct InstanceGroup;
+
+class EntityMaterialInterface
+{
+public:
+
+	EntityMaterialInterface(MaterialPropertiesOverrideDescription&);
+
+	template<typename T>
+	void setParam(const std::string& name, const T& value)
+	{
+		setParam(name, &value, sizeof(T));
+	}
+
+	void setParam(const std::string& name, const void* data, UINT sizeBytes);
+
+private:
+	MaterialPropertiesOverrideDescription& storage;
+};
+
+class SceneEntity : public RenderObject
+{
+public:
+
+	SceneEntity(RenderObjectsStorage&, std::string_view name, uint16_t groupId = 0);
+	SceneEntity(RenderObjectsStorage&, SceneEntity& source);
+	~SceneEntity();
+
+	const char* name;
+
+	MaterialInstance* material{};
+
+	EntityMaterialInterface Material();
+	MaterialPropertiesOverrideDescription* materialOverride{};
+
+	EntityGeometry geometry;
+};

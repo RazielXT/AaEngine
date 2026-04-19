@@ -8,7 +8,8 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include "Jolt/Physics/Collision/PhysicsMaterialSimple.h"
 #include "Jolt/Core/Color.h"
-#include "SceneEntity.h"
+#include "Scene/SceneEntity.h"
+#include "Scene/RenderObject.h"
 #include <thread>
 #include <format>
 
@@ -16,7 +17,6 @@ using namespace JPH;
 #include <Samples/Layers.h>
 #include <debugapi.h>
 #include "Jolt/Physics/Collision/Shape/MeshShape.h"
-#include "RenderObject.h"
 #include <Jolt/Physics/PhysicsScene.h>
 #include <Jolt/ObjectStream/ObjectStreamIn.h>
 

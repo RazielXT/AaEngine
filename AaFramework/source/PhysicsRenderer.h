@@ -2,10 +2,10 @@
 
 #include "JoltHeader.h"
 #include <Jolt/Renderer/DebugRenderer.h>
-#include "MathUtils.h"
-#include "RenderSystem.h"
+#include "Utils/MathUtils.h"
+#include "RenderCore/RenderSystem.h"
 #include "ResourceUploadBatch.h"
-#include "GraphicsResources.h"
+#include "Resources/GraphicsResources.h"
 #include <memory>
 
 class PhysicsRenderer final : public JPH::DebugRenderer

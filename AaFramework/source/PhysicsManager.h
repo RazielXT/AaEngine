@@ -5,7 +5,7 @@
 #include <Jolt/Physics/PhysicsSystem.h>
 #include <Jolt/Core/TempAllocator.h>
 #include <Jolt/Core/JobSystemThreadPool.h>
-#include "MathUtils.h"
+#include "Utils/MathUtils.h"
 #include <format>
 #include "PhysicsRenderer.h"
 

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Camera.h"
 #include "InputHandler.h"
-#include "TargetWindow.h"
+#include "Scene/Camera.h"
+#include "App/TargetWindow.h"
 
 class FreeCamera : public ViewportListener
 {

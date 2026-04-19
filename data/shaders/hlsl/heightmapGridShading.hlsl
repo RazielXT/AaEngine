@@ -1,3 +1,5 @@
+//#define GRID_DEBUG
+
 #include "grid/heightmapGridReconstruction.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
 #include "hlsl/common/MotionVectors.hlsl"
@@ -21,8 +23,6 @@ float2 GridHeightWidth;
 uint EntityId;
 #endif
 
-//#define DEBUG
-
 StructuredBuffer<GridTileData> InstancingBuffer : register(t0);
 
 SamplerState LinearWrapSampler : register(s0);
@@ -32,8 +32,8 @@ struct PSInput
 	float4 position : SV_POSITION;
 	float4 worldPosition : TEXCOORD0;
 	float2 uv : TEXCOORD1;
-#ifdef DEBUG
-	float debugColor : TEXCOORD10;
+#ifdef GRID_DEBUG
+	float3 debugColor : TEXCOORD10;
 #endif
 };
 
@@ -49,16 +49,28 @@ PSInput VSMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
 
 	GridVertexInfo info = ReadGridVertexInfo(InstancingBuffer[instanceID], vertexID, ResourceDescriptorHeap[TexIdHeightmap], LinearWrapSampler, p);
 
-	float heightTexture = GetTexture2D(TexIdGrass).SampleLevel(LinearWrapSampler, info.uv * 50 * 10, 0).w;
-	info.position.y -= heightTexture;
+	//float heightTexture = GetTexture2D(TexIdGrass).SampleLevel(LinearWrapSampler, info.uv * 50 * 10, 0).w;
+	//info.position.y -= heightTexture * 0.0001;
 
 	PSInput result;
 	result.worldPosition = info.position;
 	result.position = mul(result.worldPosition, ViewProjectionMatrix);
 	result.uv = info.uv;
 
-#ifdef DEBUG
-	result.debugColor = heightTexture;
+#ifdef GRID_DEBUG
+static const float3 LODColors[10] = {
+	float3(1.00, 0.00, 0.00), // LOD 0 - Red
+	float3(1.00, 0.50, 0.00), // LOD 1 - Orange
+	float3(1.00, 1.00, 0.00), // LOD 2 - Yellow
+	float3(0.00, 1.00, 0.00), // LOD 3 - Green
+	float3(0.00, 1.00, 1.00), // LOD 4 - Cyan
+	float3(0.00, 0.50, 1.00), // LOD 5 - Blue
+	float3(0.50, 0.00, 1.00), // LOD 6 - Purple
+	float3(1.00, 0.00, 1.00), // LOD 7 - Magenta
+	float3(1.00, 0.00, 0.50), // LOD 8 - Pink
+	float3(1.00, 1.00, 1.00)  // LOD 9 - White (fallback / max LOD)
+};
+	result.debugColor = info.morphMask * LODColors[9-InstancingBuffer[instanceID].lod];
 #endif
 	return result;
 }
@@ -165,8 +177,8 @@ GBufferOutput PSMain(PSInput input)
 	//N = BlendUDN(N, UnpackNormal(detailN) * detailWeight);
 	normal = normalize(normal);
 
-#ifdef DEBUG
-	albedo = input.debugColor; 	//float3(input.uv.xy, 0);
+#ifdef GRID_DEBUG
+	albedo = lerp(albedo, input.debugColor, 0.5);
 #endif
 
 	GBufferOutput output;

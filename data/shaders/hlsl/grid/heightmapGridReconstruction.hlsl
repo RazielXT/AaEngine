@@ -36,6 +36,9 @@ struct GridVertexInfo
 {
 	float4 position;
 	float2 uv;
+#ifdef GRID_DEBUG
+	float morphMask;
+#endif
 };
 
 GridVertexInfo ReadGridVertexInfo(GridTileData tile, uint vertexID, Texture2D<float> heightMap, SamplerState sampler, GridRuntimeParams params)
@@ -60,7 +63,19 @@ GridVertexInfo ReadGridVertexInfo(GridTileData tile, uint vertexID, Texture2D<fl
 	// Level 0 spans TilesWidth units
 	uint unitsSpanned = TilesWidth >> tile.lod; 
 
-	const float2 MorphRange = float2(tile.range * 1.45f, 0.01f);
+	// Morph range derived from CPU subdivision geometry:
+	// CPU threshold = tileSize * 3 (multiplier 1.5), so tileSize = range/3
+	// Tile half-diagonal = range*sqrt(2)/6 = 0.236*range
+	//
+	// Fine boundary (tile just appeared, dist_to_center = range):
+	//   farthest vertex = range + 0.236*range = 1.236*range -> must have k=0
+	// Coarse boundary (parent removes tile, dist_to_parent_center = 2*range):
+	//   nearest child vertex = 2*range - 2*0.236*range = 1.529*range -> must have k=1
+	//
+	// morphStart = 1.25*range (> 1.236 -> k=0 for all vertices when tile appears)
+	// morphEnd   = 1.5*range  (< 1.529 -> k=1 for all vertices before removal)
+	const float morphStart = tile.range * 1.25f;
+	const float morphInvWidth = 4.0f / tile.range;
 
 	// 1. Calculate grid position
 	// position = (TileCoord * SmallestSize) + (LocalPlanePos * UnitsSpanned * SmallestSize)
@@ -74,12 +89,18 @@ GridVertexInfo ReadGridVertexInfo(GridTileData tile, uint vertexID, Texture2D<fl
 	// 2. Calculate Morph Factor (k)
 	float d = distance(float3(gridPosition.x, 0, gridPosition.z), float3(CameraPosition.x - WorldPosition.x, 0, CameraPosition.z - WorldPosition.z));
 	// k = 0 (no morph), k = 1 (fully collapsed to next LOD)
-	float k = saturate((d - MorphRange.x) * MorphRange.y);
+	float k = saturate((d - morphStart) * morphInvWidth);
 
 	// 3. The "Collapse" Logic
 	// localPos is 0.0 to 1.0. Multiply by (TilesWidth) to get vertex integer index.
 	float2 fraction = frac(localPos.xy * (TileWidthQuads * 0.5f)); 
 	// This tells us if we are on an "odd" vertex in the 16x16 grid relative to the next LOD
+
+	// For center vertices (both x,z odd), match the alternating diagonal pattern
+	// Coarse quad parity determines / or \ diagonal direction for collapse
+	if ((x & 1) && (z & 1) && ((x / 2 + z / 2) & 1))
+		fraction.x = -fraction.x;
+
 	float2 offset = fraction * (float)unitsSpanned * SmallestLodTileSize * k;
 
 	// Adjust the grid position: if k=1 and we are an odd vertex, 
@@ -91,7 +112,13 @@ GridVertexInfo ReadGridVertexInfo(GridTileData tile, uint vertexID, Texture2D<fl
 	gridPosition.y = heightMap.SampleLevel(sampler, RemapGridTextureUV(uv), 0) * HeightScale;
 	gridPosition.xyz += WorldPosition;
 
+#ifdef GRID_DEBUG
+	float morphMask = (k > 0 && k < 1) ? 1 : 0;
+	GridVertexInfo info = { gridPosition, uv, morphMask };
+#else
 	GridVertexInfo info = { gridPosition, uv };
+#endif
+
 	return info;
 }
 

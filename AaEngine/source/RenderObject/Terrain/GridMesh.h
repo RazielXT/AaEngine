@@ -43,9 +43,12 @@ public:
 		numBlocksY = (uint32_t)std::round(gridWorldSize.y / shorterSide);
 
 		// 3. Pre-calculate thresholds
+		// Multiplier controls how far away tiles subdivide.
+		// Higher = more room for morph transitions but more tiles rendered.
+		// With mult=3: morphWidth = 0.5*range, nearest vertex at removal = 1.53*range
 		for (UINT i = 0; i < lodsCount; ++i) {
 			float levelTileSize = (TilesWidth >> i) * m_smallestTileSize * LodLevelTilesCount;
-			float limit = levelTileSize * 1.25f;
+			float limit = levelTileSize * 1.5f;
 			m_subdivideThresholdsSq.push_back(limit * limit);
 			m_subdivideThresholds.push_back(limit);
 		}

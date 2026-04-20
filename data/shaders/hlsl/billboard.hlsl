@@ -2,6 +2,7 @@
 #include "hlsl/common/ResourceAccess.hlsl"
 #include "hlsl/common/MotionVectors.hlsl"
 #include "hlsl/common/ShaderOutputs.hlsl"
+#include "hlsl/terrain/vegetation/vegetationCommon.hlsl"
 
 float4x4 ViewProjectionMatrix;
 float4x4 InvViewMatrix;
@@ -17,14 +18,6 @@ float3 ViewCameraDirection;
 #ifdef ENTITY_ID
 uint EntityId;
 #endif
-
-struct VegetationInfo
-{
-	float3 position;
-	float rotation;
-	float scale;
-	float random;
-};
 
 cbuffer PSSMShadows : register(b1)
 {

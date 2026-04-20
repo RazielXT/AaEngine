@@ -1,11 +1,4 @@
-float3 Offset;
-
-struct VegetationInfo
-{
-    float3 position;
-    float rotation;
-	float scale;
-};
+#include "vegetationCommon.hlsl"
 
 RWStructuredBuffer<float4x4> transformBuffer : register(u0);
 RWByteAddressBuffer drawCommandsBuffer : register(u1);
@@ -50,7 +43,7 @@ void main(uint3 groupId : SV_GroupID, uint3 dispatchThreadID : SV_DispatchThread
 		VegetationInfo info = infoBuffer[x];
 
 		float4x4 rotationMatrix = RotationMatrix(info.rotation);
-		float4x4 translationScaleMatrix = TranslationScaleMatrix(info.position + Offset, info.scale);
+		float4x4 translationScaleMatrix = TranslationScaleMatrix(info.position, info.scale);
 
 		uint index;
 		drawCommandsBuffer.InterlockedAdd(4, 1, index);

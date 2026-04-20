@@ -8,10 +8,10 @@ Vegetation::Vegetation()
 
 void Vegetation::initialize(RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch)
 {
-	auto csShader = resources.shaders.getShader("vegetationFindCS", ShaderType::Compute, ShaderRef{ "vegetationFindCS.hlsl", "main", "cs_6_6" });
+	auto csShader = resources.shaders.getShader("vegetationFindCS", ShaderType::Compute, ShaderRef{ "terrain/vegetation/vegetationFindCS.hlsl", "main", "cs_6_6" });
 	vegetationFindCS.init(*renderSystem.core.device, *csShader);
 
-	csShader = resources.shaders.getShader("vegetationUpdateCS", ShaderType::Compute, ShaderRef{ "vegetationUpdateCS.hlsl", "main", "cs_6_6" });
+	csShader = resources.shaders.getShader("vegetationUpdateCS", ShaderType::Compute, ShaderRef{ "terrain/vegetation/vegetationUpdateCS.hlsl", "main", "cs_6_6" });
 	vegetationUpdateCS.init(*renderSystem.core.device, *csShader);
 
 	createBillboardIndexBuffer(renderSystem, batch);
@@ -73,8 +73,7 @@ SceneEntity* Vegetation::createDrawObject(SceneManager& sceneMgr, RenderSystem& 
 	e->geometry.indexBufferView.SizeInBytes = e->geometry.indexCount * sizeof(uint16_t);
 	e->geometry.indexBufferView.Format = DXGI_FORMAT_R16_UINT;
 
-	e->setBoundingBox({ {}, { 8000,8000,8000 } }); //no culling
-	//e->setFlag(RenderObjectFlag::NoShadow);
+	e->setBoundingBox({ {}, { 4000,4000,4000 } });
 
 	return e;
 }
@@ -159,7 +158,7 @@ void VegetationFindComputeShader::dispatch(ID3D12GraphicsCommandList* commandLis
 		Vector3 terrainScale;
 		Vector2 terrainOffset;
 	}
-	ctx = { terrainId, Vector3(8192.f, 8000.f, 8192.f), Vector2(8192.f / 2.f)};
+	ctx = { terrainId, Vector3(8000.f, 8000.f, 8000.f), Vector2(0,0)};
 
 	commandList->SetComputeRoot32BitConstants(0, sizeof(ctx) / sizeof(float), &ctx, 0);
 	commandList->SetComputeRootUnorderedAccessView(1, infoBuffer->GetGPUVirtualAddress());
@@ -173,17 +172,10 @@ void VegetationUpdateComputeShader::dispatch(ID3D12GraphicsCommandList* commandL
 	commandList->SetPipelineState(pipelineState.Get());
 	commandList->SetComputeRootSignature(signature);
 
-	struct
-	{
-		Vector3 offset;
-	}
-	ctx = {};
-
-	commandList->SetComputeRoot32BitConstants(0, sizeof(ctx) / sizeof(float), &ctx, 0);
-	commandList->SetComputeRootShaderResourceView(1, infoBuffer->GetGPUVirtualAddress());
-	commandList->SetComputeRootShaderResourceView(2, infoCounter->GetGPUVirtualAddress());
-	commandList->SetComputeRootUnorderedAccessView(3, tranformBuffer->GetGPUVirtualAddress());
-	commandList->SetComputeRootUnorderedAccessView(4, commands->GetGPUVirtualAddress());
+	commandList->SetComputeRootShaderResourceView(0, infoBuffer->GetGPUVirtualAddress());
+	commandList->SetComputeRootShaderResourceView(1, infoCounter->GetGPUVirtualAddress());
+	commandList->SetComputeRootUnorderedAccessView(2, tranformBuffer->GetGPUVirtualAddress());
+	commandList->SetComputeRootUnorderedAccessView(3, commands->GetGPUVirtualAddress());
 
 	commandList->Dispatch(groups * groups, 1, 1);
 }

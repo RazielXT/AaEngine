@@ -82,7 +82,6 @@ void WaterSim::initializeTarget(const GpuTexture2D& texture, SceneManager& scene
 {
 	terrainHeight = &texture;
 
-	size = { 8000.f, 8000.f };
 	center = { 0, -100, 0 };
 	waterGridTiles.Initialize(size, center, 7);
 

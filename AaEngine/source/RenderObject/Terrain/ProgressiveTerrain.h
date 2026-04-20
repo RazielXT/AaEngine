@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RenderObject/Terrain/GridMesh.h"
+#include "RenderObject/Terrain/TerrainGridParams.h"
 #include "ResourceUploadBatch.h"
 #include "RenderCore/GpuTexture.h"
 #include "Resources/Compute/TerrainGenerationCS.h"
@@ -20,16 +21,20 @@ public:
 
 	void initialize(RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch, SceneManager& sceneMgr);
 
-	void createTerrain(ID3D12GraphicsCommandList* commandList, RenderSystem& rs, SceneManager& sceneMgr, GraphicsResources& resources, ResourceUploadBatch& batch);
 	void update(ID3D12GraphicsCommandList* commandList, const Vector3& position, UINT frameIdx);
 
 	bool updateLod = true;
 
 	UINT getCenterHeightmapSrvIndex() const;
+	UINT getHeightmapSrvIndex(XMINT2 worldChunk) const;
 
-//protected:
+	const GpuTexture2D& getHeightmap(XMINT2 worldChunk) const;
 
-	constexpr static UINT GridsSize = 5;
+	TerrainGridParams params;
+
+	constexpr static UINT GridsSize = TerrainGridParams::GridsSize;
+
+protected:
 
 	GridLODSystem terrainGridTiles;
 	GridInstanceMesh terrainGridMesh[GridsSize][GridsSize];
@@ -41,10 +46,6 @@ public:
 	XMINT2 gridCenterChunk = { 0, 0 };
 	XMINT2 chunkWorldCoord[GridsSize][GridsSize]{};
 	bool chunkDirty[GridsSize][GridsSize]{};
-
-	float gridTileSize = 0;
-	float gridTileHeight = 0;
-	Vector3 terrainCenterPosition;
 
 	VertexBufferModel terrainModel;
 

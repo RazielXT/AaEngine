@@ -10,6 +10,7 @@
 #include "RenderCore/TextureData.h"
 #include "FrameCompositor/FrameCompositor.h"
 #include "FrameCompositor/Tasks/VoxelizeSceneTask.h"
+#include "RenderObject/Terrain/TerrainGridParams.h"
 #include "PhysicsRenderTask.h"
 #include <dxgidebug.h>
 #include <filesystem>
@@ -231,8 +232,8 @@ void ApplicationCore::loadScene(const char* scene)
  		marker.move("loadSceneTerrain", commands.color);
 		sceneMgr.water.initializeGpuResources(renderSystem, resources, batch);
 		sceneMgr.newTerrain.initialize(renderSystem, resources, batch, sceneMgr);
-		sceneMgr.vegetation.createDrawObject(sceneMgr, renderSystem, *resources.materials.getMaterial("Billboard", batch), batch, resources);
-		sceneMgr.water.initializeTarget(sceneMgr.newTerrain.terrainGridHeight[2][2], sceneMgr, {}, {});
+		sceneMgr.vegetation.createChunks(sceneMgr, renderSystem, resources, batch);
+		sceneMgr.water.initializeTarget(sceneMgr.newTerrain.getHeightmap({ 0,0 }), sceneMgr, { sceneMgr.newTerrain.params.tileSize, sceneMgr.newTerrain.params.tileSize }, {});
 	}
 
 	auto uploadResourcesFinished = batch.End(renderSystem.core.commandQueue);

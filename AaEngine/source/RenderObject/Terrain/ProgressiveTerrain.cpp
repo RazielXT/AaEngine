@@ -16,15 +16,15 @@ void ProgressiveTerrain::initialize(RenderSystem& renderSystem, GraphicsResource
 	terrainTexture = resources.textures.loadFile(*renderSystem.core.device, batch, "Mountain Range Height Map PNG.png"); //"Mountain Range Height Map PNG.png");
 	resources.descriptors.createTextureView(*terrainTexture);
 
-	gridTileSize = 8000.f;
-	gridTileHeight = 8000.f;
-	terrainCenterPosition = { gridTileSize * -0.5f, gridTileHeight * -0.5f, gridTileSize * -0.5f };
+	params.tileSize = 8000.f;
+	params.tileHeight = 8000.f;
+	params.tileCenterOffset = { params.tileSize * -0.5f, params.tileHeight * -0.5f, params.tileSize * -0.5f };
 
-	terrainGridTiles.Initialize({ gridTileSize, gridTileSize }, terrainCenterPosition, 10);
+	terrainGridTiles.Initialize({ params.tileSize, params.tileSize }, params.tileCenterOffset, 10);
 
 	terrainModel.CreateIndexBufferGrid(renderSystem.core.device, &batch, TerrainModelSize);
-	terrainModel.bbox.Extents = { gridTileSize * 0.5f, gridTileHeight * 0.5f, gridTileSize * 0.5f };
-	terrainModel.bbox.Center = { gridTileSize * 0.5f, gridTileHeight * 0.5f, gridTileSize * 0.5f };
+	terrainModel.bbox.Extents = { params.tileSize * 0.5f, params.tileHeight * 0.5f, params.tileSize * 0.5f };
+	terrainModel.bbox.Center = { params.tileSize * 0.5f, params.tileHeight * 0.5f, params.tileSize * 0.5f };
 
 	for (int x = 0; x < GridsSize; x++)
 		for (int y = 0; y < GridsSize; y++)
@@ -52,7 +52,7 @@ void ProgressiveTerrain::initialize(RenderSystem& renderSystem, GraphicsResource
 			e->material = resources.materials.getMaterial("MountainTerrainGrid", batch);
 			e->Material().setParam("TexIdHeightmap", terrainHeight.view.srvHeapIndex);
 			e->Material().setParam("TexIdNormalmap", terrainNormal.view.srvHeapIndex);
-			auto GridHeightWidth = Vector2(gridTileHeight, gridTileSize);
+			auto GridHeightWidth = Vector2(params.tileHeight, params.tileSize);
 			e->Material().setParam("GridHeightWidth", &GridHeightWidth, sizeof(GridHeightWidth));
 
 			// Toroidal-consistent world coord: slot x maps to world x for x<=2, x-5 for x>2
@@ -60,12 +60,8 @@ void ProgressiveTerrain::initialize(RenderSystem& renderSystem, GraphicsResource
 			int wx = x > (int)GridsSize / 2 ? x - (int)GridsSize : x;
 			int wy = y > (int)GridsSize / 2 ? y - (int)GridsSize : y;
 
-			Vector3 pos = terrainCenterPosition;
-			pos.x += wx * gridTileSize;
-			pos.z += wy * gridTileSize;
-			e->setPosition(pos);
-
 			chunkWorldCoord[x][y] = { wx, wy };
+			e->setPosition(params.chunkWorldMin(chunkWorldCoord[x][y], params.tileSize));
 			chunkDirty[x][y] = true;
 		}
 
@@ -108,17 +104,9 @@ void ProgressiveTerrain::regenerateChunk(ID3D12GraphicsCommandList* commandList,
 	tr.push(commandList);
 }
 
-static int wrapIndex(int coord, int size)
-{
-	return ((coord % size) + size) % size;
-}
-
 void ProgressiveTerrain::update(ID3D12GraphicsCommandList* commandList, const Vector3& cameraPos, UINT frameIdx)
 {
-	XMINT2 cameraChunk = {
-		(int)std::floor(cameraPos.x / gridTileSize + 0.5f),
-		(int)std::floor(cameraPos.z / gridTileSize + 0.5f)
-	};
+	XMINT2 cameraChunk = params.gridCenterAt(cameraPos, params.tileSize, GridsSize);
 
 	if (cameraChunk.x != gridCenterChunk.x || cameraChunk.y != gridCenterChunk.y)
 	{
@@ -128,18 +116,15 @@ void ProgressiveTerrain::update(ID3D12GraphicsCommandList* commandList, const Ve
 			for (int y = 0; y < (int)GridsSize; y++)
 			{
 				XMINT2 desired = { gridCenterChunk.x + x - 2, gridCenterChunk.y + y - 2 };
-				int ax = wrapIndex(desired.x, GridsSize);
-				int ay = wrapIndex(desired.y, GridsSize);
+				int ax = TerrainGridParams::wrapIndex(desired.x, GridsSize);
+				int ay = TerrainGridParams::wrapIndex(desired.y, GridsSize);
 
 				if (chunkWorldCoord[ax][ay].x != desired.x || chunkWorldCoord[ax][ay].y != desired.y)
 				{
 					chunkWorldCoord[ax][ay] = desired;
 					chunkDirty[ax][ay] = true;
 
-					Vector3 pos = terrainCenterPosition;
-					pos.x += desired.x * gridTileSize;
-					pos.z += desired.y * gridTileSize;
-					terrainGridMesh[ax][ay].entity->setPosition(pos);
+				terrainGridMesh[ax][ay].entity->setPosition(params.chunkWorldMin(desired, params.tileSize));
 				}
 			}
 	}
@@ -167,7 +152,21 @@ void ProgressiveTerrain::update(ID3D12GraphicsCommandList* commandList, const Ve
 
 UINT ProgressiveTerrain::getCenterHeightmapSrvIndex() const
 {
-	int ax = wrapIndex(gridCenterChunk.x, GridsSize);
-	int ay = wrapIndex(gridCenterChunk.y, GridsSize);
+	int ax = TerrainGridParams::wrapIndex(gridCenterChunk.x, GridsSize);
+	int ay = TerrainGridParams::wrapIndex(gridCenterChunk.y, GridsSize);
 	return terrainGridHeight[ax][ay].view.srvHeapIndex;
+}
+
+UINT ProgressiveTerrain::getHeightmapSrvIndex(XMINT2 worldChunk) const
+{
+	int ax = TerrainGridParams::wrapIndex(worldChunk.x, GridsSize);
+	int ay = TerrainGridParams::wrapIndex(worldChunk.y, GridsSize);
+	return terrainGridHeight[ax][ay].view.srvHeapIndex;
+}
+
+const GpuTexture2D& ProgressiveTerrain::getHeightmap(XMINT2 worldChunk) const
+{
+	int ax = TerrainGridParams::wrapIndex(worldChunk.x, GridsSize);
+	int ay = TerrainGridParams::wrapIndex(worldChunk.y, GridsSize);
+	return terrainGridHeight[ax][ay];
 }

@@ -2,9 +2,12 @@
 #include "hlsl/common/Random.hlsl"
 #include "vegetationCommon.hlsl"
 
-uint TexIdTerrainDepth; 
-float3 TerrainScale;
+uint TexIdTerrainDepth;
+float TerrainHeight;
 float2 TerrainOffset;
+float2 ChunkWorldSize;
+float2 SubUvOffset;
+float2 SubUvScale;
 
 RWStructuredBuffer<VegetationInfo> infoBuffer : register(u0);
 RWByteAddressBuffer counterBuffer : register(u1);
@@ -21,9 +24,9 @@ float2 RemapGridTextureUV(float2 gridUV)
 
 uint getVegetationInfo(out VegetationInfo info, float2 coords)
 {
-	float2 texCoords = RemapGridTextureUV(coords);
-	//float3 TerrainScaleAdj = TerrainScale;
-	//TerrainScaleAdj.xz *= (1024.f + 32.f) / 1024.f;
+	// Map local coords [0,1] to the sub-region of the terrain heightmap
+	float2 heightmapUv = SubUvOffset + coords * SubUvScale;
+	float2 texCoords = RemapGridTextureUV(heightmapUv);
 
 	Texture2D<float> heightmap = GetTexture2D1f(TexIdTerrainDepth);
 	float height = heightmap.SampleLevel(LinearWrapSampler, texCoords, 0);
@@ -37,9 +40,9 @@ uint getVegetationInfo(out VegetationInfo info, float2 coords)
 	// Estimate the normal vector using cross product and normalize it
 	float3 normal = normalize(cross(bitangent, tangent));
 
-	info.position.xz = coords - 0.5f;
-	info.position.y = height - 0.5f;
-	info.position *= TerrainScale;
+	// Position: coords [0,1] map to one vegetation chunk
+	info.position.xz = (coords - 0.5f) * ChunkWorldSize;
+	info.position.y = (height - 0.5f) * TerrainHeight;
 	info.position.xz += TerrainOffset;
 
 	info.rotation = 0;

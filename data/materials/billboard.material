@@ -33,6 +33,8 @@ material Billboard
 	technique EntityId BillboardEntityId
 }
 
+material VegetationBillboard : Billboard
+
 material BillboardDepth : Billboard
 {
 	pixel_shader

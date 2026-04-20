@@ -4,14 +4,26 @@
 #include "Resources/GraphicsResources.h"
 #include "Resources/Compute/ComputeShader.h"
 #include "Scene/EntityGeometry.h"
+#include "RenderObject/Terrain/TerrainGridParams.h"
 
 class SceneManager;
+class ProgressiveTerrain;
 
 class VegetationFindComputeShader : public ComputeShader
 {
 public:
 
-	void dispatch(ID3D12GraphicsCommandList* commandList, UINT terrainId, ID3D12Resource* infoBuffer, ID3D12Resource* counter);
+	struct Input
+	{
+		UINT terrainTexture;
+		float terrainHeight;
+		Vector2 terrainOffset;
+		Vector2 chunkWorldSize;
+		Vector2 subUvOffset;
+		Vector2 subUvScale;
+	};
+
+	void dispatch(ID3D12GraphicsCommandList* commandList, const Input& input, ID3D12Resource* infoBuffer, ID3D12Resource* counter);
 };
 
 class VegetationUpdateComputeShader : public ComputeShader
@@ -21,14 +33,17 @@ public:
 	void dispatch(ID3D12GraphicsCommandList* commandList, ID3D12Resource* tranformBuffer, ID3D12Resource* counter, ID3D12Resource* infoBuffer, ID3D12Resource* infoCounter);
 };
 
-struct VegetationGroup
+struct VegetationChunk
 {
 	ComPtr<ID3D12Resource> infoBuffer;
 	ComPtr<ID3D12Resource> transformationBuffer;
-
 	ComPtr<ID3D12Resource> infoCounter;
-
 	IndirectEntityGeometry impostors;
+	SceneEntity* entity{};
+
+	XMINT2 worldCoord{};
+	bool dirty = true;
+	bool firstRun = true;
 };
 
 class Vegetation
@@ -41,25 +56,31 @@ public:
 
 	void clear();
 
-	SceneEntity* createDrawObject(SceneManager& sceneMgr, RenderSystem& renderSystem, MaterialInstance& material, ResourceUploadBatch& batch, GraphicsResources& resources);
+	void createChunks(SceneManager& sceneMgr, RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch);
 
-	void update(ID3D12GraphicsCommandList* commandList, UINT terrainId);
+	void update(ID3D12GraphicsCommandList* commandList, const Vector3& cameraPos, const ProgressiveTerrain& terrain);
+
+	constexpr static UINT ChunksPerTerrainTile = 2;
+	constexpr static UINT VegGridSize = ChunksPerTerrainTile * 2;
 
 private:
 
-	std::vector<std::unique_ptr<VegetationGroup>> vegetations;
-	std::vector<VegetationGroup*> scheduled;
+	VegetationChunk chunks[VegGridSize][VegGridSize];
+	XMINT2 gridCenterChunk = { 0, 0 };
 
 	VegetationFindComputeShader vegetationFindCS;
 	VegetationUpdateComputeShader vegetationUpdateCS;
 
-	void createDrawObjectImpostors(RenderSystem& renderSystem, ResourceUploadBatch& batch, GraphicsResources& resources, IndirectEntityGeometry& chunk);
-
 	void initializeImpostors(RenderSystem& renderSystem, ResourceUploadBatch& batch);
+	void createBillboardIndexBuffer(RenderSystem& renderSystem, ResourceUploadBatch& batch);
+	void initChunk(VegetationChunk& chunk, RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch, MaterialInstance* material);
+	void regenerateChunk(ID3D12GraphicsCommandList* commandList, VegetationChunk& chunk, const ProgressiveTerrain& terrain);
+	void updateChunk(ID3D12GraphicsCommandList* commandList, VegetationChunk& chunk);
 
 	ComPtr<ID3D12CommandSignature> commandSignature;
 	ComPtr<ID3D12Resource> defaultCommandBuffer;
-
-	void createBillboardIndexBuffer(RenderSystem& renderSystem, ResourceUploadBatch& batch);
+	ComPtr<ID3D12Resource> zeroCounterBuffer;
 	ComPtr<ID3D12Resource> indexBuffer;
+
+	MaterialInstance* vegMaterial{};
 };

@@ -1,6 +1,8 @@
 #include "RenderObject/Vegetation/Vegetation.h"
+#include "RenderObject/Terrain/ProgressiveTerrain.h"
 #include "BufferHelpers.h"
 #include "Scene/SceneManager.h"
+#include <format>
 
 Vegetation::Vegetation()
 {
@@ -20,8 +22,11 @@ void Vegetation::initialize(RenderSystem& renderSystem, GraphicsResources& resou
 
 void Vegetation::clear()
 {
-	scheduled.clear();
-	vegetations.clear();
+	for (int x = 0; x < VegGridSize; x++)
+		for (int y = 0; y < VegGridSize; y++)
+		{
+			chunks[x][y] = {};
+		}
 }
 
 const UINT groups = 4;
@@ -36,46 +41,191 @@ struct VegetationInfo
 	float random;
 };
 
-SceneEntity* Vegetation::createDrawObject(SceneManager& sceneMgr, RenderSystem& renderSystem, MaterialInstance& material, ResourceUploadBatch& batch, GraphicsResources& resources)
+void Vegetation::initChunk(VegetationChunk& chunk, RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch, MaterialInstance* material)
 {
-	auto& v = vegetations.emplace_back();
-
-	v = std::make_unique<VegetationGroup>();
-
 	constexpr UINT row = groups * threads * perThread;
 	constexpr UINT maxCount = row * row;
 
-	constexpr UINT elementInfoSize = sizeof(VegetationInfo);
-	constexpr UINT infoSize = elementInfoSize * maxCount;
-	v->infoBuffer = resources.shaderBuffers.CreateStructuredBuffer(infoSize, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-	v->infoBuffer->SetName(L"VegetationInfo");
+	constexpr UINT infoSize = sizeof(VegetationInfo) * maxCount;
+	chunk.infoBuffer = resources.shaderBuffers.CreateStructuredBuffer(infoSize, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	chunk.infoBuffer->SetName(L"VegetationInfo");
 
-	constexpr UINT tranformationInfoSize = sizeof(XMFLOAT4X4);
-	constexpr UINT tranformationSize = tranformationInfoSize * maxCount;
-	v->transformationBuffer = resources.shaderBuffers.CreateStructuredBuffer(tranformationSize);
-	v->transformationBuffer->SetName(L"VegetationTransformation");
+	constexpr UINT tranformationSize = sizeof(XMFLOAT4X4) * maxCount;
+	chunk.transformationBuffer = resources.shaderBuffers.CreateStructuredBuffer(tranformationSize);
+	chunk.transformationBuffer->SetName(L"VegetationTransformation");
 
-	v->infoCounter = resources.shaderBuffers.CreateStructuredBuffer(sizeof(UINT), D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-	v->infoCounter->SetName(L"VegetationInfoCounter");
+	chunk.infoCounter = resources.shaderBuffers.CreateStructuredBuffer(sizeof(UINT), D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	chunk.infoCounter->SetName(L"VegetationInfoCounter");
 
-	scheduled.push_back(v.get());
+	chunk.impostors.commandSignature = commandSignature;
+	chunk.impostors.commandBuffer = resources.shaderBuffers.CreateStructuredBuffer(sizeof(D3D12_DRAW_INDEXED_ARGUMENTS));
+	chunk.impostors.commandBuffer->SetName(L"VegetationCommandBuffer");
+	chunk.impostors.maxCommands = 1;
+}
 
-	createDrawObjectImpostors(renderSystem, batch, resources, v->impostors);
+void Vegetation::createChunks(SceneManager& sceneMgr, RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch)
+{
+	vegMaterial = resources.materials.getMaterial("VegetationBillboard", batch);
+	auto& terrainParams = sceneMgr.newTerrain.params;
+	float chunkSize = terrainParams.tileSize / ChunksPerTerrainTile;
+	int half = (int)VegGridSize / 2;
 
-	auto e = sceneMgr.createEntity("vegetation");
-	e->material = &material;
-	e->geometry.type = EntityGeometry::Type::Indirect;
-	e->geometry.source = &v->impostors;
-	e->geometry.geometryCustomBuffer = v->infoBuffer->GetGPUVirtualAddress();
+	gridCenterChunk = terrainParams.worldCoordAt(Vector3::Zero, chunkSize);
 
-	e->geometry.indexCount = 6;
-	e->geometry.indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
-	e->geometry.indexBufferView.SizeInBytes = e->geometry.indexCount * sizeof(uint16_t);
-	e->geometry.indexBufferView.Format = DXGI_FORMAT_R16_UINT;
+	for (int x = 0; x < (int)VegGridSize; x++)
+		for (int y = 0; y < (int)VegGridSize; y++)
+		{
+			XMINT2 desired = { gridCenterChunk.x + x - half, gridCenterChunk.y + y - half };
+			int ax = TerrainGridParams::wrapIndex(desired.x, VegGridSize);
+			int ay = TerrainGridParams::wrapIndex(desired.y, VegGridSize);
 
-	e->setBoundingBox({ {}, { 4000,4000,4000 } });
+			auto& chunk = chunks[ax][ay];
+			initChunk(chunk, renderSystem, resources, batch, vegMaterial);
 
-	return e;
+			auto e = sceneMgr.createEntity("Veg" + std::format("{}{}", ax, ay));
+			chunk.entity = e;
+			e->material = vegMaterial;
+			e->geometry.type = EntityGeometry::Type::Indirect;
+			e->geometry.source = &chunk.impostors;
+			e->geometry.geometryCustomBuffer = chunk.infoBuffer->GetGPUVirtualAddress();
+
+			e->geometry.indexCount = 6;
+			e->geometry.indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
+			e->geometry.indexBufferView.SizeInBytes = e->geometry.indexCount * sizeof(uint16_t);
+			e->geometry.indexBufferView.Format = DXGI_FORMAT_R16_UINT;
+
+			e->setBoundingBox({ { chunkSize * 0.5f, terrainParams.tileHeight * 0.5f, chunkSize * 0.5f },
+							   { chunkSize * 0.5f, terrainParams.tileHeight * 0.5f, chunkSize * 0.5f } });
+
+			chunk.worldCoord = desired;
+			chunk.dirty = true;
+
+			e->setPosition(terrainParams.chunkWorldMin(desired, chunkSize));
+		}
+}
+
+void Vegetation::regenerateChunk(ID3D12GraphicsCommandList* commandList, VegetationChunk& chunk, const ProgressiveTerrain& terrain)
+{
+	auto& terrainParams = terrain.params;
+	float chunkSize = terrainParams.tileSize / ChunksPerTerrainTile;
+
+	// Map vegetation chunk world coord to terrain chunk world coord
+	XMINT2 terrainChunk = {
+		(int)std::floor((float)chunk.worldCoord.x / ChunksPerTerrainTile),
+		(int)std::floor((float)chunk.worldCoord.y / ChunksPerTerrainTile)
+	};
+
+	UINT heightmapSrv = terrain.getHeightmapSrvIndex(terrainChunk);
+
+	// Compute UV sub-region within the terrain tile for this vegetation chunk
+	int subX = ((chunk.worldCoord.x % (int)ChunksPerTerrainTile) + (int)ChunksPerTerrainTile) % (int)ChunksPerTerrainTile;
+	int subY = ((chunk.worldCoord.y % (int)ChunksPerTerrainTile) + (int)ChunksPerTerrainTile) % (int)ChunksPerTerrainTile;
+
+	float uvScale = 1.0f / ChunksPerTerrainTile;
+
+	VegetationFindComputeShader::Input input;
+	input.terrainTexture = heightmapSrv;
+	input.terrainHeight = terrainParams.tileHeight;
+
+	auto worldMin = terrainParams.chunkWorldMin(chunk.worldCoord, chunkSize);
+	input.terrainOffset = { worldMin.x + chunkSize * 0.5f, worldMin.z + chunkSize * 0.5f };
+	input.chunkWorldSize = { chunkSize, chunkSize };
+	input.subUvOffset = { subX * uvScale, subY * uvScale };
+	input.subUvScale = { uvScale, uvScale };
+
+	// Transition info/counter back to UAV if they were left as SRV from a previous cycle
+	if (!chunk.firstRun)
+	{
+		CD3DX12_RESOURCE_BARRIER toUav[2]{};
+		toUav[0] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.infoBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+		toUav[1] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.infoCounter.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+		commandList->ResourceBarrier(2, toUav);
+	}
+	chunk.firstRun = false;
+
+	// Clear the counter to zero before dispatching find CS
+	CD3DX12_RESOURCE_BARRIER toCopyDest = CD3DX12_RESOURCE_BARRIER::Transition(chunk.infoCounter.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_DEST);
+	commandList->ResourceBarrier(1, &toCopyDest);
+	commandList->CopyBufferRegion(chunk.infoCounter.Get(), 0, zeroCounterBuffer.Get(), 0, sizeof(UINT));
+	CD3DX12_RESOURCE_BARRIER toUavAgain = CD3DX12_RESOURCE_BARRIER::Transition(chunk.infoCounter.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	commandList->ResourceBarrier(1, &toUavAgain);
+
+	vegetationFindCS.dispatch(commandList, input, chunk.infoBuffer.Get(), chunk.infoCounter.Get());
+
+	// UAV barrier to ensure find CS writes complete before update CS reads
+	CD3DX12_RESOURCE_BARRIER uavBarriers[2]{};
+	uavBarriers[0] = CD3DX12_RESOURCE_BARRIER::UAV(chunk.infoBuffer.Get());
+	uavBarriers[1] = CD3DX12_RESOURCE_BARRIER::UAV(chunk.infoCounter.Get());
+	commandList->ResourceBarrier(2, uavBarriers);
+
+	CD3DX12_RESOURCE_BARRIER toSrv[2]{};
+	toSrv[0] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.infoBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	toSrv[1] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.infoCounter.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	commandList->ResourceBarrier(2, toSrv);
+}
+
+void Vegetation::updateChunk(ID3D12GraphicsCommandList* commandList, VegetationChunk& chunk)
+{
+	CD3DX12_RESOURCE_BARRIER barrier[2]{};
+
+	barrier[0] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.impostors.commandBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
+	commandList->ResourceBarrier(1, barrier);
+
+	commandList->CopyBufferRegion(chunk.impostors.commandBuffer.Get(), 0, defaultCommandBuffer.Get(), 0, sizeof(D3D12_DRAW_INDEXED_ARGUMENTS));
+
+	barrier[0] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.impostors.commandBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	barrier[1] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.transformationBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	commandList->ResourceBarrier(2, barrier);
+
+	vegetationUpdateCS.dispatch(commandList, chunk.transformationBuffer.Get(), chunk.impostors.commandBuffer.Get(), chunk.infoBuffer.Get(), chunk.infoCounter.Get());
+
+	barrier[0] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.impostors.commandBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	barrier[1] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.transformationBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	commandList->ResourceBarrier(2, barrier);
+}
+
+void Vegetation::update(ID3D12GraphicsCommandList* commandList, const Vector3& cameraPos, const ProgressiveTerrain& terrain)
+{
+	auto& terrainParams = terrain.params;
+	float chunkSize = terrainParams.tileSize / ChunksPerTerrainTile;
+	int half = (int)VegGridSize / 2;
+
+	XMINT2 cameraChunk = terrainParams.worldCoordAt(cameraPos, chunkSize);
+
+	if (cameraChunk.x != gridCenterChunk.x || cameraChunk.y != gridCenterChunk.y)
+	{
+		gridCenterChunk = cameraChunk;
+
+		for (int x = 0; x < (int)VegGridSize; x++)
+			for (int y = 0; y < (int)VegGridSize; y++)
+			{
+				XMINT2 desired = { gridCenterChunk.x + x - half, gridCenterChunk.y + y - half };
+				int ax = TerrainGridParams::wrapIndex(desired.x, VegGridSize);
+				int ay = TerrainGridParams::wrapIndex(desired.y, VegGridSize);
+
+				auto& chunk = chunks[ax][ay];
+				if (chunk.worldCoord.x != desired.x || chunk.worldCoord.y != desired.y)
+				{
+					chunk.worldCoord = desired;
+					chunk.dirty = true;
+
+					chunk.entity->setPosition(terrainParams.chunkWorldMin(desired, chunkSize));
+				}
+			}
+	}
+
+	// Regenerate dirty chunks (find vegetation positions) and update their indirect draw calls
+	for (int x = 0; x < (int)VegGridSize; x++)
+		for (int y = 0; y < (int)VegGridSize; y++)
+		{
+			auto& chunk = chunks[x][y];
+			if (chunk.dirty && chunk.entity)
+			{
+				regenerateChunk(commandList, chunk, terrain);
+				updateChunk(commandList, chunk);
+				chunk.dirty = false;
+			}
+		}
 }
 
 struct IndirectCommand
@@ -83,53 +233,8 @@ struct IndirectCommand
 	D3D12_DRAW_INDEXED_ARGUMENTS drawArguments;
 };
 
-void Vegetation::update(ID3D12GraphicsCommandList* commandList, UINT terrainId)
-{
-	for (auto& s : scheduled)
-	{
-		vegetationFindCS.dispatch(commandList, terrainId, s->infoBuffer.Get(), s->infoCounter.Get());
-
-		CD3DX12_RESOURCE_BARRIER barrier[2]{};
-		barrier[0] = CD3DX12_RESOURCE_BARRIER::Transition(s->infoBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-		barrier[1] = CD3DX12_RESOURCE_BARRIER::Transition(s->infoCounter.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-		commandList->ResourceBarrier(2, barrier);
-	}
-
-	scheduled.clear();
-
-	for (auto& v : vegetations)
-	{
-		CD3DX12_RESOURCE_BARRIER barrier[2]{};
-		barrier[0] = CD3DX12_RESOURCE_BARRIER::Transition(v->impostors.commandBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
-		commandList->ResourceBarrier(1, barrier);
-
-		commandList->CopyBufferRegion(v->impostors.commandBuffer.Get(), 0, defaultCommandBuffer.Get(), 0, sizeof(IndirectCommand));
-		//commandList->CopyResource(v->impostors.commandBuffer.Get(), defaultCommandBuffer.Get());
-
-		barrier[0] = CD3DX12_RESOURCE_BARRIER::Transition(v->impostors.commandBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-		barrier[1] = CD3DX12_RESOURCE_BARRIER::Transition(v->transformationBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-		commandList->ResourceBarrier(2, barrier);
-
-		vegetationUpdateCS.dispatch(commandList, v->transformationBuffer.Get(), v->impostors.commandBuffer.Get(), v->infoBuffer.Get(), v->infoCounter.Get());
-
-		barrier[0] = CD3DX12_RESOURCE_BARRIER::Transition(v->impostors.commandBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-		barrier[1] = CD3DX12_RESOURCE_BARRIER::Transition(v->transformationBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-		commandList->ResourceBarrier(2, barrier);
-	}
-}
-
-void Vegetation::createDrawObjectImpostors(RenderSystem& renderSystem, ResourceUploadBatch& batch, GraphicsResources& resources, IndirectEntityGeometry& chunk)
-{
-	chunk.commandSignature = commandSignature;
-	chunk.commandBuffer = resources.shaderBuffers.CreateStructuredBuffer(sizeof(IndirectCommand));
-	chunk.commandBuffer->SetName(L"VegetationCommandBuffer");
-
-	chunk.maxCommands = 1;
-}
-
 void Vegetation::initializeImpostors(RenderSystem& renderSystem, ResourceUploadBatch& batch)
 {
-	// Each command consists of a CBV update and a DrawInstanced call.
 	D3D12_INDIRECT_ARGUMENT_DESC argumentDescs[1] = {};
 	argumentDescs[0].Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED;
 
@@ -141,26 +246,21 @@ void Vegetation::initializeImpostors(RenderSystem& renderSystem, ResourceUploadB
 	renderSystem.core.device->CreateCommandSignature(&commandSignatureDesc, nullptr, IID_PPV_ARGS(&commandSignature));
 
 	IndirectCommand defaultData{};
-	defaultData.drawArguments.IndexCountPerInstance = 6; //quad
-	defaultData.drawArguments.InstanceCount = 0; //filled by CS
+	defaultData.drawArguments.IndexCountPerInstance = 6;
+	defaultData.drawArguments.InstanceCount = 0;
 
 	CreateStaticBuffer(renderSystem.core.device, batch, &defaultData, sizeof(IndirectCommand), D3D12_RESOURCE_STATE_COPY_SOURCE, &defaultCommandBuffer);
+
+	UINT zero = 0;
+	CreateStaticBuffer(renderSystem.core.device, batch, &zero, sizeof(UINT), D3D12_RESOURCE_STATE_COPY_SOURCE, &zeroCounterBuffer);
 }
 
-void VegetationFindComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, UINT terrainId, ID3D12Resource* infoBuffer, ID3D12Resource* counter)
+void VegetationFindComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, const Input& input, ID3D12Resource* infoBuffer, ID3D12Resource* counter)
 {
 	commandList->SetPipelineState(pipelineState.Get());
 	commandList->SetComputeRootSignature(signature);
 
-	struct Input
-	{
-		UINT terrainTexture;
-		Vector3 terrainScale;
-		Vector2 terrainOffset;
-	}
-	ctx = { terrainId, Vector3(8000.f, 8000.f, 8000.f), Vector2(0,0)};
-
-	commandList->SetComputeRoot32BitConstants(0, sizeof(ctx) / sizeof(float), &ctx, 0);
+	commandList->SetComputeRoot32BitConstants(0, sizeof(input) / sizeof(float), &input, 0);
 	commandList->SetComputeRootUnorderedAccessView(1, infoBuffer->GetGPUVirtualAddress());
 	commandList->SetComputeRootUnorderedAccessView(2, counter->GetGPUVirtualAddress());
 
@@ -182,7 +282,6 @@ void VegetationUpdateComputeShader::dispatch(ID3D12GraphicsCommandList* commandL
 
 void Vegetation::createBillboardIndexBuffer(RenderSystem& renderSystem, ResourceUploadBatch& batch)
 {
-	//quad 2 triangles
 	std::vector<uint16_t> data = { 0, 1, 2, 2, 1, 3 };
 
 	CreateStaticBuffer(renderSystem.core.device, batch, data, D3D12_RESOURCE_STATE_INDEX_BUFFER, &indexBuffer);

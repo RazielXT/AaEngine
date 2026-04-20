@@ -643,21 +643,6 @@ void Editor::prepareElements(Camera& camera)
 
 	ImGui::Begin("Debug2");
 
-// 	const char* scenes[] = {
-// 		"basic",
-// 		"cubesTower",
-// 		"testCubes",
-// 		"voxelRoom",
-// 		"voxelOutside",
-// 		"voxelOutsideBig",
-// 		"sponza",
-// 		"voxelRoom",
-// 		"tmp"
-// 	};
-// 	static int currentScene = 0;
-// 	if (ImGui::Combo("Scene", &currentScene, scenes, std::size(scenes)))
-// 		state.changeScene = scenes[currentScene];
-
 	if (ImGui::CollapsingHeader("Rendering"))
 	{
 		if (ImGui::Button("Reload shaders"))
@@ -703,8 +688,14 @@ void Editor::prepareElements(Camera& camera)
 
 	if (ImGui::CollapsingHeader("Terrain"))
 	{
+		static bool debugLod = false;
+		if (ImGui::Checkbox("Debug LOD", &debugLod))
+		{
+			app.resources.shaderDefines.setDefine("GRID_DEBUG", debugLod);
+		}
+
 		static bool updateGrid = true;
-		if (ImGui::Checkbox("Update grid LOD", &updateGrid))
+		if (ImGui::Checkbox("Updating LOD", &updateGrid))
 		{
 			app.sceneMgr.water.enableLodUpdating(updateGrid);
 			app.sceneMgr.newTerrain.updateLod = updateGrid;

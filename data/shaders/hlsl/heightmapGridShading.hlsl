@@ -59,18 +59,18 @@ PSInput VSMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
 
 #ifdef GRID_DEBUG
 static const float3 LODColors[10] = {
-	float3(1.00, 0.00, 0.00), // LOD 0 - Red
-	float3(1.00, 0.50, 0.00), // LOD 1 - Orange
-	float3(1.00, 1.00, 0.00), // LOD 2 - Yellow
-	float3(0.00, 1.00, 0.00), // LOD 3 - Green
-	float3(0.00, 1.00, 1.00), // LOD 4 - Cyan
-	float3(0.00, 0.50, 1.00), // LOD 5 - Blue
-	float3(0.50, 0.00, 1.00), // LOD 6 - Purple
-	float3(1.00, 0.00, 1.00), // LOD 7 - Magenta
-	float3(1.00, 0.00, 0.50), // LOD 8 - Pink
-	float3(1.00, 1.00, 1.00)  // LOD 9 - White (fallback / max LOD)
+	float3(1.00, 0.00, 0.00), // Red
+	float3(0.00, 0.60, 0.10), // Bright Green (very bright)
+	float3(0.00, 0.20, 1.00), // Sky Blue (bright)
+	float3(1.00, 0.80, 0.00), // Gold (bright)
+	float3(0.20, 0.00, 1.00), // Deep Blue (dark)
+	float3(1.00, 0.20, 0.60), // Hot Pink (bright)
+	float3(0.60, 0.30, 0.00), // Brown/Amber (dark)
+	float3(0.00, 1.00, 0.40), // Green-Teal (bright)
+	float3(0.80, 0.00, 0.80), // Purple (mid)
+	float3(1.00, 1.00, 1.00)  // White (max contrast)
 };
-	result.debugColor = info.morphMask * LODColors[9-InstancingBuffer[instanceID].lod];
+	result.debugColor = (1 - 0.4 * info.morphMask) * LODColors[9-InstancingBuffer[instanceID].lod];
 #endif
 	return result;
 }
@@ -178,7 +178,7 @@ GBufferOutput PSMain(PSInput input)
 	normal = normalize(normal);
 
 #ifdef GRID_DEBUG
-	albedo = lerp(albedo, input.debugColor, 0.5);
+	albedo = lerp(albedo, input.debugColor, 0.7);
 #endif
 
 	GBufferOutput output;

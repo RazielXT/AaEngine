@@ -11,6 +11,7 @@ uint TexIdTerrainNormal;
 uint TexIdTerrainType;
 
 #include "hlsl/common/ResourceAccess.hlsl"
+#include "hlsl/common/Random.hlsl"
 
 struct GrassVertex { float3 start; float3 end; float3 color; float3 normal; float scale; };
 
@@ -29,15 +30,6 @@ float2 getGrassCoords(float3 position)
 	return coords;
 }
 
-float getRandom(float x, float z)
-{
-    float2 K1 = float2(
-        23.14069263277926, // e^pi (Gelfond's constant)
-         2.665144142690225 // 2^sqrt(2) (Gelfond–Schneider constant)
-    );
-    return frac(cos( dot(float2(x,z),K1) ) * 12345.6789 );
-}
-
 void createGrassPositions(uint index, out float3 pos1, out float3 pos2)
 {
 	uint x = index / GrassCountRows;
@@ -46,12 +38,12 @@ void createGrassPositions(uint index, out float3 pos1, out float3 pos2)
 	float xPos = BoundsMin.x + x * GrassSpacing;
 	float zPos = BoundsMin.z + z * GrassSpacing;
 	
-	float angle = getRandom(xPos, zPos) * 6.28;
+	float angle = RandomFrom2D(float2(xPos, zPos)) * 6.28;
 	float xTrans = cos(angle) * GrassWidth;
 	float zTrans = sin(angle) * GrassWidth;
 
-	zPos += getRandom(zPos, xPos) * GrassWidth;
-	xPos += getRandom(xPos, zPos) * GrassWidth;
+	zPos += RandomFrom2D(float2(zPos, xPos)) * GrassWidth;
+	xPos += RandomFrom2D(float2(xPos, zPos)) * GrassWidth;
 
 	pos1 = float3(xPos - xTrans, 0, zPos - zTrans);
 	pos2 = float3(xPos + xTrans, 0, zPos + zTrans);

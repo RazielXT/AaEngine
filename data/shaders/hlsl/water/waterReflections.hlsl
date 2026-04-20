@@ -2,6 +2,7 @@
 #include "hlsl/postprocess/WorldReconstruction.hlsl"
 #include "hlsl/postprocess/PostProcessCommon.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
+#include "hlsl/common/Random.hlsl"
 
 float4x4 WorldMatrix;
 float4x4 ViewProjectionMatrix;
@@ -137,16 +138,11 @@ float4 GetReflection(
 	return float4(skyboxColor, 0);
 }
 
-float rand(float2 co)
-{
-	return frac(sin(dot(co.xy + Time * 0.000001, float2(12.9898, 78.233))) * 43758.5453);
-}
-
 float2 getJitter(float2 uv, float jitterAmount)
 {
 	float2 jitterOffset;
-	jitterOffset.x = rand(uv + 0.5) * 2.0 - 1.0;
-	jitterOffset.y = rand(uv + 1.5) * 2.0 - 1.0;
+	jitterOffset.x = RandomFrom2DTime(uv + 0.5, Time) * 2.0 - 1.0;
+	jitterOffset.y = RandomFrom2DTime(uv + 1.5, Time) * 2.0 - 1.0;
 	return jitterOffset * jitterAmount;
 }
 

@@ -1,7 +1,6 @@
 #include "RenderObject/WaterSim/WaterSim.h"
 #include "RenderCore/TextureUtils.h"
 #include "Scene/SceneManager.h"
-#include "RenderObject/Terrain/GridMesh.h"
 #include <format>
 
 WaterSim::WaterSim()
@@ -14,9 +13,6 @@ WaterSim::~WaterSim()
 
 const UINT TextureSize = 1024;
 const UINT WaterModelSize = 33;
-
-GridInstanceMesh waterGridMesh;
-GridLODSystem waterGridTiles;
 
 void WaterSim::initializeGpuResources(RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch)
 {

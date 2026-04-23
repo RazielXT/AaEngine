@@ -8,6 +8,7 @@
 #include "Resources/Compute/CopyTexturesCS.h"
 #include "Resources/Compute/GenerateMipsComputeShader.h"
 #include "Resources/Compute/TerrainGenerationCS.h"
+#include "RenderObject/Terrain/GridMesh.h"
 
 class SceneManager;
 
@@ -54,4 +55,7 @@ private:
 
 	bool updateWater = true;
 	bool updateLod = true;
+
+	GridInstanceMesh waterGridMesh;
+	GridLODSystem waterGridTiles;
 };

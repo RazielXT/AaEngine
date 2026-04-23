@@ -704,7 +704,7 @@ void Editor::prepareElements(Camera& camera)
 		if (ImGui::Checkbox("Updating LOD", &updateGrid))
 		{
 			app.sceneMgr.water.enableLodUpdating(updateGrid);
-			app.sceneMgr.newTerrain.updateLod = updateGrid;
+			app.sceneMgr.terrain.updateLod = updateGrid;
 		}
 
 		static bool updateWater = true;

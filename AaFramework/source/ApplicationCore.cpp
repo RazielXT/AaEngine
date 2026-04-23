@@ -133,61 +133,10 @@ void ApplicationCore::loadScene(const char* scene)
 	ResourceUploadBatch batch(renderSystem.core.device);
 	batch.Begin();
 
-//	SceneParser::Result result;
-	{
-// 		GlobalQueueMarker marker(renderSystem.core.commandQueue, "SceneParser");
-// 
-// 		result = SceneParser::load(scene, { batch, sceneMgr, renderSystem, resources, physicsMgr });
+	sceneMgr.skybox.setMaterial("Sky", sceneMgr.getQueue(MaterialTechnique::Default, Order::Post)->targetFormats);
 
-// 		SceneCollection::LoadCtx loadCtx = { batch, sceneMgr, renderSystem, resources };
-// 		auto scene = GltfLoader::load(SCENE_DIRECTORY + "trees/fir.gltf", loadCtx);
-// 		SceneCollection::loadScene(scene, loadCtx);
-
-// 		planes.CreatePlanesVertexBuffer(renderSystem, batch, { { {0,-1400,-2000}, 4000 }, { {0,-1400,2000}, 4000 } });
-// 		auto e = sceneMgr.createEntity("testPlane", Order::Transparent);
-// 		e->material = resources.materials.getMaterial("WaterLake", batch);
-// 		planes.AssignToEntity(e);
-
-// 		auto e = sceneMgr.createEntity("pyramid", { {}, {0, -500, 0 }, { 20,20,20 } }, *resources.models.getLoadedModel("pyramid.mesh", ResourceGroup::Core));
-// 		e->material = resources.materials.getMaterial("RedVCT", batch);
-// 		result.grassTasks.push_back({ e, e->getWorldBoundingBox() });
-
-// 		{
-// 			auto material = resources.materials.getMaterial("grassBladeInstanced", batch);
-// 			auto model = resources.models.getModel("GrassBladeMedium.mesh", batch, {ResourceGroup::General, SCENE_DIRECTORY + "tmp/" });
-// 
-// 			auto& instanceDescription = result.instanceDescriptions[material];
-// 			instanceDescription.material = material;
-// 			instanceDescription.model = model;
-// 
-// 			for (float x = 0; x < 50; x++)
-// 				for (float z = 0; z < 50; z++)
-// 				{
-// 					float distance = std::sqrt(x * x + z * z); // Distance from origin (0,0)
-// 					float densityFactor = 1.0f + distance * 0.04f; // Increase spacing with distance
-// 
-// 					float GrassOffset = 3.0f * densityFactor;
-// 					float GrassRandomOffset = GrassOffset * 0.7f;
-// 
-// 					auto& tr = instanceDescription.objects.emplace_back();
-// 					tr.position = {
-// 						x * GrassOffset + getRandomFloat(-GrassRandomOffset, GrassRandomOffset),
-// 						0,
-// 						z * GrassOffset + getRandomFloat(-GrassRandomOffset, GrassRandomOffset)
-// 					};
-// 					tr.scale = Vector3(getRandomFloat(0.4f, 1.5f));
-// 					tr.orientation = Quaternion::CreateFromAxisAngle(Vector3::UnitY, getRandomFloat(0, XM_2PI));
-// 				}
-// 
-// 			planes.CreatePlanesVertexBuffer(renderSystem, batch, { { {0,0,250}, 500 }, { {500,0,250}, 500 } }, 0.01f, true);
-// 			planes.CreateEntity("testPlane", sceneMgr, resources.materials.getMaterial("terrainGrass", batch));
-// 		}
-
-		sceneMgr.skybox.setMaterial("Sky", sceneMgr.getQueue(MaterialTechnique::Default, Order::Post)->targetFormats);
-
-		sky.createClouds(sceneMgr, resources.materials, renderSystem.core.device, batch);
-		sky.createMoon(sceneMgr, resources.materials, batch);
-	}
+	sky.createClouds(sceneMgr, resources.materials, renderSystem.core.device, batch);
+	sky.createMoon(sceneMgr, resources.materials, batch);
 
 	auto commands = renderSystem.core.CreateCommandList(L"loadScene", PixColor::Load);
 	{
@@ -213,9 +162,9 @@ void ApplicationCore::loadScene(const char* scene)
 
  		marker.move("loadSceneTerrain", commands.color);
 		sceneMgr.water.initializeGpuResources(renderSystem, resources, batch);
-		sceneMgr.newTerrain.initialize(renderSystem, resources, batch, sceneMgr);
+		sceneMgr.terrain.initialize(renderSystem, resources, batch, sceneMgr);
 		sceneMgr.vegetation.createChunks(sceneMgr, renderSystem, resources, batch);
-		sceneMgr.water.initializeTarget(sceneMgr.newTerrain.getHeightmap({ 0,0 }), sceneMgr, { sceneMgr.newTerrain.params.tileSize, sceneMgr.newTerrain.params.tileSize }, {});
+		sceneMgr.water.initializeTarget(sceneMgr.terrain.getHeightmap({ 0,0 }), sceneMgr, { sceneMgr.terrain.params.tileSize, sceneMgr.terrain.params.tileSize }, {});
 	}
 
 	auto uploadResourcesFinished = batch.End(renderSystem.core.commandQueue);

@@ -74,7 +74,7 @@ public:
 
 	WaterSim water;
 
-	ProgressiveTerrain newTerrain;
+	ProgressiveTerrain terrain;
 
 	Vegetation vegetation;
 

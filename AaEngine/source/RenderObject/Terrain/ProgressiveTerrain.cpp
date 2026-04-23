@@ -13,7 +13,7 @@ ProgressiveTerrain::ProgressiveTerrain()
 
 void ProgressiveTerrain::initialize(RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch, SceneManager& sceneMgr)
 {
-	terrainTexture = resources.textures.loadFile(*renderSystem.core.device, batch, "Mountain Range Height Map PNG.png"); //"Mountain Range Height Map PNG.png");
+	terrainTexture = resources.textures.loadFile(*renderSystem.core.device, batch, "Mountain Range Height Map PNG.png");
 	resources.descriptors.createTextureView(*terrainTexture);
 
 	params.tileSize = 8000.f;

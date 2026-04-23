@@ -66,7 +66,7 @@ void Vegetation::initChunk(VegetationChunk& chunk, RenderSystem& renderSystem, G
 void Vegetation::createChunks(SceneManager& sceneMgr, RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch)
 {
 	vegMaterial = resources.materials.getMaterial("VegetationBillboard", batch);
-	auto& terrainParams = sceneMgr.newTerrain.params;
+	auto& terrainParams = sceneMgr.terrain.params;
 	float chunkSize = terrainParams.tileSize / ChunksPerTerrainTile;
 	int half = (int)VegGridSize / 2;
 

@@ -47,14 +47,14 @@ void Vegetation::initChunk(VegetationChunk& chunk, RenderSystem& renderSystem, G
 	constexpr UINT maxCount = row * row;
 
 	constexpr UINT infoSize = sizeof(VegetationInfo) * maxCount;
-	chunk.infoBuffer = resources.shaderBuffers.CreateStructuredBuffer(infoSize, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	chunk.infoBuffer = resources.shaderBuffers.CreateStructuredBuffer(infoSize);
 	chunk.infoBuffer->SetName(L"VegetationInfo");
 
 	constexpr UINT tranformationSize = sizeof(XMFLOAT4X4) * maxCount;
 	chunk.transformationBuffer = resources.shaderBuffers.CreateStructuredBuffer(tranformationSize);
 	chunk.transformationBuffer->SetName(L"VegetationTransformation");
 
-	chunk.infoCounter = resources.shaderBuffers.CreateStructuredBuffer(sizeof(UINT), D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	chunk.infoCounter = resources.shaderBuffers.CreateStructuredBuffer(sizeof(UINT));
 	chunk.infoCounter->SetName(L"VegetationInfoCounter");
 
 	chunk.impostors.commandSignature = commandSignature;

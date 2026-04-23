@@ -36,24 +36,6 @@ material HeightmapGridEntityId : HeightmapGrid
 	shader_defines ENTITY_ID
 }
 
-material HeightmapGridDepth : HeightmapGrid
-{
-	pixel_shader skip
-
-	texture Diffuse
-	{
-		file SilveryBlue.dds
-	}
-
-	texture Grass
-	{
-		file grass.dds srgb
-	}
-
-	shader_defines GRID_PADDING
-	culling none //long distance shadows
-}
-
 material MountainTerrainGrid : HeightmapGrid
 {
 	texture Diffuse
@@ -78,6 +60,14 @@ material MountainTerrainGrid : HeightmapGrid
 
 	texture Spread
 	{
-		file spread.png
+		file SilveryBlue_DISP.png
 	}
+	
+	//culling none //long distance shadows
+}
+
+material HeightmapGridDepth : MountainTerrainGrid
+{
+	pixel_shader skip
+	culling none //long distance shadows
 }

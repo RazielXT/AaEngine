@@ -175,6 +175,8 @@
     <ClCompile Include="source\FrameCompositor\Tasks\UpscaleTask.cpp" />
     <ClCompile Include="source\RenderCore\Upscaling.cpp" />
     <ClCompile Include="source\FrameCompositor\Tasks\VoxelizeSceneTask.cpp" />
+    <ClCompile Include="source\RenderCore\VCT\iso\IsoVoxelCascade.cpp" />
+    <ClCompile Include="source\RenderCore\VCT\iso\IsoVoxelization.cpp" />
     <ClCompile Include="source\RenderObject\WaterSim\WaterSim.cpp" />
     <ClCompile Include="source\RenderObject\Sky\SkyRendering.cpp" />
     <ClCompile Include="source\Resources\Compute\WaterSimCS.cpp" />
@@ -274,6 +276,8 @@
     <ClInclude Include="source\RenderCore\UpscaleTypes.h" />
     <ClInclude Include="source\RenderCore\Upscaling.h" />
     <ClInclude Include="source\FrameCompositor\Tasks\VoxelizeSceneTask.h" />
+    <ClInclude Include="source\RenderCore\VCT\iso\IsoVoxelCascade.h" />
+    <ClInclude Include="source\RenderCore\VCT\iso\IsoVoxelization.h" />
     <ClInclude Include="source\RenderObject\WaterSim\WaterSim.h" />
     <ClInclude Include="source\RenderObject\Sky\SkyRendering.h" />
     <ClInclude Include="source\Resources\Compute\WaterSimCS.h" />

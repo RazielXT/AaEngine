@@ -36,7 +36,7 @@ struct GridVertexInfo
 {
 	float4 position;
 	float2 uv;
-#ifdef GRID_DEBUG
+#ifdef GRID_LOD_DEBUG
 	float morphMask;
 #endif
 };
@@ -112,7 +112,7 @@ GridVertexInfo ReadGridVertexInfo(GridTileData tile, uint vertexID, Texture2D<fl
 	gridPosition.y = heightMap.SampleLevel(sampler, RemapGridTextureUV(uv), 0) * HeightScale;
 	gridPosition.xyz += WorldPosition;
 
-#ifdef GRID_DEBUG
+#ifdef GRID_LOD_DEBUG
 	float morphMask = (k > 0 && k < 1) ? 1 : 0;
 	GridVertexInfo info = { gridPosition, uv, morphMask };
 #else
@@ -145,6 +145,13 @@ struct GridTBN
 	float3 T;
 	float3 B;
 };
+
+float3 ReadGridNormalRaw(Texture2D<float2> texture, SamplerState sampler, float2 uv)
+{
+	float invResHalf = 0.5f / 1024.0f;
+	float2 texcoord = RemapGridTextureUV(uv);
+	return DecodeNormalSNORM(texture.SampleLevel(sampler, texcoord, 0));
+}
 
 GridTBN ReadGridTBN(Texture2D<float2> texture, SamplerState sampler, float2 uv)
 {

@@ -1,4 +1,7 @@
-//#define GRID_DEBUG
+#define GRID_INDEX_DEBUG
+#if defined(GRID_LOD_DEBUG) || defined(GRID_INDEX_DEBUG)
+#define GRID_DEBUG_COLOR
+#endif
 
 #include "grid/heightmapGridReconstruction.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
@@ -23,6 +26,10 @@ float2 GridHeightWidth;
 uint EntityId;
 #endif
 
+#ifdef GRID_INDEX_DEBUG
+uint GridIndex;
+#endif
+
 StructuredBuffer<GridTileData> InstancingBuffer : register(t0);
 
 SamplerState LinearWrapSampler : register(s0);
@@ -32,7 +39,7 @@ struct PSInput
 	float4 position : SV_POSITION;
 	float4 worldPosition : TEXCOORD0;
 	float2 uv : TEXCOORD1;
-#ifdef GRID_DEBUG
+#ifdef GRID_DEBUG_COLOR
 	float3 debugColor : TEXCOORD10;
 #endif
 };
@@ -49,28 +56,32 @@ PSInput VSMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
 
 	GridVertexInfo info = ReadGridVertexInfo(InstancingBuffer[instanceID], vertexID, ResourceDescriptorHeap[TexIdHeightmap], LinearWrapSampler, p);
 
-	//float heightTexture = GetTexture2D(TexIdGrass).SampleLevel(LinearWrapSampler, info.uv * 50 * 10, 0).w;
-	//info.position.y -= heightTexture * 0.0001;
+	float heightTexture = GetTexture2D(TexIdGrass).SampleLevel(LinearWrapSampler, info.uv * 50 * 10, 0).w;
+	info.position.y -= heightTexture * 0.0001;
 
 	PSInput result;
 	result.worldPosition = info.position;
 	result.position = mul(result.worldPosition, ViewProjectionMatrix);
 	result.uv = info.uv;
 
-#ifdef GRID_DEBUG
-static const float3 LODColors[10] = {
-	float3(1.00, 0.00, 0.00), // Red
-	float3(0.00, 0.60, 0.10), // Bright Green (very bright)
-	float3(0.00, 0.20, 1.00), // Sky Blue (bright)
-	float3(1.00, 0.80, 0.00), // Gold (bright)
-	float3(0.20, 0.00, 1.00), // Deep Blue (dark)
-	float3(1.00, 0.20, 0.60), // Hot Pink (bright)
-	float3(0.60, 0.30, 0.00), // Brown/Amber (dark)
-	float3(0.00, 1.00, 0.40), // Green-Teal (bright)
-	float3(0.80, 0.00, 0.80), // Purple (mid)
-	float3(1.00, 1.00, 1.00)  // White (max contrast)
-};
-	result.debugColor = (1 - 0.4 * info.morphMask) * LODColors[9-InstancingBuffer[instanceID].lod];
+#ifdef GRID_DEBUG_COLOR
+	static const float3 LODColors[10] = {
+		float3(1.00, 0.00, 0.00), // Red
+		float3(0.00, 0.60, 0.10), // Bright Green (very bright)
+		float3(0.00, 0.20, 1.00), // Sky Blue (bright)
+		float3(1.00, 0.80, 0.00), // Gold (bright)
+		float3(0.20, 0.00, 1.00), // Deep Blue (dark)
+		float3(1.00, 0.20, 0.60), // Hot Pink (bright)
+		float3(0.60, 0.30, 0.00), // Brown/Amber (dark)
+		float3(0.00, 1.00, 0.40), // Green-Teal (bright)
+		float3(0.80, 0.00, 0.80), // Purple (mid)
+		float3(1.00, 1.00, 1.00)  // White (max contrast)
+	};
+	#ifdef GRID_LOD_DEBUG
+		result.debugColor = (1 - 0.4 * info.morphMask) * LODColors[9-InstancingBuffer[instanceID].lod];
+	#elif defined(GRID_INDEX_DEBUG)
+		result.debugColor = LODColors[GridIndex % 9];
+	#endif
 #endif
 	return result;
 }
@@ -177,7 +188,7 @@ GBufferOutput PSMain(PSInput input)
 	//N = BlendUDN(N, UnpackNormal(detailN) * detailWeight);
 	normal = normalize(normal);
 
-#ifdef GRID_DEBUG
+#ifdef GRID_DEBUG_COLOR
 	albedo = lerp(albedo, input.debugColor, 0.7);
 #endif
 

@@ -52,8 +52,8 @@ void ProgressiveTerrain::initialize(RenderSystem& renderSystem, GraphicsResource
 			e->material = resources.materials.getMaterial("MountainTerrainGrid", batch);
 			e->Material().setParam("TexIdHeightmap", terrainHeight.view.srvHeapIndex);
 			e->Material().setParam("TexIdNormalmap", terrainNormal.view.srvHeapIndex);
-			auto GridHeightWidth = Vector2(params.tileHeight, params.tileSize);
-			e->Material().setParam("GridHeightWidth", &GridHeightWidth, sizeof(GridHeightWidth));
+			e->Material().setParam("GridHeightWidth", Vector2(params.tileHeight, params.tileSize));
+			e->Material().setParam("GridIndex", x + y * GridsSize);
 
 			// Toroidal-consistent world coord: slot x maps to world x for x<=2, x-5 for x>2
 			// This ensures wrapIndex(worldCoord, GridsSize) == slot index

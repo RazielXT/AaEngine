@@ -691,7 +691,13 @@ void Editor::prepareElements(Camera& camera)
 		static bool debugLod = false;
 		if (ImGui::Checkbox("Debug LOD", &debugLod))
 		{
-			app.resources.shaderDefines.setDefine("GRID_DEBUG", debugLod);
+			app.resources.shaderDefines.setDefine("GRID_LOD_DEBUG", debugLod);
+		}
+
+		static bool debugIndex = false;
+		if (ImGui::Checkbox("Debug grid Index", &debugIndex))
+		{
+			app.resources.shaderDefines.setDefine("GRID_INDEX_DEBUG", debugIndex);
 		}
 
 		static bool updateGrid = true;

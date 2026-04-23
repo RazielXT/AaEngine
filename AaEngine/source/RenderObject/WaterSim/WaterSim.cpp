@@ -94,8 +94,7 @@ void WaterSim::initializeTarget(const GpuTexture2D& texture, SceneManager& scene
 	e->material = waterMaterial;
 	e->Material().setParam("TexIdHeightmap", waterHeightMeshTexture.view.srvHeapIndex);
 	e->Material().setParam("TexIdMeshNormal", waterNormalTexture.view.srvHeapIndex);
-	auto GridHeightWidth = Vector2(size.x, size.x);
-	e->Material().setParam("GridHeightWidth", &GridHeightWidth, sizeof(GridHeightWidth));
+	e->Material().setParam("GridHeightWidth", Vector2(size.x, size.x));
 	e->setPosition(center);
 }
 

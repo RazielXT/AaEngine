@@ -185,26 +185,8 @@ void ApplicationCore::loadScene(const char* scene)
 
 		sceneMgr.skybox.setMaterial("Sky", sceneMgr.getQueue(MaterialTechnique::Default, Order::Post)->targetFormats);
 
-		auto e = sceneMgr.createEntity("basicClouds", EntityCreateProperties{ .order = Order::Post });
-		e->material = resources.materials.getMaterial("BasicClouds", batch);
-
-		static VertexBufferModel model;
-		model.CreateIndexBufferGrid(renderSystem.core.device, &batch, 256);
-		model.bbox.Extents = { 50000, 10000, 50000 };
-
-		//auto model = resources.models.getLoadedModel("Plane001.mesh", ResourceGroup::Core);
-		e->geometry.fromModel(model);
-		e->setBoundingBox(model.bbox);
-		e->setFlag(RenderObjectFlag::NoShadow);
-
-		{
-			auto moon = sceneMgr.createEntity("moon", EntityCreateProperties{ .order = Order::Post, .suborder = -1 });
-			moon->material = resources.materials.getMaterial("Moon", batch);
-			moon->geometry.type = EntityGeometry::Type::Manual;
-			moon->geometry.vertexCount = 6;
-			moon->geometry.instanceCount = 1;
-			moon->setBoundingBox({ {}, { 10000,10000,10000 } });
-		}
+		sky.createClouds(sceneMgr, resources.materials, renderSystem.core.device, batch);
+		sky.createMoon(sceneMgr, resources.materials, batch);
 	}
 
 	auto commands = renderSystem.core.CreateCommandList(L"loadScene", PixColor::Load);

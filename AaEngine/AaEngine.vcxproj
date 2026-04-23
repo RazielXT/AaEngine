@@ -176,6 +176,7 @@
     <ClCompile Include="source\RenderCore\Upscaling.cpp" />
     <ClCompile Include="source\FrameCompositor\Tasks\VoxelizeSceneTask.cpp" />
     <ClCompile Include="source\RenderObject\WaterSim\WaterSim.cpp" />
+    <ClCompile Include="source\RenderObject\Sky\SkyRendering.cpp" />
     <ClCompile Include="source\Resources\Compute\WaterSimCS.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -274,6 +275,7 @@
     <ClInclude Include="source\RenderCore\Upscaling.h" />
     <ClInclude Include="source\FrameCompositor\Tasks\VoxelizeSceneTask.h" />
     <ClInclude Include="source\RenderObject\WaterSim\WaterSim.h" />
+    <ClInclude Include="source\RenderObject\Sky\SkyRendering.h" />
     <ClInclude Include="source\Resources\Compute\WaterSimCS.h" />
   </ItemGroup>
   <ItemGroup>

@@ -7,6 +7,7 @@
 #include "FrameCompositor/FrameCompositor.h"
 #include "Resources/GraphicsResources.h"
 #include "PhysicsManager.h"
+#include "RenderObject/Sky/SkyRendering.h"
 
 struct DebugReporter
 {
@@ -45,6 +46,7 @@ public:
 	SceneLights lights;
 
 	PlanesModel planes;
+	SkyRendering sky;
 private:
 
 	void onViewportResize(UINT, UINT) override;

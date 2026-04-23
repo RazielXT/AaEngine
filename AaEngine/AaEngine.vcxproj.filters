@@ -68,6 +68,9 @@
     <Filter Include="Source Files\RenderObject\Prefab">
       <UniqueIdentifier>{57ce8cca-12f8-47b9-9f7e-0a387e025711}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\RenderObject\Sky">
+      <UniqueIdentifier>{c3d4e5f6-a7b8-9012-cdef-234567890123}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\App\TargetWindow.cpp">
@@ -270,6 +273,9 @@
     </ClCompile>
     <ClCompile Include="source\RenderObject\WaterSim\WaterSim.cpp">
       <Filter>Source Files\RenderObject\WaterSim</Filter>
+    </ClCompile>
+    <ClCompile Include="source\RenderObject\Sky\SkyRendering.cpp">
+      <Filter>Source Files\RenderObject\Sky</Filter>
     </ClCompile>
     <ClCompile Include="source\Resources\Compute\TextureToMeshCS.cpp">
       <Filter>Source Files\Resources\Compute</Filter>
@@ -548,6 +554,9 @@
     </ClInclude>
     <ClInclude Include="source\RenderObject\WaterSim\WaterSim.h">
       <Filter>Source Files\RenderObject\WaterSim</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RenderObject\Sky\SkyRendering.h">
+      <Filter>Source Files\RenderObject\Sky</Filter>
     </ClInclude>
     <ClInclude Include="source\Resources\Compute\TextureToMeshCS.h">
       <Filter>Source Files\Resources\Compute</Filter>

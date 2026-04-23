@@ -1,4 +1,4 @@
-#include "VoxelConeTracingCommon.hlsl"
+#include "hlsl/vct/iso/VoxelConeTracingCommon.hlsl"
 #include "ShadowsPssm.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
 #include "hlsl/common/MotionVectors.hlsl"

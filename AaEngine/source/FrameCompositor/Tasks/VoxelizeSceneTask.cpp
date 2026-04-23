@@ -101,7 +101,7 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 
 	computeMips.init(*provider.renderSystem.core.device, "generate3DMipmaps3x", provider.resources.shaders);
 
-	auto bouncesShader = provider.resources.shaders.getShader("voxelBouncesCS", ShaderType::Compute, ShaderRef{"voxelBouncesCS.hlsl", "main", "cs_6_6"});
+	auto bouncesShader = provider.resources.shaders.getShader("voxelBouncesCS", ShaderType::Compute, ShaderRef{"vct/iso/voxelBouncesCS.hlsl", "main", "cs_6_6"});
 	bouncesCS.init(*provider.renderSystem.core.device, *bouncesShader);
 
 	auto clearBufferShader = provider.resources.shaders.getShader("clearBufferCS", ShaderType::Compute, ShaderRef{ "utils/clearBufferCS.hlsl", "main", "cs_6_6" });

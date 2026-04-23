@@ -1,6 +1,6 @@
 #define GRID_PADDING
 
-#include "hlsl/VoxelConeTracingCommon.hlsl"
+#include "hlsl/vct/iso/VoxelConeTracingCommon.hlsl"
 #include "hlsl/postprocess/WorldReconstruction.hlsl"
 #include "hlsl/grid/heightmapGridReconstruction.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"

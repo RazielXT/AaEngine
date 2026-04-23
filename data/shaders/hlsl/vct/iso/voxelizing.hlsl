@@ -1,10 +1,10 @@
 #include "VoxelConeTracingCommon.hlsl"
-#include "ShadowsCommon.hlsl"
+#include "hlsl/ShadowsCommon.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
 
 #ifdef GRID
 #define GRID_PADDING
-#include "grid/heightmapGridReconstruction.hlsl"
+#include "hlsl/grid/heightmapGridReconstruction.hlsl"
 #endif
 
 float4x4 ShadowMatrix;

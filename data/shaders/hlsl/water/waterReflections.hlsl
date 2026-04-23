@@ -1,4 +1,4 @@
-#include "hlsl/VoxelConeTracingCommon.hlsl"
+#include "hlsl/vct/iso/VoxelConeTracingCommon.hlsl"
 #include "hlsl/postprocess/WorldReconstruction.hlsl"
 #include "hlsl/postprocess/PostProcessCommon.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"

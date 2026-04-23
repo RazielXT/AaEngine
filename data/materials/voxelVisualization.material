@@ -2,14 +2,14 @@ material VisualizeVoxelTexture
 {
 	vertex_shader
 	{
-		file voxelVisualization.hlsl
+		file vct/iso/voxelVisualization.hlsl
 		entry VSMain
 		profile vs_6_6
 	}
 
 	pixel_shader
 	{
-		file voxelVisualization.hlsl
+		file vct/iso/voxelVisualization.hlsl
 		entry PSMain
 		profile ps_6_6
 	}

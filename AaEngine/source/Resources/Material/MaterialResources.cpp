@@ -99,30 +99,18 @@ void MaterialResources::loadMaterials(std::string directory, bool subDirectories
 void MaterialResources::reloadChangedShaders()
 {
 	renderSystem.core.WaitForAllFrames();
-
-	auto shadersChanged = resources.shaders.reloadShadersChangedFiles();
-
-	for (auto& [name, base] : materialBaseMap)
-	{
-		for (auto& s : shadersChanged)
-		{
-			if (base->ContainsShader(s))
-			{
-				base->ReloadPipeline(resources.shaders);
-				break;
-			}
-		}
-	}
-
-	ComputeShaderLibrary::Reload(*renderSystem.core.device, shadersChanged);
+	reloadShaders(resources.shaders.reloadShadersChangedFiles());
 }
 
 void MaterialResources::reloadShadersWithDefine(const std::string& define)
 {
 	renderSystem.core.WaitForAllFrames();
+	reloadShaders(resources.shaders.reloadShadersWithDefine(define));
+}
 
-	auto shadersChanged = resources.shaders.reloadShadersWithDefine(define);
-
+void MaterialResources::reloadShaders(const std::vector<const LoadedShader*>& shadersChanged)
+{
+	std::vector<MaterialBase*> reloaded;
 	for (auto& [name, base] : materialBaseMap)
 	{
 		for (auto& s : shadersChanged)
@@ -130,10 +118,37 @@ void MaterialResources::reloadShadersWithDefine(const std::string& define)
 			if (base->ContainsShader(s))
 			{
 				base->ReloadPipeline(resources.shaders);
+				reloaded.push_back(base.get());
+				break;
+			}
+		}
+	}
+
+	for (auto& [name, instance] : materialMap)
+	{
+		for (auto& base : reloaded)
+		{
+			if (instance->GetBase() == base)
+			{
+				base->ReloadMaterialInstance(*instance, resources);
 				break;
 			}
 		}
 	}
 
 	ComputeShaderLibrary::Reload(*renderSystem.core.device, shadersChanged);
+
+	if (!reloaded.empty())
+		notifyReloaded(reloaded);
+}
+
+void MaterialResources::addReloadListener(MaterialsReloadedCallback callback)
+{
+	reloadListeners.push_back(std::move(callback));
+}
+
+void MaterialResources::notifyReloaded(const std::vector<MaterialBase*>& reloaded)
+{
+	for (auto& listener : reloadListeners)
+		listener(reloaded);
 }

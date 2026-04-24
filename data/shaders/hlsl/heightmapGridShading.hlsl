@@ -1,4 +1,3 @@
-#define GRID_INDEX_DEBUG
 #if defined(GRID_LOD_DEBUG) || defined(GRID_INDEX_DEBUG)
 #define GRID_DEBUG_COLOR
 #endif

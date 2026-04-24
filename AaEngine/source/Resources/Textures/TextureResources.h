@@ -33,6 +33,7 @@ public:
 	~TextureResources();
 
 	FileTexture* loadFile(ID3D12Device& device, DirectX::ResourceUploadBatch& batch, std::string file, TextureFileLoadOptions options = {});
+	FileTexture* getFile(std::string file);
 
 	void setNamedTexture(std::string name, const ShaderTextureView& texture);
 	ShaderTextureView* getNamedTexture(std::string name);

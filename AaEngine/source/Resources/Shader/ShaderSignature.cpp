@@ -377,9 +377,9 @@ ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device& device, co
 	return rootSignature;
 }
 
-std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData(GraphicsResources& graphicsResources) const
+void SignatureInfo::createResourcesData(ResourcesInfo& resources, GraphicsResources& graphicsResources) const
 {
-	auto resources = std::make_shared<ResourcesInfo>();
+	resources = {};
 	UINT rootIndex = 0;
 	std::vector<UINT> bindlessTextures;
 
@@ -387,8 +387,8 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData(GraphicsResour
 	{
 		if (&cb == rootBuffer)
 		{
-			resources->rootBuffer.defaultData.resize(cb.info.Size / sizeof(float));
-			resources->rootBuffer.rootIndex = rootIndex++;
+			resources.rootBuffer.defaultData.resize(cb.info.Size / sizeof(float));
+			resources.rootBuffer.rootIndex = rootIndex++;
 
 			for (const auto& p : cb.info.Params)
 			{
@@ -397,11 +397,11 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData(GraphicsResour
 				if (p.Name.starts_with("TexId"))
 				{
 					type = ResourcesInfo::AutoParam::TEXID;
-					bindlessTextures.push_back((UINT)resources->resourceAutoParams.size());
+					bindlessTextures.push_back((UINT)resources.resourceAutoParams.size());
 				}
 				if (type != ResourcesInfo::AutoParam::None)
 				{
-					resources->resourceAutoParams.emplace_back(type, (UINT)(p.StartOffset / sizeof(float)));
+					resources.resourceAutoParams.emplace_back(type, (UINT)(p.StartOffset / sizeof(float)));
 					continue;
 				}
 
@@ -418,7 +418,7 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData(GraphicsResour
 
 				if (type != ResourcesInfo::AutoParam::None)
 				{
-					resources->objectAutoParams.emplace_back(type, (UINT)(p.StartOffset / sizeof(float)));
+					resources.objectAutoParams.emplace_back(type, (UINT)(p.StartOffset / sizeof(float)));
 					continue;
 				}
 
@@ -466,9 +466,9 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData(GraphicsResour
 					type = ResourcesInfo::AutoParam::Z_MAGIC;
 
 				if (type != ResourcesInfo::AutoParam::None)
-					resources->frameAutoParams.emplace_back(type, (UINT)(p.StartOffset / sizeof(float)));
+					resources.frameAutoParams.emplace_back(type, (UINT)(p.StartOffset / sizeof(float)));
 				else
-					resources->params.emplace_back(p.Name, p.Name.c_str(), p.Size, p.StartOffset / (UINT)sizeof(float));
+					resources.params.emplace_back(p.Name, p.Name.c_str(), p.Size, p.StartOffset / (UINT)sizeof(float));
 			}
 		}
 		else
@@ -478,7 +478,7 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData(GraphicsResour
 			r.type = GpuBufferType::Global;
 			r.rootIndex = rootIndex++;
 
-			resources->buffers.push_back(r);
+			resources.buffers.push_back(r);
 		}
 	}
 
@@ -492,34 +492,32 @@ std::shared_ptr<ResourcesInfo> SignatureInfo::createResourcesData(GraphicsResour
 			r.type = GpuBufferType::Geometry;
 
 		r.rootIndex = rootIndex++;
-		resources->buffers.push_back(r);
+		resources.buffers.push_back(r);
 	}
 
-	resources->textures.resize(textures.size() + bindlessTextures.size());
+	resources.textures.resize(textures.size() + bindlessTextures.size());
 	for (size_t i = 0; i < textures.size(); i++)
 	{
-		auto& t = resources->textures[i];
+		auto& t = resources.textures[i];
 		t.rootIndex = rootIndex++;
 	}
 	for (size_t i = 0; i < bindlessTextures.size(); i++)
 	{
-		auto& t = resources->textures[i + textures.size()];
+		auto& t = resources.textures[i + textures.size()];
 		t.autoParamIdx = bindlessTextures[i];
 	}
 
-	resources->boundTexturesCount = (UINT)textures.size();
+	resources.boundTexturesCount = (UINT)textures.size();
 
-	resources->uavs.resize(uavs.size() + rwStructuredBuffers.size());
+	resources.uavs.resize(uavs.size() + rwStructuredBuffers.size());
 	for (size_t i = 0; i < uavs.size(); i++)
 	{
-		auto& uav = resources->uavs[i];
+		auto& uav = resources.uavs[i];
 		uav.rootIndex = rootIndex++;
 	}
 	for (size_t i = 0; i < rwStructuredBuffers.size(); i++)
 	{
-		auto& uav = resources->uavs[uavs.size() + i];
+		auto& uav = resources.uavs[uavs.size() + i];
 		uav.rootIndex = rootIndex++;
 	}
-
-	return resources;
 }

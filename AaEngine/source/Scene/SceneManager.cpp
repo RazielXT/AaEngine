@@ -4,6 +4,12 @@
 SceneManager::SceneManager(GraphicsResources& r) : resources(r), skybox(r), graph(*this)
 {
 	renderables.reserve(10); //need to be enough! distributed by ptr
+
+	resources.materials.addReloadListener([this](const std::vector<MaterialBase*>& reloaded)
+	{
+		for (auto& queue : queues)
+			queue->rebuildEntries(reloaded, resources);
+	});
 }
 
 SceneManager::~SceneManager()

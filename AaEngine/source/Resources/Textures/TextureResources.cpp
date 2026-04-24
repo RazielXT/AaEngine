@@ -84,6 +84,14 @@ FileTexture* TextureResources::loadFile(ID3D12Device& device, ResourceUploadBatc
 	return t.get();
 }
 
+FileTexture* TextureResources::getFile(std::string file)
+{
+	if (file.front() != '.')
+		file = TEXTURE_DIRECTORY + file;
+
+	return loadedTextures[file].get();
+}
+
 void TextureResources::setNamedTexture(std::string name, const ShaderTextureView& texture)
 {
 	namedTextures[name] = texture;

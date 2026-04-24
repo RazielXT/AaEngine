@@ -301,9 +301,45 @@ static void SetDefaultParameters(ResourcesInfo& resources, const MaterialRef& re
 	}
 }
 
+void MaterialBase::ReloadMaterialInstance(MaterialInstance& instance, GraphicsResources& resources)
+{
+	if (!instance.resources)
+		instance.resources = std::make_shared<ResourcesInfo>();
+
+	info.createResourcesData(*instance.resources, resources);
+
+	if (info.rootBuffer)
+	{
+		auto& buffer = instance.resources->rootBuffer;
+		SetDefaultParameters(*instance.resources, ref);
+		SetDefaultParameters(*instance.resources, instance.ref);
+	}
+
+	UINT texSlot = 0;
+	for (const auto& t : instance.ref.resources.textures)
+	{
+		if (!t.file.empty())
+		{
+			auto texture = resources.textures.getFile(t.file);
+			instance.SetTexture(*texture, texSlot);
+		}
+		else if (!t.id.empty())
+		{
+			if (auto texture = resources.textures.getNamedTexture(t.id))
+			{
+				instance.SetTexture(*texture, texSlot);
+			}
+		}
+		texSlot++;
+	}
+}
+
 void MaterialBase::CreateResourcesData(MaterialInstance& instance, GraphicsResources& resources, ResourceUploadBatch& batch) const
 {
-	instance.resources = info.createResourcesData(resources);
+	if (!instance.resources)
+		instance.resources = std::make_shared<ResourcesInfo>();
+
+	info.createResourcesData(*instance.resources, resources);
 
 	if (info.rootBuffer)
 	{

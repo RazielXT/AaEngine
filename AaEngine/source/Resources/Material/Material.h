@@ -46,6 +46,7 @@ public:
 	bool ContainsShader(const LoadedShader*) const;
 
 	std::unique_ptr<MaterialInstance> CreateMaterialInstance(const MaterialRef& childRef, GraphicsResources& r, ResourceUploadBatch& batch);
+	void ReloadMaterialInstance(MaterialInstance& instance, GraphicsResources& r);
 
 	const char* GetTechniqueOverride(MaterialTechnique technique) const;
 

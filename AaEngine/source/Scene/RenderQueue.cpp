@@ -142,6 +142,25 @@ void RenderQueue::renderObjects(ShaderConstantsProvider& constants, ID3D12Graphi
 	}
 }
 
+void RenderQueue::rebuildEntries(const std::vector<MaterialBase*>& reloaded, GraphicsResources& resources)
+{
+	for (auto& entry : entities)
+	{
+		bool affected = false;
+		for (auto* base : reloaded)
+		{
+			if (entry.base == base)
+			{
+				affected = true;
+				break;
+			}
+		}
+
+		if (affected)
+			entry.rebuildMaterial(technique);
+	}
+}
+
 void RenderQueue::iterateMaterials(std::function<void(AssignedMaterial*)> func)
 {
 	AssignedMaterial* m{};
@@ -163,8 +182,15 @@ RenderQueue::EntityEntry::EntityEntry(SceneEntity* e, AssignedMaterial* m, Mater
 	base = material->GetBase();
 	suborder = o;
 
-	if (e->materialOverride)
-		materialOverride = material->CreateParameterOverride(*e->materialOverride);
+	rebuildMaterial(technique);
+}
+
+void RenderQueue::EntityEntry::rebuildMaterial(MaterialTechnique technique)
+{
+	materialOverride.reset();
+
+	if (entity->materialOverride)
+		materialOverride = material->CreateParameterOverride(*entity->materialOverride);
 
 	if (technique == MaterialTechnique::EntityId)
 	{

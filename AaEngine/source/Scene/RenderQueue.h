@@ -35,6 +35,8 @@ struct RenderQueue
 
 		EntityEntry(SceneEntity*, AssignedMaterial*, MaterialTechnique, int suborder);
 
+		void rebuildMaterial(MaterialTechnique technique);
+
 		bool operator<(const EntityEntry& other) const
 		{
 			if (suborder != other.suborder) return suborder < other.suborder;
@@ -49,6 +51,7 @@ struct RenderQueue
 	std::vector<EntityEntry> entities;
 
 	void update(const EntityChangeDescritpion&, GraphicsResources& resources);
+	void rebuildEntries(const std::vector<MaterialBase*>& reloaded, GraphicsResources& resources);
 	void reset();
 
 	void renderObjects(ShaderConstantsProvider& info, ID3D12GraphicsCommandList* commandList);

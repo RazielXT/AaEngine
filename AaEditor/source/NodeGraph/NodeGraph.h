@@ -1,10 +1,10 @@
 #pragma once
 
 #include "Node.h"
-#include "ConstantNode.h"
-#include "MathNodes.h"
-#include "TextureNodes.h"
-#include "OutputNode.h"
+#include "Nodes/ConstantNode.h"
+#include "Nodes/MathNodes.h"
+#include "Nodes/TextureNodes.h"
+#include "Nodes/OutputNode.h"
 #include <memory>
 #include <vector>
 

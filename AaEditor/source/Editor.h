@@ -2,6 +2,13 @@
 
 #include "ApplicationCore.h"
 #include "InputHandler.h"
+#include "EditorSelection.h"
+#include "DebugState.h"
+#include "LogPanel.h"
+#include "AssetBrowserPanel.h"
+#include "TerrainShaderGraphPanel.h"
+#include "SceneTreePanel.h"
+#include "SidePanel.h"
 #include "imgui.h"
 
 class ImguiPanelViewport : public TargetViewport
@@ -14,21 +21,6 @@ public:
 		height = h;
 		width = w;
 	}
-};
-
-struct DebugState
-{
-	bool reloadShaders = false;
-
-	const char* changeScene{};
-
-	int DlssMode = (int)UpscaleMode::Off;
-	int FsrMode = (int)UpscaleMode::Off;
-
-	bool limitFrameRate = false;
-
-	bool wireframe = false;
-	bool wireframeChange = false;
 };
 
 class Editor
@@ -67,67 +59,52 @@ private:
 	ImguiPanelViewport& renderPanelViewport;
 
 	void prepareElements(Camera& camera);
+	void drawViewport(Camera& camera, ObjectTransformation& objTransformation);
 
 	XMUINT2 m_ViewportBounds[2];
-	Vector3 selectionPosition{};
 	bool scenePickScheduled = false;
 	bool ctrlActive = false;
+	bool gizmoActive = false;
+	bool gizmoReset = false;
+	bool gizmoResetCache = false;
+	bool overlayActive = false;
 	std::string assetDrop;
 
-	void selectItem(ObjectId, bool multi);
-	void deleteSelectedItem();
-	void deleteItem(SceneGraphNode& node);
-
-	void refreshSelectionId();
-	void clearSelection();
+	EditorSelection selection;
 
 	XMUINT2 viewportPanelSize;
 	XMUINT2 lastViewportPanelSize;
 
 	D3D12_GPU_DESCRIPTOR_HANDLE renderOutputTextureImguiHandleGpu{};
 	D3D12_CPU_DESCRIPTOR_HANDLE renderOutputTextureImguiHandleCpu{};
+	void ensureViewportOutputDescriptor();
 
-	struct SelectionInfo
+	struct DescriptorHeapAllocator
 	{
-		ObjectTransformation origin;
-		SceneObject obj;
+		ID3D12DescriptorHeap* Heap = nullptr;
+		D3D12_DESCRIPTOR_HEAP_TYPE  HeapType = D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES;
+		D3D12_CPU_DESCRIPTOR_HANDLE HeapStartCpu;
+		D3D12_GPU_DESCRIPTOR_HANDLE HeapStartGpu;
+		UINT                        HeapHandleIncrement;
+		ImVector<int>               FreeIndices;
+
+		void Create(ID3D12Device* device, ID3D12DescriptorHeap* heap);
+		void Destroy();
+		void Alloc(D3D12_CPU_DESCRIPTOR_HANDLE* out_cpu_desc_handle, D3D12_GPU_DESCRIPTOR_HANDLE* out_gpu_desc_handle);
+		void Free(D3D12_CPU_DESCRIPTOR_HANDLE out_cpu_desc_handle, D3D12_GPU_DESCRIPTOR_HANDLE out_gpu_desc_handle);
 	};
-	std::vector<SelectionInfo> selection{};
-	std::vector<ObjectId> selectionIds{};
+
+	ID3D12DescriptorHeap* srvDescHeap = nullptr;
+	DescriptorHeapAllocator srvDescHeapAlloc;
+	CommandsData commands;
 
 	std::map<std::string, FileTexture*> icons;
 	void loadIcons();
 	void initializeIconViews();
 
-	void DrawSceneTree();
-	void DrawSceneTreeNode(SceneGraphNode& node, ImGuiTextFilter& filter, ObjectId& selectedObjectId);
-
-	enum class AssetType { Model, Scene, Prefab };
-
-	struct AssetItem
-	{
-		std::string name;
-		std::string path;
-		AssetType type;
-	};
-	std::vector<AssetItem> assets;
-
-	void lookupAssets();
-	void DrawAssetBrowser(const std::vector<AssetItem>& assets);
-
-	struct AssetBrowserFilter
-	{
-		char search[128] = "";
-		bool showModel = true;
-		bool showScene = true;
-		bool showPrefab = true;
-	}
-	assetsFilter;
-
-	bool PassesFilter(const AssetItem& asset, const AssetBrowserFilter& filter);
-
-	void DrawAssetBrowserTopBar(AssetBrowserFilter& filter);
-
-	void DrawTerrainShaderGraph();
-	void DrawLogHistory();
+	SceneTreePanel sceneTreePanel;
+	LogPanel logPanel;
+	AssetBrowserPanel assetBrowserPanel;
+	TerrainShaderGraphPanel terrainShaderGraphPanel;
+	SidePanel sidePanel;
 };

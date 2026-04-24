@@ -105,7 +105,7 @@
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>..\dependencies\ImGuizmo;..\dependencies\imgui;..\dependencies\DirectXTK12\Inc;..\dependencies\DirectX-Headers\include;..\dependencies\tinyxml2;..\dependencies\pugixml\src;..\dependencies\DLSS\include;..\dependencies;..\dependencies\JoltPhysics;..\AaEngine\source;..\AaFramework\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>source;..\dependencies\ImGuizmo;..\dependencies\imgui;..\dependencies\DirectXTK12\Inc;..\dependencies\DirectX-Headers\include;..\dependencies\tinyxml2;..\dependencies\pugixml\src;..\dependencies\DLSS\include;..\dependencies;..\dependencies\JoltPhysics;..\AaEngine\source;..\AaFramework\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>4291</DisableSpecificWarnings>
     </ClCompile>
@@ -125,7 +125,7 @@
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>..\dependencies\ImGuizmo;..\dependencies\imgui;..\dependencies\DirectXTK12\Inc;..\dependencies\DirectX-Headers\include;..\dependencies\tinyxml2;..\dependencies\pugixml\src;..\dependencies\DLSS\include;..\dependencies;..\dependencies\JoltPhysics;..\AaEngine\source;..\AaFramework\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>source;..\dependencies\ImGuizmo;..\dependencies\imgui;..\dependencies\DirectXTK12\Inc;..\dependencies\DirectX-Headers\include;..\dependencies\tinyxml2;..\dependencies\pugixml\src;..\dependencies\DLSS\include;..\dependencies;..\dependencies\JoltPhysics;..\AaEngine\source;..\AaFramework\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>4291;4714</DisableSpecificWarnings>
     </ClCompile>
@@ -144,7 +144,14 @@
   <ItemGroup>
     <ClCompile Include="..\dependencies\ImGuizmo\ImGuizmo.cpp" />
     <ClCompile Include="..\dependencies\imnodes\imnodes.cpp" />
-    <ClCompile Include="source\Editor.cpp" />
+    <ClCompile Include="source\Editor\Editor.cpp" />
+    <ClCompile Include="source\Panels\AssetBrowserPanel.cpp" />
+    <ClCompile Include="source\Panels\LogPanel.cpp" />
+    <ClCompile Include="source\Panels\SceneTreePanel.cpp" />
+    <ClCompile Include="source\Panels\SidePanel.cpp" />
+    <ClCompile Include="source\Panels\TerrainShaderGraphPanel.cpp" />
+    <ClCompile Include="source\Editor\EditorSelection.cpp" />
+    <ClCompile Include="source\Panels\ViewportPanel.cpp" />
     <ClCompile Include="source\main.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\dependencies\imgui;..\dependencies\DirectXTK12\Inc;..\dependencies\DirectX-Headers\include;..\dependencies\tinyxml2;..\dependencies\pugixml\src;..\dependencies\DLSS\include;..\dependencies\FidelityFX-SDK\ffx-api\include;C:\Hobby\AaEngineDx12\AaEngine\source;C:\Hobby\AaEngineDx12\AaFramework\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
@@ -152,14 +159,23 @@
   <ItemGroup>
     <ClInclude Include="..\dependencies\imnodes\imnodes.h" />
     <ClInclude Include="..\dependencies\imnodes\imnodes_internal.h" />
-    <ClInclude Include="source\ConstantNode.h" />
-    <ClInclude Include="source\Editor.h" />
-    <ClInclude Include="source\MathNodes.h" />
-    <ClInclude Include="source\Node.h" />
-    <ClInclude Include="source\NodeGraph.h" />
-    <ClInclude Include="source\ShaderGen.h" />
-    <ClInclude Include="source\OutputNode.h" />
-    <ClInclude Include="source\TextureNodes.h" />
+    <ClInclude Include="source\NodeGraph\Nodes\ConstantNode.h" />
+    <ClInclude Include="source\Editor\Editor.h" />
+    <ClInclude Include="source\Editor\DebugState.h" />
+    <ClInclude Include="source\Editor\EditorSelection.h" />
+    <ClInclude Include="source\Editor\ImguiPanelViewport.h" />
+    <ClInclude Include="source\Panels\AssetBrowserPanel.h" />
+    <ClInclude Include="source\Panels\LogPanel.h" />
+    <ClInclude Include="source\Panels\SceneTreePanel.h" />
+    <ClInclude Include="source\Panels\SidePanel.h" />
+    <ClInclude Include="source\Panels\TerrainShaderGraphPanel.h" />
+    <ClInclude Include="source\Panels\ViewportPanel.h" />
+    <ClInclude Include="source\NodeGraph\Nodes\MathNodes.h" />
+    <ClInclude Include="source\NodeGraph\Node.h" />
+    <ClInclude Include="source\NodeGraph\NodeGraph.h" />
+    <ClInclude Include="source\NodeGraph\ShaderGen.h" />
+    <ClInclude Include="source\NodeGraph\Nodes\OutputNode.h" />
+    <ClInclude Include="source\NodeGraph\Nodes\TextureNodes.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

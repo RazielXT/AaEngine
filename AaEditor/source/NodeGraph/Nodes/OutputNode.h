@@ -1,6 +1,8 @@
 #pragma once
 
-#include "Node.h"
+#include "NodeGraph/Node.h"
+#include "../data/editor/icons/IconsFontAwesome7.h"
+#include <functional>
 
 class FloatOutputNode : public Node
 {

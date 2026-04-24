@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include "imnodes/imnodes.h"
 #include "ShaderGen.h"
+#include <intsafe.h>
+#include <utility>
 
 class Node;
 
@@ -113,7 +115,7 @@ protected:
 	UINT titleColor[3] = { IM_COL32(41, 74, 122, 255), IM_COL32(66, 100, 200, 255), IM_COL32(66, 150, 250, 255) };
 	void setTitleColor(UINT r, UINT g, UINT b)
 	{
-		r = min(r, 150); g = min(g, 150); b = min(b, 150);
+		r = std::min(r, 150U); g = std::min(g, 150U); b = std::min(b, 150U);
 		titleColor[0] = IM_COL32(r, g, b, 255);
 		titleColor[1] = IM_COL32(r * 1.3, g * 1.3, b * 1.3, 255);
 		titleColor[2] = IM_COL32(r * 1.6, g * 1.6, b * 1.6, 255);

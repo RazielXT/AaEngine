@@ -3,7 +3,7 @@
 #include "FreeCamera.h"
 #include "ApplicationCore.h"
 #include <shellscalingapi.h>
-#include "Editor.h"
+#include "Editor/Editor.h"
 #include "imgui.h"
 
 // Forward declare message handler from imgui_impl_win32.cpp
@@ -53,12 +53,12 @@ public:
 			{
 				app.physicsMgr.update(timeSinceLastFrame);
 
-				editorUi.rendererActive ? InputHandler::consumeInput(*this) : InputHandler::clearInput();
+				editorUi.isRendererActive() ? InputHandler::consumeInput(*this) : InputHandler::clearInput();
 				editorUi.updateViewportSize();
 
 				updateDebugState();
 
-				if (!editorUi.rendererHovered)
+				if (!editorUi.isRendererHovered())
 					freeCamera.stop();
 				else
 					freeCamera.update(timeSinceLastFrame);

@@ -17,6 +17,12 @@
     <Filter Include="Source Files\NodesGraph\Nodes">
       <UniqueIdentifier>{083b898c-799b-4167-9704-61bb5457519c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Editor">
+      <UniqueIdentifier>{a1b2c3d4-e5f6-7890-abcd-ef1234567890}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Panels">
+      <UniqueIdentifier>{b2c3d4e5-f6a7-8901-bcde-f12345678901}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -25,8 +31,29 @@
     <ClCompile Include="source\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\Editor.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="source\Editor\Editor.cpp">
+      <Filter>Source Files\Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Panels\AssetBrowserPanel.cpp">
+      <Filter>Source Files\Panels</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Panels\LogPanel.cpp">
+      <Filter>Source Files\Panels</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Panels\SceneTreePanel.cpp">
+      <Filter>Source Files\Panels</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Panels\SidePanel.cpp">
+      <Filter>Source Files\Panels</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Panels\TerrainShaderGraphPanel.cpp">
+      <Filter>Source Files\Panels</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Editor\EditorSelection.cpp">
+      <Filter>Source Files\Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Panels\ViewportPanel.cpp">
+      <Filter>Source Files\Panels</Filter>
     </ClCompile>
     <ClCompile Include="..\dependencies\ImGuizmo\ImGuizmo.cpp">
       <Filter>ImGuizmo</Filter>
@@ -36,10 +63,37 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="source\Editor.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="source\Editor\Editor.h">
+      <Filter>Source Files\Editor</Filter>
     </ClInclude>
-    <ClInclude Include="source\Node.h">
+    <ClInclude Include="source\Editor\DebugState.h">
+      <Filter>Source Files\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Editor\EditorSelection.h">
+      <Filter>Source Files\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Editor\ImguiPanelViewport.h">
+      <Filter>Source Files\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Panels\AssetBrowserPanel.h">
+      <Filter>Source Files\Panels</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Panels\LogPanel.h">
+      <Filter>Source Files\Panels</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Panels\SceneTreePanel.h">
+      <Filter>Source Files\Panels</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Panels\SidePanel.h">
+      <Filter>Source Files\Panels</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Panels\TerrainShaderGraphPanel.h">
+      <Filter>Source Files\Panels</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Panels\ViewportPanel.h">
+      <Filter>Source Files\Panels</Filter>
+    </ClInclude>
+    <ClInclude Include="source\NodeGraph\Node.h">
       <Filter>Source Files\NodesGraph</Filter>
     </ClInclude>
     <ClInclude Include="..\dependencies\imnodes\imnodes.h">
@@ -48,22 +102,22 @@
     <ClInclude Include="..\dependencies\imnodes\imnodes_internal.h">
       <Filter>imnodes</Filter>
     </ClInclude>
-    <ClInclude Include="source\NodeGraph.h">
+    <ClInclude Include="source\NodeGraph\NodeGraph.h">
       <Filter>Source Files\NodesGraph</Filter>
     </ClInclude>
-    <ClInclude Include="source\ConstantNode.h">
+    <ClInclude Include="source\NodeGraph\Nodes\ConstantNode.h">
       <Filter>Source Files\NodesGraph\Nodes</Filter>
     </ClInclude>
-    <ClInclude Include="source\MathNodes.h">
+    <ClInclude Include="source\NodeGraph\Nodes\MathNodes.h">
       <Filter>Source Files\NodesGraph\Nodes</Filter>
     </ClInclude>
-    <ClInclude Include="source\OutputNode.h">
+    <ClInclude Include="source\NodeGraph\Nodes\OutputNode.h">
       <Filter>Source Files\NodesGraph\Nodes</Filter>
     </ClInclude>
-    <ClInclude Include="source\TextureNodes.h">
+    <ClInclude Include="source\NodeGraph\Nodes\TextureNodes.h">
       <Filter>Source Files\NodesGraph\Nodes</Filter>
     </ClInclude>
-    <ClInclude Include="source\ShaderGen.h">
+    <ClInclude Include="source\NodeGraph\ShaderGen.h">
       <Filter>Source Files\NodesGraph</Filter>
     </ClInclude>
   </ItemGroup>

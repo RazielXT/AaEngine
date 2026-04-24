@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Node.h"
+#include "NodeGraph/Node.h"
 
 class TextureSampleNode : public Node
 {

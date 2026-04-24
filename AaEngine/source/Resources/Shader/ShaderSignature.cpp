@@ -1,6 +1,6 @@
 #include "Resources/Shader/ShaderSignature.h"
 #include "Resources/Shader/ShaderLibrary.h"
-#include "Utils/FileLogger.h"
+#include "Utils/Logger.h"
 #include "Resources/GraphicsResources.h"
 
 D3D12_SHADER_VISIBILITY SignatureInfo::getVisibility(ShaderType t)
@@ -366,7 +366,7 @@ ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device& device, co
 	D3D12SerializeVersionedRootSignature(&rootSignatureDesc, &signature, &error);
 	if (error && error->GetBufferSize() > 0)
 	{
-		FileLogger::logError((const char*)error->GetBufferPointer());
+		Logger::logError((const char*)error->GetBufferPointer());
 		return nullptr;
 	}
 

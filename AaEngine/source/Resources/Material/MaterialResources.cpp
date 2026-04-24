@@ -1,5 +1,5 @@
 #include "Resources/Material/MaterialResources.h"
-#include "Utils/FileLogger.h"
+#include "Utils/Logger.h"
 #include "Resources/Material/MaterialFileParser.h"
 #include "Resources/GraphicsResources.h"
 #include "App/Directories.h"

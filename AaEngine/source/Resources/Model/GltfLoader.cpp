@@ -1,5 +1,5 @@
 #include "Resources/Model/GltfLoader.h"
-#include "Utils/FileLogger.h"
+#include "Utils/Logger.h"
 #include "Math.h"
 
 #define TINYGLTF_IMPLEMENTATION
@@ -164,12 +164,12 @@ SceneCollection::Data GltfLoader::load(const std::string& path, SceneCollection:
 
 	if (path.ends_with(".gltf") && !loader.LoadASCIIFromFile(&gltfModel, &error, &warning, path))
 	{
-		FileLogger::logError("Failed to load " + path + "\n" + error);
+		Logger::logError("Failed to load " + path + "\n" + error);
 		return {};
 	}
 	if (path.ends_with(".glb") && !loader.LoadBinaryFromFile(&gltfModel, &error, &warning, path))
 	{
-		FileLogger::logError("Failed to load " + path + "\n" + error);
+		Logger::logError("Failed to load " + path + "\n" + error);
 		return {};
 	}
 

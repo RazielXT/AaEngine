@@ -1,7 +1,7 @@
 #include "Resources/Textures/TextureResources.h"
 #include <WICTextureLoader.h>
 #include <DDSTextureLoader.h>
-#include "Utils/FileLogger.h"
+#include "Utils/Logger.h"
 #include "App/Directories.h"
 #include "ResourceUploadBatch.h"
 #include "Utils/StringUtils.h"
@@ -47,7 +47,7 @@ HRESULT LoadTextureFromFile(ResourceUploadBatch& resourceUpload, ID3D12Device& d
 
 	if (FAILED(hr))
 	{
-		FileLogger::logErrorD3D("Failed to load texture from file: " + filename, hr);
+		Logger::logErrorD3D("Failed to load texture from file: " + filename, hr);
 		return hr;
 	}
 

@@ -4,7 +4,7 @@
 #include <ranges>
 #include "directx/d3dx12.h"
 #include "App/Directories.h"
-#include "Utils/FileLogger.h"
+#include "Utils/Logger.h"
 #include "Resources/Model/VertexBufferModel.h"
 #include <unordered_set>
 #include "Utils/StringUtils.h"
@@ -367,7 +367,7 @@ ComPtr<IDxcBlob> ShaderCompiler::compileShader(const ShaderRef& ref, ShaderDescr
 
 	if (!pSourceBlob)
 	{
-		FileLogger::logError("failed to load file " + path);
+		Logger::logError("failed to load file " + path);
 		return nullptr;
 	}
 
@@ -403,7 +403,7 @@ ComPtr<IDxcBlob> ShaderCompiler::compileShader(const ShaderRef& ref, ShaderDescr
 	auto hr = pCompiler->Compile(&sourceBuffer, arguments.data(), (uint32_t)arguments.size(), &includeHandler, IID_PPV_ARGS(pCompileResult.GetAddressOf()));
 	if (FAILED(hr))
 	{
-		FileLogger::logErrorD3D("compileShader " + ref.file, hr);
+		Logger::logErrorD3D("compileShader " + ref.file, hr);
 		return nullptr;
 	}
 
@@ -419,13 +419,13 @@ ComPtr<IDxcBlob> ShaderCompiler::compileShader(const ShaderRef& ref, ShaderDescr
 	{
 		auto loc = ParseDxcError(pErrors->GetStringPointer());
 
-		FileLogger::logError(ref.file + " " + ref.entry + "\n" + pErrors->GetStringPointer(), SHADER_DIRECTORY + loc.file);
+		Logger::logError(ref.file + " " + ref.entry + "\n" + pErrors->GetStringPointer(), SHADER_DIRECTORY + loc.file);
 		return nullptr;
 	}
 
 	if (!reflectShaderInfo(pCompileResult.Get(), description, type))
 	{
-		FileLogger::logError(ref.file + " " + ref.entry + "\n" + "compileShader no reflection");
+		Logger::logError(ref.file + " " + ref.entry + "\n" + "compileShader no reflection");
 		return nullptr;
 	}
 

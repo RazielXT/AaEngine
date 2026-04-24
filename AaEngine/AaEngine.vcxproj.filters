@@ -408,7 +408,7 @@
     <ClInclude Include="source\Scene\SceneManager.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="source\Utils\FileLogger.h">
+    <ClInclude Include="source\Utils\Logger.h">
       <Filter>Source Files\Utils</Filter>
     </ClInclude>
     <ClInclude Include="source\Utils\ConfigParser.h">

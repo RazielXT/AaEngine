@@ -1,5 +1,5 @@
 #include "Resources/Material/MaterialFileParser.h"
-#include "Utils/FileLogger.h"
+#include "Utils/Logger.h"
 #include <filesystem>
 #include "Utils/ConfigParser.h"
 #include "Resources/Shader/ShaderFileParser.h"
@@ -362,11 +362,11 @@ void MaterialFileParser::parseAllMaterialFiles(std::vector<MaterialRef>& mats, s
 		}
 		else if (entry.is_regular_file() && entry.path().generic_string().ends_with(".material"))
 		{
-			FileLogger::log("Parsing " + entry.path().generic_string());
+			Logger::log("Parsing " + entry.path().generic_string());
 			parseMaterialFile(mats, shaders, entry.path().generic_string());
 		}
 	}
 
 	if (ec)
-		FileLogger::logWarning(ec.message());
+		Logger::logWarning(ec.message());
 }

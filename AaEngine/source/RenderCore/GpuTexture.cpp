@@ -2,7 +2,7 @@
 #include "Resources/DescriptorManager.h"
 #include "Utils/StringUtils.h"
 #include <DirectXMath.h>
-#include "Utils/FileLogger.h"
+#include "Utils/Logger.h"
 
 static const DirectX::XMFLOAT4 ClearColor = { 0.0f, 0.0f, 0.0f, 0.0f };
 
@@ -158,7 +158,7 @@ void GpuTexture2D::CreateTextureBuffer(ID3D12Device* device, D3D12_RESOURCE_STAT
 	);
 
 	if (FAILED(hr))
-		FileLogger::logErrorD3D("CreateTextureBuffer", hr);
+		Logger::logErrorD3D("CreateTextureBuffer", hr);
 }
 
 void GpuTexture2D::PrepareAsDepthTarget(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES from, bool clearDepth)

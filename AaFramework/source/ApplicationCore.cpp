@@ -1,5 +1,5 @@
 #include "ApplicationCore.h"
-#include "Utils/FileLogger.h"
+#include "Utils/Logger.h"
 #include "App/Directories.h"
 #include "FreeCamera.h"
 #include "SceneParser.h"
@@ -32,7 +32,7 @@ ApplicationCore::~ApplicationCore()
 void ApplicationCore::initialize(const TargetWindow& window, const InitParams& appParams)
 {
 	if (!std::filesystem::exists(DATA_DIRECTORY) || !std::filesystem::is_directory(DATA_DIRECTORY))
-		FileLogger::logError("Missing directory " + std::filesystem::absolute(DATA_DIRECTORY).string());
+		Logger::logError("Missing directory " + std::filesystem::absolute(DATA_DIRECTORY).string());
 
 	resources.shaderDefines.setDefine("CFG_SHADOW_HIGH", true);
 
@@ -56,7 +56,7 @@ void ApplicationCore::initialize(const TargetWindow& window, const InitParams& a
 
 	physicsMgr.init();
 
-	FileLogger::log("ApplicationCore Initialized");
+	Logger::log("ApplicationCore Initialized");
 }
 
 void ApplicationCore::beginRendering(std::function<bool(float)> onUpdate)

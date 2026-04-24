@@ -1,5 +1,5 @@
 #include "Resources/Model/ModelResources.h"
-#include "Utils/FileLogger.h"
+#include "Utils/Logger.h"
 #include "App/Directories.h"
 #include <sys/stat.h>
 #include "Resources/Model/OgreMeshFileParser.h"
@@ -68,7 +68,7 @@ void ModelResources::addLoadedModel(const std::string& name, VertexBufferModel* 
 	auto& model = models[name];
 
 	if (model)
-		FileLogger::logError("Duplicate mesh " + name);
+		Logger::logError("Duplicate mesh " + name);
 
 	model = m;
 }
@@ -121,7 +121,7 @@ VertexBufferModel* ModelResources::loadModel(const std::string& filename, Resour
 {
 	VertexBufferModel* model{};
 
-	FileLogger::log("Loading mesh file " + filename);
+	Logger::log("Loading mesh file " + filename);
 
 	std::string filepath = SCENE_DIRECTORY + ctx.folder;
 	if (!filepath.ends_with('\\')) filepath += '\\';
@@ -151,7 +151,7 @@ VertexBufferModel* ModelResources::loadModel(const std::string& filename, Resour
 	}
 
 	if (!model)
-		FileLogger::logError("Model " + filename + " failed to load");
+		Logger::logError("Model " + filename + " failed to load");
 
 	return model;
 }

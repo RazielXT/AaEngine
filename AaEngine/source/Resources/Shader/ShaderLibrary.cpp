@@ -1,5 +1,5 @@
 #include "Resources/Shader/ShaderLibrary.h"
-#include "Utils/FileLogger.h"
+#include "Utils/Logger.h"
 #include "App/Directories.h"
 
 ShaderLibrary::ShaderLibrary(const ShaderDefines& d) : defines(d)
@@ -32,7 +32,7 @@ void ShaderLibrary::addShaderReferences(const shaderRefMaps& maps)
 				info->ref = ref;
 			}
 			else
-				FileLogger::logWarning("Duplicate shader ref " + name);
+				Logger::logWarning("Duplicate shader ref " + name);
 		}
 
 		auto& customizations = maps.shaderCustomizations[type];
@@ -52,7 +52,7 @@ void ShaderLibrary::addShaderReferences(const shaderRefMaps& maps)
 				}
 			}
 			else
-				FileLogger::logWarning("Invalid customization shader ref " + info.sourceName);
+				Logger::logWarning("Invalid customization shader ref " + info.sourceName);
 		}
 	}
 }

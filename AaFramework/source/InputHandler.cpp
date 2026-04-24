@@ -1,7 +1,7 @@
 #include "InputHandler.h"
 #include <windows.h>
 #include <vector>
-#include "Utils/FileLogger.h"
+#include "Utils/Logger.h"
 #include "hidusage.h"
 
 struct InputInfo { uint32_t message; int wParam; int lParam; };
@@ -64,7 +64,7 @@ void InputHandler::registerWindow(HWND hwnd)
 
 	if (!RegisterRawInputDevices(&rid, 1, sizeof(rid)))
 	{
-		FileLogger::log("Failed to register raw input device");
+		Logger::log("Failed to register raw input device");
 	}
 }
 

@@ -129,4 +129,5 @@ private:
 	void DrawAssetBrowserTopBar(AssetBrowserFilter& filter);
 
 	void DrawTerrainShaderGraph();
+	void DrawLogHistory();
 };

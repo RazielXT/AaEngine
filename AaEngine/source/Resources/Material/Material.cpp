@@ -6,7 +6,7 @@
 #include "Scene/SceneEntity.h"
 #include "Resources/Shader/ShaderLibrary.h"
 #include "Resources/Textures/TextureResources.h"
-#include "Utils/FileLogger.h"
+#include "Utils/Logger.h"
 #include <sstream>
 #include <functional>
 #include <CommonStates.h>
@@ -150,7 +150,7 @@ static void fillPipelineStateDesc(T& psoDesc, const MaterialRef& ref, const Mate
 ID3D12PipelineState* MaterialBase::CreatePipelineState(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target, const TechniqueProperties& technique)
 {
 	if (!shaders[ShaderType::Pixel] && !target.empty())
-		FileLogger::logError("Missing PS " + ref.name);
+		Logger::logError("Missing PS " + ref.name);
 
 	if (shaders[ShaderType::Mesh])
 		return CreatePipelineStateMS(target, technique);
@@ -170,7 +170,7 @@ ID3D12PipelineState* MaterialBase::CreatePipelineState(const std::vector<D3D12_I
 	ID3D12PipelineState* pipelineState{};
 	auto hr = device.CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState));
 	if (FAILED(hr) || !pipelineState) {
-		FileLogger::logErrorD3D("Failed CreateGraphicsPipelineState", hr);
+		Logger::logErrorD3D("Failed CreateGraphicsPipelineState", hr);
 	}
 
 	return pipelineState;
@@ -200,7 +200,7 @@ ID3D12PipelineState* MaterialBase::CreatePipelineStateMS(const std::vector<DXGI_
 	ID3D12PipelineState* pipelineState{};
 	auto hr = device2->CreatePipelineState(&streamDesc, IID_PPV_ARGS(&pipelineState));
 	if (FAILED(hr)) {
-		FileLogger::logErrorD3D("Failed CreatePipelineState", hr);
+		Logger::logErrorD3D("Failed CreatePipelineState", hr);
 	}
 
 	return pipelineState;

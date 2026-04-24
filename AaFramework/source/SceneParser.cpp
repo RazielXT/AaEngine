@@ -2,7 +2,7 @@
 
 #include "SceneParser.h"
 #include "App/Directories.h"
-#include "Utils/FileLogger.h"
+#include "Utils/Logger.h"
 #include "Resources/GraphicsResources.h"
 #include <filesystem>
 #include <algorithm>
@@ -253,7 +253,7 @@ void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible)
 	props.order = ParseRenderQueue(entityElement.attribute("renderQueue").value());
 	props.groupId = groupId;
 
-	FileLogger::log("Loading entity " + name + " with mesh file " + mesh);
+	Logger::log("Loading entity " + name + " with mesh file " + mesh);
 	SceneEntity* ent{};
 
 	for (const auto& element : entityElement.child("subentities").children())

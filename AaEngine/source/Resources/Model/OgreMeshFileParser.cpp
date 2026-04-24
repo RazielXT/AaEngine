@@ -1,5 +1,5 @@
 #include "Resources/Model/OgreMeshFileParser.h"
-#include "Utils/FileLogger.h"
+#include "Utils/Logger.h"
 #include <map>
 
 using namespace OgreMeshFileParser;
@@ -721,7 +721,7 @@ MeshInfo OgreMeshFileParser::load(std::string filename, ModelParseOptions o)
 
 	if (!parseOgreMeshFile(filename, out, o))
 	{
-		FileLogger::logError("failed to load model file " + filename);
+		Logger::logError("failed to load model file " + filename);
 		return {};
 	}
 

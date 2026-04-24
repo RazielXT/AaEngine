@@ -1,7 +1,7 @@
 #include "RenderCore/DLSS.h"
 #include "nvsdk_ngx.h"
 #include "nvsdk_ngx_helpers.h"
-#include "Utils/FileLogger.h"
+#include "Utils/Logger.h"
 #include <format>
 #include <vector>
 #include "RenderCore/RenderSystem.h"
@@ -20,14 +20,14 @@ bool DLSS::initLibrary()
 	NVSDK_NGX_Result Result = NVSDK_NGX_D3D12_Init_with_ProjectID(DlssProjectId, NVSDK_NGX_ENGINE_TYPE_CUSTOM, "1.0", L".", renderSystem.core.device);
 	if (NVSDK_NGX_FAILED(Result))
 	{
-		FileLogger::logWarning(std::format("NVSDK_NGX_D3D12_Init_with_ProjectID failed, code = {}", (int)Result));
+		Logger::logWarning(std::format("NVSDK_NGX_D3D12_Init_with_ProjectID failed, code = {}", (int)Result));
 		return false;
 	}
 
 	Result = NVSDK_NGX_D3D12_GetCapabilityParameters(&ngxParameters);
 	if (NVSDK_NGX_FAILED(Result))
 	{
-		FileLogger::logWarning(std::format("NVSDK_NGX_GetCapabilityParameters failed, code = {}", (int)Result));
+		Logger::logWarning(std::format("NVSDK_NGX_GetCapabilityParameters failed, code = {}", (int)Result));
 		shutdown();
 		return false;
 	}
@@ -38,7 +38,7 @@ bool DLSS::initLibrary()
 	{
 		NVSDK_NGX_Result FeatureInitResult = NVSDK_NGX_Result_Fail;
 		NVSDK_NGX_Parameter_GetI(ngxParameters, NVSDK_NGX_Parameter_SuperSampling_FeatureInitResult, (int*)&FeatureInitResult);
-		FileLogger::logWarning(std::format("NVIDIA DLSS not available on this hardward/platform., FeatureInitResult = {}", (int)FeatureInitResult));
+		Logger::logWarning(std::format("NVIDIA DLSS not available on this hardward/platform., FeatureInitResult = {}", (int)FeatureInitResult));
 		shutdown();
 		return false;
 	}
@@ -176,7 +176,7 @@ bool DLSS::selectMode(UpscaleMode m)
 
 		if (NVSDK_NGX_FAILED(ResultDLSS))
 		{
-			FileLogger::logError(std::format("Failed to create DLSS Features = {}", (int)ResultDLSS));
+			Logger::logError(std::format("Failed to create DLSS Features = {}", (int)ResultDLSS));
 			compatible = false;
 			return false;
 		}

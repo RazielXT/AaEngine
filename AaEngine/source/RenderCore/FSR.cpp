@@ -1,7 +1,7 @@
 #include "RenderCore/FSR.h"
 #include "FidelityFX-SDK/Kits/FidelityFX/upscalers/include/ffx_upscale.hpp"
 #include "RenderCore/RenderSystem.h"
-#include "Utils/FileLogger.h"
+#include "Utils/Logger.h"
 #include <format>
 #include "Scene/Camera.h"
 
@@ -15,11 +15,11 @@ static void FfxMsgCallback(uint32_t type, const wchar_t* message)
 
 	if (type == FFX_API_MESSAGE_TYPE_ERROR)
 	{
-		FileLogger::logError(buffer);
+		Logger::logError(buffer);
 	}
 	else if (type == FFX_API_MESSAGE_TYPE_WARNING)
 	{
-		FileLogger::logWarning(buffer);
+		Logger::logWarning(buffer);
 	}
 }
 
@@ -99,7 +99,7 @@ void FSR::initializeContext()
 
 		if (retCode != ffx::ReturnCode::Ok)
 		{
-			FileLogger::logError(std::format("FSR ffx::CreateContext error code {}", (int)retCode));
+			Logger::logError(std::format("FSR ffx::CreateContext error code {}", (int)retCode));
 			return;
 		}
 	}

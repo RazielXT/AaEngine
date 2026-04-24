@@ -2,7 +2,7 @@
 #include "Utils/ConfigParser.h"
 #include "Resources/GraphicsResources.h"
 #include "Scene/SceneManager.h"
-#include "Utils/FileLogger.h"
+#include "Utils/Logger.h"
 #include <format>
 
 void PrefabLoader::load(const std::string& path, SceneCollection::LoadCtx ctx)
@@ -38,7 +38,7 @@ void PrefabLoader::load(const std::string& path, SceneCollection::LoadCtx ctx)
 
 		if (name.empty() || !material || !model)
 		{
-			FileLogger::logWarning(std::format("Failed to load prefab {} {}", path, obj.value));
+			Logger::logWarning(std::format("Failed to load prefab {} {}", path, obj.value));
 			continue;
 		}
 

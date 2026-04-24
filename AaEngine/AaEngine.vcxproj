@@ -205,7 +205,7 @@
     <ClInclude Include="source\Resources\ResourcesView.h" />
     <ClInclude Include="source\Scene\SceneCollection.h" />
     <ClInclude Include="source\Scene\SceneEntity.h" />
-    <ClInclude Include="source\Utils\FileLogger.h" />
+    <ClInclude Include="source\Utils\Logger.h" />
     <ClInclude Include="source\Resources\Material\Material.h" />
     <ClInclude Include="source\Resources\Compute\AoBlurAndUpsampleCS.h" />
     <ClInclude Include="source\Resources\Compute\AoRenderCS.h" />

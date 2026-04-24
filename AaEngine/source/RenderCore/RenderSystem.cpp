@@ -7,7 +7,7 @@
 #include "Scene/SceneManager.h"
 #include "Resources/Material/MaterialResources.h"
 #include <pix3.h>
-#include "Utils/FileLogger.h"
+#include "Utils/Logger.h"
 #include "Utils/StringUtils.h"
 
 ComPtr<IDXGIAdapter1> GetHardwareAdapter(enum D3D_FEATURE_LEVEL level)
@@ -62,7 +62,7 @@ RenderCore::RenderCore()
 	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 	if (FAILED(hr))
 	{
-		FileLogger::logError("Failed to initialize COM");
+		Logger::logError("Failed to initialize COM");
 		return;
 	}
 
@@ -71,7 +71,7 @@ RenderCore::RenderCore()
 		if (!hardwareAdapter)
 		{
 			auto err = "GetHardwareAdapter failed";
-			FileLogger::logErrorD3D(err, hr);
+			Logger::logErrorD3D(err, hr);
 			throw std::invalid_argument(err);
 		}
 
@@ -79,7 +79,7 @@ RenderCore::RenderCore()
 		if (FAILED(hr))
 		{
 			auto err = "D3D12CreateDevice failed";
-			FileLogger::logErrorD3D(err, hr);
+			Logger::logErrorD3D(err, hr);
 			throw std::invalid_argument(err);
 		}
 
@@ -89,7 +89,7 @@ RenderCore::RenderCore()
 		if (SM.HighestShaderModel < D3D_SHADER_MODEL_6_6)
 		{
 			auto err = std::format("D3D12Device shader support is {:#x}", (int)SM.HighestShaderModel);
-			FileLogger::logError(err);
+			Logger::logError(err);
 			throw std::invalid_argument(err);
 		}
 
@@ -98,7 +98,7 @@ RenderCore::RenderCore()
 		if (opts.ConservativeRasterizationTier == D3D12_CONSERVATIVE_RASTERIZATION_TIER_NOT_SUPPORTED)
 		{
 			auto err = "D3D12Device D3D12_CONSERVATIVE_RASTERIZATION_TIER_NOT_SUPPORTED";
-			FileLogger::logError(err);
+			Logger::logError(err);
 			throw std::invalid_argument(err);
 		}
 
@@ -107,7 +107,7 @@ RenderCore::RenderCore()
 // 		if (opts7.MeshShaderTier == D3D12_MESH_SHADER_TIER_NOT_SUPPORTED)
 // 		{
 // 			auto err = "D3D12Device D3D12_MESH_SHADER_TIER_NOT_SUPPORTED";
-// 			FileLogger::logError(err);
+// 			Logger::logError(err);
 // 			throw std::invalid_argument(err);
 // 		}
 
@@ -277,7 +277,7 @@ void RenderCore::initializeSwapChain(const TargetWindow& window, ColorSpace colo
 	);
 
 	if (!swapChain)
-		FileLogger::logErrorD3D("CreateSwapChainForHwnd", hr);
+		Logger::logErrorD3D("CreateSwapChainForHwnd", hr);
 
 	if (colorSpace.type == ColorSpace::HDR10)
 	{

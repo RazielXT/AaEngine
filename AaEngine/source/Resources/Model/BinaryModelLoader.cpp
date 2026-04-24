@@ -1,6 +1,6 @@
 #include "Resources/Model/BinaryModelLoader.h"
 #include "Resources/Model/BinaryModelSerialization.h"
-#include "Utils/FileLogger.h"
+#include "Utils/Logger.h"
 #include "Math.h"
 
 VertexBufferModel* BinaryModelLoader::load(std::string filename, ModelParseOptions options)
@@ -9,7 +9,7 @@ VertexBufferModel* BinaryModelLoader::load(std::string filename, ModelParseOptio
 
 	if (!BinaryModelSerialization::ReadModel(filename, info))
 	{
-		FileLogger::logError("Failed to load model " + filename);
+		Logger::logError("Failed to load model " + filename);
 		return nullptr;
 	}
 

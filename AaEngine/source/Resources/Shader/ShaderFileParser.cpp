@@ -1,5 +1,5 @@
 #include "Resources/Shader/ShaderFileParser.h"
-#include "Utils/FileLogger.h"
+#include "Utils/Logger.h"
 #include <filesystem>
 #include "Utils/ConfigParser.h"
 
@@ -99,7 +99,7 @@ void parseAllShaderFiles(shaderRefMaps& shaders, std::string directory, bool sub
 		}
 		else if (entry.is_regular_file() && entry.path().generic_string().ends_with(".shader"))
 		{
-			FileLogger::log("Parsing " + entry.path().generic_string());
+			Logger::log("Parsing " + entry.path().generic_string());
 			parseShaderFile(shaders, entry.path().generic_string());
 		}
 	}
@@ -118,7 +118,7 @@ shaderRefMaps ShaderFileParser::parseAllShaderFiles(std::string directory, bool 
 	for (const auto& s : shaders.shaderRefs.data)
 		c += s.size();
 
-	FileLogger::log("Total shaders found: " + std::to_string(c));
+	Logger::log("Total shaders found: " + std::to_string(c));
 
 	return shaders;
 }

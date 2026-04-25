@@ -7,6 +7,7 @@
 #include "hlsl/common/MotionVectors.hlsl"
 #include "hlsl/common/ShaderOutputs.hlsl"
 #include "hlsl/common/Triplanar.hlsl"
+#include "hlsl/common/DebugColors.hlsl"
 
 float4x4 ViewProjectionMatrix;
 float3 MaterialColor;
@@ -64,22 +65,10 @@ PSInput VSMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
 	result.uv = info.uv;
 
 #ifdef GRID_DEBUG_COLOR
-	static const float3 LODColors[10] = {
-		float3(1.00, 0.00, 0.00), // Red
-		float3(0.00, 0.60, 0.10), // Bright Green (very bright)
-		float3(0.00, 0.20, 1.00), // Sky Blue (bright)
-		float3(1.00, 0.80, 0.00), // Gold (bright)
-		float3(0.20, 0.00, 1.00), // Deep Blue (dark)
-		float3(1.00, 0.20, 0.60), // Hot Pink (bright)
-		float3(0.60, 0.30, 0.00), // Brown/Amber (dark)
-		float3(0.00, 1.00, 0.40), // Green-Teal (bright)
-		float3(0.80, 0.00, 0.80), // Purple (mid)
-		float3(1.00, 1.00, 1.00)  // White (max contrast)
-	};
 	#ifdef GRID_LOD_DEBUG
-		result.debugColor = (1 - 0.4 * info.morphMask) * LODColors[9-InstancingBuffer[instanceID].lod];
+		result.debugColor = (1 - 0.4 * info.morphMask) * GetDebugColor(9 - InstancingBuffer[instanceID].lod);
 	#elif defined(GRID_INDEX_DEBUG)
-		result.debugColor = LODColors[GridIndex % 9];
+		result.debugColor = GetDebugColor(GridIndex);
 	#endif
 #endif
 	return result;

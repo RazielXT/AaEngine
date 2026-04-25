@@ -29,16 +29,14 @@ float4x4 TranslationScaleMatrix(float3 position, float scale)
 }
 
 [numthreads(64, 1, 1)]
-void main(uint3 groupId : SV_GroupID, uint3 dispatchThreadID : SV_DispatchThreadID)
+void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
-	const uint ItemsWidthPerThread = 8;
-	const uint ItemsPerThread = ItemsWidthPerThread * ItemsWidthPerThread;
+	const uint ItemsPerThread = 64;
 	uint totalCount = infoCounterBuffer.Load(0);
 
-	uint start = groupId.x * 64 * ItemsPerThread;
-	uint end = min(totalCount, start + ItemsPerThread);
+	uint start = dispatchThreadID.x * ItemsPerThread;
 
-	for (uint x = start; x < end; x++)
+	for (uint x = start; x < min(totalCount, start + ItemsPerThread); x++)
 	{
 		VegetationInfo info = infoBuffer[x];
 

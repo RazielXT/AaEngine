@@ -191,7 +191,7 @@ void Vegetation::update(ID3D12GraphicsCommandList* commandList, const Vector3& c
 	float chunkSize = terrainParams.tileSize / ChunksPerTerrainTile;
 	int half = (int)VegGridSize / 2;
 
-	XMINT2 cameraChunk = terrainParams.worldCoordAt(cameraPos, chunkSize);
+	XMINT2 cameraChunk = terrainParams.gridCenterAt(cameraPos, chunkSize, VegGridSize);
 
 	if (cameraChunk.x != gridCenterChunk.x || cameraChunk.y != gridCenterChunk.y)
 	{

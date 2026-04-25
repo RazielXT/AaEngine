@@ -3,6 +3,7 @@
 #include "hlsl/common/MotionVectors.hlsl"
 #include "hlsl/common/ShaderOutputs.hlsl"
 #include "hlsl/terrain/vegetation/vegetationCommon.hlsl"
+#include "hlsl/common/DebugColors.hlsl"
 
 float4x4 ViewProjectionMatrix;
 float4x4 InvViewMatrix;
@@ -14,6 +15,10 @@ uint TexIdDiffuse;
 uint TexIdNormal;
 uint TexIdEdges;
 float3 ViewCameraDirection;
+
+#ifdef BILLBOARD_DEBUG_COLOR
+uint ChunkId;
+#endif
 
 #ifdef ENTITY_ID
 uint EntityId;
@@ -107,7 +112,7 @@ GBufferOutput PSMain(PSInput input)
 {
 	SamplerState colorSampler = GetDynamicMaterialSamplerLinear();
 	float4 albedo = GetTexture2D(TexIdDiffuse).Sample(colorSampler, input.uv);
-	albedo.rgb *= ApplyTreeColorVariation(float3(0.9, 0.55, 0.35), float3(0.9, 0.35, 0.15), input.random) * saturate(0.5 + 0.5 * abs(input.random * 2 - 1));
+	albedo.rgb *= ApplyTreeColorVariation(float3(0.9, 0.6, 0.45), float3(0.9, 0.25, 0.15), input.random) * saturate(0.5 + 0.5 * abs(input.random * 2 - 1));
 
 	if (albedo.a < AlphaThreshold) discard;
 
@@ -156,6 +161,10 @@ GBufferOutput PSMain(PSInput input)
 	//normalTex = color_blend(normalTex, float3(x, y, z));
 
 	worldNormal = mul(normalTex.xyz, tbn);
+
+#ifdef BILLBOARD_DEBUG_COLOR
+	albedo.rgb = lerp(albedo.rgb, GetDebugColor(ChunkId), 0.7);
+#endif
 
 	GBufferOutput output;
 	output.albedo = float4(albedo.rgb, 0);

@@ -85,6 +85,7 @@ void Vegetation::createChunks(SceneManager& sceneMgr, RenderSystem& renderSystem
 			auto e = sceneMgr.createEntity("Veg" + std::format("{}{}", ax, ay));
 			chunk.entity = e;
 			e->material = vegMaterial;
+			e->Material().setParam("ChunkId", x + y * VegGridSize);
 			e->geometry.type = EntityGeometry::Type::Indirect;
 			e->geometry.source = &chunk.impostors;
 			e->geometry.geometryCustomBuffer = chunk.infoBuffer->GetGPUVirtualAddress();

@@ -77,6 +77,12 @@ void SidePanel::draw(const ObjectTransformation& objTransformation)
 			app.resources.shaderDefines.setDefine("GRID_INDEX_DEBUG", debugIndex);
 		}
 
+		static bool debugVegIndex = false;
+		if (ImGui::Checkbox("Debug vegetation Index", &debugVegIndex))
+		{
+			app.resources.shaderDefines.setDefine("BILLBOARD_DEBUG_COLOR", debugVegIndex);
+		}
+		
 		static bool updateGrid = true;
 		if (ImGui::Checkbox("Updating LOD", &updateGrid))
 		{

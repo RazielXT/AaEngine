@@ -9,6 +9,7 @@
 #include "RenderObject/Prefab/PrefabLoader.h"
 #include "SceneParser.h"
 #include "FrameCompositor/Tasks/VoxelizeSceneTask.h"
+#include "Utils/Logger.h"
 
 void ViewportPanel::DescriptorHeapAllocator::Create(ID3D12Device* device, ID3D12DescriptorHeap* heap)
 {
@@ -265,6 +266,8 @@ ObjectTransformation ViewportPanel::draw(Camera& camera)
 		}
 		else if (auto selectedId = pickInfo.id)
 		{
+			auto obj = app.sceneMgr.getObject(selectedId);
+			Logger::log(std::format("Picked '{}' at ({:.2f}, {:.2f}, {:.2f})", obj.getName(), pickInfo.position.x, pickInfo.position.y, pickInfo.position.z));
 			selection.select(selectedId, ctrlActive, app.sceneMgr);
 		}
 		else if (!ctrlActive)

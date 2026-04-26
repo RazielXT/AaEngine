@@ -170,3 +170,8 @@ const GpuTexture2D& ProgressiveTerrain::getHeightmap(XMINT2 worldChunk) const
 	int ay = TerrainGridParams::wrapIndex(worldChunk.y, GridsSize);
 	return terrainGridHeight[ax][ay];
 }
+
+DirectX::SimpleMath::Vector3 ProgressiveTerrain::getHeightmapPosition(XMINT2 worldChunk) const
+{
+	return params.chunkWorldMin(chunkWorldCoord[worldChunk.x][worldChunk.y], params.tileSize);
+}

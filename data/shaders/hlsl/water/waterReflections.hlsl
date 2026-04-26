@@ -3,6 +3,8 @@
 #include "hlsl/postprocess/PostProcessCommon.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
 #include "hlsl/common/Random.hlsl"
+#include "hlsl/skyFog.hlsl"
+#include "hlsl/ShadowsPssm.hlsl"
 
 float4x4 WorldMatrix;
 float4x4 ViewProjectionMatrix;
@@ -21,6 +23,11 @@ cbuffer SceneVoxelInfo : register(b1)
 {
 	SceneVoxelCbuffer VoxelInfo;
 };
+
+cbuffer PSSMShadows : register(b2)
+{
+	SunParams Sun;
+}
 
 SamplerState LinearWrapSampler : register(s0);
 SamplerState DepthSampler : register(s1);
@@ -44,7 +51,7 @@ float borderBlend(float2 uv, float edgeThreshold)
 	// Perform linear interpolation (lerp) based on the dist / edgeThresholdance to the edge
 	float alpha = saturate(minDist / edgeThreshold);
 
-	return alpha;
+	return 1 - pow(1 - alpha, 2);
 }
 
 
@@ -57,8 +64,6 @@ float4 GetReflection(
 	//Texture2D DepthBufferLow = GetTexture(TexIdSceneDepthLow);
 	Texture2D DepthBufferHigh = GetTexture2D(TexIdSceneDepthHigh);
 	float3 PrevRaySample = ScreenSpacePos;
-
-	float3 skyboxColor = GetTextureCube(TexIdSkybox).Sample(LinearWrapSampler, reflection).rgb;
 
 	// Raymarch in the direction of the ScreenSpaceReflectionVec until you get an intersection with your z buffer
 	//if (ScreenSpaceReflectionVec.z < 0 && !(ScreenSpaceReflectionVec.x == 0 && ScreenSpaceReflectionVec.y == 0))
@@ -128,14 +133,13 @@ float4 GetReflection(
 			}
 
 			float alpha = borderBlend(MidRaySample.xy, 0.15f);
-			float3 color = lerp(skyboxColor, GetTexture2D(TexIdSceneColor).Sample(LinearWrapSampler, MidRaySample.xy).rgb, alpha);
-			return float4(color, 1);
+			return float4(GetTexture2D(TexIdSceneColor).Sample(LinearWrapSampler, MidRaySample.xy).rgb, alpha);
 		}
 
 		PrevRaySample = RaySample;
 	}
 
-	return float4(skyboxColor, 0);
+	return 0.xxxx;
 }
 
 float2 getJitter(float2 uv, float jitterAmount)
@@ -176,6 +180,9 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	float3 ScreenSpaceReflectionVec = normalize(ScreenSpaceReflectionPoint.xyz - ScreenSpacePos.xyz);
 
 	float4 reflection = GetReflection(ScreenSpaceReflectionVec, ScreenSpacePos.xyz, -ReflectionVector);
+	
+	reflection.rgb = lerp(getFogColor(-cameraVector, Sun, LinearWrapSampler), reflection.rgb, reflection.a);
+	
 	if (false && reflection.a == 0)
 	{
 		float3 jjj = getJitter(ScreenUV, 0.5).xyx;

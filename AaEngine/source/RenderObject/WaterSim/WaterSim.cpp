@@ -68,7 +68,7 @@ void WaterSim::initializeGpuResources(RenderSystem& renderSystem, GraphicsResour
 	csShader = resources.shaders.getShader("continuityComputeShader", ShaderType::Compute, ShaderRef{ "waterSim/frenzySimContinuityCS.hlsl", "CS_Continuity", "cs_6_6" });
 	continuityComputeShader.init(*renderSystem.core.device, *csShader);
 
-	csShader = resources.shaders.getShader("watermapToTextureCS", ShaderType::Compute, ShaderRef{ "utils/watermapToTextureCS.hlsl", "CSMain", "cs_6_6" });
+	csShader = resources.shaders.getShader("watermapToTextureCS", ShaderType::Compute, ShaderRef{ "waterSim/watermapToTextureCS.hlsl", "CSMain", "cs_6_6" });
 	waterToTextureCS.init(*renderSystem.core.device, *csShader);
 
 	generateNormalMipsCS.init(*renderSystem.core.device, "generateNormalMipmaps4x", resources.shaders);
@@ -78,7 +78,6 @@ void WaterSim::initializeTarget(const GpuTexture2D& texture, SceneManager& scene
 {
 	terrainHeight = &texture;
 
-	center = { 0, -100, 0 };
 	waterGridTiles.Initialize(size, center, 7);
 
 	auto e = sceneMgr.createEntity("WaterSim", EntityCreateProperties{ .order = Order::Transparent });
@@ -86,7 +85,7 @@ void WaterSim::initializeTarget(const GpuTexture2D& texture, SceneManager& scene
 	waterGridMesh.entity = e;
 
 	e->geometry.fromInstancedModel(waterModel, 0, waterGridMesh.gpuBuffer.data[0].GpuAddress());
-	e->setBoundingBox(BoundingBox({}, { size.x, 150.f, size.y }));
+	e->setBoundingBox(BoundingBox({}, { size.x, size.x, size.y }));
 	e->material = waterMaterial;
 	e->Material().setParam("TexIdHeightmap", waterHeightMeshTexture.view.srvHeapIndex);
 	e->Material().setParam("TexIdMeshNormal", waterNormalTexture.view.srvHeapIndex);

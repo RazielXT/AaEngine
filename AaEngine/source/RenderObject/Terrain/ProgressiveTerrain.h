@@ -29,6 +29,7 @@ public:
 	UINT getHeightmapSrvIndex(XMINT2 worldChunk) const;
 
 	const GpuTexture2D& getHeightmap(XMINT2 worldChunk) const;
+	Vector3 getHeightmapPosition(XMINT2 worldChunk) const;
 
 	TerrainGridParams params;
 

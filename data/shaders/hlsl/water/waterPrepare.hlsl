@@ -5,6 +5,7 @@
 #include "hlsl/grid/heightmapGridReconstruction.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
 #include "hlsl/common/ShaderOutputs.hlsl"
+#include "hlsl/ShadowsPssm.hlsl"
 
 float4x4 ViewProjectionMatrix;
 float4x4 InvViewProjectionMatrix;
@@ -30,6 +31,11 @@ cbuffer SceneVoxelInfo : register(b1)
 	SceneVoxelCbuffer VoxelInfo;
 };
 
+cbuffer PSSMShadows : register(b2)
+{
+	SunParams Sun;
+}
+
 SamplerState LinearWrapSampler : register(s0);
 SamplerState DepthSampler : register(s1);
 SamplerState PointSampler : register(s2);
@@ -49,7 +55,7 @@ PSInput VSMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
 	GridRuntimeParams p;
 	p.cameraPos = CameraPosition;
 	p.worldPos = WorldPosition;
-	p.heightScale = GridHeightWidth.x * 0.01;
+	p.heightScale = GridHeightWidth.x / 50;
 	p.gridSize = GridHeightWidth.y;
 	p.tilesWidth = 64;
 	p.tileResolution = 33;
@@ -79,33 +85,46 @@ PSOutput PSMain(PSInput input)
 	float3 groundPosition = ReconstructWorldPosition(ScreenUV, groundZ, InvViewProjectionMatrix);
 	float groundDistance = length(input.worldPosition.xyz - groundPosition);
 
-	const float FadeDistance = 200;
+	const float FadeDistance = 100;
 	float fade = groundDistance / FadeDistance;
 
-	float4 albedo = GetTexture2D(TexIdDiffuse).Sample(LinearWrapSampler, input.uv * 0.1);
-	albedo.a = albedo.r * 0.2 + fade;
-	albedo.rgb *= float3(0.2,0.8, 0.6);
+	const float2 DetailUv = input.uv * 20 + Time * 0.02;
+
+	float4 albedo = GetTexture2D(TexIdDiffuse).Sample(LinearWrapSampler, DetailUv);
+	albedo.a = saturate(albedo.r * 0.2 + fade);
+	albedo.rgb = float3(0.1,0.15, 0.24);
 
 	float3 voxelUV = (input.worldPosition.xyz-VoxelInfo.FarVoxels.Offset)/VoxelInfo.FarVoxels.WorldSize;
 	Texture3D voxelmap = ResourceDescriptorHeap[VoxelInfo.FarVoxels.TexId];
-	albedo.rgb *= max(0.3, (voxelmap.SampleLevel(LinearWrapSampler, voxelUV, 3).rgb + voxelmap.SampleLevel(LinearWrapSampler, voxelUV, 4).rgb * 2) * 10);
+	albedo.rgb *= max(0.1, (voxelmap.SampleLevel(LinearWrapSampler, voxelUV, 3).rgb + voxelmap.SampleLevel(LinearWrapSampler, voxelUV, 4).rgb * 2) * 10);
 
-	float3 normalTex = 0.5 * (GetTexture2D(TexIdNormal).Sample(LinearWrapSampler,input.uv).rgr * 2.0f - 1.0f);
-	normalTex += 0.5 * (GetTexture2D(TexIdNormal).Sample(LinearWrapSampler,input.uv * 0.7).rgr * 2.0f - 1.0f);
+	const float2 NormalUv = input.uv * 20 + Time * 0.01;
+	const float2 NormalUv2 = input.uv * 23 - Time * 0.015;
+	float3 normalTex = 0.5 * (GetTexture2D(TexIdNormal).Sample(LinearWrapSampler, NormalUv).rgr * 2.0f - 1.0f);
+	normalTex += 0.5 * (GetTexture2D(TexIdNormal).Sample(LinearWrapSampler, NormalUv2).rgr * 2.0f - 1.0f);
 	normalTex.z  = sqrt(saturate(1.0f - dot(normalTex.xy, normalTex.xy)));
+	normalTex = lerp(normalTex, float3(0, 0, 1), 0.6);
 
-	float3 normal = ReadGridNormal(ResourceDescriptorHeap[TexIdMeshNormal], LinearSampler, input.uv);//lerp(float3(0,1,0), normalize(normalTex), 0.1);
+	float3 normal = ReadGridNormal(ResourceDescriptorHeap[TexIdMeshNormal], LinearSampler, input.uv);
+	//normal = lerp(normal, normalize(normalTex), 0.08);
+
+	normal = normalize(float3(normal.xy + normalTex.xy, normal.z*normalTex.z));
+
+	float3 V = normalize(CameraPosition - input.worldPosition.xyz);
+	float3 R = reflect(Sun.Direction, normal);
+	float Specular = pow( saturate( dot( R, V ) ), 128 );
+	albedo.rgb += Specular * Sun.Color * 20;
 
 	PSOutput output;
 	output.color = albedo;
 	output.normal = normal.xy;
 
-	float2 projSpeed = float2(-1,-1);
-	float2 projOffset = Time*projSpeed * 2;
-	float projScale = 0.1;
-	float projection = GetTexture2D(TexIdCaustics).Sample(LinearWrapSampler, (groundPosition.xy+groundPosition.z+projOffset)*projScale).r;
-	projection *= GetTexture2D(TexIdCaustics).Sample(LinearWrapSampler, (groundPosition.xy+groundPosition.z+ float2(0.5,0.5) + projOffset*1.11)*projScale).r;
-	output.caustics = projection * (input.worldPosition.y - groundPosition.y) / FadeDistance;
+	float2 projSpeed = float2(1,1);
+	float2 projOffset = Time * projSpeed * 10;
+	float projScale = 0.01;
+	float projection = GetTexture2D(TexIdCaustics).Sample(LinearWrapSampler, (groundPosition.xy+groundPosition.z + projOffset)*projScale).r;
+	projection *= GetTexture2D(TexIdCaustics).Sample(LinearWrapSampler, (groundPosition.xy+groundPosition.z + projOffset*-1.1)*projScale * 1.1).r;
+	output.caustics = projection * 0.3 * (input.worldPosition.y - groundPosition.y) / FadeDistance;
 	//output.caustics = 30*abs(GetTexture(TexIdHeightmap).Sample(LinearWrapSampler, input.uv + 0.005f).r - GetTexture(TexIdHeightmap).Sample(LinearWrapSampler, input.uv).r) * fade;
 	return output;
 }

@@ -71,7 +71,7 @@ compositor Frame
 	{
 		material PassThrough
 		in sceneTexture:Albedo
-		out sceneTextureTmp
+		out sceneTextureTmp2
 	}
 #else
 	task SceneRender.Opaque
@@ -116,7 +116,6 @@ compositor Frame
 	{
 		out sceneTextureTmp sceneTexture:Depth
 	}
-#endif
 
 	pass DepthDownsample
 	{
@@ -126,6 +125,8 @@ compositor Frame
 	}
 
 	ref Water(sceneTextureTmp,sceneTexture:Depth,depthDownsample2,sceneTextureTmp2)
+
+#endif
 
 	ref Exposure(sceneTextureTmp2)
 

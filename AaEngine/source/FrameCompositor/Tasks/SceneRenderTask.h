@@ -66,6 +66,7 @@ private:
 		RenderObjectsVisibilityData sceneVisibility;
 		RenderObjectsStorage* renderables;
 		RenderQueue* transparentQueue{};
+		RenderQueue* wireframeTransparentQueue{};
 
 		AsyncWork work;
 	}

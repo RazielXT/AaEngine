@@ -107,6 +107,9 @@ AsyncTasksInfo SceneRenderTask::initialize(CompositorPass& pass)
 		sceneForwardQueue = sceneMgr.createQueue({ pass.mrt->formats.front() }, MaterialTechnique::Default, Order::Post);
 		wireframeForwardQueue = sceneMgr.createQueue({ pass.mrt->formats.front() }, MaterialTechnique::Wireframe, Order::Post);
 
+		transparent.transparentQueue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::Default, Order::Transparent);
+		transparent.wireframeTransparentQueue = sceneMgr.createQueue({ pass.mrt->formats.front() }, MaterialTechnique::Wireframe, Order::Transparent);
+
 		scene.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
 		scene.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
 		scene.commands = provider.renderSystem.core.CreateCommandList(L"Wireframe", PixColor::SceneRender);
@@ -211,14 +214,20 @@ void SceneRenderTask::renderWireframe(CompositorPass& pass)
 
 	wireframeQueue->renderObjects(constants, scene.commands.commandList);
 
+	pass.mrt->PrepareSubrangeAsTarget(scene.commands.commandList, 1, 0, pass.targets.back().texture);
 	{
 		forwardRenderables->updateVisibility(*ctx.camera, sceneForwardVisibility);
-
-		pass.mrt->PrepareSubrangeAsTarget(scene.commands.commandList, 1, 0, pass.targets.back().texture);
 
 		ShaderConstantsProvider constants(provider.params, sceneForwardVisibility, *ctx.camera, *pass.mrt);
 
 		wireframeForwardQueue->renderObjects(constants, scene.commands.commandList);
+	}
+	{
+		transparent.renderables->updateVisibility(*ctx.camera, transparent.sceneVisibility);
+
+		ShaderConstantsProvider constants(provider.params, transparent.sceneVisibility, *ctx.camera, *pass.mrt);
+
+		transparent.wireframeTransparentQueue->renderObjects(constants, scene.commands.commandList);
 	}
 }
 
@@ -283,16 +292,8 @@ void SceneRenderTask::renderTransparentScene(CompositorPass& pass)
 
 		CD3DX12_RESOURCE_BARRIER barriers[] =
 		{
-			CD3DX12_RESOURCE_BARRIER::Transition(
-				opaqueDepth.texture->texture.Get(),
-				opaqueDepth.previousState,
-				D3D12_RESOURCE_STATE_COPY_SOURCE
-			),
-			CD3DX12_RESOURCE_BARRIER::Transition(
-				ourDepth.texture->texture.Get(),
-				ourDepth.previousState,
-				D3D12_RESOURCE_STATE_COPY_DEST
-			)
+			CD3DX12_RESOURCE_BARRIER::Transition(opaqueDepth.texture->texture.Get(), opaqueDepth.previousState, D3D12_RESOURCE_STATE_COPY_SOURCE),
+			CD3DX12_RESOURCE_BARRIER::Transition(ourDepth.texture->texture.Get(), ourDepth.previousState, D3D12_RESOURCE_STATE_COPY_DEST)
 		};
 		commandList->ResourceBarrier(2, barriers);
 
@@ -300,16 +301,8 @@ void SceneRenderTask::renderTransparentScene(CompositorPass& pass)
 
 		CD3DX12_RESOURCE_BARRIER barriersBack[] =
 		{
-			CD3DX12_RESOURCE_BARRIER::Transition(
-				opaqueDepth.texture->texture.Get(),
-				D3D12_RESOURCE_STATE_COPY_SOURCE,
-				opaqueDepth.previousState
-			),
-			CD3DX12_RESOURCE_BARRIER::Transition(
-				ourDepth.texture->texture.Get(),
-				D3D12_RESOURCE_STATE_COPY_DEST,
-				ourDepth.previousState
-			)
+			CD3DX12_RESOURCE_BARRIER::Transition(opaqueDepth.texture->texture.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, opaqueDepth.previousState),
+			CD3DX12_RESOURCE_BARRIER::Transition(ourDepth.texture->texture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, ourDepth.previousState)
 		};
 		commandList->ResourceBarrier(2, barriersBack);
 	}

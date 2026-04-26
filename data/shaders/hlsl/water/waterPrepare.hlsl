@@ -110,6 +110,16 @@ PSOutput PSMain(PSInput input)
 	return output;
 }
 
+#ifdef WIREFRAME
+
+float4 PSMainWireframe(PSInput input) : SV_TARGET
+{
+	return float4(0.2,0.2,0.5,1);
+}
+
+#endif
+
+
 #ifdef ENTITY_ID
 
 EntityIdOutput PSMainEntityId(PSInput input)

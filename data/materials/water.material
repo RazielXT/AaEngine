@@ -41,6 +41,7 @@ material WaterLake
 	technique Depth skip
 	technique Voxelize skip
 	technique EntityId WaterLakeEntityId
+	technique Wireframe WaterLakeWireframe
 }
 
 material WaterLakeEntityId : WaterLake
@@ -59,4 +60,17 @@ material WaterLakeEntityId : WaterLake
 		profile ps_6_6
 		defines ENTITY_ID
 	}
+}
+
+material WaterLakeWireframe : WaterLake
+{
+	pixel_shader
+	{
+		file water/waterPrepare.hlsl
+		entry PSMainWireframe
+		profile ps_6_6
+		defines WIREFRAME
+	}
+
+	wireframe
 }

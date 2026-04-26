@@ -14,9 +14,9 @@ groupshared float4 GroupValues[4][4][4];
 
 float4 combineVoxels(float4 currentValue, float4 value)
 {
-	value += currentValue / 4;
-	//value.rgb = max(currentValue.rgb, value.rgb);
-	//value.a = max(currentValue.a, value.a);
+	//value += currentValue / 4;
+	value.rgb = max(currentValue.rgb, value.rgb);
+	value.a = max(currentValue.a, value.a);
 	return value;
 }
 

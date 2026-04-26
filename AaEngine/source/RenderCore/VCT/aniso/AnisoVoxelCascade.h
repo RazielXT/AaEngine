@@ -35,8 +35,16 @@ struct AnisoVoxelCascade
 
 	Vector3 update(const Vector3& cameraPosition);
 
-	const UINT DataElementSize = sizeof(UINT) * 2;
-	const UINT DataElementCount = 128 * 128 * 128;
+	static constexpr UINT VoxelSize = 128;
+	static constexpr DXGI_FORMAT VoxelFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+
+	struct VoxelSceneData
+	{
+		UINT Diffuse;
+		UINT Normal;
+	};
+	const UINT DataElementSize = sizeof(VoxelSceneData);
+	const UINT DataElementCount = VoxelSize * VoxelSize * VoxelSize;
 
 	struct DataBuffer
 	{

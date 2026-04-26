@@ -3,9 +3,6 @@
 #include "Resources/Compute/ClearBufferCS.h"
 #include "Utils/StringUtils.h"
 
-static constexpr float VoxelSize = 128.f;
-static constexpr DXGI_FORMAT VoxelFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
-
 static const char* FaceNames[AnisoVoxelCascade::FaceCount] = { "PosX", "NegX", "PosY", "NegY", "PosZ", "NegZ" };
 
 void AnisoVoxelCascade::initialize(const std::string& n, ID3D12Device* device, GraphicsResources& resources)
@@ -92,7 +89,7 @@ static Vector3 SnapToGrid(Vector3 position, float gridStep)
 
 Vector3 AnisoVoxelCascade::update(const Vector3& cameraPosition)
 {
-	float step = settings.extends * 2 / VoxelSize;
+	float step = settings.extends * 2 / (float)VoxelSize;
 
 	const float VoxelMipmapStep = 32;
 	step *= VoxelMipmapStep;

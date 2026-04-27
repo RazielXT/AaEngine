@@ -34,7 +34,7 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	float voxelWeight = 1.0f;
 	float occlusion = 1.0f;
 
-	for (int idx = 0; idx < 1; idx++)
+	for (int idx = 0; idx < 4; idx++)
 	{
 		float3 voxelUV = (worldPosition - VoxelInfo.Voxels[idx].Offset) / VoxelInfo.Voxels[idx].WorldSize;
 

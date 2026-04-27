@@ -284,6 +284,20 @@ const char* MaterialBase::GetTechniqueOverride(MaterialTechnique technique) cons
 	return m ? m->c_str() : nullptr;
 }
 
+bool MaterialBase::GetParameterDefault(const std::string& name, float* output) const
+{
+	for (auto& [n, values] : ref.resources.defaultParams)
+	{
+		if (n == name)
+		{
+			memcpy(output, values.data(), values.size() * sizeof(float));
+			return true;
+		}
+	}
+
+	return false;
+}
+
 static void SetDefaultParameters(ResourcesInfo& resources, const MaterialRef& ref)
 {
 	auto& data = resources.rootBuffer.defaultData;
@@ -601,7 +615,7 @@ bool MaterialInstance::GetParameter(const std::string& name, float* output) cons
 		}
 	}
 
-	return false;
+	return base.GetParameterDefault(name, output);
 }
 
 void MaterialInstance::LoadMaterialConstants(MaterialDataStorage& data) const

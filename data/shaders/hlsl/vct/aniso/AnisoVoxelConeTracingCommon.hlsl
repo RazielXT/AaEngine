@@ -69,7 +69,7 @@ float4 AnisoConeTrace(float3 o, float3 d, float coneRatio, float maxDist,
 	SamplerState sampl)
 {
 	const float voxDim = 128.0f;
-	const float minDiam = 1.0 / voxDim;
+	const float minDiam = 1.5 / voxDim;
 	const float startDist = minDiam;
 	float dist = startDist;
 	float4 accum = float4(0, 0, 0, 0);

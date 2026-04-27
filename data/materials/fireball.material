@@ -22,7 +22,8 @@ material Fireball
 	default_params
 	{
 		float Direction 0 1 0
+		float Emission 1
 	}
-	
+
 	technique Depth skip
 }

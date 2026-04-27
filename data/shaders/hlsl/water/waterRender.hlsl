@@ -5,7 +5,6 @@
 #include "hlsl/grid/heightmapGridReconstruction.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
 #include "hlsl/common/ShaderOutputs.hlsl"
-#include "hlsl/ShadowsPssm.hlsl"
 
 float4x4 ViewProjectionMatrix;
 float4x4 InvViewProjectionMatrix;
@@ -31,11 +30,6 @@ cbuffer SceneVoxelInfo : register(b1)
 	SceneVoxelCbuffer VoxelInfo;
 };
 
-cbuffer PSSMShadows : register(b2)
-{
-	SunParams Sun;
-}
-
 SamplerState LinearWrapSampler : register(s0);
 SamplerState DepthSampler : register(s1);
 SamplerState PointSampler : register(s2);
@@ -57,10 +51,14 @@ PSInput VSMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
 	p.worldPos = WorldPosition;
 	p.heightScale = GridHeightWidth.x / 50;
 	p.gridSize = GridHeightWidth.y;
-	p.tilesWidth = 64;
+	p.tilesWidth = 512;
 	p.tileResolution = 33;
 
 	GridVertexInfo info = ReadGridVertexInfo(InstancingBuffer[instanceID], vertexID, ResourceDescriptorHeap[TexIdHeightmap], LinearSampler, p);
+
+	const float2 NormalUv = info.uv * 10 + Time * 0.01;
+	float heightTexture = GetTexture2D(TexIdDiffuse).SampleLevel(LinearWrapSampler, NormalUv, 0).r;
+	info.position.y -= heightTexture * 5;
 
 	PSInput result;
 	result.worldPosition = info.position;
@@ -92,7 +90,7 @@ PSOutput PSMain(PSInput input)
 
 	float4 albedo = GetTexture2D(TexIdDiffuse).Sample(LinearWrapSampler, DetailUv);
 	albedo.a = saturate(albedo.r * 0.2 + fade);
-	albedo.rgb = float3(0.1,0.15, 0.24);
+	albedo.rgb = float3(0.1,0.15, 0.24) * 0.1;
 
 	float3 voxelUV = (input.worldPosition.xyz-VoxelInfo.FarVoxels.Offset)/VoxelInfo.FarVoxels.WorldSize;
 	Texture3D voxelmap = ResourceDescriptorHeap[VoxelInfo.FarVoxels.TexId];
@@ -109,11 +107,6 @@ PSOutput PSMain(PSInput input)
 	//normal = lerp(normal, normalize(normalTex), 0.08);
 
 	normal = normalize(float3(normal.xy + normalTex.xy, normal.z*normalTex.z));
-
-	float3 V = normalize(CameraPosition - input.worldPosition.xyz);
-	float3 R = reflect(Sun.Direction, normal);
-	float Specular = pow( saturate( dot( R, V ) ), 128 );
-	albedo.rgb += Specular * Sun.Color * 20;
 
 	PSOutput output;
 	output.color = albedo;

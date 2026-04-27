@@ -56,5 +56,6 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
 
 	float terrainHeight = readTerrainHeight(uv);
 	float cameraLodOffset = 3 * saturate((length(CameraPos - worldPos) - 10) * 0.2);
-	WaterHeight[DTid.xy] = (terrainHeight > heightValue) ? heightValue - cameraLodOffset : heightValue;
+	//WaterHeight[DTid.xy] = (terrainHeight > heightValue) ? heightValue - cameraLodOffset : heightValue;
+	WaterHeight[DTid.xy] = heightValue;
 }

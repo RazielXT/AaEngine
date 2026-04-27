@@ -180,9 +180,14 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	float3 ScreenSpaceReflectionVec = normalize(ScreenSpaceReflectionPoint.xyz - ScreenSpacePos.xyz);
 
 	float4 reflection = GetReflection(ScreenSpaceReflectionVec, ScreenSpacePos.xyz, -ReflectionVector);
-	
+
 	reflection.rgb = lerp(getFogColor(-cameraVector, Sun, LinearWrapSampler), reflection.rgb, reflection.a);
-	
+
+	float3 V = -cameraVector;
+	float3 R = reflect(Sun.Direction, normal);
+	float Specular = pow( saturate( dot( R, V ) ), 128 );
+	reflection.rgb += Specular * Sun.Color * 20 * (1 - reflection.a);
+
 	if (false && reflection.a == 0)
 	{
 		float3 jjj = getJitter(ScreenUV, 0.5).xyx;

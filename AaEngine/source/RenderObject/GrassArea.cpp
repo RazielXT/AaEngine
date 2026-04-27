@@ -29,7 +29,8 @@ void GrassAreaGenerator::initializeGpuResources(RenderSystem& renderSystem, Grap
 {
 	defaultMaterial = resources.materials.getMaterial("GrassLeaves");
 
-	grassCS.init(*renderSystem.core.device, "grassInit", resources.shaders);
+	auto csShader = resources.shaders.getShader("grassInit", ShaderType::Compute, ShaderRef{ "grassInitCS.hlsl", "CSMain", "cs_6_6" });
+	grassCS.init(*renderSystem.core.device, *csShader);
 
 	heap.InitRtv(renderSystem.core.device, formats.size(), L"GrassGeneratorRtv");
 	heap.InitDsv(renderSystem.core.device, 1, L"GrassGeneratorDsv");

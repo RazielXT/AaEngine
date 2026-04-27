@@ -1,4 +1,4 @@
-#include "ShadowsCommon.hlsl"
+#include "hlsl/sky/SunParams.hlsl"
 
 float4x4 ViewMatrix;
 float4x4 ProjectionMatrix;

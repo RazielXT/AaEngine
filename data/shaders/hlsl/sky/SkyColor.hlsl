@@ -1,8 +1,8 @@
-#include "hlsl/ShadowsCommon.hlsl"
+#include "hlsl/sky/SunParams.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
 #include "hlsl/common/Srgb.hlsl"
 
-float3 getFogColor(float3 dir, SunParams Sun, SamplerState sampler)
+float3 getSkyColor(float3 dir, SunParams Sun, SamplerState sampler)
 {
 	float sunZenithDot = -Sun.Direction.y;
 	float sunZenithDot01 = (sunZenithDot + 1.0) * 0.5;

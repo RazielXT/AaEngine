@@ -2,7 +2,7 @@
 #define GRID_DEBUG_COLOR
 #endif
 
-#include "grid/heightmapGridReconstruction.hlsl"
+#include "hlsl/grid/heightmapGridReconstruction.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
 #include "hlsl/common/MotionVectors.hlsl"
 #include "hlsl/common/ShaderOutputs.hlsl"

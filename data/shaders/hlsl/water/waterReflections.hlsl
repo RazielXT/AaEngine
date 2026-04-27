@@ -3,8 +3,8 @@
 #include "hlsl/postprocess/PostProcessCommon.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
 #include "hlsl/common/Random.hlsl"
-#include "hlsl/skyFog.hlsl"
-#include "hlsl/ShadowsPssm.hlsl"
+#include "hlsl/sky/SkyColor.hlsl"
+#include "hlsl/sky/SunParams.hlsl"
 
 float4x4 WorldMatrix;
 float4x4 ViewProjectionMatrix;
@@ -181,7 +181,7 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 
 	float4 reflection = GetReflection(ScreenSpaceReflectionVec, ScreenSpacePos.xyz, -ReflectionVector);
 
-	reflection.rgb = lerp(getFogColor(-cameraVector, Sun, LinearWrapSampler), reflection.rgb, reflection.a);
+	reflection.rgb = lerp(getSkyColor(-cameraVector, Sun, LinearWrapSampler), reflection.rgb, reflection.a);
 
 	float3 V = -cameraVector;
 	float3 R = reflect(Sun.Direction, normal);

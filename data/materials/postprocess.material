@@ -207,7 +207,7 @@ material TraceGodray : PostProcess
 {
 	pixel_shader
 	{
-		file godray.hlsl
+		file postprocess/godray.hlsl
 		entry PSTraceGodray
 		profile ps_6_6
 	}

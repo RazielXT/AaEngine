@@ -1,7 +1,7 @@
 #include "PostProcessCommon.hlsl"
 #include "WorldReconstruction.hlsl"
-#include "hlsl/ShadowsPssm.hlsl"
-#include "hlsl/skyFog.hlsl"
+#include "hlsl/shadows/ShadowsPssm.hlsl"
+#include "hlsl/sky/SkyColor.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
 
 float4x4 InvViewProjectionMatrix;
@@ -50,7 +50,7 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	//fogPosCheck.y = 0;
 	float3 fogAtmDir = normalize(CameraPosition - fogPosCheck);
 	fogAtmDir.y = saturate(fogAtmDir.y);
-	const float3 fogColor = getFogColor(fogAtmDir, Sun, LinearSampler) / 2;
+	const float3 fogColor = getSkyColor(fogAtmDir, Sun, LinearSampler) / 2;
 
 	float fogDensity = 0.000000001;
 	float fogFactor = 1.0 - exp(-camDistance * camDistance * fogDensity);

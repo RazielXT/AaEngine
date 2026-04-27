@@ -4,10 +4,10 @@
 float3 getCascadeShadow(float4 wp, uint ShadowIndex, float ShadowBias, SamplerState sampler, SunParams params)
 {
 	Texture2D<float> shadowmap = ResourceDescriptorHeap[params.TexIdShadowMap0 + ShadowIndex];
-    float4 sunLookPos = mul(wp, params.ShadowMatrix[ShadowIndex]);
-    sunLookPos.xy = sunLookPos.xy / sunLookPos.w;
+	float4 sunLookPos = mul(wp, params.ShadowMatrix[ShadowIndex]);
+	sunLookPos.xy = sunLookPos.xy / sunLookPos.w;
 	sunLookPos.xy /= float2(2, -2);
-    sunLookPos.xy += 0.5;
+	sunLookPos.xy += 0.5;
 
 	sunLookPos.z -= ShadowBias;
 

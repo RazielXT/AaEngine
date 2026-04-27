@@ -1,5 +1,5 @@
-#include "ShadowsPssm.hlsl"
-#include "hlsl/skyFog.hlsl"
+#include "hlsl/sky/SunParams.hlsl"
+#include "hlsl/sky/SkyColor.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
 
 float4x4 ViewProjectionMatrix;
@@ -90,7 +90,7 @@ float3 applyFog(float3 worldPosition, float3 baseColor)
 {
 	float3 fogAtmDir = normalize(CameraPosition - worldPosition);
 	fogAtmDir.y = saturate(fogAtmDir.y);
-	const float3 fogColor = getFogColor(fogAtmDir, Sun, LinearWrapSampler) / 2;
+	const float3 fogColor = getSkyColor(fogAtmDir, Sun, LinearWrapSampler) / 2;
 	float camDistance = length(CameraPosition.xz - worldPosition.xz);
 
 	float fogDensity = 0.000000001;

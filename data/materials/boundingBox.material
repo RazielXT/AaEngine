@@ -2,13 +2,13 @@ material BoundingBox
 {
 	vertex_shader
 	{
-		file boundingBox.hlsl
+		file debug/boundingBox.hlsl
 		entry VSMain
 		profile vs_6_6
 	}
 	pixel_shader
 	{
-		file boundingBox.hlsl
+		file debug/boundingBox.hlsl
 		entry PSMain
 		profile ps_6_6
 	}

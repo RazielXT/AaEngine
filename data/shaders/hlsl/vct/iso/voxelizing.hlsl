@@ -1,5 +1,5 @@
 #include "VoxelConeTracingCommon.hlsl"
-#include "hlsl/ShadowsCommon.hlsl"
+#include "hlsl/sky/SunParams.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
 
 #ifdef GRID

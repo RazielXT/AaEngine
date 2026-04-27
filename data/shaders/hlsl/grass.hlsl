@@ -1,5 +1,5 @@
 #include "hlsl/vct/iso/VoxelConeTracingCommon.hlsl"
-#include "ShadowsPssm.hlsl"
+#include "hlsl/shadows/ShadowsPssm.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
 #include "hlsl/common/MotionVectors.hlsl"
 #include "hlsl/common/ShaderOutputs.hlsl"

@@ -1,4 +1,4 @@
-#include "ShadowsPssm.hlsl"
+#include "hlsl/sky/SunParams.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
 #include "hlsl/common/BlueNoise.hlsl"
 #include "hlsl/common/Srgb.hlsl"

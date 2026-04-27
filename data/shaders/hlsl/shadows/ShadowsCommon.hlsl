@@ -1,34 +1,11 @@
 #pragma once
 
-struct SunParams
-{
-	float4x4 ShadowMatrix[4];
-
-	float3 Direction;
-	uint TexIdShadowMap0;
-
-	float ShadowCascadeDistance0;
-	float ShadowCascadeDistance1;
-	float ShadowCascadeDistance2;
-	float ShadowCascadeDistance3;
-
-	float3 Color;
-	float ShadowMapSize;
-
-	float ShadowMapSizeInv;
-	uint TexIdSunZenith;
-	uint TexIdViewZenith;
-	uint TexIdSunView;
-
-	float CloudsAmount;
-	float CloudsDensity;
-	float CloudsSpeed;
-};
+#include "hlsl/sky/SunParams.hlsl"
 
 float readShadowmap(Texture2D<float> shadowmap, SamplerState sampler, float2 shadowCoord)
 {
 	return shadowmap.SampleLevel(sampler, shadowCoord, 0).r;
-	
+
 //	int2 texCoord = int2(shadowCoord * 1024);
 //	return shadowmap.Load(int3(texCoord, 0)).r;
 }
@@ -77,16 +54,16 @@ float CalcShadowTermSoftPCF(Texture2D<float> shadowmap, SamplerState sampler, fl
 
 float ShadowPCF(Texture2D<float> shadowmap, SamplerState sampler, float4 shadowCoord, float ShadowMapSizeInv)
 {
-    float shadow = 0.0;
-    float2 texelSize = ShadowMapSizeInv;
-    int samples = 4; // Number of samples for PCF
-    float2 offsets[4] = { float2(-1, -1), float2(1, -1), float2(-1, 1), float2(1, 1) };
+	float shadow = 0.0;
+	float2 texelSize = ShadowMapSizeInv;
+	int samples = 4; // Number of samples for PCF
+	float2 offsets[4] = { float2(-1, -1), float2(1, -1), float2(-1, 1), float2(1, 1) };
 
-    for (int i = 0; i < samples; ++i)
-    {
-        float2 offset = offsets[i] * texelSize;
-        shadow += readShadowmap(shadowmap, sampler, shadowCoord.xy + offset).r < shadowCoord.z ? 0.0 : 1.0;
-    }
+	for (int i = 0; i < samples; ++i)
+	{
+		float2 offset = offsets[i] * texelSize;
+		shadow += readShadowmap(shadowmap, sampler, shadowCoord.xy + offset).r < shadowCoord.z ? 0.0 : 1.0;
+	}
 
-    return shadow / samples;
+	return shadow / samples;
 }

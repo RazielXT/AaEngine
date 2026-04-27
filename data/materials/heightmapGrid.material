@@ -2,14 +2,14 @@ material HeightmapGrid abstract
 {
 	vertex_shader
 	{
-		file heightmapGridShading.hlsl
+		file terrain/terrainGridShading.hlsl
 		entry VSMain
 		profile vs_6_6
 	}
 
 	pixel_shader
 	{
-		file heightmapGridShading.hlsl
+		file terrain/terrainGridShading.hlsl
 		entry PSMain
 		profile ps_6_6
 	}
@@ -28,7 +28,7 @@ material HeightmapGridEntityId : HeightmapGrid
 {
 	pixel_shader
 	{
-		file heightmapGridShading.hlsl
+		file terrain/terrainGridShading.hlsl
 		entry PSMainEntityId
 		profile ps_6_6
 	}

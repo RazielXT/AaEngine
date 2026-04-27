@@ -2,14 +2,14 @@ material EntityId
 {
 	vertex_shader
 	{
-		file entityId.hlsl
+		file debug/entityId.hlsl
 		entry VSMain
 		profile vs_6_6
 	}
 
 	pixel_shader
 	{
-		file entityId.hlsl
+		file debug/entityId.hlsl
 		entry PSMain
 		profile ps_6_6
 	}

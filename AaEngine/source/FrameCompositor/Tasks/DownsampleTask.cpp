@@ -10,7 +10,7 @@ DownsampleDepthTask::~DownsampleDepthTask()
 
 AsyncTasksInfo DownsampleDepthTask::initialize(CompositorPass& pass)
 {
-	auto shader = provider.resources.shaders.getShader(pass.info.name, ShaderType::Compute, ShaderRef{ "DepthDownsampleCS.hlsl", "main", "cs_6_6" });
+	auto shader = provider.resources.shaders.getShader(pass.info.name, ShaderType::Compute, ShaderRef{ "postprocess/DepthDownsampleCS.hlsl", "main", "cs_6_6" });
 
 	cs.init(*provider.renderSystem.core.device, *shader);
 

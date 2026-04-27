@@ -1,5 +1,5 @@
-#include "ShadowsPssm.hlsl"
-#include "hlsl/skyFog.hlsl"
+#include "hlsl/sky/SunParams.hlsl"
+#include "hlsl/sky/SkyColor.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
 
 float4x4 ViewProjectionMatrix;
@@ -104,7 +104,7 @@ PSOutput PSMain(PSInput input)
 		albedo.rgb *= phase;
 	}
 
-	albedo.rgb = lerp(getFogColor(Sun.Direction, Sun, LinearWrapSampler) * 0.25, albedo.rgb, saturate(Sun.Direction.y));
+	albedo.rgb = lerp(getSkyColor(Sun.Direction, Sun, LinearWrapSampler) * 0.25, albedo.rgb, saturate(Sun.Direction.y));
 
 	PSOutput output;
 	output.albedo = float4(albedo.rgb, 1);

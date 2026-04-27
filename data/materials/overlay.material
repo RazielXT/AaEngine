@@ -2,13 +2,13 @@ material TexturePreview
 {
 	vertex_shader
 	{
-		file overlay.hlsl
+		file debug/overlay.hlsl
 		entry VSQuad
 		profile vs_6_6
 	}
 	pixel_shader
 	{
-		file overlay.hlsl
+		file debug/overlay.hlsl
 		entry PSTexturePreview
 		profile ps_6_6
 	}

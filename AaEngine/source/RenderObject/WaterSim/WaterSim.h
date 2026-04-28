@@ -44,9 +44,14 @@ private:
 	GpuTexture2D waterVelocity[FrameCount];
 
 	GpuTexture2D waterHeightMeshTexture;
+
 	GpuTexture2D waterNormalTexture;
 	std::vector<ShaderTextureViewUAV> waterNormalTextureMips;
-	GenerateNormalMips4xCS generateNormalMipsCS;
+
+	GpuTexture2D waterFlowTexture;
+	std::vector<ShaderTextureViewUAV> waterFlowTextureMips;
+
+	GenerateXYMips4xCS generateXYMips4xCS;
 
 	ComPtr<ID3D12Resource> srcWater;
 

@@ -18,6 +18,15 @@ float BlueNoise(uint2 p)
 	return bn[idx] / 63.0f;
 }
 
+float2 BlueNoise2D(uint2 p)
+{
+	float a = BlueNoise(p);
+	// wrap inside 8x8 tile
+	float b = BlueNoise(p + uint2(31, 31));
+	// decorrelate slightly by mixing
+	return float2(a, frac(b + 0.37 * a));
+}
+
 float BayerNoise(uint2 p)
 {
 	// 8x8 Bayer matrix (0-63)

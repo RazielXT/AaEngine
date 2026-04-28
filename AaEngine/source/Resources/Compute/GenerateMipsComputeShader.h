@@ -14,11 +14,11 @@ public:
 	void dispatch(ID3D12GraphicsCommandList* commandList, GpuTexture3D& texture);
 };
 
-class GenerateNormalMips4xCS : public ComputeShader
+class GenerateXYMips4xCS : public ComputeShader
 {
 public:
 
-	GenerateNormalMips4xCS() = default;
+	GenerateXYMips4xCS() = default;
 
 	void dispatch(ID3D12GraphicsCommandList* commandList, UINT textureSize, const std::vector<ShaderTextureViewUAV>& uav);
 };

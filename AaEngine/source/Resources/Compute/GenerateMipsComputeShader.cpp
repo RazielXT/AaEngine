@@ -54,7 +54,7 @@ void Generate3DMips3xCS::dispatch(ID3D12GraphicsCommandList* commandList, GpuTex
 	commandList->ResourceBarrier(1, &barrier);
 }
 
-void GenerateNormalMips4xCS::dispatch(ID3D12GraphicsCommandList* commandList, UINT textureSize, const std::vector<ShaderTextureViewUAV>& uav)
+void GenerateXYMips4xCS::dispatch(ID3D12GraphicsCommandList* commandList, UINT textureSize, const std::vector<ShaderTextureViewUAV>& uav)
 {
 	if (uav.size() < 5)
 		return;

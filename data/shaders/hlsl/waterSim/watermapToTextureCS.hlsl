@@ -1,12 +1,14 @@
 uint width, height;
 uint ResIdWaterMap;
 uint ResIdTerrainMap;
+uint ResIdVelocityMap;
 float2 CameraPos;
 
 SamplerState LinearSampler : register(s0);
 
 RWTexture2D<float2> WaterNormal : register(u0);
 RWTexture2D<float> WaterHeight : register(u1);
+RWTexture2D<half2> WaterFlow : register(u2);
 
 float readHeight(float2 uv)
 {
@@ -44,6 +46,10 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
 	float3 normal = normalize(cross(tangent, binormal));
 
 	WaterNormal[DTid.xy] = normal.xz;
+
+	Texture2D<float2> VelocityMap = ResourceDescriptorHeap[ResIdVelocityMap];
+	float2 velocity = VelocityMap.Load(int3(DTid.xy, 0));
+	WaterFlow[DTid.xy] = (half2)velocity;
 
 	float2 worldPosOffset = { 0, 0 };
 	float worldScale = 8000.0f / 1024;

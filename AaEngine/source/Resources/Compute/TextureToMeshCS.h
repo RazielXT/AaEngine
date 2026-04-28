@@ -21,7 +21,7 @@ class WaterTextureToTextureCS : public ComputeShader
 {
 public:
 
-	void dispatch(ID3D12GraphicsCommandList* commandList, UINT water, UINT terrain, UINT w, UINT h, D3D12_GPU_DESCRIPTOR_HANDLE outputNormal, D3D12_GPU_DESCRIPTOR_HANDLE outputHeight, Vector3 camPos);
+	void dispatch(ID3D12GraphicsCommandList* commandList, UINT water, UINT terrain, UINT velocity, UINT w, UINT h, D3D12_GPU_DESCRIPTOR_HANDLE outputNormal, D3D12_GPU_DESCRIPTOR_HANDLE outputHeight, D3D12_GPU_DESCRIPTOR_HANDLE outputFlow, Vector3 camPos);
 };
 
 class GenerateHeightmapNormalsCS : public ComputeShader

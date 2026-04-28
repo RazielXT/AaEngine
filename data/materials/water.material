@@ -16,8 +16,8 @@ material WaterLake
 	culling none
 
 	texture Height
-	{
-	}
+	texture Flow
+
 	texture Diffuse
 	{
 		file water.dds

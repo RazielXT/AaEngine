@@ -5,9 +5,9 @@ compute_shader generate3DMipmaps3x
 	profile cs_6_6
 }
 
-compute_shader generateNormalMipmaps4x
+compute_shader generateXYMips4xCS
 {
-	file utils/generateNormalMips4xCS.hlsl
+	file utils/generateXYMips4xCS.hlsl
 	entry CSMain
 	profile cs_6_6
 }

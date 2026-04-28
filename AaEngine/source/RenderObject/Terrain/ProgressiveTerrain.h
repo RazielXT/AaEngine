@@ -54,7 +54,7 @@ protected:
 
 	TerrainHeightmapCS generateHeightmapCS;
 	GenerateHeightmapNormalsCS heightmapToNormalCS;
-	GenerateNormalMips4xCS generateNormalMipsCS;
+	GenerateXYMips4xCS generateNormalMipsCS;
 
 	void regenerateChunk(ID3D12GraphicsCommandList* commandList, int x, int y);
 };

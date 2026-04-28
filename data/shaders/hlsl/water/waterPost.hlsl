@@ -11,6 +11,12 @@ Texture2D causticsTexture : register(t4);
 SamplerState LinearSampler : register(s0);
 SamplerState LinearBorderSampler : register(s1);
 
+float2 MirrorUV(float2 v)
+{
+	float2 a = abs(v);          // handles negative side
+	return 1.0 - abs(a - 1.0); // mirrors around 1
+}
+
 float4 PSWaterApply(VS_OUTPUT input) : SV_TARGET
 {
 	float4 water = waterTexture.Load(int3(input.Position.xy,0));
@@ -23,9 +29,11 @@ float4 PSWaterApply(VS_OUTPUT input) : SV_TARGET
 	float4 underwater = sceneTexture.SampleLevel(LinearBorderSampler, saturate(input.TexCoord + refraction), 0);
 	underwater.rgb += causticsTexture.SampleLevel(LinearBorderSampler, saturate(input.TexCoord + refraction), 0).rrr;
 
-	float2 reflOffset = normal.xy * 0.5f;
-	reflOffset.y = 0;
-	float4 reflections = reflectionsTexture.SampleLevel(LinearSampler, input.TexCoord + reflOffset, 0);
+	float2 reflOffset = normal.xy * 0.15f;
+	reflOffset.y *= 0;
+	float2 reflectionUv = MirrorUV(input.TexCoord + reflOffset);
+
+	float4 reflections = reflectionsTexture.SampleLevel(LinearSampler, reflectionUv, 0);
 
 	water.rgb = lerp(water.rgb, reflections.rgb, reflections.a);
 	underwater.rgb = lerp(underwater.rgb, water.rgb, water.a);

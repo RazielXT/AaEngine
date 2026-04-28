@@ -68,7 +68,7 @@ void ProgressiveTerrain::initialize(RenderSystem& renderSystem, GraphicsResource
 	auto csShader = resources.shaders.getShader("generateHeightmapNormalsCS", ShaderType::Compute, ShaderRef{ "grid/generateHeightmapNormalsCS.hlsl", "CSMain", "cs_6_6" });
 	heightmapToNormalCS.init(*renderSystem.core.device, *csShader);
 
-	generateNormalMipsCS.init(*renderSystem.core.device, "generateNormalMipmaps4x", resources.shaders);
+	generateNormalMipsCS.init(*renderSystem.core.device, "generateXYMips4xCS", resources.shaders);
 
 	csShader = resources.shaders.getShader("generateHeightmapCS", ShaderType::Compute, ShaderRef{ "terrain/terrainGridHeightmapDefinedCS.hlsl", "CSMain", "cs_6_6" });
 	generateHeightmapCS.init(*renderSystem.core.device, *csShader);

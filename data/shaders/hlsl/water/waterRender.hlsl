@@ -5,6 +5,7 @@
 #include "hlsl/grid/heightmapGridReconstruction.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
 #include "hlsl/common/ShaderOutputs.hlsl"
+#include "hlsl/sky/SunParams.hlsl"
 
 float4x4 ViewProjectionMatrix;
 float4x4 InvViewProjectionMatrix;
@@ -14,6 +15,7 @@ float3 CameraPosition;
 float Time;
 float2 ViewportSizeInverse;
 uint TexIdHeightmap;
+uint TexIdFlowmap;
 uint TexIdDiffuse;
 uint TexIdNormal;
 uint TexIdSceneDepthHigh;
@@ -29,6 +31,11 @@ cbuffer SceneVoxelInfo : register(b1)
 {
 	SceneVoxelCbuffer VoxelInfo;
 };
+
+cbuffer PSSMShadows : register(b2)
+{
+	SunParams Sun;
+}
 
 SamplerState LinearWrapSampler : register(s0);
 SamplerState DepthSampler : register(s1);
@@ -56,9 +63,14 @@ PSInput VSMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
 
 	GridVertexInfo info = ReadGridVertexInfo(InstancingBuffer[instanceID], vertexID, ResourceDescriptorHeap[TexIdHeightmap], LinearSampler, p);
 
-	const float2 NormalUv = info.uv * 10 + Time * 0.01;
-	float heightTexture = GetTexture2D(TexIdDiffuse).SampleLevel(LinearWrapSampler, NormalUv, 0).r;
-	info.position.y -= heightTexture * 5;
+
+	const float2 NormalUv = info.uv * 30 - Time * 0.03;
+	const float2 NormalUv2 = info.uv * 33 + Time * 0.031;
+	float3 normalTex = 0.5 * (GetTexture2D(TexIdNormal).SampleLevel(LinearWrapSampler, NormalUv, 0).rgr * 2.0f - 1.0f);
+	normalTex += 0.5 * (GetTexture2D(TexIdNormal).SampleLevel(LinearWrapSampler, NormalUv2, 0).rgr * 2.0f - 1.0f);
+	normalTex.z  = sqrt(saturate(1.0f - dot(normalTex.xy, normalTex.xy)));
+	normalTex = lerp(normalTex, float3(0, 0, 1), 0.6);
+	//info.position.y -= normalTex.r * 10;
 
 	PSInput result;
 	result.worldPosition = info.position;
@@ -74,6 +86,11 @@ struct PSOutput
 	float caustics : SV_Target2;
 };
 
+float3 BlendUDN(float3 n1, float3 n2)
+{
+	return normalize(float3(n1.xy + n2.xy, n1.z * n2.z));
+}
+
 PSOutput PSMain(PSInput input)
 {
 	float2 ScreenUV = input.position.xy * ViewportSizeInverse;
@@ -83,6 +100,25 @@ PSOutput PSMain(PSInput input)
 	float3 groundPosition = ReconstructWorldPosition(ScreenUV, groundZ, InvViewProjectionMatrix);
 	float groundDistance = length(input.worldPosition.xyz - groundPosition);
 
+	//float3 voxelUV = (input.worldPosition.xyz-VoxelInfo.FarVoxels.Offset)/VoxelInfo.FarVoxels.WorldSize;
+	//Texture3D voxelmap = ResourceDescriptorHeap[VoxelInfo.FarVoxels.TexId];
+	//albedo.rgb *= max(0.1, (voxelmap.SampleLevel(LinearWrapSampler, voxelUV, 3).rgb + voxelmap.SampleLevel(LinearWrapSampler, voxelUV, 4).rgb * 2) * 10);
+
+	float2 flow = GetTexture2D(TexIdFlowmap).Sample(LinearWrapSampler, input.uv).xy;
+	float2 flowUV = flow * 0.1 * Time;
+
+	const float2 NormalUv = input.uv * 30 - Time * 0.03 + flow;
+	const float2 NormalUv2 = input.uv * 33 + Time * 0.031 + flow;
+	float3 normalTex = 0.5 * (GetTexture2D(TexIdNormal).Sample(LinearWrapSampler, NormalUv).rgr * 2.0f - 1.0f);
+	normalTex += 0.5 * (GetTexture2D(TexIdNormal).Sample(LinearWrapSampler, NormalUv2).rgr * 2.0f - 1.0f);
+	normalTex.z  = sqrt(saturate(1.0f - dot(normalTex.xy, normalTex.xy)));
+	//normalTex = lerp(normalTex, float3(0, 0, 1), 0.6);
+
+	float3 normal = ReadGridNormal(ResourceDescriptorHeap[TexIdMeshNormal], LinearSampler, input.uv);
+	//normal = lerp(normal, normalize(normalTex), 0.08);
+
+	normal = BlendUDN(normal, normalTex);
+
 	const float FadeDistance = 100;
 	float fade = groundDistance / FadeDistance;
 
@@ -90,23 +126,9 @@ PSOutput PSMain(PSInput input)
 
 	float4 albedo = GetTexture2D(TexIdDiffuse).Sample(LinearWrapSampler, DetailUv);
 	albedo.a = saturate(albedo.r * 0.2 + fade);
-	albedo.rgb = float3(0.1,0.15, 0.24) * 0.1;
 
-	float3 voxelUV = (input.worldPosition.xyz-VoxelInfo.FarVoxels.Offset)/VoxelInfo.FarVoxels.WorldSize;
-	Texture3D voxelmap = ResourceDescriptorHeap[VoxelInfo.FarVoxels.TexId];
-	albedo.rgb *= max(0.1, (voxelmap.SampleLevel(LinearWrapSampler, voxelUV, 3).rgb + voxelmap.SampleLevel(LinearWrapSampler, voxelUV, 4).rgb * 2) * 10);
-
-	const float2 NormalUv = input.uv * 20 + Time * 0.01;
-	const float2 NormalUv2 = input.uv * 23 - Time * 0.015;
-	float3 normalTex = 0.5 * (GetTexture2D(TexIdNormal).Sample(LinearWrapSampler, NormalUv).rgr * 2.0f - 1.0f);
-	normalTex += 0.5 * (GetTexture2D(TexIdNormal).Sample(LinearWrapSampler, NormalUv2).rgr * 2.0f - 1.0f);
-	normalTex.z  = sqrt(saturate(1.0f - dot(normalTex.xy, normalTex.xy)));
-	normalTex = lerp(normalTex, float3(0, 0, 1), 0.6);
-
-	float3 normal = ReadGridNormal(ResourceDescriptorHeap[TexIdMeshNormal], LinearSampler, input.uv);
-	//normal = lerp(normal, normalize(normalTex), 0.08);
-
-	normal = normalize(float3(normal.xy + normalTex.xy, normal.z*normalTex.z));
+	float lighting = abs(dot(-Sun.Direction, normal)) * 0.5;
+	albedo.rgb = float3(0.1,0.2, 0.21) * pow(lighting, 1) * Sun.Color;
 
 	PSOutput output;
 	output.color = albedo;

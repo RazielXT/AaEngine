@@ -3,6 +3,7 @@
 #include "hlsl/postprocess/PostProcessCommon.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
 #include "hlsl/common/Random.hlsl"
+#include "hlsl/common/BlueNoise.hlsl"
 #include "hlsl/sky/SkyColor.hlsl"
 #include "hlsl/sky/SunParams.hlsl"
 
@@ -32,6 +33,7 @@ cbuffer PSSMShadows : register(b2)
 SamplerState LinearWrapSampler : register(s0);
 SamplerState DepthSampler : register(s1);
 SamplerState PointSampler : register(s2);
+SamplerState LinearBorderSampler : register(s3);
 
 static const int NUM_RAY_MARCH_SAMPLES = 64;
 static const float MAX_REFLECTION_RAY_MARCH_STEP = (1.0f / (NUM_RAY_MARCH_SAMPLES + 1));
@@ -132,8 +134,11 @@ float4 GetReflection(
 				continue;
 			}
 
-			float alpha = borderBlend(MidRaySample.xy, 0.15f);
-			return float4(GetTexture2D(TexIdSceneColor).Sample(LinearWrapSampler, MidRaySample.xy).rgb, alpha);
+			if (MidRaySample.x < 0 || MidRaySample.y < 0 || MidRaySample.x > 1 || MidRaySample.y > 1)
+				break;
+
+			float alpha = borderBlend(MidRaySample.xy, 0.05f);
+			return float4(GetTexture2D(TexIdSceneColor).Sample(LinearBorderSampler, MidRaySample.xy).rgb, alpha);
 		}
 
 		PrevRaySample = RaySample;
@@ -170,6 +175,7 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	float4 ScreenSpacePos = float4(ScreenUV, worldZ, 1.f);
 	float3 ReflectionVector = reflect(cameraVector, WorldNormal.xyz);
 	//ReflectionVector.xy += getJitter(ScreenUV, 0.01);
+	//ReflectionVector.xy += (BlueNoise2D(input.Position.xy * 2) * 2 - 1) * 0.1f;
 
 	float4 PointAlongReflectionVec = float4(ReflectionVector + WorldPosition, 1.f);
 	float4 ScreenSpaceReflectionPoint = mul(PointAlongReflectionVec, ViewProjectionMatrix);
@@ -181,7 +187,7 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 
 	float4 reflection = GetReflection(ScreenSpaceReflectionVec, ScreenSpacePos.xyz, -ReflectionVector);
 
-	reflection.rgb = lerp(getSkyColor(-cameraVector, Sun, LinearWrapSampler), reflection.rgb, reflection.a);
+	reflection.rgb = lerp(getSkyColor(-cameraVector, Sun, LinearWrapSampler) * 0.5, reflection.rgb, reflection.a);
 
 	float3 V = -cameraVector;
 	float3 R = reflect(Sun.Direction, normal);
@@ -243,7 +249,7 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	}
 
 	float fresnel = saturate((1 - abs(dot(cameraVector, normal))));
-	fresnel *= fresnel;
+	fresnel = pow(fresnel,2);
 
 	reflection.a = fresnel;
 

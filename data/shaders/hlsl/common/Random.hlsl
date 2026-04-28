@@ -11,8 +11,8 @@ float RandomFrom2D(float2 p)
 
 float2 Random2DFrom2D(float2 p)
 {
-    float n = sin(dot(p, float2(41.0, 289.0)));
-    return frac(float2(262144.0, 32768.0) * n);
+	float n = sin(dot(p, float2(41.0, 289.0)));
+	return frac(float2(262144.0, 32768.0) * n);
 }
 */
 
@@ -24,16 +24,16 @@ float RandomFrom2DTime(float2 p, float time)
 
 float RandomFrom2D(float2 p)
 {
-    p = frac(p * float2(443.8975, 441.423) * 0.3183099);
-    p += dot(p, p + 31.32);
+	p = frac(p * float2(443.8975, 441.423) * 0.3183099);
+	p += dot(p, p + 31.32);
 
-    return frac(p.x * p.y + p.x);
+	return frac(p.x * p.y + p.x);
 }
 
 float2 Random2DFrom2D(float2 p)
 {
-    p = frac(p * float2(443.8975, 441.423) * 0.3183099);
-    p += dot(p, p + 31.32);
+	p = frac(p * float2(443.8975, 441.423) * 0.3183099);
+	p += dot(p, p + 31.32);
 
-    return frac(float2(p.x * p.y + p.x, p.x * p.y + p.y));
+	return frac(float2(p.x * p.y + p.x, p.x * p.y + p.y));
 }

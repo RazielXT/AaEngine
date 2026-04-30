@@ -3,7 +3,7 @@
 
 namespace
 {
-	pugi::xml_node writeVec3(pugi::xml_node parent, const char* name, const Vec3& v)
+	pugi::xml_node writeVec3(pugi::xml_node parent, const char* name, const Vector3& v)
 	{
 		auto n = parent.append_child(name);
 		n.append_attribute("x") = v.x;
@@ -12,7 +12,7 @@ namespace
 		return n;
 	}
 
-	pugi::xml_node writeQuat(pugi::xml_node parent, const char* name, const Quat& q)
+	pugi::xml_node writeQuat(pugi::xml_node parent, const char* name, const Quaternion& q)
 	{
 		auto n = parent.append_child(name);
 		n.append_attribute("x") = q.x;
@@ -22,7 +22,7 @@ namespace
 		return n;
 	}
 
-	void readVec3(pugi::xml_node parent, const char* name, Vec3& v)
+	void readVec3(pugi::xml_node parent, const char* name, Vector3& v)
 	{
 		auto n = parent.child(name);
 		v.x = n.attribute("x").as_float();
@@ -30,7 +30,7 @@ namespace
 		v.z = n.attribute("z").as_float();
 	}
 
-	void readQuat(pugi::xml_node parent, const char* name, Quat& q)
+	void readQuat(pugi::xml_node parent, const char* name, Quaternion& q)
 	{
 		auto n = parent.child(name);
 		q.x = n.attribute("x").as_float();

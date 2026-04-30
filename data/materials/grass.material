@@ -2,13 +2,13 @@ material GrassLeaves
 {
 	vertex_shader
 	{
-		file grass.hlsl
+		file oldGrass/grass.hlsl
 		entry VSMain
 		profile vs_6_6
 	}
 	pixel_shader
 	{
-		file grass.hlsl
+		file oldGrass/grass.hlsl
 		entry PSMain
 		profile ps_6_6
 	}
@@ -30,7 +30,7 @@ material GrassLeavesDepth : GrassLeaves
 {
 	pixel_shader
 	{
-		file grass.hlsl
+		file oldGrass/grass.hlsl
 		entry PSMainDepth
 		profile ps_6_6
 	}
@@ -41,14 +41,14 @@ material GrassLeavesEntityId : GrassLeaves
 {
 	vertex_shader
 	{
-		file grass.hlsl
+		file oldGrass/grass.hlsl
 		entry VSMain
 		profile vs_6_6
 		defines ENTITY_ID
 	}
 	pixel_shader
 	{
-		file grass.hlsl
+		file oldGrass/grass.hlsl
 		entry PSMainEntityId
 		profile ps_6_6
 		defines ENTITY_ID

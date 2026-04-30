@@ -1,7 +1,6 @@
 #include "Scene/EntityGeometry.h"
 #include "Resources/Model/VertexBufferModel.h"
 #include "Scene/EntityInstancing.h"
-#include "RenderObject/GrassArea.h"
 
 bool EntityGeometry::usesInstancing() const
 {
@@ -39,20 +38,6 @@ void EntityGeometry::fromMeshInstancedModel(UINT count, D3D12_GPU_VIRTUAL_ADDRES
 	instanceCount = count;
 	geometryCustomBuffer = instancingBuffer;
 	type = Type::Mesh;
-}
-
-void EntityGeometry::fromGrass(GrassArea& grass)
-{
-	geometryCustomBuffer = grass.gpuBuffer->GetGPUVirtualAddress();
-	vertexCount = grass.vertexCount;
-	indexCount = grass.indexCount;
-	instanceCount = grass.instanceCount;
-	type = Type::Manual;
-	source = &grass;
-
-	indexBufferView.BufferLocation = grass.indexBuffer->GetGPUVirtualAddress();
-	indexBufferView.SizeInBytes = grass.indexCount * sizeof(uint32_t);
-	indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 }
 
 VertexBufferModel* EntityGeometry::getModel() const

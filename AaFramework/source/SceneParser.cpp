@@ -190,10 +190,10 @@ void loadExtensions(const xml_node& element, SceneEntity* ent, SceneNode* node)
 
 	for (auto& e : extensions)
 	{
-		if (e.name == "addGrass")
-		{
-			//parseResult->grassTasks.emplace_back(ent, ent->getWorldBoundingBox());
-		}
+// 		if (e.name == "addGrass")
+// 		{
+// 			parseResult->grassTasks.emplace_back(ent, ent->getWorldBoundingBox());
+// 		}
 	}
 }
 

@@ -15,7 +15,6 @@ enum class ObjectType
 	Entity = -1,
 	Empty = 0,
 	Instanced,
-	Grass,
 };
 
 struct ObjectId

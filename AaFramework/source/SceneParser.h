@@ -18,7 +18,6 @@ namespace SceneParser
 
 	struct Result
 	{
-		std::vector<GrassAreaPlacementTask> grassTasks;
 		std::map<MaterialInstance*, InstanceGroupDescription> instanceDescriptions;
 	};
 

@@ -6,7 +6,6 @@
 #include "Resources/Model/ModelResources.h"
 #include "Resources/Shader/ShaderLibrary.h"
 #include "Resources/Material/MaterialResources.h"
-#include "RenderObject/GrassArea.h"
 #include "RenderCore/TextureData.h"
 #include "FrameCompositor/FrameCompositor.h"
 #include "FrameCompositor/Tasks/VoxelizeSceneTask.h"
@@ -151,11 +150,6 @@ void ApplicationCore::loadScene(const char* scene)
 // 		{
 // 			sceneMgr.instancing.build(sceneMgr, i.second);
 // 		}
-// 
-// 		for (const auto& g : result.grassTasks)
-// 		{
-// 			sceneMgr.grass.scheduleGrassCreation(g, commands.commandList, params, resources, sceneMgr);
-// 		}
 
 		marker.move("loadSceneVoxels", commands.color);
 		VoxelizeSceneTask::Get().clear(commands.commandList);
@@ -173,8 +167,6 @@ void ApplicationCore::loadScene(const char* scene)
 	renderSystem.core.ExecuteCommandList(commands);
 	renderSystem.core.WaitForCurrentFrame();
 	commands.deinit();
-
-	sceneMgr.grass.finishGrassCreation();
 }
 
 DebugReporter::DebugReporter()

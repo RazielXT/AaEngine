@@ -3,7 +3,6 @@
 #include "Scene/RenderQueue.h"
 #include "Scene/EntityInstancing.h"
 #include "Scene/RenderObject.h"
-#include "RenderObject/GrassArea.h"
 #include "Scene/SceneSkybox.h"
 #include "RenderObject/WaterSim/WaterSim.h"
 #include "RenderObject/Terrain/ProgressiveTerrain.h"
@@ -69,8 +68,6 @@ public:
 	SceneGraph graph;
 
 	InstancingManager instancing;
-
-	GrassAreaGenerator grass;
 
 	WaterSim water;
 

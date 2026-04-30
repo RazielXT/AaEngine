@@ -1,3 +1,5 @@
+#pragma once
+
 // Reconstructs a normal from SNORM-encoded XZ (range -1..1)
 float3 DecodeNormalSNORM(float2 xz)
 {

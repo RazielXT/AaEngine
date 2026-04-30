@@ -9,6 +9,7 @@
 #include "FrameCompositor/Tasks/VoxelizeSceneTask.h"
 #include "FrameCompositor/Tasks/SceneRenderTask.h"
 #include "PhysicsRenderTask.h"
+#include "Resources/Shader/ShaderResources.h"
 #include <algorithm>
 
 SidePanel::SidePanel(ApplicationCore& a, EditorSelection& sel, DebugState& st, SceneTreePanel& tree)
@@ -47,6 +48,61 @@ void SidePanel::draw(const ObjectTransformation& objTransformation)
 		}
 	}
 
+	if (ImGui::CollapsingHeader("Material") && !selection.empty())
+	{
+		auto& selected = selection.back();
+		auto* material = selected.obj.entity->material;
+
+		if (material)
+		{
+			auto& params = material->GetParamsBuffer();
+
+			for (auto& param : params)
+			{
+				if (param.type == D3D_SVT_FLOAT)
+				{
+					UINT floatCount = param.size / sizeof(float);
+					float values[4]{};
+					selected.obj.entity->GetMaterialParam(param.name, values);
+
+					bool changed = false;
+					if (floatCount == 1)
+						changed = ImGui::DragFloat(param.name.c_str(), values, 0.01f);
+					else if (floatCount == 2)
+						changed = ImGui::DragFloat2(param.name.c_str(), values, 0.01f);
+					else if (floatCount == 3 && param.name.size() >= 5 && param.name.compare(param.name.size() - 5, 5, "Color") == 0)
+						changed = ImGui::ColorEdit3(param.name.c_str(), values);
+					else if (floatCount == 3)
+						changed = ImGui::DragFloat3(param.name.c_str(), values, 0.01f);
+					else if (floatCount == 4)
+						changed = ImGui::DragFloat4(param.name.c_str(), values, 0.01f);
+
+					if (changed)
+						selected.obj.entity->Material().setParam(param.name, values, param.size);
+				}
+				else if (param.type == D3D_SVT_UINT)
+				{
+					UINT uintCount = param.size / sizeof(UINT);
+					UINT values[4]{};
+					selected.obj.entity->GetMaterialParam(param.name, values);
+
+					bool changed = false;
+					if (uintCount == 1)
+						changed = ImGui::DragInt(param.name.c_str(), (int*)values);
+					else if (uintCount == 2)
+						changed = ImGui::DragInt2(param.name.c_str(), (int*)values);
+					else if (uintCount == 3)
+						changed = ImGui::DragInt3(param.name.c_str(), (int*)values);
+					else if (uintCount == 4)
+						changed = ImGui::DragInt4(param.name.c_str(), (int*)values);
+
+					if (changed)
+						selected.obj.entity->Material().setParam(param.name, values, param.size);
+				}
+			}
+		}
+	}
+
 	if (ImGui::CollapsingHeader("Defines"))
 	{
 		auto knownDefines = app.resources.shaders.getKnownDefines();
@@ -80,7 +136,7 @@ void SidePanel::draw(const ObjectTransformation& objTransformation)
 		static bool debugVegIndex = false;
 		if (ImGui::Checkbox("Debug vegetation Index", &debugVegIndex))
 		{
-			app.resources.shaderDefines.setDefine("BILLBOARD_DEBUG_COLOR", debugVegIndex);
+			app.resources.shaderDefines.setDefine("CHUNK_DEBUG_COLOR", debugVegIndex);
 		}
 		
 		static bool updateGrid = true;

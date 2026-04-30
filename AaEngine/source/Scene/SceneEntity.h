@@ -39,6 +39,7 @@ public:
 	MaterialInstance* material{};
 
 	EntityMaterialInterface Material();
+	bool GetMaterialParam(const std::string& name, void* data) const;
 	MaterialPropertiesOverrideDescription* materialOverride{};
 
 	EntityGeometry geometry;

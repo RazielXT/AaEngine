@@ -127,6 +127,8 @@ struct ResourcesInfo
 		ParamId id;
 		UINT size{};
 		UINT offset{};
+		D3D_SHADER_VARIABLE_TYPE type{};
+
 	};
 	std::vector<ParamInfo> params{};
 };

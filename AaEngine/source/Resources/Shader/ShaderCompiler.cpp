@@ -139,12 +139,16 @@ bool ShaderCompiler::reflectShaderInfo(IDxcResult* compiledShaderBuffer, ShaderD
 				D3D12_SHADER_VARIABLE_DESC desc;
 				v->GetDesc(&desc);
 
+				D3D12_SHADER_TYPE_DESC typeDesc;
+				v->GetType()->GetDesc(&typeDesc);
+
 				cbufferInfo.Size = max(cbufferInfo.Size, desc.StartOffset + desc.Size);
 
 				cbufferInfo.Params.emplace_back(ShaderReflection::CBuffer::Parameter{
 					.Name = desc.Name,
 					.StartOffset = desc.StartOffset,
 					.Size = desc.Size,
+					.Type = typeDesc.Type
 					});
 			}
 

@@ -601,6 +601,11 @@ void MaterialInstance::SetParameter(ParamId id, const void* value, MaterialDataS
 	}
 }
 
+const std::vector<ResourcesInfo::ParamInfo>& MaterialInstance::GetParamsBuffer() const
+{
+	return resources->params;
+}
+
 bool MaterialInstance::GetParameter(const std::string& name, float* output) const
 {
 	if (base.info.rootBuffer)

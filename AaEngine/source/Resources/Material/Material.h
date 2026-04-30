@@ -151,6 +151,8 @@ public:
 	void SetParameter(ParamId param, const void* value);
 	void SetParameter(ParamId param, const void* value, MaterialDataStorage& data);
 
+	const std::vector<ResourcesInfo::ParamInfo>& GetParamsBuffer() const;
+
 	void LoadMaterialConstants(MaterialDataStorage& buffers) const;
 	void UpdatePerFrame(MaterialDataStorage& data, const ShaderConstantsProvider& info);
 	void UpdatePerObject(MaterialDataStorage& buffers, const ShaderConstantsProvider& info);

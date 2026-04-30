@@ -20,6 +20,7 @@ namespace ShaderReflection
 			std::string Name;
 			UINT StartOffset;
 			UINT Size;
+			D3D_SHADER_VARIABLE_TYPE Type{};
 		};
 		std::vector<Parameter> Params;
 	};

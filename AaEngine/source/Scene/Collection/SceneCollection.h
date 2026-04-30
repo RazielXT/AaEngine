@@ -22,9 +22,10 @@ namespace SceneCollection
 		std::string materialName;
 		Mesh mesh;
 		ObjectTransformation tr;
+		uint32_t primitiveIdx{};
 	};
 
-	struct Data
+	struct ResourceData
 	{
 		std::string name;
 		std::string path;
@@ -39,5 +40,6 @@ namespace SceneCollection
 		GraphicsResources& resources;
 		ObjectTransformation placement = {};
 	};
-	void loadScene(const Data& data, LoadCtx);
+	void loadResource(const ResourceData& data, LoadCtx);
+	void loadResources(const std::vector<ResourceData>& data, LoadCtx);
 };

@@ -4,7 +4,7 @@
 #include "imgui.h"
 #include "ImGuizmo.h"
 #include "Editor/EntityPicker.h"
-#include "Scene/SceneCollection.h"
+#include "Scene/Collection/SceneCollection.h"
 #include "Resources/Model/GltfLoader.h"
 #include "RenderObject/Prefab/PrefabLoader.h"
 #include "SceneParser.h"
@@ -250,7 +250,7 @@ ObjectTransformation ViewportPanel::draw(Camera& camera)
 			{
 				SceneCollection::LoadCtx loadCtx = { batch, app.sceneMgr, app.renderSystem, app.resources, tr };
 				auto scene = GltfLoader::load(assetDrop, loadCtx);
-				SceneCollection::loadScene(scene, loadCtx);
+				SceneCollection::loadResource(scene, loadCtx);
 			}
 			else if (assetDrop.ends_with(".scene"))
 			{

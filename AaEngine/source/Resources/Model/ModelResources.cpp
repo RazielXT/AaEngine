@@ -54,6 +54,21 @@ VertexBufferModel* ModelResources::getModel(const std::string& filename, Resourc
 	return m;
 }
 
+VertexBufferModel* ModelResources::getModel(const std::string& path, ResourceUploadBatch& batch)
+{
+	auto separator = path.find_last_of('/');
+
+	if (separator != std::string::npos)
+	{
+		auto folder = path.substr(0, separator);
+		auto filename = path.substr(separator + 1);
+
+		return getModel(filename, batch, { folder });
+	}
+
+	return getCoreModel(path);
+}
+
 VertexBufferModel* ModelResources::getCoreModel(const std::string& filename)
 {
 	auto& models = getGroupLibrary({ CoreGroup });

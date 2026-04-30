@@ -1,8 +1,8 @@
-#include "Scene/SceneCollection.h"
+#include "Scene/Collection/SceneCollection.h"
 #include "Resources/GraphicsResources.h"
 #include "Scene/SceneManager.h"
 
-void SceneCollection::loadScene(const Data& data, LoadCtx ctx)
+void SceneCollection::loadResource(const ResourceData& data, LoadCtx ctx)
 {
 	auto groupId = ctx.sceneMgr.createEntityGroup(data.name);
 
@@ -20,5 +20,13 @@ void SceneCollection::loadScene(const Data& data, LoadCtx ctx)
 
 		auto ent = ctx.sceneMgr.createEntity(e.name, e.tr, *model, props);
 		ent->material = material;
+	}
+}
+
+void SceneCollection::loadResources(const std::vector<ResourceData>& data, LoadCtx ctx)
+{
+	for (const auto& r : data)
+	{
+		loadResource(r, ctx);
 	}
 }

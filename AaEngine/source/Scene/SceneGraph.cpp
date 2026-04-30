@@ -29,9 +29,6 @@ void SceneGraph::updateEntity(const std::vector<EntityChangeDescritpion>& change
 	}
 }
 
-UINT lastGroupMask{};
-SceneGraphNode* lastGroupNode{};
-
 bool SceneGraph::removeNode(std::vector<SceneGraphNode>& nodes, ObjectId id)
 {
 	bool removed = false;
@@ -47,6 +44,9 @@ bool SceneGraph::removeNode(std::vector<SceneGraphNode>& nodes, ObjectId id)
 
 	return false;
 }
+
+static UINT lastGroupMask{};
+static SceneGraphNode* lastGroupNode{};
 
 SceneGraphNode* SceneGraph::getParentNode(ObjectId id)
 {

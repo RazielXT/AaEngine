@@ -28,11 +28,11 @@ void PrefabLoader::load(const std::string& path, SceneCollection::LoadCtx ctx)
 			}
 			else if (param.type == "material")
 			{
-				material = ctx.resources.materials.getMaterial(param.value);
+				material = ctx.resources.materials.getMaterial(param.value, ctx.batch);
 			}
 			else if (param.type == "model")
 			{
-				model = ctx.resources.models.getCoreModel(param.value);
+				model = ctx.resources.models.getModel(param.value, ctx.batch);
 			}
 		}
 

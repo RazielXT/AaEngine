@@ -99,6 +99,9 @@
     <ClCompile Include="source\RenderCore\CascadedShadowMaps.cpp" />
     <ClCompile Include="source\Resources\Compute\ClearBufferCS.cpp" />
     <ClCompile Include="source\Resources\Compute\CopyTexturesCS.cpp" />
+    <ClCompile Include="source\Scene\Collection\SceneCollection.cpp" />
+    <ClCompile Include="source\Scene\Collection\SceneSnapshot.cpp" />
+    <ClCompile Include="source\Scene\Collection\SceneSnapshotLoader.cpp" />
     <ClCompile Include="source\Scene\DrawPrimitives.cpp" />
     <ClCompile Include="source\Editor\EntityPicker.cpp" />
     <ClCompile Include="source\Resources\Model\GltfLoader.cpp" />
@@ -108,7 +111,6 @@
     <ClCompile Include="source\FrameCompositor\Tasks\PrepareFrameTask.cpp" />
     <ClCompile Include="source\RenderObject\Terrain\ProgressiveTerrain.cpp" />
     <ClCompile Include="source\RenderCore\RenderTargetHeap.cpp" />
-    <ClCompile Include="source\Scene\SceneCollection.cpp" />
     <ClCompile Include="source\Scene\SceneEntity.cpp" />
     <ClCompile Include="source\Resources\Material\Material.cpp" />
     <ClCompile Include="source\Resources\Material\MaterialFileParser.cpp" />
@@ -191,6 +193,9 @@
     <ClInclude Include="source\RenderCore\CascadedShadowMaps.h" />
     <ClInclude Include="source\Resources\Compute\ClearBufferCS.h" />
     <ClInclude Include="source\Resources\Compute\CopyTexturesCS.h" />
+    <ClInclude Include="source\Scene\Collection\SceneCollection.h" />
+    <ClInclude Include="source\Scene\Collection\SceneSnapshot.h" />
+    <ClInclude Include="source\Scene\Collection\SceneSnapshotLoader.h" />
     <ClInclude Include="source\Scene\DrawPrimitives.h" />
     <ClInclude Include="source\Editor\EntityPicker.h" />
     <ClInclude Include="source\Resources\Model\GltfLoader.h" />
@@ -203,7 +208,6 @@
     <ClInclude Include="source\RenderObject\Terrain\ProgressiveTerrain.h" />
     <ClInclude Include="source\RenderCore\RenderTargetHeap.h" />
     <ClInclude Include="source\Resources\ResourcesView.h" />
-    <ClInclude Include="source\Scene\SceneCollection.h" />
     <ClInclude Include="source\Scene\SceneEntity.h" />
     <ClInclude Include="source\Utils\Logger.h" />
     <ClInclude Include="source\Resources\Material\Material.h" />

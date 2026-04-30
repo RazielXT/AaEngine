@@ -35,9 +35,9 @@ static std::pair<const char*, DXGI_FORMAT> ParseGltfElement(const std::string& n
 	return { semanticName, format };
 }
 
-static SceneCollection::Data ProcessGLTF(const tinygltf::Model& data, const std::string& path, SceneCollection::LoadCtx& ctx)
+static SceneCollection::ResourceData ProcessGLTF(const tinygltf::Model& data, const std::string& path, SceneCollection::LoadCtx& ctx)
 {
-	SceneCollection::Data loadInfo;
+	SceneCollection::ResourceData loadInfo;
 	loadInfo.path = path;
 
 	if (!data.buffers.empty())
@@ -51,14 +51,13 @@ static SceneCollection::Data ProcessGLTF(const tinygltf::Model& data, const std:
 		{
 			SceneCollection::Entity info;
 			info.name = mesh.name;
+			info.mesh.name = loadInfo.name + "/" + mesh.name;
+			info.primitiveIdx = idx++;
 
-			if (idx > 0)
-				info.name += "_" + std::to_string(idx);
-			idx++;
+			if (info.primitiveIdx > 0)
+				info.mesh.name += "/" + std::to_string(info.primitiveIdx);
 
-			info.mesh.name = info.name;
-
-			if (auto model = ctx.resources.models.addLoadedModel(info.name, path))
+			if (auto model = ctx.resources.models.addLoadedModel(info.mesh.name, path))
 			{
 				// Vertex buffer
 				{
@@ -155,7 +154,7 @@ static SceneCollection::Data ProcessGLTF(const tinygltf::Model& data, const std:
 	return loadInfo;
 }
 
-SceneCollection::Data GltfLoader::load(const std::string& path, SceneCollection::LoadCtx ctx)
+SceneCollection::ResourceData GltfLoader::load(const std::string& path, SceneCollection::LoadCtx ctx)
 {
 	tinygltf::TinyGLTF loader;
 	tinygltf::Model gltfModel;

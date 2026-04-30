@@ -6,6 +6,7 @@
 #include "hlsl/common/ResourceAccess.hlsl"
 #include "hlsl/common/ShaderOutputs.hlsl"
 #include "hlsl/sky/SunParams.hlsl"
+#include "hlsl/common/NormalDecoding.hlsl"
 
 float4x4 ViewProjectionMatrix;
 float4x4 InvViewProjectionMatrix;
@@ -105,14 +106,12 @@ PSOutput PSMain(PSInput input)
 	//albedo.rgb *= max(0.1, (voxelmap.SampleLevel(LinearWrapSampler, voxelUV, 3).rgb + voxelmap.SampleLevel(LinearWrapSampler, voxelUV, 4).rgb * 2) * 10);
 
 	float2 flow = GetTexture2D(TexIdFlowmap).Sample(LinearWrapSampler, input.uv).xy;
-	float2 flowUV = flow * 0.1 * Time;
 
-	const float2 NormalUv = input.uv * 30 - Time * 0.03 + flow;
-	const float2 NormalUv2 = input.uv * 33 + Time * 0.031 + flow;
-	float3 normalTex = 0.5 * (GetTexture2D(TexIdNormal).Sample(LinearWrapSampler, NormalUv).rgr * 2.0f - 1.0f);
-	normalTex += 0.5 * (GetTexture2D(TexIdNormal).Sample(LinearWrapSampler, NormalUv2).rgr * 2.0f - 1.0f);
-	normalTex.z  = sqrt(saturate(1.0f - dot(normalTex.xy, normalTex.xy)));
-	//normalTex = lerp(normalTex, float3(0, 0, 1), 0.6);
+	const float2 NormalUv = input.uv * 30 - Time * 0.02 + flow * 1.1;
+	const float2 NormalUv2 = input.uv * 36 + Time * 0.023 + flow;
+	float2 normalTex1 = GetTexture2D(TexIdNormal).Sample(LinearWrapSampler, NormalUv).rg;
+	float2 normalTex2 = GetTexture2D(TexIdNormal).Sample(LinearWrapSampler, NormalUv2).rg;
+	float3 normalTex = DecodeNormalTexture(0.5 * (normalTex1 + normalTex2));
 
 	float3 normal = ReadGridNormal(ResourceDescriptorHeap[TexIdMeshNormal], LinearSampler, input.uv);
 	//normal = lerp(normal, normalize(normalTex), 0.08);

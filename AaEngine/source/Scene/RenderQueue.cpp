@@ -70,6 +70,10 @@ static void RenderObject(ID3D12GraphicsCommandList* commandList, EntityGeometry&
 		{
 			commandList->IASetIndexBuffer(&geometry.indexBufferView);
 		}
+		if (geometry.vertexBufferView.BufferLocation)
+		{
+			commandList->IASetVertexBuffers(0, 1, &geometry.vertexBufferView);
+		}
 
 		((IndirectEntityGeometry*)geometry.source)->draw(commandList, frameIndex);
 	}

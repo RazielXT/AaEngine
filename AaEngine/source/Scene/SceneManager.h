@@ -7,6 +7,7 @@
 #include "RenderObject/WaterSim/WaterSim.h"
 #include "RenderObject/Terrain/ProgressiveTerrain.h"
 #include "RenderObject/Vegetation/Vegetation.h"
+#include "RenderObject/Grass/Grass.h"
 #include "Scene/SceneGraph.h"
 #include <unordered_map>
 
@@ -74,6 +75,8 @@ public:
 	ProgressiveTerrain terrain;
 
 	Vegetation vegetation;
+
+	Grass grass;
 
 	SceneSkybox skybox;
 

@@ -80,6 +80,9 @@
     <Filter Include="Source Files\Scene\Collection">
       <UniqueIdentifier>{561cc36b-4d25-4b90-98e5-a7051944f4df}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\RenderObject\Grass">
+      <UniqueIdentifier>{a4a60f79-6988-4444-9620-75573498a7dc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\App\TargetWindow.cpp">
@@ -357,6 +360,9 @@
     </ClCompile>
     <ClCompile Include="source\Scene\Collection\SceneSnapshotLoader.cpp">
       <Filter>Source Files\Scene\Collection</Filter>
+    </ClCompile>
+    <ClCompile Include="source\RenderObject\Grass\Grass.cpp">
+      <Filter>Source Files\RenderObject\Grass</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -659,6 +665,9 @@
     </ClInclude>
     <ClInclude Include="source\Scene\Collection\SceneSnapshotLoader.h">
       <Filter>Source Files\Scene\Collection</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RenderObject\Grass\Grass.h">
+      <Filter>Source Files\RenderObject\Grass</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

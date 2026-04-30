@@ -158,6 +158,7 @@ void ApplicationCore::loadScene(const char* scene)
 		sceneMgr.water.initializeGpuResources(renderSystem, resources, batch);
 		sceneMgr.terrain.initialize(renderSystem, resources, batch, sceneMgr);
 		sceneMgr.vegetation.createChunks(sceneMgr, renderSystem, resources, batch);
+		sceneMgr.grass.createChunks(sceneMgr, renderSystem, resources, batch);
 		sceneMgr.water.initializeTarget(sceneMgr.terrain.getHeightmap({ 0,0 }), sceneMgr, { sceneMgr.terrain.params.tileSize, sceneMgr.terrain.params.tileSize }, sceneMgr.terrain.getHeightmapPosition({ 0,0 }));
 	}
 

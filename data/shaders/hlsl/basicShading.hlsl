@@ -3,6 +3,7 @@
 #include "hlsl/common/MotionVectors.hlsl"
 #include "hlsl/common/ShaderOutputs.hlsl"
 #include "hlsl/common/Triplanar.hlsl"
+#include "hlsl/common/DebugColors.hlsl"
 
 float4x4 ViewProjectionMatrix;
 float4x4 PreviousWorldMatrix;
@@ -18,14 +19,17 @@ float DeltaTime;
 
 #ifdef INSTANCED
 StructuredBuffer<float4x4> InstancingBuffer : register(t0);
+	#ifdef CHUNK_DEBUG_COLOR
+	uint ChunkId;
+	#endif
 #endif
 
 struct VSInput
 {
-    float4 position : POSITION;
+	float4 position : POSITION;
 	float3 normal : NORMAL;
 #ifndef NO_TEXTURE
-    float2 uv : TEXCOORD;
+	float2 uv : TEXCOORD;
 #endif
 #ifdef USE_VC
 	float4 color : COLOR;
@@ -37,10 +41,10 @@ struct VSInput
 
 struct PSInput
 {
-    float4 position : SV_POSITION;
+	float4 position : SV_POSITION;
 	float3 normal : NORMAL;
 #ifdef USE_VC
-    float4 color : COLOR;
+	float4 color : COLOR;
 #endif
 #ifndef NO_TEXTURE
 	float2 uv : TEXCOORD0;
@@ -50,19 +54,43 @@ struct PSInput
 	float4 currentPosition : TEXCOORD3;
 };
 
-float3 WindWave(float3 basePos, float swayFactor, float seed)
+float Hash21(float2 p)
 {
-	const float3 WindDirection = float3(1,0.5,0);
-	const float  WindStrength = 2.5f;
-	const float  WindSpeed = 3;
-
-	float leafRandom = (basePos.z + basePos.x)/5;
-	float phase = WindSpeed * seed + leafRandom + swayFactor * 3;
-	float windOffset = ((sin(phase*0.4 + 0.5) + sin(phase)) * 0.25 + 0.75) * WindStrength;
-
-	float3 windDisplacement = WindDirection * windOffset * swayFactor;
-	return basePos + windDisplacement;
+    // Fast, decorrelated hash for vegetation
+    p = frac(p * float2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return frac(p.x * p.y);
 }
+
+float3 WindWave(float3 basePos, float swayFactor, float time)
+{
+    const float3 WindDir = normalize(float3(1, 0.5, 0));
+    const float  WindStrength = 2.5f;
+    const float  WindSpeed = 3.0f;
+
+    // --- BETTER RANDOMNESS ---
+    float leafRandom = Hash21(basePos.xz * 0.0000005f);
+
+    // --- MULTI-FREQUENCY WIND PHASE ---
+    float phase = time * WindSpeed + leafRandom * 6.2831;
+
+    // Low + mid + high frequency components
+    float w1 = sin(phase);
+    float w2 = sin(phase * 0.5 + leafRandom * 2.0);
+    float w3 = w1 - w2; //sin(phase * 2.3 + leafRandom * 4.0);
+
+    // Weighted sum (tunable)
+    float wind = (w1 * 0.6 + w2 * 0.3 + w3 * 0.1);
+
+    // Normalize to 0..1
+    wind = wind * 0.5 + 0.5;
+
+    // Apply strength + per‑instance sway
+    float windOffset = wind * WindStrength * swayFactor;
+
+    return basePos + WindDir * windOffset;
+}
+
 
 void ComputeBaseBend(float4 basePosOS, inout float4 vertexPosOS, float w)
 {
@@ -76,7 +104,7 @@ PSInput VSMain(VSInput input)
 #ifdef INSTANCED
 	result.worldPosition = mul(input.position, InstancingBuffer[input.instanceID]);
 	#ifdef VERTEX_WAVE
-		float waveWeight = saturate(1 - length(CameraPosition - result.worldPosition.xyz)/400) * (1-input.uv.y);
+		float waveWeight = saturate(1 - length(CameraPosition - result.worldPosition.xyz)/200) * (1-input.uv.y);
 		ComputeBaseBend(input.position, result.worldPosition, waveWeight);
 		float4 worldPositionNoWave = result.worldPosition;
 		result.worldPosition.xyz = WindWave(result.worldPosition.xyz, waveWeight, Time);
@@ -108,7 +136,7 @@ PSInput VSMain(VSInput input)
 #endif
 
 #ifdef USE_VC
-    result.color = input.color;
+	result.color = input.color;
 #endif
 
 #ifndef NO_TEXTURE
@@ -118,7 +146,7 @@ PSInput VSMain(VSInput input)
 	#endif
 #endif
 
-    return result;
+	return result;
 }
 
 GBufferOutput PSMain(PSInput input)
@@ -143,6 +171,14 @@ GBufferOutput PSMain(PSInput input)
 	float3 albedo = albedoTex.rgb * MaterialColor;
 #else
 	float3 albedo = MaterialColor;
+#endif
+
+#ifdef CHUNK_DEBUG_COLOR
+	albedo = lerp(albedo, GetDebugColor(ChunkId), 0.7);
+#endif
+
+#ifdef INSTANCED
+	albedo = lerp(albedo, float3(0.7,0.6,0.1), 0.1);
 #endif
 
 	GBufferOutput output;

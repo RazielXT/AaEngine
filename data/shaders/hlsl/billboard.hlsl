@@ -16,7 +16,7 @@ uint TexIdNormal;
 uint TexIdEdges;
 float3 ViewCameraDirection;
 
-#ifdef BILLBOARD_DEBUG_COLOR
+#ifdef CHUNK_DEBUG_COLOR
 uint ChunkId;
 #endif
 
@@ -162,7 +162,7 @@ GBufferOutput PSMain(PSInput input)
 
 	worldNormal = mul(normalTex.xyz, tbn);
 
-#ifdef BILLBOARD_DEBUG_COLOR
+#ifdef CHUNK_DEBUG_COLOR
 	albedo.rgb = lerp(albedo.rgb, GetDebugColor(ChunkId), 0.7);
 #endif
 

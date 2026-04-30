@@ -28,6 +28,7 @@ void SceneManager::initialize(RenderSystem& renderSystem)
 	batch.Begin();
 
 	vegetation.initialize(renderSystem, resources, batch);
+	grass.initialize(renderSystem, resources, batch);
 
 	auto uploadResourcesFinished = batch.End(renderSystem.core.commandQueue);
 	uploadResourcesFinished.wait();

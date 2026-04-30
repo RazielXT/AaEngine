@@ -328,6 +328,9 @@
     <ClCompile Include="source\RenderCore\GpuTexture.cpp">
       <Filter>Source Files\RenderCore</Filter>
     </ClCompile>
+    <ClCompile Include="source\RenderCore\GpuTextureReadback.cpp">
+      <Filter>Source Files\RenderCore</Filter>
+    </ClCompile>
     <ClCompile Include="source\RenderCore\MeshUtils.cpp">
       <Filter>Source Files\RenderCore</Filter>
     </ClCompile>
@@ -625,6 +628,9 @@
       <Filter>Source Files\RenderCore</Filter>
     </ClInclude>
     <ClInclude Include="source\RenderCore\GpuTexture.h">
+      <Filter>Source Files\RenderCore</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RenderCore\GpuTextureReadback.h">
       <Filter>Source Files\RenderCore</Filter>
     </ClInclude>
     <ClInclude Include="source\RenderCore\MeshUtils.h">

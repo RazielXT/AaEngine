@@ -31,6 +31,10 @@ public:
 
 	JPH::BodyID createMeshBody(const std::vector<Vector3>& points, const std::vector<uint32_t>& indices, const ObjectTransformation& transformation);
 
+	JPH::BodyID createHeightField(const float* heights, uint32_t resolution, Vector3 offset, Vector3 scale);
+
+	void removeBody(JPH::BodyID id);
+
 	struct RegisteredEntity
 	{
 		SceneEntity* entity;
@@ -66,6 +70,9 @@ private:
 	JPH::JobSystemThreadPool job_system;
 
 	void clear();
+
+	float fixedTimeStep = 1.0f / 60.0f;
+	float accumulator = 0.0f;
 
 	std::unique_ptr<PhysicsRenderer> renderer;
 };

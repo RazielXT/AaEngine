@@ -129,6 +129,8 @@ void ProgressiveTerrain::update(ID3D12GraphicsCommandList* commandList, const Ve
 			}
 	}
 
+	regeneratedChunks.clear();
+
 	for (int x = 0; x < (int)GridsSize; x++)
 		for (int y = 0; y < (int)GridsSize; y++)
 		{
@@ -136,6 +138,7 @@ void ProgressiveTerrain::update(ID3D12GraphicsCommandList* commandList, const Ve
 			{
 				regenerateChunk(commandList, x, y);
 				chunkDirty[x][y] = false;
+				regeneratedChunks.push_back(chunkWorldCoord[x][y]);
 			}
 		}
 
@@ -148,6 +151,9 @@ void ProgressiveTerrain::update(ID3D12GraphicsCommandList* commandList, const Ve
 				terrainGridMesh[x][y].update((UINT)terrainGridTiles.m_renderList.size(), terrainGridTiles.m_renderList.data(), (UINT)terrainGridTiles.m_renderList.size() * sizeof(TileData), frameIdx);
 			}
 	}
+
+	if (postUpdateCallback)
+		postUpdateCallback(commandList, *this);
 }
 
 UINT ProgressiveTerrain::getCenterHeightmapSrvIndex() const
@@ -164,7 +170,7 @@ UINT ProgressiveTerrain::getHeightmapSrvIndex(XMINT2 worldChunk) const
 	return terrainGridHeight[ax][ay].view.srvHeapIndex;
 }
 
-const GpuTexture2D& ProgressiveTerrain::getHeightmap(XMINT2 worldChunk) const
+GpuTexture2D& ProgressiveTerrain::getHeightmap(XMINT2 worldChunk)
 {
 	int ax = TerrainGridParams::wrapIndex(worldChunk.x, GridsSize);
 	int ay = TerrainGridParams::wrapIndex(worldChunk.y, GridsSize);

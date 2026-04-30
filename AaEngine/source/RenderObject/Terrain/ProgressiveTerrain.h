@@ -7,6 +7,7 @@
 #include "Resources/Compute/TerrainGenerationCS.h"
 #include "Resources/Compute/TextureToMeshCS.h"
 #include "Resources/Compute/GenerateMipsComputeShader.h"
+#include <functional>
 
 class SceneManager;
 class SceneEntity;
@@ -28,10 +29,16 @@ public:
 	UINT getCenterHeightmapSrvIndex() const;
 	UINT getHeightmapSrvIndex(XMINT2 worldChunk) const;
 
-	const GpuTexture2D& getHeightmap(XMINT2 worldChunk) const;
+	GpuTexture2D& getHeightmap(XMINT2 worldChunk);
 	Vector3 getHeightmapPosition(XMINT2 worldChunk) const;
 
 	TerrainGridParams params;
+
+	std::vector<XMINT2> regeneratedChunks;
+
+	// Called at the end of update() with the command list, after terrain regeneration.
+	// External systems can use this to issue GPU commands (e.g. readback copies).
+	std::function<void(ID3D12GraphicsCommandList*, ProgressiveTerrain&)> postUpdateCallback;
 
 	constexpr static UINT GridsSize = TerrainGridParams::GridsSize;
 

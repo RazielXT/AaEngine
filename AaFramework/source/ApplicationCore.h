@@ -7,6 +7,7 @@
 #include "FrameCompositor/FrameCompositor.h"
 #include "Resources/GraphicsResources.h"
 #include "PhysicsManager.h"
+#include "TerrainPhysics.h"
 #include "RenderObject/Sky/SkyRendering.h"
 
 struct DebugReporter
@@ -41,6 +42,7 @@ public:
 	SceneManager sceneMgr;
 	FrameParameters params;
 	PhysicsManager physicsMgr;
+	TerrainPhysics terrainPhysics;
 	FrameCompositor* compositor;
 	ShadowMaps* shadowMap;
 	SceneLights lights;

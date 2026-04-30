@@ -192,7 +192,12 @@ void SidePanel::draw(const ObjectTransformation& objTransformation)
 		};
 		static int physicsDrawIdx = 0;
 		if (ImGui::Combo("Draw physics", &physicsDrawIdx, physicsDraw, std::size(physicsDraw)))
-			((PhysicsRenderTask*)app.compositor->getTask("RenderPhysics"))->setMode((PhysicsRenderTask::Mode)physicsDrawIdx);
+		{
+			app.renderSystem.core.WaitForAllFrames();
+			app.compositor->setDefine("RENDER_PHYSICS", physicsDrawIdx != PhysicsRenderTask::Mode::Off);
+			if (physicsDrawIdx != PhysicsRenderTask::Mode::Off)
+				((PhysicsRenderTask*)app.compositor->getTask("RenderPhysics"))->setMode((PhysicsRenderTask::Mode)physicsDrawIdx);
+		}
 
 		if (ImGui::Button("Big physics"))
 			app.physicsMgr.test();

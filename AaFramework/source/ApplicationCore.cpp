@@ -54,6 +54,7 @@ void ApplicationCore::initialize(const TargetWindow& window, const InitParams& a
 	sceneMgr.initialize(renderSystem);
 
 	physicsMgr.init();
+	terrainPhysics.init(renderSystem.core.device);
 
 	Logger::log("ApplicationCore Initialized");
 }
@@ -97,6 +98,8 @@ void ApplicationCore::renderFrame(Camera& camera)
 	params.timeDelta = timeSinceLastFrame;
 	params.frameIndex = renderSystem.core.frameIndex;
 
+	terrainPhysics.consumeReadbacks(camera.getPosition(), sceneMgr.terrain.params, physicsMgr);
+
 	sceneMgr.update();
 	camera.updateMatrix();
 	shadowMap->update(renderSystem.core.frameIndex, camera);
@@ -126,7 +129,9 @@ void ApplicationCore::loadScene(const char* scene)
 {
 	renderSystem.core.WaitForAllFrames();
 	sceneMgr.clear();
+	terrainPhysics.clear(physicsMgr);
 	physicsMgr.init();
+	terrainPhysics.init(renderSystem.core.device);
 	resources.models.clear();
 
 	ResourceUploadBatch batch(renderSystem.core.device);
@@ -161,6 +166,10 @@ void ApplicationCore::loadScene(const char* scene)
 		sceneMgr.grass.createChunks(sceneMgr, renderSystem, resources, batch);
 		sceneMgr.water.initializeTarget(sceneMgr.terrain.getHeightmap({ 0,0 }), sceneMgr, { sceneMgr.terrain.params.tileSize, sceneMgr.terrain.params.tileSize }, sceneMgr.terrain.getHeightmapPosition({ 0,0 }));
 	}
+	sceneMgr.terrain.postUpdateCallback = [this](ID3D12GraphicsCommandList* commandList, ProgressiveTerrain& terrain)
+	{
+		terrainPhysics.requestReadbacks(commandList, terrain);
+	};
 
 	auto uploadResourcesFinished = batch.End(renderSystem.core.commandQueue);
 	uploadResourcesFinished.wait();

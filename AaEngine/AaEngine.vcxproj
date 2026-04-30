@@ -160,6 +160,7 @@
     <ClCompile Include="source\Resources\Model\OgreMeshFileParser.cpp" />
     <ClCompile Include="source\Scene\RenderQueue.cpp" />
     <ClCompile Include="source\RenderCore\GpuTexture.cpp" />
+    <ClCompile Include="source\RenderCore\GpuTextureReadback.cpp" />
     <ClCompile Include="source\Resources\DescriptorManager.cpp" />
     <ClCompile Include="source\FrameCompositor\Tasks\SceneRenderTask.cpp" />
     <ClCompile Include="source\FrameCompositor\Tasks\SceneTestTask.cpp" />
@@ -265,6 +266,7 @@
     <ClInclude Include="source\Resources\Model\OgreMeshFileParser.h" />
     <ClInclude Include="source\Scene\RenderQueue.h" />
     <ClInclude Include="source\RenderCore\GpuTexture.h" />
+    <ClInclude Include="source\RenderCore\GpuTextureReadback.h" />
     <ClInclude Include="source\Resources\DescriptorManager.h" />
     <ClInclude Include="source\Scene\SceneLights.h" />
     <ClInclude Include="source\FrameCompositor\Tasks\SceneRenderTask.h" />

@@ -17,6 +17,7 @@ using namespace JPH;
 #include <Samples/Layers.h>
 #include <debugapi.h>
 #include "Jolt/Physics/Collision/Shape/MeshShape.h"
+#include <Jolt/Physics/Collision/Shape/HeightFieldShape.h>
 #include <Jolt/Physics/PhysicsScene.h>
 #include <Jolt/ObjectStream/ObjectStreamIn.h>
 
@@ -79,6 +80,7 @@ void PhysicsManager::clear()
 	}
 
 	dynamicBodies.clear();
+	accumulator = 0.0f;
 }
 
 namespace
@@ -131,7 +133,7 @@ JPH::BodyID PhysicsManager::createDynamicBox(Vector3 extends, const ObjectTransf
 
 JPH::BodyID PhysicsManager::createStaticSphere(float radius, Vector3 position)
 {
-	BodyCreationSettings creation_settings(CreateSphereShape(radius), toVec3(position), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+	BodyCreationSettings creation_settings(CreateSphereShape(radius), toVec3(position), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
 	creation_settings.mMotionQuality = EMotionQuality::Discrete;
 	creation_settings.mFriction = DefaultObjectFriction;
 	creation_settings.mRestitution = DefaultObjectRestitution;
@@ -228,10 +230,20 @@ JPH::BodyID PhysicsManager::createMeshBody(const std::vector<Vector3>& points, c
 
 void PhysicsManager::update(float deltaTime)
 {
+	accumulator += deltaTime;
+
+	int steps = (int)(accumulator / fixedTimeStep);
+	if (steps == 0)
+		return;
+
+	accumulator -= steps * fixedTimeStep;
+
+	system->Update(fixedTimeStep, steps, &temp_allocator, &job_system);
+
 	Vec3 pos{};
 	Quat quat{};
 
-	for (auto& info  : dynamicBodies)
+	for (auto& info : dynamicBodies)
 	{
 		if (system->GetBodyInterface().IsActive(info.id))
 		{
@@ -240,12 +252,6 @@ void PhysicsManager::update(float deltaTime)
 			info.entity->setPositionOrientation(Vector3{ pos.GetX(), pos.GetY(), pos.GetZ() }, q);
 		}
 	}
-
-	// If you take larger steps than 1 / 60th of a second you need to do multiple collision steps in order to keep the simulation stable. Do 1 collision step per 1 / 60th of a second (round up).
-	const int cCollisionSteps = 1;
-
-	// Step the world
-	system->Update(deltaTime, cCollisionSteps, &temp_allocator, &job_system);
 }
 
 void PhysicsManager::enableRenderer(RenderSystem& rs, GraphicsResources& r)
@@ -286,6 +292,30 @@ void PhysicsManager::test()
 		body.mObjectLayer = Layers::NON_MOVING;
 	scene->FixInvalidScales();
 	scene->CreateBodies(system);
+}
+
+JPH::BodyID PhysicsManager::createHeightField(const float* heights, uint32_t resolution, Vector3 offset, Vector3 scale)
+{
+	HeightFieldShapeSettings settings(heights, Vec3(0, 0, 0), Vec3(scale.x, scale.y, scale.z), resolution);
+
+	auto shapeResult = settings.Create();
+	if (shapeResult.HasError())
+		return JPH::BodyID();
+
+	BodyCreationSettings creation_settings(shapeResult.Get(), toVec3(offset), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+	creation_settings.mFriction = DefaultObjectFriction;
+	creation_settings.mRestitution = DefaultObjectRestitution;
+
+	return system->GetBodyInterface().CreateAndAddBody(creation_settings, EActivation::DontActivate);
+}
+
+void PhysicsManager::removeBody(JPH::BodyID id)
+{
+	if (!id.IsInvalid())
+	{
+		system->GetBodyInterface().RemoveBody(id);
+		system->GetBodyInterface().DestroyBody(id);
+	}
 }
 
 PhysicsManager::Allocator::Allocator()

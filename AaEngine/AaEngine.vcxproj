@@ -122,7 +122,6 @@
     <ClCompile Include="source\Resources\Shader\ShaderType.cpp" />
     <ClCompile Include="source\Utils\SystemUtils.cpp" />
     <ClCompile Include="source\Resources\Compute\TerrainGenerationCS.cpp" />
-    <ClCompile Include="source\RenderObject\TerrainScan\TerrainScan.cpp" />
     <ClCompile Include="source\Resources\Compute\TextureToMeshCS.cpp" />
     <ClCompile Include="source\RenderCore\TextureUtils.cpp" />
     <ClCompile Include="source\RenderObject\Vegetation\Vegetation.cpp" />
@@ -156,8 +155,6 @@
     <ClCompile Include="source\App\DebugWindow.cpp" />
     <ClCompile Include="source\FrameCompositor\FrameCompositorTaskBuild.cpp" />
     <ClCompile Include="source\Resources\Compute\GenerateMipsComputeShader.cpp" />
-    <ClCompile Include="source\RenderObject\GrassArea.cpp" />
-    <ClCompile Include="source\Resources\Compute\GrassInitComputeShader.cpp" />
     <ClCompile Include="source\FrameCompositor\Tasks\ImguiDebugWindowTask.cpp" />
     <ClCompile Include="source\Resources\Model\OgreMeshFileParser.cpp" />
     <ClCompile Include="source\Scene\RenderQueue.cpp" />
@@ -221,8 +218,6 @@
     <ClInclude Include="source\RenderCore\FSR.h" />
     <ClInclude Include="source\Resources\Compute\GenerateMipsComputeShader.h" />
     <ClInclude Include="source\Resources\GraphicsResources.h" />
-    <ClInclude Include="source\RenderObject\GrassArea.h" />
-    <ClInclude Include="source\Resources\Compute\GrassInitComputeShader.h" />
     <ClInclude Include="source\Scene\SceneGraph.h" />
     <ClInclude Include="source\Scene\SceneSkybox.h" />
     <ClInclude Include="source\Resources\Shader\ShaderDefines.h" />
@@ -237,7 +232,6 @@
     <ClInclude Include="source\Resources\Material\MaterialResources.h" />
     <ClInclude Include="source\Utils\SystemUtils.h" />
     <ClInclude Include="source\Resources\Compute\TerrainGenerationCS.h" />
-    <ClInclude Include="source\RenderObject\TerrainScan\TerrainScan.h" />
     <ClInclude Include="source\Resources\Compute\TextureToMeshCS.h" />
     <ClInclude Include="source\RenderCore\TextureUtils.h" />
     <ClInclude Include="source\RenderObject\Vegetation\Vegetation.h" />

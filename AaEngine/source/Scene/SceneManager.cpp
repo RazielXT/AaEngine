@@ -27,8 +27,6 @@ void SceneManager::initialize(RenderSystem& renderSystem)
 	ResourceUploadBatch batch(renderSystem.core.device);
 	batch.Begin();
 
-	grass.initializeGpuResources(renderSystem, resources, batch);
-	//terrain.initialize(renderSystem, resources, batch);
 	vegetation.initialize(renderSystem, resources, batch);
 
 	auto uploadResourcesFinished = batch.End(renderSystem.core.commandQueue);
@@ -281,8 +279,6 @@ void SceneManager::clear()
 	resetEntityGroups();
 
 	instancing.clear();
-
-	grass.clear();
 	
 	water.clear();
 }

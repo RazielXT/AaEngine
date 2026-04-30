@@ -6,8 +6,6 @@
 
 class VertexBufferModel;
 struct InstanceGroup;
-struct GrassArea;
-
 struct EntityGeometry
 {
 	uint16_t topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
@@ -40,7 +38,6 @@ struct EntityGeometry
 	void fromInstancedModel(VertexBufferModel& model, InstanceGroup& group);
 	void fromInstancedModel(VertexBufferModel& model, UINT count, D3D12_GPU_VIRTUAL_ADDRESS instancingBuffer);
 	void fromMeshInstancedModel(UINT count, D3D12_GPU_VIRTUAL_ADDRESS instancingBuffer);
-	void fromGrass(GrassArea& grass);
 
 	VertexBufferModel* getModel() const;
 };

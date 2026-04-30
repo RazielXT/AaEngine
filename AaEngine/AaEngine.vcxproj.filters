@@ -59,9 +59,6 @@
     <Filter Include="Source Files\RenderCore">
       <UniqueIdentifier>{e35fea04-fa32-4bb9-84d0-cf2298b22539}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\RenderObject\TerrainScan">
-      <UniqueIdentifier>{b6826923-fe1e-4205-a5b4-1868c3bd8659}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\RenderObject\Terrain">
       <UniqueIdentifier>{727402fa-5524-440f-a723-0047ab5b9c37}</UniqueIdentifier>
     </Filter>
@@ -187,9 +184,6 @@
     <ClCompile Include="source\Resources\Compute\GenerateMipsComputeShader.cpp">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClCompile>
-    <ClCompile Include="source\RenderObject\GrassArea.cpp">
-      <Filter>Source Files\RenderObject</Filter>
-    </ClCompile>
     <ClCompile Include="source\Scene\EntityGeometry.cpp">
       <Filter>Source Files\Scene</Filter>
     </ClCompile>
@@ -228,9 +222,6 @@
     </ClCompile>
     <ClCompile Include="source\FrameCompositor\Tasks\ImguiDebugWindowTask.cpp">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Resources\Compute\GrassInitComputeShader.cpp">
-      <Filter>Source Files\Resources\Compute</Filter>
     </ClCompile>
     <ClCompile Include="source\FrameCompositor\Tasks\SsaoComputeTask.cpp">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
@@ -312,9 +303,6 @@
     </ClCompile>
     <ClCompile Include="source\RenderObject\Terrain\ProgressiveTerrain.cpp">
       <Filter>Source Files\RenderObject\Terrain</Filter>
-    </ClCompile>
-    <ClCompile Include="source\RenderObject\TerrainScan\TerrainScan.cpp">
-      <Filter>Source Files\RenderObject\TerrainScan</Filter>
     </ClCompile>
     <ClCompile Include="source\Resources\Model\GltfLoader.cpp">
       <Filter>Source Files\Resources\Model</Filter>
@@ -489,9 +477,6 @@
     <ClInclude Include="source\Resources\Compute\ComputeShader.h">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClInclude>
-    <ClInclude Include="source\RenderObject\GrassArea.h">
-      <Filter>Source Files\RenderObject</Filter>
-    </ClInclude>
     <ClInclude Include="source\Scene\EntityGeometry.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
@@ -527,9 +512,6 @@
     </ClInclude>
     <ClInclude Include="source\FrameCompositor\Tasks\ImguiDebugWindowTask.h">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
-    </ClInclude>
-    <ClInclude Include="source\Resources\Compute\GrassInitComputeShader.h">
-      <Filter>Source Files\Resources\Compute</Filter>
     </ClInclude>
     <ClInclude Include="source\FrameCompositor\Tasks\SsaoComputeTask.h">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
@@ -617,9 +599,6 @@
     </ClInclude>
     <ClInclude Include="source\RenderObject\Terrain\GridMesh.h">
       <Filter>Source Files\RenderObject\Terrain</Filter>
-    </ClInclude>
-    <ClInclude Include="source\RenderObject\TerrainScan\TerrainScan.h">
-      <Filter>Source Files\RenderObject\TerrainScan</Filter>
     </ClInclude>
     <ClInclude Include="source\Resources\Model\GltfLoader.h">
       <Filter>Source Files\Resources\Model</Filter>

@@ -51,7 +51,8 @@ struct RenderQueue
 	std::vector<EntityEntry> entities;
 
 	void update(const EntityChangeDescritpion&, GraphicsResources& resources);
-	void rebuildEntries(const std::vector<MaterialBase*>& reloaded, GraphicsResources& resources);
+	void rebuildEntries(const std::vector<MaterialBase*>& reloaded);
+	void rebuildEntries(const SceneEntity* reloaded);
 	void reset();
 
 	void renderObjects(ShaderConstantsProvider& info, ID3D12GraphicsCommandList* commandList);

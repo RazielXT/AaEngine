@@ -1,4 +1,5 @@
 #include "Resources/Material/MaterialResources.h"
+#include "Resources/Material/MaterialEvents.h"
 #include "Utils/Logger.h"
 #include "Resources/Material/MaterialFileParser.h"
 #include "Resources/GraphicsResources.h"
@@ -139,16 +140,5 @@ void MaterialResources::reloadShaders(const std::vector<const LoadedShader*>& sh
 	ComputeShaderLibrary::Reload(*renderSystem.core.device, shadersChanged);
 
 	if (!reloaded.empty())
-		notifyReloaded(reloaded);
-}
-
-void MaterialResources::addReloadListener(MaterialsReloadedCallback callback)
-{
-	reloadListeners.push_back(std::move(callback));
-}
-
-void MaterialResources::notifyReloaded(const std::vector<MaterialBase*>& reloaded)
-{
-	for (auto& listener : reloadListeners)
-		listener(reloaded);
+		MaterialEvents::Get().notifyReloaded(reloaded);
 }

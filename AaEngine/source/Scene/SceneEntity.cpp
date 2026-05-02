@@ -1,6 +1,7 @@
 #include "Scene/SceneEntity.h"
 #include "Resources/Model/ModelResources.h"
 #include "Resources/Material/MaterialResources.h"
+#include "Resources/Material/MaterialEvents.h"
 
 SceneEntity::SceneEntity(RenderObjectsStorage& r, std::string_view n, uint16_t groupId) : RenderObject(r, groupId), name(n.data())
 {
@@ -24,7 +25,7 @@ EntityMaterialInterface SceneEntity::Material()
 	if (!materialOverride)
 		materialOverride = new MaterialPropertiesOverrideDescription();
 
-	return { *materialOverride };
+	return { *materialOverride, *this };
 }
 
 bool SceneEntity::GetMaterialParam(const std::string& name, void* data) const
@@ -44,7 +45,7 @@ bool SceneEntity::GetMaterialParam(const std::string& name, void* data) const
 	return material->GetParameter(name, (float*)data);
 }
 
-EntityMaterialInterface::EntityMaterialInterface(MaterialPropertiesOverrideDescription& s) : storage(s)
+EntityMaterialInterface::EntityMaterialInterface(MaterialPropertiesOverrideDescription& s, SceneEntity& e) : storage(s), entity(e)
 {
 }
 
@@ -55,10 +56,13 @@ void EntityMaterialInterface::setParam(const std::string& name, const void* data
 		if (p.name == name)
 		{
 			memcpy(p.value, data, sizeBytes);
+			MaterialEvents::Get().notifyEntityParamChanged(entity);
 			return;
 		}
 	}
 
 	auto& param = storage.params.emplace_back(name, sizeBytes);
 	memcpy(param.value, data, sizeBytes);
+
+	MaterialEvents::Get().notifyEntityParamChanged(entity);
 }

@@ -146,7 +146,7 @@ void RenderQueue::renderObjects(ShaderConstantsProvider& constants, ID3D12Graphi
 	}
 }
 
-void RenderQueue::rebuildEntries(const std::vector<MaterialBase*>& reloaded, GraphicsResources& resources)
+void RenderQueue::rebuildEntries(const std::vector<MaterialBase*>& reloaded)
 {
 	for (auto& entry : entities)
 	{
@@ -162,6 +162,18 @@ void RenderQueue::rebuildEntries(const std::vector<MaterialBase*>& reloaded, Gra
 
 		if (affected)
 			entry.rebuildMaterial(technique);
+	}
+}
+
+void RenderQueue::rebuildEntries(const SceneEntity* reloaded)
+{
+	for (auto& entry : entities)
+	{
+		if (entry.entity == reloaded)
+		{
+			entry.rebuildMaterial(technique);
+			return;
+		}
 	}
 }
 

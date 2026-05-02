@@ -116,6 +116,7 @@
     <ClCompile Include="source\Resources\Material\Material.cpp" />
     <ClCompile Include="source\Resources\Material\MaterialFileParser.cpp" />
     <ClCompile Include="source\Resources\Material\MaterialResources.cpp" />
+    <ClCompile Include="source\Resources\Material\MaterialEvents.cpp" />
     <ClCompile Include="source\Utils\MathUtils.cpp" />
     <ClCompile Include="source\Scene\SceneGraph.cpp" />
     <ClCompile Include="source\Scene\SceneSkybox.cpp" />
@@ -233,6 +234,7 @@
     <ClInclude Include="source\Resources\Shader\ShaderConstantsProvider.h" />
     <ClInclude Include="source\Resources\Material\MaterialFileParser.h" />
     <ClInclude Include="source\Resources\Material\MaterialResources.h" />
+    <ClInclude Include="source\Resources\Material\MaterialEvents.h" />
     <ClInclude Include="source\Utils\SystemUtils.h" />
     <ClInclude Include="source\Resources\Compute\TerrainGenerationCS.h" />
     <ClInclude Include="source\Resources\Compute\TextureToMeshCS.h" />

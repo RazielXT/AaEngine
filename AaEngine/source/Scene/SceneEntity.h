@@ -12,7 +12,7 @@ class EntityMaterialInterface
 {
 public:
 
-	EntityMaterialInterface(MaterialPropertiesOverrideDescription&);
+	EntityMaterialInterface(MaterialPropertiesOverrideDescription&, SceneEntity& entity);
 
 	template<typename T>
 	void setParam(const std::string& name, const T& value)
@@ -24,6 +24,7 @@ public:
 
 private:
 	MaterialPropertiesOverrideDescription& storage;
+	SceneEntity& entity;
 };
 
 class SceneEntity : public RenderObject

@@ -97,6 +97,9 @@
     <ClCompile Include="source\Resources\Material\MaterialResources.cpp">
       <Filter>Source Files\Resources\Material</Filter>
     </ClCompile>
+    <ClCompile Include="source\Resources\Material\MaterialEvents.cpp">
+      <Filter>Source Files\Resources\Material</Filter>
+    </ClCompile>
     <ClCompile Include="source\Resources\Model\VertexBufferModel.cpp">
       <Filter>Source Files\Resources\Model</Filter>
     </ClCompile>
@@ -382,6 +385,9 @@
       <Filter>Source Files\Resources\Material</Filter>
     </ClInclude>
     <ClInclude Include="source\Resources\Material\MaterialResources.h">
+      <Filter>Source Files\Resources\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Resources\Material\MaterialEvents.h">
       <Filter>Source Files\Resources\Material</Filter>
     </ClInclude>
     <ClInclude Include="source\Resources\Model\VertexBufferModel.h">

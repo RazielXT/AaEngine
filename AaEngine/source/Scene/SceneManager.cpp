@@ -1,14 +1,20 @@
 #include "Scene/SceneManager.h"
-#include "Resources/Material/MaterialResources.h"
+#include "Resources/Material/MaterialEvents.h"
 
 SceneManager::SceneManager(GraphicsResources& r) : resources(r), skybox(r), graph(*this)
 {
 	renderables.reserve(10); //need to be enough! distributed by ptr
 
-	resources.materials.addReloadListener([this](const std::vector<MaterialBase*>& reloaded)
+	MaterialEvents::Get().addReloadListener([this](const std::vector<MaterialBase*>& reloaded)
 	{
 		for (auto& queue : queues)
-			queue->rebuildEntries(reloaded, resources);
+			queue->rebuildEntries(reloaded);
+	});
+
+	MaterialEvents::Get().addEntityParamChangeListener([this](SceneEntity& entity)
+	{
+		for (auto& queue : queues)
+			queue->rebuildEntries(&entity);
 	});
 }
 

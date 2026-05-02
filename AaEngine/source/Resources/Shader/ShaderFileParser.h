@@ -17,7 +17,9 @@ struct ShaderRef
 	std::string file;
 	std::string entry;
 	std::string profile;
-	std::vector<std::pair<std::string, std::string>> defines;
+
+	using Defines = std::vector<std::pair<std::string, std::string>>;
+	Defines defines;
 };
 
 struct shaderRefMaps
@@ -35,7 +37,7 @@ struct shaderRefMaps
 namespace ShaderFileParser
 {
 	void ParseShaderParams(ShaderRef& ref, const Config::Object& obj);
-	void ParseShaderDefines(ShaderRef& ref, const Config::Object& obj);
+	void ParseShaderDefines(ShaderRef::Defines&, const Config::Object& obj);
 
 	shaderRefMaps parseAllShaderFiles(std::string directory, bool subFolders = false);
 };

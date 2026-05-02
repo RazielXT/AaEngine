@@ -21,12 +21,9 @@ void ShaderLibrary::addShaderReferences(const shaderRefMaps& maps)
 {
 	for (auto type : ShaderTypes())
 	{
-		auto& map = maps.shaderRefs[type];
-
-		for (const auto& [name, ref] : map)
+		for (const auto& [name, ref] : maps.shaderRefs[type])
 		{
-			auto& info = loadedShaders[type][name];
-			if (info == nullptr)
+			if (auto& info = loadedShaders[type][name]; info == nullptr)
 			{
 				info = std::make_unique<LoadedShader>();
 				info->ref = ref;
@@ -35,16 +32,20 @@ void ShaderLibrary::addShaderReferences(const shaderRefMaps& maps)
 				Logger::logWarning("Duplicate shader ref " + name);
 		}
 
-		auto& customizations = maps.shaderCustomizations[type];
-
-		for (const auto& [name, info] : customizations)
+		for (const auto& [name, info] : maps.shaderCustomizations[type])
 		{
-			auto& original = loadedShaders[type][info.sourceName];
-			if (original)
+			if (auto& original = loadedShaders[type][info.sourceName])
 			{
 				auto& customizedShader = loadedShaders[type][name];
-				customizedShader = std::make_unique<LoadedShader>();
-				customizedShader->ref = original->ref;
+
+				if (!customizedShader)
+				{
+					customizedShader = std::make_unique<LoadedShader>();
+					customizedShader->ref = original->ref;
+				}
+
+				if (!info.customization.entry.empty())
+					customizedShader->ref.entry = info.customization.entry;
 
 				for (auto& d : info.customization.defines)
 				{

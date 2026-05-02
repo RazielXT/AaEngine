@@ -47,18 +47,12 @@ material BillboardDepth : Billboard
 
 material BillboardEntityId : Billboard
 {
-	vertex_shader
-	{
-		file billboard.hlsl
-		entry VSMain
-		profile vs_6_6
-		defines ENTITY_ID
-	}
 	pixel_shader
 	{
 		file billboard.hlsl
 		entry PSMainEntityId
 		profile ps_6_6
-		defines ENTITY_ID
 	}
+
+	shader_defines ENTITY_ID
 }

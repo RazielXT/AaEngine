@@ -63,19 +63,43 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 				}
 			}
 		}
+		else if (member.type.ends_with("_shader_entry"))
+		{
+			auto shaderType = ShaderTypeString::Parse(member.type.substr(0, member.type.length() - 6));
+
+			if (shaderType != ShaderType::None)
+			{
+				auto& sourceShader = mat.pipeline.shaders[shaderType];
+
+				if (!sourceShader.empty())
+				{
+					auto customizedName = ShaderTypeString::ShortName(shaderType) + "_" + mat.name;
+
+					auto& customization = shaders.shaderCustomizations[shaderType][customizedName];
+					customization.customization.entry = member.value;
+
+					if (customization.sourceName.empty())
+					{
+						customization.sourceName = sourceShader;
+					}
+
+					sourceShader = customizedName;
+				}
+			}
+		}
 		else if (member.type == "shader_defines")
 		{
-			auto addCustomizationDefines = [&](std::string& sourceShader, ShaderType type)
+			auto addCustomizationDefines = [&](std::string& sourceShader, ShaderType shaderType)
 				{
 					if (!sourceShader.empty())
 					{
-						auto customizedName = sourceShader + "_" + mat.name;
+						auto customizedName = ShaderTypeString::ShortName(shaderType) + "_" + mat.name;
 
-						auto& customization = shaders.shaderCustomizations[type][customizedName];
+						auto& customization = shaders.shaderCustomizations[shaderType][customizedName];
+						ShaderFileParser::ParseShaderDefines(customization.customization.defines, member);
 
 						if (customization.sourceName.empty())
 						{
-							ShaderFileParser::ParseShaderDefines(customization.customization, member);
 							customization.sourceName = sourceShader;
 						}
 

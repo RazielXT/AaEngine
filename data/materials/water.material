@@ -46,31 +46,14 @@ material WaterLake
 
 material WaterLakeEntityId : WaterLake
 {
-	vertex_shader
-	{
-		file water/waterRender.hlsl
-		entry VSMain
-		profile vs_6_6
-		defines ENTITY_ID
-	}
-	pixel_shader
-	{
-		file water/waterRender.hlsl
-		entry PSMainEntityId
-		profile ps_6_6
-		defines ENTITY_ID
-	}
+	pixel_shader_entry PSMainEntityId
+	shader_defines ENTITY_ID
 }
 
 material WaterLakeWireframe : WaterLake
 {
-	pixel_shader
-	{
-		file water/waterRender.hlsl
-		entry PSMainWireframe
-		profile ps_6_6
-		defines WIREFRAME
-	}
+	pixel_shader_entry PSMainWireframe
+	shader_defines WIREFRAME
 
 	wireframe
 }

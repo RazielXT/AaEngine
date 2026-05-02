@@ -18,7 +18,6 @@ uint TexIdSceneDepthHigh;
 uint TexIdWaterColor;
 uint TexIdWaterNormal;
 uint TexIdWaterDepth;
-uint TexIdSkybox;
 
 cbuffer SceneVoxelInfo : register(b1)
 {

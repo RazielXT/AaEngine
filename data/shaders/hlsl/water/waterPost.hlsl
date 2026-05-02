@@ -13,33 +13,29 @@ SamplerState LinearBorderSampler : register(s1);
 
 float2 MirrorUV(float2 v)
 {
-	float2 a = abs(v);          // handles negative side
+	float2 a = abs(v); // handles negative side
 	return 1.0 - abs(a - 1.0); // mirrors around 1
 }
 
 float4 PSWaterApply(VS_OUTPUT input) : SV_TARGET
 {
-	float4 water = waterTexture.Load(int3(input.Position.xy,0));
 	float4 normal = waterNormal.Load(int3(input.Position.xy,0));
 
 	float2 refraction = normal.xx * 0.3f;
 	float4 waterRefr = waterNormal.SampleLevel(LinearBorderSampler, saturate(input.TexCoord + refraction), 0);
 	refraction *= saturate(waterRefr.y * 10);
 
-	float4 underwater = sceneTexture.SampleLevel(LinearBorderSampler, saturate(input.TexCoord + refraction), 0);
-	underwater.rgb += causticsTexture.SampleLevel(LinearBorderSampler, saturate(input.TexCoord + refraction), 0).rrr;
+	float4 sceneColor = sceneTexture.SampleLevel(LinearBorderSampler, saturate(input.TexCoord + refraction), 0);
+	sceneColor.rgb += causticsTexture.SampleLevel(LinearBorderSampler, saturate(input.TexCoord + refraction), 0).rrr;
 
-	float2 reflOffset = normal.xy * 0.15f;
-	reflOffset.y *= 0;
-	float2 reflectionUv = MirrorUV(input.TexCoord + reflOffset);
+	float reflOffset = normal.x * 0.15f;
+	float2 reflectionUv = MirrorUV(input.TexCoord + float2(reflOffset, 0));
 
 	float4 reflections = reflectionsTexture.SampleLevel(LinearSampler, reflectionUv, 0);
+	float4 water = waterTexture.Load(int3(input.Position.xy,0));
 
 	water.rgb = lerp(water.rgb, reflections.rgb, reflections.a);
-	underwater.rgb = lerp(underwater.rgb, water.rgb, water.a);
+	sceneColor.rgb = lerp(sceneColor.rgb, water.rgb, water.a);
 
-	//float3 fogColor = float3(0.6,0.6,0.7);
-	//albedo.rgb = lerp(albedo.rgb, fogColor, min(0.7, saturate(camDistance / 15000)));
-
-	return underwater;
+	return sceneColor;
 }

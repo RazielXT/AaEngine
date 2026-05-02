@@ -42,6 +42,12 @@ material WaterLake
 	technique Voxelize skip
 	technique EntityId WaterLakeEntityId
 	technique Wireframe WaterLakeWireframe
+
+	default_params
+	{
+		float WaterFade 100
+		float WaterColor 0.1 0.2 0.21
+	}
 }
 
 material WaterLakeEntityId : WaterLake

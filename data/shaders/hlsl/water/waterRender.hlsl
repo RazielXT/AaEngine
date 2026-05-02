@@ -12,6 +12,8 @@ float4x4 ViewProjectionMatrix;
 float4x4 InvViewProjectionMatrix;
 float3 WorldPosition;
 float3 CameraPosition;
+float WaterFade;
+float3 WaterColor;
 
 float Time;
 float2 ViewportSizeInverse;
@@ -118,7 +120,7 @@ PSOutput PSMain(PSInput input)
 
 	normal = BlendUDN(normal, normalTex);
 
-	const float FadeDistance = 100;
+	const float FadeDistance = WaterFade + 0.0001f;
 	float fade = groundDistance / FadeDistance;
 
 	const float2 DetailUv = input.uv * 20 + Time * 0.02;
@@ -127,7 +129,7 @@ PSOutput PSMain(PSInput input)
 	albedo.a = saturate(albedo.r * 0.2 + fade);
 
 	float lighting = abs(dot(-Sun.Direction, normal)) * 0.5;
-	albedo.rgb = float3(0.1,0.2, 0.21) * pow(lighting, 1) * Sun.Color;
+	albedo.rgb = WaterColor * pow(lighting, 1) * Sun.Color;
 
 	PSOutput output;
 	output.color = albedo;

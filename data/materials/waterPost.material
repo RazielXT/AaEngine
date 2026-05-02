@@ -17,24 +17,10 @@ material TraceReflections
 	}
 
 	texture SceneColor
-	{
-	}
 	texture Depth
-	{
-	}
 	texture TransparentColor
-	{
-	}
 	texture TransparentNormal
-	{
-	}
 	texture TransparentDepth
-	{
-	}
-	texture Skybox
-	{
-		file tceCubemap.dds
-	}
 }
 
 material ApplySceneWater

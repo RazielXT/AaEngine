@@ -2,13 +2,19 @@
 
 #include <vector>
 #include <fstream>
+#include <d3d12.h>
+#include <cstdint>
+
+struct VertexLayoutElement
+{
+	DXGI_FORMAT format;
+	char semantic[16];
+};
 
 struct ModelInfo
 {
-	std::vector<float> positions;
-	std::vector<float> normals;
-	std::vector<float> tangents;
-	std::vector<float> texCoords;
+	std::vector<VertexLayoutElement> layout;
+	std::vector<char> vertexData;
 
 	std::vector<uint16_t> indices;
 	uint32_t indexCount{};
@@ -19,10 +25,8 @@ namespace BinaryModelSerialization
 {
 	enum HeaderType
 	{
-		Positions,
-		Normals,
-		Tangents,
-		TexCoords,
+		Layout,
+		Vertices,
 		Indices,
 		Metadata,
 	};
@@ -31,7 +35,7 @@ namespace BinaryModelSerialization
 		uint32_t headerSize = sizeof(Header);
 		uint32_t dataType{};
 		uint32_t dataSize{};
-		uint32_t version = 1;
+		uint32_t version = 2;
 	};
 	struct MetadataObject
 	{

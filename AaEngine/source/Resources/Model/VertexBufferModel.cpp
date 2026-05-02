@@ -393,6 +393,27 @@ void VertexBufferModel::calculateBounds(const std::vector<float>& positionsBuffe
 	bbox = volume.createBbox();
 }
 
+void VertexBufferModel::calculateBounds(const void* vertexData, uint32_t vc, uint32_t vertexStride, const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout)
+{
+	const D3D12_INPUT_ELEMENT_DESC* posDesc = nullptr;
+	for (auto& e : layout)
+		if (e.SemanticName == VertexElementSemantic::POSITION) { posDesc = &e; break; }
+
+	if (!posDesc)
+		return;
+
+	BoundingBoxVolume volume;
+	auto data = (const uint8_t*)vertexData;
+
+	for (uint32_t i = 0; i < vc; i++)
+	{
+		auto pos = (const float*)(data + i * vertexStride + posDesc->AlignedByteOffset);
+		volume.add({ pos[0], pos[1], pos[2] });
+	}
+
+	bbox = volume.createBbox();
+}
+
 void VertexBufferModel::calculateBounds()
 {
 	BoundingBoxVolume volume;

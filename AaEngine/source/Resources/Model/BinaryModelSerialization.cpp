@@ -10,29 +10,17 @@ bool BinaryModelSerialization::SaveModel(const std::string& filename, const Mode
 		MetadataObject data{ model.indexCount, model.vertexCount };
 		file.write((const char*)&data, h.dataSize);
 	}
-	if (!model.positions.empty())
+	if (!model.layout.empty())
 	{
-		Header h{ .dataType = HeaderType::Positions, .dataSize = (uint32_t)model.positions.size() * sizeof(float) };
+		Header h{ .dataType = HeaderType::Layout, .dataSize = (uint32_t)(model.layout.size() * sizeof(VertexLayoutElement)) };
 		file.write((const char*)&h, h.headerSize);
-		file.write((const char*)model.positions.data(), h.dataSize);
+		file.write((const char*)model.layout.data(), h.dataSize);
 	}
-	if (!model.normals.empty())
+	if (!model.vertexData.empty())
 	{
-		Header h{ .dataType = HeaderType::Normals, .dataSize = (uint32_t)model.normals.size() * sizeof(float) };
+		Header h{ .dataType = HeaderType::Vertices, .dataSize = (uint32_t)model.vertexData.size() };
 		file.write((const char*)&h, h.headerSize);
-		file.write((const char*)model.normals.data(), h.dataSize);
-	}
-	if (!model.tangents.empty())
-	{
-		Header h{ .dataType = HeaderType::Tangents, .dataSize = (uint32_t)model.tangents.size() * sizeof(float) };
-		file.write((const char*)&h, h.headerSize);
-		file.write((const char*)model.tangents.data(), h.dataSize);
-	}
-	if (!model.texCoords.empty())
-	{
-		Header h{ .dataType = HeaderType::TexCoords, .dataSize = (uint32_t)model.texCoords.size() * sizeof(float) };
-		file.write((const char*)&h, h.headerSize);
-		file.write((const char*)model.texCoords.data(), h.dataSize);
+		file.write(model.vertexData.data(), h.dataSize);
 	}
 	if (!model.indices.empty())
 	{
@@ -65,25 +53,15 @@ bool BinaryModelSerialization::ReadModel(const std::string& filename, ModelInfo&
 			model.indexCount = obj.indexCount;
 			model.vertexCount = obj.vertexCount;
 		}
-		else if (h.dataType == HeaderType::Positions)
+		else if (h.dataType == HeaderType::Layout)
 		{
-			model.positions.resize(h.dataSize / sizeof(float));
-			file.read((char*)model.positions.data(), h.dataSize);
+			model.layout.resize(h.dataSize / sizeof(VertexLayoutElement));
+			file.read((char*)model.layout.data(), h.dataSize);
 		}
-		else if (h.dataType == HeaderType::Normals)
+		else if (h.dataType == HeaderType::Vertices)
 		{
-			model.normals.resize(h.dataSize / sizeof(float));
-			file.read((char*)model.normals.data(), h.dataSize);
-		}
-		else if (h.dataType == HeaderType::Tangents)
-		{
-			model.tangents.resize(h.dataSize / sizeof(float));
-			file.read((char*)model.tangents.data(), h.dataSize);
-		}
-		else if (h.dataType == HeaderType::TexCoords)
-		{
-			model.texCoords.resize(h.dataSize / sizeof(float));
-			file.read((char*)model.texCoords.data(), h.dataSize);
+			model.vertexData.resize(h.dataSize);
+			file.read(model.vertexData.data(), h.dataSize);
 		}
 		else if (h.dataType == HeaderType::Indices)
 		{

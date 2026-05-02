@@ -55,6 +55,7 @@ public:
 
 	DirectX::BoundingBox bbox;
 	void calculateBounds(const std::vector<float>& positions);
+	void calculateBounds(const void* vertexData, uint32_t vertexCount, uint32_t vertexStride, const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout);
 	void calculateBounds();
 
 	std::vector<Vector3> positions;

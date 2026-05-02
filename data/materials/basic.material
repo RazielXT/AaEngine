@@ -147,24 +147,25 @@ material grassBladeInstanced : grassBlade
 	shader_defines INSTANCED
 	
 	technique Depth grassBladeInstancedDepth
+	technique EntityId grassBladeInstancedEntityId
 }
 
-material grassBladeDepth
+material grassBladeDepth : grassBlade
 {
-	vertex_shader
-	{
-		file basicShading.hlsl
-		entry VSMain
-		profile vs_6_6
-	}
-	shader_defines VERTEX_WAVE
+	pixel_shader_entry PSMainDepth
+	shader_defines DEPTH
 }
 
-material grassBladeInstancedDepth : grassBladeDepth
+material grassBladeInstancedDepth : grassBladeInstanced
 {
-	shader_defines INSTANCED
+	pixel_shader_entry PSMainDepth
+	shader_defines DEPTH
+}
 
-	culling none
+material grassBladeInstancedEntityId : grassBladeInstanced
+{
+	pixel_shader_entry PSMainEntityId
+	shader_defines ENTITY_ID
 }
 
 material terrainGrass : Color

@@ -17,6 +17,10 @@ float Time;
 float DeltaTime;
 #endif
 
+#ifdef ENTITY_ID
+uint EntityId;
+#endif
+
 #ifdef INSTANCED
 StructuredBuffer<float4x4> InstancingBuffer : register(t0);
 	#ifdef CHUNK_DEBUG_COLOR
@@ -54,41 +58,24 @@ struct PSInput
 	float4 currentPosition : TEXCOORD3;
 };
 
-float Hash21(float2 p)
-{
-    // Fast, decorrelated hash for vegetation
-    p = frac(p * float2(123.34, 456.21));
-    p += dot(p, p + 45.32);
-    return frac(p.x * p.y);
-}
-
 float3 WindWave(float3 basePos, float swayFactor, float time)
 {
-    const float3 WindDir = normalize(float3(1, 0.5, 0));
-    const float  WindStrength = 2.5f;
-    const float  WindSpeed = 3.0f;
+	const float3 WindDir = normalize(float3(1, 0.5, 0));
+	const float WindStrength = 0.5f;
+	const float WindSpeed = 2;
 
-    // --- BETTER RANDOMNESS ---
-    float leafRandom = Hash21(basePos.xz * 0.0000005f);
+	float timeWeight = WindSpeed * time;
 
-    // --- MULTI-FREQUENCY WIND PHASE ---
-    float phase = time * WindSpeed + leafRandom * 6.2831;
+	float w1 = sin((basePos.x * 2 + basePos.z) + timeWeight);
+	float w2 = sin((basePos.z + basePos.y) * 4.0 + timeWeight);
+	float wind = w1 - w2;
 
-    // Low + mid + high frequency components
-    float w1 = sin(phase);
-    float w2 = sin(phase * 0.5 + leafRandom * 2.0);
-    float w3 = w1 - w2; //sin(phase * 2.3 + leafRandom * 4.0);
+	// Normalize to 0..1
+	wind = wind * 0.5 + 0.5;
 
-    // Weighted sum (tunable)
-    float wind = (w1 * 0.6 + w2 * 0.3 + w3 * 0.1);
+	float windOffset = wind * WindStrength * swayFactor;
 
-    // Normalize to 0..1
-    wind = wind * 0.5 + 0.5;
-
-    // Apply strength + per‑instance sway
-    float windOffset = wind * WindStrength * swayFactor;
-
-    return basePos + WindDir * windOffset;
+	return basePos + WindDir * windOffset;
 }
 
 
@@ -104,7 +91,8 @@ PSInput VSMain(VSInput input)
 #ifdef INSTANCED
 	result.worldPosition = mul(input.position, InstancingBuffer[input.instanceID]);
 	#ifdef VERTEX_WAVE
-		float waveWeight = saturate(1 - length(CameraPosition - result.worldPosition.xyz)/200) * (1-input.uv.y);
+		const float WaveFade = 200.f;
+		float waveWeight = saturate(1 - length(CameraPosition - result.worldPosition.xyz)/WaveFade) * (1-input.uv.y);
 		ComputeBaseBend(input.position, result.worldPosition, waveWeight);
 		float4 worldPositionNoWave = result.worldPosition;
 		result.worldPosition.xyz = WindWave(result.worldPosition.xyz, waveWeight, Time);
@@ -151,8 +139,6 @@ PSInput VSMain(VSInput input)
 
 GBufferOutput PSMain(PSInput input)
 {
-	float3 normal = input.normal;
-
 	SamplerState sampler = GetDynamicMaterialSamplerLinear();
 
 #ifndef NO_TEXTURE
@@ -183,7 +169,37 @@ GBufferOutput PSMain(PSInput input)
 
 	GBufferOutput output;
 	output.albedo = float4(albedo,0);
-	output.normals = float4(normal, 1);
+	output.normals = float4(input.normal, 1);
 	output.motionVectors = EncodeMotionVector(input.previousPosition, input.currentPosition, ViewportSize);
 	return output;
 }
+
+#ifdef ENTITY_ID
+EntityIdOutput PSMainEntityId(PSInput input)
+{
+#ifdef ALPHA_TEST
+	SamplerState sampler = GetDynamicMaterialSamplerLinear();
+	float4 albedoTex = GetTexture2D(TexIdDiffuse).Sample(sampler, input.uv);
+	if (albedoTex.a < 0.4)
+		discard;
+#endif
+
+	EntityIdOutput output;
+	output.id = uint4(EntityId, 0, 0, 0);
+	output.position = float4(input.worldPosition.xyz, 0);
+	output.normal = float4(input.normal, 0);
+	return output;
+}
+#endif
+
+#ifdef DEPTH
+void PSMainDepth(PSInput input)
+{
+#ifdef ALPHA_TEST
+	SamplerState sampler = GetDynamicMaterialSamplerLinear();
+	float4 albedoTex = GetTexture2D(TexIdDiffuse).Sample(sampler, input.uv);
+	if (albedoTex.a < 0.4)
+		discard;
+#endif
+}
+#endif

@@ -41,9 +41,9 @@ uint getGrassInfo(out GrassInfo info, float2 coords)
 	float rnd = RandomFrom2D(coords.xy);
 	info.rotation = rnd * 6.283185f;
 	info.random = rnd;
-	info.scale = 0.5 + rnd * 0.5;
+	info.scale = (normal.y - 0.7) * 5 + rnd * 0.3;
 
-	return normal.y > 0.7f ? 1 : 0;
+	return normal.y > 0.75f ? 1 : 0;
 }
 
 [numthreads(8, 8, 1)]

@@ -225,6 +225,32 @@ void SidePanel::draw(const ObjectTransformation& objTransformation)
 				if (auto name = overlayTask.getCurrentIdxName())
 					ImGui::Text("Texture: %s", name);
 			}
+
+			auto textures = overlayTask.getTexture2DList();
+			int selectedListIdx = -1;
+			int currentIdx = overlayTask.currentIdx();
+			for (int i = 0; i < (int)textures.size(); i++)
+			{
+				if ((int)textures[i].index == currentIdx)
+				{
+					selectedListIdx = i;
+					break;
+				}
+			}
+
+			if (ImGui::BeginListBox("Textures", ImVec2(-FLT_MIN, ImGui::GetTextLineHeightWithSpacing() * min((int)textures.size(), 10))))
+			{
+				for (int i = 0; i < (int)textures.size(); i++)
+				{
+					bool isSelected = (i == selectedListIdx);
+					if (ImGui::Selectable(textures[i].name, isSelected))
+						overlayTask.setIdx(textures[i].index);
+
+					if (isSelected)
+						ImGui::SetItemDefaultFocus();
+				}
+				ImGui::EndListBox();
+			}
 		}
 	}
 

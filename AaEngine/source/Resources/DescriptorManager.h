@@ -29,9 +29,17 @@ public:
 	std::vector<ShaderTextureViewUAV> createUAVMips(GpuTextureResource& texture);
 	ShaderViewUAV createBufferView(ID3D12Resource* resource, UINT stride, UINT elements);
 
+	struct DescriptorInfo
+	{
+		D3D12_SRV_DIMENSION dimension = D3D12_SRV_DIMENSION_UNKNOWN;
+		const char* name{};
+		UINT index{};
+	};
+
 	UINT nextDescriptor(UINT offset, D3D12_SRV_DIMENSION) const;
 	UINT previousDescriptor(UINT offset, D3D12_SRV_DIMENSION) const;
 	const char* getDescriptorName(UINT idx) const;
+	std::vector<DescriptorInfo> getDescriptors(D3D12_SRV_DIMENSION filter) const;
 
 	void removeTextureView(RenderTargetTextures& textures);
 	void removeTextureView(GpuTextureResource& texture);
@@ -41,11 +49,6 @@ public:
 
 private:
 
-	struct DescriptorInfo
-	{
-		D3D12_SRV_DIMENSION dimension = D3D12_SRV_DIMENSION_UNKNOWN;
-		const char* name{};
-	};
 	std::vector<DescriptorInfo> descriptorsInfo;
 
 	ID3D12Device& device;

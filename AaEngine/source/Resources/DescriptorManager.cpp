@@ -288,6 +288,17 @@ const char* DescriptorManager::getDescriptorName(UINT idx) const
 	return descriptorsInfo[idx].name;
 }
 
+std::vector<DescriptorManager::DescriptorInfo> DescriptorManager::getDescriptors(D3D12_SRV_DIMENSION filter) const
+{
+	std::vector<DescriptorInfo> result;
+	for (UINT i = 0; i < descriptorsInfo.size(); i++)
+	{
+		if (descriptorsInfo[i].dimension == filter && descriptorsInfo[i].name)
+			result.push_back({ descriptorsInfo[i].dimension, descriptorsInfo[i].name, i });
+	}
+	return result;
+}
+
 void DescriptorManager::removeTextureView(GpuTextureResource& texture)
 {
 	removeDescriptorIndex(texture.view.srvHeapIndex);

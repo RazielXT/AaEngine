@@ -64,6 +64,11 @@ void DebugOverlayTask::changeIdx(int next)
 		current = DescriptorManager::get().previousDescriptor(current, D3D12_SRV_DIMENSION_TEXTURE2D);
 }
 
+void DebugOverlayTask::setIdx(int idx)
+{
+	current = idx;
+}
+
 int DebugOverlayTask::currentIdx() const
 {
 	return current;
@@ -91,4 +96,9 @@ void DebugOverlayTask::updateQuad()
 		quad.SetPosition(screenSize);
 	else
 		quad.SetPosition({}, 0.5f, ScreenQuad::TopRight, screenSize.x / screenSize.y);
+}
+
+std::vector<DescriptorManager::DescriptorInfo> DebugOverlayTask::getTexture2DList() const
+{
+	return DescriptorManager::get().getDescriptors(D3D12_SRV_DIMENSION_TEXTURE2D);
 }

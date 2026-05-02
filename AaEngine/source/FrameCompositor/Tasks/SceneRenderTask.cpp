@@ -9,8 +9,8 @@ SceneRenderTask* instance = nullptr;
 
 SceneRenderTask::SceneRenderTask(RenderProvider p, SceneManager& s) : CompositorTask(p, s), picker(p.renderSystem)
 {
-	renderables = sceneMgr.getRenderables(Order::Normal);
-	forwardRenderables = sceneMgr.getRenderables(Order::Post);
+	opaque.renderables = sceneMgr.getRenderables(Order::Normal);
+	forward.renderables = sceneMgr.getRenderables(Order::Post);
 	transparent.renderables = sceneMgr.getRenderables(Order::Transparent);
 	instance = this;
 }
@@ -20,22 +20,22 @@ SceneRenderTask::~SceneRenderTask()
 	instance = nullptr;
 	running = false;
 
-	if (scene.eventBegin)
+	if (opaque.work.eventBegin)
 	{
-		SetEvent(scene.eventBegin);
-		scene.worker.join();
-		scene.commands.deinit();
-		CloseHandle(scene.eventBegin);
-		CloseHandle(scene.eventFinish);
+		SetEvent(opaque.work.eventBegin);
+		opaque.work.worker.join();
+		opaque.work.commands.deinit();
+		CloseHandle(opaque.work.eventBegin);
+		CloseHandle(opaque.work.eventFinish);
 	}
 
-	if (earlyZ.eventBegin)
+	if (earlyZ.work.eventBegin)
 	{
-		SetEvent(earlyZ.eventBegin);
-		earlyZ.worker.join();
-		earlyZ.commands.deinit();
-		CloseHandle(earlyZ.eventBegin);
-		CloseHandle(earlyZ.eventFinish);
+		SetEvent(earlyZ.work.eventBegin);
+		earlyZ.work.worker.join();
+		earlyZ.work.commands.deinit();
+		CloseHandle(earlyZ.work.eventBegin);
+		CloseHandle(earlyZ.work.eventFinish);
 	}
 
 	if (transparent.work.eventBegin)
@@ -58,27 +58,27 @@ AsyncTasksInfo SceneRenderTask::initialize(CompositorPass& pass)
 	}
 	else if (pass.info.entry == "Opaque")
 	{
-		sceneQueue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::Default);
+		opaque.queue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::Default);
 
-		scene.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
-		scene.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
-		scene.commands = provider.renderSystem.core.CreateCommandList(L"SceneRender", PixColor::SceneRender);
+		opaque.work.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
+		opaque.work.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
+		opaque.work.commands = provider.renderSystem.core.CreateCommandList(L"SceneRender", PixColor::SceneRender);
 
-		scene.worker = std::thread([this, &pass]
+		opaque.work.worker = std::thread([this, &pass]
 			{
-				while (WaitForSingleObject(scene.eventBegin, INFINITE) == WAIT_OBJECT_0 && running)
+				while (WaitForSingleObject(opaque.work.eventBegin, INFINITE) == WAIT_OBJECT_0 && running)
 				{
 					renderScene(pass);
 
-					SetEvent(scene.eventFinish);
+					SetEvent(opaque.work.eventFinish);
 				}
 			});
 
-		tasks = {{ scene.eventFinish, scene.commands }};
+		tasks = {{ opaque.work.eventFinish, opaque.work.commands }};
 	}
 	else if (pass.info.entry == "Transparent")
 	{
-		transparent.transparentQueue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::Default, Order::Transparent);
+		transparent.queue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::Default, Order::Transparent);
 
 		transparent.work.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
 		transparent.work.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -98,37 +98,37 @@ AsyncTasksInfo SceneRenderTask::initialize(CompositorPass& pass)
 	}
 	else if (pass.info.entry == "Wireframe")
 	{
-		if (sceneQueue)
+		if (opaque.queue)
 			__debugbreak();
 
-		sceneQueue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::Default);
-		wireframeQueue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::Wireframe);
+		opaque.queue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::Default);
+		opaque.wireframeQueue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::Wireframe);
 
-		sceneForwardQueue = sceneMgr.createQueue({ pass.mrt->formats.front() }, MaterialTechnique::Default, Order::Post);
-		wireframeForwardQueue = sceneMgr.createQueue({ pass.mrt->formats.front() }, MaterialTechnique::Wireframe, Order::Post);
+		forward.queue = sceneMgr.createQueue({ pass.mrt->formats.front() }, MaterialTechnique::Default, Order::Post);
+		forward.wireframeQueue = sceneMgr.createQueue({ pass.mrt->formats.front() }, MaterialTechnique::Wireframe, Order::Post);
 
-		transparent.transparentQueue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::Default, Order::Transparent);
-		transparent.wireframeTransparentQueue = sceneMgr.createQueue({ pass.mrt->formats.front() }, MaterialTechnique::Wireframe, Order::Transparent);
+		transparent.queue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::Default, Order::Transparent);
+		transparent.wireframeQueue = sceneMgr.createQueue({ pass.mrt->formats.front() }, MaterialTechnique::Wireframe, Order::Transparent);
 
-		scene.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
-		scene.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
-		scene.commands = provider.renderSystem.core.CreateCommandList(L"Wireframe", PixColor::SceneRender);
+		opaque.work.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
+		opaque.work.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
+		opaque.work.commands = provider.renderSystem.core.CreateCommandList(L"Wireframe", PixColor::SceneRender);
 
-		scene.worker = std::thread([this, &pass]
+		opaque.work.worker = std::thread([this, &pass]
 			{
-				while (WaitForSingleObject(scene.eventBegin, INFINITE) == WAIT_OBJECT_0 && running)
+				while (WaitForSingleObject(opaque.work.eventBegin, INFINITE) == WAIT_OBJECT_0 && running)
 				{
 					renderWireframe(pass);
 
-					SetEvent(scene.eventFinish);
+					SetEvent(opaque.work.eventFinish);
 				}
 			});
 
-		tasks = { { scene.eventFinish, scene.commands } };
+		tasks = { { opaque.work.eventFinish, opaque.work.commands } };
 	}
 	else if (pass.info.entry == "Forward")
 	{
-		sceneForwardQueue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::Default, Order::Post);
+		forward.queue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::Default, Order::Post);
 	}
 
 	return tasks;
@@ -136,23 +136,23 @@ AsyncTasksInfo SceneRenderTask::initialize(CompositorPass& pass)
 
 AsyncTasksInfo SceneRenderTask::initializeEarlyZ(CompositorPass& pass)
 {
-	depthQueue = sceneMgr.createQueue({}, MaterialTechnique::Depth);
+	earlyZ.queue = sceneMgr.createQueue({}, MaterialTechnique::Depth);
 
-	earlyZ.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
-	earlyZ.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
-	earlyZ.commands = provider.renderSystem.core.CreateCommandList(L"EarlyZ", PixColor::EarlyZ);
+	earlyZ.work.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
+	earlyZ.work.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
+	earlyZ.work.commands = provider.renderSystem.core.CreateCommandList(L"EarlyZ", PixColor::EarlyZ);
 
-	earlyZ.worker = std::thread([this, &pass]
+	earlyZ.work.worker = std::thread([this, &pass]
 		{
-			while (WaitForSingleObject(earlyZ.eventBegin, INFINITE) == WAIT_OBJECT_0 && running)
+			while (WaitForSingleObject(earlyZ.work.eventBegin, INFINITE) == WAIT_OBJECT_0 && running)
 			{
 				renderEarlyZ(pass);
 
-				SetEvent(earlyZ.eventFinish);
+				SetEvent(earlyZ.work.eventFinish);
 			}
 		});
 
-	return { { earlyZ.eventFinish, earlyZ.commands } };
+	return { { earlyZ.work.eventFinish, earlyZ.work.commands } };
 }
 
 void SceneRenderTask::run(RenderContext& renderCtx, CompositorPass& pass)
@@ -164,7 +164,7 @@ void SceneRenderTask::run(RenderContext& renderCtx, CompositorPass& pass)
 	}
 	else if (pass.info.entry == "Opaque" || pass.info.entry == "Wireframe")
 	{
-		SetEvent(scene.eventBegin);
+		SetEvent(opaque.work.eventBegin);
 	}
 	else if (pass.info.entry == "Transparent")
 	{
@@ -201,85 +201,85 @@ SceneRenderTask& SceneRenderTask::Get()
 
 void SceneRenderTask::renderWireframe(CompositorPass& pass)
 {
-	renderables->updateVisibility(*ctx.camera, sceneVisibility);
+	opaque.renderables->updateVisibility(*ctx.camera, opaque.visibility);
 
-	if (earlyZ.eventBegin)
-		SetEvent(earlyZ.eventBegin);
+	if (earlyZ.work.eventBegin)
+		SetEvent(earlyZ.work.eventBegin);
 
-	auto marker = provider.renderSystem.core.StartCommandList(scene.commands);
+	auto marker = provider.renderSystem.core.StartCommandList(opaque.work.commands);
 
-	pass.mrt->PrepareAsTarget(scene.commands.commandList, pass.targets, true, TransitionFlags::UseDepth);
+	pass.mrt->PrepareAsTarget(opaque.work.commands.commandList, pass.targets, true, TransitionFlags::UseDepth);
 
-	ShaderConstantsProvider constants(provider.params, sceneVisibility, *ctx.camera, *pass.mrt);
+	ShaderConstantsProvider constants(provider.params, opaque.visibility, *ctx.camera, *pass.mrt);
 
-	wireframeQueue->renderObjects(constants, scene.commands.commandList);
+	opaque.wireframeQueue->renderObjects(constants, opaque.work.commands.commandList);
 
-	pass.mrt->PrepareSubrangeAsTarget(scene.commands.commandList, 1, 0, pass.targets.back().texture);
+	pass.mrt->PrepareSubrangeAsTarget(opaque.work.commands.commandList, 1, 0, pass.targets.back().texture);
 	{
-		forwardRenderables->updateVisibility(*ctx.camera, sceneForwardVisibility);
+		forward.renderables->updateVisibility(*ctx.camera, forward.visibility);
 
-		ShaderConstantsProvider constants(provider.params, sceneForwardVisibility, *ctx.camera, *pass.mrt);
+		ShaderConstantsProvider constants(provider.params, forward.visibility, *ctx.camera, *pass.mrt);
 
-		wireframeForwardQueue->renderObjects(constants, scene.commands.commandList);
+		forward.wireframeQueue->renderObjects(constants, opaque.work.commands.commandList);
 	}
 	{
-		transparent.renderables->updateVisibility(*ctx.camera, transparent.sceneVisibility);
+		transparent.renderables->updateVisibility(*ctx.camera, transparent.visibility);
 
-		ShaderConstantsProvider constants(provider.params, transparent.sceneVisibility, *ctx.camera, *pass.mrt);
+		ShaderConstantsProvider constants(provider.params, transparent.visibility, *ctx.camera, *pass.mrt);
 
-		transparent.wireframeTransparentQueue->renderObjects(constants, scene.commands.commandList);
+		transparent.wireframeQueue->renderObjects(constants, opaque.work.commands.commandList);
 	}
 }
 
 void SceneRenderTask::renderScene(CompositorPass& pass)
 {
-	renderables->updateVisibility(*ctx.camera, sceneVisibility);
+	opaque.renderables->updateVisibility(*ctx.camera, opaque.visibility);
 
-	if (earlyZ.eventBegin)
-		SetEvent(earlyZ.eventBegin);
+	if (earlyZ.work.eventBegin)
+		SetEvent(earlyZ.work.eventBegin);
 
-	auto marker = provider.renderSystem.core.StartCommandList(scene.commands);
+	auto marker = provider.renderSystem.core.StartCommandList(opaque.work.commands);
 
-	pass.mrt->PrepareAsTarget(scene.commands.commandList, pass.targets, true, TransitionFlags::UseDepth);
+	pass.mrt->PrepareAsTarget(opaque.work.commands.commandList, pass.targets, true, TransitionFlags::UseDepth);
 
-	ShaderConstantsProvider constants(provider.params, sceneVisibility, *ctx.camera, *pass.mrt);
+	ShaderConstantsProvider constants(provider.params, opaque.visibility, *ctx.camera, *pass.mrt);
 
-	sceneQueue->renderObjects(constants, scene.commands.commandList);
+	opaque.queue->renderObjects(constants, opaque.work.commands.commandList);
 }
 
 void SceneRenderTask::renderForward(CompositorPass& pass, CommandsData& cmd)
 {
 	CommandsMarker marker(cmd.commandList, "SceneRenderForward", PixColor::SceneRender);
 
-	forwardRenderables->updateVisibility(*ctx.camera, sceneForwardVisibility);
+	forward.renderables->updateVisibility(*ctx.camera, forward.visibility);
 
 	pass.mrt->PrepareAsTarget(cmd.commandList, pass.targets, false, TransitionFlags::UseDepth);
 
-	ShaderConstantsProvider constants(provider.params, sceneForwardVisibility, *ctx.camera, *pass.mrt);
+	ShaderConstantsProvider constants(provider.params, forward.visibility, *ctx.camera, *pass.mrt);
 
 	sceneMgr.skybox.render(cmd.commandList, constants);
 
-	sceneForwardQueue->renderObjects(constants, cmd.commandList);
+	forward.queue->renderObjects(constants, cmd.commandList);
 }
 
 void SceneRenderTask::renderEarlyZ(CompositorPass& pass)
 {
-	auto marker = provider.renderSystem.core.StartCommandList(earlyZ.commands);
+	auto marker = provider.renderSystem.core.StartCommandList(earlyZ.work.commands);
 
 	auto& depth = pass.targets.front();
-	depth.texture->PrepareAsDepthTarget(earlyZ.commands.commandList, depth.previousState);
+	depth.texture->PrepareAsDepthTarget(earlyZ.work.commands.commandList, depth.previousState);
 
-	ShaderConstantsProvider constants(provider.params, sceneVisibility, *ctx.camera, *depth.texture);
-	depthQueue->renderObjects(constants, earlyZ.commands.commandList);
+	ShaderConstantsProvider constants(provider.params, opaque.visibility, *ctx.camera, *depth.texture);
+	earlyZ.queue->renderObjects(constants, earlyZ.work.commands.commandList);
 
-	depth.texture->Transition(earlyZ.commands.commandList, depth.state, depth.nextState);
+	depth.texture->Transition(earlyZ.work.commands.commandList, depth.state, depth.nextState);
 }
 
 void SceneRenderTask::renderTransparentScene(CompositorPass& pass)
 {
 	auto commandList = transparent.work.commands.commandList;
 
-	transparent.renderables->updateVisibility(*ctx.camera, transparent.sceneVisibility);
+	transparent.renderables->updateVisibility(*ctx.camera, transparent.visibility);
 
 	auto marker = provider.renderSystem.core.StartCommandList(transparent.work.commands);
 
@@ -311,8 +311,8 @@ void SceneRenderTask::renderTransparentScene(CompositorPass& pass)
 
 	pass.mrt->PrepareAsTarget(commandList, pass.targets, true, TransitionFlags::UseDepth);
 
-	ShaderConstantsProvider constants(provider.params, transparent.sceneVisibility, *ctx.camera, *pass.mrt);
-	transparent.transparentQueue->renderObjects(constants, commandList);
+	ShaderConstantsProvider constants(provider.params, transparent.visibility, *ctx.camera, *pass.mrt);
+	transparent.queue->renderObjects(constants, commandList);
 
 	sceneMgr.water.prepareAfterRendering(commandList);
 }

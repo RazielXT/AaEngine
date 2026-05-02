@@ -42,49 +42,57 @@ private:
 		HANDLE eventFinish{};
 		std::thread worker;
 	};
-	AsyncWork earlyZ;
-	AsyncWork scene;
 
 	bool running = true;
 
 	RenderContext ctx;
-	RenderObjectsVisibilityData sceneVisibility;
-	RenderObjectsStorage* renderables;
 
-	RenderObjectsVisibilityData sceneForwardVisibility;
-	RenderObjectsStorage* forwardRenderables;
-
-	void renderScene(CompositorPass& pass);
-	void renderEarlyZ(CompositorPass& pass);
-
-	RenderQueue* depthQueue{};
-	RenderQueue* sceneQueue{};
-	RenderQueue* sceneForwardQueue{};
-
-	struct 
+	struct
 	{
-		RenderObjectsVisibilityData sceneVisibility;
-		RenderObjectsStorage* renderables;
-		RenderQueue* transparentQueue{};
-		RenderQueue* wireframeTransparentQueue{};
-
 		AsyncWork work;
+		RenderObjectsVisibilityData visibility;
+		RenderObjectsStorage* renderables;
+		RenderQueue* queue{};
+		RenderQueue* wireframeQueue{};
+	}
+	opaque;
+
+	struct
+	{
+		AsyncWork work;
+		RenderQueue* queue{};
+	}
+	earlyZ;
+
+	struct
+	{
+		RenderObjectsVisibilityData visibility;
+		RenderObjectsStorage* renderables;
+		RenderQueue* queue{};
+		RenderQueue* wireframeQueue{};
+	}
+	forward;
+
+	struct
+	{
+		AsyncWork work;
+		RenderObjectsVisibilityData visibility;
+		RenderObjectsStorage* renderables;
+		RenderQueue* queue{};
+		RenderQueue* wireframeQueue{};
 	}
 	transparent;
 
+	void renderScene(CompositorPass& pass);
+	void renderEarlyZ(CompositorPass& pass);
 	void renderTransparentScene(CompositorPass& pass);
+	void renderWireframe(CompositorPass& pass);
+	void renderForward(CompositorPass& pass, CommandsData& cmd);
 
 	EntityPicker picker;
 	void renderEditor(CompositorPass& pass, CommandsData& cmd);
-
-	RenderQueue* wireframeQueue{};
-	RenderQueue* wireframeForwardQueue{};
-	void renderWireframe(CompositorPass& pass);
-
 	void renderDebug(CompositorPass& pass, CommandsData& cmd);
 
 	bool showVoxelsEnabled = false;
 	void updateVoxelsDebugView(SceneEntity& debugVoxel, Camera& camera);
-
-	void renderForward(CompositorPass& pass, CommandsData& cmd);
 };

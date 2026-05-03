@@ -225,13 +225,20 @@ void PhysicsManager::update(float deltaTime)
 
 	accumulator += deltaTime;
 
-	int steps = (int)(accumulator / fixedTimeStep);
-	if (steps == 0)
+	if (accumulator < fixedTimeStep)
 		return;
 
-	accumulator -= steps * fixedTimeStep;
+	constexpr int maxSteps = 4;
+	int steps = 0;
+	while (accumulator >= fixedTimeStep && steps < maxSteps)
+	{
+		system->Update(fixedTimeStep, 1, &temp_allocator, &job_system);
+		accumulator -= fixedTimeStep;
+		steps++;
+	}
 
-	system->Update(fixedTimeStep, steps, &temp_allocator, &job_system);
+	if (steps == maxSteps)
+		accumulator = 0.0f;
 
 	Vec3 pos{};
 	Quat quat{};

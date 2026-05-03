@@ -77,6 +77,7 @@ struct BoundingBoxVolume
 
 float getRandomAngleInRadians();
 float getRandomFloat(float min, float max);
+float getRandomFloat01();
 
 template <typename T>
 constexpr T constexpr_pow(T base, int exp)
@@ -85,3 +86,5 @@ constexpr T constexpr_pow(T base, int exp)
 		(exp % 2 == 0) ? constexpr_pow(base * base, exp / 2) :
 		base * constexpr_pow(base * base, (exp - 1) / 2);
 }
+
+Quaternion getRandomQuaternion();

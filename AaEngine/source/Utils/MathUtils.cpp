@@ -19,3 +19,28 @@ float getRandomFloat(float min, float max)
 
 	return static_cast<float>(dis(gen));
 }
+
+float getRandomFloat01()
+{
+	return getRandomFloat(0.0f, 1.0f);
+}
+
+Quaternion getRandomQuaternion()
+{
+	float u1 = getRandomFloat01();
+	float u2 = getRandomFloat01();
+	float u3 = getRandomFloat01();
+
+	float sqrt1 = sqrtf(1.0f - u1);
+	float sqrt2 = sqrtf(u1);
+
+	float theta1 = 2.0f * 3.14159265f * u2;
+	float theta2 = 2.0f * 3.14159265f * u3;
+
+	return Quaternion(
+		cosf(theta2) * sqrt2,
+		sinf(theta1) * sqrt1,
+		cosf(theta1) * sqrt1,
+		sinf(theta2) * sqrt2
+	);
+}

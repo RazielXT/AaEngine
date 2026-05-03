@@ -15,4 +15,5 @@ struct DebugState
 
 	bool wireframe = false;
 	bool wireframeChange = false;
+	std::optional<int> wireframePhysicsChange;
 };

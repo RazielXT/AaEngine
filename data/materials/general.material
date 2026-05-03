@@ -1,4 +1,4 @@
-material ColorVCT abstract
+material General
 {
 	vertex_shader
 	{
@@ -30,16 +30,11 @@ material ColorVCT abstract
 	}
 }
 
-material TerrainScanColorVCT abstract
-{
-	shader_defines TERRAIN_SCAN
-}
-
-material WhiteVCT : ColorVCT
+material WhiteVCT : General
 {
 }
 
-material WhiteConcrete : ColorVCT
+material WhiteConcrete : General
 {
 }
 
@@ -59,7 +54,7 @@ material WhiteVCTLightEx : WhiteVCT
 	}
 }
 
-material BlueVCT : ColorVCT
+material BlueVCT : General
 {
 	default_params
 	{
@@ -67,7 +62,7 @@ material BlueVCT : ColorVCT
 	}
 }
 
-material RedVCT : ColorVCT
+material RedVCT : General
 {
 	texture Diffuse
 	{
@@ -75,7 +70,7 @@ material RedVCT : ColorVCT
 	}
 }
 
-material GreenVCT : ColorVCT
+material GreenVCT : General
 {
 	texture Diffuse
 	{
@@ -88,7 +83,7 @@ material GreenVCT : ColorVCT
 	}
 }
 
-material YellowVCT : ColorVCT
+material YellowVCT : General
 {
 	default_params
 	{
@@ -96,7 +91,7 @@ material YellowVCT : ColorVCT
 	}
 }
 
-material RockVCT : ColorVCT
+material RockVCT : General
 {
 	texture Diffuse
 	{
@@ -109,7 +104,7 @@ material RockVCT : ColorVCT
 	}
 }
 
-material GrassVCT : ColorVCT
+material GrassVCT : General
 {
 	texture Diffuse
 	{
@@ -122,7 +117,7 @@ material GrassVCT : ColorVCT
 	}
 }
 
-material TreeTrunk_ : ColorVCT
+material TreeTrunk_ : General
 {
 	texture Diffuse
 	{
@@ -135,7 +130,7 @@ material TreeTrunk_ : ColorVCT
 	}
 }
 
-material TreeBranch_ : ColorVCT
+material TreeBranch_ : General
 {
 	pixel_shader
 	{
@@ -186,7 +181,7 @@ material TreeBranchDepth_
 	culling none
 }
 
-material PineBranch : TreeBranch
+material PineBranch : TreeBranch_
 {
 	texture Diffuse
 	{
@@ -225,11 +220,11 @@ material PineBranchDepth
 	}
 }
 
-material PineTrunk : TreeTrunk
+material PineTrunk : TreeTrunk_
 {
 }
 
-material BrickPom_ : ColorVCT
+material BrickPom_ : General
 {
 	texture Diffuse
 	{

@@ -213,27 +213,32 @@ void loadEntityUserData(const xml_node& element, SceneEntity* ent, SceneNode* no
 			if (type == "box")
 			{
 				auto bbox = ent->getBoundingBox();
+				BodyParams bodyParams;
+				bodyParams.mass = mass;
 
-				if (mass == 0)
-					ctx->physicsMgr.createStaticBox(bbox.Extents, node->transformation, bbox.Center);
-				else
-				{
-					auto id = ctx->physicsMgr.createDynamicBox(bbox.Extents, node->transformation, bbox.Center, mass);
+				auto id = ctx->physicsMgr.createBox(bbox.Extents, node->transformation, bbox.Center, bodyParams);
+				if (mass > 0)
 					ctx->physicsMgr.dynamicBodies.push_back({ ent, id });
-				}
 			}
 			else if (type == "sphere")
 			{
 				auto radius = ent->getBoundingBox().Extents.x;
+				BodyParams bodyParams;
+				bodyParams.mass = mass;
 
-				auto id = ctx->physicsMgr.createDynamicSphere(radius, node->transformation.position, Vector3::Zero);
-				ctx->physicsMgr.dynamicBodies.push_back({ ent, id });
+				auto id = ctx->physicsMgr.createSphere(radius, node->transformation.position, bodyParams);
+				if (mass > 0)
+					ctx->physicsMgr.dynamicBodies.push_back({ ent, id });
 			}
 			else if (type == "conv")
 			{
 				auto model = ent->geometry.getModel();
-				auto id = ctx->physicsMgr.createConvexBody(model->positions, node->transformation, mass);
-				ctx->physicsMgr.dynamicBodies.push_back({ ent, id });
+				BodyParams bodyParams;
+				bodyParams.mass = mass;
+
+				auto id = ctx->physicsMgr.createConvexBody(model->positions, node->transformation, bodyParams);
+				if (mass > 0)
+					ctx->physicsMgr.dynamicBodies.push_back({ ent, id });
 			}
 			else if (type == "tree")
 			{

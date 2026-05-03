@@ -4,7 +4,9 @@
 #include "ApplicationCore.h"
 #include <shellscalingapi.h>
 #include "Editor/Editor.h"
+#include "Utils/ColorUtils.h"
 #include "imgui.h"
+#include "PhysicsRenderTask.h"
 
 // Forward declare message handler from imgui_impl_win32.cpp
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -121,6 +123,14 @@ public:
 			app.compositor->setDefine("WIREFRAME", editorUi.state.wireframe);
 			editorUi.resetViewportOutput();
 		}
+		if (editorUi.state.wireframePhysicsChange)
+		{
+			app.compositor->setDefine("RENDER_PHYSICS", true);
+			((PhysicsRenderTask*)app.compositor->getTask("RenderPhysics"))->setMode(PhysicsRenderTask::Mode(*editorUi.state.wireframePhysicsChange));
+			editorUi.resetViewportOutput();
+
+			editorUi.state.wireframePhysicsChange.reset();;
+		}
 	}
 
 	bool keyPressed(int key) override
@@ -132,20 +142,50 @@ public:
 
 		if (key == 'F')
 		{
-			auto model = app.resources.models.getCoreModel("sphere.mesh");
-			auto material = app.resources.materials.getMaterial("WhiteVCT");
-
 			auto pos = freeCamera.camera.getPosition();
+			auto shootVelocity = freeCamera.camera.getCameraDirection() * 30.f;
 
-			static int i = 0;
-			auto ent = app.sceneMgr.createEntity("shoot" + std::to_string(i++));
+			bool useSphere = (getRandomFloat01() < 0.5f);
+
+			const char* meshName = useSphere ? "sphere.mesh" : "centeredBox.mesh";
+			auto model = app.resources.models.getCoreModel(meshName);
+			auto material = app.resources.materials.getMaterial("General");
+
+			auto ent = app.sceneMgr.createEntity("shoot");
 			ent->setPosition(pos);
+			ent->setOrientation(getRandomQuaternion());
 			ent->geometry.fromModel(*model);
 			ent->material = material;
+			ent->Material().setParam("MaterialColor", getRandomSrgbColor());
 
-			auto id = app.physicsMgr.createDynamicSphere(model->bbox.Extents.x, pos, freeCamera.camera.getCameraDirection() * 30);
+			Vector3 scale;
+
+			if (useSphere)
+				scale = Vector3(getRandomFloat(1.0f, 2.0f));
+			else
+				scale = Vector3(getRandomFloat(1.0f, 3.0f), getRandomFloat(1.0f, 3.0f), getRandomFloat(1.0f, 3.0f));
+
+			ent->setScale(scale);
+
+			// --- Physics body ---
+			JPH::BodyID id{};
+			BodyParams bodyParams;
+			bodyParams.mass = getRandomFloat(1.0f, 3.0f);
+			bodyParams.velocity = shootVelocity;
+
+			if (useSphere)
+			{
+				float radius = model->bbox.Extents.x * scale.x;
+				id = app.physicsMgr.createSphere(radius, pos, bodyParams);
+			}
+			else
+			{
+				id = app.physicsMgr.createBox({ 0.5f, 0.5f, 0.5f }, ent->getTransformation(), {}, bodyParams);
+			}
+
 			app.physicsMgr.dynamicBodies.push_back({ ent, id });
 		}
+
 		return freeCamera.keyPressed(key);
 	}
 

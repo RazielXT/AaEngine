@@ -85,9 +85,6 @@ void PhysicsManager::clear()
 
 namespace
 {
-	float DefaultObjectFriction = 0.2f;
-	float DefaultObjectRestitution = 0.3f;
-
 	RefConst<Shape> CreateBoxShape(Vec3 extends, Vec3 offset, Vec3 scale)
 	{
 		RefConst<Shape> shape;
@@ -111,50 +108,50 @@ namespace
 	}
 }
 
-JPH::BodyID PhysicsManager::createStaticBox(Vector3 extends, const ObjectTransformation& t, Vector3 offset)
+static void applyBodyParams(BodyCreationSettings& s, const BodyParams& params)
+{
+	s.mFriction = params.friction;
+	s.mRestitution = params.restitution;
+	s.mLinearDamping = params.linearDamping;
+	s.mAngularDamping = params.angularDamping;
+	s.mLinearVelocity = toVec3(params.velocity);
+
+	if (params.mass > 0)
+	{
+		s.mMotionType = EMotionType::Dynamic;
+		s.mObjectLayer = Layers::MOVING;
+		s.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
+		s.mMassPropertiesOverride.mMass = params.mass;
+	}
+	else
+	{
+		s.mMotionType = EMotionType::Static;
+		s.mObjectLayer = Layers::NON_MOVING;
+	}
+}
+
+JPH::BodyID PhysicsManager::createBox(Vector3 extends, const ObjectTransformation& t, Vector3 offset, const BodyParams& params)
 {
 	BodyCreationSettings creation_settings(CreateBoxShape(toVec3(extends), toVec3(offset), toVec3(t.scale)), toVec3(t.position), toQuat(t.orientation), EMotionType::Static, Layers::NON_MOVING);
-	creation_settings.mMotionQuality = EMotionQuality::Discrete;
-	creation_settings.mFriction = DefaultObjectFriction;
-	creation_settings.mRestitution = DefaultObjectRestitution;
+	applyBodyParams(creation_settings, params);
 
-	return system->GetBodyInterface().CreateAndAddBody(creation_settings, EActivation::DontActivate);
+	bool isDynamic = params.mass > 0;
+	return system->GetBodyInterface().CreateAndAddBody(creation_settings, isDynamic ? EActivation::Activate : EActivation::DontActivate);
 }
 
-JPH::BodyID PhysicsManager::createDynamicBox(Vector3 extends, const ObjectTransformation& t, Vector3 offset, float mass)
-{
-	BodyCreationSettings creation_settings(CreateBoxShape(toVec3(extends), toVec3(offset), toVec3(t.scale)), toVec3(t.position), toQuat(t.orientation), EMotionType::Dynamic, Layers::MOVING);
-	creation_settings.mMotionQuality = EMotionQuality::Discrete;
-	creation_settings.mFriction = DefaultObjectFriction;
-	creation_settings.mRestitution = DefaultObjectRestitution;
-
-	return system->GetBodyInterface().CreateAndAddBody(creation_settings, EActivation::Activate);
-}
-
-JPH::BodyID PhysicsManager::createStaticSphere(float radius, Vector3 position)
+JPH::BodyID PhysicsManager::createSphere(float radius, Vector3 position, const BodyParams& params)
 {
 	BodyCreationSettings creation_settings(CreateSphereShape(radius), toVec3(position), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
-	creation_settings.mMotionQuality = EMotionQuality::Discrete;
-	creation_settings.mFriction = DefaultObjectFriction;
-	creation_settings.mRestitution = DefaultObjectRestitution;
+	applyBodyParams(creation_settings, params);
 
-	return system->GetBodyInterface().CreateAndAddBody(creation_settings, EActivation::Activate);
+	bool isDynamic = params.mass > 0;
+	return system->GetBodyInterface().CreateAndAddBody(creation_settings, isDynamic ? EActivation::Activate : EActivation::DontActivate);
 }
 
-JPH::BodyID PhysicsManager::createDynamicSphere(float radius, Vector3 position, Vector3 velocity)
+JPH::BodyID PhysicsManager::createConvexBody(const std::vector<Vector3>& points, const ObjectTransformation& t, const BodyParams& params)
 {
-	BodyCreationSettings creation_settings(CreateSphereShape(radius), toVec3(position), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
-	creation_settings.mMotionQuality = EMotionQuality::Discrete;
-	creation_settings.mFriction = DefaultObjectFriction;
-	creation_settings.mRestitution = DefaultObjectRestitution;
-	creation_settings.mLinearVelocity = toVec3(velocity);
-
-	return system->GetBodyInterface().CreateAndAddBody(creation_settings, EActivation::Activate);
-}
-
-JPH::BodyID PhysicsManager::createConvexBody(const std::vector<Vector3>& points, const ObjectTransformation& t, float mass)
-{
-	std::vector<Vec3> inputData(points.size());
+	std::vector<Vec3> inputData;
+	inputData.reserve(points.size());
 	for (size_t i = 0; i < points.size(); i++)
 	{
 		auto& p = points[i];
@@ -166,18 +163,11 @@ JPH::BodyID PhysicsManager::createConvexBody(const std::vector<Vector3>& points,
 	if (t.scale != Vector3::One)
 		shape = new ScaledShape(shape, toVec3(t.scale));
 
-	BodyCreationSettings creation_settings(shape, toVec3(t.position), toQuat(t.orientation), EMotionType::Dynamic, Layers::MOVING);
-	creation_settings.mMotionQuality = EMotionQuality::Discrete;
-	creation_settings.mFriction = DefaultObjectFriction;
-	creation_settings.mRestitution = DefaultObjectRestitution;
+	BodyCreationSettings creation_settings(shape, toVec3(t.position), toQuat(t.orientation), EMotionType::Static, Layers::NON_MOVING);
+	applyBodyParams(creation_settings, params);
 
-	if (mass == 0.0f)
-	{
-		creation_settings.mMotionType = EMotionType::Static;
-		creation_settings.mObjectLayer = Layers::NON_MOVING;
-	}
-
-	return system->GetBodyInterface().CreateAndAddBody(creation_settings, EActivation::Activate);
+	bool isDynamic = params.mass > 0;
+	return system->GetBodyInterface().CreateAndAddBody(creation_settings, isDynamic ? EActivation::Activate : EActivation::DontActivate);
 }
 
 static void createTriangles(const std::vector<Vector3>& points, const std::vector<uint32_t>& indices, TriangleList& triangles, PhysicsMaterialList& materials)
@@ -230,6 +220,9 @@ JPH::BodyID PhysicsManager::createMeshBody(const std::vector<Vector3>& points, c
 
 void PhysicsManager::update(float deltaTime)
 {
+	if (!enableUpdating)
+		return;
+
 	accumulator += deltaTime;
 
 	int steps = (int)(accumulator / fixedTimeStep);
@@ -252,6 +245,11 @@ void PhysicsManager::update(float deltaTime)
 			info.entity->setPositionOrientation(Vector3{ pos.GetX(), pos.GetY(), pos.GetZ() }, q);
 		}
 	}
+}
+
+void PhysicsManager::enableUpdate(bool enable)
+{
+	enableUpdating = enable;
 }
 
 void PhysicsManager::enableRenderer(RenderSystem& rs, GraphicsResources& r)
@@ -303,8 +301,8 @@ JPH::BodyID PhysicsManager::createHeightField(const float* heights, uint32_t res
 		return JPH::BodyID();
 
 	BodyCreationSettings creation_settings(shapeResult.Get(), toVec3(offset), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
-	creation_settings.mFriction = DefaultObjectFriction;
-	creation_settings.mRestitution = DefaultObjectRestitution;
+	creation_settings.mFriction = 0.8f;
+	creation_settings.mRestitution = 0.3f;
 
 	return system->GetBodyInterface().CreateAndAddBody(creation_settings, EActivation::DontActivate);
 }

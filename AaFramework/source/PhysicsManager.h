@@ -12,6 +12,16 @@
 class SceneEntity;
 struct ObjectTransformation;
 
+struct BodyParams
+{
+	float friction = 0.5f;
+	float restitution = 0.3f;
+	float linearDamping = 0.1f;
+	float angularDamping = 0.2f;
+	float mass = 0;
+	Vector3 velocity = {};
+};
+
 class PhysicsManager
 {
 public:
@@ -21,13 +31,11 @@ public:
 
 	void init();
 
-	JPH::BodyID createStaticBox(Vector3 extends, const ObjectTransformation& transformation, Vector3 offset);
-	JPH::BodyID createDynamicBox(Vector3 extends, const ObjectTransformation& transformation, Vector3 offset, float mass);
+	JPH::BodyID createBox(Vector3 extends, const ObjectTransformation& transformation, Vector3 offset, const BodyParams& params = {});
 
-	JPH::BodyID createStaticSphere(float radius, Vector3 position);
-	JPH::BodyID createDynamicSphere(float radius, Vector3 position, Vector3 velocity);
+	JPH::BodyID createSphere(float radius, Vector3 position, const BodyParams& params = {});
 
-	JPH::BodyID createConvexBody(const std::vector<Vector3>& points, const ObjectTransformation& transformation, float mass);
+	JPH::BodyID createConvexBody(const std::vector<Vector3>& points, const ObjectTransformation& transformation, const BodyParams& params = {});
 
 	JPH::BodyID createMeshBody(const std::vector<Vector3>& points, const std::vector<uint32_t>& indices, const ObjectTransformation& transformation);
 
@@ -43,6 +51,8 @@ public:
 	std::vector<RegisteredEntity> dynamicBodies;
 
 	void update(float);
+
+	void enableUpdate(bool);
 
 	JPH::PhysicsSystem* system{};
 
@@ -73,6 +83,8 @@ private:
 
 	float fixedTimeStep = 1.0f / 60.0f;
 	float accumulator = 0.0f;
+
+	bool enableUpdating = true;
 
 	std::unique_ptr<PhysicsRenderer> renderer;
 };

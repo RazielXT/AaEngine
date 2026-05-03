@@ -73,18 +73,6 @@ compositor Frame
 		in sceneTexture:Albedo
 		out sceneTextureTmp2
 	}
-#elif RENDER_PHYSICS
-	task RenderPhysics
-	{
-		sync_wait SSAO
-		out sceneTexture
-	}
-	pass RenderPhysicsPassThrough
-	{
-		material PassThrough
-		in sceneTexture:Albedo
-		out sceneTextureTmp2
-	}
 #else
 	task SceneRender.Opaque
 	{
@@ -92,6 +80,13 @@ compositor Frame
 
 		out sceneTexture
 	}
+
+#if RENDER_PHYSICS
+	task RenderPhysics
+	{
+		out sceneTexture
+	}
+#endif
 
 	pass DeferredVCT
 	{

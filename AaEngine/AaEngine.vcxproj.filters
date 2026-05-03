@@ -370,6 +370,9 @@
     <ClCompile Include="source\RenderObject\Grass\Grass.cpp">
       <Filter>Source Files\RenderObject\Grass</Filter>
     </ClCompile>
+    <ClCompile Include="source\Utils\ColorUtils.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\App\TargetWindow.h">
@@ -680,6 +683,9 @@
     </ClInclude>
     <ClInclude Include="source\RenderObject\Grass\Grass.h">
       <Filter>Source Files\RenderObject\Grass</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Utils\ColorUtils.h">
+      <Filter>Source Files\Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

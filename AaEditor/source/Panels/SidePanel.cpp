@@ -185,6 +185,10 @@ void SidePanel::draw(const ObjectTransformation& objTransformation)
 
 	if (ImGui::CollapsingHeader("Physics"))
 	{
+		static bool updatePhysics = true;
+		if (ImGui::Checkbox("Update physics", &updatePhysics))
+			app.physicsMgr.enableUpdate(updatePhysics);
+
 		const char* physicsDraw[] = {
 			"Off",
 			"Wireframe",
@@ -193,10 +197,7 @@ void SidePanel::draw(const ObjectTransformation& objTransformation)
 		static int physicsDrawIdx = 0;
 		if (ImGui::Combo("Draw physics", &physicsDrawIdx, physicsDraw, std::size(physicsDraw)))
 		{
-			app.renderSystem.core.WaitForAllFrames();
-			app.compositor->setDefine("RENDER_PHYSICS", physicsDrawIdx != PhysicsRenderTask::Mode::Off);
-			if (physicsDrawIdx != PhysicsRenderTask::Mode::Off)
-				((PhysicsRenderTask*)app.compositor->getTask("RenderPhysics"))->setMode((PhysicsRenderTask::Mode)physicsDrawIdx);
+			state.wireframePhysicsChange = physicsDrawIdx;
 		}
 
 		if (ImGui::Button("Big physics"))

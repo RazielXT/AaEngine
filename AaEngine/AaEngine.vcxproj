@@ -117,6 +117,7 @@
     <ClCompile Include="source\Resources\Material\MaterialFileParser.cpp" />
     <ClCompile Include="source\Resources\Material\MaterialResources.cpp" />
     <ClCompile Include="source\Resources\Material\MaterialEvents.cpp" />
+    <ClCompile Include="source\Utils\ColorUtils.cpp" />
     <ClCompile Include="source\Utils\MathUtils.cpp" />
     <ClCompile Include="source\Scene\SceneGraph.cpp" />
     <ClCompile Include="source\Scene\SceneSkybox.cpp" />
@@ -210,6 +211,7 @@
     <ClInclude Include="source\RenderCore\RenderTargetHeap.h" />
     <ClInclude Include="source\Resources\ResourcesView.h" />
     <ClInclude Include="source\Scene\SceneEntity.h" />
+    <ClInclude Include="source\Utils\ColorUtils.h" />
     <ClInclude Include="source\Utils\Logger.h" />
     <ClInclude Include="source\Resources\Material\Material.h" />
     <ClInclude Include="source\Resources\Compute\AoBlurAndUpsampleCS.h" />

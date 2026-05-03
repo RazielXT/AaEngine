@@ -243,8 +243,10 @@ void SidePanel::draw(const ObjectTransformation& objTransformation)
 			{
 				for (int i = 0; i < (int)textures.size(); i++)
 				{
+					std::string label = std::format("{} [{}]", textures[i].name, textures[i].index);
+
 					bool isSelected = (i == selectedListIdx);
-					if (ImGui::Selectable(textures[i].name, isSelected))
+					if (ImGui::Selectable(label.c_str(), isSelected))
 						overlayTask.setIdx(textures[i].index);
 
 					if (isSelected)

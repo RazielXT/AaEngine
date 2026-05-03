@@ -177,12 +177,13 @@ void TerrainPhysics::startAsyncBuild(XMINT2 worldChunk, const void* readbackData
 	auto ownedData = std::make_shared<std::vector<uint8_t>>(dataSize);
 	memcpy(ownedData->data(), readbackData, dataSize);
 
-	float borderWorldOffset = (float)HeightmapBorder / (float)HeightmapSize * params.tileSize;
+	// The 960-pixel content region (pixels 32..991) maps to world [0, tileSize]
+	// No border offset needed — the content region IS the chunk area
 	Vector3 chunkMin = params.chunkWorldMin(worldChunk, params.tileSize);
 	Vector3 offset = {
-		chunkMin.x + borderWorldOffset,
+		chunkMin.x,
 		chunkMin.y,
-		chunkMin.z + borderWorldOffset
+		chunkMin.z
 	};
 
 	float tileSize = params.tileSize;
@@ -210,7 +211,8 @@ void TerrainPhysics::startAsyncBuild(XMINT2 worldChunk, const void* readbackData
 			}
 		}
 
-		float cellSize = tileSize / (float)physicsRes;
+		// 480 samples have 479 intervals between them, covering tileSize
+		float cellSize = tileSize / (float)(physicsRes - 1);
 		Vec3 scale = { cellSize, tileHeight, cellSize };
 
 		HeightFieldShapeSettings settings(heights.data(), Vec3(0, 0, 0), scale, physicsRes);
@@ -222,7 +224,7 @@ void TerrainPhysics::startAsyncBuild(XMINT2 worldChunk, const void* readbackData
 		BodyCreationSettings creation_settings(shapeResult.Get(),
 			Vec3(offset.x, offset.y, offset.z), Quat::sIdentity(),
 			EMotionType::Static, 4);
-		creation_settings.mFriction = 0.2f;
+		creation_settings.mFriction = 0.8f;
 		creation_settings.mRestitution = 0.3f;
 
 		return creation_settings;

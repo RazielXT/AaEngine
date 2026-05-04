@@ -2,7 +2,7 @@
 #include "imgui.h"
 #include "backends/imgui_impl_win32.h"
 #include "backends/imgui_impl_dx12.h"
-#include "../data/editor/icons/IconsFontAwesome7.h"
+#include "../data/editor/fonts/IconsFontAwesome7.h"
 #include "ApplicationCore.h"
 #include "ImGuizmo.h"
 #include "imnodes/imnodes.h"
@@ -12,7 +12,7 @@ Editor::Editor(ApplicationCore& a, ImguiPanelViewport& v) : app(a), renderer(a.r
 	viewportPanel(a, selection, v, srvDescHeapAlloc, a.renderSystem.core),
 	sceneTreePanel(a.sceneMgr, selection),
 	terrainShaderGraphPanel(a.resources.shaderDefines),
-	sidePanel(a, selection, state, sceneTreePanel)
+	sidePanel(a, selection, state, sceneTreePanel, viewportPanel)
 {
 #ifdef _DEBUG
 	state.limitFrameRate = true;
@@ -38,15 +38,12 @@ void Editor::initializeUi(const TargetWindow& v)
 	config.MergeMode = true;
 	config.PixelSnapH = true;
 	const ImWchar icon_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
-	io.Fonts->AddFontFromFileTTF(R"(../data/editor/icons/Font Awesome 7 Free-Solid-900.otf)", 16.0f * scaling, &config, icon_ranges);
+	io.Fonts->AddFontFromFileTTF(R"(../data/editor/fonts/Font Awesome 7 Free-Solid-900.otf)", 16.0f * scaling, &config, icon_ranges);
 
-	//ImGuiStyle& style = ImGui::GetStyle();
-
-	viewportPanel.loadIcons();
 	{
 		D3D12_DESCRIPTOR_HEAP_DESC desc = {};
 		desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-		desc.NumDescriptors = 64 + (UINT)viewportPanel.getIcons().size();
+		desc.NumDescriptors = 64;
 		desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 		if (renderer.device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&srvDescHeap)) != S_OK)
 			return;
@@ -54,7 +51,6 @@ void Editor::initializeUi(const TargetWindow& v)
 		srvDescHeap->SetName(L"ImguiDescriptors");
 		srvDescHeapAlloc.Create(renderer.device, srvDescHeap);
 	}
-	viewportPanel.initializeIconViews();
 
 	ImGui_ImplWin32_Init(v.getHwnd());
 }
@@ -151,16 +147,18 @@ void Editor::deinit()
 
 bool Editor::onClick(MouseButton button)
 {
+	auto* tool = viewportPanel.getActiveTool();
+
 	if (button == MouseButton::Right)
 	{
-		if (viewportPanel.isGizmoActive())
+		if (tool && tool->isInteracting())
 		{
-			viewportPanel.cancelGizmo();
+			tool->cancel();
 			return true;
 		}
 	}
 
-	if (viewportPanel.isGizmoActive() || viewportPanel.isOverlayActive())
+	if (tool && (tool->isInteracting() || tool->isOverlayActive()))
 		return false;
 
 	if (button == MouseButton::Left)
@@ -214,6 +212,6 @@ void Editor::prepareElements(Camera& camera)
 	logPanel.draw();
 	ImGui::End();
 
-	auto objTransformation = viewportPanel.draw(camera);
-	sidePanel.draw(objTransformation);
+	viewportPanel.draw(camera);
+	sidePanel.draw();
 }

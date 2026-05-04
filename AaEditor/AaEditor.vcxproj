@@ -151,10 +151,12 @@
     <ClCompile Include="source\Panels\SidePanel.cpp" />
     <ClCompile Include="source\Panels\TerrainShaderGraphPanel.cpp" />
     <ClCompile Include="source\Editor\EditorSelection.cpp" />
-    <ClCompile Include="source\Panels\ViewportPanel.cpp" />
     <ClCompile Include="source\main.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\dependencies\imgui;..\dependencies\DirectXTK12\Inc;..\dependencies\DirectX-Headers\include;..\dependencies\tinyxml2;..\dependencies\pugixml\src;..\dependencies\DLSS\include;..\dependencies\FidelityFX-SDK\ffx-api\include;C:\Hobby\AaEngineDx12\AaEngine\source;C:\Hobby\AaEngineDx12\AaFramework\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
+    <ClCompile Include="source\Panels\Viewport\SelectionTool.cpp" />
+    <ClCompile Include="source\Panels\Viewport\ViewportPanel.cpp" />
+    <ClCompile Include="source\Panels\WaterPaintTool.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dependencies\imnodes\imnodes.h" />
@@ -169,13 +171,16 @@
     <ClInclude Include="source\Panels\SceneTreePanel.h" />
     <ClInclude Include="source\Panels\SidePanel.h" />
     <ClInclude Include="source\Panels\TerrainShaderGraphPanel.h" />
-    <ClInclude Include="source\Panels\ViewportPanel.h" />
     <ClInclude Include="source\NodeGraph\Nodes\MathNodes.h" />
     <ClInclude Include="source\NodeGraph\Node.h" />
     <ClInclude Include="source\NodeGraph\NodeGraph.h" />
     <ClInclude Include="source\NodeGraph\ShaderGen.h" />
     <ClInclude Include="source\NodeGraph\Nodes\OutputNode.h" />
     <ClInclude Include="source\NodeGraph\Nodes\TextureNodes.h" />
+    <ClInclude Include="source\Panels\Viewport\SelectionTool.h" />
+    <ClInclude Include="source\Panels\Viewport\ViewportPanel.h" />
+    <ClInclude Include="source\Panels\Viewport\ViewportTool.h" />
+    <ClInclude Include="source\Panels\WaterPaintTool.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

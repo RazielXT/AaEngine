@@ -4,9 +4,13 @@
 #include "imgui.h"
 #include <map>
 #include <string>
+#include <memory>
+#include "SelectionTool.h"
 
 class EditorSelection;
 class ImguiPanelViewport;
+class ViewportTool;
+class SelectionTool;
 
 class ViewportPanel
 {
@@ -29,24 +33,21 @@ public:
 
 	ViewportPanel(ApplicationCore& app, EditorSelection& selection, ImguiPanelViewport& renderPanelViewport, DescriptorHeapAllocator& srvDescHeapAlloc, RenderCore& renderer);
 
-	ObjectTransformation draw(Camera& camera);
+	void draw(Camera& camera);
 
 	void scheduleViewportPick();
 	void resetOutputDescriptor();
 
-	void loadIcons();
-	void initializeIconViews();
-
 	bool isActive() const { return active; }
 	bool isHovered() const { return hovered; }
-	bool isGizmoActive() const { return gizmoActive; }
-	bool isOverlayActive() const { return overlayActive; }
+	bool isOverlayActive() const;
 	XMUINT2 getViewportSize() const { return viewportPanelSize; }
 
-	void cancelGizmo() { gizmoReset = true; }
-	void reset();
+	void setActiveTool(ViewportTool* tool);
+	ViewportTool* getActiveTool() const { return activeTool; }
+	SelectionTool& getSelectionTool() { return *selectionTool; }
 
-	std::map<std::string, FileTexture*>& getIcons() { return icons; }
+	void reset();
 
 private:
 
@@ -63,14 +64,10 @@ private:
 	bool active{};
 	bool hovered{};
 	bool scenePickScheduled = false;
-	bool gizmoActive = false;
-	bool gizmoReset = false;
-	bool gizmoResetCache = false;
-	bool overlayActive = false;
-	std::string assetDrop;
+
+	ViewportTool* activeTool = nullptr;
+	std::unique_ptr<SelectionTool> selectionTool;
 
 	D3D12_GPU_DESCRIPTOR_HANDLE renderOutputHandleGpu{};
 	D3D12_CPU_DESCRIPTOR_HANDLE renderOutputHandleCpu{};
-
-	std::map<std::string, FileTexture*> icons;
 };

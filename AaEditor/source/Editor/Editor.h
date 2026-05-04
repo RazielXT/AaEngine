@@ -10,7 +10,7 @@
 #include "Panels/TerrainShaderGraphPanel.h"
 #include "Panels/SceneTreePanel.h"
 #include "Panels/SidePanel.h"
-#include "Panels/ViewportPanel.h"
+#include "Panels/Viewport/ViewportPanel.h"
 #include "imgui.h"
 
 class Editor

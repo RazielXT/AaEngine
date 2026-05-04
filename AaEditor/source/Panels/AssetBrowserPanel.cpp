@@ -1,6 +1,6 @@
 #include "AssetBrowserPanel.h"
 #include "imgui.h"
-#include "../data/editor/icons/IconsFontAwesome7.h"
+#include "../data/editor/fonts/IconsFontAwesome7.h"
 #include "App/Directories.h"
 #include <algorithm>
 #include <filesystem>

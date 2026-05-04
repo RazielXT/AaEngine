@@ -1,6 +1,8 @@
 #include "SidePanel.h"
 #include "SceneTreePanel.h"
 #include "Editor/DebugState.h"
+#include "Viewport/ViewportPanel.h"
+#include "WaterPaintTool.h"
 #include "ApplicationCore.h"
 #include "Editor/EditorSelection.h"
 #include "imgui.h"
@@ -12,12 +14,14 @@
 #include "Resources/Shader/ShaderResources.h"
 #include <algorithm>
 
-SidePanel::SidePanel(ApplicationCore& a, EditorSelection& sel, DebugState& st, SceneTreePanel& tree)
-	: app(a), selection(sel), state(st), sceneTree(tree)
+static WaterPaintTool waterPaintTool;
+
+SidePanel::SidePanel(ApplicationCore& a, EditorSelection& sel, DebugState& st, SceneTreePanel& tree, ViewportPanel& vp)
+	: app(a), selection(sel), state(st), sceneTree(tree), viewportPanel(vp)
 {
 }
 
-void SidePanel::draw(const ObjectTransformation& objTransformation)
+void SidePanel::draw()
 {
 	ImGui::Begin("SidePanel");
 
@@ -43,6 +47,7 @@ void SidePanel::draw(const ObjectTransformation& objTransformation)
 			auto& selected = selection.back();
 			ImGui::Text("EntityId %#010x", selected.obj.id);
 			ImGui::Text("Entity name %s", selected.obj.getName());
+			auto objTransformation = selected.obj.getTransformation();
 			ImGui::Text("Entity pos %f %f %f", objTransformation.position.x, objTransformation.position.y, objTransformation.position.z);
 			ImGui::Text("Entity vertex count %d", selected.obj.entity->geometry.vertexCount ? selected.obj.entity->geometry.vertexCount : selected.obj.entity->geometry.indexCount);
 		}
@@ -149,6 +154,18 @@ void SidePanel::draw(const ObjectTransformation& objTransformation)
 		static bool updateWater = true;
 		if (ImGui::Checkbox("Update water", &updateWater))
 			app.sceneMgr.water.enableWaterUpdating(updateWater);
+
+		bool waterPaintActive = viewportPanel.getActiveTool() == &waterPaintTool;
+		if (ImGui::Checkbox("Water paint mode", &waterPaintActive))
+		{
+			viewportPanel.setActiveTool(waterPaintActive ? &waterPaintTool : nullptr);
+		}
+
+		if (waterPaintActive)
+		{
+			const char* modeLabel = waterPaintTool.getMode() == WaterPaintTool::Mode::Add ? "Add" : "Remove";
+			ImGui::Text("  Mode: %s", modeLabel);
+		}
 	}
 
 	if (ImGui::CollapsingHeader("VCT"))

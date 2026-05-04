@@ -1,7 +1,7 @@
 #include "SceneTreePanel.h"
 #include "Editor/EditorSelection.h"
 #include "imgui.h"
-#include "../data/editor/icons/IconsFontAwesome7.h"
+#include "../data/editor/fonts/IconsFontAwesome7.h"
 
 static bool NodeMatchesFilter(SceneGraphNode& node, ImGuiTextFilter& filter)
 {

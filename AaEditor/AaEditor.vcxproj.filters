@@ -23,6 +23,9 @@
     <Filter Include="Source Files\Panels">
       <UniqueIdentifier>{b2c3d4e5-f6a7-8901-bcde-f12345678901}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Panels\Viewport">
+      <UniqueIdentifier>{5b7d1fdb-adf3-44d8-bddc-7269b74ca9d0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -52,14 +55,20 @@
     <ClCompile Include="source\Editor\EditorSelection.cpp">
       <Filter>Source Files\Editor</Filter>
     </ClCompile>
-    <ClCompile Include="source\Panels\ViewportPanel.cpp">
-      <Filter>Source Files\Panels</Filter>
-    </ClCompile>
     <ClCompile Include="..\dependencies\ImGuizmo\ImGuizmo.cpp">
       <Filter>ImGuizmo</Filter>
     </ClCompile>
     <ClCompile Include="..\dependencies\imnodes\imnodes.cpp">
       <Filter>imnodes</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Panels\Viewport\SelectionTool.cpp">
+      <Filter>Source Files\Panels\Viewport</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Panels\Viewport\ViewportPanel.cpp">
+      <Filter>Source Files\Panels\Viewport</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Panels\WaterPaintTool.cpp">
+      <Filter>Source Files\Panels</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -90,9 +99,6 @@
     <ClInclude Include="source\Panels\TerrainShaderGraphPanel.h">
       <Filter>Source Files\Panels</Filter>
     </ClInclude>
-    <ClInclude Include="source\Panels\ViewportPanel.h">
-      <Filter>Source Files\Panels</Filter>
-    </ClInclude>
     <ClInclude Include="source\NodeGraph\Node.h">
       <Filter>Source Files\NodesGraph</Filter>
     </ClInclude>
@@ -119,6 +125,18 @@
     </ClInclude>
     <ClInclude Include="source\NodeGraph\ShaderGen.h">
       <Filter>Source Files\NodesGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Panels\Viewport\SelectionTool.h">
+      <Filter>Source Files\Panels\Viewport</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Panels\Viewport\ViewportPanel.h">
+      <Filter>Source Files\Panels\Viewport</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Panels\Viewport\ViewportTool.h">
+      <Filter>Source Files\Panels\Viewport</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Panels\WaterPaintTool.h">
+      <Filter>Source Files\Panels</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -87,20 +87,27 @@ void WaterSim::initializeTarget(const GpuTexture2D& texture, SceneManager& scene
 {
 	terrainHeight = &texture;
 
-	waterGridTiles.Initialize(size, center, 10);
+	worldSize = size * (TextureSize / (TextureSize - 64.f));
+
+	worldCenter = center;
+	auto worldOffset = worldSize * (32.f / TextureSize);
+	worldCenter.x -= worldOffset.x;
+	worldCenter.z -= worldOffset.y;
+
+	waterGridTiles.Initialize(worldSize, worldCenter, 10);
 
 	auto e = sceneMgr.createEntity("WaterSim", EntityCreateProperties{ .order = Order::Transparent });
 	waterGridMesh.create(waterGridTiles.TilesWidth);
 	waterGridMesh.entity = e;
 
 	e->geometry.fromInstancedModel(waterModel, 0, waterGridMesh.gpuBuffer.data[0].GpuAddress());
-	e->setBoundingBox(BoundingBox({}, { size.x, size.x, size.y }));
+	e->setBoundingBox(BoundingBox({}, { worldSize.x, size.x, worldSize.y }));
 	e->material = waterMaterial;
 	e->Material().setParam("TexIdHeightmap", waterHeightMeshTexture.view.srvHeapIndex);
 	e->Material().setParam("TexIdFlowmap", waterFlowTexture.view.srvHeapIndex);
 	e->Material().setParam("TexIdMeshNormal", waterNormalTexture.view.srvHeapIndex);
-	e->Material().setParam("GridHeightWidth", Vector2(size.x, size.x));
-	e->setPosition(center);
+	e->Material().setParam("GridHeightWidth", Vector2(size.x, worldSize.x));
+	e->setPosition(worldCenter);
 }
 
 static bool first = true;

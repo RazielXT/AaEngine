@@ -1,4 +1,4 @@
-#define GRID_PADDING
+//#define GRID_PADDING
 
 #include "hlsl/vct/iso/VoxelConeTracingCommon.hlsl"
 #include "hlsl/postprocess/WorldReconstruction.hlsl"

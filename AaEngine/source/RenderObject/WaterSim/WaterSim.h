@@ -72,6 +72,8 @@ private:
 	bool updateWater = true;
 	bool updateLod = true;
 
+	Vector2 worldSize{};
+	Vector3 worldCenter{};
 
 	std::mutex adjustmentsMutex;
 	std::vector<WaterAdjustment> pendingAdjustments;

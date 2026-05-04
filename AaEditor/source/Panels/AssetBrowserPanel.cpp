@@ -47,8 +47,12 @@ void AssetBrowserPanel::lookupAssets()
 	for (auto& file : FindFilesRecursive(SCENE_DIRECTORY, { ".scene" , ".gltf", ".prefab" }))
 	{
 		AssetItem asset;
-		asset.name = file.filename().string();
 		asset.path = file.string();
+
+		if (file.extension() == ".scene")
+			asset.name = file.parent_path().filename().string();
+		else
+			asset.name = file.filename().string();
 
 		if (file.extension() == ".scene")
 			asset.type = AssetType::Scene;
@@ -65,9 +69,9 @@ void AssetBrowserPanel::draw()
 {
 	drawTopBar();
 
-	const float padding = 10.0f;      // spacing between cells
-	const float iconSize = 32;      // size of the icon inside the cell
-	const float cellSize = iconSize * 4;      // width & height of each grid cell
+	const float padding = 5.0f;      // spacing between cells
+	const float iconSize = 54;      // size of the icon inside the cell
+	const float cellSize = iconSize * 2;      // width & height of each grid cell
 
 	float panelWidth = ImGui::GetContentRegionAvail().x;
 	int columns = (int)(panelWidth / (cellSize + padding));
@@ -119,10 +123,12 @@ void AssetBrowserPanel::draw()
 		ImGui::SetCursorScreenPos(ImVec2(iconX, iconY));
 
 		const char* icon = ICON_FA_CUBE;
-		if (asset.type == AssetType::Scene)   icon = ICON_FA_CUBES;
-		if (asset.type == AssetType::Prefab)  icon = ICON_FA_CUBES_STACKED;
+		if (asset.type == AssetType::Scene)   icon = ICON_FA_CUBES_STACKED;
+		if (asset.type == AssetType::Prefab)  icon = ICON_FA_CUBES;
 
-		ImGui::Text("%s", icon);
+		ImGui::SetWindowFontScale(2.0f);
+		ImGui::Text(icon);
+		ImGui::SetWindowFontScale(1.0f);
 
 		// Text position (centered horizontally, near bottom but not touching)
 		float textY = cellMin.y + cellSize * 0.65f;
@@ -130,7 +136,9 @@ void AssetBrowserPanel::draw()
 
 		ImGui::SetCursorScreenPos(ImVec2(textX, textY));
 		ImGui::PushTextWrapPos(cellMin.x + cellSize - 4.0f);
-		ImGui::Text("%s", asset.name.c_str());
+		ImGui::SetWindowFontScale(0.8f);
+		ImGui::Text(asset.name.c_str());
+		ImGui::SetWindowFontScale(1.0f);
 		ImGui::PopTextWrapPos();
 
 		ImGui::EndGroup();

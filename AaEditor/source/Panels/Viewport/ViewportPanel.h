@@ -63,7 +63,6 @@ private:
 	XMUINT2 viewportPanelSize{};
 	bool active{};
 	bool hovered{};
-	bool scenePickScheduled = false;
 
 	ViewportTool* activeTool = nullptr;
 	std::unique_ptr<SelectionTool> selectionTool;

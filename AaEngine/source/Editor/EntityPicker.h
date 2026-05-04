@@ -31,7 +31,9 @@ public:
 		Vector3 position;
 		Vector3 normal;
 	};
+	bool hasPreparedPick() const;
 	const PickInfo& getLastPick();
+
 	bool lastPickWasTransparent() const;
 
 	std::vector<ObjectId> active;

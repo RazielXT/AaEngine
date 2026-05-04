@@ -34,9 +34,7 @@ void EntityPicker::initializeGpuResources()
 	rtt.Init(device, size.x, size.y, heap, formats, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
 	rtt.SetName("EntityPickerRttTex");
 
-	//DescriptorManager::get().createTextureView(rtt);
-
-	if (!readbackBuffer[0])
+	if (!readbackBuffer[0][0])
 	{
 		D3D12_RESOURCE_DESC bufferDesc = {};
 		bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
@@ -56,25 +54,28 @@ void EntityPicker::initializeGpuResources()
 		heapProps.CreationNodeMask = 1;
 		heapProps.VisibleNodeMask = 1;
 
-		for (auto& b : readbackBuffer)
+		for (auto& frameBuffer : readbackBuffer)
 		{
-			device->CreateCommittedResource(
-				&heapProps,
-				D3D12_HEAP_FLAG_NONE,
-				&bufferDesc,
-				D3D12_RESOURCE_STATE_COPY_DEST,
-				nullptr,
-				IID_PPV_ARGS(&b));
+			for (auto& b : frameBuffer)
+			{
+				device->CreateCommittedResource(
+					&heapProps,
+					D3D12_HEAP_FLAG_NONE,
+					&bufferDesc,
+					D3D12_RESOURCE_STATE_COPY_DEST,
+					nullptr,
+					IID_PPV_ARGS(&b));
+			}
 		}
 	}
 }
 
 const EntityPicker::PickInfo& EntityPicker::getLastPick()
 {
-	if (nextPickPrepared)
+	if (nextPickPrepared[renderSystem.core.frameIndex])
 	{
 		readPickResult();
-		nextPickPrepared = false;
+		nextPickPrepared[renderSystem.core.frameIndex] = false;
 	}
 
 	return lastPick;
@@ -112,7 +113,7 @@ void EntityPicker::scheduleReadback(ID3D12GraphicsCommandList* commandList)
 	for (size_t i = 0; i < rtt.textures.size(); i++)
 	{
 		srcLocation.pResource = rtt.textures[i].texture.Get();
-		dstLocation.pResource = readbackBuffer[i].Get();
+		dstLocation.pResource = readbackBuffer[renderSystem.core.frameIndex][i].Get();
 		dstLocation.PlacedFootprint.Footprint.Format = formats[i];
 
 		// Copy the specific pixel region
@@ -126,42 +127,42 @@ void EntityPicker::scheduleReadback(ID3D12GraphicsCommandList* commandList)
 
 void EntityPicker::readPickResult()
 {
-	renderSystem.core.WaitForCurrentFrame();
+	auto& readBuffers = readbackBuffer[renderSystem.core.frameIndex];
 	{
 		uint32_t* mappedData;
 		D3D12_RANGE readRange = { 0, sizeof(uint32_t) };
-		readbackBuffer[0]->Map(0, &readRange, reinterpret_cast<void**>(&mappedData));
+		readBuffers[0]->Map(0, &readRange, reinterpret_cast<void**>(&mappedData));
 
 		// Access the specific pixel data
 		lastPick.id = mappedData[0];
 
 		// Unmap the buffer when done
 		D3D12_RANGE writeRange = { 0, 0 }; // No need to write back any data
-		readbackBuffer[0]->Unmap(0, &writeRange);
+		readBuffers[0]->Unmap(0, &writeRange);
 	}
 	{
 		Vector3* mappedData{};
 		D3D12_RANGE readRange = { 0, sizeof(Vector3) };
-		readbackBuffer[1]->Map(0, &readRange, reinterpret_cast<void**>(&mappedData));
+		readBuffers[1]->Map(0, &readRange, reinterpret_cast<void**>(&mappedData));
 
 		// Access the specific pixel data
 		lastPick.position = mappedData[0];
 
 		// Unmap the buffer when done
 		D3D12_RANGE writeRange = { 0, 0 }; // No need to write back any data
-		readbackBuffer[1]->Unmap(0, &writeRange);
+		readBuffers[1]->Unmap(0, &writeRange);
 	}
 	{
 		Vector3* mappedData{};
 		D3D12_RANGE readRange = { 0, sizeof(Vector3) };
-		readbackBuffer[2]->Map(0, &readRange, reinterpret_cast<void**>(&mappedData));
+		readBuffers[2]->Map(0, &readRange, reinterpret_cast<void**>(&mappedData));
 
 		// Access the specific pixel data
 		lastPick.normal = mappedData[0];
 
 		// Unmap the buffer when done
 		D3D12_RANGE writeRange = { 0, 0 }; // No need to write back any data
-		readbackBuffer[2]->Unmap(0, &writeRange);
+		readBuffers[2]->Unmap(0, &writeRange);
 	}
 }
 
@@ -173,6 +174,11 @@ bool EntityPicker::lastPickWasTransparent() const
 void EntityPicker::scheduleNextPick(XMUINT2 position)
 {
 	scheduled = position;
+}
+
+bool EntityPicker::hasPreparedPick() const
+{
+	return nextPickPrepared[renderSystem.core.frameIndex];
 }
 
 RenderQueue EntityPicker::createRenderQueue() const
@@ -235,6 +241,6 @@ void EntityPicker::update(ID3D12GraphicsCommandList* commandList, RenderProvider
 		renderItems(Order::Transparent);
 
 	scheduleReadback(commandList);
-	nextPickPrepared = true;
+	nextPickPrepared[renderSystem.core.frameIndex] = true;
 	scheduled.reset();
 }

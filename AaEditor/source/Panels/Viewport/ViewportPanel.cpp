@@ -63,7 +63,6 @@ void ViewportPanel::scheduleViewportPick()
 	if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
 	{
 		EntityPicker::Get().scheduleNextPick({ mouseX, viewportSize.y - mouseY });
-		scenePickScheduled = true;
 	}
 }
 
@@ -80,7 +79,6 @@ void ViewportPanel::resetOutputDescriptor()
 
 void ViewportPanel::reset()
 {
-	scenePickScheduled = false;
 	if (activeTool)
 		activeTool->reset();
 }
@@ -137,11 +135,10 @@ void ViewportPanel::draw(Camera& camera)
 
 	bool ctrlActive = ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl);
 
-	if (scenePickScheduled)
+	if (EntityPicker::Get().hasPreparedPick())
 	{
 		auto& pickInfo = EntityPicker::Get().getLastPick();
 		activeTool->onPick(pickInfo, ctrlActive, camera);
-		scenePickScheduled = false;
 	}
 
 	if (ImGui::BeginDragDropTarget())

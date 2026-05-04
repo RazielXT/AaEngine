@@ -9,6 +9,7 @@
 #include "Resources/Compute/GenerateMipsComputeShader.h"
 #include "Resources/Compute/TerrainGenerationCS.h"
 #include "RenderObject/Terrain/GridMesh.h"
+#include <mutex>
 
 class SceneManager;
 
@@ -32,12 +33,22 @@ public:
 	void prepareForRendering(ID3D12GraphicsCommandList* commandList);
 	void prepareAfterRendering(ID3D12GraphicsCommandList* commandList);
 
+	struct WaterAdjustment
+	{
+		Vector3 worldPosition;
+		float radius;
+		float heightDelta;
+	};
+	void addAdjustment(const WaterAdjustment& adjustment);
+
 private:
 
 	WaterSimContinuityComputeShader continuityComputeShader;
 	WaterSimMomentumComputeShader momentumComputeShader;
 
 	WaterTextureToTextureCS waterToTextureCS;
+
+	WaterAdjustCS waterAdjustCS;
 
 	const GpuTexture2D* terrainHeight{};
 	GpuTexture2D waterHeight[FrameCount];
@@ -60,6 +71,10 @@ private:
 
 	bool updateWater = true;
 	bool updateLod = true;
+
+
+	std::mutex adjustmentsMutex;
+	std::vector<WaterAdjustment> pendingAdjustments;
 
 	GridInstanceMesh waterGridMesh;
 	GridLODSystem waterGridTiles;

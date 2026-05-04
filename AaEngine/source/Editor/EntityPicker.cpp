@@ -101,8 +101,8 @@ void EntityPicker::scheduleReadback(ID3D12GraphicsCommandList* commandList)
 	footprint.Footprint.RowPitch = formatSize;
 	dstLocation.PlacedFootprint = footprint;
 
-	UINT x = scheduled->x;
-	UINT y = scheduled->y;
+	UINT x = scheduled->position.x;
+	UINT y = scheduled->position.y;
 	CD3DX12_BOX srcBox(x, y, 0, x + 1, y + 1, 1); // Box to specify the region
 
 	CD3DX12_RESOURCE_BARRIER barriers[_countof(readbackBuffer)]{};
@@ -171,9 +171,9 @@ bool EntityPicker::lastPickWasTransparent() const
 	return lastPick.id.getObjectType() == ObjectType::Entity && lastPick.id.getOrder() == Order::Transparent;
 }
 
-void EntityPicker::scheduleNextPick(XMUINT2 position)
+void EntityPicker::scheduleNextPick(PickOptions pick)
 {
-	scheduled = position;
+	scheduled = pick;
 }
 
 bool EntityPicker::hasPreparedPick() const
@@ -198,7 +198,7 @@ void EntityPicker::update(ID3D12GraphicsCommandList* commandList, RenderProvider
 	rtt.PrepareAsTarget(commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 	//render only selected pixel
-	auto rect = CD3DX12_RECT(scheduled->x, scheduled->y, scheduled->x + 1, scheduled->y + 1);
+	auto rect = CD3DX12_RECT(scheduled->position.x, scheduled->position.y, scheduled->position.x + 1, scheduled->position.y + 1);
 	commandList->RSSetScissorRects(1, &rect);
 
 	CommandsMarker marker(commandList, "EntityPicker", PixColor::Debug);
@@ -235,9 +235,10 @@ void EntityPicker::update(ID3D12GraphicsCommandList* commandList, RenderProvider
 			return pick;
 		}();
 
-	renderItems(Order::Normal);
+	if (!scheduled->onlyTransparent)
+		renderItems(Order::Normal);
 
-	if (pickTransparent)
+	if (scheduled->onlyTransparent || pickTransparent)
 		renderItems(Order::Transparent);
 
 	scheduleReadback(commandList);

@@ -50,7 +50,7 @@ ViewportPanel::ViewportPanel(ApplicationCore& a, EditorSelection& sel, ImguiPane
 	activeTool = selectionTool.get();
 }
 
-void ViewportPanel::scheduleViewportPick()
+void ViewportPanel::scheduleViewportPick(bool transparent)
 {
 	auto [mx, my] = ImGui::GetMousePos();
 	mx -= viewportBounds[0].x;
@@ -62,7 +62,7 @@ void ViewportPanel::scheduleViewportPick()
 
 	if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
 	{
-		EntityPicker::Get().scheduleNextPick({ mouseX, viewportSize.y - mouseY });
+		EntityPicker::Get().scheduleNextPick({ { mouseX, viewportSize.y - mouseY }, transparent });
 	}
 }
 
@@ -77,6 +77,30 @@ void ViewportPanel::resetOutputDescriptor()
 	}
 }
 
+bool ViewportPanel::onClick(MouseButton button)
+{
+	if (button == MouseButton::Right)
+	{
+		if (activeTool && activeTool->isInteracting())
+		{
+			activeTool->cancel();
+			return true;
+		}
+	}
+
+	if (activeTool && (activeTool->isInteracting() || activeTool->isOverlayActive()))
+		return false;
+
+	if (button == MouseButton::Left)
+	{
+		scheduleViewportPick();
+
+		return true;
+	}
+
+	return false;
+}
+
 void ViewportPanel::reset()
 {
 	if (activeTool)
@@ -86,11 +110,6 @@ void ViewportPanel::reset()
 void ViewportPanel::setActiveTool(ViewportTool* tool)
 {
 	activeTool = tool ? tool : selectionTool.get();
-}
-
-bool ViewportPanel::isOverlayActive() const
-{
-	return activeTool ? activeTool->isOverlayActive() : false;
 }
 
 void ViewportPanel::ensureOutputDescriptor()

@@ -14,11 +14,12 @@
 #include "Resources/Shader/ShaderResources.h"
 #include <algorithm>
 
-static WaterPaintTool waterPaintTool;
+static WaterPaintTool* waterPaintTool;
 
 SidePanel::SidePanel(ApplicationCore& a, EditorSelection& sel, DebugState& st, SceneTreePanel& tree, ViewportPanel& vp)
 	: app(a), selection(sel), state(st), sceneTree(tree), viewportPanel(vp)
 {
+	waterPaintTool = new WaterPaintTool(a, viewportPanel);
 }
 
 void SidePanel::draw()
@@ -155,15 +156,15 @@ void SidePanel::draw()
 		if (ImGui::Checkbox("Update water", &updateWater))
 			app.sceneMgr.water.enableWaterUpdating(updateWater);
 
-		bool waterPaintActive = viewportPanel.getActiveTool() == &waterPaintTool;
+		bool waterPaintActive = viewportPanel.getActiveTool() == waterPaintTool;
 		if (ImGui::Checkbox("Water paint mode", &waterPaintActive))
 		{
-			viewportPanel.setActiveTool(waterPaintActive ? &waterPaintTool : nullptr);
+			viewportPanel.setActiveTool(waterPaintActive ? waterPaintTool : nullptr);
 		}
 
 		if (waterPaintActive)
 		{
-			const char* modeLabel = waterPaintTool.getMode() == WaterPaintTool::Mode::Add ? "Add" : "Remove";
+			const char* modeLabel = waterPaintTool->getMode() == WaterPaintTool::Mode::Add ? "Add" : "Remove";
 			ImGui::Text("  Mode: %s", modeLabel);
 		}
 	}

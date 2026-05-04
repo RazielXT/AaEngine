@@ -40,3 +40,10 @@ public:
 	};
 	void dispatch(ID3D12GraphicsCommandList* commandList, InputParams);
 };
+
+class WaterAdjustCS : public ComputeShader
+{
+public:
+
+	void dispatch(ID3D12GraphicsCommandList* commandList, UINT gridSize, XMFLOAT2 center, float radius, float heightDelta, UINT waterMap);
+};

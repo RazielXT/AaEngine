@@ -6,6 +6,7 @@
 #include <string>
 #include <memory>
 #include "SelectionTool.h"
+#include "InputHandler.h"
 
 class EditorSelection;
 class ImguiPanelViewport;
@@ -35,18 +36,17 @@ public:
 
 	void draw(Camera& camera);
 
-	void scheduleViewportPick();
+	void scheduleViewportPick(bool transparent = false);
 	void resetOutputDescriptor();
 
 	bool isActive() const { return active; }
 	bool isHovered() const { return hovered; }
-	bool isOverlayActive() const;
 	XMUINT2 getViewportSize() const { return viewportPanelSize; }
 
 	void setActiveTool(ViewportTool* tool);
 	ViewportTool* getActiveTool() const { return activeTool; }
-	SelectionTool& getSelectionTool() { return *selectionTool; }
 
+	bool onClick(MouseButton);
 	void reset();
 
 private:

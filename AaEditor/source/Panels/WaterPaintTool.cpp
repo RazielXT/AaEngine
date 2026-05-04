@@ -2,6 +2,12 @@
 #include "imgui.h"
 #include "../data/editor/fonts/IconsFontAwesome7.h"
 #include "Utils/Logger.h"
+#include "Viewport/ViewportPanel.h"
+#include "ApplicationCore.h"
+
+WaterPaintTool::WaterPaintTool(ApplicationCore& a, ViewportPanel& v) : app(a), viewport(v)
+{
+}
 
 void WaterPaintTool::onPick(const EntityPicker::PickInfo& pickInfo, bool ctrlActive, Camera& camera)
 {
@@ -10,6 +16,13 @@ void WaterPaintTool::onPick(const EntityPicker::PickInfo& pickInfo, bool ctrlAct
 		const char* action = (mode == Mode::Add) ? "Adding" : "Removing";
 		Logger::log(std::format("{} water at ({:.2f}, {:.2f}, {:.2f}) radius {:.1f}",
 			action, pickInfo.position.x, pickInfo.position.y, pickInfo.position.z, brushRadius));
+
+		adjustWaterLevel(pickInfo.position);
+	}
+
+	if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
+	{
+		viewport.scheduleViewportPick(true);
 	}
 }
 
@@ -40,7 +53,21 @@ void WaterPaintTool::draw(const ViewportToolContext& ctx)
 
 	ImGui::PopStyleVar();
 
+	ImGui::SetNextItemWidth(100);
+	ImGui::SliderFloat("##Strength", &brushStrength, 1.0f, 10.0f, "%.1f");
+
 	ImGui::EndGroup();
 
 	toolbarHovered = ImGui::IsItemHovered();
+}
+
+void WaterPaintTool::adjustWaterLevel(const Vector3& position)
+{
+	float sign = (mode == Mode::Add) ? 1.0f : -1.0f;
+
+	app.sceneMgr.water.addAdjustment({
+		.worldPosition = position,
+		.radius = brushRadius,
+		.heightDelta = sign * brushStrength
+	});
 }

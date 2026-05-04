@@ -23,7 +23,12 @@ public:
 	void initializeGpuResources();
 	void update(ID3D12GraphicsCommandList* commandList, RenderProvider& provider, Camera& camera, SceneManager& sceneMgr);
 
-	void scheduleNextPick(XMUINT2 position);
+	struct PickOptions
+	{
+		XMUINT2 position;
+		bool onlyTransparent = false;
+	};
+	void scheduleNextPick(PickOptions);
 
 	struct PickInfo
 	{
@@ -45,7 +50,8 @@ private:
 
 	RenderQueue createRenderQueue() const;
 
-	ComPtr<ID3D12Resource> readbackBuffer[3];
+	ComPtr<ID3D12Resource> readbackBuffer[3][FrameCount];
+
 	void scheduleReadback(ID3D12GraphicsCommandList* commandList);
 	void readPickResult();
 
@@ -54,8 +60,8 @@ private:
 
 	PickInfo lastPick{};
 
-	std::optional<XMUINT2> scheduled;
-	bool nextPickPrepared = false;
+	std::optional<PickOptions> scheduled;
+	bool nextPickPrepared[FrameCount]{};
 
 	RenderSystem& renderSystem;
 };

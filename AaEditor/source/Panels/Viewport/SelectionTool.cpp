@@ -146,7 +146,7 @@ void SelectionTool::draw(const ViewportToolContext& ctx)
 		selection.remove(app.sceneMgr);
 	}
 
-	auto m_GizmoType = (ImGuizmo::OPERATION)transformButtons.options[transformButtons.current].value;
+	auto gizmoType = (ImGuizmo::OPERATION)transformButtons.options[transformButtons.current].value;
 
 	if (gizmoReset || gizmoResetCache)
 	{
@@ -172,7 +172,7 @@ void SelectionTool::draw(const ViewportToolContext& ctx)
 		float snapValue = 0.5f; // Snap to 0.5m for translation/scale
 
 		// Snap to 45 degrees for rotation
-		if (m_GizmoType == ImGuizmo::OPERATION::ROTATE)
+		if (gizmoType == ImGuizmo::OPERATION::ROTATE)
 			snapValue = 45.0f;
 
 		float snapValues[3] = { snapValue, snapValue, snapValue };
@@ -206,7 +206,7 @@ void SelectionTool::draw(const ViewportToolContext& ctx)
 
 		static bool manipulated{};
 		bool currentlyManipulated = ImGuizmo::Manipulate(&cameraView._11, &cameraProjection._11,
-			m_GizmoType, selection.size() == 1 ? ImGuizmo::LOCAL : ImGuizmo::WORLD, &transform._11,
+			gizmoType, selection.size() == 1 ? ImGuizmo::LOCAL : ImGuizmo::WORLD, &transform._11,
 			&transformDelta._11, nullptr);
 
 		if (gizmoActive)
@@ -217,18 +217,18 @@ void SelectionTool::draw(const ViewportToolContext& ctx)
 
 			objTransformation = {};
 
-			if (m_GizmoType == ImGuizmo::OPERATION::TRANSLATE)
+			if (gizmoType == ImGuizmo::OPERATION::TRANSLATE)
 				XMStoreFloat3(&objTransformation.position, translation);
-			if (m_GizmoType == ImGuizmo::OPERATION::ROTATE)
+			if (gizmoType == ImGuizmo::OPERATION::ROTATE)
 				XMStoreFloat4(&objTransformation.orientation, rotation);
-			if (m_GizmoType == ImGuizmo::OPERATION::SCALE)
+			if (gizmoType == ImGuizmo::OPERATION::SCALE)
 				XMStoreFloat3(&objTransformation.scale, scale);
 
 			for (auto& s : selection)
 			{
 				auto newTransform = s.obj.getTransformation() + objTransformation;
 
-				if (m_GizmoType == ImGuizmo::OPERATION::ROTATE)
+				if (gizmoType == ImGuizmo::OPERATION::ROTATE)
 				{
 					auto offCenter = newTransform.position - gizmoCenter;
 					offCenter = objTransformation.orientation * offCenter;
@@ -236,7 +236,7 @@ void SelectionTool::draw(const ViewportToolContext& ctx)
 					newTransform.position = gizmoCenter + offCenter;
 				}
 
-				if (m_GizmoType == ImGuizmo::OPERATION::SCALE)
+				if (gizmoType == ImGuizmo::OPERATION::SCALE)
 				{
 					auto offCenter = newTransform.position - gizmoCenter;
 					offCenter = objTransformation.scale * offCenter;

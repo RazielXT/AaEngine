@@ -147,28 +147,7 @@ void Editor::deinit()
 
 bool Editor::onClick(MouseButton button)
 {
-	auto* tool = viewportPanel.getActiveTool();
-
-	if (button == MouseButton::Right)
-	{
-		if (tool && tool->isInteracting())
-		{
-			tool->cancel();
-			return true;
-		}
-	}
-
-	if (tool && (tool->isInteracting() || tool->isOverlayActive()))
-		return false;
-
-	if (button == MouseButton::Left)
-	{
-		viewportPanel.scheduleViewportPick();
-
-		return true;
-	}
-
-	return false;
+	return viewportPanel.onClick(button);
 }
 
 bool Editor::keyPressed(int key)

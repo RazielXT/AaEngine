@@ -82,3 +82,23 @@ void WaterMeshTextureCS::dispatch(ID3D12GraphicsCommandList* commandList, InputP
 
 	commandList->Dispatch(input.gridSize.x / 8, input.gridSize.y / 8, 1);
 }
+
+void WaterAdjustCS::dispatch(ID3D12GraphicsCommandList* commandList, UINT gridSize, XMFLOAT2 center, float radius, float heightDelta, UINT waterMap)
+{
+	commandList->SetPipelineState(pipelineState.Get());
+	commandList->SetComputeRootSignature(signature);
+
+	struct AdjustParams
+	{
+		XMUINT2 gridSize;
+		XMFLOAT2 center;
+		float radius;
+		float heightDelta;
+		UINT waterMap;
+	}
+	data = { {gridSize, gridSize}, center, radius, heightDelta, waterMap };
+
+	commandList->SetComputeRoot32BitConstants(0, sizeof(data) / sizeof(float), &data, 0);
+
+	commandList->Dispatch(gridSize / 8, gridSize / 8, 1);
+}

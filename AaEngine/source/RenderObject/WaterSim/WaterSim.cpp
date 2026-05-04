@@ -77,6 +77,9 @@ void WaterSim::initializeGpuResources(RenderSystem& renderSystem, GraphicsResour
 	csShader = resources.shaders.getShader("watermapToTextureCS", ShaderType::Compute, ShaderRef{ "waterSim/watermapToTextureCS.hlsl", "CSMain", "cs_6_6" });
 	waterToTextureCS.init(*renderSystem.core.device, *csShader);
 
+	csShader = resources.shaders.getShader("waterAdjustCS", ShaderType::Compute, ShaderRef{ "waterSim/waterAdjustCS.hlsl", "CSMain", "cs_6_6" });
+	waterAdjustCS.init(*renderSystem.core.device, *csShader);
+
 	generateXYMips4xCS.init(*renderSystem.core.device, "generateXYMips4xCS", resources.shaders);
 }
 
@@ -152,6 +155,26 @@ void WaterSim::updateCompute(RenderSystem& renderSystem, ID3D12GraphicsCommandLi
 	const UINT waterPrevIdx = (waterCurrentIdx == 0) ? (WaterComputeIterations - 1) : (waterCurrentIdx - 1);
 	const UINT BuffersCount = 2;
 	const UINT waterResultIdx = (waterPrevIdx + WaterComputeIterations) % BuffersCount;
+
+	// Apply pending water adjustments
+	{
+		std::lock_guard lock(adjustmentsMutex);
+		for (const auto& adj : pendingAdjustments)
+		{
+			float texelX = (adj.worldPosition.x - worldCenter.x) / worldSize.x;
+			float texelY = (adj.worldPosition.z - worldCenter.z) / worldSize.y;
+			float radiusTexels = adj.radius / worldSize.x * TextureSize;
+
+			waterAdjustCS.dispatch(computeList, TextureSize, { texelX * TextureSize, texelY * TextureSize }, radiusTexels, adj.heightDelta * dt, waterHeight[waterPrevIdx].view.uavHeapIndex);
+		}
+		if (!pendingAdjustments.empty())
+		{
+			auto uavb = CD3DX12_RESOURCE_BARRIER::UAV(waterHeight[waterPrevIdx].texture.Get());
+			D3D12_RESOURCE_BARRIER barriers[] = { uavb };
+			computeList->ResourceBarrier(1, barriers);
+			pendingAdjustments.clear();
+		}
+	}
 
 	WaterSimTextures t =
 	{
@@ -230,6 +253,12 @@ void WaterSim::enableLodUpdating(bool enable)
 void WaterSim::enableWaterUpdating(bool enable)
 {
 	updateWater = enable;
+}
+
+void WaterSim::addAdjustment(const WaterAdjustment& adjustment)
+{
+	std::lock_guard lock(adjustmentsMutex);
+	pendingAdjustments.push_back(adjustment);
 }
 
 void WaterSim::prepareForRendering(ID3D12GraphicsCommandList* commandList)

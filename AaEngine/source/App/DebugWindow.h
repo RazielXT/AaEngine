@@ -12,8 +12,6 @@ namespace imgui
 	{
 		bool reloadShaders = false;
 
-		const char* changeScene{};
-
 		bool stopUpdatingVoxel = false;
 		Vector2 middleConeRatioDistance = { 1.05f, 1.5f };
 		Vector2 sideConeRatioDistance = { 2.2f, 5.f };

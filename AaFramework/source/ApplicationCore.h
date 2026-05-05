@@ -35,7 +35,7 @@ public:
 	void renderFrame(Camera& camera);
 	HRESULT present();
 
-	void loadScene(const char* scene);
+	void loadScene();
 
 	RenderSystem renderSystem;
 	GraphicsResources resources;

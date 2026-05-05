@@ -41,7 +41,7 @@ public:
 		freeCamera.bind(renderPanelViewport);
 		freeCamera.camera.setPosition(XMFLOAT3(0, 0, 0));
 
-		app.loadScene("basic");
+		app.loadScene();
 	}
 
 	~ApplicationObject()
@@ -91,12 +91,6 @@ public:
 
 	void updateDebugState()
 	{
-		if (editorUi.state.changeScene)
-		{
-			app.loadScene(editorUi.state.changeScene);
-			editorUi.state.changeScene = {};
-			editorUi.reset();
-		}
 		if (editorUi.state.reloadShaders)
 		{
 			app.resources.materials.reloadChangedShaders();

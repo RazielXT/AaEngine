@@ -24,7 +24,7 @@ StructuredBuffer<float4x4> InstancingBuffer : register(t0);
 
 struct VS_INPUT
 {
-    float4 position : POSITION;
+	float4 position : POSITION;
 #ifdef INSTANCED
 	uint instanceID : SV_InstanceID;
 #endif
@@ -36,7 +36,7 @@ struct VS_INPUT
 
 struct VS_OUTPUT
 {
-    float4 position : SV_POSITION;
+	float4 position : SV_POSITION;
 #ifdef ALPHA_TEST
 	float2 uv : TEXCOORD;
 #endif
@@ -65,7 +65,7 @@ void ComputeBaseBend(float4 basePosOS, inout float4 vertexPosOS, float w)
 
 VS_OUTPUT VSMain(VS_INPUT Input)
 {
-    VS_OUTPUT Output;
+	VS_OUTPUT Output;
 
 #ifdef INSTANCED
 	float4 worldPosition = mul(Input.position, InstancingBuffer[Input.instanceID]);
@@ -87,7 +87,7 @@ VS_OUTPUT VSMain(VS_INPUT Input)
 	Output.uv = Input.uv;
 #endif
 
-    return Output;
+	return Output;
 }
 
 #ifdef ALPHA_TEST
@@ -97,6 +97,6 @@ void PSMain(VS_OUTPUT input)
 	SamplerState sampler = GetDynamicMaterialSamplerLinear();
 	float4 albedo = GetTexture2D(TexIdDiffuse).Sample(sampler, input.uv);
 
-	if (albedo.a <0.4) discard;
+	if (albedo.a < 0.4) discard;
 }
 #endif

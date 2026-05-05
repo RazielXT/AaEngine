@@ -6,8 +6,6 @@ struct DebugState
 {
 	bool reloadShaders = false;
 
-	const char* changeScene{};
-
 	int DlssMode = (int)UpscaleMode::Off;
 	int FsrMode = (int)UpscaleMode::Off;
 

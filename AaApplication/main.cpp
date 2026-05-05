@@ -19,7 +19,7 @@ public:
 		debugWindow.state.DlssMode = (int)app.renderSystem.upscale.dlss.selectedMode();
 		debugWindow.state.FsrMode = (int)app.renderSystem.upscale.fsr.selectedMode();
 
-		app.loadScene("basic");
+		app.loadScene();
 	}
 
 	~ApplicationObject()
@@ -36,11 +36,6 @@ public:
 
 				freeCamera.update(timeSinceLastFrame);
 
-				if (debugWindow.state.changeScene)
-				{
-					app.loadScene(debugWindow.state.changeScene);
-					debugWindow.state.changeScene = {};
-				}
 				if (debugWindow.state.reloadShaders)
 				{
 					app.resources.materials.reloadChangedShaders();

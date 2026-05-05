@@ -179,16 +179,6 @@ namespace imgui
 		ImGui::Combo("DLSS", &state.DlssMode, UpscaleModeNames, std::size(UpscaleModeNames));
 		ImGui::Combo("FSR", &state.FsrMode, UpscaleModeNames, std::size(UpscaleModeNames));
 
-		const char* scenes[] = {
-			"test",
-			"testCubes",
-			"voxelRoom",
-			"voxelOutside"
-		};
-		static int currentScene = 0;
-		if (ImGui::Combo("Scene", &currentScene, scenes, std::size(scenes)))
-			state.changeScene = scenes[currentScene];
-
 		ImGui::End();
 
 		ImGui::Render();

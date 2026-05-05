@@ -125,7 +125,7 @@ void ApplicationCore::onScreenResize(UINT, UINT)
 {
 }
 
-void ApplicationCore::loadScene(const char* scene)
+void ApplicationCore::loadScene()
 {
 	renderSystem.core.WaitForAllFrames();
 	renderWorld.clear();
@@ -149,11 +149,6 @@ void ApplicationCore::loadScene(const char* scene)
 		{
 			shadowMap->clear(commands.commandList);
 		}
-
-// 		for (const auto& i : result.instanceDescriptions)
-// 		{
-// 			renderWorld.instancing.build(renderWorld, i.second);
-// 		}
 
 		marker.move("loadSceneVoxels", commands.color);
 		VoxelizeSceneTask::Get().clear(commands.commandList);

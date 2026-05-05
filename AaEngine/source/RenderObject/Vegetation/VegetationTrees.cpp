@@ -46,7 +46,7 @@ void VegetationTrees::addTree(const ObjectTransformation& tr)
 	tr2.position.y += 20;
 	tr2.scale *= 10;
 
-	auto tree = sceneMgr.createEntity("SphereTest" + std::to_string(t), tr2, *sphereModel);
+	auto tree = sceneMgr.createEntity(tr2, *sphereModel);
 	tree->material = sphereMaterial;
  	t++;
 // 

@@ -1,5 +1,6 @@
 #include "Scene/SceneGraph.h"
 #include "Scene/SceneManager.h"
+#include <format>
 
 SceneGraph::SceneGraph(SceneManager& sm) : sceneMgr(sm)
 {
@@ -20,7 +21,7 @@ void SceneGraph::updateEntity(const std::vector<EntityChangeDescritpion>& change
 		else if (d.type == EntityChange::Add)
 		{
 			auto parent = getParentNode(d.id);
-			parent->children.push_back({ d.id, d.entity->name });
+			parent->children.push_back({ d.id, std::format("{:08X}", d.id.value) });
 		}
 		else if (d.type == EntityChange::Delete)
 		{
@@ -65,7 +66,7 @@ SceneGraphNode* SceneGraph::getParentNode(ObjectId id)
 		}
 	}
 
-	nodes.push_back({ group, sceneMgr.getEntityGroup(id.getGroupId()).c_str() });
+	nodes.push_back({ group, "group" });
 	lastGroupMask = group;
 	lastGroupNode = &nodes.back();
 	return lastGroupNode;

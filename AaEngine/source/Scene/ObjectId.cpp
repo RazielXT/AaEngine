@@ -6,15 +6,15 @@
  * There are two types of entity IDs: Scene and Custom.
  *
  * Scene Entity:
- *  - Bit 31      : Custom Entity Flag (1)
+ *  - Bit 31      : Entity Flag (1)
  *  - Bits 30-28  : Order (3 bits, 0x7) - 0-7
  *  - Bits 27-16  : Group Index (12 bits, 0xFFF) - max size 4096
  *  - Bits 15-0   : Entity Index (16 bits, 0xFFFF) - max size 65536
  *
  *
- * Custom Entity:
- *  - Bit 31      : Custom Entity Flag (0 for Custom Entity)
- *  - Bits 30-28  : Group Type (3 bits, 0x7) - 1-7 (reserved 0)
+ * Custom:
+ *  - Bit 31      : Entity Flag (0)
+ *  - Bits 30-28  : ObjectType (3 bits, 0x7) - 1-7, (reserved 0 = Empty)
  *  - Bits 27-16  : Group Index (12 bits, 0xFFF) - max size 4096
  *  - Bits 15-0   : Entity Index (16 bits, 0xFFFF) - max size 65536
  */

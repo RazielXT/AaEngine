@@ -6,7 +6,7 @@
 static bool NodeMatchesFilter(SceneGraphNode& node, ImGuiTextFilter& filter)
 {
 	// Does this node match?
-	if (filter.PassFilter(node.name))
+	if (filter.PassFilter(node.name.c_str()))
 		return true;
 
 	// Do any children match?
@@ -46,7 +46,7 @@ void SceneTreePanel::drawNode(SceneGraphNode& node, ImGuiTextFilter& filter, Obj
 	bool open = ImGui::TreeNodeEx(
 		(void*)(intptr_t)node.id.value,
 		flags,
-		"%s %s", icon, node.name
+		"%s %s", icon, node.name.c_str()
 	);
 
 	// Handle selection

@@ -348,7 +348,7 @@ void SceneRenderTask::renderDebug(CompositorPass& pass, CommandsData& cmd)
 		return;
 
 	RenderObjectsStorage tmpStorage;
-	SceneEntity entity(tmpStorage, "");
+	SceneEntity entity(tmpStorage);
 	RenderObjectsVisibilityData visibility{ { true } };
 
 	updateVoxelsDebugView(entity, *ctx.camera);

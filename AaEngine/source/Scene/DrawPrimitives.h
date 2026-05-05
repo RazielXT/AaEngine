@@ -92,9 +92,9 @@ struct PlanesModel
 		model.calculateBounds();
 	}
 
-	SceneEntity* CreateEntity(const std::string& name, SceneManager& sceneMgr, MaterialInstance* material)
+	SceneEntity* CreateEntity(SceneManager& sceneMgr, MaterialInstance* material)
 	{
-		auto e = sceneMgr.createEntity(name);
+		auto e = sceneMgr.createEntity();
 		e->material = material;
 		e->geometry.fromModel(model);
 		e->geometry.topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;

@@ -10,11 +10,11 @@ enum class Order : uint8_t
 	Transparent = 5,
 };
 
-enum class ObjectType
+enum class ObjectType : uint8_t
 {
-	Entity = -1,
 	Empty = 0,
 	Instanced,
+	Entity = 8
 };
 
 struct ObjectId

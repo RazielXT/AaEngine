@@ -6,7 +6,7 @@
 struct SceneGraphNode
 {
 	ObjectId id;
-	const char* name;
+	std::string name;
 
 	std::vector<SceneGraphNode> children;
 };

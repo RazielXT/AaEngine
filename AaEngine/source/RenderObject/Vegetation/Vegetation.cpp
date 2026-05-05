@@ -82,7 +82,7 @@ void Vegetation::createChunks(SceneManager& sceneMgr, RenderSystem& renderSystem
 			auto& chunk = chunks[ax][ay];
 			initChunk(chunk, renderSystem, resources, batch, vegMaterial);
 
-			auto e = sceneMgr.createEntity("Veg" + std::format("{}{}", ax, ay));
+			auto e = sceneMgr.createEntity();
 			chunk.entity = e;
 			e->material = vegMaterial;
 			e->Material().setParam("ChunkId", x + y * VegGridSize);

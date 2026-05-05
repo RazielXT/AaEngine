@@ -41,8 +41,7 @@ InstanceGroup* InstancingManager::build(SceneManager& sceneMgr, const InstanceGr
 	it = std::make_unique<InstanceGroup>();
 	it->create(description, groups.size() - 1);
 
-	static int counter = 0;
-	auto entity = sceneMgr.createEntity("Instancing" + std::to_string(counter++));
+	auto entity = sceneMgr.createEntity();
 	entity->geometry.fromInstancedModel(*description.model, *it);
 	entity->material = description.material;
 

@@ -20,7 +20,7 @@ SceneManager::SceneManager(GraphicsResources& r) : resources(r), skybox(r), grap
 
 SceneManager::~SceneManager()
 {
-	for (auto& [name, entity] : entityMap)
+	for (auto entity : entities)
 	{
 		delete entity;
 	}
@@ -38,8 +38,6 @@ void SceneManager::initialize(RenderSystem& renderSystem)
 
 	auto uploadResourcesFinished = batch.End(renderSystem.core.commandQueue);
 	uploadResourcesFinished.wait();
-
-	resetEntityGroups();
 }
 
 void SceneManager::update()
@@ -48,28 +46,19 @@ void SceneManager::update()
 	updateTransformations();
 }
 
-SceneEntity* SceneManager::createEntity(const std::string& name, EntityCreateProperties props)
+SceneEntity* SceneManager::createEntity(EntityCreateProperties props)
 {
-	auto [nameIt, uniqueName] = entityMap.try_emplace(name, nullptr);
+	auto ent = new SceneEntity(*getRenderables(props.order), props.groupId);
 
-	if (!uniqueName)
-	{
-		auto& counter = entityDuplicateCounterMap[name];
-
-		while (!uniqueName)
-			std::tie(nameIt, uniqueName) = entityMap.try_emplace(name + '_' + std::to_string(++counter), nullptr);
-	}
-
-	auto ent = nameIt->second = new SceneEntity(*getRenderables(props.order), nameIt->first, props.groupId);
-
+	entities.insert(ent);
 	changes.emplace_back(EntityChange::Add, props.order, ent, ent->getGlobalId(), props.suborder);
 
 	return ent;
 }
 
-SceneEntity* SceneManager::createEntity(const std::string& name, const ObjectTransformation& transformation, VertexBufferModel& model, EntityCreateProperties props)
+SceneEntity* SceneManager::createEntity(const ObjectTransformation& transformation, VertexBufferModel& model, EntityCreateProperties props)
 {
-	auto entity = createEntity(name, props);
+	auto entity = createEntity(props);
 	entity->setBoundingBox(model.bbox);
 	entity->setTransformation(transformation, true);
 	entity->geometry.fromModel(model);
@@ -86,15 +75,6 @@ void SceneManager::removeEntity(ObjectId id)
 {
 	if (auto e = getEntity(id))
 		removeEntity(e);
-}
-
-SceneEntity* SceneManager::getEntity(const std::string& name) const
-{
-	auto it = entityMap.find(name);
-	if (it != entityMap.end())
-		return it->second;
-
-	return nullptr;
 }
 
 SceneEntity* SceneManager::getEntity(ObjectId globalId) const
@@ -148,21 +128,6 @@ SceneObject SceneManager::getObject(ObjectId globalId)
 	}
 
 	return {};
-}
-
-uint16_t SceneManager::createEntityGroup(const std::string& name)
-{
-	entityGroups.emplace_back(std::make_unique<std::string>(name));
-
-	return (uint16_t)entityGroups.size() - 1;
-}
-
-const std::string& SceneManager::getEntityGroup(uint16_t id)
-{
-	if (id >= entityGroups.size())
-		__debugbreak();
-
-	return *entityGroups[id].name;
 }
 
 RenderQueue* SceneManager::createQueue(const std::vector<DXGI_FORMAT>& targets, MaterialTechnique technique, Order order)
@@ -232,7 +197,7 @@ void SceneManager::updateQueues()
 	{
 		if (c.type == EntityChange::Delete)
 		{
-			entityMap.erase(c.entity->name);
+			entities.erase(c.entity);
 			delete c.entity;
 		}
 	}
@@ -254,12 +219,6 @@ Order SceneManager::getOrder(SceneEntity* entity)
 	return entity->getStorage().order;
 }
 
-void SceneManager::resetEntityGroups()
-{
-	entityGroups.clear();
-	entityGroups.emplace_back(std::make_unique<std::string>("root"));
-}
-
 RenderObjectsStorage* SceneManager::getRenderables(Order order)
 {
 	for (auto& r : renderables)
@@ -275,15 +234,12 @@ void SceneManager::clear()
 {
 	changes.emplace_back(EntityChange::DeleteAll);
 
-	for (auto& [name, entity] : entityMap)
+	for (auto entity : entities)
 	{
 		delete entity;
 	}
 
-	entityMap.clear();
-	entityDuplicateCounterMap.clear();
-
-	resetEntityGroups();
+	entities.clear();
 
 	instancing.clear();
 	
@@ -321,12 +277,9 @@ Vector3 SceneObject::getCenterPosition() const
 	return {};
 }
 
-const char* SceneObject::getName() const
-{
-	if (type == ObjectType::Entity)
-		return entity->name;
-	if (type == ObjectType::Instanced)
-		return entity->name;
+#include <format>
 
-	return "";
+std::string SceneObject::getName() const
+{
+	return std::format("{:08X}", id.value);
 }

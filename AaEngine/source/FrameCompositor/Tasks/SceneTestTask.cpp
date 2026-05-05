@@ -29,8 +29,8 @@ void SceneTestTask::run(RenderContext& ctx, CommandsData& commands, CompositorPa
 	{
 		initialized = true;
 
-		tmpQueue.update({ EntityChange::Add, Order::Normal, sceneMgr.getEntity("Plane001") }, provider.resources);
-		tmpQueue.update({ EntityChange::Add, Order::Normal, sceneMgr.getEntity("Torus001") }, provider.resources);
+		//tmpQueue.update({ EntityChange::Add, Order::Normal, sceneMgr.getEntity("Plane001") }, provider.resources);
+		//tmpQueue.update({ EntityChange::Add, Order::Normal, sceneMgr.getEntity("Torus001") }, provider.resources);
 	}
 
 	Camera tmpCamera;

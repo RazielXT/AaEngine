@@ -47,7 +47,7 @@ void SidePanel::draw()
 
 			auto& selected = selection.back();
 			ImGui::Text("EntityId %#010x", selected.obj.id);
-			ImGui::Text("Entity name %s", selected.obj.getName());
+			ImGui::Text("Entity name %s", selected.obj.getName().c_str());
 			auto objTransformation = selected.obj.getTransformation();
 			ImGui::Text("Entity pos %f %f %f", objTransformation.position.x, objTransformation.position.y, objTransformation.position.z);
 			ImGui::Text("Entity vertex count %d", selected.obj.entity->geometry.vertexCount ? selected.obj.entity->geometry.vertexCount : selected.obj.entity->geometry.indexCount);

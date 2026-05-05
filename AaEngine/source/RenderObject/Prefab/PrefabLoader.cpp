@@ -42,7 +42,7 @@ void PrefabLoader::load(const std::string& path, SceneCollection::LoadCtx ctx)
 			continue;
 		}
 
-		auto e = ctx.sceneMgr.createEntity(name, tr, *model);
+		auto e = ctx.sceneMgr.createEntity(tr, *model);
 		e->material = material;
 	}
 }

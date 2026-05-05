@@ -151,7 +151,7 @@ public:
 			auto model = app.resources.models.getCoreModel(meshName);
 			auto material = app.resources.materials.getMaterial("General");
 
-			auto ent = app.sceneMgr.createEntity("shoot");
+			auto ent = app.sceneMgr.createEntity();
 			ent->setPosition(pos);
 			ent->setOrientation(getRandomQuaternion());
 			ent->geometry.fromModel(*model);

@@ -16,7 +16,6 @@ static SceneParser::Ctx* ctx{};
 static SceneParser::Result* parseResult{};
 static std::string loadFolder;
 static std::string sceneName;
-static uint16_t groupId;
 
 struct SceneNode
 {
@@ -256,7 +255,7 @@ void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible)
 
 	EntityCreateProperties props;
 	props.order = ParseRenderQueue(entityElement.attribute("renderQueue").value());
-	props.groupId = groupId;
+	props.groupId = 0;
 
 	Logger::log("Loading entity " + name + " with mesh file " + mesh);
 	SceneEntity* ent{};
@@ -280,7 +279,7 @@ void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible)
 		if (material->IsTransparent() && props.order < Order::Transparent)
 			props.order = Order::Transparent;
 
-		ent = ctx->sceneMgr.createEntity(name, node->transformation, *model, props);
+		ent = ctx->sceneMgr.createEntity(node->transformation, *model, props);
 		ent->material = material;
 		//ent->setVisible(visible);
 
@@ -327,8 +326,6 @@ SceneParser::Result SceneParser::load(std::filesystem::path path, Ctx parseCtx)
 	SceneParser::Result result;
 	parseResult = &result;
 	ctx = &parseCtx;
-
-	groupId = ctx->sceneMgr.createEntityGroup(path.filename().string());
 
  	loadFolder = path.parent_path().string();
 

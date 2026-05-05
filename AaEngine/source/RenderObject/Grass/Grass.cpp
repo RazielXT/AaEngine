@@ -58,7 +58,7 @@ void Grass::createChunks(SceneManager& sceneMgr, RenderSystem& renderSystem, Gra
 			auto& chunk = chunks[ax][ay];
 			initChunk(chunk, renderSystem, resources, batch);
 
-			auto e = sceneMgr.createEntity("Grass" + std::format("{}{}", ax, ay));
+			auto e = sceneMgr.createEntity();
 			chunk.entity = e;
 			e->material = grassMaterial;
 			e->Material().setParam("ChunkId", x * GrassGridSize + y);

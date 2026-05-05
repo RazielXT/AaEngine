@@ -1,6 +1,6 @@
 #include "Editor/EntityPicker.h"
 #include "Scene/RenderObject.h"
-#include "Scene/SceneManager.h"
+#include "Scene/RenderWorld.h"
 #include <chrono>
 
 EntityPicker* instance = nullptr;
@@ -198,7 +198,7 @@ RenderQueue EntityPicker::createRenderQueue() const
 	return idQueue;
 }
 
-void EntityPicker::update(ID3D12GraphicsCommandList* commandList, RenderProvider& provider, Camera& camera, SceneManager& sceneMgr)
+void EntityPicker::update(ID3D12GraphicsCommandList* commandList, RenderProvider& provider, Camera& camera, RenderWorld& renderWorld)
 {
 	readPickResult();
 
@@ -216,7 +216,7 @@ void EntityPicker::update(ID3D12GraphicsCommandList* commandList, RenderProvider
 
 	auto renderItems = [&](Order order)
 		{
-			auto renderables = sceneMgr.getRenderables(order);
+			auto renderables = renderWorld.getRenderables(order);
 
 			RenderObjectsVisibilityData visibilityData;
 			visibilityData.visibility.resize(renderables->objectsData.objects.size(), false);
@@ -225,7 +225,7 @@ void EntityPicker::update(ID3D12GraphicsCommandList* commandList, RenderProvider
 			renderables->iterateObjects([this, &idQueue, &visibilityData, &provider](RenderObject& obj)
 				{
 					if (obj.isVisible(visibilityData.visibility))
-						idQueue.update({ EntityChange::Add, Order::Normal, (SceneEntity*)&obj }, provider.resources);
+						idQueue.update({ EntityChange::Add, Order::Normal, (RenderEntity*)&obj }, provider.resources);
 				});
 
 			ShaderConstantsProvider constants(provider.params, visibilityData, camera, rtt);

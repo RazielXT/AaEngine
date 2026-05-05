@@ -4,13 +4,13 @@
 #include "Resources/GraphicsResources.h"
 #include "Scene/RenderObject.h"
 
-class SceneManager;
+class RenderWorld;
 
 class VegetationTrees
 {
 public:
 
-	VegetationTrees(SceneManager&);
+	VegetationTrees(RenderWorld&);
 
 	void initialize(GraphicsResources&, ResourceUploadBatch& batch);
 
@@ -26,8 +26,8 @@ private:
 
 	struct TreeEntity
 	{
-		SceneEntity* branch;
-		SceneEntity* trunk;
+		RenderEntity* branch;
+		RenderEntity* trunk;
 	};
 	std::vector<TreeEntity> trees;
 
@@ -47,5 +47,5 @@ private:
 
 	Tree treeData;
 
-	SceneManager& sceneMgr;
+	RenderWorld& renderWorld;
 };

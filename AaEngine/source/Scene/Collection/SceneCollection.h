@@ -5,7 +5,7 @@
 #include "Scene/RenderObject.h"
 #include "Resources/Model/VertexBufferModel.h"
 
-class SceneManager;
+class RenderWorld;
 class RenderSystem;
 struct GraphicsResources;
 
@@ -35,7 +35,7 @@ namespace SceneCollection
 	struct LoadCtx
 	{
 		ResourceUploadBatch& batch;
-		SceneManager& sceneMgr;
+		RenderWorld& renderWorld;
 		RenderSystem& renderSystem;
 		GraphicsResources& resources;
 		ObjectTransformation placement = {};

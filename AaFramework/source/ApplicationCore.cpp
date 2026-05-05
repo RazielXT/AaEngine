@@ -14,7 +14,7 @@
 #include <dxgidebug.h>
 #include <filesystem>
 
-ApplicationCore::ApplicationCore(TargetViewport& viewport) : renderSystem(viewport), resources(renderSystem), sceneMgr(resources)
+ApplicationCore::ApplicationCore(TargetViewport& viewport) : renderSystem(viewport), resources(renderSystem), renderWorld(resources)
 {
 	viewport.listeners.push_back(this);
 	Vector3(-1, -1, -1).Normalize(lights.directionalLight.direction);
@@ -43,15 +43,15 @@ void ApplicationCore::initialize(const TargetWindow& window, const InitParams& a
 	shadowMap = new ShadowMaps(renderSystem, lights.directionalLight, params.sun);
 	shadowMap->init(resources);
 
-	compositor = new FrameCompositor(appParams.compositor, { params, renderSystem, resources }, sceneMgr, *shadowMap);
+	compositor = new FrameCompositor(appParams.compositor, { params, renderSystem, resources }, renderWorld, *shadowMap);
 	compositor->setColorSpace(colorSpace);
-	compositor->registerTask("RenderPhysics", [this](RenderProvider& provider, SceneManager& sceneMgr)
+	compositor->registerTask("RenderPhysics", [this](RenderProvider& provider, RenderWorld& renderWorld)
 	{
-		return std::make_shared<PhysicsRenderTask>(provider, sceneMgr, physicsMgr);
+		return std::make_shared<PhysicsRenderTask>(provider, renderWorld, physicsMgr);
 	});
 	compositor->reloadPasses();
 
-	sceneMgr.initialize(renderSystem);
+	renderWorld.initialize(renderSystem);
 
 	physicsMgr.init();
 	terrainPhysics.init(renderSystem.core.device);
@@ -98,9 +98,9 @@ void ApplicationCore::renderFrame(Camera& camera)
 	params.timeDelta = timeSinceLastFrame;
 	params.frameIndex = renderSystem.core.frameIndex;
 
-	terrainPhysics.consumeReadbacks(camera.getPosition(), sceneMgr.terrain.params, physicsMgr);
+	terrainPhysics.consumeReadbacks(camera.getPosition(), renderWorld.terrain.params, physicsMgr);
 
-	sceneMgr.update();
+	renderWorld.update();
 	camera.updateMatrix();
 	shadowMap->update(renderSystem.core.frameIndex, camera);
 
@@ -128,7 +128,7 @@ void ApplicationCore::onScreenResize(UINT, UINT)
 void ApplicationCore::loadScene(const char* scene)
 {
 	renderSystem.core.WaitForAllFrames();
-	sceneMgr.clear();
+	renderWorld.clear();
 	terrainPhysics.clear(physicsMgr);
 	physicsMgr.init();
 	terrainPhysics.init(renderSystem.core.device);
@@ -137,10 +137,10 @@ void ApplicationCore::loadScene(const char* scene)
 	ResourceUploadBatch batch(renderSystem.core.device);
 	batch.Begin();
 
-	sceneMgr.skybox.setMaterial("Sky", sceneMgr.getQueue(MaterialTechnique::Default, Order::Post)->targetFormats);
+	renderWorld.skybox.setMaterial("Sky", renderWorld.getQueue(MaterialTechnique::Default, Order::Post)->targetFormats);
 
-	sky.createClouds(sceneMgr, resources.materials, renderSystem.core.device, batch);
-	sky.createMoon(sceneMgr, resources.materials, batch);
+	sky.createClouds(renderWorld, resources.materials, renderSystem.core.device, batch);
+	sky.createMoon(renderWorld, resources.materials, batch);
 
 	auto commands = renderSystem.core.CreateCommandList(L"loadScene", PixColor::Load);
 	{
@@ -153,20 +153,20 @@ void ApplicationCore::loadScene(const char* scene)
 
 // 		for (const auto& i : result.instanceDescriptions)
 // 		{
-// 			sceneMgr.instancing.build(sceneMgr, i.second);
+// 			renderWorld.instancing.build(renderWorld, i.second);
 // 		}
 
 		marker.move("loadSceneVoxels", commands.color);
 		VoxelizeSceneTask::Get().clear(commands.commandList);
 
  		marker.move("loadSceneTerrain", commands.color);
-		sceneMgr.water.initializeGpuResources(renderSystem, resources, batch);
-		sceneMgr.terrain.initialize(renderSystem, resources, batch, sceneMgr);
-		sceneMgr.vegetation.createChunks(sceneMgr, renderSystem, resources, batch);
-		sceneMgr.grass.createChunks(sceneMgr, renderSystem, resources, batch);
-		sceneMgr.water.initializeTarget(sceneMgr.terrain.getHeightmap({ 0,0 }), sceneMgr, { sceneMgr.terrain.params.tileSize, sceneMgr.terrain.params.tileSize }, sceneMgr.terrain.getHeightmapPosition({ 0,0 }));
+		renderWorld.water.initializeGpuResources(renderSystem, resources, batch);
+		renderWorld.terrain.initialize(renderSystem, resources, batch, renderWorld);
+		renderWorld.vegetation.createChunks(renderWorld, renderSystem, resources, batch);
+		renderWorld.grass.createChunks(renderWorld, renderSystem, resources, batch);
+		renderWorld.water.initializeTarget(renderWorld.terrain.getHeightmap({ 0,0 }), renderWorld, { renderWorld.terrain.params.tileSize, renderWorld.terrain.params.tileSize }, renderWorld.terrain.getHeightmapPosition({ 0,0 }));
 	}
-	sceneMgr.terrain.postUpdateCallback = [this](ID3D12GraphicsCommandList* commandList, ProgressiveTerrain& terrain)
+	renderWorld.terrain.postUpdateCallback = [this](ID3D12GraphicsCommandList* commandList, ProgressiveTerrain& terrain)
 	{
 		terrainPhysics.requestReadbacks(commandList, terrain);
 	};

@@ -3,7 +3,7 @@
 
 DebugOverlayTask* instance = nullptr;
 
-DebugOverlayTask::DebugOverlayTask(RenderProvider p, SceneManager& s) : CompositorTask(p, s)
+DebugOverlayTask::DebugOverlayTask(RenderProvider p, RenderWorld& w) : CompositorTask(p, w)
 {
 	instance = this;
 }

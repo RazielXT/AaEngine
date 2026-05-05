@@ -1,10 +1,10 @@
 #include "RenderObject/Sky/SkyRendering.h"
-#include "Scene/SceneManager.h"
+#include "Scene/RenderWorld.h"
 #include "Resources/Material/MaterialResources.h"
 
-void SkyRendering::createClouds(SceneManager& sceneMgr, MaterialResources& materials, ID3D12Device* device, DirectX::ResourceUploadBatch& batch)
+void SkyRendering::createClouds(RenderWorld& renderWorld, MaterialResources& materials, ID3D12Device* device, DirectX::ResourceUploadBatch& batch)
 {
-	auto e = sceneMgr.createEntity(EntityCreateProperties{ .order = Order::Post });
+	auto e = renderWorld.createEntity(EntityCreateProperties{ .order = Order::Post });
 	e->material = materials.getMaterial("BasicClouds", batch);
 
 	cloudsModel.CreateIndexBufferGrid(device, &batch, 256);
@@ -15,9 +15,9 @@ void SkyRendering::createClouds(SceneManager& sceneMgr, MaterialResources& mater
 	e->setFlag(RenderObjectFlag::NoShadow);
 }
 
-void SkyRendering::createMoon(SceneManager& sceneMgr, MaterialResources& materials, DirectX::ResourceUploadBatch& batch)
+void SkyRendering::createMoon(RenderWorld& renderWorld, MaterialResources& materials, DirectX::ResourceUploadBatch& batch)
 {
-	auto moon = sceneMgr.createEntity(EntityCreateProperties{ .order = Order::Post, .suborder = -1 });
+	auto moon = renderWorld.createEntity(EntityCreateProperties{ .order = Order::Post, .suborder = -1 });
 	moon->material = materials.getMaterial("Moon", batch);
 	moon->geometry.type = EntityGeometry::Type::Manual;
 	moon->geometry.vertexCount = 6;

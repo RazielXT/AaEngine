@@ -10,7 +10,7 @@
 
 Editor::Editor(ApplicationCore& a, ImguiPanelViewport& v) : app(a), renderer(a.renderSystem.core), renderPanelViewport(v),
 	viewportPanel(a, selection, v, srvDescHeapAlloc, a.renderSystem.core),
-	sceneTreePanel(a.sceneMgr, selection),
+	sceneTreePanel(a.renderWorld, selection),
 	terrainShaderGraphPanel(a.resources.shaderDefines),
 	sidePanel(a, selection, state, sceneTreePanel, viewportPanel)
 {

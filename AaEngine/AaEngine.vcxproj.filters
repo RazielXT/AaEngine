@@ -124,13 +124,13 @@
     <ClCompile Include="source\Scene\Camera.cpp">
       <Filter>Source Files\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="source\Scene\SceneEntity.cpp">
+    <ClCompile Include="source\Scene\RenderEntity.cpp">
       <Filter>Source Files\Scene</Filter>
     </ClCompile>
     <ClCompile Include="source\Utils\ConfigParser.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="source\Scene\SceneManager.cpp">
+    <ClCompile Include="source\Scene\RenderWorld.cpp">
       <Filter>Source Files\Scene</Filter>
     </ClCompile>
     <ClCompile Include="source\Scene\RenderObject.cpp">
@@ -417,10 +417,10 @@
     <ClInclude Include="source\Scene\Camera.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="source\Scene\SceneEntity.h">
+    <ClInclude Include="source\Scene\RenderEntity.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="source\Scene\SceneManager.h">
+    <ClInclude Include="source\Scene\RenderWorld.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
     <ClInclude Include="source\Utils\Logger.h">

@@ -22,7 +22,7 @@ void MaterialEvents::notifyReloaded(const std::vector<MaterialBase*>& reloaded)
 		listener(reloaded);
 }
 
-void MaterialEvents::notifyEntityParamChanged(SceneEntity& entity)
+void MaterialEvents::notifyEntityParamChanged(RenderEntity& entity)
 {
 	for (auto& listener : entityParamChangeListeners)
 		listener(entity);

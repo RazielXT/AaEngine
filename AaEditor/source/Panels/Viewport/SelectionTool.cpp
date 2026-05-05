@@ -100,17 +100,17 @@ void SelectionTool::onPick(const EntityPicker::PickInfo& pickInfo, bool ctrlActi
 
 		if (assetDrop.ends_with(".gltf"))
 		{
-			SceneCollection::LoadCtx loadCtx = { batch, app.sceneMgr, app.renderSystem, app.resources, tr };
+			SceneCollection::LoadCtx loadCtx = { batch, app.renderWorld, app.renderSystem, app.resources, tr };
 			auto scene = GltfLoader::load(assetDrop, loadCtx);
 			SceneCollection::loadResource(scene, loadCtx);
 		}
 		else if (assetDrop.ends_with(".scene"))
 		{
-			SceneParser::load(assetDrop, { batch, app.sceneMgr, app.renderSystem, app.resources, app.physicsMgr, tr });
+			SceneParser::load(assetDrop, { batch, app.renderWorld, app.renderSystem, app.resources, app.physicsMgr, tr });
 		}
 		else if (assetDrop.ends_with(".prefab"))
 		{
-			PrefabLoader::load(assetDrop, { batch, app.sceneMgr, app.renderSystem, app.resources, tr });
+			PrefabLoader::load(assetDrop, { batch, app.renderWorld, app.renderSystem, app.resources, tr });
 		}
 
 		auto uploadResourcesFinished = batch.End(app.renderSystem.core.commandQueue);
@@ -120,9 +120,9 @@ void SelectionTool::onPick(const EntityPicker::PickInfo& pickInfo, bool ctrlActi
 	}
 	else if (auto selectedId = pickInfo.id)
 	{
-		auto obj = app.sceneMgr.getObject(selectedId);
+		auto obj = app.renderWorld.getObject(selectedId);
 		Logger::log(std::format("Picked '{}' at ({:.2f}, {:.2f}, {:.2f})", obj.getName(), pickInfo.position.x, pickInfo.position.y, pickInfo.position.z));
-		selection.select(selectedId, ctrlActive, app.sceneMgr);
+		selection.select(selectedId, ctrlActive, app.renderWorld);
 	}
 	else if (!ctrlActive)
 	{
@@ -143,7 +143,7 @@ void SelectionTool::draw(const ViewportToolContext& ctx)
 {
 	if (ImGui::IsKeyPressed(ImGuiKey_Delete))
 	{
-		selection.remove(app.sceneMgr);
+		selection.remove(app.renderWorld);
 	}
 
 	auto gizmoType = (ImGuizmo::OPERATION)transformButtons.options[transformButtons.current].value;

@@ -5,8 +5,8 @@
 #include "Resources/ResourcesView.h"
 #include <vector>
 
-class SceneManager;
-class SceneEntity;
+class RenderWorld;
+class RenderEntity;
 class MaterialInstance;
 class VertexBufferModel;
 
@@ -35,7 +35,7 @@ struct InstanceGroup
 	ShaderViewUAV gpuIdsBufferView{};
 
 	UINT count{};
-	SceneEntity* entity{};
+	RenderEntity* entity{};
 	std::vector<InstancedEntity> entities;
 
 	BoundingBox modelBbox;
@@ -48,7 +48,7 @@ public:
 	InstancingManager() = default;
 
 	void update();
-	InstanceGroup* build(SceneManager& sceneMgr, const InstanceGroupDescription&);
+	InstanceGroup* build(RenderWorld& renderWorld, const InstanceGroupDescription&);
 	void clear();
 
 	InstanceGroup* getGroup(UINT) const;

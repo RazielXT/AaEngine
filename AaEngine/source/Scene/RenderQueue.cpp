@@ -165,7 +165,7 @@ void RenderQueue::rebuildEntries(const std::vector<MaterialBase*>& reloaded)
 	}
 }
 
-void RenderQueue::rebuildEntries(const SceneEntity* reloaded)
+void RenderQueue::rebuildEntries(const RenderEntity* reloaded)
 {
 	for (auto& entry : entities)
 	{
@@ -191,7 +191,7 @@ void RenderQueue::iterateMaterials(std::function<void(AssignedMaterial*)> func)
 	}
 }
 
-RenderQueue::EntityEntry::EntityEntry(SceneEntity* e, AssignedMaterial* m, MaterialTechnique technique, int o)
+RenderQueue::EntityEntry::EntityEntry(RenderEntity* e, AssignedMaterial* m, MaterialTechnique technique, int o)
 {
 	entity = e;
 	material = m;

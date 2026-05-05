@@ -10,7 +10,7 @@
 #include <span>
 
 struct RenderQueue;
-class SceneManager;
+class RenderWorld;
 struct RenderContext;
 struct CommandsData;
 struct FrameParameters;
@@ -38,7 +38,7 @@ public:
 
 	static constexpr UINT CascadesCount = 4;
 
-	void initialize(RenderSystem& renderSystem, const FrameParameters& params, GraphicsResources& resources, ShadowMaps& shadowMaps, SceneManager& sceneMgr, DXGI_FORMAT outputFormat);
+	void initialize(RenderSystem& renderSystem, const FrameParameters& params, GraphicsResources& resources, ShadowMaps& shadowMaps, RenderWorld& renderWorld, DXGI_FORMAT outputFormat);
 	void shutdown();
 
 	void clear(ID3D12GraphicsCommandList* c);
@@ -95,7 +95,7 @@ private:
 	RenderQueue* shadowQueue{};
 	RenderQueue* sceneQueue{};
 
-	SceneManager* sceneMgr{};
+	RenderWorld* renderWorld{};
 	ShadowMaps* shadowMaps{};
 	const FrameParameters* frameParams{};
 };

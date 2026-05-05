@@ -148,13 +148,13 @@ void SidePanel::draw()
 		static bool updateGrid = true;
 		if (ImGui::Checkbox("Updating LOD", &updateGrid))
 		{
-			app.sceneMgr.water.enableLodUpdating(updateGrid);
-			app.sceneMgr.terrain.updateLod = updateGrid;
+			app.renderWorld.water.enableLodUpdating(updateGrid);
+			app.renderWorld.terrain.updateLod = updateGrid;
 		}
 
 		static bool updateWater = true;
 		if (ImGui::Checkbox("Update water", &updateWater))
-			app.sceneMgr.water.enableWaterUpdating(updateWater);
+			app.renderWorld.water.enableWaterUpdating(updateWater);
 
 		bool waterPaintActive = viewportPanel.getActiveTool() == waterPaintTool;
 		if (ImGui::Checkbox("Water paint mode", &waterPaintActive))

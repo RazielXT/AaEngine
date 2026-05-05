@@ -6,7 +6,7 @@ class PrepareFrameTask : public CompositorTask
 {
 public:
 
-	PrepareFrameTask(RenderProvider provider, SceneManager&);
+	PrepareFrameTask(RenderProvider provider, RenderWorld&);
 	~PrepareFrameTask();
 
 	AsyncTasksInfo initialize(CompositorPass& pass) override;

@@ -1,6 +1,6 @@
 #include "RenderObject/WaterSim/WaterSim.h"
 #include "RenderCore/TextureUtils.h"
-#include "Scene/SceneManager.h"
+#include "Scene/RenderWorld.h"
 #include <format>
 
 WaterSim::WaterSim()
@@ -83,7 +83,7 @@ void WaterSim::initializeGpuResources(RenderSystem& renderSystem, GraphicsResour
 	generateXYMips4xCS.init(*renderSystem.core.device, "generateXYMips4xCS", resources.shaders);
 }
 
-void WaterSim::initializeTarget(const GpuTexture2D& texture, SceneManager& sceneMgr, Vector2 size, Vector3 center)
+void WaterSim::initializeTarget(const GpuTexture2D& texture, RenderWorld& renderWorld, Vector2 size, Vector3 center)
 {
 	terrainHeight = &texture;
 
@@ -96,7 +96,7 @@ void WaterSim::initializeTarget(const GpuTexture2D& texture, SceneManager& scene
 
 	waterGridTiles.Initialize(worldSize, worldCenter, 10);
 
-	auto e = sceneMgr.createEntity(EntityCreateProperties{ .order = Order::Transparent });
+	auto e = renderWorld.createEntity(EntityCreateProperties{ .order = Order::Transparent });
 	waterGridMesh.create(waterGridTiles.TilesWidth);
 	waterGridMesh.entity = e;
 

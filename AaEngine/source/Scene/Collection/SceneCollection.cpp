@@ -1,6 +1,6 @@
 #include "Scene/Collection/SceneCollection.h"
 #include "Resources/GraphicsResources.h"
-#include "Scene/SceneManager.h"
+#include "Scene/RenderWorld.h"
 
 void SceneCollection::loadResource(const ResourceData& data, LoadCtx ctx)
 {
@@ -16,7 +16,7 @@ void SceneCollection::loadResource(const ResourceData& data, LoadCtx ctx)
 		if (material->IsTransparent())
 			props.order = Order::Transparent;
 
-		auto ent = ctx.sceneMgr.createEntity(e.tr, *model, props);
+		auto ent = ctx.renderWorld.createEntity(e.tr, *model, props);
 		ent->material = material;
 	}
 }

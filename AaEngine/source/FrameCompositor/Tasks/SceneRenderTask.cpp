@@ -1,17 +1,17 @@
 #include "FrameCompositor/Tasks/SceneRenderTask.h"
 #include "Scene/RenderObject.h"
-#include "Scene/SceneManager.h"
+#include "Scene/RenderWorld.h"
 #include "Resources/Material/MaterialResources.h"
 #include "Resources/Model/ModelResources.h"
 #include "Scene/DrawPrimitives.h"
 
 SceneRenderTask* instance = nullptr;
 
-SceneRenderTask::SceneRenderTask(RenderProvider p, SceneManager& s) : CompositorTask(p, s), picker(p.renderSystem)
+SceneRenderTask::SceneRenderTask(RenderProvider p, RenderWorld& w) : CompositorTask(p, w), picker(p.renderSystem)
 {
-	opaque.renderables = sceneMgr.getRenderables(Order::Normal);
-	forward.renderables = sceneMgr.getRenderables(Order::Post);
-	transparent.renderables = sceneMgr.getRenderables(Order::Transparent);
+	opaque.renderables = renderWorld.getRenderables(Order::Normal);
+	forward.renderables = renderWorld.getRenderables(Order::Post);
+	transparent.renderables = renderWorld.getRenderables(Order::Transparent);
 	instance = this;
 }
 
@@ -58,7 +58,7 @@ AsyncTasksInfo SceneRenderTask::initialize(CompositorPass& pass)
 	}
 	else if (pass.info.entry == "Opaque")
 	{
-		opaque.queue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::Default);
+		opaque.queue = renderWorld.createQueue(pass.mrt->formats, MaterialTechnique::Default);
 
 		opaque.work.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
 		opaque.work.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -78,7 +78,7 @@ AsyncTasksInfo SceneRenderTask::initialize(CompositorPass& pass)
 	}
 	else if (pass.info.entry == "Transparent")
 	{
-		transparent.queue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::Default, Order::Transparent);
+		transparent.queue = renderWorld.createQueue(pass.mrt->formats, MaterialTechnique::Default, Order::Transparent);
 
 		transparent.work.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
 		transparent.work.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -101,14 +101,14 @@ AsyncTasksInfo SceneRenderTask::initialize(CompositorPass& pass)
 		if (opaque.queue)
 			__debugbreak();
 
-		opaque.queue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::Default);
-		opaque.wireframeQueue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::Wireframe);
+		opaque.queue = renderWorld.createQueue(pass.mrt->formats, MaterialTechnique::Default);
+		opaque.wireframeQueue = renderWorld.createQueue(pass.mrt->formats, MaterialTechnique::Wireframe);
 
-		forward.queue = sceneMgr.createQueue({ pass.mrt->formats.front() }, MaterialTechnique::Default, Order::Post);
-		forward.wireframeQueue = sceneMgr.createQueue({ pass.mrt->formats.front() }, MaterialTechnique::Wireframe, Order::Post);
+		forward.queue = renderWorld.createQueue({ pass.mrt->formats.front() }, MaterialTechnique::Default, Order::Post);
+		forward.wireframeQueue = renderWorld.createQueue({ pass.mrt->formats.front() }, MaterialTechnique::Wireframe, Order::Post);
 
-		transparent.queue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::Default, Order::Transparent);
-		transparent.wireframeQueue = sceneMgr.createQueue({ pass.mrt->formats.front() }, MaterialTechnique::Wireframe, Order::Transparent);
+		transparent.queue = renderWorld.createQueue(pass.mrt->formats, MaterialTechnique::Default, Order::Transparent);
+		transparent.wireframeQueue = renderWorld.createQueue({ pass.mrt->formats.front() }, MaterialTechnique::Wireframe, Order::Transparent);
 
 		opaque.work.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
 		opaque.work.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -128,7 +128,7 @@ AsyncTasksInfo SceneRenderTask::initialize(CompositorPass& pass)
 	}
 	else if (pass.info.entry == "Forward")
 	{
-		forward.queue = sceneMgr.createQueue(pass.mrt->formats, MaterialTechnique::Default, Order::Post);
+		forward.queue = renderWorld.createQueue(pass.mrt->formats, MaterialTechnique::Default, Order::Post);
 	}
 
 	return tasks;
@@ -136,7 +136,7 @@ AsyncTasksInfo SceneRenderTask::initialize(CompositorPass& pass)
 
 AsyncTasksInfo SceneRenderTask::initializeEarlyZ(CompositorPass& pass)
 {
-	earlyZ.queue = sceneMgr.createQueue({}, MaterialTechnique::Depth);
+	earlyZ.queue = renderWorld.createQueue({}, MaterialTechnique::Depth);
 
 	earlyZ.work.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);
 	earlyZ.work.eventFinish = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -257,7 +257,7 @@ void SceneRenderTask::renderForward(CompositorPass& pass, CommandsData& cmd)
 
 	ShaderConstantsProvider constants(provider.params, forward.visibility, *ctx.camera, *pass.mrt);
 
-	sceneMgr.skybox.render(cmd.commandList, constants);
+	renderWorld.skybox.render(cmd.commandList, constants);
 
 	forward.queue->renderObjects(constants, cmd.commandList);
 }
@@ -307,19 +307,19 @@ void SceneRenderTask::renderTransparentScene(CompositorPass& pass)
 		commandList->ResourceBarrier(2, barriersBack);
 	}
 
-	sceneMgr.water.prepareForRendering(commandList);
+	renderWorld.water.prepareForRendering(commandList);
 
 	pass.mrt->PrepareAsTarget(commandList, pass.targets, true, TransitionFlags::UseDepth);
 
 	ShaderConstantsProvider constants(provider.params, transparent.visibility, *ctx.camera, *pass.mrt);
 	transparent.queue->renderObjects(constants, commandList);
 
-	sceneMgr.water.prepareAfterRendering(commandList);
+	renderWorld.water.prepareAfterRendering(commandList);
 }
 
 void SceneRenderTask::renderEditor(CompositorPass& pass, CommandsData& cmd)
 {
-	picker.update(cmd.commandList, provider, *ctx.camera, sceneMgr);
+	picker.update(cmd.commandList, provider, *ctx.camera, renderWorld);
 
 	pass.mrt->PrepareAsTarget(cmd.commandList, pass.targets, false, TransitionFlags::DepthPrepareRead);
 
@@ -331,7 +331,7 @@ void SceneRenderTask::renderEditor(CompositorPass& pass, CommandsData& cmd)
 
 		for (auto selectedId : picker.active)
 		{
-			if (auto selectedEntity = sceneMgr.getEntity(selectedId))
+			if (auto selectedEntity = renderWorld.getEntity(selectedId))
 			{
 				bboxDraw.renderObjectAligned(cmd.commandList, constants, selectedEntity);
 			}
@@ -348,7 +348,7 @@ void SceneRenderTask::renderDebug(CompositorPass& pass, CommandsData& cmd)
 		return;
 
 	RenderObjectsStorage tmpStorage;
-	SceneEntity entity(tmpStorage);
+	RenderEntity entity(tmpStorage);
 	RenderObjectsVisibilityData visibility{ { true } };
 
 	updateVoxelsDebugView(entity, *ctx.camera);
@@ -373,7 +373,7 @@ CompositorTask::RunType SceneRenderTask::getRunType(CompositorPass& pass) const
 		return RunType::Generic;
 }
 
-void SceneRenderTask::updateVoxelsDebugView(SceneEntity& debugVoxel, Camera& camera)
+void SceneRenderTask::updateVoxelsDebugView(RenderEntity& debugVoxel, Camera& camera)
 {
 	auto orientation = camera.getOrientation();
 	auto pos = camera.getPosition() - orientation * Vector3(0, 5.f, 0) + camera.getCameraDirection() * 1.75;

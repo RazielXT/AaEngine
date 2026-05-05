@@ -9,7 +9,7 @@ class ShadowsRenderTask : public CompositorTask
 {
 public:
 
-	ShadowsRenderTask(RenderProvider provider, SceneManager&, ShadowMaps& shadows);
+	ShadowsRenderTask(RenderProvider provider, RenderWorld&, ShadowMaps& shadows);
 	~ShadowsRenderTask();
 
 	AsyncTasksInfo initialize(CompositorPass& pass) override;

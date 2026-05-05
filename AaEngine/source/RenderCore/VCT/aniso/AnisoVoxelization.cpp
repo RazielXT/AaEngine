@@ -1,5 +1,5 @@
 #include "RenderCore/VCT/aniso/AnisoVoxelization.h"
-#include "Scene/SceneManager.h"
+#include "Scene/RenderWorld.h"
 #include "Scene/RenderQueue.h"
 #include "Resources/Material/MaterialResources.h"
 #include "Resources/Textures/TextureResources.h"
@@ -10,10 +10,10 @@
 static constexpr float VoxelSize = 128.f;
 static constexpr DXGI_FORMAT VoxelFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 
-void AnisoVoxelization::initialize(RenderSystem& renderSystem, const FrameParameters& params, GraphicsResources& resources, ShadowMaps& shadows, SceneManager& mgr, DXGI_FORMAT outputFormat)
+void AnisoVoxelization::initialize(RenderSystem& renderSystem, const FrameParameters& params, GraphicsResources& resources, ShadowMaps& shadows, RenderWorld& mgr, DXGI_FORMAT outputFormat)
 {
 	shadowMaps = &shadows;
-	sceneMgr = &mgr;
+	renderWorld = &mgr;
 	frameParams = &params;
 
 	shadows.createShadowMap(shadowMap, 256, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, "AnisoVoxelShadowMap");
@@ -176,7 +176,7 @@ void AnisoVoxelization::voxelizeCascade(ID3D12GraphicsCommandList* commandList, 
 	camera.setOrthographicCamera(orthoHalfSize * 2, orthoHalfSize * 2, NearClipDistance, NearClipDistance + orthoHalfSize * 2);
 
 	static RenderObjectsVisibilityData sceneInfo;
-	auto& renderables = *sceneMgr->getRenderables(Order::Normal);
+	auto& renderables = *renderWorld->getRenderables(Order::Normal);
 
 	ShaderConstantsProvider constants(*frameParams, sceneInfo, camera, *viewportOutput.texture);
 	constants.uavBarrier = cascade.voxelInfoBuffer.data.Get();

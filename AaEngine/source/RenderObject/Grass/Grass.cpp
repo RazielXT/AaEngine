@@ -1,7 +1,7 @@
 #include "RenderObject/Grass/Grass.h"
 #include "RenderObject/Terrain/ProgressiveTerrain.h"
 #include "BufferHelpers.h"
-#include "Scene/SceneManager.h"
+#include "Scene/RenderWorld.h"
 #include <format>
 
 Grass::Grass()
@@ -40,9 +40,9 @@ void Grass::initialize(RenderSystem& renderSystem, GraphicsResources& resources,
 	CreateStaticBuffer(renderSystem.core.device, batch, &zero, sizeof(UINT), D3D12_RESOURCE_STATE_COPY_SOURCE, &zeroCounterBuffer);
 }
 
-void Grass::createChunks(SceneManager& sceneMgr, RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch)
+void Grass::createChunks(RenderWorld& renderWorld, RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch)
 {
-	auto& terrainParams = sceneMgr.terrain.params;
+	auto& terrainParams = renderWorld.terrain.params;
 	float chunkSize = terrainParams.tileSize / ChunksPerTerrainTile;
 	int half = (int)GrassGridSize / 2;
 
@@ -58,7 +58,7 @@ void Grass::createChunks(SceneManager& sceneMgr, RenderSystem& renderSystem, Gra
 			auto& chunk = chunks[ax][ay];
 			initChunk(chunk, renderSystem, resources, batch);
 
-			auto e = sceneMgr.createEntity();
+			auto e = renderWorld.createEntity();
 			chunk.entity = e;
 			e->material = grassMaterial;
 			e->Material().setParam("ChunkId", x * GrassGridSize + y);

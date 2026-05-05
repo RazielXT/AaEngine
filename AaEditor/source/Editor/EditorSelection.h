@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Scene/SceneManager.h"
+#include "Scene/RenderWorld.h"
 #include <vector>
 
 class EditorSelection
@@ -13,9 +13,9 @@ public:
 		SceneObject obj;
 	};
 
-	void select(ObjectId id, bool multi, SceneManager& sceneMgr);
-	void remove(SceneManager& sceneMgr);
-	void removeNode(SceneGraphNode& node, SceneManager& sceneMgr);
+	void select(ObjectId id, bool multi, RenderWorld& renderWorld);
+	void remove(RenderWorld& renderWorld);
+	void removeNode(SceneGraphNode& node, RenderWorld& renderWorld);
 	void clear();
 
 	bool empty() const { return items.empty(); }

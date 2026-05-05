@@ -19,7 +19,7 @@ using namespace DirectX;
 
 class Camera;
 class VertexBufferModel;
-class SceneEntity;
+class RenderEntity;
 class MaterialInstance;
 class AssignedMaterial;
 struct GraphicsResources;

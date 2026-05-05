@@ -9,7 +9,7 @@
 #include <format>
 #include "PhysicsRenderer.h"
 
-class SceneEntity;
+class RenderEntity;
 struct ObjectTransformation;
 
 struct BodyParams
@@ -45,7 +45,7 @@ public:
 
 	struct RegisteredEntity
 	{
-		SceneEntity* entity;
+		RenderEntity* entity;
 		JPH::BodyID id;
 	};
 	std::vector<RegisteredEntity> dynamicBodies;

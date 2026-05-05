@@ -9,8 +9,8 @@
 #include "Resources/Compute/GenerateMipsComputeShader.h"
 #include <functional>
 
-class SceneManager;
-class SceneEntity;
+class RenderWorld;
+class RenderEntity;
 class RenderSystem;
 struct GraphicsResources;
 
@@ -20,7 +20,7 @@ public:
 
 	ProgressiveTerrain();
 
-	void initialize(RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch, SceneManager& sceneMgr);
+	void initialize(RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch, RenderWorld& renderWorld);
 
 	void update(ID3D12GraphicsCommandList* commandList, const Vector3& position, UINT frameIdx);
 

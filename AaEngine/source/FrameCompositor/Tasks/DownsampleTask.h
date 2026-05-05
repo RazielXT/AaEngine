@@ -25,7 +25,7 @@ class DownsampleDepthTask : public CompositorTask
 {
 public:
 
-	DownsampleDepthTask(RenderProvider provider, SceneManager&);
+	DownsampleDepthTask(RenderProvider provider, RenderWorld&);
 	~DownsampleDepthTask();
 
 	AsyncTasksInfo initialize(CompositorPass& pass) override;

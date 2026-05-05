@@ -1,13 +1,13 @@
-#include "Scene/SceneEntity.h"
+#include "Scene/RenderEntity.h"
 #include "Resources/Model/ModelResources.h"
 #include "Resources/Material/MaterialResources.h"
 #include "Resources/Material/MaterialEvents.h"
 
-SceneEntity::SceneEntity(RenderObjectsStorage& r, uint16_t groupId) : RenderObject(r, groupId)
+RenderEntity::RenderEntity(RenderObjectsStorage& r, uint16_t groupId) : RenderObject(r, groupId)
 {
 }
 
-SceneEntity::SceneEntity(RenderObjectsStorage& r, SceneEntity& source) : RenderObject(r, source.getGlobalId().getGroupId())
+RenderEntity::RenderEntity(RenderObjectsStorage& r, RenderEntity& source) : RenderObject(r, source.getGlobalId().getGroupId())
 {
 	material = source.material;
 	geometry = source.geometry;
@@ -15,11 +15,11 @@ SceneEntity::SceneEntity(RenderObjectsStorage& r, SceneEntity& source) : RenderO
 	setTransformation(source.getTransformation(), true);
 }
 
-SceneEntity::~SceneEntity()
+RenderEntity::~RenderEntity()
 {
 }
 
-EntityMaterialInterface SceneEntity::Material()
+EntityMaterialInterface RenderEntity::Material()
 {
 	if (!materialOverride)
 		materialOverride = new MaterialPropertiesOverrideDescription();
@@ -27,7 +27,7 @@ EntityMaterialInterface SceneEntity::Material()
 	return { *materialOverride, *this };
 }
 
-bool SceneEntity::GetMaterialParam(const std::string& name, void* data) const
+bool RenderEntity::GetMaterialParam(const std::string& name, void* data) const
 {
 	if (materialOverride)
 	{
@@ -44,7 +44,7 @@ bool SceneEntity::GetMaterialParam(const std::string& name, void* data) const
 	return material->GetParameter(name, (float*)data);
 }
 
-EntityMaterialInterface::EntityMaterialInterface(MaterialPropertiesOverrideDescription& s, SceneEntity& e) : storage(s), entity(e)
+EntityMaterialInterface::EntityMaterialInterface(MaterialPropertiesOverrideDescription& s, RenderEntity& e) : storage(s), entity(e)
 {
 }
 

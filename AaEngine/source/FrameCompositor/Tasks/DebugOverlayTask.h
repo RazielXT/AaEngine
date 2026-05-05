@@ -10,7 +10,7 @@ class DebugOverlayTask : public CompositorTask
 {
 public:
 
-	DebugOverlayTask(RenderProvider, SceneManager&);
+	DebugOverlayTask(RenderProvider, RenderWorld&);
 	~DebugOverlayTask();
 
 	AsyncTasksInfo initialize(CompositorPass& pass) override;

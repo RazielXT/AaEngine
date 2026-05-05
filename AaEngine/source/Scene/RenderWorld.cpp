@@ -1,7 +1,7 @@
-#include "Scene/SceneManager.h"
+#include "Scene/RenderWorld.h"
 #include "Resources/Material/MaterialEvents.h"
 
-SceneManager::SceneManager(GraphicsResources& r) : resources(r), skybox(r), graph(*this)
+RenderWorld::RenderWorld(GraphicsResources& r) : resources(r), skybox(r), graph(*this)
 {
 	renderables.reserve(10); //need to be enough! distributed by ptr
 
@@ -11,14 +11,14 @@ SceneManager::SceneManager(GraphicsResources& r) : resources(r), skybox(r), grap
 			queue->rebuildEntries(reloaded);
 	});
 
-	MaterialEvents::Get().addEntityParamChangeListener([this](SceneEntity& entity)
+	MaterialEvents::Get().addEntityParamChangeListener([this](RenderEntity& entity)
 	{
 		for (auto& queue : queues)
 			queue->rebuildEntries(&entity);
 	});
 }
 
-SceneManager::~SceneManager()
+RenderWorld::~RenderWorld()
 {
 	for (auto entity : entities)
 	{
@@ -26,7 +26,7 @@ SceneManager::~SceneManager()
 	}
 }
 
-void SceneManager::initialize(RenderSystem& renderSystem)
+void RenderWorld::initialize(RenderSystem& renderSystem)
 {
 	GlobalQueueMarker marker(renderSystem.core.commandQueue, "InitializeSceneManager");
 
@@ -40,15 +40,15 @@ void SceneManager::initialize(RenderSystem& renderSystem)
 	uploadResourcesFinished.wait();
 }
 
-void SceneManager::update()
+void RenderWorld::update()
 {
 	updateQueues();
 	updateTransformations();
 }
 
-SceneEntity* SceneManager::createEntity(EntityCreateProperties props)
+RenderEntity* RenderWorld::createEntity(EntityCreateProperties props)
 {
-	auto ent = new SceneEntity(*getRenderables(props.order), props.groupId);
+	auto ent = new RenderEntity(*getRenderables(props.order), props.groupId);
 
 	entities.insert(ent);
 	changes.emplace_back(EntityChange::Add, props.order, ent, ent->getGlobalId(), props.suborder);
@@ -56,7 +56,7 @@ SceneEntity* SceneManager::createEntity(EntityCreateProperties props)
 	return ent;
 }
 
-SceneEntity* SceneManager::createEntity(const ObjectTransformation& transformation, VertexBufferModel& model, EntityCreateProperties props)
+RenderEntity* RenderWorld::createEntity(const ObjectTransformation& transformation, VertexBufferModel& model, EntityCreateProperties props)
 {
 	auto entity = createEntity(props);
 	entity->setBoundingBox(model.bbox);
@@ -66,18 +66,18 @@ SceneEntity* SceneManager::createEntity(const ObjectTransformation& transformati
 	return entity;
 }
 
-void SceneManager::removeEntity(SceneEntity* entity)
+void RenderWorld::removeEntity(RenderEntity* entity)
 {
 	changes.emplace_back(EntityChange::Delete, getOrder(entity), entity, entity->getGlobalId(), 0);
 }
 
-void SceneManager::removeEntity(ObjectId id)
+void RenderWorld::removeEntity(ObjectId id)
 {
 	if (auto e = getEntity(id))
 		removeEntity(e);
 }
 
-SceneEntity* SceneManager::getEntity(ObjectId globalId) const
+RenderEntity* RenderWorld::getEntity(ObjectId globalId) const
 {
 	auto type = globalId.getObjectType();
 
@@ -89,7 +89,7 @@ SceneEntity* SceneManager::getEntity(ObjectId globalId) const
 			if (r.order == o)
 			{
 				auto id = globalId.getLocalIdx();
-				return (SceneEntity*)r.getObject(id);
+				return (RenderEntity*)r.getObject(id);
 			}
 		}
 	}
@@ -103,7 +103,7 @@ SceneEntity* SceneManager::getEntity(ObjectId globalId) const
 	return nullptr;
 }
 
-SceneObject SceneManager::getObject(ObjectId globalId)
+SceneObject RenderWorld::getObject(ObjectId globalId)
 {
 	auto type = globalId.getObjectType();
 
@@ -115,7 +115,7 @@ SceneObject SceneManager::getObject(ObjectId globalId)
 			if (r.order == o)
 			{
 				auto id = globalId.getLocalIdx();
-				return { globalId, type, (SceneEntity*)r.getObject(id), this };
+				return { globalId, type, (RenderEntity*)r.getObject(id), this };
 			}
 		}
 	}
@@ -130,7 +130,7 @@ SceneObject SceneManager::getObject(ObjectId globalId)
 	return {};
 }
 
-RenderQueue* SceneManager::createQueue(const std::vector<DXGI_FORMAT>& targets, MaterialTechnique technique, Order order)
+RenderQueue* RenderWorld::createQueue(const std::vector<DXGI_FORMAT>& targets, MaterialTechnique technique, Order order)
 {
 	for (auto& q : queues)
 	{
@@ -146,13 +146,13 @@ RenderQueue* SceneManager::createQueue(const std::vector<DXGI_FORMAT>& targets, 
 	auto r = getRenderables(order);
 	r->iterateObjects([&](RenderObject& obj)
 		{
-			queue->update({ EntityChange::Add, order, (SceneEntity*) &obj}, resources);
+			queue->update({ EntityChange::Add, order, (RenderEntity*) &obj}, resources);
 		});
 
 	return queues.emplace_back(std::move(queue)).get();
 }
 
-RenderQueue* SceneManager::getQueue(MaterialTechnique technique /*= MaterialTechnique::Default*/, Order order /*= Order::Normal*/)
+RenderQueue* RenderWorld::getQueue(MaterialTechnique technique /*= MaterialTechnique::Default*/, Order order /*= Order::Normal*/)
 {
 	for (auto& q : queues)
 	{
@@ -163,7 +163,7 @@ RenderQueue* SceneManager::getQueue(MaterialTechnique technique /*= MaterialTech
 	return nullptr;
 }
 
-RenderQueue SceneManager::createManualQueue(MaterialTechnique technique, Order order)
+RenderQueue RenderWorld::createManualQueue(MaterialTechnique technique, Order order)
 {
 	for (auto& q : queues)
 	{
@@ -181,7 +181,7 @@ RenderQueue SceneManager::createManualQueue(MaterialTechnique technique, Order o
 	return {};
 }
 
-void SceneManager::updateQueues()
+void RenderWorld::updateQueues()
 {
 	for (auto& queue : queues)
 	{
@@ -204,7 +204,7 @@ void SceneManager::updateQueues()
 	changes.clear();
 }
 
-void SceneManager::updateTransformations()
+void RenderWorld::updateTransformations()
 {
 	for (auto& r : renderables)
 	{
@@ -214,12 +214,12 @@ void SceneManager::updateTransformations()
 	instancing.update();
 }
 
-Order SceneManager::getOrder(SceneEntity* entity)
+Order RenderWorld::getOrder(RenderEntity* entity)
 {
 	return entity->getStorage().order;
 }
 
-RenderObjectsStorage* SceneManager::getRenderables(Order order)
+RenderObjectsStorage* RenderWorld::getRenderables(Order order)
 {
 	for (auto& r : renderables)
 	{
@@ -230,7 +230,7 @@ RenderObjectsStorage* SceneManager::getRenderables(Order order)
 	return &renderables.emplace_back(order);
 }
 
-void SceneManager::clear()
+void RenderWorld::clear()
 {
 	changes.emplace_back(EntityChange::DeleteAll);
 

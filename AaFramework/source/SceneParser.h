@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Scene/SceneManager.h"
+#include "Scene/RenderWorld.h"
 #include "PhysicsManager.h"
 #include <filesystem>
 
@@ -9,7 +9,7 @@ namespace SceneParser
 	struct Ctx
 	{
 		ResourceUploadBatch& batch;
-		SceneManager& sceneMgr;
+		RenderWorld& renderWorld;
 		RenderSystem& renderSystem;
 		GraphicsResources& resources;
 		PhysicsManager& physicsMgr;

@@ -16,7 +16,7 @@ public:
 		bool renderToBackbuffer = true;
 	};
 
-	FrameCompositor(const InitConfig& params, RenderProvider provider, SceneManager& sceneMgr, ShadowMaps& shadows);
+	FrameCompositor(const InitConfig& params, RenderProvider provider, RenderWorld& renderWorld, ShadowMaps& shadows);
 	~FrameCompositor();
 
 	void setDefine(const std::string& name, bool);
@@ -31,7 +31,7 @@ public:
 
 	const GpuTexture2D* getTexture(const std::string& name) const;
 
-	using CreateTaskFunc = std::function<std::shared_ptr<CompositorTask>(RenderProvider&, SceneManager&)>;
+	using CreateTaskFunc = std::function<std::shared_ptr<CompositorTask>(RenderProvider&, RenderWorld&)>;
 	void registerTask(const std::string& name, CreateTaskFunc);
 
 	CompositorTask* getTask(const std::string& name);
@@ -95,7 +95,7 @@ protected:
 	void renderQuad(PassData& pass, RenderContext& ctx, ID3D12GraphicsCommandList* commandList);
 
 	RenderProvider provider;
-	SceneManager& sceneMgr;
+	RenderWorld& renderWorld;
 	ShadowMaps& shadowMaps;
 
 	std::map<std::string, CreateTaskFunc> externTasks;

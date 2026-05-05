@@ -1,7 +1,7 @@
 #include "FrameCompositor/FrameCompositor.h"
 #include "FrameCompositor/CompositorFileParser.h"
 #include "Resources/Material/MaterialResources.h"
-#include "Scene/SceneManager.h"
+#include "Scene/RenderWorld.h"
 #include "RenderCore/ShadowMaps.h"
 #include "App/DebugWindow.h"
 #include "FrameCompositor/Tasks/ShadowsRenderTask.h"
@@ -16,7 +16,7 @@
 #include "FrameCompositor/Tasks/DownsampleTask.h"
 #include "FrameCompositor/Tasks/PrepareFrameTask.h"
 
-FrameCompositor::FrameCompositor(const InitConfig& params, RenderProvider p, SceneManager& scene, ShadowMaps& shadows) : config(params), provider(p), sceneMgr(scene), shadowMaps(shadows)
+FrameCompositor::FrameCompositor(const InitConfig& params, RenderProvider p, RenderWorld& w, ShadowMaps& shadows) : config(params), provider(p), renderWorld(w), shadowMaps(shadows)
 {
 }
 
@@ -82,47 +82,47 @@ void FrameCompositor::reloadPasses()
 		{
 			if (pass.info.task == "SceneRender")
 			{
-				pass.task = std::make_shared<SceneRenderTask>(provider, sceneMgr);
+				pass.task = std::make_shared<SceneRenderTask>(provider, renderWorld);
 			}
 			else if (pass.info.task == "PrepareFrame")
 			{
-				pass.task = std::make_shared<PrepareFrameTask>(provider, sceneMgr);
+				pass.task = std::make_shared<PrepareFrameTask>(provider, renderWorld);
 			}
 			else if (pass.info.task == "Shadows")
 			{
-				pass.task = std::make_shared<ShadowsRenderTask>(provider, sceneMgr, shadowMaps);
+				pass.task = std::make_shared<ShadowsRenderTask>(provider, renderWorld, shadowMaps);
 			}
 			else if (pass.info.task == "VoxelScene")
 			{
-				pass.task = std::make_shared<VoxelizeSceneTask>(provider, sceneMgr, shadowMaps);
+				pass.task = std::make_shared<VoxelizeSceneTask>(provider, renderWorld, shadowMaps);
 			}
 			else if (pass.info.task == "DebugOverlay")
 			{
-				pass.task = std::make_shared<DebugOverlayTask>(provider, sceneMgr);
+				pass.task = std::make_shared<DebugOverlayTask>(provider, renderWorld);
 			}
 			else if (pass.info.task == "Imgui")
 			{
-				pass.task = std::make_shared<ImguiDebugWindowTask>(provider, sceneMgr);
+				pass.task = std::make_shared<ImguiDebugWindowTask>(provider, renderWorld);
 			}
 			else if (pass.info.task == "SSAO")
 			{
-				pass.task = std::make_shared<SsaoComputeTask>(provider, sceneMgr);
+				pass.task = std::make_shared<SsaoComputeTask>(provider, renderWorld);
 			}
 			else if (pass.info.task == "Upscale")
 			{
-				pass.task = std::make_shared<UpscaleTask>(provider, sceneMgr);
+				pass.task = std::make_shared<UpscaleTask>(provider, renderWorld);
 			}
 			else if (pass.info.task == "Test")
 			{
-				pass.task = std::make_shared<SceneTestTask>(provider, sceneMgr);
+				pass.task = std::make_shared<SceneTestTask>(provider, renderWorld);
 			}
 			else if (pass.info.task == "HiZDepthDownsample")
 			{
-				pass.task = std::make_shared<DownsampleDepthTask>(provider, sceneMgr);
+				pass.task = std::make_shared<DownsampleDepthTask>(provider, renderWorld);
 			}
 			else if (auto it = externTasks.find(pass.info.task); it != externTasks.end())
 			{
-				pass.task = it->second(provider, sceneMgr);
+				pass.task = it->second(provider, renderWorld);
 			}
 
 			task = pass.task;

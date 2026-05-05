@@ -2,9 +2,9 @@
 
 #include "Resources/Model/VertexBufferModel.h"
 
-class SceneManager;
+class RenderWorld;
 class MaterialResources;
-class SceneEntity;
+class RenderEntity;
 
 namespace DirectX
 {
@@ -15,8 +15,8 @@ class SkyRendering
 {
 public:
 
-	void createClouds(SceneManager& sceneMgr, MaterialResources& materials, ID3D12Device* device, DirectX::ResourceUploadBatch& batch);
-	void createMoon(SceneManager& sceneMgr, MaterialResources& materials, DirectX::ResourceUploadBatch& batch);
+	void createClouds(RenderWorld& renderWorld, MaterialResources& materials, ID3D12Device* device, DirectX::ResourceUploadBatch& batch);
+	void createMoon(RenderWorld& renderWorld, MaterialResources& materials, DirectX::ResourceUploadBatch& batch);
 
 private:
 

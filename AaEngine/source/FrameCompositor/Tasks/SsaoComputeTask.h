@@ -12,7 +12,7 @@ class SsaoComputeTask : public CompositorTask
 {
 public:
 
-	SsaoComputeTask(RenderProvider provider, SceneManager&);
+	SsaoComputeTask(RenderProvider provider, RenderWorld&);
 	~SsaoComputeTask();
 
 	AsyncTasksInfo initialize(CompositorPass& pass) override;

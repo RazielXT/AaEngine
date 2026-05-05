@@ -1,8 +1,8 @@
 #include "FrameCompositor/Tasks/PrepareFrameTask.h"
-#include "Scene/SceneManager.h"
+#include "Scene/RenderWorld.h"
 #include "Scene/Camera.h"
 
-PrepareFrameTask::PrepareFrameTask(RenderProvider provider, SceneManager& s) : CompositorTask(provider, s)
+PrepareFrameTask::PrepareFrameTask(RenderProvider provider, RenderWorld& w) : CompositorTask(provider, w)
 {
 }
 
@@ -24,15 +24,15 @@ void PrepareFrameTask::run(RenderContext& ctx, CommandsData& cmd, CompositorPass
 	if (fsr.enabled())
 		ctx.camera->setPixelOffset(fsr.getJitter(), fsr.getRenderSize());
 
-	sceneMgr.water.update(provider.renderSystem, cmd.commandList, provider.params.timeDelta, provider.params.frameIndex, ctx.camera->getPosition());
-	sceneMgr.terrain.update(cmd.commandList, ctx.camera->getPosition(), provider.params.frameIndex);
-	sceneMgr.vegetation.update(cmd.commandList, ctx.camera->getPosition(), sceneMgr.terrain);
-	sceneMgr.grass.update(cmd.commandList, ctx.camera->getPosition(), sceneMgr.terrain);
+	renderWorld.water.update(provider.renderSystem, cmd.commandList, provider.params.timeDelta, provider.params.frameIndex, ctx.camera->getPosition());
+	renderWorld.terrain.update(cmd.commandList, ctx.camera->getPosition(), provider.params.frameIndex);
+	renderWorld.vegetation.update(cmd.commandList, ctx.camera->getPosition(), renderWorld.terrain);
+	renderWorld.grass.update(cmd.commandList, ctx.camera->getPosition(), renderWorld.terrain);
 }
 
 void PrepareFrameTask::runCompute(RenderContext& ctx, CommandsData& cmd, CompositorPass& pass)
 {
-	sceneMgr.water.updateCompute(provider.renderSystem, cmd.commandList, provider.params.timeDelta, provider.params.frameIndex);
+	renderWorld.water.updateCompute(provider.renderSystem, cmd.commandList, provider.params.timeDelta, provider.params.frameIndex);
 }
 
 CompositorTask::RunType PrepareFrameTask::getRunType(CompositorPass& pass) const

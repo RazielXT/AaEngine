@@ -5,7 +5,7 @@
 #include "Utils/MathUtils.h"
 
 struct RenderObjectsVisibilityData;
-class SceneEntity;
+class RenderEntity;
 class Camera;
 class GpuTexture2D;
 class RenderTargetTexturesView;
@@ -22,7 +22,7 @@ public:
 	XMFLOAT2 inverseViewportSize;
 	XMUINT2 viewportSize;
 
-	SceneEntity* entity{};
+	RenderEntity* entity{};
 	ID3D12Resource* uavBarrier{};
 
 	XMMATRIX getWorldMatrix() const;

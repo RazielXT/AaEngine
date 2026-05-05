@@ -58,18 +58,18 @@ public:
 					app.renderSystem.upscale.fsr.selectMode((UpscaleMode)debugWindow.state.FsrMode);
 					app.compositor->reloadPasses();
 				}
-				if (auto ent = app.sceneMgr.getEntity("Torus001"))
+				if (auto ent = app.renderWorld.getEntity("Torus001"))
 				{
 					ent->roll(timeSinceLastFrame);
 					ent->yaw(timeSinceLastFrame / 2.f);
 					ent->pitch(timeSinceLastFrame / 3.f);
 				}
-				if (auto ent = app.sceneMgr.getEntity("Suzanne"))
+				if (auto ent = app.renderWorld.getEntity("Suzanne"))
 				{
 					ent->yaw(timeSinceLastFrame);
 					ent->setPosition({ cos(app.params.time / 2.f) * 5, ent->getPosition().y, ent->getPosition().z });
 				}
-				if (auto ent = app.sceneMgr.getEntity("MovingCube"))
+				if (auto ent = app.renderWorld.getEntity("MovingCube"))
 				{
 					ent->setPosition({ ent->getPosition().x, ent->getPosition().y, -130.f - cos(app.params.time * 3) * 20 });
 				}

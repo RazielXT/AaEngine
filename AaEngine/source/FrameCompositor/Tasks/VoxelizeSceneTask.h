@@ -5,13 +5,13 @@
 #include <thread>
 
 struct RenderQueue;
-class SceneManager;
+class RenderWorld;
 
 class VoxelizeSceneTask : public CompositorTask
 {
 public:
 
-	VoxelizeSceneTask(RenderProvider provider, SceneManager&, ShadowMaps& shadows);
+	VoxelizeSceneTask(RenderProvider provider, RenderWorld&, ShadowMaps& shadows);
 	~VoxelizeSceneTask();
 
 	AsyncTasksInfo initialize(CompositorPass& pass) override;

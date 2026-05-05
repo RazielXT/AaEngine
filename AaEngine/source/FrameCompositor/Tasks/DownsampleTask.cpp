@@ -1,6 +1,6 @@
 #include "FrameCompositor/Tasks/DownsampleTask.h"
 
-DownsampleDepthTask::DownsampleDepthTask(RenderProvider provider, SceneManager& s) : CompositorTask(provider, s)
+DownsampleDepthTask::DownsampleDepthTask(RenderProvider provider, RenderWorld& w) : CompositorTask(provider, w)
 {
 }
 

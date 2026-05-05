@@ -1,7 +1,7 @@
 #include "RenderObject/Prefab/PrefabLoader.h"
 #include "Utils/ConfigParser.h"
 #include "Resources/GraphicsResources.h"
-#include "Scene/SceneManager.h"
+#include "Scene/RenderWorld.h"
 #include "Utils/Logger.h"
 #include <format>
 
@@ -42,7 +42,7 @@ void PrefabLoader::load(const std::string& path, SceneCollection::LoadCtx ctx)
 			continue;
 		}
 
-		auto e = ctx.sceneMgr.createEntity(tr, *model);
+		auto e = ctx.renderWorld.createEntity(tr, *model);
 		e->material = material;
 	}
 }

@@ -1,7 +1,7 @@
 #include "Scene/DrawPrimitives.h"
 #include "Resources/Model/ModelResources.h"
 #include "Resources/Material/MaterialResources.h"
-#include "Scene/SceneEntity.h"
+#include "Scene/RenderEntity.h"
 
 BoundingBoxDraw::BoundingBoxDraw(GraphicsResources& r, const std::vector<DXGI_FORMAT>& targets) : resources(r)
 {
@@ -9,7 +9,7 @@ BoundingBoxDraw::BoundingBoxDraw(GraphicsResources& r, const std::vector<DXGI_FO
 	material = resources.materials.getMaterial("BoundingBox")->Assign(model->vertexLayout, targets);
 }
 
-void BoundingBoxDraw::renderAxisAligned(ID3D12GraphicsCommandList* commandList, ShaderConstantsProvider& constants, SceneEntity* entity)
+void BoundingBoxDraw::renderAxisAligned(ID3D12GraphicsCommandList* commandList, ShaderConstantsProvider& constants, RenderEntity* entity)
 {
 	{
 		auto bbox = entity->getWorldBoundingBox();
@@ -54,7 +54,7 @@ void BoundingBoxDraw::renderAxisAligned(ID3D12GraphicsCommandList* commandList, 
 	commandList->DrawIndexedInstanced(model->indexCount, 1, 0, 0, 0);
 }
 
-void BoundingBoxDraw::renderObjectAligned(ID3D12GraphicsCommandList* commandList, ShaderConstantsProvider& constants, SceneEntity* entity)
+void BoundingBoxDraw::renderObjectAligned(ID3D12GraphicsCommandList* commandList, ShaderConstantsProvider& constants, RenderEntity* entity)
 {
 	{
 		auto bbox = entity->getBoundingBox();

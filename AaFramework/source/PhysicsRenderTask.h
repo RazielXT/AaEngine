@@ -8,7 +8,7 @@ class PhysicsRenderTask : public CompositorTask
 {
 public:
 
-	PhysicsRenderTask(RenderProvider, SceneManager&, PhysicsManager&);
+	PhysicsRenderTask(RenderProvider, RenderWorld&, PhysicsManager&);
 	~PhysicsRenderTask();
 
 	AsyncTasksInfo initialize(CompositorPass& pass) override;

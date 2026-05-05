@@ -3,7 +3,7 @@
 #include "FrameCompositor/RenderContext.h"
 #include "FrameCompositor/CompositorFileParser.h"
 
-class SceneManager;
+class RenderWorld;
 
 struct CompositorPass
 {
@@ -21,7 +21,7 @@ class CompositorTask
 {
 public:
 
-	CompositorTask(RenderProvider& p, SceneManager& s) : provider(p), sceneMgr(s) {};
+	CompositorTask(RenderProvider& p, RenderWorld& w) : provider(p), renderWorld(w) {};
 	virtual ~CompositorTask() = default;
 
 	virtual AsyncTasksInfo initialize(CompositorPass& pass) = 0;
@@ -39,5 +39,5 @@ public:
 protected:
 
 	RenderProvider provider;
-	SceneManager& sceneMgr;
+	RenderWorld& renderWorld;
 };

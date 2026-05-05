@@ -17,7 +17,7 @@ static bool NodeMatchesFilter(SceneGraphNode& node, ImGuiTextFilter& filter)
 	return false;
 }
 
-SceneTreePanel::SceneTreePanel(SceneManager& sm, EditorSelection& sel) : sceneMgr(sm), selection(sel)
+SceneTreePanel::SceneTreePanel(RenderWorld& w, EditorSelection& sel) : renderWorld(w), selection(sel)
 {
 }
 
@@ -60,9 +60,9 @@ void SceneTreePanel::drawNode(SceneGraphNode& node, ImGuiTextFilter& filter, Obj
 		if (ImGui::MenuItem("Delete"))
 		{
 			if (node.children.empty())
-				selection.remove(sceneMgr);
+				selection.remove(renderWorld);
 			else
-				selection.removeNode(node, sceneMgr);
+				selection.removeNode(node, renderWorld);
 		}
 
 		ImGui::EndPopup();
@@ -88,7 +88,7 @@ void SceneTreePanel::draw()
 	float height = ImGui::GetContentRegionAvail().y * 0.5f;
 	ImGui::BeginChild("SceneTreeRegion", ImVec2(0, height), true);
 
-	for (auto& node : sceneMgr.graph.nodes)
+	for (auto& node : renderWorld.graph.nodes)
 	{
 		drawNode(node, filter, selectedObjectId);
 	}
@@ -96,5 +96,5 @@ void SceneTreePanel::draw()
 	ImGui::EndChild();
 
 	if (selectedObjectId.value != 0xFFFFFFFF)
-		selection.select(selectedObjectId, ImGui::IsKeyDown(ImGuiKey_LeftCtrl), sceneMgr);
+		selection.select(selectedObjectId, ImGui::IsKeyDown(ImGuiKey_LeftCtrl), renderWorld);
 }

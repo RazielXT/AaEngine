@@ -8,7 +8,7 @@ class UpscaleTask : public CompositorTask
 {
 public:
 
-	UpscaleTask(RenderProvider provider, SceneManager&);
+	UpscaleTask(RenderProvider provider, RenderWorld&);
 	~UpscaleTask();
 
 	AsyncTasksInfo initialize(CompositorPass& pass) override;

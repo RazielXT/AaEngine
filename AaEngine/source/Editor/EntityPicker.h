@@ -7,8 +7,8 @@
 #include "Scene/ObjectId.h"
 #include <vector>
 
-class SceneEntity;
-class SceneManager;
+class RenderEntity;
+class RenderWorld;
 struct RenderQueue;
 
 class EntityPicker
@@ -21,7 +21,7 @@ public:
 	static EntityPicker& Get();
 
 	void initializeGpuResources();
-	void update(ID3D12GraphicsCommandList* commandList, RenderProvider& provider, Camera& camera, SceneManager& sceneMgr);
+	void update(ID3D12GraphicsCommandList* commandList, RenderProvider& provider, Camera& camera, RenderWorld& renderWorld);
 
 	struct PickOptions
 	{

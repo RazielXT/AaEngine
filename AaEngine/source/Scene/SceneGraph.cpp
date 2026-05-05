@@ -1,8 +1,8 @@
 #include "Scene/SceneGraph.h"
-#include "Scene/SceneManager.h"
+#include "Scene/RenderWorld.h"
 #include <format>
 
-SceneGraph::SceneGraph(SceneManager& sm) : sceneMgr(sm)
+SceneGraph::SceneGraph(RenderWorld& w) : renderWorld(w)
 {
 	reset();
 }

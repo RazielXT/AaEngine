@@ -5,7 +5,7 @@
 #include "Resources/Model/ModelParseOptions.h"
 #include "Scene/Collection/SceneCollection.h"
 
-class SceneManager;
+class RenderWorld;
 class RenderSystem;
 struct GraphicsResources;
 

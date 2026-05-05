@@ -1,7 +1,7 @@
 #include "RenderObject/Vegetation/Vegetation.h"
 #include "RenderObject/Terrain/ProgressiveTerrain.h"
 #include "BufferHelpers.h"
-#include "Scene/SceneManager.h"
+#include "Scene/RenderWorld.h"
 #include <format>
 
 Vegetation::Vegetation()
@@ -63,10 +63,10 @@ void Vegetation::initChunk(VegetationChunk& chunk, RenderSystem& renderSystem, G
 	chunk.impostors.maxCommands = 1;
 }
 
-void Vegetation::createChunks(SceneManager& sceneMgr, RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch)
+void Vegetation::createChunks(RenderWorld& renderWorld, RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch)
 {
 	vegMaterial = resources.materials.getMaterial("VegetationBillboard", batch);
-	auto& terrainParams = sceneMgr.terrain.params;
+	auto& terrainParams = renderWorld.terrain.params;
 	float chunkSize = terrainParams.tileSize / ChunksPerTerrainTile;
 	int half = (int)VegGridSize / 2;
 
@@ -82,7 +82,7 @@ void Vegetation::createChunks(SceneManager& sceneMgr, RenderSystem& renderSystem
 			auto& chunk = chunks[ax][ay];
 			initChunk(chunk, renderSystem, resources, batch, vegMaterial);
 
-			auto e = sceneMgr.createEntity();
+			auto e = renderWorld.createEntity();
 			chunk.entity = e;
 			e->material = vegMaterial;
 			e->Material().setParam("ChunkId", x + y * VegGridSize);

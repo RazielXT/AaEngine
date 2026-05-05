@@ -1,7 +1,7 @@
 #include "RenderObject/Vegetation/VegetationTrees.h"
-#include "Scene/SceneManager.h"
+#include "Scene/RenderWorld.h"
 
-VegetationTrees::VegetationTrees(SceneManager& s) : sceneMgr(s)
+VegetationTrees::VegetationTrees(RenderWorld& w) : renderWorld(w)
 {
 }
 
@@ -36,17 +36,17 @@ void VegetationTrees::addTree(const ObjectTransformation& tr)
 {
 	static int t = 0;
 
-// 	auto tree = sceneMgr.createEntity("Tree" + std::to_string(t), tr, *treeData.lod[0].branchModel);
+// 	auto tree = renderWorld.createEntity("Tree" + std::to_string(t), tr, *treeData.lod[0].branchModel);
 // 	tree->material = treeData.branchMaterial;
 // 
-// 	auto treeTrunk = sceneMgr.createEntity("TreeTrunk" + std::to_string(t), tr, *treeData.lod[0].trunkModel);
+// 	auto treeTrunk = renderWorld.createEntity("TreeTrunk" + std::to_string(t), tr, *treeData.lod[0].trunkModel);
 // 	treeTrunk->material = treeData.trunkMaterial;
 
 	auto tr2 = tr;
 	tr2.position.y += 20;
 	tr2.scale *= 10;
 
-	auto tree = sceneMgr.createEntity(tr2, *sphereModel);
+	auto tree = renderWorld.createEntity(tr2, *sphereModel);
 	tree->material = sphereMaterial;
  	t++;
 // 

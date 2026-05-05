@@ -1,7 +1,7 @@
 #include "RenderObject/Terrain/ProgressiveTerrain.h"
 #include "Resources/Textures/TextureResources.h"
 #include "Resources/GraphicsResources.h"
-#include "Scene/SceneManager.h"
+#include "Scene/RenderWorld.h"
 #include <format>
 
 const UINT TextureSize = 1024;
@@ -11,7 +11,7 @@ ProgressiveTerrain::ProgressiveTerrain()
 {
 }
 
-void ProgressiveTerrain::initialize(RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch, SceneManager& sceneMgr)
+void ProgressiveTerrain::initialize(RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch, RenderWorld& renderWorld)
 {
 	terrainTexture = resources.textures.loadFile(*renderSystem.core.device, batch, "Mountain Range Height Map PNG.png");
 	resources.descriptors.createTextureView(*terrainTexture);
@@ -44,7 +44,7 @@ void ProgressiveTerrain::initialize(RenderSystem& renderSystem, GraphicsResource
 			resources.descriptors.createTextureView(terrainNormal);
 			terrainNormalMips = resources.descriptors.createUAVMips(terrainNormal);
 
-			auto e = sceneMgr.createEntity();
+			auto e = renderWorld.createEntity();
 			terrainGridMesh[x][y].create(terrainGridTiles.TilesWidth);
 			terrainGridMesh[x][y].entity = e;
 			e->geometry.fromInstancedModel(terrainModel, 0, terrainGridMesh[x][y].gpuBuffer.data[0].GpuAddress());

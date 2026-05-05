@@ -10,7 +10,7 @@
 #include "RenderCore/RenderSystem.h"
 #include "Resources/GraphicsResources.h"
 #include "Scene/ObjectId.h"
-#include "Scene/SceneManager.h"
+#include "Scene/RenderWorld.h"
 #include "App/Directories.h"
 
 static std::pair<const char*, DXGI_FORMAT> ParseGltfElement(const std::string& name, int type)

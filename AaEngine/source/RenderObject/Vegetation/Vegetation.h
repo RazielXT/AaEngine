@@ -6,7 +6,7 @@
 #include "Scene/EntityGeometry.h"
 #include "RenderObject/Terrain/TerrainGridParams.h"
 
-class SceneManager;
+class RenderWorld;
 class ProgressiveTerrain;
 
 class VegetationFindComputeShader : public ComputeShader
@@ -39,7 +39,7 @@ struct VegetationChunk
 	ComPtr<ID3D12Resource> transformationBuffer;
 	ComPtr<ID3D12Resource> infoCounter;
 	IndirectEntityGeometry impostors;
-	SceneEntity* entity{};
+	RenderEntity* entity{};
 
 	XMINT2 worldCoord{};
 	bool dirty = true;
@@ -56,7 +56,7 @@ public:
 
 	void clear();
 
-	void createChunks(SceneManager& sceneMgr, RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch);
+	void createChunks(RenderWorld& renderWorld, RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch);
 
 	void update(ID3D12GraphicsCommandList* commandList, const Vector3& cameraPos, const ProgressiveTerrain& terrain);
 

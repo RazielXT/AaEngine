@@ -1,5 +1,5 @@
 #include "Scene/EntityInstancing.h"
-#include "Scene/SceneManager.h"
+#include "Scene/RenderWorld.h"
 #include "Resources/Material/Material.h"
 
 void InstancingManager::clear()
@@ -32,7 +32,7 @@ void InstancingManager::update()
 	updates.clear();
 }
 
-InstanceGroup* InstancingManager::build(SceneManager& sceneMgr, const InstanceGroupDescription& description)
+InstanceGroup* InstancingManager::build(RenderWorld& renderWorld, const InstanceGroupDescription& description)
 {
 	if (description.objects.empty())
 		return nullptr;
@@ -41,7 +41,7 @@ InstanceGroup* InstancingManager::build(SceneManager& sceneMgr, const InstanceGr
 	it = std::make_unique<InstanceGroup>();
 	it->create(description, groups.size() - 1);
 
-	auto entity = sceneMgr.createEntity();
+	auto entity = renderWorld.createEntity();
 	entity->geometry.fromInstancedModel(*description.model, *it);
 	entity->material = description.material;
 

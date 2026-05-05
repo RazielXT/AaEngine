@@ -3,7 +3,7 @@
 #include "backends/imgui_impl_win32.h"
 #include "backends/imgui_impl_dx12.h"
 #include "RenderCore/RenderSystem.h"
-#include "Scene/SceneManager.h"
+#include "Scene/RenderWorld.h"
 #include "Resources/Material/MaterialResources.h"
 #include "FrameCompositor/Tasks/DebugOverlayTask.h"
 #include "Utils/SystemUtils.h"

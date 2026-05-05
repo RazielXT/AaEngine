@@ -2,7 +2,7 @@
 #include "Resources/DescriptorManager.h"
 #include "Scene/Camera.h"
 
-SsaoComputeTask::SsaoComputeTask(RenderProvider p, SceneManager& s) : CompositorTask(p, s)
+SsaoComputeTask::SsaoComputeTask(RenderProvider p, RenderWorld& w) : CompositorTask(p, w)
 {
 }
 

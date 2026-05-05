@@ -1,6 +1,6 @@
 #include "FrameCompositor/Tasks/SceneTestTask.h"
 
-SceneTestTask::SceneTestTask(RenderProvider p, SceneManager& s) : CompositorTask(p, s)
+SceneTestTask::SceneTestTask(RenderProvider p, RenderWorld& w) : CompositorTask(p, w)
 {
 }
 
@@ -10,7 +10,7 @@ SceneTestTask::~SceneTestTask()
 
 AsyncTasksInfo SceneTestTask::initialize(CompositorPass& pass)
 {
-	tmpQueue = sceneMgr.createManualQueue();
+	tmpQueue = renderWorld.createManualQueue();
 	tmpQueue.targetFormats = pass.mrt->formats;
 
 	heap.InitRtv(provider.renderSystem.core.device, tmpQueue.targetFormats.size(), L"testRttHeap");
@@ -29,8 +29,8 @@ void SceneTestTask::run(RenderContext& ctx, CommandsData& commands, CompositorPa
 	{
 		initialized = true;
 
-		//tmpQueue.update({ EntityChange::Add, Order::Normal, sceneMgr.getEntity("Plane001") }, provider.resources);
-		//tmpQueue.update({ EntityChange::Add, Order::Normal, sceneMgr.getEntity("Torus001") }, provider.resources);
+		//tmpQueue.update({ EntityChange::Add, Order::Normal, renderWorld.getEntity("Plane001") }, provider.resources);
+		//tmpQueue.update({ EntityChange::Add, Order::Normal, renderWorld.getEntity("Torus001") }, provider.resources);
 	}
 
 	Camera tmpCamera;
@@ -40,7 +40,7 @@ void SceneTestTask::run(RenderContext& ctx, CommandsData& commands, CompositorPa
 	tmpCamera.updateMatrix();
 
 	static RenderObjectsVisibilityData sceneInfo;
-	sceneMgr.getRenderables(Order::Normal)->updateVisibility(tmpCamera, sceneInfo);
+	renderWorld.getRenderables(Order::Normal)->updateVisibility(tmpCamera, sceneInfo);
 
 	CommandsMarker marker(commands.commandList, "Test", PixColor::OliveDrab);
 

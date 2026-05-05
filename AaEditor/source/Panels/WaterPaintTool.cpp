@@ -65,7 +65,7 @@ void WaterPaintTool::adjustWaterLevel(const Vector3& position)
 {
 	float sign = (mode == Mode::Add) ? 1.0f : -1.0f;
 
-	app.sceneMgr.water.addAdjustment({
+	app.renderWorld.water.addAdjustment({
 		.worldPosition = position,
 		.radius = brushRadius,
 		.heightDelta = sign * brushStrength

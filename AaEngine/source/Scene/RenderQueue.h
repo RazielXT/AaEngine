@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Scene/SceneEntity.h"
+#include "Scene/RenderEntity.h"
 #include "Scene/Camera.h"
 #include "Scene/RenderObject.h"
 #include <functional>
@@ -16,7 +16,7 @@ struct EntityChangeDescritpion
 {
 	EntityChange type;
 	Order order;
-	SceneEntity* entity{};
+	RenderEntity* entity{};
 	ObjectId id;
 	int suborder;
 };
@@ -30,10 +30,10 @@ struct RenderQueue
 		const MaterialBase* base{};
 		AssignedMaterial* material{};
 		std::unique_ptr<MaterialPropertiesOverride> materialOverride{};
-		SceneEntity* entity{};
+		RenderEntity* entity{};
 		int suborder;
 
-		EntityEntry(SceneEntity*, AssignedMaterial*, MaterialTechnique, int suborder);
+		EntityEntry(RenderEntity*, AssignedMaterial*, MaterialTechnique, int suborder);
 
 		void rebuildMaterial(MaterialTechnique technique);
 
@@ -52,7 +52,7 @@ struct RenderQueue
 
 	void update(const EntityChangeDescritpion&, GraphicsResources& resources);
 	void rebuildEntries(const std::vector<MaterialBase*>& reloaded);
-	void rebuildEntries(const SceneEntity* reloaded);
+	void rebuildEntries(const RenderEntity* reloaded);
 	void reset();
 
 	void renderObjects(ShaderConstantsProvider& info, ID3D12GraphicsCommandList* commandList);

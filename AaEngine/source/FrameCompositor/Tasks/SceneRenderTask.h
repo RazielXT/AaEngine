@@ -13,7 +13,7 @@ class SceneRenderTask : public CompositorTask
 {
 public:
 
-	SceneRenderTask(RenderProvider provider, SceneManager&);
+	SceneRenderTask(RenderProvider provider, RenderWorld&);
 	~SceneRenderTask();
 
 	AsyncTasksInfo initialize(CompositorPass& pass) override;
@@ -94,5 +94,5 @@ private:
 	void renderDebug(CompositorPass& pass, CommandsData& cmd);
 
 	bool showVoxelsEnabled = false;
-	void updateVoxelsDebugView(SceneEntity& debugVoxel, Camera& camera);
+	void updateVoxelsDebugView(RenderEntity& debugVoxel, Camera& camera);
 };

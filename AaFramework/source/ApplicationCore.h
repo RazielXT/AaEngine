@@ -2,7 +2,7 @@
 
 #include "RenderCore/RenderSystem.h"
 #include "RenderCore/ShadowMaps.h"
-#include "Scene/SceneManager.h"
+#include "Scene/RenderWorld.h"
 #include "Scene/DrawPrimitives.h"
 #include "FrameCompositor/FrameCompositor.h"
 #include "Resources/GraphicsResources.h"
@@ -39,7 +39,7 @@ public:
 
 	RenderSystem renderSystem;
 	GraphicsResources resources;
-	SceneManager sceneMgr;
+	RenderWorld renderWorld;
 	FrameParameters params;
 	PhysicsManager physicsMgr;
 	TerrainPhysics terrainPhysics;

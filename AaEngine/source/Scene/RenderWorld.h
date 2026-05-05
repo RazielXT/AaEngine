@@ -15,7 +15,7 @@ struct SceneObject
 {
 	ObjectId id;
 	ObjectType type;
-	SceneEntity* entity{};
+	RenderEntity* entity{};
 	void* owner{};
 	void* item{};
 
@@ -36,24 +36,24 @@ struct EntityCreateProperties
 	int suborder = 0;
 };
 
-class SceneManager
+class RenderWorld
 {
 public:
 
-	SceneManager(GraphicsResources& r);
-	~SceneManager();
+	RenderWorld(GraphicsResources& r);
+	~RenderWorld();
 
 	void initialize(RenderSystem& rs);
 
 	void update();
 	void clear();
 
-	SceneEntity* createEntity(EntityCreateProperties props = {});
-	SceneEntity* createEntity(const ObjectTransformation&, VertexBufferModel&, EntityCreateProperties = {});
-	void removeEntity(SceneEntity* entity);
+	RenderEntity* createEntity(EntityCreateProperties props = {});
+	RenderEntity* createEntity(const ObjectTransformation&, VertexBufferModel&, EntityCreateProperties = {});
+	void removeEntity(RenderEntity* entity);
 	void removeEntity(ObjectId id);
 
-	SceneEntity* getEntity(ObjectId globalId) const;
+	RenderEntity* getEntity(ObjectId globalId) const;
 	SceneObject getObject(ObjectId globalId);
 
 	RenderQueue* createQueue(const std::vector<DXGI_FORMAT>& targets, MaterialTechnique technique = MaterialTechnique::Default, Order order = Order::Normal);
@@ -84,11 +84,11 @@ private:
 	void updateTransformations();
 
 	std::vector<RenderObjectsStorage> renderables;
-	Order getOrder(SceneEntity* entity);
+	Order getOrder(RenderEntity* entity);
 
 	std::vector<EntityChangeDescritpion> changes;
 
-	std::set<SceneEntity*> entities;
+	std::set<RenderEntity*> entities;
 
 	std::vector<std::unique_ptr<RenderQueue>> queues;
 };

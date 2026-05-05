@@ -113,7 +113,7 @@ Order ParseRenderQueue(std::string_view renderQueue)
 	return Order::Normal;
 }
 
-// void loadLight(const XmlParser::Element* lightElement, SceneNode* node, AaSceneManager* sceneMgr)
+// void loadLight(const XmlParser::Element* lightElement, SceneNode* node, AaSceneManager* renderWorld)
 // {
 // 	Light light{};
 // 	light.type = ParseLightType(lightElement->attribute("type"));
@@ -183,7 +183,7 @@ std::vector<ExtensionFunction> parseExtensionFunctions(const std::string& input)
 	return functions;
 }
 
-void loadExtensions(const xml_node& element, SceneEntity* ent, SceneNode* node)
+void loadExtensions(const xml_node& element, RenderEntity* ent, SceneNode* node)
 {
 	auto extensions = parseExtensionFunctions(element.text().get());
 
@@ -196,7 +196,7 @@ void loadExtensions(const xml_node& element, SceneEntity* ent, SceneNode* node)
 	}
 }
 
-void loadEntityUserData(const xml_node& element, SceneEntity* ent, SceneNode* node)
+void loadEntityUserData(const xml_node& element, RenderEntity* ent, SceneNode* node)
 {
 	pugi::xml_document subdoc;
 	if (subdoc.load_string(element.text().get()))
@@ -258,7 +258,7 @@ void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible)
 	props.groupId = 0;
 
 	Logger::log("Loading entity " + name + " with mesh file " + mesh);
-	SceneEntity* ent{};
+	RenderEntity* ent{};
 
 	for (const auto& element : entityElement.child("subentities").children())
 	{
@@ -279,7 +279,7 @@ void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible)
 		if (material->IsTransparent() && props.order < Order::Transparent)
 			props.order = Order::Transparent;
 
-		ent = ctx->sceneMgr.createEntity(node->transformation, *model, props);
+		ent = ctx->renderWorld.createEntity(node->transformation, *model, props);
 		ent->material = material;
 		//ent->setVisible(visible);
 
@@ -317,7 +317,7 @@ void loadNode(const xml_node& nodeElement, SceneNode* parentNode = nullptr)
 		if (elementName == "node")
 			loadNode(element, &node);
 // 		else if (elementName == "light")
-// 			loadLight(childElement, &node, sceneMgr);
+// 			loadLight(childElement, &node, renderWorld);
 	}
 }
 

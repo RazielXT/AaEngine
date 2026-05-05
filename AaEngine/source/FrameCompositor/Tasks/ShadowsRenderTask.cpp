@@ -1,12 +1,12 @@
 #include "FrameCompositor/Tasks/ShadowsRenderTask.h"
 #include "Scene/RenderObject.h"
-#include "Scene/SceneManager.h"
+#include "Scene/RenderWorld.h"
 
-ShadowsRenderTask::ShadowsRenderTask(RenderProvider p, SceneManager& s, ShadowMaps& shadows) : shadowMaps(shadows), CompositorTask(p, s)
+ShadowsRenderTask::ShadowsRenderTask(RenderProvider p, RenderWorld& w, ShadowMaps& shadows) : shadowMaps(shadows), CompositorTask(p, w)
 {
 	for (auto& shadow : cascades)
 	{
-		shadow.renderables = sceneMgr.getRenderables(Order::Normal);
+		shadow.renderables = renderWorld.getRenderables(Order::Normal);
 	}
 }
 
@@ -29,7 +29,7 @@ ShadowsRenderTask::~ShadowsRenderTask()
 
 AsyncTasksInfo ShadowsRenderTask::initialize(CompositorPass&)
 {
-	depthQueue = sceneMgr.createQueue({}, MaterialTechnique::DepthShadowmap);
+	depthQueue = renderWorld.createQueue({}, MaterialTechnique::DepthShadowmap);
 
 	AsyncTasksInfo tasks;
 

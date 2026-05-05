@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Scene/SceneEntity.h"
+#include "Scene/RenderEntity.h"
 #include "Scene/RenderQueue.h"
 
 struct SceneGraphNode
@@ -11,13 +11,13 @@ struct SceneGraphNode
 	std::vector<SceneGraphNode> children;
 };
 
-class SceneManager;
+class RenderWorld;
 
 class SceneGraph
 {
 public:
 
-	SceneGraph(SceneManager& sceneMgr);
+	SceneGraph(RenderWorld& renderWorld);
 
 	void updateEntity(const std::vector<EntityChangeDescritpion>&);
 
@@ -32,5 +32,5 @@ protected:
 
 	void reset();
 
-	SceneManager& sceneMgr;
+	RenderWorld& renderWorld;
 };

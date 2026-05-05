@@ -2,7 +2,7 @@
 #include "Resources/Shader/ShaderConstantsProvider.h"
 #include "Scene/RenderObject.h"
 
-PhysicsRenderTask::PhysicsRenderTask(RenderProvider p, SceneManager& s, PhysicsManager& m) : CompositorTask(p, s), physicsMgr(m)
+PhysicsRenderTask::PhysicsRenderTask(RenderProvider p, RenderWorld& w, PhysicsManager& m) : CompositorTask(p, w), physicsMgr(m)
 {
 }
 

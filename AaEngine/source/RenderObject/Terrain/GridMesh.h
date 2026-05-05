@@ -3,7 +3,7 @@
 #include "Utils/MathUtils.h"
 #include <vector>
 #include "Resources/Shader/ShaderDataBuffers.h"
-#include "Scene/SceneEntity.h"
+#include "Scene/RenderEntity.h"
 
 // Data sent to the StructuredBuffer
 struct TileData
@@ -132,6 +132,6 @@ struct GridInstanceMesh
 
 	CbufferData gpuBuffer;
 
-	SceneEntity* entity{};
+	RenderEntity* entity{};
 	BoundingBox modelBbox;
 };

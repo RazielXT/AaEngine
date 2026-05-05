@@ -3,7 +3,7 @@
 #include <d3d12shader.h>
 #include <ranges>
 #include "Scene/Camera.h"
-#include "Scene/SceneEntity.h"
+#include "Scene/RenderEntity.h"
 #include "Resources/Shader/ShaderLibrary.h"
 #include "Resources/Textures/TextureResources.h"
 #include "Utils/Logger.h"

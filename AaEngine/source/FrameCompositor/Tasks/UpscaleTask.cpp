@@ -1,6 +1,6 @@
 #include "FrameCompositor/Tasks/UpscaleTask.h"
 
-UpscaleTask::UpscaleTask(RenderProvider provider, SceneManager& s) : CompositorTask(provider, s)
+UpscaleTask::UpscaleTask(RenderProvider provider, RenderWorld& w) : CompositorTask(provider, w)
 {
 }
 

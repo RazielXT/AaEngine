@@ -8,6 +8,9 @@
     <Filter Include="Source Files\Physics">
       <UniqueIdentifier>{839f81cc-880a-4424-8ba7-7489016d5bd0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\SceneGraph">
+      <UniqueIdentifier>{aba07fc9-201e-4f7e-afec-9390a3f19904}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\FreeCamera.cpp">

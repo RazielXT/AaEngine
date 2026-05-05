@@ -112,7 +112,7 @@
     <ClCompile Include="source\FrameCompositor\Tasks\PrepareFrameTask.cpp" />
     <ClCompile Include="source\RenderObject\Terrain\ProgressiveTerrain.cpp" />
     <ClCompile Include="source\RenderCore\RenderTargetHeap.cpp" />
-    <ClCompile Include="source\Scene\SceneEntity.cpp" />
+    <ClCompile Include="source\Scene\RenderEntity.cpp" />
     <ClCompile Include="source\Resources\Material\Material.cpp" />
     <ClCompile Include="source\Resources\Material\MaterialFileParser.cpp" />
     <ClCompile Include="source\Resources\Material\MaterialResources.cpp" />
@@ -140,7 +140,7 @@
     <ClCompile Include="source\Resources\GraphicsResources.cpp" />
     <ClCompile Include="source\Scene\RenderObject.cpp" />
     <ClCompile Include="source\RenderCore\RenderSystem.cpp" />
-    <ClCompile Include="source\Scene\SceneManager.cpp" />
+    <ClCompile Include="source\Scene\RenderWorld.cpp" />
     <ClCompile Include="source\Resources\Shader\ShaderCompiler.cpp" />
     <ClCompile Include="source\Resources\Shader\ShaderFileParser.cpp" />
     <ClCompile Include="source\Resources\Shader\ShaderLibrary.cpp" />
@@ -210,7 +210,7 @@
     <ClInclude Include="source\RenderObject\Terrain\ProgressiveTerrain.h" />
     <ClInclude Include="source\RenderCore\RenderTargetHeap.h" />
     <ClInclude Include="source\Resources\ResourcesView.h" />
-    <ClInclude Include="source\Scene\SceneEntity.h" />
+    <ClInclude Include="source\Scene\RenderEntity.h" />
     <ClInclude Include="source\Utils\ColorUtils.h" />
     <ClInclude Include="source\Utils\Logger.h" />
     <ClInclude Include="source\Resources\Material\Material.h" />
@@ -247,7 +247,7 @@
     <ClInclude Include="source\Resources\Model\ModelResources.h" />
     <ClInclude Include="source\Scene\RenderObject.h" />
     <ClInclude Include="source\RenderCore\RenderSystem.h" />
-    <ClInclude Include="source\Scene\SceneManager.h" />
+    <ClInclude Include="source\Scene\RenderWorld.h" />
     <ClInclude Include="source\Resources\Shader\ShaderCompiler.h" />
     <ClInclude Include="source\Resources\Shader\ShaderFileParser.h" />
     <ClInclude Include="source\Resources\Shader\ShaderLibrary.h" />

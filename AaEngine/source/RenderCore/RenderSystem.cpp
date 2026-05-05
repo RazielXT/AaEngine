@@ -4,7 +4,7 @@
 #include "Resources/Material/Material.h"
 #include "Model.h"
 #include "Resources/Model/OgreMeshFileParser.h"
-#include "Scene/SceneManager.h"
+#include "Scene/RenderWorld.h"
 #include "Resources/Material/MaterialResources.h"
 #include <pix3.h>
 #include "Utils/Logger.h"

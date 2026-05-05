@@ -1,7 +1,7 @@
 #include "EditorSelection.h"
 #include "Editor/EntityPicker.h"
 
-void EditorSelection::select(ObjectId selectedId, bool multi, SceneManager& sceneMgr)
+void EditorSelection::select(ObjectId selectedId, bool multi, RenderWorld& renderWorld)
 {
 	bool add = true;
 
@@ -24,7 +24,7 @@ void EditorSelection::select(ObjectId selectedId, bool multi, SceneManager& scen
 
 	if (add)
 	{
-		if (auto obj = sceneMgr.getObject(selectedId))
+		if (auto obj = renderWorld.getObject(selectedId))
 		{
 			items.emplace_back(obj.getTransformation(), obj);
 		}
@@ -33,21 +33,21 @@ void EditorSelection::select(ObjectId selectedId, bool multi, SceneManager& scen
 	refreshIds();
 }
 
-void EditorSelection::remove(SceneManager& sceneMgr)
+void EditorSelection::remove(RenderWorld& renderWorld)
 {
 	for (auto& s : items)
 	{
-		sceneMgr.removeEntity(s.obj.entity);
+		renderWorld.removeEntity(s.obj.entity);
 	}
 
 	clear();
 }
 
-void EditorSelection::removeNode(SceneGraphNode& node, SceneManager& sceneMgr)
+void EditorSelection::removeNode(SceneGraphNode& node, RenderWorld& renderWorld)
 {
 	for (auto& child : node.children)
 	{
-		sceneMgr.removeEntity(child.id);
+		renderWorld.removeEntity(child.id);
 	}
 
 	clear();

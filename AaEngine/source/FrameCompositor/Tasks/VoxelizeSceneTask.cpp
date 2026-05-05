@@ -1,9 +1,9 @@
 #include "FrameCompositor/Tasks/VoxelizeSceneTask.h"
-#include "Scene/SceneManager.h"
+#include "Scene/RenderWorld.h"
 
 static VoxelizeSceneTask* instance = nullptr;
 
-VoxelizeSceneTask::VoxelizeSceneTask(RenderProvider p, SceneManager& s, ShadowMaps& shadows) : shadowMaps(shadows), CompositorTask(p, s)
+VoxelizeSceneTask::VoxelizeSceneTask(RenderProvider p, RenderWorld& w, ShadowMaps& shadows) : shadowMaps(shadows), CompositorTask(p, w)
 {
 	instance = this;
 }
@@ -56,7 +56,7 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 	if (pass.info.entry != "Voxelize")
 		return {};
 
-	voxelization.initialize(provider.renderSystem, provider.params, provider.resources, shadowMaps, sceneMgr, pass.targets.front().texture->format);
+	voxelization.initialize(provider.renderSystem, provider.params, provider.resources, shadowMaps, renderWorld, pass.targets.front().texture->format);
 
 	frameCbuffer = provider.resources.shaderBuffers.CreateCbufferResource(sizeof(Matrix), "FrameInfo");
 

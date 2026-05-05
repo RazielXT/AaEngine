@@ -2,7 +2,7 @@
 
 #include "Resources/GraphicsResources.h"
 #include <string>
-#include "Scene/SceneManager.h"
+#include "Scene/RenderWorld.h"
 
 class VertexBufferModel;
 class AssignedMaterial;
@@ -12,9 +12,9 @@ struct BoundingBoxDraw
 {
 	BoundingBoxDraw(GraphicsResources& resources, const std::vector<DXGI_FORMAT>& targets);
 
-	void renderAxisAligned(ID3D12GraphicsCommandList* commandList, ShaderConstantsProvider& constants, SceneEntity* entity);
+	void renderAxisAligned(ID3D12GraphicsCommandList* commandList, ShaderConstantsProvider& constants, RenderEntity* entity);
 
-	void renderObjectAligned(ID3D12GraphicsCommandList* commandList, ShaderConstantsProvider& constants, SceneEntity* entity);
+	void renderObjectAligned(ID3D12GraphicsCommandList* commandList, ShaderConstantsProvider& constants, RenderEntity* entity);
 
 private:
 
@@ -92,9 +92,9 @@ struct PlanesModel
 		model.calculateBounds();
 	}
 
-	SceneEntity* CreateEntity(SceneManager& sceneMgr, MaterialInstance* material)
+	RenderEntity* CreateEntity(RenderWorld& renderWorld, MaterialInstance* material)
 	{
-		auto e = sceneMgr.createEntity();
+		auto e = renderWorld.createEntity();
 		e->material = material;
 		e->geometry.fromModel(model);
 		e->geometry.topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;

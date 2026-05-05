@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Scene/SceneManager.h"
+#include "Scene/RenderWorld.h"
 #include "imgui.h"
 
 class EditorSelection;
@@ -9,7 +9,7 @@ class SceneTreePanel
 {
 public:
 
-	SceneTreePanel(SceneManager& sceneMgr, EditorSelection& selection);
+	SceneTreePanel(RenderWorld& renderWorld, EditorSelection& selection);
 
 	void draw();
 
@@ -17,6 +17,6 @@ private:
 
 	void drawNode(SceneGraphNode& node, ImGuiTextFilter& filter, ObjectId& selectedObjectId);
 
-	SceneManager& sceneMgr;
+	RenderWorld& renderWorld;
 	EditorSelection& selection;
 };

@@ -8,7 +8,7 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include "Jolt/Physics/Collision/PhysicsMaterialSimple.h"
 #include "Jolt/Core/Color.h"
-#include "Scene/SceneEntity.h"
+#include "Scene/RenderEntity.h"
 #include "Scene/RenderObject.h"
 #include <thread>
 #include <format>

@@ -1,14 +1,14 @@
 #pragma once
 
 #include "FrameCompositor/Tasks/CompositorTask.h"
-#include "Scene/SceneManager.h"
+#include "Scene/RenderWorld.h"
 #include <thread>
 
 class SceneTestTask : public CompositorTask
 {
 public:
 
-	SceneTestTask(RenderProvider provider, SceneManager&);
+	SceneTestTask(RenderProvider provider, RenderWorld&);
 	~SceneTestTask();
 
 	AsyncTasksInfo initialize(CompositorPass& pass) override;

@@ -11,7 +11,7 @@
 #include "RenderObject/Terrain/GridMesh.h"
 #include <mutex>
 
-class SceneManager;
+class RenderWorld;
 
 class WaterSim
 {
@@ -21,7 +21,7 @@ public:
 	~WaterSim();
 
 	void initializeGpuResources(RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch);
-	void initializeTarget(const GpuTexture2D& texture, SceneManager& s, Vector2 size, Vector3 center);
+	void initializeTarget(const GpuTexture2D& texture, RenderWorld& w, Vector2 size, Vector3 center);
 
 	void update(RenderSystem& renderSystem, ID3D12GraphicsCommandList* commandList, float dt, UINT frameIdx, Vector3 cameraPos);
 	void updateCompute(RenderSystem& renderSystem, ID3D12GraphicsCommandList* commandList, float dt, UINT frameIdx);

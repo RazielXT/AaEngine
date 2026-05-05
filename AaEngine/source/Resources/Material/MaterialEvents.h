@@ -4,10 +4,10 @@
 #include <vector>
 
 class MaterialBase;
-class SceneEntity;
+class RenderEntity;
 
 using MaterialsReloadedCallback = std::function<void(const std::vector<MaterialBase*>& reloaded)>;
-using EntityMaterialChangedCallback = std::function<void(SceneEntity& entity)>;
+using EntityMaterialChangedCallback = std::function<void(RenderEntity& entity)>;
 
 class MaterialEvents
 {
@@ -19,7 +19,7 @@ public:
 	void addEntityParamChangeListener(EntityMaterialChangedCallback callback);
 
 	void notifyReloaded(const std::vector<MaterialBase*>& reloaded);
-	void notifyEntityParamChanged(SceneEntity& entity);
+	void notifyEntityParamChanged(RenderEntity& entity);
 
 private:
 

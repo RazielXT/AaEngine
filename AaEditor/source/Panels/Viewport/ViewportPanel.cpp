@@ -156,7 +156,7 @@ void ViewportPanel::draw(Camera& camera)
 
 	if (EntityPicker::Get().hasPreparedPick())
 	{
-		auto& pickInfo = EntityPicker::Get().getLastPick();
+		auto pickInfo = EntityPicker::Get().getLastPick();
 		activeTool->onPick(pickInfo, ctrlActive, camera);
 	}
 

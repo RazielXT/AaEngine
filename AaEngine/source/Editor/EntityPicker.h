@@ -37,7 +37,7 @@ public:
 		Vector3 normal;
 	};
 	bool hasPreparedPick() const;
-	const PickInfo& getLastPick();
+	PickInfo getLastPick();
 
 	bool lastPickWasTransparent() const;
 
@@ -61,7 +61,8 @@ private:
 	PickInfo lastPick{};
 
 	std::optional<PickOptions> scheduled;
-	bool nextPickPrepared[FrameCount]{};
+	bool nextPickScheduled[FrameCount]{};
+	bool nextPickAvailable[FrameCount]{};
 
 	RenderSystem& renderSystem;
 };

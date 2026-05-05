@@ -70,17 +70,6 @@ void EntityPicker::initializeGpuResources()
 	}
 }
 
-const EntityPicker::PickInfo& EntityPicker::getLastPick()
-{
-	if (nextPickPrepared[renderSystem.core.frameIndex])
-	{
-		readPickResult();
-		nextPickPrepared[renderSystem.core.frameIndex] = false;
-	}
-
-	return lastPick;
-}
-
 void EntityPicker::scheduleReadback(ID3D12GraphicsCommandList* commandList)
 {
 	D3D12_TEXTURE_COPY_LOCATION srcLocation = {};
@@ -123,10 +112,18 @@ void EntityPicker::scheduleReadback(ID3D12GraphicsCommandList* commandList)
 	for (int i = 0; auto & t : rtt.textures)
 		barriers[i++] = CD3DX12_RESOURCE_BARRIER::Transition(t.texture.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	commandList->ResourceBarrier(_countof(barriers), barriers);
+
+	nextPickScheduled[renderSystem.core.frameIndex] = true;
 }
 
 void EntityPicker::readPickResult()
 {
+	if (!nextPickScheduled[renderSystem.core.frameIndex])
+		return;
+
+	nextPickScheduled[renderSystem.core.frameIndex] = false;
+	nextPickAvailable[renderSystem.core.frameIndex] = true;
+
 	auto& readBuffers = readbackBuffer[renderSystem.core.frameIndex];
 	{
 		uint32_t* mappedData;
@@ -178,7 +175,18 @@ void EntityPicker::scheduleNextPick(PickOptions pick)
 
 bool EntityPicker::hasPreparedPick() const
 {
-	return nextPickPrepared[renderSystem.core.frameIndex];
+	return nextPickAvailable[renderSystem.core.frameIndex];
+}
+
+EntityPicker::PickInfo EntityPicker::getLastPick()
+{
+	if (nextPickAvailable[renderSystem.core.frameIndex])
+	{
+		nextPickAvailable[renderSystem.core.frameIndex] = false;
+		return lastPick;
+	}
+
+	return {};
 }
 
 RenderQueue EntityPicker::createRenderQueue() const
@@ -192,6 +200,8 @@ RenderQueue EntityPicker::createRenderQueue() const
 
 void EntityPicker::update(ID3D12GraphicsCommandList* commandList, RenderProvider& provider, Camera& camera, SceneManager& sceneMgr)
 {
+	readPickResult();
+
 	if (!scheduled)
 		return;
 
@@ -242,6 +252,5 @@ void EntityPicker::update(ID3D12GraphicsCommandList* commandList, RenderProvider
 		renderItems(Order::Transparent);
 
 	scheduleReadback(commandList);
-	nextPickPrepared[renderSystem.core.frameIndex] = true;
 	scheduled.reset();
 }

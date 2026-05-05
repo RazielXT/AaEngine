@@ -137,8 +137,7 @@ void ApplicationCore::loadScene(const char* scene)
 	ResourceUploadBatch batch(renderSystem.core.device);
 	batch.Begin();
 
-	renderWorld.skybox.setMaterial("Sky", renderWorld.getQueue(MaterialTechnique::Default, Order::Post)->targetFormats);
-
+	sky.createSky(renderWorld, resources.materials, batch);
 	sky.createClouds(renderWorld, resources.materials, renderSystem.core.device, batch);
 	sky.createMoon(renderWorld, resources.materials, batch);
 

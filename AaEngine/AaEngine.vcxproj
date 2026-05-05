@@ -120,7 +120,6 @@
     <ClCompile Include="source\Utils\ColorUtils.cpp" />
     <ClCompile Include="source\Utils\MathUtils.cpp" />
     <ClCompile Include="source\Scene\SceneGraph.cpp" />
-    <ClCompile Include="source\Scene\SceneSkybox.cpp" />
     <ClCompile Include="source\Resources\Shader\ShaderDefines.cpp" />
     <ClCompile Include="source\Resources\Shader\ShaderType.cpp" />
     <ClCompile Include="source\Utils\SystemUtils.cpp" />
@@ -225,7 +224,6 @@
     <ClInclude Include="source\Resources\Compute\GenerateMipsComputeShader.h" />
     <ClInclude Include="source\Resources\GraphicsResources.h" />
     <ClInclude Include="source\Scene\SceneGraph.h" />
-    <ClInclude Include="source\Scene\SceneSkybox.h" />
     <ClInclude Include="source\Resources\Shader\ShaderDefines.h" />
     <ClInclude Include="source\Resources\Shader\ShaderType.h" />
     <ClInclude Include="source\Utils\StringUtils.h" />

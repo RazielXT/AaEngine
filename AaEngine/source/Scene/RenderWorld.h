@@ -3,7 +3,6 @@
 #include "Scene/RenderQueue.h"
 #include "Scene/EntityInstancing.h"
 #include "Scene/RenderObject.h"
-#include "Scene/SceneSkybox.h"
 #include "RenderObject/WaterSim/WaterSim.h"
 #include "RenderObject/Terrain/ProgressiveTerrain.h"
 #include "RenderObject/Vegetation/Vegetation.h"
@@ -50,6 +49,7 @@ public:
 
 	RenderEntity* createEntity(EntityCreateProperties props = {});
 	RenderEntity* createEntity(const ObjectTransformation&, VertexBufferModel&, EntityCreateProperties = {});
+
 	void removeEntity(RenderEntity* entity);
 	void removeEntity(ObjectId id);
 
@@ -73,8 +73,6 @@ public:
 	Vegetation vegetation;
 
 	Grass grass;
-
-	SceneSkybox skybox;
 
 private:
 	

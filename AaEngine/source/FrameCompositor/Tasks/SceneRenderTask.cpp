@@ -257,8 +257,6 @@ void SceneRenderTask::renderForward(CompositorPass& pass, CommandsData& cmd)
 
 	ShaderConstantsProvider constants(provider.params, forward.visibility, *ctx.camera, *pass.mrt);
 
-	renderWorld.skybox.render(cmd.commandList, constants);
-
 	forward.queue->renderObjects(constants, cmd.commandList);
 }
 

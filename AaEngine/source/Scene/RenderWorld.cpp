@@ -1,7 +1,7 @@
 #include "Scene/RenderWorld.h"
 #include "Resources/Material/MaterialEvents.h"
 
-RenderWorld::RenderWorld(GraphicsResources& r) : resources(r), skybox(r), graph(*this)
+RenderWorld::RenderWorld(GraphicsResources& r) : resources(r), graph(*this)
 {
 	renderables.reserve(10); //need to be enough! distributed by ptr
 

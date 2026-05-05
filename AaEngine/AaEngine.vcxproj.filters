@@ -259,9 +259,6 @@
     <ClCompile Include="source\Scene\ObjectId.cpp">
       <Filter>Source Files\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="source\Scene\SceneSkybox.cpp">
-      <Filter>Source Files\Scene</Filter>
-    </ClCompile>
     <ClCompile Include="source\Resources\Textures\TextureResources.cpp">
       <Filter>Source Files\Resources\Textures</Filter>
     </ClCompile>
@@ -559,9 +556,6 @@
       <Filter>Source Files\Editor</Filter>
     </ClInclude>
     <ClInclude Include="source\Scene\ObjectId.h">
-      <Filter>Source Files\Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="source\Scene\SceneSkybox.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
     <ClInclude Include="source\Resources\Textures\TextureResources.h">

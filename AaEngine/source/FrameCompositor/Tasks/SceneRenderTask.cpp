@@ -3,7 +3,7 @@
 #include "Scene/RenderWorld.h"
 #include "Resources/Material/MaterialResources.h"
 #include "Resources/Model/ModelResources.h"
-#include "Scene/DrawPrimitives.h"
+#include "RenderObject/DrawPrimitives.h"
 
 SceneRenderTask* instance = nullptr;
 

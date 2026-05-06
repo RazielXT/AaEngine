@@ -3,7 +3,7 @@
 #include "RenderCore/RenderSystem.h"
 #include "RenderCore/ShadowMaps.h"
 #include "Scene/RenderWorld.h"
-#include "Scene/DrawPrimitives.h"
+#include "RenderObject/DrawPrimitives.h"
 #include "FrameCompositor/FrameCompositor.h"
 #include "Resources/GraphicsResources.h"
 #include "PhysicsManager.h"

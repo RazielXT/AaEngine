@@ -95,6 +95,7 @@
     <ClCompile Include="..\dependencies\imgui\imgui_draw.cpp" />
     <ClCompile Include="..\dependencies\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\dependencies\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="source\RenderObject\DrawPrimitives.cpp" />
     <ClCompile Include="source\RenderObject\Grass\Grass.cpp" />
     <ClCompile Include="source\Scene\Camera.cpp" />
     <ClCompile Include="source\RenderCore\CascadedShadowMaps.cpp" />
@@ -103,7 +104,6 @@
     <ClCompile Include="source\Scene\Collection\SceneCollection.cpp" />
     <ClCompile Include="source\Scene\Collection\SceneSnapshot.cpp" />
     <ClCompile Include="source\Scene\Collection\SceneSnapshotLoader.cpp" />
-    <ClCompile Include="source\Scene\DrawPrimitives.cpp" />
     <ClCompile Include="source\Editor\EntityPicker.cpp" />
     <ClCompile Include="source\Resources\Model\GltfLoader.cpp" />
     <ClCompile Include="source\RenderCore\MeshUtils.cpp" />
@@ -189,6 +189,7 @@
     <ClInclude Include="..\dependencies\imgui\backends\imgui_impl_dx12.h" />
     <ClInclude Include="..\dependencies\imgui\backends\imgui_impl_win32.h" />
     <ClInclude Include="..\dependencies\imgui\imgui.h" />
+    <ClInclude Include="source\RenderObject\DrawPrimitives.h" />
     <ClInclude Include="source\RenderObject\Grass\Grass.h" />
     <ClInclude Include="source\Scene\Camera.h" />
     <ClInclude Include="source\RenderCore\CascadedShadowMaps.h" />
@@ -197,7 +198,6 @@
     <ClInclude Include="source\Scene\Collection\SceneCollection.h" />
     <ClInclude Include="source\Scene\Collection\SceneSnapshot.h" />
     <ClInclude Include="source\Scene\Collection\SceneSnapshotLoader.h" />
-    <ClInclude Include="source\Scene\DrawPrimitives.h" />
     <ClInclude Include="source\Editor\EntityPicker.h" />
     <ClInclude Include="source\Resources\Model\GltfLoader.h" />
     <ClInclude Include="source\RenderObject\Terrain\GridMesh.h" />

@@ -1,4 +1,4 @@
-#include "Scene/DrawPrimitives.h"
+#include "RenderObject/DrawPrimitives.h"
 #include "Resources/Model/ModelResources.h"
 #include "Resources/Material/MaterialResources.h"
 #include "Scene/RenderEntity.h"

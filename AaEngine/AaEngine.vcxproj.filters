@@ -262,9 +262,6 @@
     <ClCompile Include="source\Resources\Textures\TextureResources.cpp">
       <Filter>Source Files\Resources\Textures</Filter>
     </ClCompile>
-    <ClCompile Include="source\Scene\DrawPrimitives.cpp">
-      <Filter>Source Files\Scene</Filter>
-    </ClCompile>
     <ClCompile Include="source\Resources\Compute\ClearBufferCS.cpp">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClCompile>
@@ -369,6 +366,9 @@
     </ClCompile>
     <ClCompile Include="source\Utils\ColorUtils.cpp">
       <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="source\RenderObject\DrawPrimitives.cpp">
+      <Filter>Source Files\RenderObject</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -561,9 +561,6 @@
     <ClInclude Include="source\Resources\Textures\TextureResources.h">
       <Filter>Source Files\Resources\Textures</Filter>
     </ClInclude>
-    <ClInclude Include="source\Scene\DrawPrimitives.h">
-      <Filter>Source Files\Scene</Filter>
-    </ClInclude>
     <ClInclude Include="source\Resources\Compute\ClearBufferCS.h">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClInclude>
@@ -680,6 +677,9 @@
     </ClInclude>
     <ClInclude Include="source\Utils\ColorUtils.h">
       <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RenderObject\DrawPrimitives.h">
+      <Filter>Source Files\RenderObject</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -92,6 +92,10 @@ void EntityPicker::scheduleReadback(ID3D12GraphicsCommandList* commandList)
 
 	UINT x = scheduled->position.x;
 	UINT y = scheduled->position.y;
+
+	if (x >= rtt.width || y >= rtt.height)
+		return;
+
 	CD3DX12_BOX srcBox(x, y, 0, x + 1, y + 1, 1); // Box to specify the region
 
 	CD3DX12_RESOURCE_BARRIER barriers[_countof(readbackBuffer)]{};

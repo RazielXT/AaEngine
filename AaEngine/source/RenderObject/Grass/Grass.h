@@ -30,15 +30,14 @@ class GrassUpdateComputeShader : public ComputeShader
 {
 public:
 
-	void dispatch(ID3D12GraphicsCommandList* commandList, ID3D12Resource* transformBuffer, ID3D12Resource* commands, ID3D12Resource* infoBuffer, ID3D12Resource* infoCounter);
-};
+	struct Input
+	{
+		XMFLOAT4 frustumPlanes[6];
+		XMFLOAT3 cameraPosition;
+		float maxDistance;
+	};
 
-struct GrassInfo
-{
-	Vector3 position;
-	float rotation;
-	float scale;
-	float random;
+	void dispatch(ID3D12GraphicsCommandList* commandList, const Input& input, ID3D12Resource* transformBuffer, ID3D12Resource* commands, ID3D12Resource* infoBuffer, ID3D12Resource* infoCounter);
 };
 
 struct GrassChunk
@@ -66,11 +65,11 @@ public:
 
 	void clear();
 
-	void update(ID3D12GraphicsCommandList* commandList, const Vector3& cameraPos, const ProgressiveTerrain& terrain);
+	void update(ID3D12GraphicsCommandList* commandList, const Camera& camera, const ProgressiveTerrain& terrain);
 
 	// Each grass chunk = 1 terrain tile / ChunksPerTerrainTile, so chunk aligns to a fraction of the heightmap
 	constexpr static UINT ChunksPerTerrainTile = 32;
-	constexpr static UINT GrassGridSize = 6;
+	constexpr static UINT GrassGridSize = 5;
 
 private:
 
@@ -88,7 +87,7 @@ private:
 
 	void initChunk(GrassChunk& chunk, RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch);
 	void regenerateChunk(ID3D12GraphicsCommandList* commandList, GrassChunk& chunk, const ProgressiveTerrain& terrain);
-	void updateChunk(ID3D12GraphicsCommandList* commandList, GrassChunk& chunk);
+	void updateChunk(ID3D12GraphicsCommandList* commandList, GrassChunk& chunk, const GrassUpdateComputeShader::Input& cullingInput);
 
 	ComPtr<ID3D12CommandSignature> commandSignature;
 	ComPtr<ID3D12Resource> defaultCommandBuffer;

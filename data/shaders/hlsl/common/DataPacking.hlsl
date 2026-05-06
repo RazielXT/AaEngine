@@ -79,6 +79,55 @@ float3 UnpackR11G10B11_SNORM(uint p)
 	return n;
 }
 
+uint PackR11G10B11_UNORM(float3 n)
+{
+	// Clamp to UNORM range
+	n = saturate(n); // [0,1]
+
+	// Convert to integers with rounding
+	uint xi = (uint)(n.x * 2047.0 + 0.5); // 11 bits
+	uint yi = (uint)(n.y * 1023.0 + 0.5); // 10 bits
+	uint zi = (uint)(n.z * 2047.0 + 0.5); // 11 bits
+
+	// Mask (technically optional after clamp, but keeps symmetry)
+	xi &= 0x7FF;
+	yi &= 0x3FF;
+	zi &= 0x7FF;
+
+	return (xi << 21) | (yi << 11) | zi;
+}
+
+float3 UnpackR11G10B11_UNORM(uint p)
+{
+	// Extract
+	uint xi = (p >> 21) & 0x7FF;
+	uint yi = (p >> 11) & 0x3FF;
+	uint zi = p & 0x7FF;
+
+	// Normalize back to [0,1]
+	float3 n;
+	n.x = xi / 2047.0;
+	n.y = yi / 1023.0;
+	n.z = zi / 2047.0;
+	return n;
+}
+
+uint PackR16G16_FLOAT(float2 v)
+{
+	// Convert to 16-bit floats and pack into uint
+	uint2 h = f32tof16(v); // each component is 16-bit in low bits
+	return (h.x & 0xFFFF) | (h.y << 16);
+}
+
+float2 UnpackR16G16_FLOAT(uint p)
+{
+	uint2 h;
+	h.x = p & 0xFFFF;
+	h.y = (p >> 16) & 0xFFFF;
+
+	return f16tof32(h);
+}
+
 // Pack float4 [0..1] into RGBA8 uint
 uint PackRGBA8(float4 c)
 {

@@ -1,5 +1,6 @@
 #include "hlsl/common/ResourceAccess.hlsl"
 #include "hlsl/common/Random.hlsl"
+#include "hlsl/common/DataPacking.hlsl"
 #include "grassCommon.hlsl"
 
 uint TexIdTerrainDepth;
@@ -39,9 +40,12 @@ uint getGrassInfo(out GrassInfo info, float2 coords)
 	info.position.xz += TerrainOffset;
 
 	float rnd = RandomFrom2D(coords.xy);
-	info.rotation = rnd * 6.283185f;
-	info.random = rnd;
-	info.scale = (normal.y - 0.7) * 5 + rnd * 0.3;
+	float rotation = rnd * 6.283185f;
+	//info.random = rnd;
+	float scale = (normal.y - 0.7) * 5 + rnd * 0.3;
+	//info.rotationScale = PackR16G16_FLOAT(float2(rotation, scale));
+	info.rotation = rotation;
+	info.scale = scale;
 
 	return normal.y > 0.75f ? 1 : 0;
 }

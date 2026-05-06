@@ -5,6 +5,10 @@
 #include "hlsl/common/Triplanar.hlsl"
 #include "hlsl/common/DebugColors.hlsl"
 
+#ifdef GRASS_INSTANCED
+#include "hlsl/terrain/grass/grassCommon.hlsl"
+#endif
+
 float4x4 ViewProjectionMatrix;
 float4x4 PreviousWorldMatrix;
 float4x4 WorldMatrix;
@@ -21,11 +25,17 @@ float DeltaTime;
 uint EntityId;
 #endif
 
+#ifdef CHUNK_DEBUG_COLOR
+uint ChunkId;
+#endif
+
+
 #ifdef INSTANCED
 StructuredBuffer<float4x4> InstancingBuffer : register(t0);
-	#ifdef CHUNK_DEBUG_COLOR
-	uint ChunkId;
-	#endif
+#endif
+
+#ifdef GRASS_INSTANCED
+StructuredBuffer<RenderGrassInfo> InstancingBuffer : register(t0);
 #endif
 
 struct VSInput
@@ -38,7 +48,7 @@ struct VSInput
 #ifdef USE_VC
 	float4 color : COLOR;
 #endif
-#ifdef INSTANCED
+#if defined(INSTANCED) || defined(GRASS_INSTANCED)
 	uint instanceID : SV_InstanceID;
 #endif
 };
@@ -53,7 +63,7 @@ struct PSInput
 #ifndef NO_TEXTURE
 	float2 uv : TEXCOORD0;
 #endif
-	float4 worldPosition : TEXCOORD1;
+	float3 worldPosition : TEXCOORD1;
 	float4 previousPosition : TEXCOORD2;
 	float4 currentPosition : TEXCOORD3;
 };
@@ -79,7 +89,7 @@ float3 WindWave(float3 basePos, float swayFactor, float time)
 }
 
 
-void ComputeBaseBend(float4 basePosOS, inout float4 vertexPosOS, float w)
+void ComputeBaseBend(float3 basePosOS, inout float3 vertexPosOS, float w)
 {
 	vertexPosOS.y -= dot(basePosOS.xz, basePosOS.xz) * 0.15 * w;
 }
@@ -88,20 +98,27 @@ PSInput VSMain(VSInput input)
 {
 	PSInput result;
 
-#ifdef INSTANCED
-	result.worldPosition = mul(input.position, InstancingBuffer[input.instanceID]);
+#if defined(INSTANCED) || defined(GRASS_INSTANCED)
+	#ifdef INSTANCED
+		result.worldPosition = mul(input.position, InstancingBuffer[input.instanceID]).xyz;
+		result.normal = normalize(mul(input.normal, (float3x3)InstancingBuffer[input.instanceID]));
+	#else
+		RenderGrassInfo grass = InstancingBuffer[input.instanceID];
+		result.worldPosition = mul(input.position.xyz, grass.RotationMatrix()) * grass.scale + grass.position;
+		result.normal = normalize(mul(input.normal, grass.RotationMatrix()));
+	#endif
+
 	#ifdef VERTEX_WAVE
 		const float WaveFade = 200.f;
-		float waveWeight = saturate(1 - length(CameraPosition - result.worldPosition.xyz)/WaveFade) * (1-input.uv.y);
-		ComputeBaseBend(input.position, result.worldPosition, waveWeight);
-		float4 worldPositionNoWave = result.worldPosition;
-		result.worldPosition.xyz = WindWave(result.worldPosition.xyz, waveWeight, Time);
+		float waveWeight = saturate(1 - length(CameraPosition - result.worldPosition)/WaveFade) * (1-input.uv.y);
+		ComputeBaseBend(input.position.xyz, result.worldPosition, waveWeight);
+		float3 worldPositionNoWave = result.worldPosition;
+		result.worldPosition = WindWave(result.worldPosition, waveWeight, Time);
 	#endif
-	result.position = mul(result.worldPosition, ViewProjectionMatrix);
-	result.normal = normalize(mul(input.normal, (float3x3)InstancingBuffer[input.instanceID]));
+	result.position = mul(float4(result.worldPosition,1), ViewProjectionMatrix);
 	
 	#ifdef VERTEX_WAVE
-		float4 previousWorldPosition = float4(WindWave(worldPositionNoWave.xyz, waveWeight, Time - DeltaTime), 1);
+		float4 previousWorldPosition = float4(WindWave(worldPositionNoWave, waveWeight, Time - DeltaTime), 1);
 		result.previousPosition = mul(previousWorldPosition, ViewProjectionMatrix);
 	#else
 		result.previousPosition = result.position; // no support
@@ -144,7 +161,7 @@ GBufferOutput PSMain(PSInput input)
 #ifndef NO_TEXTURE
 
 	#ifdef TRIPLANAR
-	float4 albedoTex = SampleTriplanar(TexIdDiffuse, sampler, input.worldPosition.xyz, input.normal.xyz, 0.05);
+	float4 albedoTex = SampleTriplanar(TexIdDiffuse, sampler, input.worldPosition, input.normal, 0.05);
 	#else
 	float4 albedoTex = GetTexture2D(TexIdDiffuse).Sample(sampler, input.uv);
 	#endif
@@ -163,12 +180,15 @@ GBufferOutput PSMain(PSInput input)
 	albedo = lerp(albedo, GetDebugColor(ChunkId), 0.7);
 #endif
 
-#ifdef INSTANCED
-	albedo = lerp(albedo, float3(0.7,0.6,0.1), 0.1);
+#ifdef GRASS_INSTANCED
+	albedo = lerp(albedo, float3(0.7,0.6,0.1), 0.05);
 #endif
 
 	GBufferOutput output;
 	output.albedo = float4(albedo,0);
+#ifdef CHUNK_DEBUG_COLOR
+	output.albedo.a = 0.05;
+#endif
 	output.normals = float4(input.normal, 1);
 	output.motionVectors = EncodeMotionVector(input.previousPosition, input.currentPosition, ViewportSize);
 	return output;
@@ -186,7 +206,7 @@ EntityIdOutput PSMainEntityId(PSInput input)
 
 	EntityIdOutput output;
 	output.id = uint4(EntityId, 0, 0, 0);
-	output.position = float4(input.worldPosition.xyz, 0);
+	output.position = float4(input.worldPosition, 0);
 	output.normal = float4(input.normal, 0);
 	return output;
 }

@@ -128,46 +128,6 @@ material TriplanarTest : Color
 	shader_defines TRIPLANAR
 }
 
-material grassBlade : Color
-{
-	texture Diffuse
-	{
-		file grassBlade.dds
-	}
-
-	culling none
-
-	shader_defines VERTEX_WAVE
-
-	technique Depth grassBladeDepth
-}
-
-material grassBladeInstanced : grassBlade
-{
-	shader_defines INSTANCED
-	
-	technique Depth grassBladeInstancedDepth
-	technique EntityId grassBladeInstancedEntityId
-}
-
-material grassBladeDepth : grassBlade
-{
-	pixel_shader_entry PSMainDepth
-	shader_defines DEPTH
-}
-
-material grassBladeInstancedDepth : grassBladeInstanced
-{
-	pixel_shader_entry PSMainDepth
-	shader_defines DEPTH
-}
-
-material grassBladeInstancedEntityId : grassBladeInstanced
-{
-	pixel_shader_entry PSMainEntityId
-	shader_defines ENTITY_ID
-}
-
 material terrainGrass : Color
 {
 	texture Diffuse

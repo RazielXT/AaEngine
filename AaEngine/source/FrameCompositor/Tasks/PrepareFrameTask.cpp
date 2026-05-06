@@ -27,7 +27,7 @@ void PrepareFrameTask::run(RenderContext& ctx, CommandsData& cmd, CompositorPass
 	renderWorld.water.update(provider.renderSystem, cmd.commandList, provider.params.timeDelta, provider.params.frameIndex, ctx.camera->getPosition());
 	renderWorld.terrain.update(cmd.commandList, ctx.camera->getPosition(), provider.params.frameIndex);
 	renderWorld.vegetation.update(cmd.commandList, ctx.camera->getPosition(), renderWorld.terrain);
-	renderWorld.grass.update(cmd.commandList, ctx.camera->getPosition(), renderWorld.terrain);
+	renderWorld.grass.update(cmd.commandList, *ctx.camera, renderWorld.terrain);
 }
 
 void PrepareFrameTask::runCompute(RenderContext& ctx, CommandsData& cmd, CompositorPass& pass)

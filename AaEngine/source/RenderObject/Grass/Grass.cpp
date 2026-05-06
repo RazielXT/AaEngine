@@ -13,7 +13,7 @@ void Grass::initialize(RenderSystem& renderSystem, GraphicsResources& resources,
 	auto csShader = resources.shaders.getShader("grassFindCS", ShaderType::Compute, ShaderRef{ "terrain/grass/grassFindCS.hlsl", "main", "cs_6_6" });
 	grassFindCS.init(*renderSystem.core.device, *csShader);
 
-	csShader = resources.shaders.getShader("grassUpdateCS", ShaderType::Compute, ShaderRef{ "terrain/grass/grassUpdateCS.hlsl", "main", "cs_6_6" });
+	csShader = resources.shaders.getShader("grassUpdateCS", ShaderType::Compute, ShaderRef{ "terrain/grass/grassUpdateCS.hlsl", "main", "cs_6_6", { {"FRUSTUM_CULLING", "1"}, {"DISTANCE_CULLING", "0"} } });
 	grassUpdateCS.init(*renderSystem.core.device, *csShader);
 
 	grassModel = resources.models.getModel("GrassBlade.mesh", batch, { "meshes/grass", true });
@@ -73,7 +73,7 @@ void Grass::createChunks(RenderWorld& renderWorld, RenderSystem& renderSystem, G
 			e->setBoundingBox({ { chunkSize * 0.5f, terrainParams.tileHeight * 0.5f, chunkSize * 0.5f },
 							   { chunkSize * 0.5f, terrainParams.tileHeight * 0.5f, chunkSize * 0.5f } });
 
-			e->setFlag(RenderObjectFlag::NoShadow);
+			e->setFlag(RenderObjectFlag::OnlyFirstCascade);
 
 			chunk.worldCoord = desired;
 			chunk.dirty = true;
@@ -93,11 +93,24 @@ void Grass::clear()
 
 void Grass::initChunk(GrassChunk& chunk, RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch)
 {
+	struct GrassInfo
+	{
+		Vector3 position;
+		float rotation;
+		float scale;
+	};
 	constexpr UINT infoSize = sizeof(GrassInfo) * maxPerChunk;
 	chunk.infoBuffer = resources.shaderBuffers.CreateStructuredBuffer(infoSize);
 	chunk.infoBuffer->SetName(L"GrassInfo");
 
-	constexpr UINT transformSize = sizeof(XMFLOAT4X4) * maxPerChunk;
+	struct RenderGrassInfo
+	{
+		Vector3 position;
+		float scale;
+		float cosYaw;
+		float sinYaw;
+	};
+	constexpr UINT transformSize = sizeof(RenderGrassInfo) * maxPerChunk;
 	chunk.transformationBuffer = resources.shaderBuffers.CreateStructuredBuffer(transformSize);
 	chunk.transformationBuffer->SetName(L"GrassTransformation");
 
@@ -165,7 +178,7 @@ void Grass::regenerateChunk(ID3D12GraphicsCommandList* commandList, GrassChunk& 
 	commandList->ResourceBarrier(2, toSrv);
 }
 
-void Grass::updateChunk(ID3D12GraphicsCommandList* commandList, GrassChunk& chunk)
+void Grass::updateChunk(ID3D12GraphicsCommandList* commandList, GrassChunk& chunk, const GrassUpdateComputeShader::Input& cullingInput)
 {
 	CD3DX12_RESOURCE_BARRIER barrier[2]{};
 
@@ -178,20 +191,22 @@ void Grass::updateChunk(ID3D12GraphicsCommandList* commandList, GrassChunk& chun
 	barrier[1] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.transformationBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	commandList->ResourceBarrier(2, barrier);
 
-	grassUpdateCS.dispatch(commandList, chunk.transformationBuffer.Get(), chunk.indirect.commandBuffer.Get(), chunk.infoBuffer.Get(), chunk.infoCounter.Get());
+	grassUpdateCS.dispatch(commandList, cullingInput, chunk.transformationBuffer.Get(), chunk.indirect.commandBuffer.Get(), chunk.infoBuffer.Get(), chunk.infoCounter.Get());
 
 	barrier[0] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.indirect.commandBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 	barrier[1] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.transformationBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 	commandList->ResourceBarrier(2, barrier);
 }
 
-void Grass::update(ID3D12GraphicsCommandList* commandList, const Vector3& cameraPos, const ProgressiveTerrain& terrain)
+void Grass::update(ID3D12GraphicsCommandList* commandList, const Camera& camera, const ProgressiveTerrain& terrain)
 {
+	CommandsMarker marker(commandList, "Grass", PixColor::ForestGreen);
+
 	auto& terrainParams = terrain.params;
 	float chunkSize = terrainParams.tileSize / ChunksPerTerrainTile;
 	int half = (int)GrassGridSize / 2;
 
-	XMINT2 cameraChunk = terrainParams.gridCenterAt(cameraPos, chunkSize, GrassGridSize);
+	XMINT2 cameraChunk = terrainParams.gridCenterAt(camera.getPosition(), chunkSize, GrassGridSize);
 
 	if (cameraChunk.x != gridCenterChunk.x || cameraChunk.y != gridCenterChunk.y)
 	{
@@ -215,17 +230,40 @@ void Grass::update(ID3D12GraphicsCommandList* commandList, const Vector3& camera
 			}
 	}
 
-	for (int x = 0; x < (int)GrassGridSize; x++)
-		for (int y = 0; y < (int)GrassGridSize; y++)
+	for (UINT x = 0; x < GrassGridSize; x++)
+		for (UINT y = 0; y < GrassGridSize; y++)
 		{
 			auto& chunk = chunks[x][y];
-			if (chunk.dirty && chunk.entity)
+			if (chunk.dirty)
 			{
 				regenerateChunk(commandList, chunk, terrain);
-				updateChunk(commandList, chunk);
 				chunk.dirty = false;
 			}
 		}
+
+	GrassUpdateComputeShader::Input cullingInput{};
+	camera.extractFrustumPlanes(cullingInput.frustumPlanes);
+	auto camPos = camera.getPosition();
+	cullingInput.cameraPosition = { camPos.x, camPos.y, camPos.z };
+	cullingInput.maxDistance = chunkSize * GrassGridSize * 0.5f;
+
+	auto frustum = camera.prepareFrustum();
+
+	static UINT counter = 0;
+	const UINT UpdateDivision = 4;
+
+	for (UINT x = 0; x < GrassGridSize; x++)
+		for (UINT y = 0; y < GrassGridSize; y++)
+		{
+			auto& chunk = chunks[x][y];
+			if (chunk.entity->isVisible(frustum))
+			{
+				if (!counter || (x * GrassGridSize + y + counter) % UpdateDivision == 0)
+					updateChunk(commandList, chunk, cullingInput);
+			}
+		}
+
+	counter++;
 }
 
 const UINT groups = 4;
@@ -242,15 +280,16 @@ void GrassFindComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, co
 	commandList->Dispatch(groups, groups, 1);
 }
 
-void GrassUpdateComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, ID3D12Resource* transformBuffer, ID3D12Resource* commands, ID3D12Resource* infoBuffer, ID3D12Resource* infoCounter)
+void GrassUpdateComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, const Input& input, ID3D12Resource* transformBuffer, ID3D12Resource* commands, ID3D12Resource* infoBuffer, ID3D12Resource* infoCounter)
 {
 	commandList->SetPipelineState(pipelineState.Get());
 	commandList->SetComputeRootSignature(signature);
 
-	commandList->SetComputeRootShaderResourceView(0, infoBuffer->GetGPUVirtualAddress());
-	commandList->SetComputeRootShaderResourceView(1, infoCounter->GetGPUVirtualAddress());
-	commandList->SetComputeRootUnorderedAccessView(2, transformBuffer->GetGPUVirtualAddress());
-	commandList->SetComputeRootUnorderedAccessView(3, commands->GetGPUVirtualAddress());
+	commandList->SetComputeRoot32BitConstants(0, sizeof(input) / sizeof(float), &input, 0);
+	commandList->SetComputeRootShaderResourceView(1, infoBuffer->GetGPUVirtualAddress());
+	commandList->SetComputeRootShaderResourceView(2, infoCounter->GetGPUVirtualAddress());
+	commandList->SetComputeRootUnorderedAccessView(3, transformBuffer->GetGPUVirtualAddress());
+	commandList->SetComputeRootUnorderedAccessView(4, commands->GetGPUVirtualAddress());
 
 	commandList->Dispatch(groups * groups, 1, 1);
 }

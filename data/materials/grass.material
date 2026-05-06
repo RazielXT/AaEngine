@@ -1,57 +1,65 @@
-material GrassLeaves
+material grassBase abstract
 {
 	vertex_shader
 	{
-		file oldGrass/grass.hlsl
+		file basicShading.hlsl
 		entry VSMain
 		profile vs_6_6
 	}
 	pixel_shader
 	{
-		file oldGrass/grass.hlsl
+		file basicShading.hlsl
 		entry PSMain
 		profile ps_6_6
 	}
 
-	culling none
-	blend none
-
 	texture Diffuse
 	{
-		file grassLeaves.dds
+		file white.dds
 	}
+
+	default_params
+	{
+		color MaterialColor 1 1 1
+	}
+}
+
+material grassBlade : grassBase
+{
+	texture Diffuse
+	{
+		file grassBlade.dds
+	}
+
+	culling none
+
+	shader_defines VERTEX_WAVE
+
+	technique Depth grassBladeDepth
+}
+
+material grassBladeInstanced : grassBlade
+{
+	shader_defines GRASS_INSTANCED
 	
-	technique Depth GrassLeavesDepth
-	technique Voxelize skip
-	technique EntityId GrassLeavesEntityId
+	technique Depth grassBladeInstancedDepth
+	technique EntityId grassBladeInstancedEntityId
 }
 
-material GrassLeavesDepth : GrassLeaves
+material grassBladeDepth : grassBlade
 {
-	pixel_shader
-	{
-		file oldGrass/grass.hlsl
-		entry PSMainDepth
-		profile ps_6_6
-	}
-	blend none
+	pixel_shader_entry PSMainDepth
+	shader_defines DEPTH
 }
 
-material GrassLeavesEntityId : GrassLeaves
+material grassBladeInstancedDepth : grassBladeInstanced
 {
-	vertex_shader
-	{
-		file oldGrass/grass.hlsl
-		entry VSMain
-		profile vs_6_6
-		defines ENTITY_ID
-	}
-	pixel_shader
-	{
-		file oldGrass/grass.hlsl
-		entry PSMainEntityId
-		profile ps_6_6
-		defines ENTITY_ID
-	}
-	blend none
+	pixel_shader_entry PSMainDepth
+	shader_defines DEPTH
+}
+
+material grassBladeInstancedEntityId : grassBladeInstanced
+{
+	pixel_shader_entry PSMainEntityId
+	shader_defines ENTITY_ID
 }

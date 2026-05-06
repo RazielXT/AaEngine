@@ -49,6 +49,8 @@ public:
 	DirectX::BoundingFrustum prepareFrustum() const;
 	DirectX::BoundingOrientedBox prepareOrientedBox() const;
 
+	void extractFrustumPlanes(XMFLOAT4* planes) const;
+
 	float getCameraZ() const;
 	float getTanHalfFovH() const;
 

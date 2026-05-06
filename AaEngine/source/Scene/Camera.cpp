@@ -288,6 +288,32 @@ DirectX::BoundingOrientedBox Camera::prepareOrientedBox() const
 	return orientedBox;
 }
 
+void Camera::extractFrustumPlanes(XMFLOAT4* planes) const
+{
+	XMFLOAT4X4 m;
+	XMStoreFloat4x4(&m, getViewProjectionMatrix());
+
+	// Left
+	planes[0] = { m._14 + m._11, m._24 + m._21, m._34 + m._31, m._44 + m._41 };
+	// Right
+	planes[1] = { m._14 - m._11, m._24 - m._21, m._34 - m._31, m._44 - m._41 };
+	// Bottom
+	planes[2] = { m._14 + m._12, m._24 + m._22, m._34 + m._32, m._44 + m._42 };
+	// Top
+	planes[3] = { m._14 - m._12, m._24 - m._22, m._34 - m._32, m._44 - m._42 };
+	// Near
+	planes[4] = { m._13, m._23, m._33, m._43 };
+	// Far
+	planes[5] = { m._14 - m._13, m._24 - m._23, m._34 - m._33, m._44 - m._43 };
+
+	for (int i = 0; i < 6; i++)
+	{
+		XMVECTOR p = XMLoadFloat4(&planes[i]);
+		p = XMVector4Normalize(p);
+		XMStoreFloat4(&planes[i], p);
+	}
+}
+
 float Camera::getCameraZ() const
 {
 	return zProjection;

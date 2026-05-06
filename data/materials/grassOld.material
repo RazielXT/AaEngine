@@ -1,0 +1,57 @@
+material GrassLeaves
+{
+	vertex_shader
+	{
+		file oldGrass/grass.hlsl
+		entry VSMain
+		profile vs_6_6
+	}
+	pixel_shader
+	{
+		file oldGrass/grass.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
+
+	culling none
+	blend none
+
+	texture Diffuse
+	{
+		file grassLeaves.dds
+	}
+	
+	technique Depth GrassLeavesDepth
+	technique Voxelize skip
+	technique EntityId GrassLeavesEntityId
+}
+
+material GrassLeavesDepth : GrassLeaves
+{
+	pixel_shader
+	{
+		file oldGrass/grass.hlsl
+		entry PSMainDepth
+		profile ps_6_6
+	}
+	blend none
+}
+
+material GrassLeavesEntityId : GrassLeaves
+{
+	vertex_shader
+	{
+		file oldGrass/grass.hlsl
+		entry VSMain
+		profile vs_6_6
+		defines ENTITY_ID
+	}
+	pixel_shader
+	{
+		file oldGrass/grass.hlsl
+		entry PSMainEntityId
+		profile ps_6_6
+		defines ENTITY_ID
+	}
+	blend none
+}

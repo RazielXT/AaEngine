@@ -27,7 +27,10 @@ private:
 		std::thread worker;
 
 		RenderObjectsVisibilityData renderablesData;
+		std::vector<UINT> idFilter;
+
 		RenderObjectsStorage* renderables;
+		uint8_t filterFlag{};
 	};
 
 	ShadowWork cascades[4];

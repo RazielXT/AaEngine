@@ -8,7 +8,6 @@ struct ObjectTransformation
 	Quaternion orientation;
 	Vector3 position;
 	Vector3	scale{1, 1, 1};
-	bool dirty = true;
 
 	XMMATRIX createWorldMatrix() const;
 	ObjectTransformation operator+(const ObjectTransformation& rhs) const
@@ -23,14 +22,17 @@ struct ObjectTransformation
 };
 
 using RenderObjectsVisibilityState = std::vector<bool>;
-using RenderObjectsFilter = std::vector<UINT>;
 using RenderObjectFlags = uint8_t;
 
 namespace RenderObjectFlag
 {
 	enum Value
 	{
-		NoShadow = 1
+		NoShadow = 1,
+		NoCascade1 = 1 << 1,
+		NoCascade2 = 1 << 2,
+		NoCascade3 = 1 << 3,
+		OnlyFirstCascade = NoCascade1 | NoCascade2 | NoCascade3,
 	};
 }
 
@@ -57,10 +59,14 @@ public:
 	void initializeTransformation(UINT id, ObjectTransformation& transformation);
 
 	void updateVisibility(const Camera& camera, RenderObjectsVisibilityData&) const;
+	void updateVisibility(const Camera& camera, const std::vector<UINT>& ids, RenderObjectsVisibilityData&) const;
+
+	void createFilteredIds(uint8_t flag, std::vector<UINT>& ids) const;
 
 	struct
 	{
 		std::vector<ObjectTransformation> transformation;
+		std::vector<uint8_t> dirtyTransformation;
 		std::vector<XMMATRIX> worldMatrix;
 		std::vector<XMMATRIX> prevWorldMatrix;
 		std::vector<BoundingBox> worldBbox;
@@ -77,8 +83,8 @@ public:
 
 private:
 
-	void updateVisibility(const BoundingFrustum&, RenderObjectsVisibilityState&) const;
-	void updateVisibility(const BoundingOrientedBox&, RenderObjectsVisibilityState&) const;
+	void updateVisibility(const BoundingFrustum&, RenderObjectsVisibilityState&, const std::vector<UINT>& ids) const;
+	void updateVisibility(const BoundingOrientedBox&, RenderObjectsVisibilityState&, const std::vector<UINT>& ids) const;
 
 	void reset();
 
@@ -112,6 +118,8 @@ public:
 	const ObjectTransformation& getTransformation() const;
 
 	bool isVisible(const RenderObjectsVisibilityState&) const;
+	bool isVisible(const BoundingFrustum&) const;
+	bool isVisible(const BoundingOrientedBox&) const;
 
 	XMMATRIX getWorldMatrix() const;
 	XMMATRIX getPreviousWorldMatrix() const;

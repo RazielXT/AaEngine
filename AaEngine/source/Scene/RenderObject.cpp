@@ -17,6 +17,7 @@ UINT RenderObjectsStorage::createId(RenderObject* obj)
 		freeIds.pop_back();
 
 		objectsData.transformation[id] = {};
+		objectsData.dirtyTransformation[id] = {};
 		objectsData.bbox[id] = {};
 		objectsData.worldBbox[id] = {};
 		objectsData.worldMatrix[id] = {};
@@ -33,6 +34,7 @@ UINT RenderObjectsStorage::createId(RenderObject* obj)
 	auto id = (UINT)ids.size();
 
 	objectsData.transformation.push_back({});
+	objectsData.dirtyTransformation.emplace_back(true);
 	objectsData.bbox.emplace_back();
 	objectsData.worldBbox.emplace_back();
 	objectsData.worldMatrix.emplace_back();
@@ -60,16 +62,16 @@ void RenderObjectsStorage::updateTransformation()
 {
 	for (auto id : ids)
 	{
-		auto& transformation = objectsData.transformation[id];
-
-		if (transformation.dirty)
-			updateTransformation(id, transformation);
+		if (auto& dirty = objectsData.dirtyTransformation[id])
+		{
+			updateTransformation(id, objectsData.transformation[id]);
+			dirty = {};
+		}
 	}
 }
 
 void RenderObjectsStorage::updateTransformation(UINT id, ObjectTransformation& transformation)
 {
-	transformation.dirty = false;
 	objectsData.prevWorldMatrix[id] = objectsData.worldMatrix[id];
 	objectsData.worldMatrix[id] = transformation.createWorldMatrix();
 	objectsData.bbox[id].Transform(objectsData.worldBbox[id], objectsData.worldMatrix[id]);
@@ -81,20 +83,16 @@ void RenderObjectsStorage::initializeTransformation(UINT id, ObjectTransformatio
 	objectsData.prevWorldMatrix[id] = objectsData.worldMatrix[id];
 }
 
-void RenderObjectsStorage::updateVisibility(const BoundingFrustum& frustum, RenderObjectsVisibilityState& visible) const
+void RenderObjectsStorage::updateVisibility(const BoundingFrustum& frustum, RenderObjectsVisibilityState& visible, const std::vector<UINT>& ids) const
 {
-	visible.resize(ids.size() + freeIds.size());
-
 	for (auto id : ids)
 	{
 		visible[id] = objectsData.worldBbox[id].Extents.x == 0 || frustum.Intersects(objectsData.worldBbox[id]);
 	}
 }
 
-void RenderObjectsStorage::updateVisibility(const BoundingOrientedBox& box, RenderObjectsVisibilityState& visible) const
+void RenderObjectsStorage::updateVisibility(const BoundingOrientedBox& box, RenderObjectsVisibilityState& visible, const std::vector<UINT>& ids) const
 {
-	visible.resize(ids.size() + freeIds.size());
-
 	for (auto id : ids)
 	{
 		visible[id] = box.Intersects(objectsData.worldBbox[id]);
@@ -103,10 +101,33 @@ void RenderObjectsStorage::updateVisibility(const BoundingOrientedBox& box, Rend
 
 void RenderObjectsStorage::updateVisibility(const Camera& camera, RenderObjectsVisibilityData& info) const
 {
+	info.visibility.resize(ids.size() + freeIds.size());
+
 	if (camera.isOrthographic())
-		updateVisibility(camera.prepareOrientedBox(), info.visibility);
+		updateVisibility(camera.prepareOrientedBox(), info.visibility, ids);
 	else
-		updateVisibility(camera.prepareFrustum(), info.visibility);
+		updateVisibility(camera.prepareFrustum(), info.visibility, ids);
+}
+
+void RenderObjectsStorage::updateVisibility(const Camera& camera, const std::vector<UINT>& filtered, RenderObjectsVisibilityData& info) const
+{
+	info.visibility.resize(ids.size() + freeIds.size());
+
+	if (camera.isOrthographic())
+		updateVisibility(camera.prepareOrientedBox(), info.visibility, filtered);
+	else
+		updateVisibility(camera.prepareFrustum(), info.visibility, filtered);
+}
+
+void RenderObjectsStorage::createFilteredIds(uint8_t flag, std::vector<UINT>& filtered) const
+{
+	filtered.clear();
+
+	for (auto id : ids)
+	{
+		if (!(objectsData.flags[id] & flag))
+			filtered.push_back(id);
+	}
 }
 
 RenderObject* RenderObjectsStorage::getObject(UINT id) const
@@ -159,15 +180,15 @@ RenderObject::~RenderObject()
 void RenderObject::setPosition(Vector3 position)
 {
 	auto& coords = source.objectsData.transformation[id];
-	coords.dirty = true;
 	coords.position = position;
+	source.objectsData.dirtyTransformation[id] = true;
 }
 
 void RenderObject::setScale(Vector3 scale)
 {
 	auto& coords = source.objectsData.transformation[id];
-	coords.dirty = true;
 	coords.scale = scale;
+	source.objectsData.dirtyTransformation[id] = true;
 }
 
 Vector3 RenderObject::getPosition() const
@@ -190,29 +211,29 @@ Quaternion RenderObject::getOrientation() const
 void RenderObject::setOrientation(Quaternion orientation)
 {
 	auto& coords = source.objectsData.transformation[id];
-	coords.dirty = true;
 	coords.orientation = orientation;
+	source.objectsData.dirtyTransformation[id] = true;
 }
 
 void RenderObject::yaw(float yaw)
 {
 	auto& coords = source.objectsData.transformation[id];
-	coords.dirty = true;
 	coords.orientation = XMQuaternionMultiply(coords.orientation, XMQuaternionRotationRollPitchYaw(0, yaw, 0));
+	source.objectsData.dirtyTransformation[id] = true;
 }
 
 void RenderObject::pitch(float pitch)
 {
 	auto& coords = source.objectsData.transformation[id];
-	coords.dirty = true;
 	coords.orientation = XMQuaternionMultiply(coords.orientation, XMQuaternionRotationRollPitchYaw(pitch, 0, 0));
+	source.objectsData.dirtyTransformation[id] = true;
 }
 
 void RenderObject::roll(float roll)
 {
 	auto& coords = source.objectsData.transformation[id];
-	coords.dirty = true;
 	coords.orientation = XMQuaternionMultiply(coords.orientation, XMQuaternionRotationRollPitchYaw(0, 0, roll));
+	source.objectsData.dirtyTransformation[id] = true;
 }
 
 void RenderObject::resetRotation()
@@ -223,9 +244,9 @@ void RenderObject::resetRotation()
 void RenderObject::setPositionOrientation(Vector3 position, Quaternion orientation)
 {
 	auto& coords = source.objectsData.transformation[id];
-	coords.dirty = true;
 	coords.position = position;
 	coords.orientation = orientation;
+	source.objectsData.dirtyTransformation[id] = true;
 }
 
 void RenderObject::setTransformation(const ObjectTransformation& transformation, bool initialize)
@@ -245,6 +266,16 @@ const ObjectTransformation& RenderObject::getTransformation() const
 bool RenderObject::isVisible(const RenderObjectsVisibilityState& visible) const
 {
 	return visible[id];
+}
+
+bool RenderObject::isVisible(const BoundingFrustum& frustum) const
+{
+	return frustum.Intersects(source.objectsData.worldBbox[id]);
+}
+
+bool RenderObject::isVisible(const BoundingOrientedBox& box) const
+{
+	return box.Intersects(source.objectsData.worldBbox[id]);
 }
 
 XMMATRIX RenderObject::getWorldMatrix() const

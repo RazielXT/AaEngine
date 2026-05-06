@@ -8,6 +8,10 @@ ShadowsRenderTask::ShadowsRenderTask(RenderProvider p, RenderWorld& w, ShadowMap
 	{
 		shadow.renderables = renderWorld.getRenderables(Order::Normal);
 	}
+
+	cascades[1].filterFlag = RenderObjectFlag::NoCascade1;
+	cascades[2].filterFlag = RenderObjectFlag::NoCascade2;
+	cascades[3].filterFlag = RenderObjectFlag::NoCascade3;
 }
 
 ShadowsRenderTask::~ShadowsRenderTask()
@@ -80,7 +84,8 @@ void ShadowsRenderTask::prepareShadowCascade(ShadowWork& shadow, ShadowMaps::Sha
 
 	auto& sceneInfo = shadow.renderablesData;
 
-	shadow.renderables->updateVisibility(cascade.camera, sceneInfo);
+	shadow.renderables->createFilteredIds(shadow.filterFlag, shadow.idFilter);
+	shadow.renderables->updateVisibility(cascade.camera, shadow.idFilter, sceneInfo);
 
 	cascade.texture.PrepareAsDepthTarget(shadow.commands.commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 

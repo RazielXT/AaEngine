@@ -49,7 +49,7 @@ UINT DescriptorManager::createTextureView(FileTexture& texture)
 	if (desc.DepthOrArraySize == 6)
 		dimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
 
-	auto index = createDescriptorIndex({ dimension, texture.name.c_str() });
+	auto index = createDescriptorIndex({ texture.name.c_str(), texture.texture.Get(), dimension });
 	auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mainDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), index
 		, device.GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 
@@ -81,7 +81,7 @@ void DescriptorManager::createTextureView(GpuTextureResource& texture, UINT mipL
 	if (texture.view.srvHandle.ptr)
 		return;
 
-	auto index = createDescriptorIndex({ D3D12_SRV_DIMENSION_TEXTURE2D, texture.name.c_str() });
+	auto index = createDescriptorIndex({ texture.name.c_str(), texture.texture.Get(), D3D12_SRV_DIMENSION_TEXTURE2D });
 	auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mainDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), index
 		, device.GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 
@@ -128,7 +128,7 @@ void DescriptorManager::createTextureView(GpuTexture3D& texture, UINT mipLevels)
 		return;
 
 	auto dimension = D3D12_SRV_DIMENSION_TEXTURE3D;
-	auto index = createDescriptorIndex({ dimension, texture.name.c_str() });
+	auto index = createDescriptorIndex({ texture.name.c_str(), texture.texture.Get(), dimension });
 	auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mainDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), index
 		, device.GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 
@@ -158,7 +158,7 @@ void DescriptorManager::createUAVView(GpuTexture3D& texture)
 		uavDesc.Texture3D.FirstWSlice = 0;
 		uavDesc.Texture3D.WSize = -1;
 
-		auto index = createDescriptorIndex({ D3D12_SRV_DIMENSION_BUFFER, texture.name.c_str() });
+		auto index = createDescriptorIndex({ texture.name.c_str(), texture.texture.Get(), D3D12_SRV_DIMENSION_BUFFER });
 		auto cpuHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mainDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), index
 			, device.GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 
@@ -189,7 +189,7 @@ std::vector<ShaderTextureViewUAV> DescriptorManager::createUAVMips(GpuTextureRes
 		uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
 		uavDesc.Texture2D.MipSlice = mipLevel;
 
-		auto index = createDescriptorIndex({ D3D12_SRV_DIMENSION_BUFFER, texture.name.c_str() });
+		auto index = createDescriptorIndex({ texture.name.c_str(), texture.texture.Get(), D3D12_SRV_DIMENSION_BUFFER });
 		auto cpuHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mainDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), index
 			, device.GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 
@@ -210,7 +210,7 @@ UINT DescriptorManager::createUAVView(GpuTextureResource& texture)
 		return texture.view.uavHeapIndex;
 
 	const UINT mipLevel = 0;
-	auto index = createDescriptorIndex({ D3D12_SRV_DIMENSION_BUFFER, texture.name.c_str() });
+	auto index = createDescriptorIndex({ texture.name.c_str(), texture.texture.Get(), D3D12_SRV_DIMENSION_BUFFER });
 
 	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 	uavDesc.ViewDimension = texture.depthOrArraySize == 1 ? D3D12_UAV_DIMENSION_TEXTURE2D : D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
@@ -239,7 +239,7 @@ UINT DescriptorManager::createUAVView(GpuTextureResource& texture)
 
 ShaderViewUAV DescriptorManager::createBufferView(ID3D12Resource* resource, UINT stride, UINT elements)
 {
-	auto index = createDescriptorIndex({ D3D12_SRV_DIMENSION_BUFFER, "Buffer"});
+	auto index = createDescriptorIndex({ "Buffer", resource, D3D12_SRV_DIMENSION_BUFFER });
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
@@ -280,12 +280,12 @@ UINT DescriptorManager::previousDescriptor(UINT offset, D3D12_SRV_DIMENSION d) c
 	return offset;
 }
 
-const char* DescriptorManager::getDescriptorName(UINT idx) const
+const DescriptorManager::DescriptorInfo* DescriptorManager::getDescriptor(UINT idx) const
 {
 	if (descriptorsInfo.size() <= idx)
 		return nullptr;
 
-	return descriptorsInfo[idx].name;
+	return &descriptorsInfo[idx];
 }
 
 std::vector<DescriptorManager::DescriptorInfo> DescriptorManager::getDescriptors(D3D12_SRV_DIMENSION filter) const
@@ -294,7 +294,7 @@ std::vector<DescriptorManager::DescriptorInfo> DescriptorManager::getDescriptors
 	for (UINT i = 0; i < descriptorsInfo.size(); i++)
 	{
 		if (descriptorsInfo[i].dimension == filter && descriptorsInfo[i].name)
-			result.push_back({ descriptorsInfo[i].dimension, descriptorsInfo[i].name, i });
+			result.emplace_back(descriptorsInfo[i]).index = i;
 	}
 	return result;
 }

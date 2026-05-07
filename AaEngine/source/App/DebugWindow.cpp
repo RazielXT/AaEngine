@@ -145,8 +145,8 @@ namespace imgui
 			if (ImGui::InputInt("Texture preview", &next))
 				overlayTask.changeIdx(next);
 
-			if (auto name = overlayTask.getCurrentIdxName())
-				ImGui::Text("Texture: %s", name);
+			if (auto info = overlayTask.getCurrentDescriptor())
+				ImGui::Text("Texture: %s", info->name);
 		}
 
 		if (ImGui::CollapsingHeader("GI"))

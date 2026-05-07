@@ -20,10 +20,10 @@ public:
 	void enable(bool enabled);
 
 	static DebugOverlayTask& Get();
-	void changeIdx(int idx);
-	void setIdx(int idx);
-	int currentIdx() const;
-	const char* getCurrentIdxName() const;
+	void changeIdx(UINT idx);
+	void setIdx(UINT idx);
+	UINT currentIdx() const;
+	const DescriptorManager::DescriptorInfo* getCurrentDescriptor() const;
 	std::vector<DescriptorManager::DescriptorInfo> getTexture2DList() const;
 
 	bool isFullscreen() const;
@@ -40,6 +40,6 @@ private:
 	void updateQuad();
 	ScreenQuad quad;
 
-	int current = 70;
+	UINT current = 0;
 	bool enabled = false;
 };

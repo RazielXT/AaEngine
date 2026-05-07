@@ -12,6 +12,7 @@
 #include "FrameCompositor/Tasks/SceneRenderTask.h"
 #include "PhysicsRenderTask.h"
 #include "Resources/Shader/ShaderResources.h"
+#include "Utils/DxUtils.h"
 #include <algorithm>
 
 static WaterPaintTool* waterPaintTool;
@@ -231,26 +232,32 @@ void SidePanel::draw()
 
 		if (enabledTexture)
 		{
-			int next = overlayTask.currentIdx();
-			if (ImGui::InputInt("Texture idx", &next))
+			UINT next = overlayTask.currentIdx();
+			const uint32_t step = 1;
+			if (ImGui::InputScalar("Texture idx", ImGuiDataType_U32 , &next, &step))
 				overlayTask.changeIdx(next);
 
-			if (next >= 0)
 			{
 				bool f = overlayTask.isFullscreen();
 				if (ImGui::Checkbox("Texture preview fullscreen", &f))
 					overlayTask.setFullscreen(f);
 
-				if (auto name = overlayTask.getCurrentIdxName())
-					ImGui::Text("Texture: %s", name);
+				if (auto info = overlayTask.getCurrentDescriptor())
+				{
+					ImGui::Text("Texture: %s", info->name);
+
+					auto desc = info->resource->GetDesc();
+					ImGui::Text("Format: %s", DxgiFormatToString(desc.Format));
+					ImGui::Text("Size: %u x %u", desc.Width, desc.Height);
+				}
 			}
 
 			auto textures = overlayTask.getTexture2DList();
-			int selectedListIdx = -1;
-			int currentIdx = overlayTask.currentIdx();
-			for (int i = 0; i < (int)textures.size(); i++)
+			UINT selectedListIdx = -1;
+			UINT currentIdx = overlayTask.currentIdx();
+			for (UINT i = 0; i < textures.size(); i++)
 			{
-				if ((int)textures[i].index == currentIdx)
+				if (textures[i].index == currentIdx)
 				{
 					selectedListIdx = i;
 					break;
@@ -259,7 +266,23 @@ void SidePanel::draw()
 
 			if (ImGui::BeginListBox("Textures", ImVec2(-FLT_MIN, ImGui::GetTextLineHeightWithSpacing() * min((int)textures.size(), 10))))
 			{
-				for (int i = 0; i < (int)textures.size(); i++)
+				bool refocus = false;
+				if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))
+				{
+					if (ImGui::IsKeyPressed(ImGuiKey_UpArrow) && selectedListIdx > 0)
+						selectedListIdx--;
+
+					if (ImGui::IsKeyPressed(ImGuiKey_DownArrow) && selectedListIdx < textures.size() - 1)
+						selectedListIdx++;
+
+					if (textures[selectedListIdx].index != currentIdx)
+					{
+						overlayTask.changeIdx(textures[selectedListIdx].index);
+						refocus = true;
+					}
+				}
+
+				for (UINT i = 0; i < textures.size(); i++)
 				{
 					std::string label = std::format("{} [{}]", textures[i].name, textures[i].index);
 
@@ -268,8 +291,13 @@ void SidePanel::draw()
 						overlayTask.setIdx(textures[i].index);
 
 					if (isSelected)
+					{
 						ImGui::SetItemDefaultFocus();
+						if (refocus)
+							ImGui::SetScrollHereY(0.5f);
+					}
 				}
+
 				ImGui::EndListBox();
 			}
 		}

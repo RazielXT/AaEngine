@@ -32,7 +32,7 @@ void DebugOverlayTask::run(RenderContext& ctx, CommandsData& syncCommands, Compo
 
 	auto idx = currentIdx();
 
-	if (enabled && idx >= 0)
+	if (enabled)
 	{
 		CommandsMarker marker(syncCommands.commandList, "DebugOverlay", PixColor::Debug);
 
@@ -52,11 +52,9 @@ DebugOverlayTask& DebugOverlayTask::Get()
 	return *instance;
 }
 
-void DebugOverlayTask::changeIdx(int next)
+void DebugOverlayTask::changeIdx(UINT next)
 {
-	if (next < 0)
-		current = -1;
-	else if (next == 0)
+	if (next == 0)
 		current = 0;
 	else if (next > current)
 		current = DescriptorManager::get().nextDescriptor(current, D3D12_SRV_DIMENSION_TEXTURE2D);
@@ -64,20 +62,21 @@ void DebugOverlayTask::changeIdx(int next)
 		current = DescriptorManager::get().previousDescriptor(current, D3D12_SRV_DIMENSION_TEXTURE2D);
 }
 
-void DebugOverlayTask::setIdx(int idx)
+void DebugOverlayTask::setIdx(UINT idx)
 {
 	current = idx;
 }
 
-int DebugOverlayTask::currentIdx() const
+UINT DebugOverlayTask::currentIdx() const
 {
 	return current;
 }
 
-const char* DebugOverlayTask::getCurrentIdxName() const
+const DescriptorManager::DescriptorInfo* DebugOverlayTask::getCurrentDescriptor() const
 {
-	return current >= 0 ? DescriptorManager::get().getDescriptorName(current) : nullptr;
+	return current >= 0 ? DescriptorManager::get().getDescriptor(current) : nullptr;
 }
+
 
 bool DebugOverlayTask::isFullscreen() const
 {

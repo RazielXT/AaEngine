@@ -31,14 +31,16 @@ public:
 
 	struct DescriptorInfo
 	{
-		D3D12_SRV_DIMENSION dimension = D3D12_SRV_DIMENSION_UNKNOWN;
 		const char* name{};
+		ID3D12Resource* resource{};
+		D3D12_SRV_DIMENSION dimension = D3D12_SRV_DIMENSION_UNKNOWN;
 		UINT index{};
 	};
 
 	UINT nextDescriptor(UINT offset, D3D12_SRV_DIMENSION) const;
 	UINT previousDescriptor(UINT offset, D3D12_SRV_DIMENSION) const;
-	const char* getDescriptorName(UINT idx) const;
+
+	const DescriptorInfo* getDescriptor(UINT idx) const;
 	std::vector<DescriptorInfo> getDescriptors(D3D12_SRV_DIMENSION filter) const;
 
 	void removeTextureView(RenderTargetTextures& textures);

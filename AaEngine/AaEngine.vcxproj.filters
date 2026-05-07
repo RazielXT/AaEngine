@@ -370,6 +370,9 @@
     <ClCompile Include="source\RenderObject\DrawPrimitives.cpp">
       <Filter>Source Files\RenderObject</Filter>
     </ClCompile>
+    <ClCompile Include="source\Utils\DxUtils.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\App\TargetWindow.h">
@@ -680,6 +683,9 @@
     </ClInclude>
     <ClInclude Include="source\RenderObject\DrawPrimitives.h">
       <Filter>Source Files\RenderObject</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Utils\DxUtils.h">
+      <Filter>Source Files\Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

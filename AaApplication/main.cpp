@@ -1,8 +1,8 @@
 #include "InputHandler.h"
-#include "TargetWindow.h"
+#include "App/TargetWindow.h"
 #include "FreeCamera.h"
 #include "ApplicationCore.h"
-#include "DebugWindow.h"
+#include "App/DebugWindow.h"
 #include <shellscalingapi.h>
 
 class ApplicationObject : public InputListener
@@ -52,21 +52,6 @@ public:
 				{
 					app.renderSystem.upscale.fsr.selectMode((UpscaleMode)debugWindow.state.FsrMode);
 					app.compositor->reloadPasses();
-				}
-				if (auto ent = app.renderWorld.getEntity("Torus001"))
-				{
-					ent->roll(timeSinceLastFrame);
-					ent->yaw(timeSinceLastFrame / 2.f);
-					ent->pitch(timeSinceLastFrame / 3.f);
-				}
-				if (auto ent = app.renderWorld.getEntity("Suzanne"))
-				{
-					ent->yaw(timeSinceLastFrame);
-					ent->setPosition({ cos(app.params.time / 2.f) * 5, ent->getPosition().y, ent->getPosition().z });
-				}
-				if (auto ent = app.renderWorld.getEntity("MovingCube"))
-				{
-					ent->setPosition({ ent->getPosition().x, ent->getPosition().y, -130.f - cos(app.params.time * 3) * 20 });
 				}
 
 				app.renderFrame(freeCamera.camera);

@@ -153,6 +153,13 @@ void SidePanel::draw()
 			app.renderWorld.terrain.updateLod = updateGrid;
 		}
 
+		static bool updateVegetationCulling = true;
+		if (ImGui::Checkbox("Vegetation culling", &updateVegetationCulling))
+		{
+			app.renderWorld.vegetation.enableUpdating(updateVegetationCulling);
+			app.renderWorld.grass.enableUpdating(updateVegetationCulling);
+		}
+
 		static bool updateWater = true;
 		if (ImGui::Checkbox("Update water", &updateWater))
 			app.renderWorld.water.enableWaterUpdating(updateWater);

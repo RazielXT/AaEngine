@@ -736,6 +736,8 @@ void MaterialInstance::BindConstants(ID3D12GraphicsCommandList* commandList, con
 	{
 		if (b.type == GpuBufferType::Instancing || b.type == GpuBufferType::Geometry)
 			commandList->SetGraphicsRootShaderResourceView(b.rootIndex, constants.getGeometryBuffer());
+		else if (b.type == GpuBufferType::Redirect)
+			commandList->SetGraphicsRootShaderResourceView(b.rootIndex, constants.getGeometryRedirectBuffer());
 		else if (b.type == GpuBufferType::Global)
  			commandList->SetGraphicsRootConstantBufferView(b.rootIndex, b.globalCBuffer.data[constants.params.frameIndex]->GpuAddress());
 	}

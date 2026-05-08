@@ -149,9 +149,11 @@ RenderCore::RenderCore()
 	}
 
 	device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&commandFence));
+	commandFence->SetName(L"commandFence");
 	commandFenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 
 	device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&computeFence));
+	computeFence->SetName(L"computeFence");
 	computeFenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 
 	for (auto& f : fenceValues)

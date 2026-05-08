@@ -274,9 +274,6 @@
     <ClCompile Include="source\RenderObject\Vegetation\Vegetation.cpp">
       <Filter>Source Files\RenderObject\Vegetation</Filter>
     </ClCompile>
-    <ClCompile Include="source\RenderObject\Vegetation\VegetationTrees.cpp">
-      <Filter>Source Files\RenderObject\Vegetation</Filter>
-    </ClCompile>
     <ClCompile Include="source\Utils\SystemUtils.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
@@ -574,9 +571,6 @@
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClInclude>
     <ClInclude Include="source\RenderObject\Vegetation\Vegetation.h">
-      <Filter>Source Files\RenderObject\Vegetation</Filter>
-    </ClInclude>
-    <ClInclude Include="source\RenderObject\Vegetation\VegetationTrees.h">
       <Filter>Source Files\RenderObject\Vegetation</Filter>
     </ClInclude>
     <ClInclude Include="source\Utils\SystemUtils.h">

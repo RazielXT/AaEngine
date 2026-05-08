@@ -10,7 +10,7 @@ float2 SubUvOffset;
 float2 SubUvScale;
 
 RWStructuredBuffer<VegetationInfo> infoBuffer : register(u0);
-RWByteAddressBuffer counterBuffer : register(u1);
+RWStructuredBuffer<SubgroupMeta> subgroupMetaBuffer : register(u1);
 SamplerState LinearWrapSampler : register(s0);
 
 float2 RemapGridTextureUV(float2 gridUV)
@@ -59,18 +59,29 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 	const uint ItemsPerThread = 8;
 	const float ItemsTotalWidth = 4 * 8 * ItemsPerThread;
 
+	// Each subgroup covers 32 positions per dim, each thread covers 8 items, so 4 threads per subgroup dim
+	uint2 subgroupIdx = dispatchThreadID.xy / 4;
+	uint subgroupLinear = subgroupIdx.y * SubgroupsPerDim + subgroupIdx.x;
+
 	for (uint x = 0; x < ItemsPerThread; x++)
 		for (uint y = 0; y < ItemsPerThread; y++)
 		{
 			float2 coords = (dispatchThreadID.xy * ItemsPerThread + float2(x, y)) / ItemsTotalWidth;
 			coords += (-0.5 + RandomFrom2D(float2(coords.x + y, coords.y + x))) * 2 / ItemsTotalWidth;
-			//coords /= 1.5;
 
 			if (getVegetationInfo(info, coords) != 0)
 			{
-				uint index;
-				counterBuffer.InterlockedAdd(0, 1, index);
-				infoBuffer[index] = info;
+				int index;
+				InterlockedAdd(subgroupMetaBuffer[subgroupLinear].counter, 1, index);
+
+				if ((uint)index < MaxItemsPerSubgroup)
+				{
+					infoBuffer[subgroupLinear * MaxItemsPerSubgroup + index] = info;
+
+					int posYInt = int(info.position.y * 100.0);
+					InterlockedMin(subgroupMetaBuffer[subgroupLinear].minY, posYInt);
+					InterlockedMax(subgroupMetaBuffer[subgroupLinear].maxY, posYInt);
+				}
 			}
 		}
 }

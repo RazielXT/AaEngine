@@ -31,6 +31,7 @@ struct EntityGeometry
 	D3D12_INDEX_BUFFER_VIEW indexBufferView{};
 
 	D3D12_GPU_VIRTUAL_ADDRESS geometryCustomBuffer{};
+	D3D12_GPU_VIRTUAL_ADDRESS geometryRedirectBuffer{};
 
 	void* source{};
 
@@ -50,6 +51,7 @@ public:
 	ComPtr<ID3D12Resource> commandBuffer;
 
 	UINT maxCommands{};
+	UINT commandBufferOffset{};
 
 	void draw(ID3D12GraphicsCommandList* commandList, UINT frameIndex);
 };

@@ -3,6 +3,7 @@
 #include "BufferHelpers.h"
 #include "Scene/RenderWorld.h"
 #include <format>
+#include <climits>
 
 Vegetation::Vegetation()
 {
@@ -13,11 +14,19 @@ void Vegetation::initialize(RenderSystem& renderSystem, GraphicsResources& resou
 	auto csShader = resources.shaders.getShader("vegetationFindCS", ShaderType::Compute, ShaderRef{ "terrain/vegetation/vegetationFindCS.hlsl", "main", "cs_6_6" });
 	vegetationFindCS.init(*renderSystem.core.device, *csShader);
 
+	csShader = resources.shaders.getShader("vegetationClearCS", ShaderType::Compute, ShaderRef{ "terrain/vegetation/vegetationClearCS.hlsl", "main", "cs_6_6" });
+	vegetationClearCS.init(*renderSystem.core.device, *csShader);
+
 	csShader = resources.shaders.getShader("vegetationUpdateCS", ShaderType::Compute, ShaderRef{ "terrain/vegetation/vegetationUpdateCS.hlsl", "main", "cs_6_6" });
 	vegetationUpdateCS.init(*renderSystem.core.device, *csShader);
 
 	createBillboardIndexBuffer(renderSystem, batch);
 	initializeImpostors(renderSystem, batch);
+}
+
+void Vegetation::enableUpdating(bool enabled)
+{
+	updatingEnabled = enabled;
 }
 
 void Vegetation::clear()
@@ -41,25 +50,29 @@ struct VegetationInfo
 	float random;
 };
 
+struct SubgroupMeta
+{
+	INT counter;
+	INT minY;
+	INT maxY;
+	INT _pad;
+};
+
 void Vegetation::initChunk(VegetationChunk& chunk, RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch, MaterialInstance* material)
 {
-	constexpr UINT row = groups * threads * perThread;
-	constexpr UINT maxCount = row * row;
+	constexpr UINT maxCount = SubgroupCount * MaxItemsPerSubgroup;
 
 	constexpr UINT infoSize = sizeof(VegetationInfo) * maxCount;
 	chunk.infoBuffer = resources.shaderBuffers.CreateStructuredBuffer(infoSize);
 	chunk.infoBuffer->SetName(L"VegetationInfo");
 
-	constexpr UINT tranformationSize = sizeof(XMFLOAT4X4) * maxCount;
-	chunk.transformationBuffer = resources.shaderBuffers.CreateStructuredBuffer(tranformationSize);
-	chunk.transformationBuffer->SetName(L"VegetationTransformation");
+	chunk.subgroupMetaBuffer = resources.shaderBuffers.CreateStructuredBuffer(sizeof(SubgroupMeta) * SubgroupCount);
+	chunk.subgroupMetaBuffer->SetName(L"VegetationSubgroupMeta");
 
-	chunk.infoCounter = resources.shaderBuffers.CreateStructuredBuffer(sizeof(UINT));
-	chunk.infoCounter->SetName(L"VegetationInfoCounter");
+	chunk.redirectBuffer = resources.shaderBuffers.CreateStructuredBuffer(sizeof(UINT) * maxCount);
+	chunk.redirectBuffer->SetName(L"VegetationRedirect");
 
 	chunk.impostors.commandSignature = commandSignature;
-	chunk.impostors.commandBuffer = resources.shaderBuffers.CreateStructuredBuffer(sizeof(D3D12_DRAW_INDEXED_ARGUMENTS));
-	chunk.impostors.commandBuffer->SetName(L"VegetationCommandBuffer");
 	chunk.impostors.maxCommands = 1;
 }
 
@@ -82,6 +95,10 @@ void Vegetation::createChunks(RenderWorld& renderWorld, RenderSystem& renderSyst
 			auto& chunk = chunks[ax][ay];
 			initChunk(chunk, renderSystem, resources, batch, vegMaterial);
 
+			UINT chunkIndex = ax * VegGridSize + ay;
+			chunk.impostors.commandBuffer = sharedCommandBuffer;
+			chunk.impostors.commandBufferOffset = chunkIndex * sizeof(D3D12_DRAW_INDEXED_ARGUMENTS);
+
 			auto e = renderWorld.createEntity();
 			chunk.entity = e;
 			e->material = vegMaterial;
@@ -89,6 +106,7 @@ void Vegetation::createChunks(RenderWorld& renderWorld, RenderSystem& renderSyst
 			e->geometry.type = EntityGeometry::Type::Indirect;
 			e->geometry.source = &chunk.impostors;
 			e->geometry.geometryCustomBuffer = chunk.infoBuffer->GetGPUVirtualAddress();
+			e->geometry.geometryRedirectBuffer = chunk.redirectBuffer->GetGPUVirtualAddress();
 
 			e->geometry.indexCount = 6;
 			e->geometry.indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
@@ -134,59 +152,54 @@ void Vegetation::regenerateChunk(ID3D12GraphicsCommandList* commandList, Vegetat
 	input.subUvOffset = { subX * uvScale, subY * uvScale };
 	input.subUvScale = { uvScale, uvScale };
 
-	// Transition info/counter back to UAV if they were left as SRV from a previous cycle
+	// Transition info/meta back to UAV if they were left as SRV from a previous cycle
 	if (!chunk.firstRun)
 	{
 		CD3DX12_RESOURCE_BARRIER toUav[2]{};
 		toUav[0] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.infoBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-		toUav[1] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.infoCounter.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+		toUav[1] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.subgroupMetaBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 		commandList->ResourceBarrier(2, toUav);
 	}
 	chunk.firstRun = false;
 
-	// Clear the counter to zero before dispatching find CS
-	CD3DX12_RESOURCE_BARRIER toCopyDest = CD3DX12_RESOURCE_BARRIER::Transition(chunk.infoCounter.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_DEST);
+	// Clear subgroup metadata (counters=0, minY=INT_MAX, maxY=INT_MIN) before dispatching find CS
+	CD3DX12_RESOURCE_BARRIER toCopyDest = CD3DX12_RESOURCE_BARRIER::Transition(chunk.subgroupMetaBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_DEST);
 	commandList->ResourceBarrier(1, &toCopyDest);
-	commandList->CopyBufferRegion(chunk.infoCounter.Get(), 0, zeroCounterBuffer.Get(), 0, sizeof(UINT));
-	CD3DX12_RESOURCE_BARRIER toUavAgain = CD3DX12_RESOURCE_BARRIER::Transition(chunk.infoCounter.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	commandList->CopyBufferRegion(chunk.subgroupMetaBuffer.Get(), 0, defaultMetaBuffer.Get(), 0, sizeof(SubgroupMeta) * SubgroupCount);
+	CD3DX12_RESOURCE_BARRIER toUavAgain = CD3DX12_RESOURCE_BARRIER::Transition(chunk.subgroupMetaBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	commandList->ResourceBarrier(1, &toUavAgain);
 
-	vegetationFindCS.dispatch(commandList, input, chunk.infoBuffer.Get(), chunk.infoCounter.Get());
+	vegetationFindCS.dispatch(commandList, input, chunk.infoBuffer.Get(), chunk.subgroupMetaBuffer.Get());
 
 	// UAV barrier to ensure find CS writes complete before update CS reads
 	CD3DX12_RESOURCE_BARRIER uavBarriers[2]{};
 	uavBarriers[0] = CD3DX12_RESOURCE_BARRIER::UAV(chunk.infoBuffer.Get());
-	uavBarriers[1] = CD3DX12_RESOURCE_BARRIER::UAV(chunk.infoCounter.Get());
+	uavBarriers[1] = CD3DX12_RESOURCE_BARRIER::UAV(chunk.subgroupMetaBuffer.Get());
 	commandList->ResourceBarrier(2, uavBarriers);
 
 	CD3DX12_RESOURCE_BARRIER toSrv[2]{};
 	toSrv[0] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.infoBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-	toSrv[1] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.infoCounter.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	toSrv[1] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.subgroupMetaBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 	commandList->ResourceBarrier(2, toSrv);
 }
 
-void Vegetation::updateChunk(ID3D12GraphicsCommandList* commandList, VegetationChunk& chunk)
+void Vegetation::updateChunk(ID3D12GraphicsCommandList* commandList, VegetationChunk& chunk, const VegetationUpdateComputeShader::Input& cullingInput)
 {
-	CD3DX12_RESOURCE_BARRIER barrier[2]{};
+	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(chunk.redirectBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	commandList->ResourceBarrier(1, &barrier);
 
-	barrier[0] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.impostors.commandBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
-	commandList->ResourceBarrier(1, barrier);
+	D3D12_GPU_VIRTUAL_ADDRESS commandsAddr = sharedCommandBuffer->GetGPUVirtualAddress() + chunk.impostors.commandBufferOffset;
+	vegetationUpdateCS.dispatch(commandList, cullingInput, chunk.subgroupMetaBuffer.Get(), commandsAddr, chunk.redirectBuffer.Get());
 
-	commandList->CopyBufferRegion(chunk.impostors.commandBuffer.Get(), 0, defaultCommandBuffer.Get(), 0, sizeof(D3D12_DRAW_INDEXED_ARGUMENTS));
-
-	barrier[0] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.impostors.commandBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-	barrier[1] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.transformationBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-	commandList->ResourceBarrier(2, barrier);
-
-	vegetationUpdateCS.dispatch(commandList, chunk.transformationBuffer.Get(), chunk.impostors.commandBuffer.Get(), chunk.infoBuffer.Get(), chunk.infoCounter.Get());
-
-	barrier[0] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.impostors.commandBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-	barrier[1] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.transformationBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-	commandList->ResourceBarrier(2, barrier);
+	barrier = CD3DX12_RESOURCE_BARRIER::Transition(chunk.redirectBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	commandList->ResourceBarrier(1, &barrier);
 }
 
 void Vegetation::update(ID3D12GraphicsCommandList* commandList, const Vector3& cameraPos, const ProgressiveTerrain& terrain)
 {
+	if (!updatingEnabled)
+		return;
+
 	auto& terrainParams = terrain.params;
 	float chunkSize = terrainParams.tileSize / ChunksPerTerrainTile;
 	int half = (int)VegGridSize / 2;
@@ -215,24 +228,59 @@ void Vegetation::update(ID3D12GraphicsCommandList* commandList, const Vector3& c
 			}
 	}
 
-	// Regenerate dirty chunks (find vegetation positions) and update their indirect draw calls
 	for (int x = 0; x < (int)VegGridSize; x++)
 		for (int y = 0; y < (int)VegGridSize; y++)
 		{
 			auto& chunk = chunks[x][y];
-			if (chunk.dirty && chunk.entity)
+			if (chunk.dirty)
 			{
 				regenerateChunk(commandList, chunk, terrain);
-				updateChunk(commandList, chunk);
 				chunk.dirty = false;
 			}
 		}
 }
 
-struct IndirectCommand
+void Vegetation::updateCulling(ID3D12GraphicsCommandList* commandList, const Camera& camera, const ProgressiveTerrain& terrain)
 {
-	D3D12_DRAW_INDEXED_ARGUMENTS drawArguments;
-};
+	if (!updatingEnabled)
+		return;
+
+	CommandsMarker marker(commandList, "Trees", PixColor::ForestGreen);
+
+	auto& terrainParams = terrain.params;
+	float chunkSize = terrainParams.tileSize / ChunksPerTerrainTile;
+
+	VegetationUpdateComputeShader::Input cullingInput{};
+	camera.extractFrustumPlanes(cullingInput.frustumPlanes);
+	cullingInput.chunkSize = chunkSize;
+
+	auto frustum = camera.prepareFrustum();
+
+	// Transition shared command buffer to UAV and clear all InstanceCounts
+	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(sharedCommandBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	commandList->ResourceBarrier(1, &barrier);
+
+	vegetationClearCS.dispatch(commandList, TotalChunks, sharedCommandBuffer.Get());
+
+	CD3DX12_RESOURCE_BARRIER uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(sharedCommandBuffer.Get());
+	commandList->ResourceBarrier(1, &uavBarrier);
+
+	for (int x = 0; x < (int)VegGridSize; x++)
+		for (int y = 0; y < (int)VegGridSize; y++)
+		{
+			auto& chunk = chunks[x][y];
+
+			if (chunk.entity->isVisible(frustum))
+			{
+				auto worldMin = terrainParams.chunkWorldMin(chunk.worldCoord, chunkSize);
+				cullingInput.chunkWorldMin = { worldMin.x, worldMin.y, worldMin.z };
+				updateChunk(commandList, chunk, cullingInput);
+			}
+		}
+
+	barrier = CD3DX12_RESOURCE_BARRIER::Transition(sharedCommandBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	commandList->ResourceBarrier(1, &barrier);
+}
 
 void Vegetation::initializeImpostors(RenderSystem& renderSystem, ResourceUploadBatch& batch)
 {
@@ -242,43 +290,70 @@ void Vegetation::initializeImpostors(RenderSystem& renderSystem, ResourceUploadB
 	D3D12_COMMAND_SIGNATURE_DESC commandSignatureDesc = {};
 	commandSignatureDesc.pArgumentDescs = argumentDescs;
 	commandSignatureDesc.NumArgumentDescs = _countof(argumentDescs);
-	commandSignatureDesc.ByteStride = sizeof(IndirectCommand);
+	commandSignatureDesc.ByteStride = sizeof(D3D12_DRAW_INDEXED_ARGUMENTS);
 
 	renderSystem.core.device->CreateCommandSignature(&commandSignatureDesc, nullptr, IID_PPV_ARGS(&commandSignature));
 
-	IndirectCommand defaultData{};
-	defaultData.drawArguments.IndexCountPerInstance = 6;
-	defaultData.drawArguments.InstanceCount = 0;
+	// Default subgroup metadata: counter=0, minY=INT_MAX, maxY=INT_MIN
+	std::vector<SubgroupMeta> defaultMeta(SubgroupCount);
+	for (auto& meta : defaultMeta)
+	{
+		meta.counter = 0;
+		meta.minY = INT_MAX;
+		meta.maxY = INT_MIN;
+		meta._pad = 0;
+	}
+	CreateStaticBuffer(renderSystem.core.device, batch, defaultMeta.data(), sizeof(SubgroupMeta) * SubgroupCount, D3D12_RESOURCE_STATE_COPY_SOURCE, &defaultMetaBuffer);
 
-	CreateStaticBuffer(renderSystem.core.device, batch, &defaultData, sizeof(IndirectCommand), D3D12_RESOURCE_STATE_COPY_SOURCE, &defaultCommandBuffer);
-
-	UINT zero = 0;
-	CreateStaticBuffer(renderSystem.core.device, batch, &zero, sizeof(UINT), D3D12_RESOURCE_STATE_COPY_SOURCE, &zeroCounterBuffer);
+	// Shared command buffer for all chunks — pre-fill IndexCountPerInstance=6, rest=0
+	std::vector<D3D12_DRAW_INDEXED_ARGUMENTS> defaultCommands(TotalChunks);
+	for (auto& cmd : defaultCommands)
+	{
+		cmd.IndexCountPerInstance = 6;
+		cmd.InstanceCount = 0;
+		cmd.StartIndexLocation = 0;
+		cmd.BaseVertexLocation = 0;
+		cmd.StartInstanceLocation = 0;
+	}
+	CreateStaticBuffer(renderSystem.core.device, batch, defaultCommands.data(), TotalChunks, sizeof(D3D12_DRAW_INDEXED_ARGUMENTS),
+		D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, &sharedCommandBuffer, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+	sharedCommandBuffer->SetName(L"VegetationSharedCommands");
 }
 
-void VegetationFindComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, const Input& input, ID3D12Resource* infoBuffer, ID3D12Resource* counter)
+void VegetationFindComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, const Input& input, ID3D12Resource* infoBuffer, ID3D12Resource* subgroupMeta)
 {
 	commandList->SetPipelineState(pipelineState.Get());
 	commandList->SetComputeRootSignature(signature);
 
 	commandList->SetComputeRoot32BitConstants(0, sizeof(input) / sizeof(float), &input, 0);
 	commandList->SetComputeRootUnorderedAccessView(1, infoBuffer->GetGPUVirtualAddress());
-	commandList->SetComputeRootUnorderedAccessView(2, counter->GetGPUVirtualAddress());
+	commandList->SetComputeRootUnorderedAccessView(2, subgroupMeta->GetGPUVirtualAddress());
 
 	commandList->Dispatch(groups, groups, 1);
 }
 
-void VegetationUpdateComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, ID3D12Resource* tranformBuffer, ID3D12Resource* commands, ID3D12Resource* infoBuffer, ID3D12Resource* infoCounter)
+void VegetationClearComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, UINT commandCount, ID3D12Resource* commands)
 {
 	commandList->SetPipelineState(pipelineState.Get());
 	commandList->SetComputeRootSignature(signature);
 
-	commandList->SetComputeRootShaderResourceView(0, infoBuffer->GetGPUVirtualAddress());
-	commandList->SetComputeRootShaderResourceView(1, infoCounter->GetGPUVirtualAddress());
-	commandList->SetComputeRootUnorderedAccessView(2, tranformBuffer->GetGPUVirtualAddress());
-	commandList->SetComputeRootUnorderedAccessView(3, commands->GetGPUVirtualAddress());
+	commandList->SetComputeRoot32BitConstants(0, 1, &commandCount, 0);
+	commandList->SetComputeRootUnorderedAccessView(1, commands->GetGPUVirtualAddress());
 
-	commandList->Dispatch(groups * groups, 1, 1);
+	commandList->Dispatch((commandCount + 63) / 64, 1, 1);
+}
+
+void VegetationUpdateComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, const Input& input, ID3D12Resource* subgroupMeta, D3D12_GPU_VIRTUAL_ADDRESS commandsAddr, ID3D12Resource* redirectBuffer)
+{
+	commandList->SetPipelineState(pipelineState.Get());
+	commandList->SetComputeRootSignature(signature);
+
+	commandList->SetComputeRoot32BitConstants(0, sizeof(input) / sizeof(float), &input, 0);
+	commandList->SetComputeRootShaderResourceView(1, subgroupMeta->GetGPUVirtualAddress());
+	commandList->SetComputeRootUnorderedAccessView(2, commandsAddr);
+	commandList->SetComputeRootUnorderedAccessView(3, redirectBuffer->GetGPUVirtualAddress());
+
+	commandList->Dispatch(Vegetation::SubgroupsPerDim, Vegetation::SubgroupsPerDim, 1);
 }
 
 void Vegetation::createBillboardIndexBuffer(RenderSystem& renderSystem, ResourceUploadBatch& batch)

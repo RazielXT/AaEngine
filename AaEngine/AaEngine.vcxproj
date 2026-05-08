@@ -128,7 +128,6 @@
     <ClCompile Include="source\Resources\Compute\TextureToMeshCS.cpp" />
     <ClCompile Include="source\RenderCore\TextureUtils.cpp" />
     <ClCompile Include="source\RenderObject\Vegetation\Vegetation.cpp" />
-    <ClCompile Include="source\RenderObject\Vegetation\VegetationTrees.cpp" />
     <ClCompile Include="source\Resources\Model\VertexBufferModel.cpp" />
     <ClCompile Include="source\Resources\Model\ModelResources.cpp" />
     <ClCompile Include="source\Resources\Compute\AoBlurAndUpsampleCS.cpp" />
@@ -242,7 +241,6 @@
     <ClInclude Include="source\Resources\Compute\TextureToMeshCS.h" />
     <ClInclude Include="source\RenderCore\TextureUtils.h" />
     <ClInclude Include="source\RenderObject\Vegetation\Vegetation.h" />
-    <ClInclude Include="source\RenderObject\Vegetation\VegetationTrees.h" />
     <ClInclude Include="source\Resources\Model\VertexBufferModel.h" />
     <ClInclude Include="source\Resources\Model\ModelResources.h" />
     <ClInclude Include="source\Scene\RenderObject.h" />

@@ -54,7 +54,7 @@ void IndirectEntityGeometry::draw(ID3D12GraphicsCommandList* commandList, UINT f
 		commandSignature.Get(),
 		maxCommands,
 		commandBuffer.Get(),
-		0,
+		commandBufferOffset,
 		nullptr,
 		0);
 }

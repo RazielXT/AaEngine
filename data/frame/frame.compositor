@@ -81,12 +81,12 @@ compositor Frame
 		out sceneTexture
 	}
 
-#if RENDER_PHYSICS
+	#if RENDER_PHYSICS
 	task RenderPhysics
 	{
 		out sceneTexture
 	}
-#endif
+	#endif
 
 	pass DeferredVCT
 	{
@@ -124,6 +124,7 @@ compositor Frame
 		out sceneTextureTmp sceneTexture:Depth
 	}
 
+
 	pass DepthDownsample
 	{
 		material LoadThrough
@@ -139,7 +140,13 @@ compositor Frame
 
 	task SceneRender.Editor
 	{
+		sync_signal PostCompute
 		out sceneTextureTmp2 sceneTexture:Depth (depth_read)
+	}
+
+	task PrepareFrame.PostCompute (async_compute)
+	{
+		sync_wait PostCompute
 	}
 
 #if UPSCALE

@@ -5,6 +5,7 @@
 #include "Resources/Compute/ComputeShader.h"
 #include "Scene/EntityGeometry.h"
 #include "RenderObject/Terrain/TerrainGridParams.h"
+#include "../Vegetation/Vegetation.h"
 
 class RenderWorld;
 class ProgressiveTerrain;
@@ -64,12 +65,15 @@ public:
 	void createChunks(RenderWorld& renderWorld, RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch);
 
 	void clear();
+	void enableUpdating(bool enabled);
 
 	void update(ID3D12GraphicsCommandList* commandList, const Camera& camera, const ProgressiveTerrain& terrain);
+	void updateCulling(ID3D12GraphicsCommandList* commandList, const Camera& camera, const ProgressiveTerrain& terrain);
 
 	// Each grass chunk = 1 terrain tile / ChunksPerTerrainTile, so chunk aligns to a fraction of the heightmap
 	constexpr static UINT ChunksPerTerrainTile = 32;
 	constexpr static UINT GrassGridSize = 5;
+	constexpr static UINT TotalChunks = GrassGridSize * GrassGridSize;
 
 private:
 
@@ -84,13 +88,14 @@ private:
 
 	GrassFindComputeShader grassFindCS;
 	GrassUpdateComputeShader grassUpdateCS;
+	VegetationClearComputeShader vegetationClearCS;
+	bool updatingEnabled = true;
 
 	void initChunk(GrassChunk& chunk, RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch);
 	void regenerateChunk(ID3D12GraphicsCommandList* commandList, GrassChunk& chunk, const ProgressiveTerrain& terrain);
 	void updateChunk(ID3D12GraphicsCommandList* commandList, GrassChunk& chunk, const GrassUpdateComputeShader::Input& cullingInput);
 
 	ComPtr<ID3D12CommandSignature> commandSignature;
-	ComPtr<ID3D12Resource> defaultCommandBuffer;
 	ComPtr<ID3D12Resource> zeroCounterBuffer;
 
 	VertexBufferModel* grassModel{};

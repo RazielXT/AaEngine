@@ -385,13 +385,18 @@ void FrameCompositor::initializeCommands()
 				syncCommands = generalCommandsArray.emplace_back(provider.renderSystem.core.CreateCommandList(L"Compositor", PixColor::Compositor));
 				passData.startCommands = true;
 			}
+
+			passData.syncCommands = syncCommands;
+
 			if (!syncComputeCommands && passData.task && passData.task->getRunType(passData) == CompositorTask::RunType::SyncComputeCommands)
 			{
 				syncComputeCommands = generalCommandsArray.emplace_back(provider.renderSystem.core.CreateCommandList(L"CompositorCompute", PixColor::Compositor, D3D12_COMMAND_LIST_TYPE_COMPUTE));
 				passData.startComputeCommands = true;
+				passData.syncCommands = {};
 			}
-			passData.syncCommands = syncCommands;
+
 			passData.computeCommands = syncComputeCommands;
+
 			syncPasses.push_back(&passData.info);
 		};
 	auto dependsOnPreviousPass = [](const CompositorPassInfo& pass, const std::vector<CompositorPassInfo*>& passes, bool forceTargetOrder = false)

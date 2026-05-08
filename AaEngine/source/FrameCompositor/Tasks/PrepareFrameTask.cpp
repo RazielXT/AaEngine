@@ -32,12 +32,18 @@ void PrepareFrameTask::run(RenderContext& ctx, CommandsData& cmd, CompositorPass
 
 void PrepareFrameTask::runCompute(RenderContext& ctx, CommandsData& cmd, CompositorPass& pass)
 {
-	renderWorld.water.updateCompute(provider.renderSystem, cmd.commandList, provider.params.timeDelta, provider.params.frameIndex);
+	if (pass.info.entry == "Water")
+		renderWorld.water.updateCompute(provider.renderSystem, cmd.commandList, provider.params.timeDelta, provider.params.frameIndex);
+	else
+	{
+		renderWorld.grass.updateCulling(cmd.commandList, *ctx.camera, renderWorld.terrain);
+		renderWorld.vegetation.updateCulling(cmd.commandList, *ctx.camera, renderWorld.terrain);
+	}
 }
 
 CompositorTask::RunType PrepareFrameTask::getRunType(CompositorPass& pass) const
 {
-	if (pass.info.entry == "Water")
+	if (pass.info.entry == "Water" || pass.info.entry == "PostCompute")
 		return RunType::SyncComputeCommands;
 	else
 		return RunType::SyncCommands;

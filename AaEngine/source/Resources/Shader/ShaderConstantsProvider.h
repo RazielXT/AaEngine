@@ -41,6 +41,7 @@ public:
 	XMFLOAT3 getMainCameraDirection() const;
 
 	D3D12_GPU_VIRTUAL_ADDRESS getGeometryBuffer() const;
+	D3D12_GPU_VIRTUAL_ADDRESS getGeometryRedirectBuffer() const;
 
 	const RenderObjectsVisibilityData& info;
 

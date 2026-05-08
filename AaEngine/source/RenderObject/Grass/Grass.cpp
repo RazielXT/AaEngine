@@ -16,6 +16,9 @@ void Grass::initialize(RenderSystem& renderSystem, GraphicsResources& resources,
 	csShader = resources.shaders.getShader("grassUpdateCS", ShaderType::Compute, ShaderRef{ "terrain/grass/grassUpdateCS.hlsl", "main", "cs_6_6", { {"FRUSTUM_CULLING", "1"}, {"DISTANCE_CULLING", "0"} } });
 	grassUpdateCS.init(*renderSystem.core.device, *csShader);
 
+	csShader = resources.shaders.getShader("vegetationClearCS", ShaderType::Compute, ShaderRef{ "terrain/vegetation/vegetationClearCS.hlsl", "main", "cs_6_6" });
+	vegetationClearCS.init(*renderSystem.core.device, *csShader);
+
 	grassModel = resources.models.getModel("GrassBlade.mesh", batch, { "meshes/grass", true });
 	grassMaterial = resources.materials.getMaterial("grassBladeInstanced", batch);
 
@@ -29,12 +32,6 @@ void Grass::initialize(RenderSystem& renderSystem, GraphicsResources& resources,
 	commandSignatureDesc.ByteStride = sizeof(D3D12_DRAW_INDEXED_ARGUMENTS);
 
 	renderSystem.core.device->CreateCommandSignature(&commandSignatureDesc, nullptr, IID_PPV_ARGS(&commandSignature));
-
-	D3D12_DRAW_INDEXED_ARGUMENTS defaultData{};
-	defaultData.IndexCountPerInstance = grassModel->indexCount;
-	defaultData.InstanceCount = 0;
-
-	CreateStaticBuffer(renderSystem.core.device, batch, &defaultData, sizeof(defaultData), D3D12_RESOURCE_STATE_COPY_SOURCE, &defaultCommandBuffer);
 
 	UINT zero = 0;
 	CreateStaticBuffer(renderSystem.core.device, batch, &zero, sizeof(UINT), D3D12_RESOURCE_STATE_COPY_SOURCE, &zeroCounterBuffer);
@@ -91,6 +88,11 @@ void Grass::clear()
 		}
 }
 
+void Grass::enableUpdating(bool enabled)
+{
+	updatingEnabled = enabled;
+}
+
 void Grass::initChunk(GrassChunk& chunk, RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch)
 {
 	struct GrassInfo
@@ -117,10 +119,15 @@ void Grass::initChunk(GrassChunk& chunk, RenderSystem& renderSystem, GraphicsRes
 	chunk.infoCounter = resources.shaderBuffers.CreateStructuredBuffer(sizeof(UINT));
 	chunk.infoCounter->SetName(L"GrassInfoCounter");
 
-	chunk.indirect.commandSignature = commandSignature;
-	chunk.indirect.commandBuffer = resources.shaderBuffers.CreateStructuredBuffer(sizeof(D3D12_DRAW_INDEXED_ARGUMENTS));
-	chunk.indirect.commandBuffer->SetName(L"GrassCommandBuffer");
+ 	chunk.indirect.commandSignature = commandSignature;
 	chunk.indirect.maxCommands = 1;
+
+	D3D12_DRAW_INDEXED_ARGUMENTS cmd{};
+	cmd.IndexCountPerInstance = grassModel->indexCount;
+
+	CreateStaticBuffer(renderSystem.core.device, batch, &cmd, TotalChunks, sizeof(D3D12_DRAW_INDEXED_ARGUMENTS),
+		D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, &chunk.indirect.commandBuffer, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+	chunk.indirect.commandBuffer->SetName(L"GrassCommandBuffer");
 }
 
 void Grass::regenerateChunk(ID3D12GraphicsCommandList* commandList, GrassChunk& chunk, const ProgressiveTerrain& terrain)
@@ -182,14 +189,14 @@ void Grass::updateChunk(ID3D12GraphicsCommandList* commandList, GrassChunk& chun
 {
 	CD3DX12_RESOURCE_BARRIER barrier[2]{};
 
-	barrier[0] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.indirect.commandBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
-	commandList->ResourceBarrier(1, barrier);
-
-	commandList->CopyBufferRegion(chunk.indirect.commandBuffer.Get(), 0, defaultCommandBuffer.Get(), 0, sizeof(D3D12_DRAW_INDEXED_ARGUMENTS));
-
-	barrier[0] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.indirect.commandBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	barrier[0] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.indirect.commandBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	barrier[1] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.transformationBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	commandList->ResourceBarrier(2, barrier);
+
+	vegetationClearCS.dispatch(commandList, 1, chunk.indirect.commandBuffer.Get());
+
+	CD3DX12_RESOURCE_BARRIER uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(chunk.indirect.commandBuffer.Get());
+	commandList->ResourceBarrier(1, &uavBarrier);
 
 	grassUpdateCS.dispatch(commandList, cullingInput, chunk.transformationBuffer.Get(), chunk.indirect.commandBuffer.Get(), chunk.infoBuffer.Get(), chunk.infoCounter.Get());
 
@@ -200,6 +207,9 @@ void Grass::updateChunk(ID3D12GraphicsCommandList* commandList, GrassChunk& chun
 
 void Grass::update(ID3D12GraphicsCommandList* commandList, const Camera& camera, const ProgressiveTerrain& terrain)
 {
+	if (!updatingEnabled)
+		return;
+
 	CommandsMarker marker(commandList, "Grass", PixColor::ForestGreen);
 
 	auto& terrainParams = terrain.params;
@@ -240,6 +250,17 @@ void Grass::update(ID3D12GraphicsCommandList* commandList, const Camera& camera,
 				chunk.dirty = false;
 			}
 		}
+}
+
+void Grass::updateCulling(ID3D12GraphicsCommandList* commandList, const Camera& camera, const ProgressiveTerrain& terrain)
+{
+	if (!updatingEnabled)
+		return;
+
+	CommandsMarker marker(commandList, "Grass", PixColor::ForestGreen);
+
+	auto& terrainParams = terrain.params;
+	float chunkSize = terrainParams.tileSize / ChunksPerTerrainTile;
 
 	GrassUpdateComputeShader::Input cullingInput{};
 	camera.extractFrustumPlanes(cullingInput.frustumPlanes);

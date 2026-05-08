@@ -490,6 +490,8 @@ void SignatureInfo::createResourcesData(ResourcesInfo& resources, GraphicsResour
 			r.type = GpuBufferType::Instancing;
 		else if (b.info.Name == "GeometryBuffer")
 			r.type = GpuBufferType::Geometry;
+		else if (b.info.Name == "RedirectBuffer")
+			r.type = GpuBufferType::Redirect;
 
 		r.rootIndex = rootIndex++;
 		resources.buffers.push_back(r);

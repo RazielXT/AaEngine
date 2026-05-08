@@ -24,6 +24,7 @@ enum class GpuBufferType
 	Root,
 	Instancing,
 	Geometry,
+	Redirect,
 	COUNT
 };
 

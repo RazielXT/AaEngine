@@ -88,3 +88,8 @@ D3D12_GPU_VIRTUAL_ADDRESS ShaderConstantsProvider::getGeometryBuffer() const
 {
 	return entity->geometry.geometryCustomBuffer;
 }
+
+D3D12_GPU_VIRTUAL_ADDRESS ShaderConstantsProvider::getGeometryRedirectBuffer() const
+{
+	return entity->geometry.geometryRedirectBuffer;
+}

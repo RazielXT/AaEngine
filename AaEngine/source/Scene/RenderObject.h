@@ -26,7 +26,7 @@ using RenderObjectFlags = uint8_t;
 
 namespace RenderObjectFlag
 {
-	enum Value
+	enum Value : RenderObjectFlags
 	{
 		NoShadow = 1,
 		NoCascade1 = 1 << 1,

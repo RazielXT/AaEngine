@@ -30,6 +30,7 @@ cbuffer PSSMShadows : register(b1)
 }
 
 StructuredBuffer<VegetationInfo> GeometryBuffer : register(t0);
+StructuredBuffer<uint> RedirectBuffer : register(t1);
 
 struct PSInput
 {
@@ -53,7 +54,7 @@ PSInput VSMain(uint vertexIdx : SV_VertexId, uint instanceId : SV_InstanceID)
 	float2 uv = coords[vertexIdx];
 	float top = 1 - uv.y;
 
-	VegetationInfo v = GeometryBuffer[instanceId];
+	VegetationInfo v = GeometryBuffer[RedirectBuffer[instanceId]];
 
 	float yRot = clamp((ViewCameraPosition.y - v.position.y) / 1000, -0.5, 1);
 	float3 pos = float3((uv.x - 0.5) * v.scale * 0.5, top * v.scale * yRot, top * v.scale);

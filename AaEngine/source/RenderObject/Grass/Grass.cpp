@@ -312,5 +312,5 @@ void GrassUpdateComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, 
 	commandList->SetComputeRootUnorderedAccessView(3, transformBuffer->GetGPUVirtualAddress());
 	commandList->SetComputeRootUnorderedAccessView(4, commands->GetGPUVirtualAddress());
 
-	commandList->Dispatch(groups * groups, 1, 1);
+	commandList->Dispatch(groups * groups, 64, 1);
 }

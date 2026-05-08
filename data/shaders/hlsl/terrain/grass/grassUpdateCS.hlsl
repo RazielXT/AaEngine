@@ -48,61 +48,58 @@ bool isVisible(float3 position, float radius, float scale)
 }
 
 [numthreads(64, 1, 1)]
-void main(uint3 dispatchThreadID : SV_DispatchThreadID, uint3 groupID : SV_GroupID, uint groupIndex : SV_GroupIndex)
+void main(uint3 groupID : SV_GroupID, uint groupIndex : SV_GroupIndex)
 {
 	const float Radius = 5;
 	uint totalCount = infoCounterBuffer.Load(0);
 
-	for (uint i = 0; i < 64; i++)
+	uint x = (groupID.x * 64 + groupID.y) * 64 + groupIndex;
+	bool inBounds = (x < totalCount);
+
+	if (!WaveActiveAnyTrue(inBounds))
+		return;
+
+	bool visible = false;
+	RenderGrassInfo renderInfo;
+
+	if (inBounds)
 	{
-		uint x = (groupID.x * 64 + i) * 64 + groupIndex; 
-		bool inBounds = (x < totalCount);
+		GrassInfo info = infoBuffer[x];
 
-	   if (!WaveActiveAnyTrue(inBounds))
-			break;
-
-		bool visible = false;
-		RenderGrassInfo renderInfo;
-
-		if (inBounds)
-		{
-			GrassInfo info = infoBuffer[x];
-
-			float3 testPos = info.position + float3(0, Radius, 0);
-			visible = isVisible(testPos, Radius, info.scale);
-
-			if (visible)
-			{
-				renderInfo.position = info.position;
-				/*float2 rotationScale = UnpackR16G16_FLOAT(info.rotationScale);*/
-				renderInfo.scale    = info.scale;
-				renderInfo.cosYaw   = cos(info.rotation);
-				renderInfo.sinYaw   = sin(info.rotation);
-			}
-		}
-
-		// If nobody in the wave is visible this iteration, skip to next block
-		if (!WaveActiveAnyTrue(visible))
-			continue;
-
-		// Count how many visible lanes in this wave
-		uint waveVisibleCount = WaveActiveCountBits(visible);
-
-		// One atomic per wave to reserve a contiguous block
-		uint baseIndex = 0;
-		if (WaveIsFirstLane())
-		{
-			drawCommandsBuffer.InterlockedAdd(4, waveVisibleCount, baseIndex);
-		}
-
-		// Broadcast baseIndex to all lanes
-		baseIndex = WaveReadLaneFirst(baseIndex);
-		// Per-lane offset among visible lanes
-		uint laneOffset = WavePrefixCountBits(visible);
+		float3 testPos = info.position + float3(0, Radius, 0);
+		visible = isVisible(testPos, Radius, info.scale);
 
 		if (visible)
 		{
-			transformBuffer[baseIndex + laneOffset] = renderInfo;
+			renderInfo.position = info.position;
+			/*float2 rotationScale = UnpackR16G16_FLOAT(info.rotationScale);*/
+			renderInfo.scale    = info.scale;
+			renderInfo.cosYaw   = cos(info.rotation);
+			renderInfo.sinYaw   = sin(info.rotation);
 		}
+	}
+
+	// If nobody in the wave is visible this iteration, skip to next block
+	if (!WaveActiveAnyTrue(visible))
+		return;
+
+	// Count how many visible lanes in this wave
+	uint waveVisibleCount = WaveActiveCountBits(visible);
+
+	// One atomic per wave to reserve a contiguous block
+	uint baseIndex = 0;
+	if (WaveIsFirstLane())
+	{
+		drawCommandsBuffer.InterlockedAdd(4, waveVisibleCount, baseIndex);
+	}
+
+	// Broadcast baseIndex to all lanes
+	baseIndex = WaveReadLaneFirst(baseIndex);
+	// Per-lane offset among visible lanes
+	uint laneOffset = WavePrefixCountBits(visible);
+
+	if (visible)
+	{
+		transformBuffer[baseIndex + laneOffset] = renderInfo;
 	}
 }

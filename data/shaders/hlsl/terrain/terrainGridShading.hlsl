@@ -142,7 +142,7 @@ GBufferOutput PSMain(PSInput input)
 	float4 grassTexture = GetTexture2D(TexIdGrass).Sample(sampler, texCoords * 10);
 
 	float3 mud = (rockTexture.rgb + grassTexture.ggg) * 0.5 * float3(0.4, 0.2, 0.1) * 0.8; // Color for brown
-	float3 grass = grassTexture.rgb * float3(0.6, 0.9, 0.3) * 0.5;
+	float3 grass = grassTexture.rgb * float3(0.5, 0.8, 0.55) * 0.45;
 
 	float heightWeight = saturate((input.worldPosition.y - WorldPosition.y) / GridHeightWidth.x);
 	heightWeight = 1 - smoothstep(0.1,0.6,heightWeight);

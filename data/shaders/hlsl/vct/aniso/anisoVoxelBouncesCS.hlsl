@@ -47,7 +47,7 @@ void main(uint3 id : SV_DispatchThreadID)
 		PrevFacePosX, PrevFaceNegX, PrevFacePosY, PrevFaceNegY, PrevFacePosZ, PrevFaceNegZ,
 		VoxelSampler);
 
-	float3 bounceColor = baseColor * traceSample.rgb;
+	float3 bounceColor = baseColor * traceSample.rgb * 1.5;
 	float shadow = diffuse.w;
 	bounceColor += baseColor * shadow;
 

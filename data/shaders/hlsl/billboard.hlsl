@@ -79,8 +79,8 @@ PSInput VSMain(uint vertexIdx : SV_VertexId, uint instanceId : SV_InstanceID)
 	return output;
 }
 
-static const float AlphaThreshold = 0.8f;
-static const float AlphaFadeThreshold = 5000;
+static const float AlphaThreshold = 0.3f;
+static const float AlphaFadeThreshold = 500000;
 
 float Hash12(float2 p)
 {

@@ -16,8 +16,8 @@ void Grass::initialize(RenderSystem& renderSystem, GraphicsResources& resources,
 	csShader = resources.shaders.getShader("grassUpdateCS", ShaderType::Compute, ShaderRef{ "terrain/grass/grassUpdateCS.hlsl", "main", "cs_6_6", { {"FRUSTUM_CULLING", "1"}, {"DISTANCE_CULLING", "0"} } });
 	grassUpdateCS.init(*renderSystem.core.device, *csShader);
 
-	csShader = resources.shaders.getShader("vegetationClearCS", ShaderType::Compute, ShaderRef{ "terrain/vegetation/vegetationClearCS.hlsl", "main", "cs_6_6" });
-	vegetationClearCS.init(*renderSystem.core.device, *csShader);
+	csShader = resources.shaders.getShader("indirectDrawIndexedClearCS", ShaderType::Compute);
+	indirectDrawClearCS.init(*renderSystem.core.device, *csShader);
 
 	grassModel = resources.models.getModel("GrassBlade.mesh", batch, { "meshes/grass", true });
 	grassMaterial = resources.materials.getMaterial("grassBladeInstanced", batch);
@@ -193,7 +193,7 @@ void Grass::updateChunk(ID3D12GraphicsCommandList* commandList, GrassChunk& chun
 	barrier[1] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.transformationBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	commandList->ResourceBarrier(2, barrier);
 
-	vegetationClearCS.dispatch(commandList, 1, chunk.indirect.commandBuffer.Get());
+	indirectDrawClearCS.dispatch(commandList, 1, chunk.indirect.commandBuffer.Get());
 
 	CD3DX12_RESOURCE_BARRIER uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(chunk.indirect.commandBuffer.Get());
 	commandList->ResourceBarrier(1, &uavBarrier);

@@ -5,6 +5,7 @@
 #include "Resources/Compute/ComputeShader.h"
 #include "Scene/EntityGeometry.h"
 #include "RenderObject/Terrain/TerrainGridParams.h"
+#include "Resources/Compute/IndirectCommandsCS.h"
 
 class RenderWorld;
 class ProgressiveTerrain;
@@ -24,13 +25,6 @@ public:
 	};
 
 	void dispatch(ID3D12GraphicsCommandList* commandList, const Input& input, ID3D12Resource* infoBuffer, ID3D12Resource* subgroupMeta);
-};
-
-class VegetationClearComputeShader : public ComputeShader
-{
-public:
-
-	void dispatch(ID3D12GraphicsCommandList* commandList, UINT commandCount, ID3D12Resource* commands);
 };
 
 class VegetationUpdateComputeShader : public ComputeShader
@@ -90,7 +84,7 @@ private:
 	XMINT2 gridCenterChunk = { 0, 0 };
 
 	VegetationFindComputeShader vegetationFindCS;
-	VegetationClearComputeShader vegetationClearCS;
+	IndirectDrawIndexedClearCS indirectDrawClearCS;
 	VegetationUpdateComputeShader vegetationUpdateCS;
 	bool updatingEnabled = true;
 

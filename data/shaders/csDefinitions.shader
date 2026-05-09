@@ -12,6 +12,13 @@ compute_shader generateXYMips4xCS
 	profile cs_6_6
 }
 
+compute_shader indirectDrawIndexedClearCS
+{
+	file utils/indirectDrawIndexedClearCS.hlsl
+	entry main
+	profile cs_6_6
+}
+
 compute_shader AoPrepareDepthBuffers
 {
 	file postprocess/ssao/AoPrepareDepthBuffers1CS.hlsl

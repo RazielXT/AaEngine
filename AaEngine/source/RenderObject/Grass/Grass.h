@@ -3,9 +3,9 @@
 #include "RenderCore/RenderSystem.h"
 #include "Resources/GraphicsResources.h"
 #include "Resources/Compute/ComputeShader.h"
+#include "Resources/Compute/IndirectCommandsCS.h"
 #include "Scene/EntityGeometry.h"
 #include "RenderObject/Terrain/TerrainGridParams.h"
-#include "../Vegetation/Vegetation.h"
 
 class RenderWorld;
 class ProgressiveTerrain;
@@ -88,7 +88,7 @@ private:
 
 	GrassFindComputeShader grassFindCS;
 	GrassUpdateComputeShader grassUpdateCS;
-	VegetationClearComputeShader vegetationClearCS;
+	IndirectDrawIndexedClearCS indirectDrawClearCS;
 	bool updatingEnabled = true;
 
 	void initChunk(GrassChunk& chunk, RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch);

@@ -370,6 +370,9 @@
     <ClCompile Include="source\Utils\DxUtils.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="source\Resources\Compute\IndirectCommandsCS.cpp">
+      <Filter>Source Files\Resources\Compute</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\App\TargetWindow.h">
@@ -680,6 +683,9 @@
     </ClInclude>
     <ClInclude Include="source\Utils\DxUtils.h">
       <Filter>Source Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Resources\Compute\IndirectCommandsCS.h">
+      <Filter>Source Files\Resources\Compute</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

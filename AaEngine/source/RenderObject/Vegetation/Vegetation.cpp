@@ -14,11 +14,11 @@ void Vegetation::initialize(RenderSystem& renderSystem, GraphicsResources& resou
 	auto csShader = resources.shaders.getShader("vegetationFindCS", ShaderType::Compute, ShaderRef{ "terrain/vegetation/vegetationFindCS.hlsl", "main", "cs_6_6" });
 	vegetationFindCS.init(*renderSystem.core.device, *csShader);
 
-	csShader = resources.shaders.getShader("vegetationClearCS", ShaderType::Compute, ShaderRef{ "terrain/vegetation/vegetationClearCS.hlsl", "main", "cs_6_6" });
-	vegetationClearCS.init(*renderSystem.core.device, *csShader);
-
 	csShader = resources.shaders.getShader("vegetationUpdateCS", ShaderType::Compute, ShaderRef{ "terrain/vegetation/vegetationUpdateCS.hlsl", "main", "cs_6_6" });
 	vegetationUpdateCS.init(*renderSystem.core.device, *csShader);
+
+	csShader = resources.shaders.getShader("indirectDrawIndexedClearCS", ShaderType::Compute);
+	indirectDrawClearCS.init(*renderSystem.core.device, *csShader);
 
 	createBillboardIndexBuffer(renderSystem, batch);
 	initializeImpostors(renderSystem, batch);
@@ -260,7 +260,7 @@ void Vegetation::updateCulling(ID3D12GraphicsCommandList* commandList, const Cam
 	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(sharedCommandBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	commandList->ResourceBarrier(1, &barrier);
 
-	vegetationClearCS.dispatch(commandList, TotalChunks, sharedCommandBuffer.Get());
+	indirectDrawClearCS.dispatch(commandList, TotalChunks, sharedCommandBuffer.Get());
 
 	CD3DX12_RESOURCE_BARRIER uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(sharedCommandBuffer.Get());
 	commandList->ResourceBarrier(1, &uavBarrier);
@@ -330,17 +330,6 @@ void VegetationFindComputeShader::dispatch(ID3D12GraphicsCommandList* commandLis
 	commandList->SetComputeRootUnorderedAccessView(2, subgroupMeta->GetGPUVirtualAddress());
 
 	commandList->Dispatch(groups, groups, 1);
-}
-
-void VegetationClearComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, UINT commandCount, ID3D12Resource* commands)
-{
-	commandList->SetPipelineState(pipelineState.Get());
-	commandList->SetComputeRootSignature(signature);
-
-	commandList->SetComputeRoot32BitConstants(0, 1, &commandCount, 0);
-	commandList->SetComputeRootUnorderedAccessView(1, commands->GetGPUVirtualAddress());
-
-	commandList->Dispatch((commandCount + 63) / 64, 1, 1);
 }
 
 void VegetationUpdateComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, const Input& input, ID3D12Resource* subgroupMeta, D3D12_GPU_VIRTUAL_ADDRESS commandsAddr, ID3D12Resource* redirectBuffer)

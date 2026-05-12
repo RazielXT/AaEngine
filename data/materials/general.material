@@ -117,6 +117,22 @@ material GrassVCT : General
 	}
 }
 
+material Tire : General
+{
+	texture Diffuse
+	{
+		file tire.dds
+	}
+
+	texture Normal
+	{
+		file tire_norm.dds
+	}
+
+	shader_defines ALPHA_TEST
+	culling none
+}
+
 material TreeTrunk_ : General
 {
 	texture Diffuse

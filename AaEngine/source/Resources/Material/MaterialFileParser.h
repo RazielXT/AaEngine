@@ -73,6 +73,8 @@ struct MaterialRef
 
 	std::array<std::optional<std::string>, int(MaterialTechnique::COUNT)> techniqueMaterial;
 
+	bool alphaTest = false;
+
 	struct TechniqueOverride
 	{
 		MaterialTechnique technique;

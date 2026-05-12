@@ -11,6 +11,18 @@ static bool parseToggleValue(const std::string& value)
 
 using ParsedObjects = std::map<std::string, const Config::Object*>;
 
+static void UpdateShaderUsageInfo(MaterialRef& mat, ShaderRef& ref, ShaderType shaderType)
+{
+	if (shaderType == ShaderType::Pixel)
+	{
+		for (auto& d : ref.defines)
+		{
+			if (d.first == "ALPHA_TEST")
+				mat.alphaTest = true;
+		}
+	}
+}
+
 static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const Config::Object& obj, const ParsedObjects& previous)
 {
 	if (obj.params.size() > 1 && obj.params[0] == ":")
@@ -59,6 +71,7 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 						auto generatedName = target = ShaderTypeString::ShortName(shaderType) + "_" + mat.name;
 						auto& ref = shaders.shaderRefs[shaderType][generatedName];
 						ShaderFileParser::ParseShaderParams(ref, member);
+						UpdateShaderUsageInfo(mat, ref, shaderType);
 					}
 				}
 			}
@@ -104,6 +117,7 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 						}
 
 						sourceShader = customizedName;
+						UpdateShaderUsageInfo(mat, customization.customization, shaderType);
 					}
 				};
 

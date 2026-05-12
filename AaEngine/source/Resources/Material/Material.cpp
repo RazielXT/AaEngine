@@ -417,7 +417,7 @@ const char* MaterialInstance::GetTechniqueOverride(MaterialTechnique technique) 
 		if (!ref.pipeline.depth.write)
 			return "";
 
-		return HasInstancing() ? "DepthInstancing" : "Depth";
+		return HasInstancing() ? "DepthInstancing" : (ref.pipeline.culling == D3D12_CULL_MODE_NONE ? "DepthCullNone" : "Depth");
 	}
 	else if (technique == MaterialTechnique::Voxelize)
 		return HasInstancing() ? "VoxelizeInstancing" : "Voxelize";

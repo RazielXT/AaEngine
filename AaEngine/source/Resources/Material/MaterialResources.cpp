@@ -65,7 +65,14 @@ void MaterialResources::loadMaterials(std::string directory, bool subDirectories
 	MaterialFileParser::parseAllMaterialFiles(knownMaterials, shaders, directory, subDirectories);
 	resources.shaders.addShaderReferences(shaders);
 
-	knownMaterials.reserve(knownMaterials.size() * 2);
+	knownMaterials.reserve(knownMaterials.size() * 3);
+
+	MaterialRef* depthAlpha{};
+	for (auto& m : knownMaterials)
+	{
+		if (m.name == "DepthAlpha")
+			depthAlpha = &m;
+	}
 
 	for (size_t i = 0; i < knownMaterials.size(); i++)
 	{
@@ -84,6 +91,17 @@ void MaterialResources::loadMaterials(std::string directory, bool subDirectories
 
 			wMat.base = wMat.name = info.name + "_WIRE";
 			info.techniqueMaterial[int(MaterialTechnique::Wireframe)] = wMat.name;
+		}
+
+		if (!info.abstract && info.pipeline.fill == D3D12_FILL_MODE_SOLID && !info.techniqueMaterial[int(MaterialTechnique::Depth)] && info.alphaTest && !info.name.ends_with("Depth") && !info.name.starts_with("Depth"))
+		{
+			auto& wMat = knownMaterials.emplace_back();
+			wMat.base = info.pipeline.culling == D3D12_CULL_MODE_NONE ? "DepthAlphaCullNone" : "DepthAlpha";
+			wMat.name = info.name + "_" + wMat.base;
+			wMat.resources.textures.push_back(info.resources.textures.front());
+
+			info.techniqueMaterial[int(MaterialTechnique::Depth)] = wMat.name;
+			info.techniqueMaterial[int(MaterialTechnique::DepthShadowmap)] = wMat.name;
 		}
 	}
 

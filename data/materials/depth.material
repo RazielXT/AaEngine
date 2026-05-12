@@ -8,13 +8,31 @@ material Depth
 	}
 }
 
-material DepthInstancing
+material DepthCullNone : Depth
 {
-	vertex_shader
+	culling none
+}
+
+material DepthInstancing : Depth
+{
+	shader_defines ALPHA_TEST
+}
+
+material DepthAlpha : Depth
+{
+	pixel_shader
 	{
 		file depthWrite.hlsl
-		entry VSMain
-		profile vs_6_6
-		defines INSTANCED
+		entry PSMain
+		profile ps_6_6
 	}
+
+	texture Diffuse
+
+	shader_defines ALPHA_TEST
+}
+
+material DepthAlphaCullNone : DepthAlpha
+{
+	culling none
 }

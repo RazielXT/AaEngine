@@ -1,11 +1,12 @@
 #pragma once
 
-#include "JoltHeader.h"
+#include "../JoltHeader.h"
 #include <Jolt/Renderer/DebugRenderer.h>
 #include "Utils/MathUtils.h"
 #include "RenderCore/RenderSystem.h"
 #include "ResourceUploadBatch.h"
 #include "Resources/GraphicsResources.h"
+#include "HeightmapDebugMeshOptimizer.h"
 #include <memory>
 
 class PhysicsRenderer final : public JPH::DebugRenderer
@@ -55,4 +56,6 @@ private:
 	renderCtx;
 
 	AssignedMaterial* GetMaterial(const VertexBufferModel&, EDrawMode);
+
+	HeightmapDebugMeshOptimizer<DebugRenderer::Vertex, DebugRenderer::Triangle, 64> heightmapOptimizer;
 };

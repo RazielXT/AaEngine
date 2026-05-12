@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Scene/RenderWorld.h"
-#include "PhysicsManager.h"
+#include "Physics/PhysicsManager.h"
 #include <filesystem>
 
 namespace SceneParser

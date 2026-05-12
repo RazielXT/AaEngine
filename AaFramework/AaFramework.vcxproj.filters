@@ -5,9 +5,12 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Source Files\Physics">
-      <UniqueIdentifier>{839f81cc-880a-4424-8ba7-7489016d5bd0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Physics">
+      <UniqueIdentifier>{b3df8f1e-49e3-43f6-9e00-2339b2588561}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Physics\Render">
+      <UniqueIdentifier>{d16e82a9-6f5f-457d-a324-b42d938a01f2}</UniqueIdentifier>
     <Filter Include="Source Files\SceneGraph">
       <UniqueIdentifier>{aba07fc9-201e-4f7e-afec-9390a3f19904}</UniqueIdentifier>
     </Filter>
@@ -25,16 +28,19 @@
     <ClCompile Include="source\SceneParser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\PhysicsManager.cpp">
+    <ClCompile Include="source\Managers\EntityRenderManager.cpp">
+      <Filter>Source Files\Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Physics\Render\PhysicsRenderer.cpp">
+      <Filter>Source Files\Physics\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Physics\Render\PhysicsRenderTask.cpp">
+      <Filter>Source Files\Physics\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Physics\PhysicsManager.cpp">
       <Filter>Source Files\Physics</Filter>
     </ClCompile>
-    <ClCompile Include="source\PhysicsRenderer.cpp">
-      <Filter>Source Files\Physics</Filter>
-    </ClCompile>
-    <ClCompile Include="source\PhysicsRenderTask.cpp">
-      <Filter>Source Files\Physics</Filter>
-    </ClCompile>
-    <ClCompile Include="source\TerrainPhysics.cpp">
+    <ClCompile Include="source\Physics\TerrainPhysics.cpp">
       <Filter>Source Files\Physics</Filter>
     </ClCompile>
   </ItemGroup>
@@ -51,19 +57,23 @@
     <ClInclude Include="source\SceneParser.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="source\PhysicsManager.h">
+    </ClInclude>
+    <ClInclude Include="source\Physics\Render\HeightmapDebugMeshOptimizer.h">
+      <Filter>Source Files\Physics\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Physics\Render\PhysicsRenderer.h">
+      <Filter>Source Files\Physics\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Physics\Render\PhysicsRenderTask.h">
+      <Filter>Source Files\Physics\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Physics\JoltHeader.h">
       <Filter>Source Files\Physics</Filter>
     </ClInclude>
-    <ClInclude Include="source\PhysicsRenderer.h">
+    <ClInclude Include="source\Physics\PhysicsManager.h">
       <Filter>Source Files\Physics</Filter>
     </ClInclude>
-    <ClInclude Include="source\JoltHeader.h">
-      <Filter>Source Files\Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="source\PhysicsRenderTask.h">
-      <Filter>Source Files\Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="source\TerrainPhysics.h">
+    <ClInclude Include="source\Physics\TerrainPhysics.h">
       <Filter>Source Files\Physics</Filter>
     </ClInclude>
   </ItemGroup>

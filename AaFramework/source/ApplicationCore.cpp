@@ -10,7 +10,7 @@
 #include "FrameCompositor/FrameCompositor.h"
 #include "FrameCompositor/Tasks/VoxelizeSceneTask.h"
 #include "RenderObject/Terrain/TerrainGridParams.h"
-#include "PhysicsRenderTask.h"
+#include "Physics/Render/PhysicsRenderTask.h"
 #include <dxgidebug.h>
 #include <filesystem>
 

@@ -6,8 +6,8 @@
 #include "RenderObject/DrawPrimitives.h"
 #include "FrameCompositor/FrameCompositor.h"
 #include "Resources/GraphicsResources.h"
-#include "PhysicsManager.h"
-#include "TerrainPhysics.h"
+#include "Physics/PhysicsManager.h"
+#include "Physics/TerrainPhysics.h"
 #include "RenderObject/Sky/SkyRendering.h"
 
 struct DebugReporter

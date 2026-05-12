@@ -7,7 +7,7 @@
 #include <Jolt/Core/JobSystemThreadPool.h>
 #include "Utils/MathUtils.h"
 #include <format>
-#include "PhysicsRenderer.h"
+#include "Render/PhysicsRenderer.h"
 
 class RenderEntity;
 struct ObjectTransformation;
@@ -32,6 +32,8 @@ public:
 	void init();
 
 	JPH::BodyID createBox(Vector3 extends, const ObjectTransformation& transformation, Vector3 offset, const BodyParams& params = {});
+
+	JPH::BodyID createCylinder(float height, float radius, const ObjectTransformation& transformation, Vector3 offset, const BodyParams& params = {});
 
 	JPH::BodyID createSphere(float radius, Vector3 position, const BodyParams& params = {});
 

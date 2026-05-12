@@ -140,21 +140,22 @@
     <ClCompile Include="source\FreeCamera.cpp" />
     <ClCompile Include="source\ApplicationCore.cpp" />
     <ClCompile Include="source\InputHandler.cpp" />
-    <ClCompile Include="source\PhysicsManager.cpp" />
-    <ClCompile Include="source\PhysicsRenderer.cpp" />
-    <ClCompile Include="source\PhysicsRenderTask.cpp" />
-    <ClCompile Include="source\TerrainPhysics.cpp" />
+    <ClCompile Include="source\Physics\PhysicsManager.cpp" />
+    <ClCompile Include="source\Physics\Render\PhysicsRenderer.cpp" />
+    <ClCompile Include="source\Physics\Render\PhysicsRenderTask.cpp" />
+    <ClCompile Include="source\Physics\TerrainPhysics.cpp" />
     <ClCompile Include="source\SceneParser.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\FreeCamera.h" />
     <ClInclude Include="source\ApplicationCore.h" />
     <ClInclude Include="source\InputHandler.h" />
-    <ClInclude Include="source\JoltHeader.h" />
-    <ClInclude Include="source\PhysicsManager.h" />
-    <ClInclude Include="source\PhysicsRenderer.h" />
-    <ClInclude Include="source\PhysicsRenderTask.h" />
-    <ClInclude Include="source\TerrainPhysics.h" />
+    <ClInclude Include="source\Physics\JoltHeader.h" />
+    <ClInclude Include="source\Physics\PhysicsManager.h" />
+    <ClInclude Include="source\Physics\Render\HeightmapDebugMeshOptimizer.h" />
+    <ClInclude Include="source\Physics\Render\PhysicsRenderer.h" />
+    <ClInclude Include="source\Physics\Render\PhysicsRenderTask.h" />
+    <ClInclude Include="source\Physics\TerrainPhysics.h" />
     <ClInclude Include="source\SceneParser.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

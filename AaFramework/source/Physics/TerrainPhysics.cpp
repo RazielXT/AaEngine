@@ -179,11 +179,15 @@ void TerrainPhysics::startAsyncBuild(XMINT2 worldChunk, const void* readbackData
 
 	// The 960-pixel content region (pixels 32..991) maps to world [0, tileSize]
 	// No border offset needed — the content region IS the chunk area
+	// Add half-texel offset to match the visual shader's linear sampling:
+	// SampleLevel at texUV = (32+k)/1024 hits between texel centers 31.5+k and 32.5+k,
+	// so visual features appear at +0.5 texels compared to integer texel reads.
+	float halfTexel = params.tileSize / 960.0f * 0.5f;
 	Vector3 chunkMin = params.chunkWorldMin(worldChunk, params.tileSize);
 	Vector3 offset = {
-		chunkMin.x,
+		chunkMin.x + halfTexel,
 		chunkMin.y,
-		chunkMin.z
+		chunkMin.z + halfTexel
 	};
 
 	float tileSize = params.tileSize;
@@ -192,7 +196,11 @@ void TerrainPhysics::startAsyncBuild(XMINT2 worldChunk, const void* readbackData
 
 	auto future = std::async(std::launch::async, [ownedData, capturedRowPitch, tileSize, tileHeight, offset]() -> BodyCreationSettings
 	{
-		constexpr UINT physicsRes = 480;
+		// Sample 961 pixels (32..992 inclusive) so the last sample overlaps with
+		// the next chunk's first sample — pixel 992 of chunk A = pixel 32 of chunk B
+		// in the compute shader's world-space mapping.
+		// 961 samples = 960 intervals, cellSize = tileSize / 960.
+		constexpr UINT physicsRes = 961;
 		std::vector<float> heights(physicsRes * physicsRes);
 
 		const uint8_t* rawData = ownedData->data();
@@ -201,8 +209,8 @@ void TerrainPhysics::startAsyncBuild(XMINT2 worldChunk, const void* readbackData
 		{
 			for (UINT px = 0; px < physicsRes; px++)
 			{
-				UINT srcX = HeightmapBorder + px * 2;
-				UINT srcY = HeightmapBorder + py * 2;
+				UINT srcX = HeightmapBorder + px;
+				UINT srcY = HeightmapBorder + py;
 
 				const uint16_t* row = reinterpret_cast<const uint16_t*>(rawData + srcY * capturedRowPitch);
 				uint16_t sample = row[srcX];
@@ -211,8 +219,8 @@ void TerrainPhysics::startAsyncBuild(XMINT2 worldChunk, const void* readbackData
 			}
 		}
 
-		// 480 samples have 479 intervals between them, covering tileSize
-		float cellSize = tileSize / (float)(physicsRes - 1);
+		// 961 samples, 960 intervals covering tileSize
+		float cellSize = tileSize / 960.0f;
 		Vec3 scale = { cellSize, tileHeight, cellSize };
 
 		HeightFieldShapeSettings settings(heights.data(), Vec3(0, 0, 0), scale, physicsRes);

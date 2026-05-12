@@ -38,8 +38,8 @@ public:
 	std::vector<D3D12_INPUT_ELEMENT_DESC> vertexLayout;
 	uint32_t getFormatSize(DXGI_FORMAT t) const;
 
-	void CreateVertexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, const void* vertices, UINT vertexCount, UINT vertexSize);
-	void CreateVertexBuffer(ID3D12Resource* buffer, UINT vertexCount, UINT vertexSize);
+	void CreateVertexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, const void* vertices, UINT vertexCount, UINT vertexSize, bool noPositions = false);
+	void SetVertexBuffer(ID3D12Resource* buffer, UINT vertexCount, UINT vertexSize);
 	ID3D12Resource* vertexBuffer{};
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 	uint32_t vertexCount = 0;
@@ -48,7 +48,7 @@ public:
 	void CreateIndexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, const uint32_t* data, size_t dataCount);
 	void CreateIndexBufferGrid(ID3D12Device* device, ResourceUploadBatch* memory, UINT width, bool alternating = true);
 	void CreateIndexBufferStrip(ID3D12Device* device, ResourceUploadBatch* memory, UINT width, UINT height);
-	void CreateIndexBuffer(ID3D12Resource* buffer, uint32_t dataCount);
+	void SetIndexBuffer(ID3D12Resource* buffer, uint32_t dataCount);
 	ID3D12Resource* indexBuffer{};
 	D3D12_INDEX_BUFFER_VIEW indexBufferView;
 	uint32_t indexCount = 0;

@@ -71,8 +71,11 @@ JPH::DebugRenderer::Batch PhysicsRenderer::CreateTriangleBatch(const Triangle* i
 	PrepareUploadBatch();
 
 	ModelBatch* primitive = new ModelBatch();
-	primitive->model.CreateVertexBuffer(renderSystem.core.device, batch.get(), inTriangles, 3 * inTriangleCount, sizeof(Vertex));
-	primitive->model.calculateBounds();
+
+	if (inTriangleCount == 8192)
+		heightmapOptimizer.ReconstructGrid(renderSystem.core.device, *batch, primitive->model, inTriangles);
+	else
+		primitive->model.CreateVertexBuffer(renderSystem.core.device, batch.get(), inTriangles, 3 * inTriangleCount, sizeof(Vertex), true);
 
 	return primitive;
 }
@@ -82,9 +85,8 @@ JPH::DebugRenderer::Batch PhysicsRenderer::CreateTriangleBatch(const Vertex* inV
 	PrepareUploadBatch();
 
 	ModelBatch* primitive = new ModelBatch();
-	primitive->model.CreateVertexBuffer(renderSystem.core.device, batch.get(), inVertices, inVertexCount, sizeof(Vertex));
+	primitive->model.CreateVertexBuffer(renderSystem.core.device, batch.get(), inVertices, inVertexCount, sizeof(Vertex), true);
 	primitive->model.CreateIndexBuffer(renderSystem.core.device, batch.get(), inIndices, (size_t)inIndexCount);
-	primitive->model.calculateBounds();
 
 	return primitive;
 }

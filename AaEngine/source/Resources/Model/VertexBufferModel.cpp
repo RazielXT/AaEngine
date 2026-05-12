@@ -156,7 +156,7 @@ uint32_t VertexBufferModel::getLayoutVertexSize(uint16_t slot) const
 	return sz;
 }
 
-void VertexBufferModel::CreateVertexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, const void* vertices, UINT vc, UINT vertexSize)
+void VertexBufferModel::CreateVertexBuffer(ID3D12Device* device, ResourceUploadBatch* memory, const void* vertices, UINT vc, UINT vertexSize, bool noPositions)
 {
 	vertexCount = vc;
 
@@ -172,6 +172,7 @@ void VertexBufferModel::CreateVertexBuffer(ID3D12Device* device, ResourceUploadB
 	vertexBufferView.StrideInBytes = vertexSize;
 	vertexBuffer->SetName(L"VB");
 
+	if (!noPositions)
 	{
 		D3D12_INPUT_ELEMENT_DESC* desc = nullptr;
 		for (auto& f : vertexLayout)
@@ -199,9 +200,13 @@ void VertexBufferModel::CreateVertexBuffer(ID3D12Device* device, ResourceUploadB
 			}
 		}
 	}
+	else
+	{
+		calculateBounds(vertices, vc, vertexSize, vertexLayout);
+	}
 }
 
-void VertexBufferModel::CreateVertexBuffer(ID3D12Resource* buffer, UINT vc, UINT vertexSize)
+void VertexBufferModel::SetVertexBuffer(ID3D12Resource* buffer, UINT vc, UINT vertexSize)
 {
 	vertexCount = vc;
 	vertexBuffer = buffer;
@@ -254,7 +259,7 @@ void VertexBufferModel::CreateIndexBuffer(ID3D12Device* device, ResourceUploadBa
 	}
 }
 
-void VertexBufferModel::CreateIndexBuffer(ID3D12Resource* buffer, uint32_t dataCount)
+void VertexBufferModel::SetIndexBuffer(ID3D12Resource* buffer, uint32_t dataCount)
 {
 	owner = false;
 	indexCount = dataCount;

@@ -1,6 +1,7 @@
 #include "PhysicsManager.h"
 #include <Jolt/RegisterTypes.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/CylinderShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Collision/Shape/ScaledShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
@@ -99,6 +100,20 @@ namespace
 		return shape;
 	}
 
+	RefConst<Shape> CreateCylinderShape(float height, float radius, Vec3 offset, Vec3 scale)
+	{
+		RefConst<Shape> shape;
+		shape = new CylinderShape(height * 0.5f, radius);
+
+		if (offset != Vec3::sReplicate(0.0f))
+			shape = RotatedTranslatedShapeSettings(offset, Quat::sIdentity(), shape).Create().Get();
+
+		if (scale != Vec3::sReplicate(1.0f))
+			shape = new ScaledShape(shape, scale);
+
+		return shape;
+	}
+
 	RefConst<Shape> CreateSphereShape(float radius)
 	{
 		RefConst<Shape> shape;
@@ -133,6 +148,15 @@ static void applyBodyParams(BodyCreationSettings& s, const BodyParams& params)
 JPH::BodyID PhysicsManager::createBox(Vector3 extends, const ObjectTransformation& t, Vector3 offset, const BodyParams& params)
 {
 	BodyCreationSettings creation_settings(CreateBoxShape(toVec3(extends), toVec3(offset), toVec3(t.scale)), toVec3(t.position), toQuat(t.orientation), EMotionType::Static, Layers::NON_MOVING);
+	applyBodyParams(creation_settings, params);
+
+	bool isDynamic = params.mass > 0;
+	return system->GetBodyInterface().CreateAndAddBody(creation_settings, isDynamic ? EActivation::Activate : EActivation::DontActivate);
+}
+
+JPH::BodyID PhysicsManager::createCylinder(float height, float radius, const ObjectTransformation& t, Vector3 offset, const BodyParams& params /*= {}*/)
+{
+	BodyCreationSettings creation_settings(CreateCylinderShape(height, radius, toVec3(offset), Vec3(t.scale.x, t.scale.y, t.scale.x)), toVec3(t.position), toQuat(t.orientation), EMotionType::Static, Layers::NON_MOVING);
 	applyBodyParams(creation_settings, params);
 
 	bool isDynamic = params.mass > 0;

@@ -6,7 +6,7 @@
 #include "Editor/Editor.h"
 #include "Utils/ColorUtils.h"
 #include "imgui.h"
-#include "PhysicsRenderTask.h"
+#include "Physics/Render/PhysicsRenderTask.h"
 
 // Forward declare message handler from imgui_impl_win32.cpp
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -139,27 +139,22 @@ public:
 			auto pos = freeCamera.camera.getPosition();
 			auto shootVelocity = freeCamera.camera.getCameraDirection() * 30.f;
 
-			bool useSphere = (getRandomFloat01() < 0.5f);
+			enum Type { Sphere, Box, Cylinder, Tire } type{};
+			const char* meshes[] = { "sphere.mesh", "centeredBox.mesh", "cylinder.mesh", "wheel.mesh" };
 
-			const char* meshName = useSphere ? "sphere.mesh" : "centeredBox.mesh";
+			type = (Type) int(getRandomFloat01() * (float)std::size(meshes));
+			const char* meshName = meshes[type];
 			auto model = app.resources.models.getCoreModel(meshName);
-			auto material = app.resources.materials.getMaterial("General");
+			auto material = app.resources.materials.getMaterial(type == Tire ? "Tire" : "General");
 
 			auto ent = app.renderWorld.createEntity();
 			ent->setPosition(pos);
 			ent->setOrientation(getRandomQuaternion());
 			ent->geometry.fromModel(*model);
 			ent->material = material;
-			ent->Material().setParam("MaterialColor", getRandomSrgbColor());
 
-			Vector3 scale;
-
-			if (useSphere)
-				scale = Vector3(getRandomFloat(1.0f, 2.0f));
-			else
-				scale = Vector3(getRandomFloat(1.0f, 3.0f), getRandomFloat(1.0f, 3.0f), getRandomFloat(1.0f, 3.0f));
-
-			ent->setScale(scale);
+			if (type != Tire)
+				ent->Material().setParam("MaterialColor", getRandomSrgbColor());
 
 			// --- Physics body ---
 			JPH::BodyID id{};
@@ -167,12 +162,41 @@ public:
 			bodyParams.mass = getRandomFloat(1.0f, 3.0f);
 			bodyParams.velocity = shootVelocity;
 
-			if (useSphere)
+			Vector3 scale;
+
+			if (type == Sphere)
+				scale = Vector3(getRandomFloat(1.0f, 2.0f));
+			else if (type == Cylinder)
+			{
+				float xz = getRandomFloat(1.0f, 3.0f);
+				scale = Vector3(xz, getRandomFloat(1.0f, 3.0f), xz);
+			}
+			else if (type == Tire)
+			{
+				float xz = getRandomFloat(2.0f, 4.0f);
+				scale = Vector3(xz, getRandomFloat(1.0f, 2.0f), xz);
+
+				bodyParams.restitution = 0.6f;
+			}
+			else
+				scale = Vector3(getRandomFloat(1.0f, 3.0f), getRandomFloat(1.0f, 3.0f), getRandomFloat(1.0f, 3.0f));
+
+			ent->setScale(scale);
+
+			if (type == Sphere)
 			{
 				float radius = model->bbox.Extents.x * scale.x;
 				id = app.physicsMgr.createSphere(radius, pos, bodyParams);
 			}
-			else
+			else if (type == Cylinder)
+			{
+				id = app.physicsMgr.createCylinder(1.0f, 1.0f, ent->getTransformation(), {}, bodyParams);
+			}
+			else if (type == Tire)
+			{
+				id = app.physicsMgr.createConvexBody(model->positions, ent->getTransformation(), bodyParams);
+			}
+			else //box
 			{
 				id = app.physicsMgr.createBox({ 0.5f, 0.5f, 0.5f }, ent->getTransformation(), {}, bodyParams);
 			}

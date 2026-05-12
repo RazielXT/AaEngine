@@ -10,7 +10,7 @@
 #include "FrameCompositor/Tasks/DebugOverlayTask.h"
 #include "FrameCompositor/Tasks/VoxelizeSceneTask.h"
 #include "FrameCompositor/Tasks/SceneRenderTask.h"
-#include "PhysicsRenderTask.h"
+#include "Physics/Render/PhysicsRenderTask.h"
 #include "Resources/Shader/ShaderResources.h"
 #include "Utils/DxUtils.h"
 #include <algorithm>

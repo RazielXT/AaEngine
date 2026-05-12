@@ -125,11 +125,11 @@ PSInput VSMain(VSInput input)
 	#endif
 	result.currentPosition = result.position;
 #else
-	result.worldPosition = mul(input.position, WorldMatrix);
+	result.worldPosition = mul(input.position, WorldMatrix).xyz;
 	#ifdef VERTEX_WAVE
 		result.worldPosition.xyz = WindWave(result.worldPosition.xyz, 1-input.uv.y, Time);
 	#endif
-	result.position = mul(result.worldPosition, ViewProjectionMatrix);
+	result.position = mul(float4(result.worldPosition,1), ViewProjectionMatrix);
 	result.normal = normalize(mul(input.normal, (float3x3)WorldMatrix));
 
 	float4 previousWorldPosition = mul(input.position, PreviousWorldMatrix);

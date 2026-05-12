@@ -1,5 +1,9 @@
 #include "hlsl/common/NormalDecoding.hlsl"
 
+#if defined(GRID_SAMPLE_BICUBIC) || defined(GRID_SAMPLE_FAST_BICUBIC)
+#include "hlsl/common/BicubicSampling.hlsl"
+#endif
+
 struct GridTileData
 {
 	uint x;
@@ -108,8 +112,17 @@ GridVertexInfo ReadGridVertexInfo(GridTileData tile, uint vertexID, Texture2D<fl
 	gridPosition.xz -= offset * (2.0f / (float)TileWidthQuads);
 
 	float2 uv = gridPosition.xz / (TilesWidth * SmallestLodTileSize);
+	float2 heightmapUv = RemapGridTextureUV(uv);
 
-	gridPosition.y = heightMap.SampleLevel(sampler, RemapGridTextureUV(uv), 0) * HeightScale;
+#ifdef GRID_SAMPLE_BICUBIC
+	gridPosition.y = SampleBicubic(heightMap, sampler, heightmapUv, 1024.f);
+#elif defined(GRID_SAMPLE_FAST_BICUBIC)
+	gridPosition.y = SampleFastBicubic(heightMap, sampler, heightmapUv, 1024.f);
+#else
+	gridPosition.y = heightMap.SampleLevel(sampler, heightmapUv, 0);
+#endif
+
+	gridPosition.y *= HeightScale;
 	gridPosition.xyz += WorldPosition;
 
 #ifdef GRID_LOD_DEBUG

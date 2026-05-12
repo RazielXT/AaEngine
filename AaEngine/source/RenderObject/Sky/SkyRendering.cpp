@@ -11,7 +11,7 @@ void SkyRendering::createSky(RenderWorld& renderWorld, MaterialResources& materi
 	e->geometry.vertexCount = 3;
 	e->geometry.instanceCount = 1;
 
-	e->setBoundingBox({ {}, { 10000, 10000, 10000 } });
+	e->setBoundingBox({ {}, { 0, 0, 0 } });
 	e->setFlag(RenderObjectFlag::NoShadow);
 }
 
@@ -21,7 +21,7 @@ void SkyRendering::createClouds(RenderWorld& renderWorld, MaterialResources& mat
 	e->material = materials.getMaterial("BasicClouds", batch);
 
 	cloudsModel.CreateIndexBufferGrid(device, &batch, 256);
-	cloudsModel.bbox.Extents = { 50000, 10000, 50000 };
+	cloudsModel.bbox.Extents = { 0, 0, 0 };
 
 	e->geometry.fromModel(cloudsModel);
 	e->setBoundingBox(cloudsModel.bbox);
@@ -35,5 +35,6 @@ void SkyRendering::createMoon(RenderWorld& renderWorld, MaterialResources& mater
 	moon->geometry.type = EntityGeometry::Type::Manual;
 	moon->geometry.vertexCount = 6;
 	moon->geometry.instanceCount = 1;
-	moon->setBoundingBox({ {}, { 10000, 10000, 10000 } });
+	moon->setBoundingBox({ {}, { 0, 0, 0 } });
+	moon->setFlag(RenderObjectFlag::NoShadow);
 }

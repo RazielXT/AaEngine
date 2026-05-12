@@ -51,7 +51,6 @@ struct VegetationChunk
 
 	XMINT2 worldCoord{};
 	bool dirty = true;
-	bool firstRun = true;
 };
 
 class Vegetation

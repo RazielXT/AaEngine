@@ -152,22 +152,15 @@ void Vegetation::regenerateChunk(ID3D12GraphicsCommandList* commandList, Vegetat
 	input.subUvOffset = { subX * uvScale, subY * uvScale };
 	input.subUvScale = { uvScale, uvScale };
 
-	// Transition info/meta back to UAV if they were left as SRV from a previous cycle
-	if (!chunk.firstRun)
-	{
-		CD3DX12_RESOURCE_BARRIER toUav[2]{};
-		toUav[0] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.infoBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-		toUav[1] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.subgroupMetaBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-		commandList->ResourceBarrier(2, toUav);
-	}
-	chunk.firstRun = false;
-
 	// Clear subgroup metadata (counters=0, minY=INT_MAX, maxY=INT_MIN) before dispatching find CS
-	CD3DX12_RESOURCE_BARRIER toCopyDest = CD3DX12_RESOURCE_BARRIER::Transition(chunk.subgroupMetaBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_DEST);
+	CD3DX12_RESOURCE_BARRIER toCopyDest = CD3DX12_RESOURCE_BARRIER::Transition(chunk.subgroupMetaBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
 	commandList->ResourceBarrier(1, &toCopyDest);
 	commandList->CopyBufferRegion(chunk.subgroupMetaBuffer.Get(), 0, defaultMetaBuffer.Get(), 0, sizeof(SubgroupMeta) * SubgroupCount);
-	CD3DX12_RESOURCE_BARRIER toUavAgain = CD3DX12_RESOURCE_BARRIER::Transition(chunk.subgroupMetaBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-	commandList->ResourceBarrier(1, &toUavAgain);
+
+	CD3DX12_RESOURCE_BARRIER toUav[2]{};
+	toUav[0] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.infoBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	toUav[1] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.subgroupMetaBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	commandList->ResourceBarrier(2, toUav);
 
 	vegetationFindCS.dispatch(commandList, input, chunk.infoBuffer.Get(), chunk.subgroupMetaBuffer.Get());
 

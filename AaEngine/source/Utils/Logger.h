@@ -54,7 +54,10 @@ public:
 			int r = MessageBoxA(0, text.c_str(), "Error", MB_RETRYCANCEL | MB_ICONERROR);
 
 			if (r == IDRETRY)
-				ShellExecuteA(nullptr, "open", (std::filesystem::absolute(path).string()).c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+			{
+				auto fullpath = std::filesystem::absolute(path).string();
+				ShellExecuteA(nullptr, "open", fullpath.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+			}
 		}
 	}
 

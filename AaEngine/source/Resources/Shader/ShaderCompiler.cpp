@@ -217,7 +217,7 @@ static std::unordered_set<std::string> FindDefineUsages(ComPtr<IDxcBlobEncoding>
 	size_t sourceSize = sourceBlob->GetBufferSize();
 
 	std::string_view shaderView(sourceText, sourceSize);
-	std::regex defineRegex(R"(#\s*(ifdef|ifndef|if\s+defined)\s*\(?\s*([A-Za-z_]\w*)\s*\)?)");
+	std::regex defineRegex(R"(#\s*(ifdef|ifndef|if\s+defined|elif\s+defined)\s*\(?\s*([A-Za-z_]\w*)\s*\)?)");
 	//std::regex defineRegex(R"(#\s*(ifdef|ifndef|if\s+defined)\s*\(?\s*(CFG_\w*)\s*\)?)"); // CFG_x
 
 	size_t start = 0;
@@ -331,34 +331,6 @@ static std::vector<std::wstring> MakeDefines(const ShaderRef& ref, const std::un
 	return out;
 }
 
-struct ShaderErrorLocation { std::string file; int line = -1; int column = -1; };
-
-ShaderErrorLocation ParseDxcError(const std::string& msg)
-{
-	ShaderErrorLocation loc;
-
-	std::istringstream stream(msg);
-	std::string line;
-	while (std::getline(stream, line)) {
-		// Skip include trace lines
-		if (line.find("In file included from") != std::string::npos)
-			continue;
-
-		// Look for actual error line
-		size_t p1 = line.find(':');
-		size_t p2 = line.find(':', p1 + 1);
-		size_t p3 = line.find(':', p2 + 1);
-		if (p1 != std::string::npos && p2 != std::string::npos && p3 != std::string::npos) {
-			loc.file = line.substr(0, p1);
-			loc.line = std::stoi(line.substr(p1 + 1, p2 - p1 - 1));
-			loc.column = std::stoi(line.substr(p2 + 1, p3 - p2 - 1));
-			break;
-		}
-	}
-
-	return loc;
-}
-
 ComPtr<IDxcBlob> ShaderCompiler::compileShader(const ShaderRef& ref, ShaderDescription& outDescription, ShaderType type, const ShaderDefines& globalDefines)
 {
 	ShaderDescription description;
@@ -421,9 +393,7 @@ ComPtr<IDxcBlob> ShaderCompiler::compileShader(const ShaderRef& ref, ShaderDescr
 	pCompileResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&pErrors), nullptr);
 	if (pErrors && pErrors->GetStringLength() > 0)
 	{
-		auto loc = ParseDxcError(pErrors->GetStringPointer());
-
-		Logger::logError(ref.file + " " + ref.entry + "\n" + pErrors->GetStringPointer(), SHADER_DIRECTORY + loc.file);
+		Logger::logError(ref.file + " " + ref.entry + "\n" + pErrors->GetStringPointer(), path);
 		return nullptr;
 	}
 

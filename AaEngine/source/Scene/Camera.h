@@ -35,6 +35,8 @@ public:
 	void roll(float Roll);
 	void rotate(Vector3 axis, float angle);
 	void resetRotation();
+	float getYaw() const;
+	float getPitch() const;
 
 	void setDirection(Vector3 Direction);
 	void lookAt(Vector3 target);
@@ -56,6 +58,8 @@ public:
 
 	void setPixelOffset(XMFLOAT2 offset, XMUINT2 viewportSize);
 	void clearPixelOffset();
+
+	void restoreYawPitchFromDirection();
 
 	struct Params
 	{

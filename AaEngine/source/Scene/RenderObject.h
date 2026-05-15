@@ -10,6 +10,7 @@ struct ObjectTransformation
 	Vector3	scale{1, 1, 1};
 
 	XMMATRIX createWorldMatrix() const;
+	void fromWorldMatrix(const XMMATRIX&);
 	ObjectTransformation operator+(const ObjectTransformation& rhs) const
 	{
 		ObjectTransformation obj{};
@@ -32,7 +33,7 @@ namespace RenderObjectFlag
 		NoCascade1 = 1 << 1,
 		NoCascade2 = 1 << 2,
 		NoCascade3 = 1 << 3,
-		OnlyFirstCascade = NoCascade1 | NoCascade2 | NoCascade3,
+		OnlyFirstCascade = NoCascade2 | NoCascade3,
 	};
 }
 
@@ -115,6 +116,7 @@ public:
 	void setPositionOrientation(Vector3 position, Quaternion orientation);
 
 	void setTransformation(const ObjectTransformation& transformation, bool initialize);
+	void setWorldMatrix(const XMMATRIX& transformation);
 	const ObjectTransformation& getTransformation() const;
 
 	bool isVisible(const RenderObjectsVisibilityState&) const;

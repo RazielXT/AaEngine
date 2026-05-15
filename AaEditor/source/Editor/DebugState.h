@@ -2,6 +2,14 @@
 
 #include "RenderCore/UpscaleTypes.h"
 
+enum class InteractionMode
+{
+	Editor,
+	Motorbike,
+	WalkingFirstPerson,
+	WalkingThirdPerson
+};
+
 struct DebugState
 {
 	bool reloadShaders = false;
@@ -14,4 +22,8 @@ struct DebugState
 	bool wireframe = false;
 	bool wireframeChange = false;
 	std::optional<int> wireframePhysicsChange;
+
+	InteractionMode interactionMode = InteractionMode::Editor;
+	bool interactionModeChanged = false;
+	bool showPlayerBody = false;
 };

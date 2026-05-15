@@ -363,5 +363,22 @@ void SidePanel::draw()
 		ImGui::SliderFloat("Clouds speed", &app.params.sun.CloudsSpeed, 0, 0.02f);
 	}
 
+	if (ImGui::CollapsingHeader("Interaction", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		const char* modes[] = { "Editor", "Motorbike", "Walking (1st Person)", "Walking (3rd Person)" };
+		int currentMode = (int)state.interactionMode;
+
+		if (ImGui::Combo("Mode", &currentMode, modes, std::size(modes)))
+		{
+			state.interactionMode = (InteractionMode)currentMode;
+			state.interactionModeChanged = true;
+		}
+
+		if (state.interactionMode == InteractionMode::WalkingFirstPerson || state.interactionMode == InteractionMode::WalkingThirdPerson)
+		{
+			ImGui::Checkbox("Show player body", &state.showPlayerBody);
+		}
+	}
+
 	ImGui::End();
 }

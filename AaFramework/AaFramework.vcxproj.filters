@@ -5,17 +5,35 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
+    <Filter Include="Source Files\Scene">
+      <UniqueIdentifier>{aba07fc9-201e-4f7e-afec-9390a3f19904}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Managers">
+      <UniqueIdentifier>{6164f8d9-d0d8-43e0-a2cc-669e3695b333}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Physics">
       <UniqueIdentifier>{b3df8f1e-49e3-43f6-9e00-2339b2588561}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Physics\Render">
       <UniqueIdentifier>{d16e82a9-6f5f-457d-a324-b42d938a01f2}</UniqueIdentifier>
-    <Filter Include="Source Files\SceneGraph">
-      <UniqueIdentifier>{aba07fc9-201e-4f7e-afec-9390a3f19904}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Objects">
+      <UniqueIdentifier>{f20289c7-337d-4ace-b798-6c1beb85a737}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Objects\Vehicle">
+      <UniqueIdentifier>{9ba0430e-2b90-4ec0-858d-6cc1c5882b65}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="source\CameraHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\FollowCamera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\FirstPersonCamera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="source\FreeCamera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -43,8 +61,26 @@
     <ClCompile Include="source\Physics\TerrainPhysics.cpp">
       <Filter>Source Files\Physics</Filter>
     </ClCompile>
+    <ClCompile Include="source\Objects\Vehicle\JoltMotorcycle.cpp">
+      <Filter>Source Files\Objects\Vehicle</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Objects\PlayerBody.cpp">
+      <Filter>Source Files\Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Objects\Vehicle\ArcadeMotorcycle.cpp">
+      <Filter>Source Files\Objects\Vehicle</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="source\CameraHandler.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="source\FollowCamera.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="source\FirstPersonCamera.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
     <ClInclude Include="source\FreeCamera.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -57,6 +93,17 @@
     <ClInclude Include="source\SceneParser.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="source\SceneGraph\ComponentStorage.h">
+      <Filter>Source Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="source\SceneGraph\Scene.h">
+      <Filter>Source Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="source\SceneGraph\SceneTree.h">
+      <Filter>Source Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Managers\EntityRenderManager.h">
+      <Filter>Source Files\Managers</Filter>
     </ClInclude>
     <ClInclude Include="source\Physics\Render\HeightmapDebugMeshOptimizer.h">
       <Filter>Source Files\Physics\Render</Filter>
@@ -75,6 +122,18 @@
     </ClInclude>
     <ClInclude Include="source\Physics\TerrainPhysics.h">
       <Filter>Source Files\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Objects\Vehicle\JoltMotorcycle.h">
+      <Filter>Source Files\Objects\Vehicle</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Objects\MovableBody.h">
+      <Filter>Source Files\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Objects\PlayerBody.h">
+      <Filter>Source Files\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Objects\Vehicle\ArcadeMotorcycle.h">
+      <Filter>Source Files\Objects\Vehicle</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

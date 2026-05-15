@@ -1,12 +1,6 @@
-#pragma once
-
 #include "FreeCamera.h"
 
-FreeCamera::FreeCamera()
-{
-}
-
-FreeCamera::~FreeCamera()
+FreeCamera::FreeCamera(Camera& camera) : CameraHandler(camera)
 {
 }
 
@@ -24,14 +18,14 @@ void FreeCamera::update(float time)
 	else if (d)
 		dir.x += 1;
 
-	dir.z += wheelDiff * 5;
+	dir.z += wheelDiff;
 	wheelDiff = 0;
 
 	if (dir != Vector3::Zero)
 	{
 		dir.Normalize();
 
-		float speed = 40 * time;
+		float speed = 5 * time;
 		if (turbo)
 			speed *= 20;
 		else if (slow)
@@ -42,14 +36,6 @@ void FreeCamera::update(float time)
 		camera.setInCameraRotation(dir);
 		camera.move(dir);
 	}
-}
-
-void FreeCamera::bind(TargetViewport& viewport)
-{
-	target = &viewport;
-	viewport.listeners.push_back(this);
-
-	onViewportResize(target->getWidth(), target->getHeight());
 }
 
 bool FreeCamera::keyPressed(int key)
@@ -168,11 +154,12 @@ void FreeCamera::stop()
 	w = s = a = d = turbo = slow = move = false;
 }
 
-void FreeCamera::onViewportResize(UINT width, UINT height)
+void FreeCamera::activate()
 {
-	camera.setPerspectiveCamera(70, width / (float)height, 1, 30000);
+	camera.restoreYawPitchFromDirection();
 }
 
-void FreeCamera::onScreenResize(UINT, UINT)
+void FreeCamera::deactivate()
 {
+	stop();
 }

@@ -58,6 +58,8 @@ public:
 
 	JPH::PhysicsSystem* system{};
 
+	JPH::TempAllocatorMalloc& getTempAllocator() { return temp_allocator; }
+
 	void enableRenderer(RenderSystem&, GraphicsResources&);
 	void disableRenderer(RenderSystem& rs);
 

@@ -105,7 +105,7 @@
       <PreprocessorDefinitions>_DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>..\dependencies\imgui;..\dependencies\DirectXTK12\Inc;..\dependencies\DirectX-Headers\include;..\dependencies\tinyxml2;..\dependencies\pugixml\src;..\dependencies\DLSS\include;..\dependencies;..\dependencies\JoltPhysics;..\AaEngine\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\dependencies\imgui;..\dependencies\DirectXTK12\Inc;..\dependencies\DirectX-Headers\include;..\dependencies\tinyxml2;..\dependencies\pugixml\src;..\dependencies\DLSS\include;..\dependencies;..\dependencies\JoltPhysics;..\AaEngine\source;source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <DisableSpecificWarnings>4291</DisableSpecificWarnings>
@@ -123,7 +123,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\dependencies\imgui;..\dependencies\DirectXTK12\Inc;..\dependencies\DirectX-Headers\include;..\dependencies\tinyxml2;..\dependencies\pugixml\src;..\dependencies\DLSS\include;..\dependencies;..\dependencies\JoltPhysics;..\AaEngine\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\dependencies\imgui;..\dependencies\DirectXTK12\Inc;..\dependencies\DirectX-Headers\include;..\dependencies\tinyxml2;..\dependencies\pugixml\src;..\dependencies\DLSS\include;..\dependencies;..\dependencies\JoltPhysics;..\AaEngine\source;source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
@@ -137,9 +137,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="source\CameraHandler.cpp" />
+    <ClCompile Include="source\FirstPersonCamera.cpp" />
+    <ClCompile Include="source\FollowCamera.cpp" />
     <ClCompile Include="source\FreeCamera.cpp" />
     <ClCompile Include="source\ApplicationCore.cpp" />
     <ClCompile Include="source\InputHandler.cpp" />
+    <ClCompile Include="source\Managers\EntityRenderManager.cpp" />
+    <ClCompile Include="source\Objects\PlayerBody.cpp" />
+    <ClCompile Include="source\Objects\Vehicle\ArcadeMotorcycle.cpp" />
+    <ClCompile Include="source\Objects\Vehicle\JoltMotorcycle.cpp" />
     <ClCompile Include="source\Physics\PhysicsManager.cpp" />
     <ClCompile Include="source\Physics\Render\PhysicsRenderer.cpp" />
     <ClCompile Include="source\Physics\Render\PhysicsRenderTask.cpp" />
@@ -147,15 +154,26 @@
     <ClCompile Include="source\SceneParser.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="source\CameraHandler.h" />
+    <ClInclude Include="source\FirstPersonCamera.h" />
+    <ClInclude Include="source\FollowCamera.h" />
     <ClInclude Include="source\FreeCamera.h" />
     <ClInclude Include="source\ApplicationCore.h" />
     <ClInclude Include="source\InputHandler.h" />
+    <ClInclude Include="source\Managers\EntityRenderManager.h" />
+    <ClInclude Include="source\Objects\MovableBody.h" />
+    <ClInclude Include="source\Objects\PlayerBody.h" />
+    <ClInclude Include="source\Objects\Vehicle\ArcadeMotorcycle.h" />
+    <ClInclude Include="source\Objects\Vehicle\JoltMotorcycle.h" />
     <ClInclude Include="source\Physics\JoltHeader.h" />
     <ClInclude Include="source\Physics\PhysicsManager.h" />
     <ClInclude Include="source\Physics\Render\HeightmapDebugMeshOptimizer.h" />
     <ClInclude Include="source\Physics\Render\PhysicsRenderer.h" />
     <ClInclude Include="source\Physics\Render\PhysicsRenderTask.h" />
     <ClInclude Include="source\Physics\TerrainPhysics.h" />
+    <ClInclude Include="source\SceneGraph\ComponentStorage.h" />
+    <ClInclude Include="source\SceneGraph\Scene.h" />
+    <ClInclude Include="source\SceneGraph\SceneTree.h" />
     <ClInclude Include="source\SceneParser.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

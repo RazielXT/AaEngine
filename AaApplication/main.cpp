@@ -14,7 +14,7 @@ public:
 		app.initialize(window);
 
 		freeCamera.bind(window);
-		freeCamera.camera.setPosition(XMFLOAT3(0, 0, -14.f));
+		camera.setPosition(XMFLOAT3(0, 0, -14.f));
 
 		debugWindow.state.DlssMode = (int)app.renderSystem.upscale.dlss.selectedMode();
 		debugWindow.state.FsrMode = (int)app.renderSystem.upscale.fsr.selectedMode();
@@ -54,7 +54,7 @@ public:
 					app.compositor->reloadPasses();
 				}
 
-				app.renderFrame(freeCamera.camera);
+				app.renderFrame(camera);
 				app.present();
 
 				Sleep(10);
@@ -96,7 +96,8 @@ public:
 		return freeCamera.mouseWheel(change);
 	}
 
-	FreeCamera freeCamera;
+	Camera camera;
+	FreeCamera freeCamera{camera};
 	ApplicationCore app;
 	imgui::DebugWindow debugWindow;
 

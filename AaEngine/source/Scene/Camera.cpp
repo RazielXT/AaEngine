@@ -157,9 +157,19 @@ void Camera::setInCameraRotation(Vector3& direction) const
 
 Vector3 Camera::getCameraDirection() const
 {
-	Vector3 dir = Forward;
+	Vector3 dir = direction;
 
-	setInCameraRotation(dir);
+	if (dir.LengthSquared() == 0)
+		dir = Forward;
+
+	dir.Normalize();
+
+	XMVECTOR worldDir = XMLoadFloat3(&dir);
+	worldDir = XMVector3TransformNormal(worldDir, XMMatrixRotationY(yaw_));
+	worldDir = XMVector3TransformNormal(worldDir, XMMatrixRotationX(pitch_));
+	worldDir = XMVector3TransformNormal(worldDir, XMMatrixRotationZ(roll_));
+	worldDir = XMVector3Normalize(worldDir);
+	XMStoreFloat3(&dir, worldDir);
 
 	return dir;
 }
@@ -203,8 +213,34 @@ void Camera::resetRotation()
 	dirty = true;
 }
 
+float Camera::getYaw() const
+{
+	return yaw_;
+}
+
+float Camera::getPitch() const
+{
+	return pitch_;
+}
+
+void Camera::restoreYawPitchFromDirection()
+{
+	// Compute yaw/pitch from current direction and reset direction to canonical forward
+	Vector3 dir = direction;
+	dir.Normalize();
+
+	yaw_ = atan2(-dir.x, dir.z);
+	pitch_ = asin(dir.y);
+	roll_ = 0;
+	direction = XMFLOAT3(0, 0, 1);
+	dirty = true;
+}
+
 void Camera::setDirection(Vector3 Direction)
 {
+	assert(Direction.LengthSquared() != 0);
+	Direction.Normalize();
+
 	resetRotation();
 	//rotation = Quaternion::FromToRotation(FrontDirection, Direction);
 
@@ -220,6 +256,7 @@ void Camera::setDirection(Vector3 Direction)
 	}
 	else
 		direction = Direction;
+
 
 	dirty = true;
 }

@@ -1,7 +1,6 @@
 #include "ApplicationCore.h"
 #include "Utils/Logger.h"
 #include "App/Directories.h"
-#include "FreeCamera.h"
 #include "SceneParser.h"
 #include "Resources/Model/ModelResources.h"
 #include "Resources/Shader/ShaderLibrary.h"

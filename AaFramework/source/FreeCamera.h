@@ -1,39 +1,32 @@
 #pragma once
 
+#include "CameraHandler.h"
 #include "InputHandler.h"
-#include "Scene/Camera.h"
-#include "App/TargetWindow.h"
 
-class FreeCamera : public ViewportListener
+class FreeCamera : public CameraHandler
 {
 public:
 
-	FreeCamera();
-	~FreeCamera();
+	FreeCamera(Camera& camera);
 
-	void update(float time);
-	void bind(TargetViewport&);
+	void update(float time) override;
 
-	bool keyPressed(int key);
-	bool keyReleased(int key);
-	bool mouseMoved(int x, int y);
-	bool mousePressed(MouseButton button);
-	bool mouseReleased(MouseButton button);
-	bool mouseWheel(float change);
+	bool keyPressed(int key) override;
+	bool keyReleased(int key) override;
+	bool mouseMoved(int x, int y) override;
+	bool mousePressed(MouseButton button) override;
+	bool mouseReleased(MouseButton button) override;
+	bool mouseWheel(float change) override;
 	void stop();
 
-	Camera camera;
+	void activate() override;
+	void deactivate() override;
 
 private:
-
-	void onViewportResize(UINT, UINT) override;
-	void onScreenResize(UINT, UINT) override;
 
 	float wheelDiff{};
 
 	float mouseX{}, mouseY{};
 	bool w{}, s{}, a{}, d{}, turbo{}, slow{}, move{};
 	bool strafe{};
-
-	TargetViewport* target{};
 };

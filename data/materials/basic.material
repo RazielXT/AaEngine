@@ -1,3 +1,5 @@
+import fireball.material
+
 material Color abstract
 {
 	vertex_shader
@@ -24,29 +26,31 @@ material Color abstract
 	}
 }
 
-material ColorVc abstract
-{
-	vertex_shader
-	{
-		file basicShading.hlsl
-		entry VSMain
-		profile vs_6_6
-		defines USE_VC
-	}
-	pixel_shader
-	{
-		file basicShading.hlsl
-		entry PSMain
-		profile ps_6_6
-		defines USE_VC
-	}
-}
-
 material White : Color
+
+material Red : Color
 {
+	default_params
+	{
+		color MaterialColor 1 0.2 0.2
+	}
 }
 
-material whiteVc : White ColorVc
+material DarkRed : Color
+{
+	default_params
+	{
+		color MaterialColor 0.5 0.2 0.2
+	}
+}
+
+material Green : Color
+{
+	default_params
+	{
+		color MaterialColor 0.2 0.8 0.2
+	}
+}
 
 material Yellow : Color
 {
@@ -56,13 +60,19 @@ material Yellow : Color
 	}
 }
 
-material yellowVc : Yellow ColorVc
-
 material Blue : Color
 {
 	default_params
 	{
 		color MaterialColor 0.2 0.2 1
+	}
+}
+
+material DarkBlue : Color
+{
+	default_params
+	{
+		color MaterialColor 0.2 0.2 0.5
 	}
 }
 
@@ -78,45 +88,19 @@ material DarkGreen : Color
 {
 	default_params
 	{
-		color MaterialColor 0x025020
+		color MaterialColor 0.2 0.5 0.2
 	}
 }
 
-material blueVc : Blue ColorVc
-
-material Red : Color
+material UseVc : abstract
 {
-	default_params
-	{
-		color MaterialColor 1 0.2 0.2
-	}
+	shader_defines USE_VC
 }
 
-material niceRedVc : Red ColorVc
-
-material Green : Color
-{
-	default_params
-	{
-		color MaterialColor 0.2 0.8 0.2
-	}
-}
-
-material Green : Color
-{
-	default_params
-	{
-		color MaterialColor 0.2 0.8 0.2
-	}
-}
-
-material WaterSim : Color
-{
-	texture Diffuse
-	{
-		name WaterColorTexture
-	}
-}
+material whiteVc : White UseVc
+material yellowVc : Yellow UseVc
+material blueVc : Blue UseVc
+material niceRedVc : Red UseVc
 
 material TriplanarTest : Color
 {
@@ -145,53 +129,4 @@ material terrainGrassInstanced : terrainGrass
 		profile vs_6_6
 		defines INSTANCED
 	}
-}
-
-material bushBranchesDepth
-{
-	texture Diffuse
-	{
-		file bushBranches.dds
-	}
-
-	vertex_shader
-	{
-		file depthWrite.hlsl
-		entry VSMain
-		profile vs_6_6
-		defines ALPHA_TEST
-	}
-	pixel_shader
-	{
-		file depthWrite.hlsl
-		entry PSMain
-		profile ps_6_6
-		defines ALPHA_TEST
-	}
-
-	shader_defines VERTEX_WAVE
-
-	culling none
-}
-
-material bushBranches : Color
-{
-	texture Diffuse
-	{
-		file bushBranches.dds
-	}
-
-	culling none
-
-	shader_defines VERTEX_WAVE ALPHA_TEST
-
-	technique Depth bushBranchesDepth
-	technique Wireframe bushBranchesWireframe
-}
-
-material bushBranchesWireframe : bushBranches
-{
-	wireframe
-
-	shader_defines VERTEX_WAVE FLAT_COLOR
 }

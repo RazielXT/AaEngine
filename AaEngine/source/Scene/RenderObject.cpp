@@ -166,6 +166,33 @@ DirectX::XMMATRIX ObjectTransformation::createWorldMatrix() const
 	return affineMatrix;
 }
 
+void ObjectTransformation::fromWorldMatrix(const XMMATRIX& worldMatrix)
+{
+	DirectX::XMVECTOR outScale;
+	DirectX::XMVECTOR outRotationQuat;
+	DirectX::XMVECTOR outTranslation;
+
+	bool success = DirectX::XMMatrixDecompose(
+		&outScale,
+		&outRotationQuat,
+		&outTranslation,
+		worldMatrix
+	);
+
+	if (success)
+	{
+		scale.x = DirectX::XMVectorGetX(outScale);
+		scale.y = DirectX::XMVectorGetY(outScale);
+		scale.z = DirectX::XMVectorGetZ(outScale);
+
+		position.x = DirectX::XMVectorGetX(outTranslation);
+		position.y = DirectX::XMVectorGetY(outTranslation);
+		position.z = DirectX::XMVectorGetZ(outTranslation);
+
+		orientation = outRotationQuat;
+	}
+}
+
 RenderObject::RenderObject(RenderObjectsStorage& r, uint16_t g) : source(r)
 {
 	id = source.createId(this);
@@ -256,6 +283,15 @@ void RenderObject::setTransformation(const ObjectTransformation& transformation,
 
 	if (initialize)
 		source.initializeTransformation(id, t);
+	else
+		source.objectsData.dirtyTransformation[id] = true;
+}
+
+void RenderObject::setWorldMatrix(const XMMATRIX& transformation)
+{
+	auto& t = source.objectsData.transformation[id];
+	t.fromWorldMatrix(transformation);
+	source.objectsData.dirtyTransformation[id] = true;
 }
 
 const ObjectTransformation& RenderObject::getTransformation() const

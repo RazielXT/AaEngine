@@ -1,12 +1,17 @@
 #include "InputHandler.h"
 #include "App/TargetWindow.h"
 #include "FreeCamera.h"
+#include "FollowCamera.h"
+#include "FirstPersonCamera.h"
 #include "ApplicationCore.h"
 #include <shellscalingapi.h>
 #include "Editor/Editor.h"
 #include "Utils/ColorUtils.h"
 #include "imgui.h"
 #include "Physics/Render/PhysicsRenderTask.h"
+#include "Objects/Vehicle/JoltMotorcycle.h"
+#include "Objects/Vehicle/ArcadeMotorcycle.h"
+#include "Objects/PlayerBody.h"
 
 // Forward declare message handler from imgui_impl_win32.cpp
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -38,8 +43,11 @@ public:
 
 		editorUi.initializeRenderer(app.compositor->getColorSpace().outputFormat);
 
-		freeCamera.bind(renderPanelViewport);
-		freeCamera.camera.setPosition(XMFLOAT3(0, 0, 0));
+		camera.setPosition(XMFLOAT3(0, 0, 0));
+
+		activeCameraHandler = std::make_unique<FreeCamera>(camera);
+		activeCameraHandler->bind(renderPanelViewport);
+		activeCameraHandler->activate();
 
 		app.loadScene();
 	}
@@ -49,25 +57,83 @@ public:
 		editorUi.deinit();
 	}
 
+	bool isPlayMode() const
+	{
+		return editorUi.state.interactionMode != InteractionMode::Editor;
+	}
+
+	bool isWalkingMode() const
+	{
+		return editorUi.state.interactionMode == InteractionMode::WalkingFirstPerson
+			|| editorUi.state.interactionMode == InteractionMode::WalkingThirdPerson;
+	}
+
 	void start()
 	{
 		app.beginRendering([this](float timeSinceLastFrame)
 			{
-				app.physicsMgr.update(timeSinceLastFrame);
-
-				editorUi.isRendererActive() ? InputHandler::consumeInput(*this) : InputHandler::clearInput();
-				editorUi.updateViewportSize();
-
+				handleModeChange();
 				updateDebugState();
 
-				if (!editorUi.isRendererHovered())
-					freeCamera.stop();
+				{
+					static float accumulator = 0;
+					const float fixedTimeStep = 1 / 60.f;
+					accumulator += timeSinceLastFrame;
+
+					if (accumulator >= fixedTimeStep)
+					{
+						constexpr int maxSteps = 2;
+						int steps = 0;
+						while (accumulator >= fixedTimeStep && steps < maxSteps)
+						{
+							if (motorcycle)
+								motorcycle->update(fixedTimeStep);
+
+							accumulator -= fixedTimeStep;
+							steps++;
+						}
+
+						if (steps == maxSteps)
+							accumulator = 0.0f;
+					}
+				}
+
+				if (playerBody)
+					playerBody->update(timeSinceLastFrame, camera);
+
+				app.physicsMgr.update(timeSinceLastFrame);
+
+				if (isPlayMode())
+					InputHandler::consumeInput(*this);
 				else
-					freeCamera.update(timeSinceLastFrame);
+					editorUi.isRendererActive() ? InputHandler::consumeInput(*this) : InputHandler::clearInput();
 
-				app.renderFrame(freeCamera.camera);
+				editorUi.updateViewportSize();
 
-				editorUi.render(freeCamera.camera);
+				if (editorUi.state.interactionMode == InteractionMode::Editor)
+				{
+					if (!editorUi.isRendererHovered())
+					{
+						auto* freeCamera = dynamic_cast<FreeCamera*>(activeCameraHandler.get());
+						if (freeCamera)
+							freeCamera->stop();
+					}
+				}
+
+				// Handle visual body toggle
+				if (playerBody)
+				{
+					if (editorUi.state.showPlayerBody && !playerBody->hasVisualBody())
+						playerBody->createVisualBody(app.renderWorld, app.resources);
+					else if (!editorUi.state.showPlayerBody && playerBody->hasVisualBody())
+						playerBody->destroyVisualBody(app.renderWorld);
+				}
+
+				activeCameraHandler->update(timeSinceLastFrame);
+
+				app.renderFrame(camera);
+
+				editorUi.render(camera);
 
 				auto presentResult = app.present();
 
@@ -87,6 +153,76 @@ public:
 
 				return continueRendering;
 			});
+	}
+
+	void handleModeChange()
+	{
+		if (!editorUi.state.interactionModeChanged)
+			return;
+
+		editorUi.state.interactionModeChanged = false;
+
+		auto spawnPos = camera.getPosition();
+
+		if (activeCameraHandler)
+			activeCameraHandler->deactivate();
+
+		// Cleanup previous play mode objects
+		activePlayInputListener = nullptr;
+		if (playerBody)
+			playerBody->destroyVisualBody(app.renderWorld);
+		motorcycle.reset();
+		playerBody.reset();
+
+		// Restore cursor when returning to editor
+		ShowCursor(TRUE);
+
+		switch (editorUi.state.interactionMode)
+		{
+		case InteractionMode::Editor:
+			activeCameraHandler = std::make_unique<FreeCamera>(camera);
+			activeCameraHandler->bind(renderPanelViewport);
+			activeCameraHandler->activate();
+			break;
+
+		case InteractionMode::Motorbike:
+		{
+			motorcycle = std::make_unique<ArcadeMotorcycle>(app.physicsMgr);
+
+			ResourceUploadBatch batch(app.renderSystem.core.device);
+			batch.Begin();
+			motorcycle->initialize(app.renderWorld, app.resources, batch);
+			motorcycle->setPositionOrientation(spawnPos, camera.getOrientation());
+			auto uploadResourcesFinished = batch.End(app.renderSystem.core.commandQueue);
+			uploadResourcesFinished.wait();
+
+			auto cameraHandler = std::make_unique<FollowCamera>(camera, app.physicsMgr);
+			cameraHandler->setTarget(motorcycle.get());
+			cameraHandler->bind(renderPanelViewport);
+			cameraHandler->activate();
+			activeCameraHandler = std::move(cameraHandler);
+			activePlayInputListener = motorcycle.get();
+			ShowCursor(FALSE);
+			break;
+		}
+
+		case InteractionMode::WalkingFirstPerson:
+		case InteractionMode::WalkingThirdPerson:
+		{
+			playerBody = std::make_unique<PlayerBody>(app.physicsMgr);
+			playerBody->initialize(spawnPos);
+
+			auto cameraHandler = std::make_unique<FirstPersonCamera>(camera, app.physicsMgr);
+			cameraHandler->thirdPerson = (editorUi.state.interactionMode == InteractionMode::WalkingThirdPerson);
+			cameraHandler->setTarget(playerBody.get());
+			cameraHandler->bind(renderPanelViewport);
+			cameraHandler->activate();
+			activeCameraHandler = std::move(cameraHandler);
+			activePlayInputListener = playerBody.get();
+			ShowCursor(FALSE);
+			break;
+		}
+		}
 	}
 
 	void updateDebugState()
@@ -129,6 +265,24 @@ public:
 
 	bool keyPressed(int key) override
 	{
+		if (isPlayMode())
+		{
+			if (key == VK_ESCAPE)
+			{
+				editorUi.state.interactionMode = InteractionMode::Editor;
+				editorUi.state.interactionModeChanged = true;
+				return true;
+			}
+
+			if (activePlayInputListener)
+				activePlayInputListener->keyPressed(key);
+
+			if (activeCameraHandler)
+				activeCameraHandler->keyPressed(key);
+
+			return true;
+		}
+
 		if (key == VK_ESCAPE)
 			continueRendering = false;
 
@@ -136,8 +290,9 @@ public:
 
 		if (key == 'F')
 		{
-			auto pos = freeCamera.camera.getPosition();
-			auto shootVelocity = freeCamera.camera.getCameraDirection() * 30.f;
+			auto pos = camera.getPosition();
+			auto shootVelocity = camera.getCameraDirection() * 10.f;
+			shootVelocity += camera.getOrientation() * Vector3(0,3,0);
 
 			enum Type { Sphere, Box, Cylinder, Tire } type{};
 			const char* meshes[] = { "sphere.mesh", "centeredBox.mesh", "cylinder.mesh", "wheel.mesh" };
@@ -165,21 +320,21 @@ public:
 			Vector3 scale;
 
 			if (type == Sphere)
-				scale = Vector3(getRandomFloat(1.0f, 2.0f));
+				scale = Vector3(getRandomFloat(0.5f, 1.0f));
 			else if (type == Cylinder)
 			{
-				float xz = getRandomFloat(1.0f, 3.0f);
-				scale = Vector3(xz, getRandomFloat(1.0f, 3.0f), xz);
+				float xz = getRandomFloat(0.5f, 1.0f);
+				scale = Vector3(xz, getRandomFloat(0.5f, 1.0f), xz);
 			}
 			else if (type == Tire)
 			{
-				float xz = getRandomFloat(2.0f, 4.0f);
-				scale = Vector3(xz, getRandomFloat(1.0f, 2.0f), xz);
+				float xz = getRandomFloat(0.5f, 1.0f);
+				scale = Vector3(xz, getRandomFloat(0.2f, 0.5f), xz);
 
 				bodyParams.restitution = 0.6f;
 			}
 			else
-				scale = Vector3(getRandomFloat(1.0f, 3.0f), getRandomFloat(1.0f, 3.0f), getRandomFloat(1.0f, 3.0f));
+				scale = Vector3(getRandomFloat(0.5f, 1.0f), getRandomFloat(0.5f, 1.0f), getRandomFloat(0.5f, 1.0f));
 
 			ent->setScale(scale);
 
@@ -204,36 +359,78 @@ public:
 			app.physicsMgr.dynamicBodies.push_back({ ent, id });
 		}
 
-		return freeCamera.keyPressed(key);
+		if (activeCameraHandler)
+			return activeCameraHandler->keyPressed(key);
+
+		return false;
 	}
 
 	bool keyReleased(int key) override
 	{
+		if (isPlayMode())
+		{
+			if (activePlayInputListener)
+				activePlayInputListener->keyReleased(key);
+
+			if (activeCameraHandler)
+				activeCameraHandler->keyReleased(key);
+
+			return true;
+		}
+
 		editorUi.keyReleased(key);
 
-		return freeCamera.keyReleased(key);
+		if (activeCameraHandler)
+			return activeCameraHandler->keyReleased(key);
+
+		return false;
 	}
 
 	bool mousePressed(MouseButton button) override
 	{
-		editorUi.onClick(button);
+		if (!isPlayMode())
+			editorUi.onClick(button);
 
-		return freeCamera.mousePressed(button);
+		bool handled = false;
+		if (activeCameraHandler)
+			handled = activeCameraHandler->mousePressed(button) || handled;
+		if (activePlayInputListener)
+			handled = activePlayInputListener->mousePressed(button) || handled;
+
+		return handled;
 	}
 
 	bool mouseReleased(MouseButton button) override
 	{
-		return freeCamera.mouseReleased(button);
+		bool handled = false;
+		if (activeCameraHandler)
+			handled = activeCameraHandler->mouseReleased(button) || handled;
+		if (activePlayInputListener)
+			handled = activePlayInputListener->mouseReleased(button) || handled;
+
+		return handled;
 	}
 
 	bool mouseMoved(int x, int y) override
 	{
-		return freeCamera.mouseMoved(x, y);
+		bool handled = false;
+		if (activeCameraHandler)
+			handled = activeCameraHandler->mouseMoved(x, y) || handled;
+		if (activePlayInputListener)
+			handled = activePlayInputListener->mouseMoved(x, y) || handled;
+
+		return handled;
 	}
 
 	bool mouseWheel(float change) override
 	{
-		return freeCamera.mouseWheel(change);
+		bool handled = false;
+		if (activeCameraHandler)
+			handled = activeCameraHandler->mouseWheel(change) || handled;
+		if (activePlayInputListener)
+			handled = activePlayInputListener->mouseWheel(change) || handled;
+
+		return handled;
 	}
 
 	std::unique_ptr<TargetWindow> window;
@@ -241,8 +438,14 @@ public:
 	ImguiPanelViewport renderPanelViewport;
 
 	ApplicationCore app;
-	FreeCamera freeCamera;
+	Camera camera;
+	std::unique_ptr<CameraHandler> activeCameraHandler;
+
 	Editor editorUi;
+
+	std::unique_ptr<ArcadeMotorcycle> motorcycle;
+	std::unique_ptr<PlayerBody> playerBody;
+	InputListener* activePlayInputListener{};
 
 	bool continueRendering = true;
 

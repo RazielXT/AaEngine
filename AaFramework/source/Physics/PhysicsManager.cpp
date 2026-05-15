@@ -239,7 +239,11 @@ JPH::BodyID PhysicsManager::createMeshBody(const std::vector<Vector3>& points, c
 	if (t.scale != Vector3::One)
 		shape = new ScaledShape(shape, toVec3(t.scale));
 
-	return system->GetBodyInterface().CreateAndAddBody(BodyCreationSettings(shape, toVec3(t.position), toQuat(t.orientation), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+	BodyParams params{};
+	BodyCreationSettings creation_settings(shape, toVec3(t.position), toQuat(t.orientation), EMotionType::Static, Layers::NON_MOVING);
+	applyBodyParams(creation_settings, params);
+
+	return system->GetBodyInterface().CreateAndAddBody(creation_settings, EActivation::DontActivate);
 }
 
 void PhysicsManager::update(float deltaTime)

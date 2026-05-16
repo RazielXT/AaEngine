@@ -15,5 +15,7 @@ namespace Config
 		std::vector<Object> children;
 	};
 
-	std::vector<Object> Parse(const std::string& file, const std::set<std::string>& defines = {});
+	using Data = std::vector<Object>;
+
+	Data Parse(const std::string& file, const std::set<std::string>& defines = {});
 }

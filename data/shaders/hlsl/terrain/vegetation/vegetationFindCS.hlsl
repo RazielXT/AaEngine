@@ -8,6 +8,7 @@ float2 TerrainOffset;
 float2 ChunkWorldSize;
 float2 SubUvOffset;
 float2 SubUvScale;
+uint TexIdNoise;
 
 RWStructuredBuffer<VegetationInfo> infoBuffer : register(u0);
 RWStructuredBuffer<SubgroupMeta> subgroupMetaBuffer : register(u1);
@@ -47,9 +48,15 @@ uint getVegetationInfo(out VegetationInfo info, float2 coords)
 
 	info.rotation = 0;
 	info.random = RandomFrom2D(coords.xy);
-	info.scale = 25 + info.random * 35;
+	info.scale = (25 + info.random * 35) / 8.f;
 
-	return normal.y > 0.82f ? 1 : 0;
+	Texture2D<float> noisemap = GetTexture2D1f(TexIdNoise);
+	float noise = noisemap.SampleLevel(LinearWrapSampler, texCoords * 4, 0);
+
+	if (noise < 0.435f)
+		return 0;
+
+	return normal.y > 0.982f ? 1 : 0;
 }
 
 [numthreads(8, 8, 1)]

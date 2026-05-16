@@ -1,0 +1,100 @@
+<scene formatVersion="1.0" upAxis="y" unitsPerMeter="39.3701" minOgreVersion="1.8" ogreMaxVersion="2.4.3" author="OgreMax Scene Exporter (www.ogremax.com)" application="3DS Max">
+    <environment>
+        <colourAmbient r="0.333333" g="0.333333" b="0.333333" />
+        <colourBackground r="0" g="0" b="0" />
+        <clipping near="0" far="100000" />
+    </environment>
+    <nodes>
+        <node name="Line002">
+            <position x="15.9236" y="1.47477" z="-12.7775" />
+            <scale x="0.466278" y="0.466278" z="0.466278" />
+            <rotation qx="-0.0502922" qy="0.0377496" qz="0.780305" qw="0.62223" />
+            <entity name="Line002" castShadows="true" receiveShadows="true" meshFile="Line002.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>tree</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart><Extension></Extension></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="DarkBlue" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box001">
+            <position x="-5.34482" y="2.20546" z="-13.192" />
+            <scale x="1.23738" y="0.466278" z="1.23738" />
+            <rotation qx="0" qy="0" qz="0" qw="1" />
+            <entity name="Box001" castShadows="true" receiveShadows="true" meshFile="Box001.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart><Extension></Extension></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="terrainGrass" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box002">
+            <position x="-12.8042" y="5.16443" z="22.485" />
+            <scale x="0.466278" y="0.466278" z="0.466278" />
+            <rotation qx="0" qy="-7.54496e-009" qz="-0.172609" qw="0.98499" />
+            <entity name="Box002" castShadows="true" receiveShadows="true" meshFile="Box002.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart><Extension></Extension></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="DarkRed" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box003">
+            <position x="-56.1003" y="5.16443" z="22.485" />
+            <scale x="0.466278" y="0.466278" z="0.466278" />
+            <rotation qx="-0.172596" qy="0.984921" qz="0.00204953" qw="-0.0116958" />
+            <entity name="Box003" castShadows="true" receiveShadows="true" meshFile="Box003.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart><Extension></Extension></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="DarkRed" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Circle001">
+            <position x="29.7182" y="7.60699" z="-6.13453" />
+            <scale x="1" y="1" z="1" />
+            <rotation qx="0.163726" qy="0.982806" qz="0.0140263" qw="-0.084197" />
+            <entity name="Circle001" castShadows="true" receiveShadows="true" meshFile="Circle001.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>tree</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart><Extension></Extension></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="DarkBlue" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Tube001">
+            <position x="-29.8369" y="0.749035" z="-91.3573" />
+            <scale x="1" y="1" z="1" />
+            <rotation qx="0" qy="0.889502" qz="-3.88814e-008" qw="-0.456931" />
+            <entity name="Tube001" castShadows="true" receiveShadows="true" meshFile="Tube001.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>tree</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart><Extension></Extension></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="DarkBlue" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Tube002">
+            <position x="291.245" y="239.926" z="-321.957" />
+            <scale x="1" y="1" z="1" />
+            <rotation qx="0.277161" qy="0.0696991" qz="0.440484" qw="0.851057" />
+            <entity name="Tube002" castShadows="true" receiveShadows="true" meshFile="Tube002.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>tree</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart><Extension></Extension></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="DarkBlue" />
+                </subentities>
+            </entity>
+        </node>
+    </nodes>
+</scene>

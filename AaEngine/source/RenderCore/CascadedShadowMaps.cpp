@@ -109,7 +109,7 @@ void ShadowMapCascade::update(Camera& lightCamera, Camera& viewer, float extends
 			// Because we want to fit the orthographic projection tightly around the Cascade, we set the Minimum cascade 
 			// value to the previous Frustum end Interval
 			if (iCascadeIndex == 0) fFrustumIntervalBegin = 0.0f;
-			else fFrustumIntervalBegin = (FLOAT)cascadePartitionsZeroToOne[iCascadeIndex - 1];
+			else fFrustumIntervalBegin = cascadePartitionsZeroToOne[iCascadeIndex - 1];
 		}
 		else
 		{
@@ -119,7 +119,7 @@ void ShadowMapCascade::update(Camera& lightCamera, Camera& viewer, float extends
 		}
 
 		// Scale the intervals between 0 and 1. They are now percentages that we can scale with.
-		fFrustumIntervalEnd = (FLOAT)cascadePartitionsZeroToOne[iCascadeIndex];
+		fFrustumIntervalEnd = cascadePartitionsZeroToOne[iCascadeIndex];
 		fFrustumIntervalBegin /= (FLOAT)m_iCascadePartitionsMax;
 		fFrustumIntervalEnd /= (FLOAT)m_iCascadePartitionsMax;
 		fFrustumIntervalBegin = fFrustumIntervalBegin * fCameraNearFarRange;

@@ -56,7 +56,7 @@ PSInput VSMain(uint vertexIdx : SV_VertexId, uint instanceId : SV_InstanceID)
 
 	VegetationInfo v = GeometryBuffer[RedirectBuffer[instanceId]];
 
-	float yRot = clamp((ViewCameraPosition.y - v.position.y) / 1000, -0.5, 1);
+	float yRot = clamp((ViewCameraPosition.y - v.position.y) / 200, -0.5, 1);
 	float3 pos = float3((uv.x - 0.5) * v.scale * 0.5, top * v.scale * yRot, top * v.scale);
 
 	//billboard

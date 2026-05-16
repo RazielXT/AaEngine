@@ -8,6 +8,8 @@
 #include "Utils/MathUtils.h"
 #include <format>
 #include "Render/PhysicsRenderer.h"
+#include <unordered_set>
+#include "PhysicsUpdater.h"
 
 class RenderEntity;
 struct ObjectTransformation;
@@ -66,6 +68,8 @@ public:
 	void drawDebugRender(ID3D12GraphicsCommandList* commandList, ShaderConstantsProvider* constants, const std::vector<DXGI_FORMAT>& targets, bool wireframe);
 
 	void test();
+
+	std::unordered_set<PhysicsUpdater*> updaters;
 
 private:
 

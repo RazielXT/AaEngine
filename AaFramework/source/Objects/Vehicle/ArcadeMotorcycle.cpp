@@ -15,7 +15,12 @@ using namespace JPH;
 
 ArcadeMotorcycle::ArcadeMotorcycle(PhysicsManager& p) : physics(p)
 {
+	physics.updaters.insert(this);
+}
 
+ArcadeMotorcycle::~ArcadeMotorcycle()
+{
+	physics.updaters.erase(this);
 }
 
 void ArcadeMotorcycle::initialize(RenderWorld& world, GraphicsResources& resources, ResourceUploadBatch& batch)
@@ -88,6 +93,11 @@ void ArcadeMotorcycle::initializePhysics()
 
 void ArcadeMotorcycle::update(float delta)
 {
+	updateGraphics(delta);
+}
+
+void ArcadeMotorcycle::updatePhysics(float delta)
+{
 	cachePhysicsState();
 
 	updateGrounding(delta);
@@ -103,8 +113,6 @@ void ArcadeMotorcycle::update(float delta)
 	applyDrag(delta);
 
 	clampVelocities();
-
-	updateGraphics(delta);
 }
 
 void ArcadeMotorcycle::cachePhysicsState()
@@ -576,7 +584,21 @@ Vec3 ArcadeMotorcycle::getGroundNormal() const
 	return normal.Normalized();
 }
 
-void ArcadeMotorcycle::updateGraphics(float)
+std::vector<float> bikeDistances;
+
+void smoothDamped(Vector3& value, Vector3& velocity, const Vector3& target, float smoothTime, float dt)
+{
+	float omega = 2.0f / smoothTime;
+	float x = omega * dt;
+	float exp = 1.0f / (1.0f + x + 0.48f * x * x + 0.235f * x * x * x);
+
+	Vector3 change = value - target;
+	Vector3 temp = (velocity + change * omega) * dt;
+	velocity = (velocity - temp * omega) * exp;
+	value = target + (change + temp) * exp;
+}
+
+void ArcadeMotorcycle::updateGraphics(float dt)
 {
 	Vec3 pos = motorcycleBody->GetPosition();
 	Quat rot = motorcycleBody->GetRotation();
@@ -592,11 +614,27 @@ void ArcadeMotorcycle::updateGraphics(float)
 		pos.GetY(),
 		pos.GetZ());
 
-	graphics.chassis->setPositionOrientation(
-		p,
-		q);
+	cachedVelocity = p - cachedPosition;
+	bikeDistances.push_back(cachedVelocity.Length());
 
-	cachedPosition = p;
+
+	// Apply smoothing to cached camera position
+// 	const float smooth = 0.3f; // tweak to taste
+// 	cachedPosition += (p - cachedPosition) * smooth;
+
+	// tau = smoothing time constant in seconds (0.05–0.15 is typical)
+	float tau = 0.08f;
+
+	// Compute smoothing factor based on dt
+	float alpha = 1.0f - expf(-dt / tau);
+
+	// Apply smoothing
+	cachedPosition += (p - cachedPosition) * alpha;
+
+
+	graphics.chassis->setPositionOrientation(
+		cachedPosition,
+		q);
 
 	Vec3 forward =
 		motorcycleBody->GetRotation().RotateAxisZ();
@@ -607,10 +645,14 @@ void ArcadeMotorcycle::updateGraphics(float)
 	{
 		auto& s = suspension[i];
 
+		auto smoothPos = s.worldPosition;
+		smoothPos -= pos;
+		smoothPos += Vec3(cachedPosition.x, cachedPosition.y, cachedPosition.z);
+
 		Vector3 pos(
-			s.worldPosition.GetX(),
-			s.worldPosition.GetY(),
-			s.worldPosition.GetZ());
+			smoothPos.GetX(),
+			smoothPos.GetY(),
+			smoothPos.GetZ());
 
 
 		Quat rot = s.wheelRotation;

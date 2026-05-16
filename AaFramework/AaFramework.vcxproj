@@ -167,6 +167,7 @@
     <ClInclude Include="source\Objects\Vehicle\JoltMotorcycle.h" />
     <ClInclude Include="source\Physics\JoltHeader.h" />
     <ClInclude Include="source\Physics\PhysicsManager.h" />
+    <ClInclude Include="source\Physics\PhysicsUpdater.h" />
     <ClInclude Include="source\Physics\Render\HeightmapDebugMeshOptimizer.h" />
     <ClInclude Include="source\Physics\Render\PhysicsRenderer.h" />
     <ClInclude Include="source\Physics\Render\PhysicsRenderTask.h" />

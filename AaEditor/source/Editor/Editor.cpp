@@ -166,9 +166,27 @@ void Editor::reset()
 	viewportPanel.reset();
 }
 
+extern std::vector<float> bikeDistances;
+
 void Editor::prepareElements(Camera& camera)
 {
 	ImGui::Begin("Runtime");
+
+	if (!bikeDistances.empty())
+	{
+		if (bikeDistances.size() > 100)
+			bikeDistances.erase(bikeDistances.begin(), bikeDistances.begin() + bikeDistances.size() - 100);
+
+		float dmax = 0.1f;
+		for (auto f : bikeDistances)
+		{
+			if (f > dmax)
+				dmax = f;
+		}
+
+		//ImGui::PlotLines("Frame Times", bikeDistances.data(), (int)bikeDistances.size());
+		ImGui::PlotHistogram("Histogram", bikeDistances.data(), (int)bikeDistances.size(), 0, NULL, 0.0f, dmax, ImVec2(0, 80.0f));
+	}
 
 	ImGui::Text("%.1f FPS (%.2f ms)", ImGui::GetIO().Framerate, 1000.0f / ImGui::GetIO().Framerate);
 	ImGui::SameLine();

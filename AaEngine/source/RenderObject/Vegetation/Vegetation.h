@@ -22,6 +22,7 @@ public:
 		Vector2 chunkWorldSize;
 		Vector2 subUvOffset;
 		Vector2 subUvScale;
+		UINT noiseTexture;
 	};
 
 	void dispatch(ID3D12GraphicsCommandList* commandList, const Input& input, ID3D12Resource* infoBuffer, ID3D12Resource* subgroupMeta);
@@ -99,4 +100,5 @@ private:
 	ComPtr<ID3D12Resource> indexBuffer;
 
 	MaterialInstance* vegMaterial{};
+	FileTexture* noiseTexture{};
 };

@@ -52,7 +52,7 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
 	WaterFlow[DTid.xy] = (half2)velocity;
 
 	float2 worldPosOffset = { 0, 0 };
-	float worldScale = 8000.0f / 1024;
+	float worldScale = 1000.0f / 1024;
 	float2 worldPos = worldScale * DTid.xy + worldPosOffset;
 
 	for (int x = -1; x <= 1; x++)

@@ -260,6 +260,9 @@ void PhysicsManager::update(float deltaTime)
 	int steps = 0;
 	while (accumulator >= fixedTimeStep && steps < maxSteps)
 	{
+		for (auto u : updaters)
+			u->updatePhysics(fixedTimeStep);
+
 		system->Update(fixedTimeStep, 1, &temp_allocator, &job_system);
 		accumulator -= fixedTimeStep;
 		steps++;

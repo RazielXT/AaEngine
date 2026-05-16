@@ -75,28 +75,8 @@ public:
 				handleModeChange();
 				updateDebugState();
 
-				{
-					static float accumulator = 0;
-					const float fixedTimeStep = 1 / 60.f;
-					accumulator += timeSinceLastFrame;
-
-					if (accumulator >= fixedTimeStep)
-					{
-						constexpr int maxSteps = 2;
-						int steps = 0;
-						while (accumulator >= fixedTimeStep && steps < maxSteps)
-						{
-							if (motorcycle)
-								motorcycle->update(fixedTimeStep);
-
-							accumulator -= fixedTimeStep;
-							steps++;
-						}
-
-						if (steps == maxSteps)
-							accumulator = 0.0f;
-					}
-				}
+				if (motorcycle)
+					motorcycle->update(timeSinceLastFrame);
 
 				if (playerBody)
 					playerBody->update(timeSinceLastFrame, camera);

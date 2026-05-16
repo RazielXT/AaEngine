@@ -7,6 +7,7 @@
 #include "InputHandler.h"
 #include "Jolt/Physics/Body/Body.h"
 #include "Jolt/Physics/Constraints/Constraint.h"
+#include "Physics/PhysicsUpdater.h"
 
 class PhysicsManager;
 struct GraphicsResources;
@@ -18,16 +19,18 @@ struct Wheel
 	Vector3 visualPosition;
 };
 
-class ArcadeMotorcycle : public MovableBody, public InputListener
+class ArcadeMotorcycle : public MovableBody, public InputListener, public PhysicsUpdater
 {
 public:
 
 	ArcadeMotorcycle(PhysicsManager& physics);
+	~ArcadeMotorcycle();
 
 	void initialize(RenderWorld&, GraphicsResources& resources, ResourceUploadBatch& batch);
 	void setPositionOrientation(Vector3, Quaternion);
 
 	void update(float delta);
+	void updatePhysics(float delta) override;
 
 	bool keyPressed(int key) override;
 	bool keyReleased(int key) override;

@@ -62,13 +62,16 @@ material BlueVCT : General
 	}
 }
 
-material RedVCT : General
+material Red : General
 {
 	texture Diffuse
 	{
 		file nicered.dds
 	}
 }
+
+
+material RedVCT : Red
 
 material GreenVCT : General
 {

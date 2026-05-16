@@ -20,7 +20,7 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
 		return;
 
 	float falloff = smoothstep(0.0, radius, dist);
-	float delta = heightDelta * 10 * (1.0 - falloff * falloff);
+	float delta = heightDelta * (1.0 - falloff * falloff);
 
 	RWTexture2D<float> WaterMap = ResourceDescriptorHeap[TexIdWaterMap];
 

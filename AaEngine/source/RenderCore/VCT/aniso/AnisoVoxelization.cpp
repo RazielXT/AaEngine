@@ -20,7 +20,7 @@ void AnisoVoxelization::initialize(RenderSystem& renderSystem, const FrameParame
 	shadowRenderables = mgr.getRenderables(Order::Normal);
 	shadowQueue = mgr.createQueue({}, MaterialTechnique::DepthShadowmap);
 
-	constexpr float CascadeDistances[CascadesCount] = { 200, 400, 800, 1600 };
+	constexpr float CascadeDistances[CascadesCount] = { 50, 100, 200, 400 };
 	for (UINT i = 0; i < CascadesCount; i++)
 	{
 		auto& voxels = voxelCascades[i];

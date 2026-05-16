@@ -1,0 +1,50 @@
+import basic.material
+
+material bushBranchesDepth
+{
+	texture Diffuse
+	{
+		file bushBranches.dds
+	}
+
+	vertex_shader
+	{
+		file depthWrite.hlsl
+		entry VSMain
+		profile vs_6_6
+		defines ALPHA_TEST
+	}
+	pixel_shader
+	{
+		file depthWrite.hlsl
+		entry PSMain
+		profile ps_6_6
+		defines ALPHA_TEST
+	}
+
+	shader_defines VERTEX_WAVE
+
+	culling none
+}
+
+material bushBranches : Color
+{
+	texture Diffuse
+	{
+		file bushBranches.dds
+	}
+
+	culling none
+
+	shader_defines VERTEX_WAVE ALPHA_TEST
+
+	technique Depth bushBranchesDepth
+	technique Wireframe bushBranchesWireframe
+}
+
+material bushBranchesWireframe : bushBranches
+{
+	wireframe
+
+	shader_defines VERTEX_WAVE FLAT_COLOR
+}

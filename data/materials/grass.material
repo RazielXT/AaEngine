@@ -31,6 +31,11 @@ material grassBlade : grassBase
 		file grassBlade.dds
 	}
 
+	texture Wind
+	{
+		file perlinNoiseLow.dds
+	}
+
 	culling none
 
 	shader_defines VERTEX_WAVE

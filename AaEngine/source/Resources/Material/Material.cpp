@@ -88,6 +88,9 @@ ID3D12PipelineState* MaterialBase::GetPipelineState(const std::vector<D3D12_INPU
 	props.comparisonFunc = technique != MaterialTechnique::DepthShadowmap ? D3D12_COMPARISON_FUNC_GREATER_EQUAL : D3D12_COMPARISON_FUNC_LESS_EQUAL;
 	props.slopeScaledDepthBias = technique == MaterialTechnique::DepthShadowmap ? 1.0f : ref.pipeline.slopeScaledDepthBias;
 
+	//if (technique == MaterialTechnique::Depth)
+	//	props.DepthBias = -100;
+
 	auto layoutHash = HashInputLayout(layout, target, props.comparisonFunc);
 
 	for (const auto& s : pipelineStates)
@@ -112,6 +115,8 @@ static void fillPipelineStateDesc(T& psoDesc, const MaterialRef& ref, const Mate
 	psoDesc.RasterizerState.DepthBias = ref.pipeline.depthBias;
 	psoDesc.RasterizerState.SlopeScaledDepthBias = technique.slopeScaledDepthBias;
 	psoDesc.RasterizerState.ConservativeRaster = ref.pipeline.conservativeRasterization;
+
+	psoDesc.RasterizerState.DepthBias += technique.DepthBias;
 
 	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	psoDesc.SampleMask = UINT_MAX;

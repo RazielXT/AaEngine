@@ -10,4 +10,5 @@ data/scene/scenes/*
 !data/scene/scenes/voxelOutsideBig
 !data/scene/scenes/cubesTower
 !data/scene/scenes/voxelRoom
-!data/scene/scenes/tmp
+!data/scene/scenes/playground
+

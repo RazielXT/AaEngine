@@ -1,18 +1,4 @@
-material TreeTrunk
-{
-	technique
-	{
-		pass
-		{
-		}
-
-	}
-
-}
-
-
-
-material TreeBranch
+material Blue
 {
 	technique
 	{

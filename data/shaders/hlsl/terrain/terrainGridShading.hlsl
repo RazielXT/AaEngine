@@ -62,7 +62,7 @@ PSInput VSMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
 
 	GridVertexInfo info = ReadGridVertexInfo(InstancingBuffer[instanceID], vertexID, ResourceDescriptorHeap[TexIdHeightmap], LinearWrapSampler, p);
 
-	float heightTexture = GetTexture2D(TexIdGrass).SampleLevel(LinearWrapSampler, info.uv * 50 * 10, 0).w;
+	float heightTexture = GetTexture2D(TexIdGrass).SampleLevel(LinearWrapSampler, info.uv * 50 * 10 / 8.f, 0).w;
 	info.position.y -= heightTexture * 0.25 - 0.2;
 
 	PSInput result;
@@ -122,7 +122,7 @@ GBufferOutput PSMain(PSInput input)
 {
 	SamplerState sampler = GetDynamicMaterialSamplerLinear();
 	float3 cameraView = CameraPosition - input.worldPosition.xyz;
-	float camDistance = length(cameraView);
+	float camDistance = length(cameraView) * 8.f;
 
 	GridTBN tbn = ReadGridTBN(ResourceDescriptorHeap[TexIdNormalmap], sampler, input.uv);
 
@@ -135,7 +135,7 @@ GBufferOutput PSMain(PSInput input)
 
 	//float4 rockFarTexture = GetTexture(TexIdDiffuse).Sample(sampler, texCoords / 10.f);
 	//float rockFarWeight = saturate((camDistance - 500) / 1000);
-	float triplanarScale = 0.03;
+	float triplanarScale = 0.03 * 8.f;
 	float triplanarScaleFar = triplanarScale * 0.1;
 	float rockDistanceWeight = saturate(camDistance / 300);
 

@@ -6,7 +6,7 @@
 namespace
 {
 	const UINT ShadowMapSize = 1024;
-	const float LightRange = 8000.f;
+	const float LightRange = 1000.f;
 	Vector2 NearFarPlane{};
 }
 
@@ -23,7 +23,7 @@ void ShadowMaps::init(GraphicsResources& resources)
 		createShadowMap(cascade, ShadowMapSize, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, "ShadowMapCascade" + std::to_string(i++));
 
 	for (int i = 0; auto c : cascadeInfo.cascadePartitionsZeroToOne)
-		data.ShadowCascadeDistance[i++] = (float)c;
+		data.ShadowCascadeDistance[i++] = c;
 
 	data.TexIdShadowMap0 = cascades[0].texture.view.srvHeapIndex;
 	data.ShadowMapSize = ShadowMapSize;

@@ -42,7 +42,7 @@ uint getGrassInfo(out GrassInfo info, float2 coords)
 	float rnd = RandomFrom2D(coords.xy);
 	float rotation = rnd * 6.283185f;
 	//info.random = rnd;
-	float scale = (normal.y - 0.7) * 5 + rnd * 0.3;
+	float scale = max(0.4f, (normal.y - 0.7) * 5) + rnd * 0.3;
 	//info.rotationScale = PackR16G16_FLOAT(float2(rotation, scale));
 	info.rotation = rotation;
 	info.scale = scale;

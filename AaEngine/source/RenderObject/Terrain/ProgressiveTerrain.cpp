@@ -16,8 +16,8 @@ void ProgressiveTerrain::initialize(RenderSystem& renderSystem, GraphicsResource
 	terrainTexture = resources.textures.loadFile(*renderSystem.core.device, batch, "Mountain Range Height Map PNG.png");
 	resources.descriptors.createTextureView(*terrainTexture);
 
-	params.tileSize = 8000.f;
-	params.tileHeight = 8000.f;
+	params.tileSize = 1000.f;
+	params.tileHeight = 1000.f;
 	params.tileCenterOffset = { params.tileSize * -0.5f, params.tileHeight * -0.5f, params.tileSize * -0.5f };
 
 	terrainGridTiles.Initialize({ params.tileSize, params.tileSize }, params.tileCenterOffset, 10);
@@ -70,7 +70,7 @@ void ProgressiveTerrain::initialize(RenderSystem& renderSystem, GraphicsResource
 
 	generateNormalMipsCS.init(*renderSystem.core.device, "generateXYMips4xCS", resources.shaders);
 
-	csShader = resources.shaders.getShader("generateHeightmapCS", ShaderType::Compute, ShaderRef{ "terrain/terrainGridHeightmapDefinedCS.hlsl", "CSMain", "cs_6_6" });
+	csShader = resources.shaders.getShader("generateHeightmapCS", ShaderType::Compute, ShaderRef{ "terrain/terrainGridHeightmapCS.hlsl", "CSMain", "cs_6_6" });
 	generateHeightmapCS.init(*renderSystem.core.device, *csShader);
 }
 

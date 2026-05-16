@@ -47,7 +47,7 @@ PSInput VSMain(uint vertexID : SV_VertexID)
 	float falloff = smoothstep(1.0f, 0.0f, dist / falloffRadius);
 	float height = falloff * heightScale;
 
-	const float scale = 1000;
+	const float scale = 1000 / 8.0f;
 	float4 worldPosition = float4(posXZ.x * halfSize, height, posXZ.y * halfSize, 1);
 
 	float noiseHeight = GetHeight(uv);
@@ -91,7 +91,7 @@ float3 applyFog(float3 worldPosition, float3 baseColor)
 	float3 fogAtmDir = normalize(CameraPosition - worldPosition);
 	fogAtmDir.y = saturate(fogAtmDir.y);
 	const float3 fogColor = getSkyColor(fogAtmDir, Sun, LinearWrapSampler) / 2;
-	float camDistance = length(CameraPosition.xz - worldPosition.xz);
+	float camDistance = length(CameraPosition.xz - worldPosition.xz) * 8.f;
 
 	float fogDensity = 0.000000001;
 	float fogFactor = 1.0 - exp(-camDistance * camDistance * fogDensity);

@@ -1,0 +1,39 @@
+material terrainGrass
+{
+	technique
+	{
+		pass
+		{
+		}
+
+	}
+
+}
+
+
+
+material DarkRed
+{
+	technique
+	{
+		pass
+		{
+		}
+
+	}
+
+}
+
+
+
+material DarkBlue
+{
+	technique
+	{
+		pass
+		{
+		}
+
+	}
+
+}

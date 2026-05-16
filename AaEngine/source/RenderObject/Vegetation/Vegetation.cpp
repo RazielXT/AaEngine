@@ -20,6 +20,9 @@ void Vegetation::initialize(RenderSystem& renderSystem, GraphicsResources& resou
 	csShader = resources.shaders.getShader("indirectDrawIndexedClearCS", ShaderType::Compute);
 	indirectDrawClearCS.init(*renderSystem.core.device, *csShader);
 
+	noiseTexture = resources.textures.loadFile(*renderSystem.core.device, batch, "perlinNoiseLow.dds");
+	resources.descriptors.createTextureView(*noiseTexture);
+
 	createBillboardIndexBuffer(renderSystem, batch);
 	initializeImpostors(renderSystem, batch);
 }
@@ -151,6 +154,8 @@ void Vegetation::regenerateChunk(ID3D12GraphicsCommandList* commandList, Vegetat
 	input.chunkWorldSize = { chunkSize, chunkSize };
 	input.subUvOffset = { subX * uvScale, subY * uvScale };
 	input.subUvScale = { uvScale, uvScale };
+
+	input.noiseTexture = noiseTexture->srvHeapIndex;
 
 	// Clear subgroup metadata (counters=0, minY=INT_MAX, maxY=INT_MIN) before dispatching find CS
 	CD3DX12_RESOURCE_BARRIER toCopyDest = CD3DX12_RESOURCE_BARRIER::Transition(chunk.subgroupMetaBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST);

@@ -12,6 +12,7 @@
 #include "Physics/Render/PhysicsRenderTask.h"
 #include <dxgidebug.h>
 #include <filesystem>
+#include "SceneGraph/Scene.h"
 
 ApplicationCore::ApplicationCore(TargetViewport& viewport) : renderSystem(viewport), resources(renderSystem), renderWorld(resources)
 {
@@ -170,6 +171,37 @@ void ApplicationCore::loadScene()
 	renderSystem.core.ExecuteCommandList(commands);
 	renderSystem.core.WaitForCurrentFrame();
 	commands.deinit();
+
+	struct MeshRendererComponent
+	{
+		int idx = 0;
+	};
+
+	class RenderSystem
+	{
+	public:
+
+		RenderSystem(Scene& scene)
+		{
+			scene.Events<MeshRendererComponent>().onAdded = 
+				[&](Entity e, MeshRendererComponent& c)
+				{
+					c.idx++;
+				};
+			scene.Events<MeshRendererComponent>().onRemoved =
+				[&](Entity e, MeshRendererComponent& c)
+				{
+					c.idx--;
+				};
+		}
+	};
+
+	Scene scene;
+	RenderSystem rs(scene);
+
+	auto entity = scene.CreateEntity();
+	scene.AddComponent(entity, MeshRendererComponent{ -10 });
+	scene.DestroyEntity(entity);
 }
 
 DebugReporter::DebugReporter()

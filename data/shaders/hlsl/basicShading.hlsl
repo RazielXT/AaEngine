@@ -17,6 +17,7 @@ uint TexIdDiffuse;
 float3 CameraPosition;
 uint2 ViewportSize;
 #ifdef VERTEX_WAVE
+uint TexIdWind;
 float Time;
 float DeltaTime;
 #endif
@@ -68,50 +69,75 @@ struct PSInput
 	float4 currentPosition : TEXCOORD3;
 };
 
+SamplerState LinearWrapSampler : register(s0);
+
+#ifdef VERTEX_WAVE
+float WindWaveFactor(float3 basePos, float time)
+{
+	//time = 0;
+	const float3 WindDir = normalize(float3(-1, 0.25, 0));
+	const float WindSpeed = 2 * 0.1;
+
+	float2 windWorldUv = basePos.xz * 0.02 + WindDir.xz * WindSpeed * time;
+	float wind = GetTexture2D1f(TexIdWind).SampleLevel(LinearWrapSampler,windWorldUv , 0);
+
+	float2 windWorldUv2 = basePos.xz * 0.2 + WindDir.xz * WindSpeed * time * 2;
+	wind += 0.3f * GetTexture2D1f(TexIdWind).SampleLevel(LinearWrapSampler,windWorldUv2, 0);
+
+	//wind *= 2;
+	wind -= 0.3f;
+
+	return wind;
+}
+
 float3 WindWave(float3 basePos, float swayFactor, float time)
 {
-	const float3 WindDir = normalize(float3(1, 0.5, 0));
-	const float WindStrength = 0.5f;
-	const float WindSpeed = 2;
+	const float3 WindDir = normalize(float3(-1, 0.25, 0));
+	const float WindStrength = 6 * 0.5f / 8.f;
 
-	float timeWeight = WindSpeed * time;
+	/*float timeWeight = WindSpeed * time;
 
-	float w1 = sin((basePos.x * 2 + basePos.z) + timeWeight);
-	float w2 = sin((basePos.z + basePos.y) * 4.0 + timeWeight);
+	float w1 = sin((basePos.x * 2 * 8 + basePos.z* 8 ) + timeWeight);
+	float w2 = sin((basePos.z* 8  + basePos.y* 8 ) * 4.0 + timeWeight);
 	float wind = w1 - w2;
 
 	// Normalize to 0..1
-	wind = wind * 0.5 + 0.5;
+	wind = wind * 0.5 + 0.5;*/
+
+	float wind = WindWaveFactor(basePos, time);
 
 	float windOffset = wind * WindStrength * swayFactor;
 
 	return basePos + WindDir * windOffset;
 }
 
-
 void ComputeBaseBend(float3 basePosOS, inout float3 vertexPosOS, float w)
 {
-	vertexPosOS.y -= dot(basePosOS.xz, basePosOS.xz) * 0.15 * w;
+	vertexPosOS.y -= dot(basePosOS.xz, basePosOS.xz) * (0.15 / 8.f) * w;
 }
+
+#endif
 
 PSInput VSMain(VSInput input)
 {
 	PSInput result;
 
 #if defined(INSTANCED) || defined(GRASS_INSTANCED)
+	float bendScale = 1;
 	#ifdef INSTANCED
 		result.worldPosition = mul(input.position, InstancingBuffer[input.instanceID]).xyz;
 		result.normal = normalize(mul(input.normal, (float3x3)InstancingBuffer[input.instanceID]));
 	#else
 		RenderGrassInfo grass = InstancingBuffer[input.instanceID];
-		result.worldPosition = mul(input.position.xyz, grass.RotationMatrix()) * grass.scale + grass.position;
+		bendScale = grass.scale;
+		result.worldPosition = mul(input.position.xyz, grass.RotationMatrix()) * grass.scale + grass.position + float3(0,0.1,0);
 		result.normal = normalize(mul(input.normal, grass.RotationMatrix()));
 	#endif
 
 	#ifdef VERTEX_WAVE
-		const float WaveFade = 200.f;
+		const float WaveFade = 200.f / 8.f;
 		float waveWeight = saturate(1 - length(CameraPosition - result.worldPosition)/WaveFade) * (1-input.uv.y);
-		ComputeBaseBend(input.position.xyz, result.worldPosition, waveWeight);
+		ComputeBaseBend(input.position.xyz, result.worldPosition, waveWeight * bendScale * 6);
 		float3 worldPositionNoWave = result.worldPosition;
 		result.worldPosition = WindWave(result.worldPosition, waveWeight, Time);
 	#endif
@@ -146,9 +172,6 @@ PSInput VSMain(VSInput input)
 
 #ifndef NO_TEXTURE
 	result.uv = input.uv;
-	#ifndef VERTEX_WAVE
-		//result.uv *= 10;
-	#endif
 #endif
 
 	return result;
@@ -178,6 +201,10 @@ GBufferOutput PSMain(PSInput input)
 
 #ifdef CHUNK_DEBUG_COLOR
 	albedo = lerp(albedo, GetDebugColor(ChunkId), 0.7);
+#endif
+
+#if defined(WIND_DEBUG_COLOR) && defined(VERTEX_WAVE)
+	albedo = lerp(albedo, WindWaveFactor(input.worldPosition, Time), 0.9);
 #endif
 
 #ifdef GRASS_INSTANCED

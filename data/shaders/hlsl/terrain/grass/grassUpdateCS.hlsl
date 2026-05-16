@@ -32,8 +32,8 @@ bool isVisible(float3 position, float radius, float scale)
 	float distSq = dot(position - CameraPosition, position - CameraPosition);
 	float rnd = RandomFrom2D(position.xz) * scale;
 
-	const float MinDistanceRemoval = 100;
-	const float MaxDistanceRemoval = 600;
+	const float MinDistanceRemoval = 15;
+	const float MaxDistanceRemoval = 75;
 
 	// pick a random cutoff distance
 	float cutoff = MinDistanceRemoval + rnd * (MaxDistanceRemoval - MinDistanceRemoval);
@@ -73,7 +73,7 @@ void main(uint3 groupID : SV_GroupID, uint groupIndex : SV_GroupIndex)
 		{
 			renderInfo.position = info.position;
 			/*float2 rotationScale = UnpackR16G16_FLOAT(info.rotationScale);*/
-			renderInfo.scale    = info.scale;
+			renderInfo.scale    = info.scale / 8.f;
 			renderInfo.cosYaw   = cos(info.rotation);
 			renderInfo.sinYaw   = sin(info.rotation);
 		}

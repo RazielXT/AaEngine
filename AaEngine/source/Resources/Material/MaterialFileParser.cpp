@@ -362,14 +362,25 @@ void PostProcessMaterial(MaterialRef& ref, shaderRefMaps& shaders, const ParsedO
 	}
 }
 
-void parseMaterialFile(std::vector<MaterialRef>& mats, shaderRefMaps& shaders, std::string file)
+void parseMaterialFile(std::vector<MaterialRef>& mats, shaderRefMaps& shaders, std::filesystem::path file)
 {
+	std::map<std::string, Config::Data> imports;
+
 	auto matsStartCount = mats.size();
-	auto objects = Config::Parse(file);
+	auto objects = Config::Parse(file.generic_string());
 
 	ParsedObjects parsed;
 	for (auto& obj : objects)
 	{
+		if (obj.type == "import")
+		{
+			auto importFile = (file.parent_path() / obj.value).string();
+			imports[importFile] = Config::Parse(importFile);
+
+			for (auto& obj : imports[importFile])
+				parsed[obj.value] = &obj;
+		}
+
 		if (obj.type == "material")
 		{
 			MaterialRef mat;
@@ -401,7 +412,7 @@ void MaterialFileParser::parseAllMaterialFiles(std::vector<MaterialRef>& mats, s
 		else if (entry.is_regular_file() && entry.path().generic_string().ends_with(".material"))
 		{
 			Logger::log("Parsing " + entry.path().generic_string());
-			parseMaterialFile(mats, shaders, entry.path().generic_string());
+			parseMaterialFile(mats, shaders, entry.path());
 		}
 	}
 

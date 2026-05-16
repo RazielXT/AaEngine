@@ -35,16 +35,16 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 
 	float depth = depthMap.Load(int3(input.Position.xy, 0)).r;
 	float4 worldPosition = float4(ReconstructWorldPosition(input.TexCoord, depth, InvViewProjectionMatrix), 1);
-	float camDistance = length(CameraPosition - worldPosition.xyz);
+	float camDistance = length(CameraPosition - worldPosition.xyz) * 8.f;
 
-	float directShadow = getPssmShadow(worldPosition, camDistance, dotLighting, ShadowSampler, Sun);
+	float directShadow = getPssmShadow(worldPosition, camDistance / 8.f, dotLighting, ShadowSampler, Sun);
 	directShadow *= saturate(-10 * Sun.Direction.y);
 
 	float3 skyColor = getSkyColor(worldNormal, Sun, LinearSampler);
-	skyColor = 0.35 * skyColor * saturate(worldNormal.y);
+	skyColor = 0.3 * skyColor * saturate(worldNormal.y);
 
 	float4 vctLighting = vctMap.Load(int3(input.Position.xy, 0));// + worldNormal.y * Sun.Color * 0.1;// * saturate(dot(Sun.Direction, worldNormal) + 0.5);
-	float3 lighting = dotLighting * Sun.Color * directShadow + skyColor + vctLighting.rgb + emmisive * 10;
+	float3 lighting = dotLighting * Sun.Color * directShadow + skyColor + 2 * vctLighting.rgb + emmisive * 10;
 	float ssao = ssaoMap.Sample(LinearSampler, input.TexCoord);
 	lighting *= lerp(ssao, 1, saturate((lighting.r + lighting.g + lighting.b) / 3));
 	//lighting *= ssao;

@@ -10,7 +10,7 @@ float4 PSCombineLighting(VS_OUTPUT input) : SV_TARGET
 
 	float3 fogColor = float3(0.6,0.6,0.7);
 	float camDistance = distanceMap.Load(int3(input.Position.xy, 0)).r;
-	original.rgb = lerp(original.rgb, fogColor, min(0.85, saturate((camDistance - 1000) / 14000)));
+	original.rgb = lerp(original.rgb, fogColor, min(0.85, saturate((camDistance - 1000 / 8.f) / (14000/ 8.f))));
 
     return original;
 }

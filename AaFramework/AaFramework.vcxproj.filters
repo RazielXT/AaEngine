@@ -135,5 +135,8 @@
     <ClInclude Include="source\Objects\Vehicle\ArcadeMotorcycle.h">
       <Filter>Source Files\Objects\Vehicle</Filter>
     </ClInclude>
+    <ClInclude Include="source\Physics\PhysicsUpdater.h">
+      <Filter>Source Files\Physics</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

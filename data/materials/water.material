@@ -45,7 +45,7 @@ material WaterLake
 
 	default_params
 	{
-		float WaterFade 100
+		float WaterFade 20
 		float WaterColor 0.1 0.2 0.21
 	}
 }

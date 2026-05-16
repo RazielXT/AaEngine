@@ -136,8 +136,8 @@ PSOutput PSMain(PSInput input)
 	output.normal = normal.xy;
 
 	float2 projSpeed = float2(1,1);
-	float2 projOffset = Time * projSpeed * 10;
-	float projScale = 0.01;
+	float2 projOffset = Time * projSpeed * 10 / 8.f;
+	float projScale = 0.01 * 8.f;
 	float projection = GetTexture2D(TexIdCaustics).Sample(LinearWrapSampler, (groundPosition.xy+groundPosition.z + projOffset)*projScale).r;
 	projection *= GetTexture2D(TexIdCaustics).Sample(LinearWrapSampler, (groundPosition.xy+groundPosition.z + projOffset*-1.1)*projScale * 1.1).r;
 	output.caustics = projection * 0.3 * (input.worldPosition.y - groundPosition.y) / FadeDistance;

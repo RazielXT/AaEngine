@@ -4,6 +4,7 @@
 #include <vector>
 #include "Resources/Shader/ShaderDataBuffers.h"
 #include "Scene/RenderEntity.h"
+#include "Scene/Camera.h"
 
 // Data sent to the StructuredBuffer
 struct TileData
@@ -70,6 +71,25 @@ public:
 		}
 	}
 
+	void BuildLOD(const Camera& camera, XMINT2 offset)
+	{
+		auto cameraPos = camera.getPosition();
+		auto frustum = camera.prepareFrustum();
+
+		m_renderList.clear();
+
+		auto worldSize = m_smallestTileSize * TilesWidth;
+		Vector3 cameraPosCentered = cameraPos - Vector3(offset.x * worldSize, 0, offset.y * worldSize);
+
+		// Iterate through all Root Blocks
+		for (uint32_t bx = 0; bx < numBlocksX; ++bx) {
+			for (uint32_t by = 0; by < numBlocksY; ++by) {
+				// Each root is a TilesWidth x TilesWidth unit block
+				RecursiveSubdivide(bx * TilesWidth, by * TilesWidth, TilesWidth, 0, cameraPosCentered, frustum);
+			}
+		}
+	}
+
 private:
 
 	void RecursiveSubdivide(uint32_t x, uint32_t y, uint32_t size, uint32_t level, const Vector3& cameraPos)
@@ -96,6 +116,42 @@ private:
 		}
 		else {
 			// Output as integer coordinates and LOD
+			m_renderList.push_back({ x, y, level, m_subdivideThresholds[level] });
+		}
+	}
+
+	void RecursiveSubdivide(uint32_t x, uint32_t y, uint32_t size, uint32_t level, const Vector3& cameraPos, const BoundingFrustum& frustum)
+	{
+		// Center calculation in world space
+		float worldHalfSize = (size * 0.5f) * m_smallestTileSize;
+		Vector3 tileCenterWorld = m_gridOrigin + Vector3(
+			(x * m_smallestTileSize) + worldHalfSize,
+			0, // Update this if your grid origin.y is the floor height
+			(y * m_smallestTileSize) + worldHalfSize
+		);
+
+		// -------- DISTANCE LOD --------
+		float distSq = Vector3::DistanceSquared(Vector3(cameraPos.x, m_gridOrigin.y, cameraPos.z), tileCenterWorld);
+
+		if (level < (lodsLevels - 1) && distSq < m_subdivideThresholdsSq[level]) {
+			uint32_t child = size / 2;
+			uint32_t next = level + 1;
+
+			RecursiveSubdivide(x, y, child, next, cameraPos, frustum);
+			RecursiveSubdivide(x + child, y, child, next, cameraPos, frustum);
+			RecursiveSubdivide(x, y + child, child, next, cameraPos, frustum);
+			RecursiveSubdivide(x + child, y + child, child, next, cameraPos, frustum);
+		}
+		else
+		{
+			BoundingBox bbox;
+			bbox.Center = tileCenterWorld;
+			bbox.Extents = Vector3(worldHalfSize, 4000, worldHalfSize);
+
+			// -------- FRUSTUM CULL --------
+			if (!frustum.Intersects(bbox))
+				return;
+
 			m_renderList.push_back({ x, y, level, m_subdivideThresholds[level] });
 		}
 	}

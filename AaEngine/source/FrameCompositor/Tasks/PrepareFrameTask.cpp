@@ -25,7 +25,7 @@ void PrepareFrameTask::run(RenderContext& ctx, CommandsData& cmd, CompositorPass
 		ctx.camera->setPixelOffset(fsr.getJitter(), fsr.getRenderSize());
 
 	renderWorld.water.update(provider.renderSystem, cmd.commandList, provider.params.timeDelta, provider.params.frameIndex, ctx.camera->getPosition());
-	renderWorld.terrain.update(cmd.commandList, ctx.camera->getPosition(), provider.params.frameIndex);
+	renderWorld.terrain.update(cmd.commandList, *ctx.camera, provider.params.frameIndex);
 	renderWorld.vegetation.update(cmd.commandList, ctx.camera->getPosition(), renderWorld.terrain);
 	renderWorld.grass.update(cmd.commandList, *ctx.camera, renderWorld.terrain);
 }

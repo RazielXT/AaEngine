@@ -30,7 +30,7 @@ material DeferredVCT
 
 	pixel_shader
 	{
-		file postprocess/deferredAnisoVCT.hlsl
+		file postprocess/deferredVCT.hlsl
 		entry PSMain
 		profile ps_6_6
 	}

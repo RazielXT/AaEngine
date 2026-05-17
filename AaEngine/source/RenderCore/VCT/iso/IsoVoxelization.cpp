@@ -20,7 +20,7 @@ void IsoVoxelization::initialize(RenderSystem& renderSystem, const FrameParamete
 	shadowRenderables = mgr.getRenderables(Order::Normal);
 	shadowQueue = mgr.createQueue({}, MaterialTechnique::DepthShadowmap);
 
-	constexpr float CascadeDistances[CascadesCount] = { 200, 400, 800, 1600 };
+	constexpr float CascadeDistances[CascadesCount] = { 30, 60, 120, 240 };
 	for (UINT i = 0; i < CascadesCount; i++)
 	{
 		auto& voxels = voxelCascades[i];

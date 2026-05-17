@@ -31,6 +31,8 @@ void ArcadeMotorcycle::initialize(RenderWorld& world, GraphicsResources& resourc
 
 void ArcadeMotorcycle::setPositionOrientation(Vector3 position, Quaternion q)
 {
+	cachedPosition = position;
+
 	physics.system->GetBodyInterface().SetPositionAndRotation(motorcycleBody->GetID(), { position.x, position.y, position.z }, { q.x, q.y, q.z, q.w }, EActivation::DontActivate);
 }
 
@@ -617,20 +619,12 @@ void ArcadeMotorcycle::updateGraphics(float dt)
 	cachedVelocity = p - cachedPosition;
 	bikeDistances.push_back(cachedVelocity.Length());
 
-
 	// Apply smoothing to cached camera position
-// 	const float smooth = 0.3f; // tweak to taste
-// 	cachedPosition += (p - cachedPosition) * smooth;
-
 	// tau = smoothing time constant in seconds (0.05–0.15 is typical)
 	float tau = 0.08f;
-
-	// Compute smoothing factor based on dt
-	float alpha = 1.0f - expf(-dt / tau);
-
-	// Apply smoothing
-	cachedPosition += (p - cachedPosition) * alpha;
-
+	float smooth = 1.0f - expf(-dt / tau);
+// 	const float smooth = 0.3f;
+	cachedPosition += (p - cachedPosition) * smooth;
 
 	graphics.chassis->setPositionOrientation(
 		cachedPosition,

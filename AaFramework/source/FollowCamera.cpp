@@ -9,6 +9,8 @@ FollowCamera::FollowCamera(Camera& camera, PhysicsManager& p) : CameraHandler(ca
 void FollowCamera::activate()
 {
 	initialized = false;
+	smoothedTargetPosition = camera.getPosition();
+	currentLookDirection = camera.getCameraDirection();
 }
 
 void FollowCamera::setTarget(MovableBody* body)

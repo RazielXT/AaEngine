@@ -90,7 +90,7 @@ float WindWaveFactor(float3 basePos, float time)
 	return wind;
 }
 
-float3 WindWave(float3 basePos, float swayFactor, float time)
+float3 WindWave_(float3 basePos, float swayFactor, float time)
 {
 	const float3 WindDir = normalize(float3(-1, 0.25, 0));
 	const float WindStrength = 6 * 0.5f / 8.f;
@@ -109,6 +109,18 @@ float3 WindWave(float3 basePos, float swayFactor, float time)
 	float windOffset = wind * WindStrength * swayFactor;
 
 	return basePos + WindDir * windOffset;
+}
+
+float3 WindWave(float3 objPos, float3 basePos, float swayFactor, float time)
+{
+	const float3 WindDir = normalize(float3(-1, 0.25, 0));
+	const float WindStrength = 0.03f;
+	const float WindSpeed = 3;
+
+	float x = (2 * sin(WindSpeed * 1 * (objPos.x + objPos.y + objPos.z + time))) + 1;
+	float z = (1 * sin(WindSpeed * 2 * (objPos.x + objPos.y + objPos.z + time))) + 0.5f;
+
+	return basePos + WindStrength * swayFactor * float3(x, 0, z);
 }
 
 void ComputeBaseBend(float3 basePosOS, inout float3 vertexPosOS, float w)
@@ -139,12 +151,12 @@ PSInput VSMain(VSInput input)
 		float waveWeight = saturate(1 - length(CameraPosition - result.worldPosition)/WaveFade) * (1-input.uv.y);
 		ComputeBaseBend(input.position.xyz, result.worldPosition, waveWeight * bendScale * 6);
 		float3 worldPositionNoWave = result.worldPosition;
-		result.worldPosition = WindWave(result.worldPosition, waveWeight, Time);
+		result.worldPosition = WindWave(grass.position, result.worldPosition, waveWeight, Time);
 	#endif
 	result.position = mul(float4(result.worldPosition,1), ViewProjectionMatrix);
 	
 	#ifdef VERTEX_WAVE
-		float4 previousWorldPosition = float4(WindWave(worldPositionNoWave, waveWeight, Time - DeltaTime), 1);
+		float4 previousWorldPosition = float4(WindWave(grass.position, worldPositionNoWave, waveWeight, Time - DeltaTime), 1);
 		result.previousPosition = mul(previousWorldPosition, ViewProjectionMatrix);
 	#else
 		result.previousPosition = result.position; // no support

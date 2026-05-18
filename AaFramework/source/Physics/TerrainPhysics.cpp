@@ -6,9 +6,103 @@
 
 using namespace JPH;
 
+XMINT2 TerrainPhysics::tileToHeightmapChunk(XMINT2 tileCoord)
+{
+	// Integer floor division: tile 0..3 -> heightmap 0, tile -4..-1 -> heightmap -1
+	return {
+		(tileCoord.x >= 0) ? tileCoord.x / (int)TilesPerHeightmap : (tileCoord.x + 1) / (int)TilesPerHeightmap - 1,
+		(tileCoord.y >= 0) ? tileCoord.y / (int)TilesPerHeightmap : (tileCoord.y + 1) / (int)TilesPerHeightmap - 1
+	};
+}
+
+XMINT2 TerrainPhysics::tileLocalIndex(XMINT2 tileCoord)
+{
+	int lx = tileCoord.x % (int)TilesPerHeightmap;
+	int ly = tileCoord.y % (int)TilesPerHeightmap;
+	if (lx < 0) lx += TilesPerHeightmap;
+	if (ly < 0) ly += TilesPerHeightmap;
+	return { lx, ly };
+}
+
 void TerrainPhysics::init(ID3D12Device* d)
 {
 	device = d;
+}
+
+TerrainPhysics::HeightmapCache* TerrainPhysics::findCache(XMINT2 heightmapChunk)
+{
+	for (auto& cache : heightmapCaches)
+		if (cache.matches(heightmapChunk))
+			return &cache;
+	return nullptr;
+}
+
+TerrainPhysics::HeightmapCache* TerrainPhysics::allocateCache(XMINT2 heightmapChunk)
+{
+	// First check if already cached
+	if (auto* existing = findCache(heightmapChunk))
+		return existing;
+
+	// Find an unused slot or evict the one not needed by current 5x5 tile set
+	// Determine which heightmap chunks are needed by the current physics grid
+	std::unordered_set<uint64_t> neededHeightmaps;
+	int halfExtent = (int)PhysicsGridSize / 2;
+	for (int dx = -halfExtent; dx <= halfExtent; dx++)
+		for (int dy = -halfExtent; dy <= halfExtent; dy++)
+		{
+			XMINT2 tile = { physicsCenter.x + dx, physicsCenter.y + dy };
+			XMINT2 hc = tileToHeightmapChunk(tile);
+			neededHeightmaps.insert(packCoord(hc));
+		}
+
+	// Find a slot: prefer empty, then not-needed
+	HeightmapCache* bestSlot = nullptr;
+	for (auto& cache : heightmapCaches)
+	{
+		if (!cache.isValid())
+		{
+			bestSlot = &cache;
+			break;
+		}
+		if (neededHeightmaps.find(packCoord(cache.worldChunk)) == neededHeightmaps.end())
+		{
+			bestSlot = &cache;
+			break;
+		}
+	}
+
+	// Fallback: just use the first slot (shouldn't happen with correct MaxCachedHeightmaps)
+	if (!bestSlot)
+		bestSlot = &heightmapCaches[0];
+
+	bestSlot->worldChunk = heightmapChunk;
+	bestSlot->hasCpuData = false;
+	bestSlot->readbackPending = false;
+	return bestSlot;
+}
+
+void TerrainPhysics::ensureHeightmapReadback(ID3D12GraphicsCommandList* commandList, XMINT2 heightmapChunk, ProgressiveTerrain& terrain)
+{
+	auto* cache = allocateCache(heightmapChunk);
+
+	// Already have CPU data or readback is already pending
+	if (cache->hasCpuData || cache->readbackPending)
+		return;
+
+	if (!cache->readback.isInitialized())
+		cache->readback.init(device, HeightmapSize, HeightmapSize, DXGI_FORMAT_R16_UNORM);
+
+	auto& heightmap = terrain.getHeightmap(heightmapChunk);
+
+	auto barrierToSrc = CD3DX12_RESOURCE_BARRIER::Transition(heightmap.texture.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_SOURCE);
+	commandList->ResourceBarrier(1, &barrierToSrc);
+
+	cache->readback.copyFrom(commandList, heightmap.texture.Get());
+
+	auto barrierBack = CD3DX12_RESOURCE_BARRIER::Transition(heightmap.texture.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	commandList->ResourceBarrier(1, &barrierBack);
+
+	cache->readbackPending = true;
 }
 
 void TerrainPhysics::requestReadbacks(ID3D12GraphicsCommandList* commandList, ProgressiveTerrain& terrain)
@@ -16,55 +110,48 @@ void TerrainPhysics::requestReadbacks(ID3D12GraphicsCommandList* commandList, Pr
 	if (physicsCenter.x == INT_MAX)
 		return;
 
-	// Request readback for chunks that were regenerated this frame and are in the physics 3x3
-	for (auto& worldChunk : terrain.regeneratedChunks)
+	// If any heightmap in our tile range was regenerated, invalidate its cache
+	for (auto& regeneratedChunk : terrain.regeneratedChunks)
 	{
-		int dx = worldChunk.x - physicsCenter.x;
-		int dy = worldChunk.y - physicsCenter.y;
-		if (abs(dx) <= 1 && abs(dy) <= 1)
+		if (auto* cache = findCache(regeneratedChunk))
 		{
-			int gx = wrapIndex(worldChunk.x);
-			int gy = wrapIndex(worldChunk.y);
-			requestReadback(commandList, gx, gy, worldChunk, terrain);
+			cache->hasCpuData = false;
+			cache->readbackPending = false;
 		}
 	}
 
-	// Request readback for chunks that entered the 3x3 (from center shift) but weren't regenerated
-	for (int dx = -1; dx <= 1; dx++)
-		for (int dy = -1; dy <= 1; dy++)
+	// Ensure readback for all heightmaps needed by the 5x5 physics tile grid
+	int halfExtent = (int)PhysicsGridSize / 2;
+	std::unordered_set<uint64_t> requestedHeightmaps;
+	for (int dx = -halfExtent; dx <= halfExtent; dx++)
+		for (int dy = -halfExtent; dy <= halfExtent; dy++)
 		{
-			XMINT2 worldChunk = { physicsCenter.x + dx, physicsCenter.y + dy };
-			int gx = wrapIndex(worldChunk.x);
-			int gy = wrapIndex(worldChunk.y);
-
-			// If we already scheduled this chunk for readback, or it already has a body, skip
-			if (readbackPending[gx][gy])
-				continue;
-
-			uint64_t key = packCoord(worldChunk);
-			if (activeBodies.find(key) != activeBodies.end())
-				continue;
-			if (pendingBuildChunks.find(key) != pendingBuildChunks.end())
-				continue;
-
-			requestReadback(commandList, gx, gy, worldChunk, terrain);
+			XMINT2 tile = { physicsCenter.x + dx, physicsCenter.y + dy };
+			XMINT2 hc = tileToHeightmapChunk(tile);
+			uint64_t key = packCoord(hc);
+			if (requestedHeightmaps.find(key) == requestedHeightmaps.end())
+			{
+				requestedHeightmaps.insert(key);
+				ensureHeightmapReadback(commandList, hc, terrain);
+			}
 		}
 }
 
 void TerrainPhysics::consumeReadbacks(const Vector3& cameraPos, const TerrainGridParams& params, PhysicsManager& physics)
 {
-	// Update center with hysteresis
+	// Update center with hysteresis (in physics tile coordinates)
 	bool centerChanged = updateCenter(cameraPos, params);
 
 	if (centerChanged)
 	{
-		// Remove bodies that are no longer in the 3x3
+		// Remove bodies outside the 5x5 tile grid
+		int halfExtent = (int)PhysicsGridSize / 2;
 		std::vector<uint64_t> toRemove;
 		for (auto& [key, body] : activeBodies)
 		{
-			int dx = body.worldChunk.x - physicsCenter.x;
-			int dy = body.worldChunk.y - physicsCenter.y;
-			if (abs(dx) > 1 || abs(dy) > 1)
+			int dx = body.tileCoord.x - physicsCenter.x;
+			int dy = body.tileCoord.y - physicsCenter.y;
+			if (abs(dx) > halfExtent || abs(dy) > halfExtent)
 				toRemove.push_back(key);
 		}
 		for (auto key : toRemove)
@@ -74,15 +161,47 @@ void TerrainPhysics::consumeReadbacks(const Vector3& cameraPos, const TerrainGri
 		}
 	}
 
-	// Collect any finished async builds (adds bodies to physics system)
+	// Collect any finished async builds
 	collectFinishedBuilds(physics);
 
-	// Consume completed readbacks from previous frame — launches async builds
-	for (int gx = 0; gx < (int)PhysicsGridSize; gx++)
-		for (int gy = 0; gy < (int)PhysicsGridSize; gy++)
+	// Consume completed heightmap readbacks into CPU cache
+	for (auto& cache : heightmapCaches)
+	{
+		if (cache.readbackPending)
 		{
-			if (readbackPending[gx][gy])
-				consumeReadback(gx, gy, params, physics);
+			const void* data = cache.readback.map();
+			if (data)
+			{
+				UINT rowPitch = cache.readback.getRowPitch();
+				UINT dataSize = HeightmapSize * rowPitch;
+				cache.cpuData.resize(dataSize);
+				memcpy(cache.cpuData.data(), data, dataSize);
+				cache.rowPitch = rowPitch;
+				cache.hasCpuData = true;
+				cache.readback.unmap();
+			}
+			cache.readbackPending = false;
+		}
+	}
+
+	// Build physics tiles from cached heightmap data
+	int halfExtent = (int)PhysicsGridSize / 2;
+	for (int dx = -halfExtent; dx <= halfExtent; dx++)
+		for (int dy = -halfExtent; dy <= halfExtent; dy++)
+		{
+			XMINT2 tileCoord = { physicsCenter.x + dx, physicsCenter.y + dy };
+			uint64_t key = packCoord(tileCoord);
+
+			if (activeBodies.find(key) != activeBodies.end())
+				continue;
+			if (pendingBuildTiles.find(key) != pendingBuildTiles.end())
+				continue;
+
+			// Check if we have the heightmap data for this tile
+			XMINT2 hc = tileToHeightmapChunk(tileCoord);
+			auto* cache = findCache(hc);
+			if (cache && cache->hasCpuData)
+				buildTileFromCache(tileCoord, params);
 		}
 }
 
@@ -95,7 +214,7 @@ void TerrainPhysics::clear(PhysicsManager& physics)
 			build.future.wait();
 	}
 	pendingBuilds.clear();
-	pendingBuildChunks.clear();
+	pendingBuildTiles.clear();
 
 	for (auto& [key, body] : activeBodies)
 		physics.removeBody(body.bodyId);
@@ -103,24 +222,28 @@ void TerrainPhysics::clear(PhysicsManager& physics)
 	activeBodies.clear();
 	physicsCenter = { INT_MAX, INT_MAX };
 
-	for (int gx = 0; gx < (int)PhysicsGridSize; gx++)
-		for (int gy = 0; gy < (int)PhysicsGridSize; gy++)
-			readbackPending[gx][gy] = false;
+	for (auto& cache : heightmapCaches)
+	{
+		cache.worldChunk = { INT_MAX, INT_MAX };
+		cache.hasCpuData = false;
+		cache.readbackPending = false;
+	}
 }
 
 bool TerrainPhysics::updateCenter(const Vector3& cameraPos, const TerrainGridParams& params)
 {
-	XMINT2 cameraChunk = params.worldCoordAt(cameraPos, params.tileSize);
+	float tileSz = physicsTileSize(params);
+	XMINT2 cameraTile = params.worldCoordAt(cameraPos, tileSz);
 
 	if (physicsCenter.x == INT_MAX)
 	{
-		physicsCenter = cameraChunk;
+		physicsCenter = cameraTile;
 		return true;
 	}
 
-	float margin = params.tileSize * hysteresisMargin;
-	Vector3 centerMin = params.chunkWorldMin(physicsCenter, params.tileSize);
-	Vector3 centerMax = centerMin + Vector3(params.tileSize, 0, params.tileSize);
+	float margin = tileSz * hysteresisMargin;
+	Vector3 centerMin = params.chunkWorldMin(physicsCenter, tileSz);
+	Vector3 centerMax = centerMin + Vector3(tileSz, 0, tileSz);
 
 	XMINT2 newCenter = physicsCenter;
 	if (cameraPos.x > centerMax.x + margin) newCenter.x++;
@@ -137,70 +260,39 @@ bool TerrainPhysics::updateCenter(const Vector3& cameraPos, const TerrainGridPar
 	return false;
 }
 
-void TerrainPhysics::requestReadback(ID3D12GraphicsCommandList* commandList, int gx, int gy, XMINT2 worldChunk, ProgressiveTerrain& terrain)
+void TerrainPhysics::buildTileFromCache(XMINT2 tileCoord, const TerrainGridParams& params)
 {
-	if (!readbacks[gx][gy].isInitialized())
-		readbacks[gx][gy].init(device, HeightmapSize, HeightmapSize, DXGI_FORMAT_R16_UNORM);
+	XMINT2 hc = tileToHeightmapChunk(tileCoord);
+	auto* cache = findCache(hc);
+	if (!cache || !cache->hasCpuData)
+		return;
 
-	auto& heightmap = terrain.getHeightmap(worldChunk);
+	XMINT2 localIdx = tileLocalIndex(tileCoord);
+	float tileSz = physicsTileSize(params);
 
-	auto barrierToSrc = CD3DX12_RESOURCE_BARRIER::Transition(heightmap.texture.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_SOURCE);
-	commandList->ResourceBarrier(1, &barrierToSrc);
+	// Each tile samples TileContentPixels+1 pixels for TileContentPixels intervals
+	// Pixel offset within the heightmap content region for this tile
+	UINT tilePixelOffsetX = localIdx.x * TileContentPixels;
+	UINT tilePixelOffsetY = localIdx.y * TileContentPixels;
 
-	readbacks[gx][gy].copyFrom(commandList, heightmap.texture.Get());
-
-	auto barrierBack = CD3DX12_RESOURCE_BARRIER::Transition(heightmap.texture.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-	commandList->ResourceBarrier(1, &barrierBack);
-
-	readbackPending[gx][gy] = true;
-	readbackWorldCoord[gx][gy] = worldChunk;
-}
-
-void TerrainPhysics::consumeReadback(int gx, int gy, const TerrainGridParams& params, PhysicsManager& physics)
-{
-	readbackPending[gx][gy] = false;
-
-	const void* data = readbacks[gx][gy].map();
-	if (data)
-	{
-		// Remove existing body before starting async rebuild
-		removeChunkBody(readbackWorldCoord[gx][gy], physics);
-		startAsyncBuild(readbackWorldCoord[gx][gy], data, readbacks[gx][gy].getRowPitch(), params);
-		readbacks[gx][gy].unmap();
-	}
-}
-
-void TerrainPhysics::startAsyncBuild(XMINT2 worldChunk, const void* readbackData, UINT rowPitch, const TerrainGridParams& params)
-{
-	// Copy raw heightmap data so the readback buffer can be reused
-	const UINT dataSize = HeightmapSize * rowPitch;
-	auto ownedData = std::make_shared<std::vector<uint8_t>>(dataSize);
-	memcpy(ownedData->data(), readbackData, dataSize);
-
-	// The 960-pixel content region (pixels 32..991) maps to world [0, tileSize]
-	// No border offset needed — the content region IS the chunk area
-	// Add half-texel offset to match the visual shader's linear sampling:
-	// SampleLevel at texUV = (32+k)/1024 hits between texel centers 31.5+k and 32.5+k,
-	// so visual features appear at +0.5 texels compared to integer texel reads.
-	float halfTexel = params.tileSize / 960.0f * 0.5f;
-	Vector3 chunkMin = params.chunkWorldMin(worldChunk, params.tileSize);
+	// Half-texel offset matching visual shader sampling
+	float halfTexel = params.tileSize / (float)HeightmapContentSize * 0.5f;
+	Vector3 tileWorldMin = params.chunkWorldMin(tileCoord, tileSz);
 	Vector3 offset = {
-		chunkMin.x + halfTexel,
-		chunkMin.y,
-		chunkMin.z + halfTexel
+		tileWorldMin.x + halfTexel,
+		tileWorldMin.y,
+		tileWorldMin.z + halfTexel
 	};
 
-	float tileSize = params.tileSize;
+	// Share the cached data via pointer (cache lifetime guaranteed during build)
+	auto ownedData = std::make_shared<std::vector<uint8_t>>(cache->cpuData);
+	UINT capturedRowPitch = cache->rowPitch;
 	float tileHeight = params.tileHeight;
-	UINT capturedRowPitch = rowPitch;
 
-	auto future = std::async(std::launch::async, [ownedData, capturedRowPitch, tileSize, tileHeight, offset]() -> BodyCreationSettings
+	auto future = std::async(std::launch::async, [ownedData, capturedRowPitch, tileSz, tileHeight, offset, tilePixelOffsetX, tilePixelOffsetY]() -> BodyCreationSettings
 	{
-		// Sample 961 pixels (32..992 inclusive) so the last sample overlaps with
-		// the next chunk's first sample — pixel 992 of chunk A = pixel 32 of chunk B
-		// in the compute shader's world-space mapping.
-		// 961 samples = 960 intervals, cellSize = tileSize / 960.
-		constexpr UINT physicsRes = 961;
+		// Sample TileContentPixels+1 pixels = TileContentPixels intervals
+		constexpr UINT physicsRes = TileContentPixels + 1; // 241
 		std::vector<float> heights(physicsRes * physicsRes);
 
 		const uint8_t* rawData = ownedData->data();
@@ -209,8 +301,8 @@ void TerrainPhysics::startAsyncBuild(XMINT2 worldChunk, const void* readbackData
 		{
 			for (UINT px = 0; px < physicsRes; px++)
 			{
-				UINT srcX = HeightmapBorder + px;
-				UINT srcY = HeightmapBorder + py;
+				UINT srcX = HeightmapBorder + tilePixelOffsetX + px;
+				UINT srcY = HeightmapBorder + tilePixelOffsetY + py;
 
 				const uint16_t* row = reinterpret_cast<const uint16_t*>(rawData + srcY * capturedRowPitch);
 				uint16_t sample = row[srcX];
@@ -219,8 +311,8 @@ void TerrainPhysics::startAsyncBuild(XMINT2 worldChunk, const void* readbackData
 			}
 		}
 
-		// 961 samples, 960 intervals covering tileSize
-		float cellSize = tileSize / 960.0f;
+		// 241 samples, 240 intervals covering tileSz
+		float cellSize = tileSz / (float)TileContentPixels;
 		Vec3 scale = { cellSize, tileHeight, cellSize };
 
 		HeightFieldShapeSettings settings(heights.data(), Vec3(0, 0, 0), scale, physicsRes);
@@ -238,8 +330,8 @@ void TerrainPhysics::startAsyncBuild(XMINT2 worldChunk, const void* readbackData
 		return creation_settings;
 	});
 
-	pendingBuildChunks.insert(packCoord(worldChunk));
-	pendingBuilds.push_back({ worldChunk, offset, std::move(future) });
+	pendingBuildTiles.insert(packCoord(tileCoord));
+	pendingBuilds.push_back({ tileCoord, offset, std::move(future) });
 }
 
 void TerrainPhysics::collectFinishedBuilds(PhysicsManager& physics)
@@ -252,15 +344,14 @@ void TerrainPhysics::collectFinishedBuilds(PhysicsManager& physics)
 
 			if (settings.GetShape() != nullptr)
 			{
-				// Remove any stale body before adding the new one
-				removeChunkBody(it->worldChunk, physics);
+				removeTileBody(it->tileCoord, physics);
 
 				auto bodyId = physics.system->GetBodyInterface().CreateAndAddBody(settings, JPH::EActivation::DontActivate);
 				if (!bodyId.IsInvalid())
-					activeBodies[packCoord(it->worldChunk)] = { bodyId, it->worldChunk };
+					activeBodies[packCoord(it->tileCoord)] = { bodyId, it->tileCoord };
 			}
 
-			pendingBuildChunks.erase(packCoord(it->worldChunk));
+			pendingBuildTiles.erase(packCoord(it->tileCoord));
 			it = pendingBuilds.erase(it);
 		}
 		else
@@ -270,9 +361,9 @@ void TerrainPhysics::collectFinishedBuilds(PhysicsManager& physics)
 	}
 }
 
-void TerrainPhysics::removeChunkBody(XMINT2 worldChunk, PhysicsManager& physics)
+void TerrainPhysics::removeTileBody(XMINT2 tileCoord, PhysicsManager& physics)
 {
-	auto it = activeBodies.find(packCoord(worldChunk));
+	auto it = activeBodies.find(packCoord(tileCoord));
 	if (it != activeBodies.end())
 	{
 		physics.removeBody(it->second.bodyId);

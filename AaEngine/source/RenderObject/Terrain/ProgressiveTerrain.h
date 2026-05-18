@@ -22,7 +22,7 @@ public:
 
 	void initialize(RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch, RenderWorld& renderWorld);
 
-	void update(ID3D12GraphicsCommandList* commandList, const Vector3& position, UINT frameIdx);
+	void update(ID3D12GraphicsCommandList* commandList, const Camera& cam, UINT frameIdx);
 
 	bool updateLod = true;
 

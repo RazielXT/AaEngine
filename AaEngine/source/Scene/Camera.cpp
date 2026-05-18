@@ -157,19 +157,9 @@ void Camera::setInCameraRotation(Vector3& direction) const
 
 Vector3 Camera::getCameraDirection() const
 {
-	Vector3 dir = direction;
+	Vector3 dir = Forward;
 
-	if (dir.LengthSquared() == 0)
-		dir = Forward;
-
-	dir.Normalize();
-
-	XMVECTOR worldDir = XMLoadFloat3(&dir);
-	worldDir = XMVector3TransformNormal(worldDir, XMMatrixRotationY(yaw_));
-	worldDir = XMVector3TransformNormal(worldDir, XMMatrixRotationX(pitch_));
-	worldDir = XMVector3TransformNormal(worldDir, XMMatrixRotationZ(roll_));
-	worldDir = XMVector3Normalize(worldDir);
-	XMStoreFloat3(&dir, worldDir);
+	setInCameraRotation(dir);
 
 	return dir;
 }

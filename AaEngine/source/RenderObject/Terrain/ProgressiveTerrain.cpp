@@ -104,9 +104,9 @@ void ProgressiveTerrain::regenerateChunk(ID3D12GraphicsCommandList* commandList,
 	tr.push(commandList);
 }
 
-void ProgressiveTerrain::update(ID3D12GraphicsCommandList* commandList, const Vector3& cameraPos, UINT frameIdx)
+void ProgressiveTerrain::update(ID3D12GraphicsCommandList* commandList, const Camera& camera, UINT frameIdx)
 {
-	XMINT2 cameraChunk = params.gridCenterAt(cameraPos, params.tileSize, GridsSize);
+	XMINT2 cameraChunk = params.gridCenterAt(camera.getPosition(), params.tileSize, GridsSize);
 
 	if (cameraChunk.x != gridCenterChunk.x || cameraChunk.y != gridCenterChunk.y)
 	{
@@ -147,7 +147,7 @@ void ProgressiveTerrain::update(ID3D12GraphicsCommandList* commandList, const Ve
 		for (int x = 0; x < (int)GridsSize; x++)
 			for (int y = 0; y < (int)GridsSize; y++)
 			{
-				terrainGridTiles.BuildLOD(cameraPos, chunkWorldCoord[x][y]);
+				terrainGridTiles.BuildLOD(camera, chunkWorldCoord[x][y]);
 				terrainGridMesh[x][y].update((UINT)terrainGridTiles.m_renderList.size(), terrainGridTiles.m_renderList.data(), (UINT)terrainGridTiles.m_renderList.size() * sizeof(TileData), frameIdx);
 			}
 	}

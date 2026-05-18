@@ -308,8 +308,8 @@ public:
 			}
 			else if (type == Tire)
 			{
-				float xz = getRandomFloat(0.5f, 1.0f);
-				scale = Vector3(xz, getRandomFloat(0.2f, 0.5f), xz);
+				float yz = getRandomFloat(0.5f, 1.0f);
+				scale = Vector3(getRandomFloat(0.2f, 0.5f), yz, yz);
 
 				bodyParams.restitution = 0.6f;
 			}

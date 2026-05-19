@@ -45,7 +45,7 @@ void ProgressiveTerrain::initialize(RenderSystem& renderSystem, GraphicsResource
 			terrainNormalMips = resources.descriptors.createUAVMips(terrainNormal);
 
 			auto e = renderWorld.createEntity();
-			terrainGridMesh[x][y].create(terrainGridTiles.TilesWidth);
+			terrainGridMesh[x][y].create(terrainGridTiles.MaxInstances);
 			terrainGridMesh[x][y].entity = e;
 			e->geometry.fromInstancedModel(terrainModel, 0, terrainGridMesh[x][y].gpuBuffer.data[0].GpuAddress());
 			e->setBoundingBox(terrainModel.bbox);

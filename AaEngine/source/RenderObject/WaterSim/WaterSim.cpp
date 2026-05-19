@@ -97,7 +97,7 @@ void WaterSim::initializeTarget(const GpuTexture2D& texture, RenderWorld& render
 	waterGridTiles.Initialize(worldSize, worldCenter, 10);
 
 	auto e = renderWorld.createEntity(EntityCreateProperties{ .order = Order::Transparent });
-	waterGridMesh.create(waterGridTiles.TilesWidth);
+	waterGridMesh.create(waterGridTiles.MaxInstances);
 	waterGridMesh.entity = e;
 
 	e->geometry.fromInstancedModel(waterModel, 0, waterGridMesh.gpuBuffer.data[0].GpuAddress());

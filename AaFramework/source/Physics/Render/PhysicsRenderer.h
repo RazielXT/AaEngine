@@ -7,6 +7,7 @@
 #include "ResourceUploadBatch.h"
 #include "Resources/GraphicsResources.h"
 #include "HeightmapDebugMeshOptimizer.h"
+#include "ModelBatch.h"
 #include <memory>
 
 class PhysicsRenderer final : public JPH::DebugRenderer
@@ -32,7 +33,7 @@ public:
 
 private:
 
-	const Batch EmptyBatch;
+	ModelBatchGarbageCollector modelGarbageCollector;
 
 	RenderSystem& renderSystem;
 	GraphicsResources& resources;

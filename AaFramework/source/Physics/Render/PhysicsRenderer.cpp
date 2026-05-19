@@ -3,29 +3,6 @@
 
 using namespace JPH;
 
-class ModelBatch : public RefTargetVirtual, public RefTarget<ModelBatch>
-{
-public:
-
-	ModelBatch()
-	{
-		initializeLayout();
-	}
-
-	VertexBufferModel model;
-
-	virtual void AddRef() override { RefTarget::AddRef(); }
-	virtual void Release() override { if (--mRefCount == 0) delete this; }
-
-	void initializeLayout()
-	{
-		model.addLayoutElement(DXGI_FORMAT_R32G32B32_FLOAT, VertexElementSemantic::POSITION);
-		model.addLayoutElement(DXGI_FORMAT_R32G32B32_FLOAT, VertexElementSemantic::NORMAL);
-		model.addLayoutElement(DXGI_FORMAT_R32G32_FLOAT, VertexElementSemantic::TEXCOORD);
-		model.addLayoutElement(DXGI_FORMAT_R8G8B8A8_UNORM, VertexElementSemantic::COLOR);
-	}
-};
-
 PhysicsRenderer::PhysicsRenderer(RenderSystem& rs, GraphicsResources& r) : renderSystem(rs), resources(r)
 {
 	Initialize();
@@ -37,6 +14,8 @@ PhysicsRenderer::~PhysicsRenderer()
 
 bool PhysicsRenderer::PrepareForRendering(ID3D12GraphicsCommandList* commandList, ShaderConstantsProvider* constants, const std::vector<DXGI_FORMAT>& targets)
 {
+	modelGarbageCollector.CollectGarbageBatches();
+
 	if (batch)
 	{
 		if (!batchSubmitted)
@@ -70,7 +49,7 @@ JPH::DebugRenderer::Batch PhysicsRenderer::CreateTriangleBatch(const Triangle* i
 {
 	PrepareUploadBatch();
 
-	ModelBatch* primitive = new ModelBatch();
+	ModelBatch* primitive = new ModelBatch(modelGarbageCollector);
 
 	if (inTriangleCount == 8192)
 		heightmapOptimizer.ReconstructGrid(renderSystem.core.device, *batch, primitive->model, inTriangles);
@@ -84,7 +63,7 @@ JPH::DebugRenderer::Batch PhysicsRenderer::CreateTriangleBatch(const Vertex* inV
 {
 	PrepareUploadBatch();
 
-	ModelBatch* primitive = new ModelBatch();
+	ModelBatch* primitive = new ModelBatch(modelGarbageCollector);
 	primitive->model.CreateVertexBuffer(renderSystem.core.device, batch.get(), inVertices, inVertexCount, sizeof(Vertex), true);
 	primitive->model.CreateIndexBuffer(renderSystem.core.device, batch.get(), inIndices, (size_t)inIndexCount);
 

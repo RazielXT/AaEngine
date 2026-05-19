@@ -148,6 +148,7 @@
     <ClCompile Include="source\Objects\Vehicle\ArcadeMotorcycle.cpp" />
     <ClCompile Include="source\Objects\Vehicle\JoltMotorcycle.cpp" />
     <ClCompile Include="source\Physics\PhysicsManager.cpp" />
+    <ClCompile Include="source\Physics\Render\ModelBatch.cpp" />
     <ClCompile Include="source\Physics\Render\PhysicsRenderer.cpp" />
     <ClCompile Include="source\Physics\Render\PhysicsRenderTask.cpp" />
     <ClCompile Include="source\Physics\TerrainPhysics.cpp" />
@@ -169,6 +170,7 @@
     <ClInclude Include="source\Physics\PhysicsManager.h" />
     <ClInclude Include="source\Physics\PhysicsUpdater.h" />
     <ClInclude Include="source\Physics\Render\HeightmapDebugMeshOptimizer.h" />
+    <ClInclude Include="source\Physics\Render\ModelBatch.h" />
     <ClInclude Include="source\Physics\Render\PhysicsRenderer.h" />
     <ClInclude Include="source\Physics\Render\PhysicsRenderTask.h" />
     <ClInclude Include="source\Physics\TerrainPhysics.h" />

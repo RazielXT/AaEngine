@@ -70,6 +70,9 @@
     <ClCompile Include="source\Objects\Vehicle\ArcadeMotorcycle.cpp">
       <Filter>Source Files\Objects\Vehicle</Filter>
     </ClCompile>
+    <ClCompile Include="source\Physics\Render\ModelBatch.cpp">
+      <Filter>Source Files\Physics\Render</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\CameraHandler.h">
@@ -137,6 +140,9 @@
     </ClInclude>
     <ClInclude Include="source\Physics\PhysicsUpdater.h">
       <Filter>Source Files\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Physics\Render\ModelBatch.h">
+      <Filter>Source Files\Physics\Render</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,0 +1,235 @@
+<scene formatVersion="1.0" upAxis="y" unitsPerMeter="39.3701" minOgreVersion="1.8" ogreMaxVersion="2.4.3" author="OgreMax Scene Exporter (www.ogremax.com)" application="3DS Max">
+    <environment>
+        <colourAmbient r="0.333333" g="0.333333" b="0.333333" />
+        <colourBackground r="0" g="0" b="0" />
+        <clipping near="0" far="100000" />
+    </environment>
+    <nodes>
+        <node name="Box023">
+            <position x="-33.3684" y="13.8288" z="12.7149" />
+            <scale x="0.0847469" y="0.104247" z="0.367748" />
+            <rotation qx="0.982972" qy="0.150539" qz="-0.104605" qw="0.012727" />
+            <entity name="Box023" castShadows="true" receiveShadows="true" meshFile="test3Box023.mesh">
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box036">
+            <position x="13.281" y="17.6464" z="48.0827" />
+            <scale x="0.101172" y="0.0268478" z="0.0502917" />
+            <rotation qx="0.923804" qy="-0.330583" qz="-0.193126" qw="-0.00196429" />
+            <entity name="Box036" castShadows="true" receiveShadows="true" meshFile="test3Box036.mesh">
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Torus001">
+            <position x="-4.30183" y="11.3119" z="16.1195" />
+            <scale x="0.0923063" y="0.0923063" z="0.0923063" />
+            <rotation qx="0" qy="0" qz="0" qw="1" />
+            <entity name="Torus001" castShadows="true" receiveShadows="true" meshFile="test3Torus001.mesh">
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCTLight" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box062">
+            <position x="8.47972" y="13.6591" z="27.5643" />
+            <scale x="1.916" y="0.257523" z="0.257523" />
+            <rotation qx="0" qy="0.626319" qz="-2.73773e-008" qw="0.779567" />
+            <entity name="Box062" castShadows="true" receiveShadows="true" meshFile="test3Box062.mesh">
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCTLight" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box077">
+            <position x="30.4024" y="15.7266" z="-4.53681" />
+            <scale x="0.24053" y="0.0568553" z="0.0881305" />
+            <rotation qx="0.969294" qy="0.153477" qz="-0.1804" qw="-0.0661057" />
+            <entity name="Box077" castShadows="true" receiveShadows="true" meshFile="test3Box077.mesh">
+                <subentities>
+                    <subentity index="0" materialName="RedVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box166">
+            <position x="34.3273" y="36.0084" z="31.3924" />
+            <scale x="0.0705279" y="0.358461" z="0.192599" />
+            <rotation qx="0.888769" qy="-0.449074" qz="-0.0563497" qw="-0.0724302" />
+            <entity name="Box166" castShadows="true" receiveShadows="true" meshFile="test3Box166.mesh">
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box176">
+            <position x="20.341" y="32.8826" z="20.7208" />
+            <scale x="0.0614248" y="0.213663" z="0.086493" />
+            <rotation qx="0.933786" qy="0.351318" qz="-0.0641881" qw="-0.0223612" />
+            <entity name="Box176" castShadows="true" receiveShadows="true" meshFile="test3Box176.mesh">
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box204">
+            <position x="-29.2225" y="15.8003" z="-13.8995" />
+            <scale x="0.201388" y="0.0950101" z="0.309248" />
+            <rotation qx="0.972712" qy="0.0942243" qz="0.194396" qw="0.0846405" />
+            <entity name="Box204" castShadows="true" receiveShadows="true" meshFile="test3Box204.mesh">
+                <subentities>
+                    <subentity index="0" materialName="YellowVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box205">
+            <position x="-10.2994" y="43.5123" z="43.0078" />
+            <scale x="0.0503417" y="0.147008" z="0.532841" />
+            <rotation qx="0.993252" qy="-0.0835072" qz="-0.0560152" qw="-0.0577897" />
+            <entity name="Box205" castShadows="true" receiveShadows="true" meshFile="test3Box205.mesh">
+                <subentities>
+                    <subentity index="0" materialName="BlueVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box221">
+            <position x="6.0536" y="44.4563" z="11.7761" />
+            <scale x="0.278576" y="0.148984" z="0.458095" />
+            <rotation qx="0.98994" qy="0.121293" qz="0.0722574" qw="-0.00927359" />
+            <entity name="Box221" castShadows="true" receiveShadows="true" meshFile="test3Box221.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box222">
+            <position x="-22.3512" y="33.0744" z="12.7149" />
+            <scale x="0.0856087" y="0.103218" z="0.367675" />
+            <rotation qx="0.946786" qy="0.304311" qz="-0.100891" qw="0.0285041" />
+            <entity name="Box222" castShadows="true" receiveShadows="true" meshFile="test3Box222.mesh">
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box228">
+            <position x="-0.186707" y="26.7469" z="29.9265" />
+            <scale x="0.215808" y="0.322318" z="0.415938" />
+            <rotation qx="-0.471576" qy="0.565225" qz="-0.520021" qw="0.43326" />
+            <entity name="Box228" castShadows="true" receiveShadows="true" meshFile="test3Box228.mesh">
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCTLight" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box229">
+            <position x="5.10929" y="47.432" z="42.3745" />
+            <scale x="0.107497" y="0.287744" z="0.248132" />
+            <rotation qx="0.994105" qy="-0.0524909" qz="0.0332036" qw="0.0888724" />
+            <entity name="Box229" castShadows="true" receiveShadows="true" meshFile="test3Box229.mesh">
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box232">
+            <position x="0.0420456" y="29.2376" z="46.3419" />
+            <scale x="0.215644" y="0.201836" z="0.0495241" />
+            <rotation qx="0.974381" qy="-0.07104" qz="-0.0853139" qw="-0.19559" />
+            <entity name="Box232" castShadows="true" receiveShadows="true" meshFile="test3Box232.mesh">
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box239">
+            <position x="-7.32746" y="37.7323" z="21.3869" />
+            <scale x="0.121344" y="0.139344" z="0.171258" />
+            <rotation qx="0.980537" qy="-0.157632" qz="0.115177" qw="-0.0208018" />
+            <entity name="Box239" castShadows="true" receiveShadows="true" meshFile="test3Box239.mesh">
+                <subentities>
+                    <subentity index="0" materialName="WhiteVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box245">
+            <position x="13.0599" y="30.6543" z="8.80544" />
+            <scale x="0.162797" y="0.453585" z="0.721376" />
+            <rotation qx="0.983163" qy="-0.0511109" qz="0.101521" qw="0.143082" />
+            <entity name="Box245" castShadows="true" receiveShadows="true" meshFile="test3Box245.mesh">
+                <subentities>
+                    <subentity index="0" materialName="YellowVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box265">
+            <position x="-15.5479" y="13.0023" z="76.3906" />
+            <scale x="0.242039" y="0.0564327" z="0.0882369" />
+            <rotation qx="0.980207" qy="0.0479138" qz="-0.171505" qw="-0.0865107" />
+            <entity name="Box265" castShadows="true" receiveShadows="true" meshFile="test3Box265.mesh">
+                <subentities>
+                    <subentity index="0" materialName="RedVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box267">
+            <position x="-7.33186" y="41.3762" z="8.40151" />
+            <scale x="0.104085" y="0.243691" z="0.649207" />
+            <rotation qx="0.951358" qy="0.26695" qz="-0.021805" qw="-0.152249" />
+            <entity name="Box267" castShadows="true" receiveShadows="true" meshFile="test3Box267.mesh">
+                <subentities>
+                    <subentity index="0" materialName="RedVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box533">
+            <position x="25.0903" y="37.1279" z="57.4246" />
+            <scale x="0.188434" y="0.101635" z="0.308963" />
+            <rotation qx="0.840463" qy="-0.497945" qz="0.10564" qw="0.185776" />
+            <entity name="Box533" castShadows="true" receiveShadows="true" meshFile="test3Box533.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="YellowVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box705">
+            <position x="-16.0997" y="29.9628" z="7.47817" />
+            <scale x="0.195843" y="0.27385" z="0.0800386" />
+            <rotation qx="0.966152" qy="0.254439" qz="0.0380509" qw="0.0190529" />
+            <entity name="Box705" castShadows="true" receiveShadows="true" meshFile="test3Box705.mesh">
+                <subentities>
+                    <subentity index="0" materialName="BlueVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box722">
+            <position x="-0.00674248" y="-2.01948" z="24.4711" />
+            <scale x="0.419473" y="0.419473" z="0.419473" />
+            <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
+            <entity name="Box722" castShadows="true" receiveShadows="true" meshFile="test3Box722.mesh">
+                <subentities>
+                    <subentity index="0" materialName="GreenVCT" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box723">
+            <position x="4.66965" y="7.53414" z="27.5884" />
+            <scale x="0.257523" y="0.257523" z="0.257523" />
+            <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
+            <entity name="Box723" castShadows="true" receiveShadows="true" meshFile="test3Box723.mesh">
+                <subentities>
+                    <subentity index="0" materialName="GreenVCT" />
+                </subentities>
+            </entity>
+        </node>
+    </nodes>
+</scene>

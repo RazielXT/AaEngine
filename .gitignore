@@ -10,4 +10,4 @@ data/scene/scenes/*
 !data/scene/scenes/cubesTower
 !data/scene/scenes/voxelRoom
 !data/scene/scenes/playground
-
+!data/scene/scenes/cave

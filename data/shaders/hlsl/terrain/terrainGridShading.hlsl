@@ -63,7 +63,7 @@ PSInput VSMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
 	GridVertexInfo info = ReadGridVertexInfo(InstancingBuffer[instanceID], vertexID, ResourceDescriptorHeap[TexIdHeightmap], LinearWrapSampler, p);
 
 	float heightTexture = GetTexture2D(TexIdGrass).SampleLevel(LinearWrapSampler, info.uv * 50 * 10 / 8.f, 0).w;
-	info.position.y -= heightTexture * 0.25 - 0.2;
+	//info.position.y -= heightTexture * 0.25 - 0.2;
 
 	PSInput result;
 	result.worldPosition = info.position;

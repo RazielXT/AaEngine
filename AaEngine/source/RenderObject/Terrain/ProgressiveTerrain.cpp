@@ -147,7 +147,7 @@ void ProgressiveTerrain::update(ID3D12GraphicsCommandList* commandList, const Ca
 		for (int x = 0; x < (int)GridsSize; x++)
 			for (int y = 0; y < (int)GridsSize; y++)
 			{
-				terrainGridTiles.BuildLOD(camera, chunkWorldCoord[x][y]);
+				terrainGridTiles.BuildLOD(camera.getPosition(), chunkWorldCoord[x][y]);
 				terrainGridMesh[x][y].update((UINT)terrainGridTiles.m_renderList.size(), terrainGridTiles.m_renderList.data(), (UINT)terrainGridTiles.m_renderList.size() * sizeof(TileData), frameIdx);
 			}
 	}

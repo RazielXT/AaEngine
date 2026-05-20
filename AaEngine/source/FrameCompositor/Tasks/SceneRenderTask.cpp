@@ -345,6 +345,8 @@ void SceneRenderTask::renderDebug(CompositorPass& pass, CommandsData& cmd)
 	if (!showVoxelsEnabled)
 		return;
 
+	CommandsMarker marker(cmd.commandList, "SceneRenderDebug", PixColor::SceneRender);
+
 	RenderObjectsStorage tmpStorage;
 	RenderEntity entity(tmpStorage);
 	RenderObjectsVisibilityData visibility{ { true } };

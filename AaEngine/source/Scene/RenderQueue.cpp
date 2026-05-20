@@ -83,7 +83,7 @@ static void RenderObject(ID3D12GraphicsCommandList* commandList, EntityGeometry&
 	}
 	else
 	{
-		if (geometry.type != EntityGeometry::Type::Manual)
+		if (geometry.vertexBufferView.BufferLocation)
 		{
 			commandList->IASetVertexBuffers(0, 1, &geometry.vertexBufferView);
 		}

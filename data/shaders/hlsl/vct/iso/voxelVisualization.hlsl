@@ -122,11 +122,11 @@ PSOutput PSMain(PS_Input pin)
 
 	}
 
-	if (nearVoxel.a == 0.f)
-		discard;
+	//if (nearVoxel.a == 0.f)
+	//	discard;
 
 	PSOutput output;
-	output.color = float4(nearVoxel.rgb, 1);
+	output.color = float4(nearVoxel.rgb + i / 1024.f, 1);
 
 	return output;
 }

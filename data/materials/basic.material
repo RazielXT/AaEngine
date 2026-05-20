@@ -116,7 +116,7 @@ material terrainGrass : Color
 {
 	texture Diffuse
 	{
-		file grassDark.dds
+		file grass.dds
 	}
 }
 

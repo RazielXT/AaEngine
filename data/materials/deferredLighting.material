@@ -30,7 +30,7 @@ material DeferredVCT
 
 	pixel_shader
 	{
-		file postprocess/deferredVCT.hlsl
+		file postprocess/deferredVRT.hlsl
 		entry PSMain
 		profile ps_6_6
 	}

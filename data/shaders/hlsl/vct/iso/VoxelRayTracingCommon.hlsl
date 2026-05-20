@@ -11,7 +11,10 @@ struct RayTraceResult
 
 RayTraceResult RayTraceSingle(float3 rayStart, float3 rayDir, uint voxelMip, SceneVoxelChunkInfo voxels, Texture3D voxelmap)
 {
-	rayStart -= rayDir * 0.1f;
+	const float3 voxelSize = pow(2, voxelMip) / voxels.Density;
+	const float3 VoxelDimensions = voxels.Density * voxels.WorldSize;
+
+	rayStart += voxelSize * rayDir * 1.5f;
 
 	RayTraceResult result;
 	result.color = float4(0, 0, 0, 0);
@@ -22,8 +25,7 @@ RayTraceResult RayTraceSingle(float3 rayStart, float3 rayDir, uint voxelMip, Sce
 	if (rayDir.y == 0) rayDir.y = 1e-6;
 	if (rayDir.z == 0) rayDir.z = 1e-6;
 
-	const float3 voxelSize = pow(2, voxelMip) / voxels.Density;
-	const float3 VoxelDimensions = voxels.Density * voxels.WorldSize;
+
 
 	int3 voxelCoord = int3(floor((rayStart - voxels.Offset) / voxelSize));
 

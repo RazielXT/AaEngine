@@ -41,5 +41,5 @@ void main(uint3 id : SV_DispatchThreadID)
 	float3 distanceFade = saturate(-4 * (diffOffset - 0.5) + 1);
 	float fade = min(min(distanceFade.x, distanceFade.y), distanceFade.z);
 
-	SceneVoxelBounces[id] = float4(currentLightBounce, 1) * fade;
+	SceneVoxelBounces[id] = float4(currentLightBounce, 1 + fade);
 }

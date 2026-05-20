@@ -41,10 +41,10 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	directShadow *= saturate(-10 * Sun.Direction.y);
 
 	float3 skyColor = getSkyColor(worldNormal, Sun, LinearSampler);
-	skyColor = 0.3 * skyColor * saturate(worldNormal.y);
+	skyColor = 0.03 * skyColor * saturate(worldNormal.y);
 
 	float4 vctLighting = vctMap.Load(int3(input.Position.xy, 0));// + worldNormal.y * Sun.Color * 0.1;// * saturate(dot(Sun.Direction, worldNormal) + 0.5);
-	float3 lighting = dotLighting * Sun.Color * directShadow + skyColor + 0.2 * vctLighting.rgb + emmisive * 10;
+	float3 lighting = dotLighting * Sun.Color * directShadow + skyColor + 2.2 * vctLighting.rgb + emmisive * 10;
 	float ssao = ssaoMap.Sample(LinearSampler, input.TexCoord);
 	lighting *= lerp(ssao, 1, saturate((lighting.r + lighting.g + lighting.b) / 3));
 	//lighting *= ssao;

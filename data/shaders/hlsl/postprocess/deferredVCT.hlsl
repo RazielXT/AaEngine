@@ -34,7 +34,7 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	float voxelWeight = 1.0f;
 	float occlusion = 1.0f;
 
-	for (int idx = 0; idx < 1; idx++)
+	/*for (int idx = 0; idx < 1; idx++)
 	{
 		float3 voxelUV = (worldPosition - VoxelInfo.Voxels[idx].Offset) / VoxelInfo.Voxels[idx].WorldSize;
 		Texture3D voxelmap = GetTexture3D(VoxelInfo.Voxels[idx].TexId);
@@ -55,8 +55,18 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 		voxelAmbient += fullTrace.rgb * voxelWeight;
 		voxelWeight = saturate(voxelWeight - fullTrace.w);
 		occlusion = min(occlusion, 1 - fullTrace.w);
+	}*/
+
+	float4 fullTrace = ConeTraceCascades(worldPosition, worldNormal, VoxelInfo.MiddleConeRatio.x, VoxelInfo, VoxelSampler);
+	{
+		fullTrace = ConeTraceCascades(worldPosition, normalize(worldNormal + worldTangent), VoxelInfo.SideConeRatio.x, VoxelInfo, VoxelSampler);
+		fullTrace = ConeTraceCascades(worldPosition, normalize(worldNormal - worldTangent), VoxelInfo.SideConeRatio.x, VoxelInfo, VoxelSampler);
+		fullTrace = ConeTraceCascades(worldPosition, normalize(worldNormal + worldBinormal), VoxelInfo.SideConeRatio.x, VoxelInfo, VoxelSampler);
+		fullTrace = ConeTraceCascades(worldPosition, normalize(worldNormal - worldBinormal), VoxelInfo.SideConeRatio.x, VoxelInfo, VoxelSampler);
+		fullTrace /= 5;
 	}
 
+	fullTrace.w = 1 - fullTrace.w;
 
-	return float4(voxelAmbient, occlusion);
+	return fullTrace;
 }

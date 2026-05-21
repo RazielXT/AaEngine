@@ -30,7 +30,45 @@ material DeferredVCT
 
 	pixel_shader
 	{
+		file postprocess/deferredVCT.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
+}
+
+material DeferredVRT
+{
+	vertex_shader
+	{
+		file postprocess/postprocess.hlsl
+		entry VSQuad
+		profile vs_6_6
+	}
+
+	depth off
+
+	pixel_shader
+	{
 		file postprocess/deferredVRT.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
+}
+
+material DeferredVRT_Accumulation
+{
+	vertex_shader
+	{
+		file postprocess/postprocess.hlsl
+		entry VSQuad
+		profile vs_6_6
+	}
+
+	depth off
+
+	pixel_shader
+	{
+		file postprocess/deferredVRT_accumulation.hlsl
 		entry PSMain
 		profile ps_6_6
 	}

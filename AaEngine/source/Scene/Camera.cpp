@@ -219,8 +219,8 @@ void Camera::restoreYawPitchFromDirection()
 	Vector3 dir = direction;
 	dir.Normalize();
 
-	yaw_ = atan2(-dir.x, dir.z);
-	pitch_ = asin(dir.y);
+	yaw_ += atan2(-dir.x, dir.z);
+	pitch_ += asin(dir.y);
 	roll_ = 0;
 	direction = XMFLOAT3(0, 0, 1);
 	dirty = true;

@@ -1,11 +1,10 @@
 #include "PostProcessCommon.hlsl"
 #include "WorldReconstruction.hlsl"
 #include "hlsl/vct/iso/VoxelRayTracingCommon.hlsl"
-#include "hlsl/common/BlueNoise.hlsl"
 #include "hlsl/common/Random.hlsl"
 
 #ifndef VRT_NUM_RAYS
-#define VRT_NUM_RAYS 16
+#define VRT_NUM_RAYS 2
 #endif
 
 float4x4 InvViewProjectionMatrix;
@@ -21,8 +20,7 @@ cbuffer SceneVoxelInfo : register(b1)
 Texture2D normalMap : register(t0);
 Texture2D<float> depthMap : register(t1);
 
-SamplerState VoxelSampler : register(s0);
-SamplerState PointSampler : register(s1);
+SamplerState PointSampler : register(s0);
 
 float3 CosineWeightedHemisphere(float2 xi, float3 N, float3 T, float3 B)
 {
@@ -37,9 +35,9 @@ float3 CosineWeightedHemisphere(float2 xi, float3 N, float3 T, float3 B)
 float3 SkyColor(float3 dir)
 {
 	float t = saturate(dir.y * 0.75 + 0.25);
-	float3 bottomColor = float3(0.8, 0.85, 0.9);
+	float3 bottomColor = float3(0.1, 0.15, 0.2);
 	float3 topColor = float3(0.3, 0.5, 0.9);
-	return lerp(bottomColor, topColor, 1 - t);
+	return lerp(bottomColor, topColor, 1 - t) * 0.1f;
 }
 
 float4 PSMain(VS_OUTPUT input) : SV_TARGET
@@ -57,13 +55,12 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	float3 radiance = 0;
 	float occlusion = 0;
 
-	//uint2 pixelSeed = input.Position.xy * 2;
 	float2 pixelSeed = input.TexCoord;
 	[unroll]
 	for (int r = 0; r < VRT_NUM_RAYS; r++)
 	{
-		float2 xi = Random2DFrom2D(pixelSeed + Time + float2(r * 7.239, r * 13.137));
-		//float2 xi = BlueNoise2D(pixelSeed + uint2(r * 3, r * 3));
+		float2 xi = Random2DFrom2D(pixelSeed + Time % 10 + float2(r * 7.239, r * 13.137));
+
 		float3 dir = CosineWeightedHemisphere(xi, worldNormal, worldTangent, worldBinormal);
 
 		float4 hit = RayTraceCascades(worldPosition, dir, 0, VoxelInfo);
@@ -75,7 +72,7 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 		}
 		else
 		{
-			radiance += SkyColor(dir) * 0.03f;
+			radiance += SkyColor(dir);
 		}
 	}
 

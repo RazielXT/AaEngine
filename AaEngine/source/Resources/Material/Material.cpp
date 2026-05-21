@@ -641,6 +641,8 @@ void MaterialInstance::UpdatePerFrame(MaterialDataStorage& data, const ShaderCon
 			data.rootParams[p.bufferOffset] = info.params.time;
 		else if (p.type == ResourcesInfo::AutoParam::DELTA_TIME)
 			data.rootParams[p.bufferOffset] = info.params.timeDelta;
+		else if (p.type == ResourcesInfo::AutoParam::FRAME_INDEX)
+			*(UINT*)&data.rootParams[p.bufferOffset] = info.params.frameCounter;
 		else if (p.type == ResourcesInfo::AutoParam::SUN_DIRECTION)
 			*(DirectX::XMFLOAT3*)&data.rootParams[p.bufferOffset] = info.params.sun.SunDirection;
 		else if (p.type == ResourcesInfo::AutoParam::SUN_COLOR)

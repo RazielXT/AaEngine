@@ -97,6 +97,7 @@ void ApplicationCore::renderFrame(Camera& camera)
 	params.time += timeSinceLastFrame;
 	params.timeDelta = timeSinceLastFrame;
 	params.frameIndex = renderSystem.core.frameIndex;
+	params.frameCounter++;
 
 	terrainPhysics.consumeReadbacks(camera.getPosition(), renderWorld.terrain.params, physicsMgr);
 

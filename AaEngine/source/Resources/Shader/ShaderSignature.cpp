@@ -293,6 +293,13 @@ ID3D12RootSignature* SignatureInfo::createRootSignature(ID3D12Device& device, co
 			sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
 			sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
 		}
+		else if (samplers[i].info.Name == "PointWrapSampler")
+		{
+			sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+			sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+			sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+			sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		}
 		else if (samplers[i].info.Name == "DepthClampSampler")
 		{
 			sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
@@ -446,6 +453,8 @@ void SignatureInfo::createResourcesData(ResourcesInfo& resources, GraphicsResour
 					type = ResourcesInfo::AutoParam::TIME;
 				else if (p.Name == "DeltaTime")
 					type = ResourcesInfo::AutoParam::DELTA_TIME;
+				else if (p.Name == "FrameIndex")
+					type = ResourcesInfo::AutoParam::FRAME_INDEX;
 				else if (p.Name == "ViewportSizeInverse")
 					type = ResourcesInfo::AutoParam::VIEWPORT_SIZE_INV;
 				else if (p.Name == "ViewportSize")

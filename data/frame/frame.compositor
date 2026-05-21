@@ -9,9 +9,13 @@ compositor Frame
 	texture sceneTexture target_size Albedo:DXGI_FORMAT_R8G8B8A8_UNORM Normal:DXGI_FORMAT_R16G16B16A16_SNORM MotionVectors:DXGI_FORMAT_R16G16_FLOAT Depth
 
 
-	texture sceneVCT target_size DXGI_FORMAT_R16G16B16A16_FLOAT
-	alias sceneTextureTmp2 sceneVCT
+	texture sceneGI target_size DXGI_FORMAT_R16G16B16A16_FLOAT
+	alias sceneTextureTmp2 sceneGI
+
 	texture sceneVCTLow target_size_div 2 DXGI_FORMAT_R16G16B16A16_FLOAT
+	texture sceneVCTLowAcc target_size_div 2 DXGI_FORMAT_R16G16B16A16_FLOAT
+	texture sceneVCTLowFinal target_size_div 2 DXGI_FORMAT_R16G16B16A16_FLOAT
+
 	texture sceneTextureTmp target_size DXGI_FORMAT_R16G16B16A16_FLOAT
 
 	texture depthDownsample2 target_size_div 2 DXGI_FORMAT_R32_FLOAT
@@ -88,24 +92,37 @@ compositor Frame
 	}
 	#endif
 
-	pass DeferredVCT
+	pass DeferredVRT
 	{
 		after VoxelScene.Voxelize
 
-		material DeferredVCT
+		material DeferredVRT
 		in sceneTexture:Normal
 		in sceneTexture:Depth
 		out sceneVCTLow
 	}
+	pass DeferredVRT_Accumulation
+	{
+		material DeferredVRT_Accumulation
+		in sceneVCTLow
+		in sceneVCTLowAcc
+		out sceneVCTLowFinal
+	}
+	pass DeferredVRT_AccumulationCopy
+	{
+		material LoadThrough
+		in sceneVCTLowFinal
+		out sceneVCTLowAcc
+	}
 
-	pass UpsampleDeferredVCT
+	pass UpsampleDeferredVRT
 	{
 		material UpsampleDepthAware
-		in sceneVCTLow
+		in sceneVCTLowFinal
 		in SSAO.linearDepth
 		in SSAO.linearDepthDownsample2
 		in sceneTexture:Normal
-		out sceneVCT
+		out sceneGI
 	}
 
 	pass DeferredLighting
@@ -115,7 +132,7 @@ compositor Frame
 		in sceneTexture:Normal
 		in sceneTexture:Depth
 		in SSAO.aoSmooth
-		in sceneVCT
+		in sceneGI
 		out sceneTextureTmp
 	}
 

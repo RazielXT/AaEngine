@@ -44,6 +44,7 @@ public:
 		editorUi.initializeRenderer(app.compositor->getColorSpace().outputFormat);
 
 		camera.setPosition(XMFLOAT3(0, 0, 0));
+		camera.lookAt(Vector3(0, -1, 0));
 
 		activeCameraHandler = std::make_unique<FreeCamera>(camera);
 		activeCameraHandler->bind(renderPanelViewport);

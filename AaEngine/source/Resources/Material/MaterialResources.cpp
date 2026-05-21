@@ -67,13 +67,6 @@ void MaterialResources::loadMaterials(std::string directory, bool subDirectories
 
 	knownMaterials.reserve(knownMaterials.size() * 3);
 
-	MaterialRef* depthAlpha{};
-	for (auto& m : knownMaterials)
-	{
-		if (m.name == "DepthAlpha")
-			depthAlpha = &m;
-	}
-
 	for (size_t i = 0; i < knownMaterials.size(); i++)
 	{
 		MaterialRef& info = knownMaterials[i];

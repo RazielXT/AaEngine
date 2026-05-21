@@ -2,6 +2,7 @@
 
 FreeCamera::FreeCamera(Camera& camera) : CameraHandler(camera)
 {
+	camera.yaw(90);
 }
 
 void FreeCamera::update(float time)

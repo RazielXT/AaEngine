@@ -112,6 +112,7 @@ struct ResourcesInfo
 		CAMERA_DIRECTION,
 		VIEW_CAMERA_POSITION,
 		VIEW_CAMERA_DIRECTION,
+		FRAME_INDEX,
 	};
 	struct AutoParamInfo
 	{
@@ -158,4 +159,5 @@ struct FrameParameters
 	float time{};
 	float timeDelta{};
 	UINT frameIndex{};
+	UINT frameCounter{};
 };

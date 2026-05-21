@@ -1,7 +1,7 @@
 #pragma once
 
 #include "FrameCompositor/Tasks/CompositorTask.h"
-#include "RenderCore/VCT/iso/IsoVoxelization.h"
+#include "RenderCore/VCT/isoSeparate/IsoSeparateVoxelization.h"
 #include <thread>
 
 struct RenderQueue;
@@ -25,13 +25,13 @@ public:
 	void revoxelize();
 	void clear(ID3D12GraphicsCommandList* list = nullptr);
 
-	VoxelTracingParams params;
+	IsoSeparateVoxelTracingParams params;
 
 	RunType getRunType(CompositorPass&) const override;
 
 private:
 
-	IsoVoxelization voxelization;
+	IsoSeparateVoxelization voxelization;
 
 	CommandsData voxelizeCommands;
 	HANDLE eventBegin{};

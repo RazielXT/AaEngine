@@ -74,6 +74,9 @@
     <Filter Include="Source Files\RenderCore\VCT\iso">
       <UniqueIdentifier>{b2c3d4e5-f6a7-8901-bcde-f12345678901}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\RenderCore\VCT\isoSeparate">
+      <UniqueIdentifier>{d20f4b6e-2de7-4d46-9f5a-b76a14cf0b64}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source Files\RenderCore\VCT\aniso">
       <UniqueIdentifier>{d4e5f6a7-b8c9-0123-defg-456789012345}</UniqueIdentifier>
     </Filter>
@@ -213,6 +216,12 @@
     </ClCompile>
     <ClCompile Include="source\RenderCore\VCT\iso\IsoVoxelization.cpp">
       <Filter>Source Files\RenderCore\VCT\iso</Filter>
+    </ClCompile>
+    <ClCompile Include="source\RenderCore\VCT\isoSeparate\IsoSeparateVoxelCascade.cpp">
+      <Filter>Source Files\RenderCore\VCT\isoSeparate</Filter>
+    </ClCompile>
+    <ClCompile Include="source\RenderCore\VCT\isoSeparate\IsoSeparateVoxelization.cpp">
+      <Filter>Source Files\RenderCore\VCT\isoSeparate</Filter>
     </ClCompile>
     <ClCompile Include="source\RenderCore\VCT\aniso\AnisoVoxelCascade.cpp">
       <Filter>Source Files\RenderCore\VCT\aniso</Filter>
@@ -515,6 +524,12 @@
     </ClInclude>
     <ClInclude Include="source\RenderCore\VCT\iso\IsoVoxelization.h">
       <Filter>Source Files\RenderCore\VCT\iso</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RenderCore\VCT\isoSeparate\IsoSeparateVoxelCascade.h">
+      <Filter>Source Files\RenderCore\VCT\isoSeparate</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RenderCore\VCT\isoSeparate\IsoSeparateVoxelization.h">
+      <Filter>Source Files\RenderCore\VCT\isoSeparate</Filter>
     </ClInclude>
     <ClInclude Include="source\RenderCore\VCT\aniso\AnisoVoxelCascade.h">
       <Filter>Source Files\RenderCore\VCT\aniso</Filter>

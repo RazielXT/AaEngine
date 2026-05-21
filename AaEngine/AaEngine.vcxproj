@@ -180,6 +180,8 @@
     <ClCompile Include="source\FrameCompositor\Tasks\VoxelizeSceneTask.cpp" />
     <ClCompile Include="source\RenderCore\VCT\iso\IsoVoxelCascade.cpp" />
     <ClCompile Include="source\RenderCore\VCT\iso\IsoVoxelization.cpp" />
+    <ClCompile Include="source\RenderCore\VCT\isoSeparate\IsoSeparateVoxelCascade.cpp" />
+    <ClCompile Include="source\RenderCore\VCT\isoSeparate\IsoSeparateVoxelization.cpp" />
     <ClCompile Include="source\RenderCore\VCT\aniso\AnisoVoxelCascade.cpp" />
     <ClCompile Include="source\RenderCore\VCT\aniso\AnisoVoxelization.cpp" />
     <ClCompile Include="source\RenderObject\WaterSim\WaterSim.cpp" />
@@ -286,6 +288,8 @@
     <ClInclude Include="source\FrameCompositor\Tasks\VoxelizeSceneTask.h" />
     <ClInclude Include="source\RenderCore\VCT\iso\IsoVoxelCascade.h" />
     <ClInclude Include="source\RenderCore\VCT\iso\IsoVoxelization.h" />
+    <ClInclude Include="source\RenderCore\VCT\isoSeparate\IsoSeparateVoxelCascade.h" />
+    <ClInclude Include="source\RenderCore\VCT\isoSeparate\IsoSeparateVoxelization.h" />
     <ClInclude Include="source\RenderCore\VCT\aniso\AnisoVoxelCascade.h" />
     <ClInclude Include="source\RenderCore\VCT\aniso\AnisoVoxelization.h" />
     <ClInclude Include="source\RenderObject\WaterSim\WaterSim.h" />

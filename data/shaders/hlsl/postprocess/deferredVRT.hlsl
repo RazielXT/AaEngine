@@ -1,6 +1,6 @@
 #include "PostProcessCommon.hlsl"
 #include "WorldReconstruction.hlsl"
-#include "hlsl/vct/iso/VoxelRayTracingCommon.hlsl"
+#include "hlsl/vct/isoSeparate/VoxelRayTracingCommon.hlsl"
 #include "hlsl/common/Random.hlsl"
 
 #ifndef VRT_NUM_RAYS

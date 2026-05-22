@@ -4,7 +4,7 @@
 #include "hlsl/common/Random.hlsl"
 
 #ifndef VRT_NUM_RAYS
-#define VRT_NUM_RAYS 2
+#define VRT_NUM_RAYS 16
 #endif
 
 float4x4 InvViewProjectionMatrix;

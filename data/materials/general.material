@@ -30,27 +30,19 @@ material General
 	}
 }
 
-material WhiteVCT : General
-{
-}
-
 material WhiteConcrete : General
 {
-}
-
-material WhiteVCTLight : WhiteVCT
-{
-	default_params
+	texture Diffuse
 	{
-		float Emission 0.0
+		file concrete.dds
 	}
 }
 
-material WhiteVCTLightEx : WhiteVCT
+material BrownConcrete : WhiteConcrete
 {
 	default_params
 	{
-		float Emission 20
+		color MaterialColor #c9b19f
 	}
 }
 
@@ -134,6 +126,18 @@ material Tire : General
 
 	shader_defines ALPHA_TEST
 	culling none
+}
+
+material terrainRock : General
+{
+	texture Diffuse
+	{
+		file SilveryBlue.dds
+	}
+	texture Normal
+	{
+		file SilveryBlue_NRM.dds
+	}
 }
 
 material TreeTrunk_ : General

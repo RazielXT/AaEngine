@@ -101,6 +101,7 @@ material whiteVc : White UseVc
 material yellowVc : Yellow UseVc
 material blueVc : Blue UseVc
 material niceRedVc : Red UseVc
+material niceRed : Red
 
 material TriplanarTest : Color
 {

@@ -195,9 +195,9 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 
 				for (auto& value : param.params)
 				{
-					if (value.starts_with("0x"))
+					if (value.starts_with("0x") || value.starts_with("#"))
 					{
-						auto hexStr = value.substr(2);
+						auto hexStr = value.starts_with("#") ? value.substr(1) : value.substr(2);
 
 						if (type == Type::Color)
 						{

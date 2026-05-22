@@ -32,9 +32,9 @@ void main(uint3 id : SV_DispatchThreadID)
 
 	float4 traceSample = ConeTrace(voxelUV, worldNormal, 1.05f, 1.5f, SceneVoxelBouncesPrev, SceneVoxelBouncesOccupancyPrev, VoxelSampler);
 
-	float3 bounceColor = baseColor * traceSample.rgb * 0.3f;
+	float3 bounceColor = baseColor * traceSample.rgb * 0.25f;
 	float shadow = diffuse.w;
-	bounceColor += baseColor * shadow * 0.5f;
+	bounceColor += baseColor * shadow * 0.75f;
 
 	float3 currentLightBounce = bounceColor;
 

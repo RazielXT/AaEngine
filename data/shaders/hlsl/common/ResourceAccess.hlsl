@@ -47,6 +47,16 @@ Texture3D<float> GetTexture3D1f(uint index)
 	return ResourceDescriptorHeap[index];
 }
 
+Texture2D<uint4> GetTexture2Du(uint index)
+{
+	return ResourceDescriptorHeap[index];
+}
+
+Texture3D<uint4> GetTexture3Du(uint index)
+{
+	return ResourceDescriptorHeap[index];
+}
+
 RWTexture2D<float4> GetRWTexture2D(uint index)
 {
 	return ResourceDescriptorHeap[index];

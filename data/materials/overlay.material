@@ -17,3 +17,69 @@ material TexturePreview
 	depth off
 	sampler clamp bilinear
 }
+
+material TexturePreview3D
+{
+	vertex_shader
+	{
+		file debug/overlay.hlsl
+		entry VSQuad
+		profile vs_6_6
+		defines TEXTURE_3D
+	}
+	pixel_shader
+	{
+		file debug/overlay.hlsl
+		entry PSTexturePreview
+		profile ps_6_6
+		defines TEXTURE_3D
+	}
+
+	culling none
+	depth off
+	sampler clamp bilinear
+}
+
+material TexturePreviewUint
+{
+	vertex_shader
+	{
+		file debug/overlay.hlsl
+		entry VSQuad
+		profile vs_6_6
+		defines TEXTURE_UINT
+	}
+	pixel_shader
+	{
+		file debug/overlay.hlsl
+		entry PSTexturePreview
+		profile ps_6_6
+		defines TEXTURE_UINT
+	}
+
+	culling none
+	depth off
+	sampler clamp bilinear
+}
+
+material TexturePreview3DUint
+{
+	vertex_shader
+	{
+		file debug/overlay.hlsl
+		entry VSQuad
+		profile vs_6_6
+		defines TEXTURE_3D TEXTURE_UINT
+	}
+	pixel_shader
+	{
+		file debug/overlay.hlsl
+		entry PSTexturePreview
+		profile ps_6_6
+		defines TEXTURE_3D TEXTURE_UINT
+	}
+
+	culling none
+	depth off
+	sampler clamp bilinear
+}

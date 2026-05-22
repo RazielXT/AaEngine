@@ -6,6 +6,23 @@
 
 class AssignedMaterial;
 
+struct TexturePreviewData
+{
+	UINT textureIndex{};
+	UINT resId{};
+	float remapMin = 0.0f;
+	float remapMax = 1.0f;
+};
+
+struct TexturePreview3DData
+{
+	UINT textureIndex{};
+	UINT sliceIndex{};
+	UINT resId{};
+	float remapMin = 0.0f;
+	float remapMax = 1.0f;
+};
+
 class DebugOverlayTask : public CompositorTask
 {
 public:
@@ -24,16 +41,28 @@ public:
 	void setIdx(UINT idx);
 	UINT currentIdx() const;
 	const DescriptorManager::DescriptorInfo* getCurrentDescriptor() const;
-	std::vector<DescriptorManager::DescriptorInfo> getTexture2DList() const;
+	bool isCurrentTexture3D() const;
+	std::vector<DescriptorManager::DescriptorInfo> getTextureList() const;
 
 	bool isFullscreen() const;
 	void setFullscreen(bool);
+
+	UINT getSliceIdx() const;
+	void setSliceIdx(UINT idx);
+
+	bool isRemapEnabled() const;
+	void setRemapEnabled(bool);
+	Vector2 getRemapMinMax() const;
+	void setRemapMinMax(Vector2);
 
 	RunType getRunType(CompositorPass&) const override { return RunType::SyncCommands; }
 
 private:
 
 	AssignedMaterial* material{};
+	AssignedMaterial* material3D{};
+	AssignedMaterial* materialUint{};
+	AssignedMaterial* material3DUint{};
 
 	Vector2 screenSize{};
 	bool fullscreen = false;
@@ -41,5 +70,9 @@ private:
 	ScreenQuad quad;
 
 	UINT current = 0;
+	UINT sliceIdx = 0;
 	bool enabled = false;
+
+	bool remapEnabled = false;
+	Vector2 remapMinMax = { 0.0f, 1.0f };
 };

@@ -6,54 +6,52 @@ groupshared uint gsMaskY;
 
 [numthreads(4,4,4)]
 void CSMain(
-	uint3 groupID          : SV_GroupID,
-	uint3 groupThreadID    : SV_GroupThreadID,
-	uint3 dispatchThreadID : SV_DispatchThreadID)
+    uint3 groupID          : SV_GroupID,
+    uint3 groupThreadID    : SV_GroupThreadID,
+    uint3 dispatchThreadID : SV_DispatchThreadID)
 {
-	uint linearBitIdx = groupThreadID.z * 16 + groupThreadID.y * 4 + groupThreadID.x;
+    uint linearBitIdx =
+        groupThreadID.z * 16 +
+        groupThreadID.y * 4 +
+        groupThreadID.x;
 
-	// Single thread clears the shared storage
-	if (linearBitIdx == 0u)
-	{
-		gsMaskX = 0u;
-		gsMaskY = 0u;
-	}
+    if (linearBitIdx == 0)
+    {
+        gsMaskX = 0;
+        gsMaskY = 0;
+    }
 
-	GroupMemoryBarrierWithGroupSync();
+    GroupMemoryBarrierWithGroupSync();
 
-	float opacity = OpacityGrid.Load(int4(dispatchThreadID, 0));
-	bool occupied = opacity > 0.0f;
+    bool occupied =
+        OpacityGrid.Load(int4(dispatchThreadID, 0)) > 0.0f;
 
-	// 1. Accumulate our bit into a local REGISTER first (completely free/independent)
-	uint localBitX = 0u;
-	uint localBitY = 0u;
+    uint bitX = 0;
+    uint bitY = 0;
 
-	if (occupied)
-	{
-		if (linearBitIdx < 32u)
-			localBitX = 1u << linearBitIdx;
-		else
-			localBitY = 1u << (linearBitIdx - 32u); // Explicitly unsigned suffix
-	}
+    if (occupied)
+    {
+        if (linearBitIdx < 32)
+            bitX = 1u << linearBitIdx;
+        else
+            bitY = 1u << (linearBitIdx - 32);
+    }
 
-	// 2. ONLY execute atomics if this specific thread actually has a bit to append.
-	// In empty spaces, threads skip this entirely. In full spaces, we drastically 
-	// reduce atomic traffic.
-	if (localBitX != 0u)
-	{
-		InterlockedOr(gsMaskX, localBitX);
-	}
-	
-	if (localBitY != 0u)
-	{
-		InterlockedOr(gsMaskY, localBitY);
-	}
+    // Fast wave reduction first
+    uint waveMaskX = WaveActiveBitOr(bitX);
+    uint waveMaskY = WaveActiveBitOr(bitY);
 
-	GroupMemoryBarrierWithGroupSync();
+    // One thread per wave commits
+    if (WaveIsFirstLane())
+    {
+        InterlockedOr(gsMaskX, waveMaskX);
+        InterlockedOr(gsMaskY, waveMaskY);
+    }
 
-	// 3. Output to the 32x32x32 global grid
-	if (linearBitIdx == 0u)
-	{
-		BitmaskGrid[groupID] = uint2(gsMaskX, gsMaskY);
-	}
+    GroupMemoryBarrierWithGroupSync();
+
+    if (linearBitIdx == 0)
+    {
+        BitmaskGrid[groupID] = uint2(gsMaskX, gsMaskY);
+    }
 }

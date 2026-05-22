@@ -144,7 +144,7 @@ void IsoSeparateVoxelization::voxelizeCascades(CommandsData& commands, GpuTextur
 		TextureStatePair voxelOccupancyTexture_state = { &cascade.voxelOccupancyTexture, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE };
 		TextureStatePair voxelPreviousOccupancyTexture_state = { &cascade.voxelPreviousOccupancyTexture, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE };
 
-		//if (!buildCounter[i])
+		if (!buildCounter[i])
 		{
 			buildCounter[i]++;
 			voxelizeCascade(commands.commandList, voxelSceneTexture_state, voxelPreviousSceneTexture_state, voxelOccupancyTexture_state, voxelPreviousOccupancyTexture_state, viewportOutput, cascade, ctx);
@@ -199,16 +199,13 @@ void IsoSeparateVoxelization::voxelizeCascade(ID3D12GraphicsCommandList* command
 	renderables.updateVisibility(camera, sceneInfo);
 	sceneQueue->renderObjects(constants, commandList);
 
-	voxelScene.Transition(commandList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-	voxelOccupancy.Transition(commandList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-
 	{
 		auto uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(cascade.voxelOccupancyTexture.texture.Get());
 		commandList->ResourceBarrier(1, &uavBarrier);
 	}
-	cascade.opacityGridTextureState.Transition(commandList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-	opacityGridCS.dispatch(commandList, cascade.voxelOccupancyTexture.view, cascade.opacityGridTexture.view);
-	cascade.opacityGridTextureState.Transition(commandList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+
+	voxelScene.Transition(commandList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	voxelOccupancy.Transition(commandList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
 	computeMips.dispatch(commandList, cascade.voxelSceneTexture);
 	computeMips.dispatch(commandList, cascade.voxelOccupancyTexture);
@@ -281,6 +278,16 @@ void IsoSeparateVoxelization::bounceCascade(CommandsData& commands, IsoSeparateV
 
 	computeMips.dispatch(commands.commandList, cascade.voxelSceneTexture);
 	computeMips.dispatch(commands.commandList, cascade.voxelOccupancyTexture);
+
+	auto commandList = commands.commandList;
+	{
+		auto uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(cascade.voxelOccupancyTexture.texture.Get());
+		commandList->ResourceBarrier(1, &uavBarrier);
+	}
+
+	cascade.opacityGridTextureState.Transition(commandList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	opacityGridCS.dispatch(commandList, cascade.voxelOccupancyTexture.view, cascade.opacityGridTexture.view);
+	cascade.opacityGridTextureState.Transition(commandList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 }
 
 void IsoSeparateVoxelization::runBounces(CommandsData& computeCommands, const RenderContext& ctx, const IsoSeparateVoxelTracingParams& params)

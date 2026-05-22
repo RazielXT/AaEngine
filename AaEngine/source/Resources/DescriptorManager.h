@@ -1,6 +1,7 @@
 #pragma once
 
 #include <d3d12.h>
+#include <initializer_list>
 #include "RenderCore/GpuTexture.h"
 
 struct Texture;
@@ -39,9 +40,12 @@ public:
 
 	UINT nextDescriptor(UINT offset, D3D12_SRV_DIMENSION) const;
 	UINT previousDescriptor(UINT offset, D3D12_SRV_DIMENSION) const;
+	UINT nextDescriptor(UINT offset, std::initializer_list<D3D12_SRV_DIMENSION>) const;
+	UINT previousDescriptor(UINT offset, std::initializer_list<D3D12_SRV_DIMENSION>) const;
 
 	const DescriptorInfo* getDescriptor(UINT idx) const;
 	std::vector<DescriptorInfo> getDescriptors(D3D12_SRV_DIMENSION filter) const;
+	std::vector<DescriptorInfo> getDescriptors(std::initializer_list<D3D12_SRV_DIMENSION> filters) const;
 
 	void removeTextureView(RenderTargetTextures& textures);
 	void removeTextureView(GpuTextureResource& texture);

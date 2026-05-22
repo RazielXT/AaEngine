@@ -2,7 +2,7 @@
 #include "Scene/RenderQueue.h"
 #include "Resources/Material/Material.h"
 
-void ScreenQuad::Render(AssignedMaterial* material, const GpuTexture2D& target, const RenderProvider& provider, RenderContext& ctx, ID3D12GraphicsCommandList* commandList) const
+void ScreenQuad::Render(AssignedMaterial* material, const GpuTexture2D& target, const RenderProvider& provider, RenderContext& ctx, ID3D12GraphicsCommandList* commandList, const void* materialData, size_t materialDataSize) const
 {
 	ShaderConstantsProvider constants(provider.params, {}, * ctx.camera, target);
 	MaterialDataStorage storage;
@@ -10,7 +10,9 @@ void ScreenQuad::Render(AssignedMaterial* material, const GpuTexture2D& target, 
 	material->GetBase()->BindSignature(commandList);
 
 	material->LoadMaterialConstants(storage);
-	memcpy(storage.rootParams.data(), &data, storage.rootParams.size() * sizeof(float));
+	memcpy(storage.rootParams.data(), &data.vertices, sizeof(data.vertices));
+	if (materialData && materialDataSize)
+		memcpy(reinterpret_cast<char*>(storage.rootParams.data()) + sizeof(data.vertices), materialData, materialDataSize);
 
 	material->UpdatePerFrame(storage, constants);
 	material->BindPipeline(commandList);

@@ -255,11 +255,50 @@ void SidePanel::draw()
 
 					auto desc = info->resource->GetDesc();
 					ImGui::Text("Format: %s", DxgiFormatToString(desc.Format));
-					ImGui::Text("Size: %u x %u", desc.Width, desc.Height);
+
+					if (info->dimension == D3D12_SRV_DIMENSION_TEXTURE3D)
+					{
+						ImGui::Text("Size: %u x %u x %u", desc.Width, desc.Height, desc.DepthOrArraySize);
+
+						int slice = (int)overlayTask.getSliceIdx();
+						if (ImGui::SliderInt("Slice", &slice, 0, (int)desc.DepthOrArraySize - 1))
+							overlayTask.setSliceIdx((UINT)slice);
+					}
+					else
+					{
+						ImGui::Text("Size: %u x %u", desc.Width, desc.Height);
+					}
 				}
 			}
 
-			auto textures = overlayTask.getTexture2DList();
+			{
+				bool remap = overlayTask.isRemapEnabled();
+				if (ImGui::Checkbox("Remap color range", &remap))
+					overlayTask.setRemapEnabled(remap);
+
+				if (remap)
+				{
+					auto range = overlayTask.getRemapMinMax();
+					const float epsilon = 0.0001f;
+
+					if (ImGui::DragFloat2("Range min max", &range.x, 0.001f, 0.0f, 1.0f, "%.4f"))
+					{
+						auto last = overlayTask.getRemapMinMax();
+
+						// If min goes above max - epsilon, push max up
+						if (range.x != last.x && range.x > range.y - epsilon)
+							range.y = std::clamp(range.x + epsilon, 0.0f, 1.0f);
+
+						// If max goes below min + epsilon, push min down
+						if (range.y != last.y && range.y < range.x + epsilon)
+							range.x = std::clamp(range.y - epsilon, 0.0f, 1.0f);
+
+						overlayTask.setRemapMinMax(range);
+					}
+				}
+			}
+
+			auto textures = overlayTask.getTextureList();
 			UINT selectedListIdx = -1;
 			UINT currentIdx = overlayTask.currentIdx();
 			for (UINT i = 0; i < textures.size(); i++)
@@ -291,7 +330,8 @@ void SidePanel::draw()
 
 				for (UINT i = 0; i < textures.size(); i++)
 				{
-					std::string label = std::format("{} [{}]", textures[i].name, textures[i].index);
+					const char* dimLabel = textures[i].dimension == D3D12_SRV_DIMENSION_TEXTURE3D ? " (3D)" : "";
+					std::string label = std::format("{}{} [{}]", textures[i].name, dimLabel, textures[i].index);
 
 					bool isSelected = (i == selectedListIdx);
 					if (ImGui::Selectable(label.c_str(), isSelected))

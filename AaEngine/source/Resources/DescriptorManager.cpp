@@ -280,6 +280,36 @@ UINT DescriptorManager::previousDescriptor(UINT offset, D3D12_SRV_DIMENSION d) c
 	return offset;
 }
 
+static bool matchesDimension(D3D12_SRV_DIMENSION d, std::initializer_list<D3D12_SRV_DIMENSION> dims)
+{
+	for (auto dim : dims)
+		if (d == dim)
+			return true;
+	return false;
+}
+
+UINT DescriptorManager::nextDescriptor(UINT offset, std::initializer_list<D3D12_SRV_DIMENSION> dims) const
+{
+	offset = min(offset, descriptorsInfo.size());
+
+	for (auto pos = offset + 1; descriptorsInfo.size() > pos; pos++)
+		if (matchesDimension(descriptorsInfo[pos].dimension, dims))
+			return pos;
+
+	return offset;
+}
+
+UINT DescriptorManager::previousDescriptor(UINT offset, std::initializer_list<D3D12_SRV_DIMENSION> dims) const
+{
+	offset = min(offset, descriptorsInfo.size());
+
+	for (auto pos = offset; pos > 0; pos--)
+		if (matchesDimension(descriptorsInfo[pos - 1].dimension, dims))
+			return pos - 1;
+
+	return offset;
+}
+
 const DescriptorManager::DescriptorInfo* DescriptorManager::getDescriptor(UINT idx) const
 {
 	if (descriptorsInfo.size() <= idx)
@@ -294,6 +324,17 @@ std::vector<DescriptorManager::DescriptorInfo> DescriptorManager::getDescriptors
 	for (UINT i = 0; i < descriptorsInfo.size(); i++)
 	{
 		if (descriptorsInfo[i].dimension == filter && descriptorsInfo[i].name)
+			result.emplace_back(descriptorsInfo[i]).index = i;
+	}
+	return result;
+}
+
+std::vector<DescriptorManager::DescriptorInfo> DescriptorManager::getDescriptors(std::initializer_list<D3D12_SRV_DIMENSION> filters) const
+{
+	std::vector<DescriptorInfo> result;
+	for (UINT i = 0; i < descriptorsInfo.size(); i++)
+	{
+		if (descriptorsInfo[i].name && matchesDimension(descriptorsInfo[i].dimension, filters))
 			result.emplace_back(descriptorsInfo[i]).index = i;
 	}
 	return result;

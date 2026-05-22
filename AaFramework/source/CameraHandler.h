@@ -15,8 +15,8 @@ public:
 
 	virtual void update(float deltaTime) = 0;
 
-	virtual void activate() {}
-	virtual void deactivate() {}
+	virtual void activate(TargetViewport&);
+	virtual void deactivate(TargetViewport&);
 
 	bool keyPressed(int) override { return false; }
 	bool keyReleased(int) override { return false; }
@@ -24,8 +24,6 @@ public:
 	bool mouseReleased(MouseButton) override { return false; }
 	bool mouseMoved(int, int) override { return false; }
 	bool mouseWheel(float) override { return false; }
-
-	void bind(TargetViewport&);
 
 	Camera& camera;
 
@@ -36,5 +34,6 @@ protected:
 	void onViewportResize(UINT width, UINT height) override;
 	void onScreenResize(UINT, UINT) override {}
 
+	void bind(TargetViewport&);
 	TargetViewport* target{};
 };

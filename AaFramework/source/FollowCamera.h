@@ -12,7 +12,7 @@ public:
 
 	void update(float time) override;
 
-	void activate() override;
+	void activate(TargetViewport& viewport) override;
 
 	void setTarget(MovableBody* body);
 

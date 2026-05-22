@@ -10,6 +10,23 @@ CameraHandler::CameraHandler(Camera& camera) : camera(camera)
 {
 }
 
+void CameraHandler::activate(TargetViewport& viewport)
+{
+	bind(viewport);
+}
+
+void CameraHandler::deactivate(TargetViewport& viewport)
+{
+	for (auto it = viewport.listeners.begin(); it != viewport.listeners.end(); it++)
+	{
+		if (*it == this)
+		{
+			viewport.listeners.erase(it);
+			break;
+		}
+	}
+}
+
 void CameraHandler::bind(TargetViewport& viewport)
 {
 	target = &viewport;

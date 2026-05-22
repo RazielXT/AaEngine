@@ -19,8 +19,8 @@ public:
 	bool mouseWheel(float change) override;
 	void stop();
 
-	void activate() override;
-	void deactivate() override;
+	void activate(TargetViewport& viewport) override;
+	void deactivate(TargetViewport& viewport) override;
 
 private:
 

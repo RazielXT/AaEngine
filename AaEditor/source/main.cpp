@@ -47,8 +47,7 @@ public:
 		camera.lookAt(Vector3(0, -1, 0));
 
 		activeCameraHandler = std::make_unique<FreeCamera>(camera);
-		activeCameraHandler->bind(renderPanelViewport);
-		activeCameraHandler->activate();
+		activeCameraHandler->activate(renderPanelViewport);
 
 		app.loadScene();
 	}
@@ -146,7 +145,7 @@ public:
 		auto spawnPos = camera.getPosition();
 
 		if (activeCameraHandler)
-			activeCameraHandler->deactivate();
+			activeCameraHandler->deactivate(renderPanelViewport);
 
 		// Cleanup previous play mode objects
 		activePlayInputListener = nullptr;
@@ -162,8 +161,7 @@ public:
 		{
 		case InteractionMode::Editor:
 			activeCameraHandler = std::make_unique<FreeCamera>(camera);
-			activeCameraHandler->bind(renderPanelViewport);
-			activeCameraHandler->activate();
+			activeCameraHandler->activate(renderPanelViewport);
 			break;
 
 		case InteractionMode::Motorbike:
@@ -179,8 +177,7 @@ public:
 
 			auto cameraHandler = std::make_unique<FollowCamera>(camera, app.physicsMgr);
 			cameraHandler->setTarget(motorcycle.get());
-			cameraHandler->bind(renderPanelViewport);
-			cameraHandler->activate();
+			cameraHandler->activate(renderPanelViewport);
 			activeCameraHandler = std::move(cameraHandler);
 			activePlayInputListener = motorcycle.get();
 			ShowCursor(FALSE);
@@ -196,8 +193,7 @@ public:
 			auto cameraHandler = std::make_unique<FirstPersonCamera>(camera, app.physicsMgr);
 			cameraHandler->thirdPerson = (editorUi.state.interactionMode == InteractionMode::WalkingThirdPerson);
 			cameraHandler->setTarget(playerBody.get());
-			cameraHandler->bind(renderPanelViewport);
-			cameraHandler->activate();
+			cameraHandler->activate(renderPanelViewport);
 			activeCameraHandler = std::move(cameraHandler);
 			activePlayInputListener = playerBody.get();
 			ShowCursor(FALSE);

@@ -15,12 +15,6 @@ AsyncTasksInfo UpscaleTask::initialize(CompositorPass& pass)
 
 void UpscaleTask::run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass)
 {
-	if (pass.info.entry == "Prepare")
-	{
-		prepare(ctx);
-		return;
-	}
-
 	CommandsMarker marker(syncCommands.commandList, "Upscale", PixColor::Upscale);
 
 	std::vector<CD3DX12_RESOURCE_BARRIER> barriers;
@@ -75,26 +69,4 @@ void UpscaleTask::run(RenderContext& ctx, CommandsData& syncCommands, Compositor
 	auto& descriptors = DescriptorManager::get();
 	ID3D12DescriptorHeap* descriptorHeaps[] = { descriptors.mainDescriptorHeap, descriptors.samplerHeap };
 	syncCommands.commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-}
-
-void UpscaleTask::prepare(RenderContext& ctx)
-{
-	// Assuming view and viewPrevious are pointers to View instances
-	XMMATRIX viewMatrixCurrent = ctx.camera->getViewMatrix();
-	static XMMATRIX viewMatrixPrevious = viewMatrixCurrent;
-	XMMATRIX projMatrixCurrent = ctx.camera->getProjectionMatrixNoOffset();
-	static XMMATRIX projMatrixPrevious = projMatrixCurrent;
-
-	// Calculate the view reprojection matrix
-	XMMATRIX viewReprojectionMatrix = XMMatrixMultiply(XMMatrixInverse(nullptr, viewMatrixCurrent), viewMatrixPrevious);
-
-	// Calculate the reprojection matrix for TAA
-	XMMATRIX reprojectionMatrix = XMMatrixMultiply(XMMatrixMultiply(XMMatrixInverse(nullptr, projMatrixCurrent), viewReprojectionMatrix), projMatrixPrevious);
-
-	viewMatrixPrevious = viewMatrixCurrent;
-	projMatrixPrevious = projMatrixCurrent;
-
-	XMFLOAT4X4 reprojectionData;
-	XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&reprojectionData, XMMatrixTranspose(reprojectionMatrix));
-	provider.resources.materials.getMaterial("MotionVectors")->SetParameter("reprojectionMatrix", &reprojectionData._11, 16);
 }

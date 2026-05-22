@@ -7,10 +7,12 @@ FirstPersonCamera::FirstPersonCamera(Camera& camera, PhysicsManager& ph) : Camer
 {
 }
 
-void FirstPersonCamera::activate()
+void FirstPersonCamera::activate(TargetViewport& viewport)
 {
 	yaw = -camera.getYaw();
 	pitch = camera.getPitch();
+
+	CameraHandler::activate(viewport);
 }
 
 void FirstPersonCamera::setTarget(MovableBody* body)

@@ -14,6 +14,7 @@ struct IsoSeparateVoxelCascade
 	GpuTexture3D voxelPreviousSceneTexture;
 	GpuTexture3D voxelOccupancyTexture;
 	GpuTexture3D voxelPreviousOccupancyTexture;
+	GpuTexture3D opacityGridTexture;
 
 	std::string name;
 	UINT idx{};
@@ -33,6 +34,8 @@ struct IsoSeparateVoxelCascade
 	settings;
 
 	Vector3 update(const Vector3& cameraPosition);
+
+	TextureStatePair opacityGridTextureState;
 
 	const UINT DataElementSize = sizeof(UINT) * 2;
 	const UINT DataElementCount = 128 * 128 * 128;

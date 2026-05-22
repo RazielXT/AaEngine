@@ -28,6 +28,8 @@ void PrepareFrameTask::run(RenderContext& ctx, CommandsData& cmd, CompositorPass
 	renderWorld.terrain.update(cmd.commandList, *ctx.camera, provider.params.frameIndex);
 	renderWorld.vegetation.update(cmd.commandList, ctx.camera->getPosition(), renderWorld.terrain);
 	renderWorld.grass.update(cmd.commandList, *ctx.camera, renderWorld.terrain);
+
+	prepareMotionVectors(ctx);
 }
 
 void PrepareFrameTask::runCompute(RenderContext& ctx, CommandsData& cmd, CompositorPass& pass)
@@ -47,4 +49,26 @@ CompositorTask::RunType PrepareFrameTask::getRunType(CompositorPass& pass) const
 		return RunType::SyncComputeCommands;
 	else
 		return RunType::SyncCommands;
+}
+
+void PrepareFrameTask::prepareMotionVectors(RenderContext& ctx)
+{
+	// Assuming view and viewPrevious are pointers to View instances
+	XMMATRIX viewMatrixCurrent = ctx.camera->getViewMatrix();
+	static XMMATRIX viewMatrixPrevious = viewMatrixCurrent;
+	XMMATRIX projMatrixCurrent = ctx.camera->getProjectionMatrixNoOffset();
+	static XMMATRIX projMatrixPrevious = projMatrixCurrent;
+
+	// Calculate the view reprojection matrix
+	XMMATRIX viewReprojectionMatrix = XMMatrixMultiply(XMMatrixInverse(nullptr, viewMatrixCurrent), viewMatrixPrevious);
+
+	// Calculate the reprojection matrix for TAA
+	XMMATRIX reprojectionMatrix = XMMatrixMultiply(XMMatrixMultiply(XMMatrixInverse(nullptr, projMatrixCurrent), viewReprojectionMatrix), projMatrixPrevious);
+
+	viewMatrixPrevious = viewMatrixCurrent;
+	projMatrixPrevious = projMatrixCurrent;
+
+	XMFLOAT4X4 reprojectionData;
+	XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&reprojectionData, XMMatrixTranspose(reprojectionMatrix));
+	provider.resources.materials.getMaterial("MotionVectors")->SetParameter("reprojectionMatrix", &reprojectionData._11, 16);
 }

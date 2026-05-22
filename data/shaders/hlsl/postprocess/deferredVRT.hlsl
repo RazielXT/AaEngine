@@ -37,7 +37,7 @@ float3 SkyColor(float3 dir)
 	float t = saturate(dir.y * 0.75 + 0.25);
 	float3 bottomColor = float3(0.1, 0.15, 0.2);
 	float3 topColor = float3(0.3, 0.5, 0.9);
-	return lerp(bottomColor, topColor, 1 - t) * 0.1f;
+	return lerp(bottomColor, topColor, 1 - t) * 0.3f;
 }
 
 float4 PSMain(VS_OUTPUT input) : SV_TARGET

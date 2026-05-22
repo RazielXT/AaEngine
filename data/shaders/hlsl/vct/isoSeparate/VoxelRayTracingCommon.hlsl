@@ -29,8 +29,6 @@ RayTraceResult RayTraceSingle(float3 rayStart, float3 rayDir, uint voxelMip, Sce
 {
 	const float3 voxelSize = float(1u << voxelMip) / voxels.Density;
 
-	rayStart += voxelSize * rayDir * 1.5f;
-
 	RayTraceResult result;
 	result.color = float4(0, 0, 0, 0);
 	result.exitWorldPos = rayStart;
@@ -95,6 +93,7 @@ RayTraceResult RayTraceSingle(float3 rayStart, float3 rayDir, uint voxelMip, Sce
 float4 RayTraceCascades(float3 rayStart, float3 rayDir, uint voxelMip, SceneVoxelCbufferIndexed voxelInfo)
 {
 	float3 currentStart = rayStart;
+	bool bOffsetApplied = false;
 
 	for (int c = 0; c < 4; c++)
 	{
@@ -103,6 +102,33 @@ float4 RayTraceCascades(float3 rayStart, float3 rayDir, uint voxelMip, SceneVoxe
 
 		if (any(localUV < 0.0) || any(localUV > 1.0))
 			continue;
+
+		if (!bOffsetApplied)
+		{
+			const float3 voxelSize = float(1u << voxelMip) / cascade.Density;
+			
+			// 1. Locate the exact discrete voxel coordinate where the ray starts
+			float3 localPos = currentStart - cascade.Offset;
+			float3 voxelCoord = floor(localPos / voxelSize);
+			
+			// 2. Reconstruct the precise world-space AABB of this starting voxel
+			float3 voxelMin = voxelCoord * voxelSize + cascade.Offset;
+			float3 voxelMax = voxelMin + voxelSize;
+			
+			// 3. Find exactly where the ray exits this starting voxel
+			float tExitVoxel = GetRayAABBExitT(currentStart, rayDir, voxelMin, voxelMax);
+			
+			// 4. Snap the ray origin to just slightly past the voxel boundary.
+			// A tiny epsilon (like 1e-4f) guarantees it lands inside the next voxel.
+			currentStart = currentStart + rayDir * max(0.5f, tExitVoxel + 1e-4f);
+			
+			bOffsetApplied = true;
+
+			// Re-evaluate boundary check since we stepped forward
+			localUV = (currentStart - cascade.Offset) / cascade.WorldSize;
+			if (any(localUV < 0.0) || any(localUV > 1.0))
+				continue;
+		}
 
 		Texture3D<float4> colorMap = GetTexture3D(cascade.TexId);
 		Texture3D<float> occupancyMap = GetTexture3D1f(cascade.TexIdOccupancy);

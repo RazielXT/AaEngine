@@ -14,4 +14,9 @@ public:
 	void runCompute(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
 
 	RunType getRunType(CompositorPass&) const override;
+
+private:
+
+	void prepareMotionVectors(RenderContext& ctx);
+
 };

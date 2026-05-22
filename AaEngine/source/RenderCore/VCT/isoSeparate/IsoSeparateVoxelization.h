@@ -32,6 +32,17 @@ public:
 	void dispatch(ID3D12GraphicsCommandList* commandList, const std::span<float>& data, const ShaderTextureView& targetColor, const ShaderTextureView& targetOccupancy, const ShaderTextureView& sourceColor, const ShaderTextureView& sourceOccupancy, D3D12_GPU_VIRTUAL_ADDRESS);
 };
 
+class IsoSeparateOpacityGridCS : public ComputeShader
+{
+public:
+	IsoSeparateOpacityGridCS()
+	{
+		volatileTextures = true;
+	}
+
+	void dispatch(ID3D12GraphicsCommandList* commandList, const ShaderTextureView& sourceOccupancy, const ShaderTextureView& targetOpacityGrid);
+};
+
 class IsoSeparateVoxelization
 {
 public:
@@ -86,6 +97,7 @@ private:
 	bool reset = false;
 
 	IsoSeparateBounceVoxelsCS bouncesCS;
+	IsoSeparateOpacityGridCS opacityGridCS;
 	Generate3DMips3xCS computeMips;
 	ClearBufferComputeShader clearBufferCS;
 

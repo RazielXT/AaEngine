@@ -4,8 +4,10 @@
 #include "Utils/StringUtils.h"
 
 constexpr float VoxelSize = 128.f;
+constexpr UINT OpacityGridSize = static_cast<UINT>(VoxelSize) / 4;
 constexpr DXGI_FORMAT VoxelColorFormat = DXGI_FORMAT_R11G11B10_FLOAT;
 constexpr DXGI_FORMAT VoxelOccupancyFormat = DXGI_FORMAT_R8_UNORM;
+constexpr DXGI_FORMAT OpacityGridFormat = DXGI_FORMAT_R32G32_UINT;
 
 void IsoSeparateVoxelCascade::initialize(const std::string& n, ID3D12Device* device, GraphicsResources& resources)
 {
@@ -31,6 +33,13 @@ void IsoSeparateVoxelCascade::initialize(const std::string& n, ID3D12Device* dev
 	voxelPreviousOccupancyTexture.Init(device, VoxelSize, VoxelSize, VoxelSize, VoxelOccupancyFormat);
 	voxelPreviousOccupancyTexture.SetName(prevOccupancyName.c_str());
 	resources.descriptors.createTextureView(voxelPreviousOccupancyTexture);
+
+	auto opacityGridName = name + "OpacityGrid";
+	opacityGridTexture.Init(device, OpacityGridSize, OpacityGridSize, OpacityGridSize, OpacityGridFormat);
+	opacityGridTexture.SetName(opacityGridName.c_str());
+	resources.descriptors.createTextureView(opacityGridTexture);
+	resources.descriptors.createUAVView(opacityGridTexture);
+	opacityGridTextureState = TextureStatePair(&opacityGridTexture, D3D12_RESOURCE_STATE_COMMON);
 
 	voxelInfoBuffer.data = resources.shaderBuffers.CreateStructuredBuffer(DataElementSize * DataElementCount);
 	voxelInfoBuffer.data->SetName(as_wstring(name + "DataBuffer").c_str());

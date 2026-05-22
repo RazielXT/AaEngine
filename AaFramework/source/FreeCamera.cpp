@@ -155,12 +155,14 @@ void FreeCamera::stop()
 	w = s = a = d = turbo = slow = move = false;
 }
 
-void FreeCamera::activate()
+void FreeCamera::activate(TargetViewport& viewport)
 {
 	camera.restoreYawPitchFromDirection();
+	CameraHandler::activate(viewport);
 }
 
-void FreeCamera::deactivate()
+void FreeCamera::deactivate(TargetViewport& viewport)
 {
 	stop();
+	CameraHandler::deactivate(viewport);
 }

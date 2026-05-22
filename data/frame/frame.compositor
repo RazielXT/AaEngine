@@ -19,9 +19,9 @@ compositor Frame
 	texture sceneTextureTmp target_size DXGI_FORMAT_R16G16B16A16_FLOAT
 
 	texture depthDownsample2 target_size_div 2 DXGI_FORMAT_R32_FLOAT
+	texture motionVectors target_size DXGI_FORMAT_R16G16_FLOAT
 
 #if UPSCALE
-	texture motionVectors target_size DXGI_FORMAT_R16G16_FLOAT
 	rwtexture sceneTextureTmp_upscaled output_size DXGI_FORMAT_R16G16B16A16_FLOAT
 #else
 	texture sceneTextureTmpOut output_size DXGI_FORMAT_R16G16B16A16_FLOAT
@@ -92,6 +92,14 @@ compositor Frame
 	}
 	#endif
 
+	pass MotionVectors
+	{
+		material MotionVectors
+		in sceneTexture:Depth
+		in sceneTexture:MotionVectors
+		out motionVectors
+	}
+
 	pass DeferredVRT
 	{
 		after VoxelScene.Voxelize
@@ -106,6 +114,7 @@ compositor Frame
 		material DeferredVRT_Accumulation
 		in sceneVCTLow
 		in sceneVCTLowAcc
+		in motionVectors
 		out sceneVCTLowFinal
 	}
 	pass DeferredVRT_AccumulationCopy
@@ -167,16 +176,6 @@ compositor Frame
 	}
 
 #if UPSCALE
-	task Upscale.Prepare
-
-	pass MotionVectors
-	{
-		material MotionVectors
-		in sceneTexture:Depth
-		in sceneTexture:MotionVectors
-		out motionVectors
-	}
-
 	task Upscale (compute)
 	{
 		in sceneTextureTmp2

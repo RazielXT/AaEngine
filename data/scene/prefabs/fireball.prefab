@@ -1,6 +1,6 @@
 object Fireball
 {
-	scale 5
+	scale 2
 	material Fireball
 	model sphere.mesh
 }

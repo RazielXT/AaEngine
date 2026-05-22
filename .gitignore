@@ -8,6 +8,7 @@ data/scene/scenes/*
 !data/scene/scenes/voxelOutside
 !data/scene/scenes/voxelOutsideBig
 !data/scene/scenes/cubesTower
-!data/scene/scenes/voxelRoom
+!data/scene/scenes/giRoom
 !data/scene/scenes/playground
 !data/scene/scenes/cave
+!data/scene/scenes/columnsOutside

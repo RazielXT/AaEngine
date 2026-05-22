@@ -1,0 +1,126 @@
+<scene formatVersion="1.0" upAxis="y" unitsPerMeter="39.3701" minOgreVersion="1.8" ogreMaxVersion="2.4.3" author="OgreMax Scene Exporter (www.ogremax.com)" application="3DS Max">
+    <environment>
+        <colourAmbient r="0.333333" g="0.333333" b="0.333333" />
+        <colourBackground r="0" g="0" b="0" />
+        <clipping near="0" far="100000" />
+    </environment>
+    <nodes>
+        <node name="Box395">
+            <position x="-2.04845" y="3.07025" z="-0.0406434" />
+            <scale x="0.19233" y="0.19233" z="0.19233" />
+            <rotation qx="0" qy="0" qz="0" qw="1" />
+            <entity name="Box395" castShadows="true" receiveShadows="true" meshFile="test3Box395.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>tree</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="terrainRock" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box397">
+            <position x="2.25057" y="7.84904" z="7.19666" />
+            <scale x="0.19233" y="0.19233" z="0.19233" />
+            <rotation qx="-8.74228e-008" qy="0" qz="0" qw="1" />
+            <entity name="Box397" castShadows="true" receiveShadows="true" meshFile="test3Box397.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>tree</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="terrainRock" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box398">
+            <position x="14.0215" y="48.259" z="0.0271461" />
+            <scale x="0.501528" y="2.23695" z="0.501528" />
+            <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
+            <entity name="Box398" castShadows="true" receiveShadows="true" meshFile="test3Box398.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="White" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Cone001">
+            <position x="1.4708" y="36.4805" z="-0.34236" />
+            <scale x="0.19233" y="0.19233" z="0.19233" />
+            <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
+            <entity name="Cone001" castShadows="true" receiveShadows="true" meshFile="test3Cone001.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>tree</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="terrainRock" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box400">
+            <position x="-12.8725" y="48.9731" z="0.027146" />
+            <scale x="0.501528" y="2.23695" z="0.501528" />
+            <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
+            <entity name="Box400" castShadows="true" receiveShadows="true" meshFile="test3Box400.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="niceRed" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box401">
+            <position x="1.30051" y="48.9731" z="0.027146" />
+            <scale x="0.501528" y="2.23695" z="0.501528" />
+            <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
+            <entity name="Box401" castShadows="true" receiveShadows="true" meshFile="test3Box401.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="niceRed" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box402">
+            <position x="-12.8725" y="48.9731" z="-15.1855" />
+            <scale x="0.501528" y="2.23695" z="0.501528" />
+            <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
+            <entity name="Box402" castShadows="true" receiveShadows="true" meshFile="test3Box402.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="niceRed" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box403">
+            <position x="1.30051" y="48.9731" z="-15.1855" />
+            <scale x="0.501528" y="2.23695" z="0.501528" />
+            <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
+            <entity name="Box403" castShadows="true" receiveShadows="true" meshFile="test3Box403.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="niceRed" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box404">
+            <position x="14.0215" y="48.9731" z="-15.1855" />
+            <scale x="0.501528" y="2.23695" z="0.501528" />
+            <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
+            <entity name="Box404" castShadows="true" receiveShadows="true" meshFile="test3Box404.mesh">
+                <userData>
+                    <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
+</userData>
+                <subentities>
+                    <subentity index="0" materialName="niceRed" />
+                </subentities>
+            </entity>
+        </node>
+    </nodes>
+</scene>

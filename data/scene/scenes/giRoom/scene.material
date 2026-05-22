@@ -1,0 +1,65 @@
+material Blue
+{
+	technique
+	{
+		pass
+		{
+			ambient 0.266667 0.282353 0.945098 1
+			diffuse 0.266667 0.282353 0.945098 1
+			specular 0 0 0 1 10
+		}
+
+	}
+
+}
+
+
+
+material Red
+{
+	technique
+	{
+		pass
+		{
+			ambient 0.917647 0.588235 0.588235 1
+			diffuse 0.917647 0.588235 0.588235 1
+			specular 0 0 0 1 10
+		}
+
+	}
+
+}
+
+
+
+material Green
+{
+	technique
+	{
+		pass
+		{
+			ambient 0.388235 0.831373 0.266667 1
+			diffuse 0.388235 0.831373 0.266667 1
+			specular 0 0 0 1 10
+		}
+
+	}
+
+}
+
+
+
+material BrownConcrete
+{
+	technique
+	{
+		pass
+		{
+			ambient 0.921569 0.823529 0.745098 1
+			diffuse 0.921569 0.823529 0.745098 1
+			specular 0 0 0 1 10
+		}
+
+	}
+
+}

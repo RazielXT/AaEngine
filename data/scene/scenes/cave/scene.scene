@@ -11,7 +11,7 @@
             <rotation qx="0.982972" qy="0.150539" qz="-0.104605" qw="0.012727" />
             <entity name="Box023" castShadows="true" receiveShadows="true" meshFile="test3Box023.mesh">
                 <subentities>
-                    <subentity index="0" materialName="WhiteVCT" />
+                    <subentity index="0" materialName="WhiteConcrete" />
                 </subentities>
             </entity>
         </node>
@@ -21,7 +21,7 @@
             <rotation qx="0.923804" qy="-0.330583" qz="-0.193126" qw="-0.00196429" />
             <entity name="Box036" castShadows="true" receiveShadows="true" meshFile="test3Box036.mesh">
                 <subentities>
-                    <subentity index="0" materialName="WhiteVCT" />
+                    <subentity index="0" materialName="WhiteConcrete" />
                 </subentities>
             </entity>
         </node>
@@ -31,7 +31,7 @@
             <rotation qx="0" qy="0" qz="0" qw="1" />
             <entity name="Torus001" castShadows="true" receiveShadows="true" meshFile="test3Torus001.mesh">
                 <subentities>
-                    <subentity index="0" materialName="WhiteVCTLight" />
+                    <subentity index="0" materialName="White" />
                 </subentities>
             </entity>
         </node>
@@ -41,7 +41,7 @@
             <rotation qx="0" qy="0.626319" qz="-2.73773e-008" qw="0.779567" />
             <entity name="Box062" castShadows="true" receiveShadows="true" meshFile="test3Box062.mesh">
                 <subentities>
-                    <subentity index="0" materialName="WhiteVCTLight" />
+                    <subentity index="0" materialName="White" />
                 </subentities>
             </entity>
         </node>
@@ -51,7 +51,7 @@
             <rotation qx="0.969294" qy="0.153477" qz="-0.1804" qw="-0.0661057" />
             <entity name="Box077" castShadows="true" receiveShadows="true" meshFile="test3Box077.mesh">
                 <subentities>
-                    <subentity index="0" materialName="RedVCT" />
+                    <subentity index="0" materialName="Red" />
                 </subentities>
             </entity>
         </node>
@@ -61,7 +61,7 @@
             <rotation qx="0.888769" qy="-0.449074" qz="-0.0563497" qw="-0.0724302" />
             <entity name="Box166" castShadows="true" receiveShadows="true" meshFile="test3Box166.mesh">
                 <subentities>
-                    <subentity index="0" materialName="WhiteVCT" />
+                    <subentity index="0" materialName="WhiteConcrete" />
                 </subentities>
             </entity>
         </node>
@@ -71,7 +71,7 @@
             <rotation qx="0.933786" qy="0.351318" qz="-0.0641881" qw="-0.0223612" />
             <entity name="Box176" castShadows="true" receiveShadows="true" meshFile="test3Box176.mesh">
                 <subentities>
-                    <subentity index="0" materialName="WhiteVCT" />
+                    <subentity index="0" materialName="WhiteConcrete" />
                 </subentities>
             </entity>
         </node>
@@ -81,7 +81,7 @@
             <rotation qx="0.972712" qy="0.0942243" qz="0.194396" qw="0.0846405" />
             <entity name="Box204" castShadows="true" receiveShadows="true" meshFile="test3Box204.mesh">
                 <subentities>
-                    <subentity index="0" materialName="YellowVCT" />
+                    <subentity index="0" materialName="Yellow" />
                 </subentities>
             </entity>
         </node>
@@ -91,7 +91,7 @@
             <rotation qx="0.993252" qy="-0.0835072" qz="-0.0560152" qw="-0.0577897" />
             <entity name="Box205" castShadows="true" receiveShadows="true" meshFile="test3Box205.mesh">
                 <subentities>
-                    <subentity index="0" materialName="BlueVCT" />
+                    <subentity index="0" materialName="Blue" />
                 </subentities>
             </entity>
         </node>
@@ -104,7 +104,7 @@
                     <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
 </userData>
                 <subentities>
-                    <subentity index="0" materialName="WhiteVCT" />
+                    <subentity index="0" materialName="WhiteConcrete" />
                 </subentities>
             </entity>
         </node>
@@ -114,7 +114,7 @@
             <rotation qx="0.946786" qy="0.304311" qz="-0.100891" qw="0.0285041" />
             <entity name="Box222" castShadows="true" receiveShadows="true" meshFile="test3Box222.mesh">
                 <subentities>
-                    <subentity index="0" materialName="WhiteVCT" />
+                    <subentity index="0" materialName="WhiteConcrete" />
                 </subentities>
             </entity>
         </node>
@@ -124,7 +124,7 @@
             <rotation qx="-0.471576" qy="0.565225" qz="-0.520021" qw="0.43326" />
             <entity name="Box228" castShadows="true" receiveShadows="true" meshFile="test3Box228.mesh">
                 <subentities>
-                    <subentity index="0" materialName="WhiteVCTLight" />
+                    <subentity index="0" materialName="White" />
                 </subentities>
             </entity>
         </node>
@@ -134,7 +134,7 @@
             <rotation qx="0.994105" qy="-0.0524909" qz="0.0332036" qw="0.0888724" />
             <entity name="Box229" castShadows="true" receiveShadows="true" meshFile="test3Box229.mesh">
                 <subentities>
-                    <subentity index="0" materialName="WhiteVCT" />
+                    <subentity index="0" materialName="WhiteConcrete" />
                 </subentities>
             </entity>
         </node>
@@ -144,7 +144,7 @@
             <rotation qx="0.974381" qy="-0.07104" qz="-0.0853139" qw="-0.19559" />
             <entity name="Box232" castShadows="true" receiveShadows="true" meshFile="test3Box232.mesh">
                 <subentities>
-                    <subentity index="0" materialName="WhiteVCT" />
+                    <subentity index="0" materialName="WhiteConcrete" />
                 </subentities>
             </entity>
         </node>
@@ -154,7 +154,7 @@
             <rotation qx="0.980537" qy="-0.157632" qz="0.115177" qw="-0.0208018" />
             <entity name="Box239" castShadows="true" receiveShadows="true" meshFile="test3Box239.mesh">
                 <subentities>
-                    <subentity index="0" materialName="WhiteVCT" />
+                    <subentity index="0" materialName="WhiteConcrete" />
                 </subentities>
             </entity>
         </node>
@@ -164,7 +164,7 @@
             <rotation qx="0.983163" qy="-0.0511109" qz="0.101521" qw="0.143082" />
             <entity name="Box245" castShadows="true" receiveShadows="true" meshFile="test3Box245.mesh">
                 <subentities>
-                    <subentity index="0" materialName="YellowVCT" />
+                    <subentity index="0" materialName="Yellow" />
                 </subentities>
             </entity>
         </node>
@@ -174,7 +174,7 @@
             <rotation qx="0.980207" qy="0.0479138" qz="-0.171505" qw="-0.0865107" />
             <entity name="Box265" castShadows="true" receiveShadows="true" meshFile="test3Box265.mesh">
                 <subentities>
-                    <subentity index="0" materialName="RedVCT" />
+                    <subentity index="0" materialName="Red" />
                 </subentities>
             </entity>
         </node>
@@ -184,7 +184,7 @@
             <rotation qx="0.951358" qy="0.26695" qz="-0.021805" qw="-0.152249" />
             <entity name="Box267" castShadows="true" receiveShadows="true" meshFile="test3Box267.mesh">
                 <subentities>
-                    <subentity index="0" materialName="RedVCT" />
+                    <subentity index="0" materialName="Red" />
                 </subentities>
             </entity>
         </node>
@@ -197,7 +197,7 @@
                     <![CDATA[<PhysicalBody><Identifier>0</Identifier><ObjectModifier>Regular</ObjectModifier><BodyType>conv</BodyType><MaterialID>0</MaterialID><Mass>0</Mass><Type>0</Type><Amaker>false</Amaker><Actions></Actions><Aonstart></Aonstart></PhysicalBody>]]>
 </userData>
                 <subentities>
-                    <subentity index="0" materialName="YellowVCT" />
+                    <subentity index="0" materialName="Yellow" />
                 </subentities>
             </entity>
         </node>
@@ -207,7 +207,7 @@
             <rotation qx="0.966152" qy="0.254439" qz="0.0380509" qw="0.0190529" />
             <entity name="Box705" castShadows="true" receiveShadows="true" meshFile="test3Box705.mesh">
                 <subentities>
-                    <subentity index="0" materialName="BlueVCT" />
+                    <subentity index="0" materialName="Blue" />
                 </subentities>
             </entity>
         </node>
@@ -217,7 +217,7 @@
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
             <entity name="Box722" castShadows="true" receiveShadows="true" meshFile="test3Box722.mesh">
                 <subentities>
-                    <subentity index="0" materialName="GreenVCT" />
+                    <subentity index="0" materialName="Rock" />
                 </subentities>
             </entity>
         </node>
@@ -227,7 +227,7 @@
             <rotation qx="1" qy="0" qz="0" qw="-7.54979e-008" />
             <entity name="Box723" castShadows="true" receiveShadows="true" meshFile="test3Box723.mesh">
                 <subentities>
-                    <subentity index="0" materialName="GreenVCT" />
+                    <subentity index="0" materialName="Rock" />
                 </subentities>
             </entity>
         </node>

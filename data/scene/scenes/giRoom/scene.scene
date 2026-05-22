@@ -1,0 +1,59 @@
+<scene formatVersion="1.0" upAxis="y" unitsPerMeter="39.3701" minOgreVersion="1.8" ogreMaxVersion="2.4.3" author="OgreMax Scene Exporter (www.ogremax.com)" application="3DS Max">
+    <environment>
+        <colourAmbient r="0.333333" g="0.333333" b="0.333333" />
+        <colourBackground r="0" g="0" b="0" />
+        <clipping near="0" far="100000" />
+    </environment>
+    <nodes>
+        <node name="Box004">
+            <position x="1.25701" y="9.14756" z="-1.73633" />
+            <scale x="0.157233" y="0.157233" z="0.157233" />
+            <rotation qx="0" qy="0" qz="0" qw="1" />
+            <entity name="Box004" castShadows="true" receiveShadows="true" meshFile="Box004.mesh">
+                <subentities>
+                    <subentity index="0" materialName="BrownConcrete" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box010">
+            <position x="2.21707" y="4.01497" z="-0.421477" />
+            <scale x="0.157233" y="0.157233" z="0.157233" />
+            <rotation qx="-0.5" qy="-0.5" qz="0.5" qw="-0.5" />
+            <entity name="Box010" castShadows="true" receiveShadows="true" meshFile="Box010.mesh">
+                <subentities>
+                    <subentity index="0" materialName="Green" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box011">
+            <position x="2.21707" y="4.01497" z="-6.61047" />
+            <scale x="0.157233" y="0.157233" z="0.157233" />
+            <rotation qx="-0.5" qy="-0.5" qz="0.5" qw="-0.5" />
+            <entity name="Box011" castShadows="true" receiveShadows="true" meshFile="Box011.mesh">
+                <subentities>
+                    <subentity index="0" materialName="Red" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Box012">
+            <position x="2.21707" y="8.54106" z="-0.421477" />
+            <scale x="0.157233" y="0.157233" z="0.157233" />
+            <rotation qx="-0.5" qy="-0.5" qz="0.5" qw="-0.5" />
+            <entity name="Box012" castShadows="true" receiveShadows="true" meshFile="Box012.mesh">
+                <subentities>
+                    <subentity index="0" materialName="Green" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Sphere001">
+            <position x="1.55129" y="7.82587" z="-6.60848" />
+            <scale x="0.157233" y="0.157233" z="0.157233" />
+            <rotation qx="0" qy="0" qz="0" qw="1" />
+            <entity name="Sphere001" castShadows="true" receiveShadows="true" meshFile="Sphere001.mesh">
+                <subentities>
+                    <subentity index="0" materialName="Blue" />
+                </subentities>
+            </entity>
+        </node>
+    </nodes>
+</scene>

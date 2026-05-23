@@ -1,6 +1,6 @@
 #include "PostProcessCommon.hlsl"
 #include "WorldReconstruction.hlsl"
-#include "hlsl/vct/isoSeparate/VoxelRayTracingCommon.hlsl"
+#include "hlsl/vct/anisoSeparate/VoxelRayTracingCommon.hlsl"
 #include "hlsl/common/Random.hlsl"
 
 #ifndef VRT_NUM_RAYS
@@ -14,7 +14,7 @@ float ResId;
 
 cbuffer SceneVoxelInfo : register(b1)
 {
-	SceneVoxelCbufferIndexed VoxelInfo;
+	AnisoSeparateSceneVoxelCbufferIndexed VoxelInfo;
 };
 
 Texture2D normalMap : register(t0);
@@ -37,7 +37,7 @@ float3 SkyColor(float3 dir)
 	float t = saturate(dir.y * 0.75 + 0.25);
 	float3 bottomColor = float3(0.1, 0.15, 0.2);
 	float3 topColor = float3(0.3, 0.5, 0.9);
-	return lerp(bottomColor, topColor, 1 - t) * 0.3f;
+	return lerp(bottomColor, topColor, 1 - t) * 0.1f;
 }
 
 float4 PSMain(VS_OUTPUT input) : SV_TARGET

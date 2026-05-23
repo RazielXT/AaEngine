@@ -266,6 +266,12 @@ void loadEntity(const xml_node& entityElement, SceneNode* node, bool visible)
 		auto material = ctx->resources.materials.getMaterial(materialName, ctx->batch);
 		auto model = ctx->resources.models.getModel(mesh, ctx->batch, { loadFolder });
 
+		if (!material)
+		{
+			Logger::logWarning("Missing material " + materialName);
+			return;
+		}
+
 		if (material->HasInstancing())
 		{
 			auto& instanceDescription = parseResult->instanceDescriptions[material];

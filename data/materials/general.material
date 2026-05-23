@@ -46,26 +46,7 @@ material BrownConcrete : WhiteConcrete
 	}
 }
 
-material BlueVCT : General
-{
-	default_params
-	{
-		color MaterialColor 0.2 0.2 1
-	}
-}
-
-material Red : General
-{
-	texture Diffuse
-	{
-		file nicered.dds
-	}
-}
-
-
-material RedVCT : Red
-
-material GreenVCT : General
+material Rock : General
 {
 	texture Diffuse
 	{
@@ -78,28 +59,7 @@ material GreenVCT : General
 	}
 }
 
-material YellowVCT : General
-{
-	default_params
-	{
-		color MaterialColor 1 1 0.1
-	}
-}
-
-material RockVCT : General
-{
-	texture Diffuse
-	{
-		file SilveryBlue.dds
-	}
-
-	texture Normal
-	{
-		file rock_norm.dds
-	}
-}
-
-material GrassVCT : General
+material GrassTerrain : General
 {
 	texture Diffuse
 	{

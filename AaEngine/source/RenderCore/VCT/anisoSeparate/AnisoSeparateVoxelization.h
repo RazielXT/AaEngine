@@ -32,6 +32,17 @@ public:
 	void dispatch(ID3D12GraphicsCommandList* commandList, const std::span<float>& data, const ShaderTextureView faceViews[AnisoSeparateVoxelCascade::FaceCount], const ShaderTextureView& occupancyView, const ShaderTextureView prevFaceViews[AnisoSeparateVoxelCascade::FaceCount], const ShaderTextureView& prevOccupancyView, D3D12_GPU_VIRTUAL_ADDRESS);
 };
 
+class AnisoSeparateOccupancyBitmaskCS : public ComputeShader
+{
+public:
+	AnisoSeparateOccupancyBitmaskCS()
+	{
+		volatileTextures = true;
+	}
+
+	void dispatch(ID3D12GraphicsCommandList* commandList, const ShaderTextureView& sourceOccupancy, const ShaderTextureView& targetBitmask);
+};
+
 class AnisoSeparateVoxelization
 {
 public:
@@ -63,7 +74,7 @@ private:
 		UINT texIdOccupancy;
 		UINT texIdPrevOccupancy;
 		UINT resIdDataBuffer;
-		UINT padding;
+		UINT texIdOccupancyBitmask;
 	};
 
 	XM_ALIGNED_STRUCT(16) SceneVoxelCbuffer
@@ -87,6 +98,7 @@ private:
 	bool reset = false;
 
 	AnisoSeparateBounceVoxelsCS bouncesCS;
+	AnisoSeparateOccupancyBitmaskCS occupancyBitmaskCS;
 	Generate3DMips3xCS computeMips;
 	ClearBufferComputeShader clearBufferCS;
 

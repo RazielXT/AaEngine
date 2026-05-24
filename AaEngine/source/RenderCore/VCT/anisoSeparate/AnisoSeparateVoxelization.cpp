@@ -45,6 +45,9 @@ void AnisoSeparateVoxelization::initialize(RenderSystem& renderSystem, const Fra
 	auto clearBufferShader = resources.shaders.getShader("clearBufferCS", ShaderType::Compute, ShaderRef{ "utils/clearBufferCS.hlsl", "main", "cs_6_6" });
 	clearBufferCS.init(*renderSystem.core.device, *clearBufferShader);
 
+	auto bitmaskShader = resources.shaders.getShader("opacityGridCS", ShaderType::Compute, ShaderRef{ "vct/opacityGridCS.hlsl", "CSMain", "cs_6_6" });
+	occupancyBitmaskCS.init(*renderSystem.core.device, *bitmaskShader);
+
 	sceneQueue = mgr.createQueue({ outputFormat }, MaterialTechnique::Voxelize);
 
 	revoxelize();
@@ -109,6 +112,7 @@ void AnisoSeparateVoxelization::updateCBufferCascade(SceneVoxelChunkInfo& info, 
 	info.texIdOccupancy = cascade.voxelOccupancyTexture.view.srvHeapIndex;
 	info.texIdPrevOccupancy = cascade.voxelPreviousOccupancyTexture.view.srvHeapIndex;
 	info.resIdDataBuffer = cascade.voxelInfoBuffer.view.heapIndex;
+	info.texIdOccupancyBitmask = cascade.voxelOccupancyBitmaskTexture.view.srvHeapIndex;
 }
 
 void AnisoSeparateVoxelization::updateCBuffer(const Vector3& cameraPosition, const AnisoSeparateVoxelTracingParams& params)
@@ -269,11 +273,14 @@ void AnisoSeparateVoxelization::bounceCascade(CommandsData& commands, AnisoSepar
 		Vector3 VoxelsOffset;
 		float padding2;
 		Vector3 VoxelsSceneSize;
+		float padding3;
+		Vector3 SunColor;
 	}
 	data = {
 		.CameraPosition = ctx.camera->getPosition(),
 		.VoxelsOffset = cascade.settings.center - Vector3(cascade.settings.extends),
 		.VoxelsSceneSize = Vector3(cascade.settings.extends * 2),
+		.SunColor = frameParams->sun.SunColor
 	};
 
 	ShaderTextureView faceViews[AnisoSeparateVoxelCascade::FaceCount];
@@ -294,6 +301,10 @@ void AnisoSeparateVoxelization::bounceCascade(CommandsData& commands, AnisoSepar
 
 	cascade.voxelOccupancyTexture.Transition(commands.commandList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 	computeMips.dispatch(commands.commandList, cascade.voxelOccupancyTexture);
+
+	cascade.voxelOccupancyBitmaskTexture.Transition(commands.commandList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	occupancyBitmaskCS.dispatch(commands.commandList, cascade.voxelOccupancyTexture.view, cascade.voxelOccupancyBitmaskTexture.view);
+	cascade.voxelOccupancyBitmaskTexture.Transition(commands.commandList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 }
 
 void AnisoSeparateVoxelization::runBounces(CommandsData& computeCommands, const RenderContext& ctx, const AnisoSeparateVoxelTracingParams& params)
@@ -318,26 +329,38 @@ void AnisoSeparateBounceVoxelsCS::dispatch(ID3D12GraphicsCommandList* commandLis
 	commandList->SetPipelineState(pipelineState.Get());
 	commandList->SetComputeRootSignature(signature);
 
-	//commandList->SetComputeRoot32BitConstants(0, data.size(), data.data(), 0);
-	commandList->SetComputeRootShaderResourceView(0, dataAddr);
+	commandList->SetComputeRoot32BitConstants(0, data.size(), data.data(), 0);
+	commandList->SetComputeRootShaderResourceView(1, dataAddr);
 
 	for (UINT f = 0; f < AnisoSeparateVoxelCascade::FaceCount; f++)
 	{
-		commandList->SetComputeRootDescriptorTable(1 + f, prevFaceViews[f].srvHandle);
+		commandList->SetComputeRootDescriptorTable(2 + f, prevFaceViews[f].srvHandle);
 	}
 
-	commandList->SetComputeRootDescriptorTable(1 + AnisoSeparateVoxelCascade::FaceCount, prevOccupancyView.srvHandle);
+	commandList->SetComputeRootDescriptorTable(2 + AnisoSeparateVoxelCascade::FaceCount, prevOccupancyView.srvHandle);
 
 	for (UINT f = 0; f < AnisoSeparateVoxelCascade::FaceCount; f++)
 	{
-		commandList->SetComputeRootDescriptorTable(2 + AnisoSeparateVoxelCascade::FaceCount + f, faceViews[f].uavHandle);
+		commandList->SetComputeRootDescriptorTable(3 + AnisoSeparateVoxelCascade::FaceCount + f, faceViews[f].uavHandle);
 	}
 
-	commandList->SetComputeRootDescriptorTable(2 + AnisoSeparateVoxelCascade::FaceCount * 2, occupancyView.uavHandle);
+	commandList->SetComputeRootDescriptorTable(3 + AnisoSeparateVoxelCascade::FaceCount * 2, occupancyView.uavHandle);
 
 	const UINT threadSize = 4;
 	const auto voxelSize = UINT(VoxelSize);
 	const uint32_t groupSize = (voxelSize + threadSize - 1) / threadSize;
 
+	commandList->Dispatch(groupSize, groupSize, groupSize);
+}
+
+void AnisoSeparateOccupancyBitmaskCS::dispatch(ID3D12GraphicsCommandList* commandList, const ShaderTextureView& sourceOccupancy, const ShaderTextureView& target)
+{
+	commandList->SetPipelineState(pipelineState.Get());
+	commandList->SetComputeRootSignature(signature);
+
+	commandList->SetComputeRootDescriptorTable(0, sourceOccupancy.srvHandle);
+	commandList->SetComputeRootDescriptorTable(1, target.uavHandle);
+
+	const UINT groupSize = 32;
 	commandList->Dispatch(groupSize, groupSize, groupSize);
 }

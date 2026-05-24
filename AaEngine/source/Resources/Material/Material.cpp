@@ -449,6 +449,9 @@ bool MaterialInstance::IsTransparent() const
 
 void MaterialInstance::SetTexture(ShaderTextureView& texture, UINT slot)
 {
+	if (resources->textures.size() <= slot)
+		return;
+
 	auto& t = resources->textures[slot];
 	t.texture = &texture;
 

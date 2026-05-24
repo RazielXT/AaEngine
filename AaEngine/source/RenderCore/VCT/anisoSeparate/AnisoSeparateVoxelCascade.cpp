@@ -34,6 +34,12 @@ void AnisoSeparateVoxelCascade::initialize(const std::string& n, ID3D12Device* d
 	voxelPreviousOccupancyTexture.SetName(prevOccupancyName.c_str());
 	resources.descriptors.createTextureView(voxelPreviousOccupancyTexture);
 
+	auto opacityGridName = name + "OpacityGrid";
+	voxelOccupancyBitmaskTexture.Init(device, OccupancyBitmaskSize, OccupancyBitmaskSize, OccupancyBitmaskSize, OccupancyBitmaskFormat);
+	voxelOccupancyBitmaskTexture.SetName(opacityGridName.c_str());
+	resources.descriptors.createTextureView(voxelOccupancyBitmaskTexture);
+	resources.descriptors.createUAVView(voxelOccupancyBitmaskTexture);
+
 	voxelInfoBuffer.data = resources.shaderBuffers.CreateStructuredBuffer(DataElementSize * DataElementCount);
 	voxelInfoBuffer.data->SetName(as_wstring(name + "DataBuffer").c_str());
 	voxelInfoBuffer.view = resources.descriptors.createBufferView(voxelInfoBuffer.data.Get(), DataElementSize, DataElementCount);

@@ -37,6 +37,11 @@ uint GetOccupancyTexId(AnisoSeparateSceneVoxelChunkInfo info)
 	return info.TexIdData3.x;
 }
 
+uint GetOccupancyBitmaskTexId(AnisoSeparateSceneVoxelChunkInfo info)
+{
+	return info.TexIdData3.w;
+}
+
 uint GetPrevOccupancyTexId(AnisoSeparateSceneVoxelChunkInfo info)
 {
 	return info.TexIdData3.y;

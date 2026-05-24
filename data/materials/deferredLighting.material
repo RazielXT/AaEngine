@@ -53,6 +53,14 @@ material DeferredVRT
 		entry PSMain
 		profile ps_6_6
 	}
+
+	texture normal
+	texture depth
+
+	texture
+	{
+		file blueNoise_LDR_RG01_0.png
+	}
 }
 
 material DeferredVRT_Accumulation

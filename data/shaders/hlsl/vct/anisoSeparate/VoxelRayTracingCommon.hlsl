@@ -81,7 +81,7 @@ RayTraceResult RayTraceSingle(
 	float hitOccupancy = 0.0f;
 
 	[loop]
-	for (int i = 0; i < 256; i++)
+	for (int i = 0; i < 64; i++)
 	{
 		if (tMax.x < tMax.y && tMax.x < tMax.z)
 		{

@@ -16,6 +16,7 @@ struct AnisoSeparateVoxelCascade
 	GpuTexture3D voxelPreviousFaceTextures[FaceCount];
 	GpuTexture3D voxelOccupancyTexture;
 	GpuTexture3D voxelPreviousOccupancyTexture;
+	GpuTexture3D voxelOccupancyBitmaskTexture;
 
 	std::string name;
 	UINT idx{};
@@ -55,4 +56,7 @@ struct AnisoSeparateVoxelCascade
 	};
 
 	DataBuffer voxelInfoBuffer;
+
+	const UINT OccupancyBitmaskSize = static_cast<UINT>(VoxelSize) / 4;
+	const DXGI_FORMAT OccupancyBitmaskFormat = DXGI_FORMAT_R32G32_UINT;
 };

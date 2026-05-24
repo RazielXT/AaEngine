@@ -5,6 +5,7 @@ float _pad0;
 float3 VoxelsOffset;
 float _pad1;
 float3 VoxelsSceneSize;
+float3 SunColor;
 
 StructuredBuffer<VoxelSceneData> VoxelData : register(t0);
 
@@ -52,7 +53,7 @@ void main(uint3 id : SV_DispatchThreadID)
 
 	float3 bounceColor = baseColor * traceSample.rgb * 0.15;
 	float shadow = diffuse.w;
-	bounceColor += baseColor * shadow * 1;
+	bounceColor += baseColor * shadow * SunColor;
 
 	float3 currentLightBounce = bounceColor;
 

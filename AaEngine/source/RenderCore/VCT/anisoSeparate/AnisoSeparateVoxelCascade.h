@@ -57,6 +57,7 @@ struct AnisoSeparateVoxelCascade
 
 	DataBuffer voxelInfoBuffer;
 
-	const UINT OccupancyBitmaskSize = static_cast<UINT>(VoxelSize) / 4;
-	const DXGI_FORMAT OccupancyBitmaskFormat = DXGI_FORMAT_R32G32_UINT;
+	bool occupancyCleared = true;
+	const UINT OccupancyBitmaskSize = VoxelSize;
+	const DXGI_FORMAT OccupancyBitmaskFormat = DXGI_FORMAT_R8_UINT;
 };

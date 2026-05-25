@@ -7,13 +7,8 @@
 #include "Editor/EditorSelection.h"
 #include "imgui.h"
 #include "RenderCore/UpscaleTypes.h"
-#include "FrameCompositor/Tasks/DebugOverlayTask.h"
-#include "FrameCompositor/Tasks/VoxelizeSceneTask.h"
-#include "FrameCompositor/Tasks/SceneRenderTask.h"
 #include "Physics/Render/PhysicsRenderTask.h"
 #include "Resources/Shader/ShaderResources.h"
-#include "Utils/DxUtils.h"
-#include <algorithm>
 
 static WaterPaintTool* waterPaintTool;
 
@@ -179,34 +174,7 @@ void SidePanel::draw()
 
 	if (ImGui::CollapsingHeader("VCT"))
 	{
-		static bool showVoxels = false;
-		if (ImGui::Checkbox("Show voxels", &showVoxels))
-			SceneRenderTask::Get().showVoxels(showVoxels);
-
-		if (showVoxels)
-		{
-			static int showVoxelsIndex = 0;
-			if (ImGui::InputInt("Show voxels index", &showVoxelsIndex))
-			{
-				showVoxelsIndex = std::clamp(showVoxelsIndex, 0, 3);
-				app.resources.materials.getMaterial("VisualizeVoxelTexture")->SetParameter("VoxelIndex", &showVoxelsIndex, 1);
-			}
-			static int showVoxelsMip = 0;
-			if (ImGui::InputInt("Show voxels MIP", &showVoxelsMip))
-			{
-				showVoxelsMip = std::clamp(showVoxelsMip, 0, 7);
-				app.resources.materials.getMaterial("VisualizeVoxelTexture")->SetParameter("VoxelMip", &showVoxelsMip, 1);
-			}
-		}
-
-		if (ImGui::Button("Regenerate voxels"))
-			VoxelizeSceneTask::Get().revoxelize();
-
-		auto& state = VoxelizeSceneTask::Get().params;
-		ImGui::SliderFloat("middleConeRatio", &state.middleConeRatioDistance.x, 0.0f, 5.f);
-		ImGui::SliderFloat("middleConeDistance", &state.middleConeRatioDistance.y, 0.0f, 5.f);
-		ImGui::SliderFloat("sideConeRatio", &state.sideConeRatioDistance.x, 0.0f, 5.f);
-		ImGui::SliderFloat("sideConeDistance", &state.sideConeRatioDistance.y, 0.0f, 5.f);
+		vctSection.draw(app);
 	}
 
 	if (ImGui::CollapsingHeader("Physics"))
@@ -232,175 +200,12 @@ void SidePanel::draw()
 
 	if (ImGui::CollapsingHeader("Texture overlay"))
 	{
-		auto& overlayTask = DebugOverlayTask::Get();
-		static bool enabledTexture = false;
-		if (ImGui::Checkbox("Enable texture overlay", &enabledTexture))
-			overlayTask.enable(enabledTexture);
-
-		if (enabledTexture)
-		{
-			UINT next = overlayTask.currentIdx();
-			const uint32_t step = 1;
-			if (ImGui::InputScalar("Texture idx", ImGuiDataType_U32 , &next, &step))
-				overlayTask.changeIdx(next);
-
-			{
-				bool f = overlayTask.isFullscreen();
-				if (ImGui::Checkbox("Texture preview fullscreen", &f))
-					overlayTask.setFullscreen(f);
-
-				if (auto info = overlayTask.getCurrentDescriptor())
-				{
-					ImGui::Text("Texture: %s", info->name);
-
-					auto desc = info->resource->GetDesc();
-					ImGui::Text("Format: %s", DxgiFormatToString(desc.Format));
-
-					if (info->dimension == D3D12_SRV_DIMENSION_TEXTURE3D)
-					{
-						ImGui::Text("Size: %u x %u x %u", desc.Width, desc.Height, desc.DepthOrArraySize);
-
-						int slice = (int)overlayTask.getSliceIdx();
-						if (ImGui::SliderInt("Slice", &slice, 0, (int)desc.DepthOrArraySize - 1))
-							overlayTask.setSliceIdx((UINT)slice);
-					}
-					else
-					{
-						ImGui::Text("Size: %u x %u", desc.Width, desc.Height);
-					}
-				}
-			}
-
-			{
-				bool remap = overlayTask.isRemapEnabled();
-				if (ImGui::Checkbox("Remap color range", &remap))
-					overlayTask.setRemapEnabled(remap);
-
-				if (remap)
-				{
-					auto range = overlayTask.getRemapMinMax();
-					const float epsilon = 0.0001f;
-
-					if (ImGui::DragFloat2("Range min max", &range.x, 0.001f, 0.0f, 1.0f, "%.4f"))
-					{
-						auto last = overlayTask.getRemapMinMax();
-
-						// If min goes above max - epsilon, push max up
-						if (range.x != last.x && range.x > range.y - epsilon)
-							range.y = std::clamp(range.x + epsilon, 0.0f, 1.0f);
-
-						// If max goes below min + epsilon, push min down
-						if (range.y != last.y && range.y < range.x + epsilon)
-							range.x = std::clamp(range.y - epsilon, 0.0f, 1.0f);
-
-						overlayTask.setRemapMinMax(range);
-					}
-				}
-			}
-
-			auto textures = overlayTask.getTextureList();
-			UINT selectedListIdx = -1;
-			UINT currentIdx = overlayTask.currentIdx();
-			for (UINT i = 0; i < textures.size(); i++)
-			{
-				if (textures[i].index == currentIdx)
-				{
-					selectedListIdx = i;
-					break;
-				}
-			}
-
-			if (ImGui::BeginListBox("Textures", ImVec2(-FLT_MIN, ImGui::GetTextLineHeightWithSpacing() * min((int)textures.size(), 10))))
-			{
-				bool refocus = false;
-				if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))
-				{
-					if (ImGui::IsKeyPressed(ImGuiKey_UpArrow) && selectedListIdx > 0)
-						selectedListIdx--;
-
-					if (ImGui::IsKeyPressed(ImGuiKey_DownArrow) && selectedListIdx < textures.size() - 1)
-						selectedListIdx++;
-
-					if (textures[selectedListIdx].index != currentIdx)
-					{
-						overlayTask.changeIdx(textures[selectedListIdx].index);
-						refocus = true;
-					}
-				}
-
-				for (UINT i = 0; i < textures.size(); i++)
-				{
-					const char* dimLabel = textures[i].dimension == D3D12_SRV_DIMENSION_TEXTURE3D ? " (3D)" : "";
-					std::string label = std::format("{}{} [{}]", textures[i].name, dimLabel, textures[i].index);
-
-					bool isSelected = (i == selectedListIdx);
-					if (ImGui::Selectable(label.c_str(), isSelected))
-						overlayTask.setIdx(textures[i].index);
-
-					if (isSelected)
-					{
-						ImGui::SetItemDefaultFocus();
-						if (refocus)
-							ImGui::SetScrollHereY(0.5f);
-					}
-				}
-
-				ImGui::EndListBox();
-			}
-		}
+		textureOverlaySection.draw();
 	}
 
 	if (ImGui::CollapsingHeader("Sky"))
 	{
-		static float latitude = 0.0f;
-		static float timeOfDay = 9.0f;
-		static int dayOfYear = 172;
-
-		bool change = ImGui::SliderFloat("Time of Day", &timeOfDay, 0.0f, 24.0f);
-		change |= ImGui::SliderFloat("Latitude", &latitude, -XM_PIDIV2, XM_PIDIV2);
-		change |= ImGui::SliderInt("Day of Year", &dayOfYear, 1, 365);
-
-		if (change)
-		{
-			float declination = XMConvertToRadians(-23.44f) * std::cos(XM_2PI / 365.0f * (dayOfYear + 10));
-			float hourAngle = (timeOfDay - 12.0f) * (XM_PI / 12.0f);
-
-			float sinAlt = std::sin(latitude) * std::sin(declination) +
-				std::cos(latitude) * std::cos(declination) * std::cos(hourAngle);
-			float altitude = std::asin(std::clamp(sinAlt, -1.0f, 1.0f));
-
-			float cosAz = (std::sin(declination) - std::sin(altitude) * std::sin(latitude)) /
-				(std::cos(altitude) * std::cos(latitude));
-
-			float azimuth = std::acos(std::clamp(cosAz, -1.0f, 1.0f));
-			if (hourAngle > 0) azimuth = XM_2PI - azimuth;
-
-			Vector3 sunPos;
-			sunPos.x = std::cos(altitude) * std::sin(azimuth);
-			sunPos.y = std::sin(altitude);
-			sunPos.z = std::cos(altitude) * std::cos(azimuth);
-
-			app.lights.directionalLight.direction = -sunPos;
-			app.lights.directionalLight.direction.Normalize();
-
-			VoxelizeSceneTask::Get().revoxelize();
-		}
-
-		if (ImGui::ColorEdit3("Sun Color", &app.lights.directionalLight.color.x))
-		{
-			VoxelizeSceneTask::Get().revoxelize();
-		}
-
-		static float moonPhase = 0;
-		if (ImGui::SliderFloat("Moon phase", &moonPhase, -1, 1))
-		{
-			auto material = app.resources.materials.getMaterial("Moon");
-			material->SetParameter("MoonPhase", &moonPhase, 1);
-		}
-
-		ImGui::SliderFloat("Clouds amount", &app.params.sun.CloudsAmount, -1, 1);
-		ImGui::SliderFloat("Clouds density", &app.params.sun.CloudsDensity, 0, 1);
-		ImGui::SliderFloat("Clouds speed", &app.params.sun.CloudsSpeed, 0, 0.02f);
+		skySection.draw(app);
 	}
 
 	if (ImGui::CollapsingHeader("Interaction", ImGuiTreeNodeFlags_DefaultOpen))

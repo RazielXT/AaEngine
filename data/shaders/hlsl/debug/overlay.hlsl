@@ -65,7 +65,7 @@ float4 PSTexturePreview(VS_OUTPUT input) : SV_TARGET
 		uint2 coord = uint2(input.uv * float2(w, h));
 		float4 color = float4(tex.Load(int3(coord, 0)));
 	#else
-		float4 color = GetTexture2D(TextureIndex).Sample(LinearSampler, input.uv);
+		float4 color = GetTexture2D(TextureIndex).Sample(PointSampler, input.uv);
 	#endif
 #endif
 

@@ -64,5 +64,5 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	float4 current = currentRays.Load(int3(input.Position.xy, 0));
 	//float4 current = Gaussian3x3(currentRays, input.TexCoord + motionUV, ViewportSizeInverse);
 	float4 accumulated = Gaussian3x3(accumulatedRays, input.TexCoord + motionUV, ViewportSizeInverse);
-	return lerp(current, accumulated, 0.85f);
+	return lerp(current, accumulated, 0.9f);
 }

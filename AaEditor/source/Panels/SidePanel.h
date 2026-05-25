@@ -1,5 +1,9 @@
 #pragma once
 
+#include "SidePanelSections/SkySection.h"
+#include "SidePanelSections/TextureOverlaySection.h"
+#include "SidePanelSections/VctSection.h"
+
 class ApplicationCore;
 class EditorSelection;
 class SceneTreePanel;
@@ -22,4 +26,8 @@ private:
 	DebugState& state;
 	SceneTreePanel& sceneTree;
 	ViewportPanel& viewportPanel;
+
+	TextureOverlaySection textureOverlaySection;
+	VctSection vctSection;
+	SkySection skySection;
 };

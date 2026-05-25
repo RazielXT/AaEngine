@@ -59,7 +59,7 @@ material DeferredVRT
 
 	texture
 	{
-		file blueNoise_LDR_RG01_0.png
+		file blueNoise.png
 	}
 }
 

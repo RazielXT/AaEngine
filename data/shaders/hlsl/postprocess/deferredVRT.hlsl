@@ -5,7 +5,7 @@
 #include "hlsl/sky/SkyColor.hlsl"
 
 #ifndef VRT_NUM_RAYS
-#define VRT_NUM_RAYS 8
+#define VRT_NUM_RAYS 4
 #endif
 
 float4x4 InvViewProjectionMatrix;
@@ -26,7 +26,7 @@ cbuffer PSSMShadows : register(b2)
 
 Texture2D normalMap : register(t0);
 Texture2D<float> depthMap : register(t1);
-Texture2D<float2> blueNoiseMap : register(t2);
+Texture2D<float> blueNoiseMap : register(t2);
 
 SamplerState PointSampler : register(s0);
 SamplerState LinearWrapSampler : register(s1);
@@ -48,8 +48,7 @@ float3 SkyColor(float3 dir)
 
 	float t = saturate(dir.y * 0.75 + 0.25);
 	float3 bottomColor = float3(0.1, 0.15, 0.2);
-	float3 topColor = float3(0.3, 0.5, 0.9);
-	return lerp(bottomColor, sky, 1 - t) * 0.1f;
+	return lerp(bottomColor, sky, 1 - t) * 0.3f;
 }
 
 float4 PSMain(VS_OUTPUT input) : SV_TARGET
@@ -71,16 +70,18 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	[unroll]
 	for (int r = 0; r < VRT_NUM_RAYS; r++)
 	{
-		//const float2 pixelSeed = input.TexCoord;
-		//float2 xi = Random2DFrom2D(pixelSeed + Time % 10 + float2(r * 0.239, r * 0.137));
-		//float2 xi2 = Random2DFrom2D(pixelSeed - Time % 3 + float2(r * 0.119, r * 0.437));
-		//noiseWeight = float2(xi.x, xi2.y);
-		
-		float2 blueNoiseUv = input.TexCoord * (ViewportSize / 128.f);
-		float2 uvScramble = Random2DFrom2D(Time % 2 + float2(r * 7.239, r * 13.137));
-		float2 xi = blueNoiseMap.Sample(PointWrapSampler, blueNoiseUv + uvScramble);
-		float2 xi2 = blueNoiseMap.Sample(PointWrapSampler, blueNoiseUv - uvScramble);
+	#ifdef VRT_WHITE_NOISE
+		const float2 pixelSeed = input.TexCoord;
+		float2 xi = Random2DFrom2D(pixelSeed + Time % 10 + float2(r * 0.239, r * 0.137));
+		float2 xi2 = Random2DFrom2D(pixelSeed - Time % 3 + float2(r * 0.119, r * 0.437));
 		noiseWeight = float2(xi.x, xi2.y);
+	#else
+		float2 blueNoiseUv = input.TexCoord * (ViewportSize / 128.f);
+		float2 uvScramble = saturate(Random2DFrom2D(Time % 2 + float2(r * 0.239, r * 0.137)));
+		float xi = blueNoiseMap.Sample(PointWrapSampler, blueNoiseUv + uvScramble);
+		float xi2 = blueNoiseMap.Sample(PointWrapSampler, blueNoiseUv - uvScramble);
+		noiseWeight = float2(xi, xi2);
+	#endif
 
 		float3 dir = CosineWeightedHemisphere(noiseWeight, worldNormal, worldTangent, worldBinormal);
 
@@ -99,7 +100,10 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 
 	radiance /= VRT_NUM_RAYS;
 	occlusion /= VRT_NUM_RAYS;
-	//radiance.xy = noiseWeight;
-	//radiance.z *= 0.001f;
+
+#ifdef VRT_OUTPUT_NOISE
+	radiance = float3(noiseWeight, 0);
+#endif
+
 	return float4(radiance, 1 - occlusion);
 }

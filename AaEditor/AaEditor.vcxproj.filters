@@ -26,6 +26,9 @@
     <Filter Include="Source Files\Panels\Viewport">
       <UniqueIdentifier>{5b7d1fdb-adf3-44d8-bddc-7269b74ca9d0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Panels\SidePanelSections">
+      <UniqueIdentifier>{d5d7bb84-1da7-4b29-bf7d-b5cbe9b12376}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -69,6 +72,15 @@
     </ClCompile>
     <ClCompile Include="source\Panels\WaterPaintTool.cpp">
       <Filter>Source Files\Panels</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Panels\SidePanelSections\SkySection.cpp">
+      <Filter>Source Files\Panels\SidePanelSections</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Panels\SidePanelSections\TextureOverlaySection.cpp">
+      <Filter>Source Files\Panels\SidePanelSections</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Panels\SidePanelSections\VctSection.cpp">
+      <Filter>Source Files\Panels\SidePanelSections</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -137,6 +149,15 @@
     </ClInclude>
     <ClInclude Include="source\Panels\WaterPaintTool.h">
       <Filter>Source Files\Panels</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Panels\SidePanelSections\SkySection.h">
+      <Filter>Source Files\Panels\SidePanelSections</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Panels\SidePanelSections\TextureOverlaySection.h">
+      <Filter>Source Files\Panels\SidePanelSections</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Panels\SidePanelSections\VctSection.h">
+      <Filter>Source Files\Panels\SidePanelSections</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

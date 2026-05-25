@@ -8,6 +8,7 @@ struct RayTraceResult
 	float4 color;
 	float3 exitWorldPos;
 	bool hit;
+	uint steps;
 };
 
 float GetRayAABBExitT(float3 rayStart, float3 rayDir, float3 boxMin, float3 boxMax)
@@ -44,6 +45,8 @@ float3 SampleAnisotropicColor(
 	return (colorX * weights.x) + (colorY * weights.y) + (colorZ * weights.z);
 }
 
+#define VRT_RAY_MAX_STEPS 32
+
 RayTraceResult RayTraceSingle(
 	float3 rayStart,
 	float3 rayDir,
@@ -60,6 +63,7 @@ RayTraceResult RayTraceSingle(
 	result.color = float4(0, 0, 0, 0);
 	result.exitWorldPos = rayStart;
 	result.hit = false;
+	result.steps = 0;
 
 	float3 invDir = 1.0f / select(abs(rayDir) < 1e-6f, sign(rayDir) * 1e-6f, rayDir);
 	int3 stepDir = int3(sign(rayDir));
@@ -81,8 +85,10 @@ RayTraceResult RayTraceSingle(
 	float hitOccupancy = 0.0f;
 
 	[loop]
-	for (int i = 0; i < 64; i++)
+	for (int i = 0; i < VRT_RAY_MAX_STEPS; i++)
 	{
+		result.steps++;
+
 		if (tMax.x < tMax.y && tMax.x < tMax.z)
 		{
 			exitT = tMax.x;
@@ -134,10 +140,23 @@ RayTraceResult RayTraceSingle(
 	return result;
 }
 
+float3 HeatmapColor(uint value, uint maxValue)
+{
+	float t = (maxValue == 0) ? 0.0 : saturate((float)value / (float)maxValue);
+
+	float3 color;
+	color.r = saturate(1.5 - abs(4.0 * t - 3.0));
+	color.g = saturate(1.5 - abs(4.0 * t - 2.0));
+	color.b = saturate(1.5 - abs(4.0 * t - 1.0));
+
+	return color;
+}
+
 float4 RayTraceCascades(float3 rayStart, float3 rayDir, uint voxelMip, AnisoSeparateSceneVoxelCbufferIndexed voxelInfo)
 {
 	float3 currentStart = rayStart;
 	bool bOffsetApplied = false;
+	uint steps = 0;
 
 	for (int c = 0; c < 4; c++)
 	{
@@ -181,11 +200,21 @@ float4 RayTraceCascades(float3 rayStart, float3 rayDir, uint voxelMip, AnisoSepa
 			facePosX, faceNegX, facePosY, faceNegY, facePosZ, faceNegZ,
 			occupancyMap);
 
+		steps += result.steps;
+
 		if (result.hit)
+#ifdef VRT_RAY_HEATMAP
+			return float4(HeatmapColor(steps, 4 * VRT_RAY_MAX_STEPS), 1);
+#else
 			return result.color;
+#endif
 
 		currentStart = result.exitWorldPos;
 	}
 
+#ifdef VRT_RAY_HEATMAP
+	return float4(HeatmapColor(steps, 4 * VRT_RAY_MAX_STEPS), 1);
+#else
 	return float4(0, 0, 0, 0);
+#endif
 }

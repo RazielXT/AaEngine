@@ -483,8 +483,8 @@ void SignatureInfo::createResourcesData(ResourcesInfo& resources, GraphicsResour
 		else
 		{
 			ResourcesInfo::GpuBuffer r;
-			r.globalCBuffer = graphicsResources.shaderBuffers.GetCbufferResource(cb.info.Name);
-			r.type = GpuBufferType::Global;
+			r.data.cbuffer = graphicsResources.shaderBuffers.GetCbufferResource(cb.info.Name);
+			r.type = GpuBufferType::CBuffer;
 			r.rootIndex = rootIndex++;
 
 			resources.buffers.push_back(r);
@@ -493,7 +493,8 @@ void SignatureInfo::createResourcesData(ResourcesInfo& resources, GraphicsResour
 
 	for (auto& b : structuredBuffers)
 	{
-		ResourcesInfo::GpuBuffer r;
+		ResourcesInfo::GpuBuffer r{};
+		r.name = b.info.Name;
 
 		if (b.info.Name == "InstancingBuffer")
 			r.type = GpuBufferType::Instancing;
@@ -501,6 +502,13 @@ void SignatureInfo::createResourcesData(ResourcesInfo& resources, GraphicsResour
 			r.type = GpuBufferType::Geometry;
 		else if (b.info.Name == "RedirectBuffer")
 			r.type = GpuBufferType::Redirect;
+		else
+		{
+			r.type = GpuBufferType::GpuMemory;
+
+			if (auto existingBuffer = graphicsResources.shaderBuffers.GetStructuredBufferResource(b.info.Name))
+				r.data.gpuPtr = existingBuffer->GetGPUVirtualAddress();
+		}
 
 		r.rootIndex = rootIndex++;
 		resources.buffers.push_back(r);

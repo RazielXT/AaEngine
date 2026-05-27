@@ -449,9 +449,6 @@ bool MaterialInstance::IsTransparent() const
 
 void MaterialInstance::SetTexture(ShaderTextureView& texture, UINT slot)
 {
-	if (resources->textures.size() <= slot)
-		return;
-
 	auto& t = resources->textures[slot];
 	t.texture = &texture;
 
@@ -479,6 +476,18 @@ void MaterialInstance::SetUAV(ID3D12Resource* uav, UINT slot)
 {
 	auto& u = resources->uavs[slot];
 	u.uav = uav;
+}
+
+void MaterialInstance::SetGpuBuffer(const std::string& name, D3D12_GPU_VIRTUAL_ADDRESS address)
+{
+	for (auto& b : resources->buffers)
+	{
+		if (b.type == GpuBufferType::GpuMemory && b.name == name)
+		{
+			b.data.gpuPtr = address;
+			return;
+		}
+	}
 }
 
 std::unique_ptr<MaterialPropertiesOverride> MaterialInstance::CreateParameterOverride(const MaterialPropertiesOverrideDescription& description) const
@@ -748,8 +757,10 @@ void MaterialInstance::BindConstants(ID3D12GraphicsCommandList* commandList, con
 			commandList->SetGraphicsRootShaderResourceView(b.rootIndex, constants.getGeometryBuffer());
 		else if (b.type == GpuBufferType::Redirect)
 			commandList->SetGraphicsRootShaderResourceView(b.rootIndex, constants.getGeometryRedirectBuffer());
-		else if (b.type == GpuBufferType::Global)
- 			commandList->SetGraphicsRootConstantBufferView(b.rootIndex, b.globalCBuffer.data[constants.params.frameIndex]->GpuAddress());
+		else if (b.type == GpuBufferType::CBuffer)
+			commandList->SetGraphicsRootConstantBufferView(b.rootIndex, b.data.cbuffer.data[constants.params.frameIndex]->GpuAddress());
+		else if (b.type == GpuBufferType::GpuMemory && b.data.gpuPtr)
+			commandList->SetGraphicsRootShaderResourceView(b.rootIndex, b.data.gpuPtr);
 	}
 }
 

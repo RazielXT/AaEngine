@@ -152,6 +152,7 @@
     <ClCompile Include="source\Physics\Render\PhysicsRenderer.cpp" />
     <ClCompile Include="source\Physics\Render\PhysicsRenderTask.cpp" />
     <ClCompile Include="source\Physics\TerrainPhysics.cpp" />
+    <ClCompile Include="source\Physics\WaterSimInteractionUpdater.cpp" />
     <ClCompile Include="source\SceneParser.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -174,6 +175,7 @@
     <ClInclude Include="source\Physics\Render\PhysicsRenderer.h" />
     <ClInclude Include="source\Physics\Render\PhysicsRenderTask.h" />
     <ClInclude Include="source\Physics\TerrainPhysics.h" />
+    <ClInclude Include="source\Physics\WaterSimInteractionUpdater.h" />
     <ClInclude Include="source\SceneGraph\ComponentStorage.h" />
     <ClInclude Include="source\SceneGraph\Scene.h" />
     <ClInclude Include="source\SceneGraph\SceneTree.h" />

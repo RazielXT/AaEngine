@@ -23,13 +23,14 @@ compositor Frame
 
 #if UPSCALE
 	rwtexture sceneTextureTmp_upscaled output_size DXGI_FORMAT_R16G16B16A16_FLOAT
-#else
-	texture sceneTextureTmpOut output_size DXGI_FORMAT_R16G16B16A16_FLOAT
 #endif
+
+	texture sceneTextureTmpOut output_size DXGI_FORMAT_R16G16B16A16_FLOAT
 
 	texture voxelDummy 128 128 DXGI_FORMAT_R8G8B8A8_UNORM
 
 	task PrepareFrame
+	task WaterSim.PrepareFrame
 
 	task SceneRender.EarlyZ
 	{
@@ -45,7 +46,7 @@ compositor Frame
 		sync_signal Voxels
 	}
 
-	task PrepareFrame.Water (async_compute)
+	task WaterSim.Compute (async_compute)
 	{
 		sync_signal Water
 	}
@@ -187,15 +188,7 @@ compositor Frame
 	ref Bloom(sceneTextureTmp_upscaled,Exposure.exposure)
 	ref Godray(sceneTextureTmp_upscaled,sceneTexture:Depth)
 
-	pass ToneMapping
-	{
-		material ToneMapping
-		in sceneTextureTmp_upscaled
-		in Bloom.bloom
-		in Exposure.exposure
-		in Godray.godray
-		out Output
-	}
+	alias sceneAfterAA sceneTextureTmp_upscaled
 #else
 
 	ref Bloom(sceneTextureTmp2,Exposure.exposure)
@@ -214,17 +207,25 @@ compositor Frame
  		out sceneTextureTmp2
  	}
 
+	alias sceneAfterAA sceneTextureTmp2
+#endif
+
 	pass ToneMapping
 	{
 		material ToneMapping
-		in sceneTextureTmp2
+		in sceneAfterAA
 		in Bloom.bloom
 		in Exposure.exposure
 		in Godray.godray
-		out Output
+		out sceneTextureTmpOut
 	}
 
-#endif
+	pass PostToneMappingFx
+	{
+		material PostToneMappingFx
+		in sceneTextureTmpOut
+		out Output
+	}
 
 	task SceneRender.Debug
 	{

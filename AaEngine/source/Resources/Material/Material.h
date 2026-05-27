@@ -161,6 +161,8 @@ public:
 	void BindTextures(ID3D12GraphicsCommandList* commandList);
 	void BindConstants(ID3D12GraphicsCommandList* commandList, const MaterialDataStorage& data, const ShaderConstantsProvider& buffers);
 
+	void SetGpuBuffer(const std::string& name, D3D12_GPU_VIRTUAL_ADDRESS);
+
 	AssignedMaterial* Assign(const std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<DXGI_FORMAT>& target, MaterialTechnique technique =  MaterialTechnique::Default);
 
 	const MaterialBase* GetBase() const;

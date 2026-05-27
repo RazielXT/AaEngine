@@ -95,6 +95,7 @@
     <ClCompile Include="..\dependencies\imgui\imgui_draw.cpp" />
     <ClCompile Include="..\dependencies\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\dependencies\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="source\FrameCompositor\Tasks\WaterSimTask.cpp" />
     <ClCompile Include="source\RenderObject\DrawPrimitives.cpp" />
     <ClCompile Include="source\RenderObject\Grass\Grass.cpp" />
     <ClCompile Include="source\Resources\Compute\IndirectCommandsCS.cpp" />
@@ -187,13 +188,17 @@
     <ClCompile Include="source\RenderCore\VCT\anisoSeparate\AnisoSeparateVoxelCascade.cpp" />
     <ClCompile Include="source\RenderCore\VCT\anisoSeparate\AnisoSeparateVoxelization.cpp" />
     <ClCompile Include="source\RenderObject\WaterSim\WaterSim.cpp" />
+    <ClCompile Include="source\RenderObject\WaterSim\WaterSimInteraction.cpp" />
     <ClCompile Include="source\RenderObject\Sky\SkyRendering.cpp" />
     <ClCompile Include="source\Resources\Compute\WaterSimCS.cpp" />
+    <ClCompile Include="source\Resources\Compute\WaterInteractionCS.cpp" />
+    <ClCompile Include="source\Resources\Compute\CameraWaterStateCS.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dependencies\imgui\backends\imgui_impl_dx12.h" />
     <ClInclude Include="..\dependencies\imgui\backends\imgui_impl_win32.h" />
     <ClInclude Include="..\dependencies\imgui\imgui.h" />
+    <ClInclude Include="source\FrameCompositor\Tasks\WaterSimTask.h" />
     <ClInclude Include="source\RenderObject\DrawPrimitives.h" />
     <ClInclude Include="source\RenderObject\Grass\Grass.h" />
     <ClInclude Include="source\Resources\Compute\IndirectCommandsCS.h" />
@@ -297,8 +302,11 @@
     <ClInclude Include="source\RenderCore\VCT\anisoSeparate\AnisoSeparateVoxelCascade.h" />
     <ClInclude Include="source\RenderCore\VCT\anisoSeparate\AnisoSeparateVoxelization.h" />
     <ClInclude Include="source\RenderObject\WaterSim\WaterSim.h" />
+    <ClInclude Include="source\RenderObject\WaterSim\WaterSimInteraction.h" />
     <ClInclude Include="source\RenderObject\Sky\SkyRendering.h" />
     <ClInclude Include="source\Resources\Compute\WaterSimCS.h" />
+    <ClInclude Include="source\Resources\Compute\WaterInteractionCS.h" />
+    <ClInclude Include="source\Resources\Compute\CameraWaterStateCS.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

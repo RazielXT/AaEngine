@@ -67,8 +67,21 @@ void WaterSim::initializeGpuResources(RenderSystem& renderSystem, GraphicsResour
 	resources.descriptors.createTextureView(waterHeightMeshTexture);
 
 	waterMaterial = resources.materials.getMaterial("WaterLake", batch); 
+	sceneRenderingStateBuffer = resources.shaderBuffers.CreateStructuredBuffer(sizeof(float) * 4, "SceneRenderingState");
 
-	auto csShader = resources.shaders.getShader("momentumComputeShader", ShaderType::Compute, ShaderRef{ "waterSim/frenzySimMomentumCS.hlsl", "CS_Momentum", "cs_6_6" });
+	if (auto postToneMappingFx = resources.materials.getMaterial("PostToneMappingFx", batch))
+	{
+		postToneMappingFx->SetGpuBuffer("SceneRenderingState", sceneRenderingStateBuffer->GetGPUVirtualAddress());
+	}
+	if (auto DeferredLighting = resources.materials.getMaterial("DeferredLighting", batch))
+	{
+		DeferredLighting->SetGpuBuffer("SceneRenderingState", sceneRenderingStateBuffer->GetGPUVirtualAddress());
+	}
+
+	auto csShader = resources.shaders.getShader("cameraWaterStateCS", ShaderType::Compute, ShaderRef{ "waterSim/cameraWaterStateCS.hlsl", "CSMain", "cs_6_6" });
+	cameraWaterStateCS.init(*renderSystem.core.device, *csShader);
+
+	csShader = resources.shaders.getShader("momentumComputeShader", ShaderType::Compute, ShaderRef{ "waterSim/frenzySimMomentumCS.hlsl", "CS_Momentum", "cs_6_6" });
 	momentumComputeShader.init(*renderSystem.core.device, *csShader);
 
 	csShader = resources.shaders.getShader("continuityComputeShader", ShaderType::Compute, ShaderRef{ "waterSim/frenzySimContinuityCS.hlsl", "CS_Continuity", "cs_6_6" });
@@ -79,6 +92,9 @@ void WaterSim::initializeGpuResources(RenderSystem& renderSystem, GraphicsResour
 
 	csShader = resources.shaders.getShader("waterAdjustCS", ShaderType::Compute, ShaderRef{ "waterSim/waterAdjustCS.hlsl", "CSMain", "cs_6_6" });
 	waterAdjustCS.init(*renderSystem.core.device, *csShader);
+
+	csShader = resources.shaders.getShader("waterInteractionCS", ShaderType::Compute, ShaderRef{ "waterSim/waterInteractionCS.hlsl", "CSMain", "cs_6_6" });
+	interaction.initializeGpuResources(renderSystem, *csShader);
 
 	generateXYMips4xCS.init(*renderSystem.core.device, "generateXYMips4xCS", resources.shaders);
 }
@@ -101,7 +117,7 @@ void WaterSim::initializeTarget(const GpuTexture2D& texture, RenderWorld& render
 	waterGridMesh.entity = e;
 
 	e->geometry.fromInstancedModel(waterModel, 0, waterGridMesh.gpuBuffer.data[0].GpuAddress());
-	e->setBoundingBox(BoundingBox({}, { worldSize.x, size.x, worldSize.y }));
+	e->setBoundingBox(BoundingBox({ worldSize.x * 0.5f, size.x * 0.5f, worldSize.y * 0.5f }, { worldSize.x * 0.5f, size.x * 0.5f, worldSize.y * 0.5f }));
 	e->material = waterMaterial;
 	e->Material().setParam("TexIdHeightmap", waterHeightMeshTexture.view.srvHeapIndex);
 	e->Material().setParam("TexIdFlowmap", waterFlowTexture.view.srvHeapIndex);
@@ -129,9 +145,11 @@ void WaterSim::update(RenderSystem& renderSystem, ID3D12GraphicsCommandList* com
 	{
 		waterGridTiles.BuildLOD(cameraPos, {});
 		waterGridMesh.update((UINT)waterGridTiles.m_renderList.size(), waterGridTiles.m_renderList.data(), (UINT)waterGridTiles.m_renderList.size() * sizeof(TileData), frameIdx);
-
-		lastCameraPos = cameraPos;
 	}
+
+	lastCameraPos = cameraPos;
+
+	interaction.buildRequest();
 }
 
 void WaterSim::updateCompute(RenderSystem& renderSystem, ID3D12GraphicsCommandList* computeList, float dt, UINT)
@@ -242,6 +260,41 @@ void WaterSim::updateCompute(RenderSystem& renderSystem, ID3D12GraphicsCommandLi
 	waterToTextureCS.dispatch(computeList, waterHeight[waterResultIdx].view.srvHeapIndex, terrainHeight->view.srvHeapIndex, waterVelocity[waterResultIdx].view.srvHeapIndex, TextureSize, TextureSize, waterNormalTexture.view.uavHandle, waterHeightMeshTexture.view.uavHandle, waterFlowTexture.view.uavHandle, lastCameraPos);
 	generateXYMips4xCS.dispatch(computeList, TextureSize, waterNormalTextureMips);
 	generateXYMips4xCS.dispatch(computeList, TextureSize, waterFlowTextureMips);
+
+	interaction.dispatchCompute(computeList, waterHeight[waterResultIdx], waterVelocity[waterResultIdx], worldCenter, worldSize);
+
+	if (sceneRenderingStateBuffer)
+	{
+		auto toUav = CD3DX12_RESOURCE_BARRIER::Transition(
+			sceneRenderingStateBuffer.Get(),
+			sceneRenderingStateNeedsReset ? D3D12_RESOURCE_STATE_COMMON : D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+			D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+		computeList->ResourceBarrier(1, &toUav);
+
+		CameraWaterStateCS::DispatchParams params;
+		params.waterHeightSrvIndex = waterHeight[waterResultIdx].view.srvHeapIndex;
+		params.dt = DtPerUpdate;
+		params.worldCenter = { worldCenter.x, worldCenter.z };
+		params.worldSize = worldSize;
+		params.cameraPosition = lastCameraPos;
+		params.waterHeightScale = 1000.0f;
+		params.waterHeightStart = -500.0f;
+		params.dryingSpeed = 1.1f;
+		params.resetState = sceneRenderingStateNeedsReset ? 1 : 0;
+		cameraWaterStateCS.dispatch(computeList, params, sceneRenderingStateBuffer.Get());
+
+		auto uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(sceneRenderingStateBuffer.Get());
+		computeList->ResourceBarrier(1, &uavBarrier);
+
+		auto toSrv = CD3DX12_RESOURCE_BARRIER::Transition(
+			sceneRenderingStateBuffer.Get(),
+			D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+			D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+		computeList->ResourceBarrier(1, &toSrv);
+
+		sceneRenderingStateNeedsReset = false;
+	}
+
 	waterVelocity[waterResultIdx].Transition(computeList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	waterHeight[waterResultIdx].Transition(computeList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
@@ -280,4 +333,14 @@ void WaterSim::prepareAfterRendering(ID3D12GraphicsCommandList* commandList)
 	waterNormalTexture.Transition(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	waterFlowTexture.Transition(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	waterHeightMeshTexture.Transition(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+}
+
+void WaterSim::submitInteractionQueries(const std::vector<InteractionQuery>& queries)
+{
+	interaction.submitQueries(queries);
+}
+
+bool WaterSim::consumeInteractionResults(std::vector<InteractionResult>& outResults)
+{
+	return interaction.consumeResults(outResults);
 }

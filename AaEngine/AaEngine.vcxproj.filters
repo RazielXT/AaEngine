@@ -301,7 +301,16 @@
     <ClCompile Include="source\Resources\Compute\WaterSimCS.cpp">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClCompile>
+    <ClCompile Include="source\Resources\Compute\WaterInteractionCS.cpp">
+      <Filter>Source Files\Resources\Compute</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Resources\Compute\CameraWaterStateCS.cpp">
+      <Filter>Source Files\Resources\Compute</Filter>
+    </ClCompile>
     <ClCompile Include="source\RenderObject\WaterSim\WaterSim.cpp">
+      <Filter>Source Files\RenderObject\WaterSim</Filter>
+    </ClCompile>
+    <ClCompile Include="source\RenderObject\WaterSim\WaterSimInteraction.cpp">
       <Filter>Source Files\RenderObject\WaterSim</Filter>
     </ClCompile>
     <ClCompile Include="source\RenderObject\Sky\SkyRendering.cpp">
@@ -390,6 +399,9 @@
     </ClCompile>
     <ClCompile Include="source\Resources\Compute\IndirectCommandsCS.cpp">
       <Filter>Source Files\Resources\Compute</Filter>
+    </ClCompile>
+    <ClCompile Include="source\FrameCompositor\Tasks\WaterSimTask.cpp">
+      <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -615,7 +627,16 @@
     <ClInclude Include="source\Resources\Compute\WaterSimCS.h">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClInclude>
+    <ClInclude Include="source\Resources\Compute\WaterInteractionCS.h">
+      <Filter>Source Files\Resources\Compute</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Resources\Compute\CameraWaterStateCS.h">
+      <Filter>Source Files\Resources\Compute</Filter>
+    </ClInclude>
     <ClInclude Include="source\RenderObject\WaterSim\WaterSim.h">
+      <Filter>Source Files\RenderObject\WaterSim</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RenderObject\WaterSim\WaterSimInteraction.h">
       <Filter>Source Files\RenderObject\WaterSim</Filter>
     </ClInclude>
     <ClInclude Include="source\RenderObject\Sky\SkyRendering.h">
@@ -716,6 +737,9 @@
     </ClInclude>
     <ClInclude Include="source\Resources\Compute\IndirectCommandsCS.h">
       <Filter>Source Files\Resources\Compute</Filter>
+    </ClInclude>
+    <ClInclude Include="source\FrameCompositor\Tasks\WaterSimTask.h">
+      <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

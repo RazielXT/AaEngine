@@ -75,6 +75,14 @@ ComPtr<ID3D12Resource> ShaderDataBuffers::CreateUploadStructuredBuffer(const voi
 	return buffer;
 }
 
+ComPtr<ID3D12Resource> ShaderDataBuffers::CreateUploadStructuredBuffer(const void* data, UINT dataSize, std::string name, D3D12_RESOURCE_STATES state)
+{
+	auto buffer = CreateUploadStructuredBuffer(data, dataSize, state);
+	strbuffers[name] = buffer;
+
+	return buffer;
+}
+
 Microsoft::WRL::ComPtr<ID3D12Resource> ShaderDataBuffers::CreateStructuredBuffer(UINT dataSize, D3D12_RESOURCE_STATES state, D3D12_HEAP_TYPE heap)
 {
 	D3D12_RESOURCE_DESC desc = {};
@@ -97,6 +105,22 @@ Microsoft::WRL::ComPtr<ID3D12Resource> ShaderDataBuffers::CreateStructuredBuffer
 	device.CreateCommittedResource(&props, D3D12_HEAP_FLAG_NONE, &desc, state, nullptr, IID_PPV_ARGS(&buffer));
 
 	return buffer;
+}
+
+Microsoft::WRL::ComPtr<ID3D12Resource> ShaderDataBuffers::CreateStructuredBuffer(UINT dataSize, std::string name, D3D12_RESOURCE_STATES state, D3D12_HEAP_TYPE heap)
+{
+	auto buffer = CreateStructuredBuffer(dataSize, state, heap);
+	strbuffers[name] = buffer;
+
+	return buffer;
+}
+
+Microsoft::WRL::ComPtr<ID3D12Resource> ShaderDataBuffers::GetStructuredBufferResource(std::string name)
+{
+	if (auto it = strbuffers.find(name); it != strbuffers.end())
+		return it->second;
+
+	return nullptr;
 }
 
 CbufferView::CbufferView(CbufferData& buffer)

@@ -100,6 +100,7 @@ void ApplicationCore::renderFrame(Camera& camera)
 	params.frameCounter++;
 
 	terrainPhysics.consumeReadbacks(camera.getPosition(), renderWorld.terrain.params, physicsMgr);
+	waterInteraction.update(timeSinceLastFrame, physicsMgr, renderWorld.water);
 
 	renderWorld.update();
 	camera.updateMatrix();

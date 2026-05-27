@@ -24,7 +24,6 @@ void PrepareFrameTask::run(RenderContext& ctx, CommandsData& cmd, CompositorPass
 	if (fsr.enabled())
 		ctx.camera->setPixelOffset(fsr.getJitter(), fsr.getRenderSize());
 
-	renderWorld.water.update(provider.renderSystem, cmd.commandList, provider.params.timeDelta, provider.params.frameIndex, ctx.camera->getPosition());
 	renderWorld.terrain.update(cmd.commandList, *ctx.camera, provider.params.frameIndex);
 	renderWorld.vegetation.update(cmd.commandList, ctx.camera->getPosition(), renderWorld.terrain);
 	renderWorld.grass.update(cmd.commandList, *ctx.camera, renderWorld.terrain);
@@ -34,9 +33,7 @@ void PrepareFrameTask::run(RenderContext& ctx, CommandsData& cmd, CompositorPass
 
 void PrepareFrameTask::runCompute(RenderContext& ctx, CommandsData& cmd, CompositorPass& pass)
 {
-	if (pass.info.entry == "Water")
-		renderWorld.water.updateCompute(provider.renderSystem, cmd.commandList, provider.params.timeDelta, provider.params.frameIndex);
-	else
+	if (pass.info.entry == "PostCompute")
 	{
 		renderWorld.grass.updateCulling(cmd.commandList, *ctx.camera, renderWorld.terrain);
 		renderWorld.vegetation.updateCulling(cmd.commandList, *ctx.camera, renderWorld.terrain);
@@ -45,10 +42,10 @@ void PrepareFrameTask::runCompute(RenderContext& ctx, CommandsData& cmd, Composi
 
 CompositorTask::RunType PrepareFrameTask::getRunType(CompositorPass& pass) const
 {
-	if (pass.info.entry == "Water" || pass.info.entry == "PostCompute")
+	if (pass.info.entry == "PostCompute")
 		return RunType::SyncComputeCommands;
-	else
-		return RunType::SyncCommands;
+
+	return RunType::SyncCommands;
 }
 
 void PrepareFrameTask::prepareMotionVectors(RenderContext& ctx)

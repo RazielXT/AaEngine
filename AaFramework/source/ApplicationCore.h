@@ -8,6 +8,7 @@
 #include "Resources/GraphicsResources.h"
 #include "Physics/PhysicsManager.h"
 #include "Physics/TerrainPhysics.h"
+#include "Physics/WaterSimInteractionUpdater.h"
 #include "RenderObject/Sky/SkyRendering.h"
 
 struct DebugReporter
@@ -43,6 +44,7 @@ public:
 	FrameParameters params;
 	PhysicsManager physicsMgr;
 	TerrainPhysics terrainPhysics;
+	WaterSimInteractionUpdater waterInteraction;
 	FrameCompositor* compositor;
 	ShadowMaps* shadowMap;
 	SceneLights lights;

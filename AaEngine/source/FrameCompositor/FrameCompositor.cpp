@@ -15,6 +15,7 @@
 #include "FrameCompositor/Tasks/UpscaleTask.h"
 #include "FrameCompositor/Tasks/DownsampleTask.h"
 #include "FrameCompositor/Tasks/PrepareFrameTask.h"
+#include "Tasks/WaterSimTask.h"
 
 FrameCompositor::FrameCompositor(const InitConfig& params, RenderProvider p, RenderWorld& w, ShadowMaps& shadows) : config(params), provider(p), renderWorld(w), shadowMaps(shadows)
 {
@@ -119,6 +120,10 @@ void FrameCompositor::reloadPasses()
 			else if (pass.info.task == "HiZDepthDownsample")
 			{
 				pass.task = std::make_shared<DownsampleDepthTask>(provider, renderWorld);
+			}
+			else if (pass.info.task == "WaterSim")
+			{
+				pass.task = std::make_shared<WaterSimTask>(provider, renderWorld);
 			}
 			else if (auto it = externTasks.find(pass.info.task); it != externTasks.end())
 			{

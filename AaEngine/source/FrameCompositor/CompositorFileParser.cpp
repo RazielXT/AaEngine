@@ -72,7 +72,9 @@ static std::vector<CompositorTextureSlot> parseCompositorTextureSlot(const Confi
 		if (auto it = ctx.externTextureNameRemap.find(t.name); it != ctx.externTextureNameRemap.end())
 			t.name = it->second;
 		else if (auto it = ctx.textureAlias.find(t.name); it != ctx.textureAlias.end())
+		{
 			t.name = it->second;
+		}
 		else if (t.name.find('.') == std::string::npos)
 			t.name = ctx.scope + t.name;
 
@@ -147,7 +149,11 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 				}
 				if (member.type == "alias")
 				{
-					ctx.textureAlias.emplace(member.value, member.params.front());
+					const auto& aliasTarget = member.params.front();
+					if (auto it = ctx.textureAlias.find(aliasTarget); it == ctx.textureAlias.end())
+						ctx.textureAlias.emplace(member.value, aliasTarget);
+					else
+						ctx.textureAlias.emplace(member.value, it->second);
 				}
 				if (member.type == "texture" || member.type == "rwtexture")
 				{

@@ -20,7 +20,8 @@ struct SamplerInfo
 enum class GpuBufferType
 {
 	None,
-	Global,
+	CBuffer,
+	GpuMemory,
 	Root,
 	Instancing,
 	Geometry,
@@ -60,8 +61,15 @@ struct ResourcesInfo
 	struct GpuBuffer
 	{
 		GpuBufferType type{};
+		std::string name;
 		UINT rootIndex{};
-		CbufferView globalCBuffer;
+
+		union
+		{
+			CbufferView cbuffer;
+			D3D12_GPU_VIRTUAL_ADDRESS gpuPtr;
+		}
+		data;
 	};
 	std::vector<GpuBuffer> buffers;
 

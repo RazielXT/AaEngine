@@ -8,6 +8,8 @@
 #include "Resources/Compute/CopyTexturesCS.h"
 #include "Resources/Compute/GenerateMipsComputeShader.h"
 #include "Resources/Compute/TerrainGenerationCS.h"
+#include "Resources/Compute/CameraWaterStateCS.h"
+#include "RenderObject/WaterSim/WaterSimInteraction.h"
 #include "RenderObject/Terrain/GridMesh.h"
 #include <mutex>
 
@@ -41,6 +43,21 @@ public:
 	};
 	void addAdjustment(const WaterAdjustment& adjustment);
 
+	struct WaterBounds
+	{
+		Vector3 center;
+		Vector2 size;
+	};
+	WaterBounds getWaterBounds() const { return { worldCenter, worldSize }; }
+
+	// Water interaction query system
+	using InteractionQuery = WaterSimInteraction::Query;
+	using InteractionResult = WaterSimInteraction::Result;
+	static constexpr UINT MaxInteractionQueries = WaterSimInteraction::MaxQueries;
+
+	void submitInteractionQueries(const std::vector<InteractionQuery>& queries);
+	bool consumeInteractionResults(std::vector<InteractionResult>& outResults);
+
 private:
 
 	WaterSimContinuityComputeShader continuityComputeShader;
@@ -63,6 +80,7 @@ private:
 	std::vector<ShaderTextureViewUAV> waterFlowTextureMips;
 
 	GenerateXYMips4xCS generateXYMips4xCS;
+	CameraWaterStateCS cameraWaterStateCS;
 
 	ComPtr<ID3D12Resource> srcWater;
 
@@ -80,4 +98,9 @@ private:
 
 	GridInstanceMesh waterGridMesh;
 	GridLODSystem waterGridTiles;
+
+	WaterSimInteraction interaction;
+
+	ComPtr<ID3D12Resource> sceneRenderingStateBuffer;
+	bool sceneRenderingStateNeedsReset = true;
 };

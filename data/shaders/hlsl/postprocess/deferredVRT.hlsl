@@ -5,7 +5,7 @@
 #include "hlsl/sky/SkyColor.hlsl"
 
 #ifndef VRT_NUM_RAYS
-#define VRT_NUM_RAYS 8
+#define VRT_NUM_RAYS 4
 #endif
 
 float4x4 InvViewProjectionMatrix;

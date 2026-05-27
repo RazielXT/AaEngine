@@ -229,8 +229,6 @@ void AnisoSeparateVoxelization::voxelizeCascade(ID3D12GraphicsCommandList* comma
 
 	auto b2 = CD3DX12_RESOURCE_BARRIER::Transition(cascade.voxelInfoBuffer.data.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 	commandList->ResourceBarrier(1, &b2);
-
-	cascade.occupancyCleared = true;
 }
 
 void AnisoSeparateVoxelization::renderShadowMap(ID3D12GraphicsCommandList* commandList, float extends, const RenderContext& ctx)
@@ -302,17 +300,11 @@ void AnisoSeparateVoxelization::bounceCascade(CommandsData& commands, AnisoSepar
 	}
 
 	cascade.voxelOccupancyTexture.Transition(commands.commandList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	computeMips.dispatch(commands.commandList, cascade.voxelOccupancyTexture);
 
-	if (cascade.occupancyCleared)
-	{
-		computeMips.dispatch(commands.commandList, cascade.voxelOccupancyTexture);
-
-		cascade.voxelOccupancyBitmaskTexture.Transition(commands.commandList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-		occupancyBitmaskCS.dispatch(commands.commandList, cascade.voxelOccupancyTexture.view, cascade.voxelOccupancyBitmaskTexture.view);
-		cascade.voxelOccupancyBitmaskTexture.Transition(commands.commandList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-		
-		cascade.occupancyCleared = false;
-	}
+	cascade.voxelOccupancyBitmaskTexture.Transition(commands.commandList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	occupancyBitmaskCS.dispatch(commands.commandList, cascade.voxelOccupancyTexture.view, cascade.voxelOccupancyBitmaskTexture.view);
+	cascade.voxelOccupancyBitmaskTexture.Transition(commands.commandList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 }
 
 void AnisoSeparateVoxelization::runBounces(CommandsData& computeCommands, const RenderContext& ctx, const AnisoSeparateVoxelTracingParams& params)

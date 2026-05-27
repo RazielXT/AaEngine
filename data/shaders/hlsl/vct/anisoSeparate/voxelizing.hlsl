@@ -197,7 +197,7 @@ float4 PSMain(PS_Input pin) : SV_TARGET
 	}
 
 	Texture3D<float> prevOccupancy = GetTexture3D1f(GetPrevOccupancyTexId(VoxelInfo.Voxels[VoxelIdx]));
-	RWTexture3D<float> currentOccupancy = ResourceDescriptorHeap[GetOccupancyBitmaskTexId(VoxelInfo.Voxels[VoxelIdx])];
+	RWTexture3D<float> currentOccupancy = ResourceDescriptorHeap[GetOccupancyTexId(VoxelInfo.Voxels[VoxelIdx])];
 	currentOccupancy[posUV] = prevOccupancy.Load(float4(prevUv, 0)).r;
 
 	bool isInBounds = (posUV.x >= 0 && posUV.x < 128) &&

@@ -50,13 +50,15 @@ float3 SampleAnisotropicColor(
 RayTraceResult RayTraceSingle(
 	float3 rayStart,
 	float3 rayDir,
-	uint voxelMip, // Your target base mip level
+	uint voxelMip,
 	AnisoSeparateSceneVoxelChunkInfo voxels,
 	Texture3D<float4> facePosX, Texture3D<float4> faceNegX,
 	Texture3D<float4> facePosY, Texture3D<float4> faceNegY,
 	Texture3D<float4> facePosZ, Texture3D<float4> faceNegZ,
-	Texture3D<uint> occupancyMap) // This is now your packed R8_UINT distance + occupancy map
+	Texture3D<float> occupancyMap)
 {
+	const float3 voxelSize = float(1u << voxelMip) / voxels.Density;
+
 	RayTraceResult result;
 	result.color = float4(0, 0, 0, 0);
 	result.exitWorldPos = rayStart;
@@ -65,22 +67,19 @@ RayTraceResult RayTraceSingle(
 
 	float3 invDir = 1.0f / select(abs(rayDir) < 1e-6f, sign(rayDir) * 1e-6f, rayDir);
 	int3 stepDir = int3(sign(rayDir));
-	float3 stepSign = float3(rayDir.x >= 0.0f ? 1.0f : 0.0f, rayDir.y >= 0.0f ? 1.0f : 0.0f, rayDir.z >= 0.0f ? 1.0f : 0.0f);
 
 	float3 chunkMin = voxels.Offset;
 	float3 chunkMax = voxels.Offset + voxels.WorldSize;
 	float tExitGrid = GetRayAABBExitT(rayStart, rayDir, chunkMin, chunkMax);
 
-	const float3 voxelSize = float(1u << voxelMip) / voxels.Density;
-
-	// DDA Tracker Setup
 	int3 voxelCoord = int3(floor((rayStart - voxels.Offset) / voxelSize));
+
+	float3 stepSign = float3(rayDir.x >= 0.0f ? 1.0f : 0.0f, rayDir.y >= 0.0f ? 1.0f : 0.0f, rayDir.z >= 0.0f ? 1.0f : 0.0f);
 	float3 nextBoundary = (float3(voxelCoord) + stepSign) * voxelSize + voxels.Offset;
-	
+
 	float3 tMax = (nextBoundary - rayStart) * invDir;
 	float3 tDelta = voxelSize * abs(invDir);
-	float exitT = 0.0f;
-	float currentT = 0.0f;
+	float exitT = 0;
 
 	int3 hitVoxelCoord = int3(0, 0, 0);
 	float hitOccupancy = 0.0f;
@@ -89,48 +88,6 @@ RayTraceResult RayTraceSingle(
 	for (int i = 0; i < VRT_RAY_MAX_STEPS; i++)
 	{
 		result.steps++;
-
-		// 1. Unpack occupancy and the distance field data
-		uint rawData = occupancyMap.Load(int4(voxelCoord, voxelMip));
-		bool isOccupied   = (rawData & 0x1) != 0;
-		uint skipDistance = rawData >> 1; 
-
-		// 2. Hit registration
-		if (isOccupied)
-		{
-			hitVoxelCoord = voxelCoord;
-			hitOccupancy = 1.0f; // Solid geometry
-			result.hit = true;
-			break;
-		}
-
-		// 3. Fast-Forward Space Skipping
-		// If skipDistance > 1, the ray is sitting in a guaranteed safety sphere
-		if (skipDistance > 2)
-		{
-			// Land safely 1 voxel short of the maximum edge to prevent rounding issues
-			uint safeSteps = skipDistance - 2; 
-
-			// Advance the voxel tracking integers directly
-			voxelCoord += stepDir * safeSteps;
-
-			// Advance the boundary intervals by the constant step weights
-			tMax += tDelta * safeSteps;
-
-			// Keep track of total elapsed ray parameter t
-			currentT = min(tMax.x, min(tMax.y, tMax.z));
-			
-			if (currentT >= tExitGrid)
-			{
-				exitT = tExitGrid;
-				break;
-			}
-			
-			continue; // Bypass standard 1-voxel operations
-		}
-
-		// 4. Standard 1-Voxel Fallback Step (When skipDistance <= 1)
-		currentT = min(tMax.x, min(tMax.y, tMax.z));
 
 		if (tMax.x < tMax.y && tMax.x < tMax.z)
 		{
@@ -153,9 +110,18 @@ RayTraceResult RayTraceSingle(
 
 		if (exitT >= tExitGrid)
 			break;
+
+		float occupancy = occupancyMap.Load(int4(voxelCoord, voxelMip)).r;
+		if (occupancy > 0.0f)
+		{
+			hitVoxelCoord = voxelCoord;
+			hitOccupancy = occupancy;
+			result.hit = true;
+			break;
+		}
 	}
 
-	// Resolve lighting outside the loop
+	// Resolve lighting outside of the loop if a hit occurred
 	if (result.hit)
 	{
 		int4 loadCoord = int4(hitVoxelCoord, voxelMip);
@@ -170,7 +136,7 @@ RayTraceResult RayTraceSingle(
 		result.color = float4(blendedColor, hitOccupancy);
 	}
 
-	result.exitWorldPos = rayStart + rayDir * (result.hit ? currentT : exitT);
+	result.exitWorldPos = rayStart + rayDir * exitT;
 	return result;
 }
 
@@ -224,7 +190,7 @@ float4 RayTraceCascades(float3 rayStart, float3 rayDir, uint voxelMip, AnisoSepa
 		Texture3D<float4> facePosZ = GetTexture3D(GetFaceTexId(cascade, 4));
 		Texture3D<float4> faceNegZ = GetTexture3D(GetFaceTexId(cascade, 5));
 
-		Texture3D<uint> occupancyMap = GetTexture3D1u(GetOccupancyBitmaskTexId(cascade));
+		Texture3D<float> occupancyMap = GetTexture3D1f(GetOccupancyTexId(cascade));
 
 		RayTraceResult result = RayTraceSingle(
 			currentStart,

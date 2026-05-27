@@ -8,6 +8,12 @@ Texture2D reflectionsTexture : register(t2);
 Texture2D waterNormal : register(t3);
 Texture2D causticsTexture : register(t4);
 
+struct SceneRenderingStateParams
+{
+	float Underwater;
+};
+StructuredBuffer<SceneRenderingStateParams> SceneRenderingState : register(t5);
+
 SamplerState LinearSampler : register(s0);
 SamplerState LinearBorderSampler : register(s1);
 
@@ -35,7 +41,7 @@ float4 PSWaterApply(VS_OUTPUT input) : SV_TARGET
 	float4 water = waterTexture.Load(int3(input.Position.xy,0));
 
 	water.rgb = lerp(water.rgb, reflections.rgb, reflections.a);
-	sceneColor.rgb = lerp(sceneColor.rgb, water.rgb, water.a);
+	sceneColor.rgb = lerp(sceneColor.rgb, water.rgb, saturate(water.a - SceneRenderingState[0].Underwater * 0.5f));
 
 	return sceneColor;
 }

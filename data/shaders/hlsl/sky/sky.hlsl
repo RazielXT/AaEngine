@@ -117,8 +117,6 @@ PSOutput PSMain(VSOut input)
 	float sunDot = dot(-skyDir, Sky.SunDirection);
 
 	float sunZenithDot = -Sky.SunDirection.y;
-	float viewZenithDot = skyDir.y;
-	float sunViewDot01 = (sunDot + 1.0) * 0.5;
 	float sunZenithDot01 = (sunZenithDot + 1.0) * 0.5;
 
 	float3 sunZenithColor = GetTexture2D(Sky.TexIdSunZenith).Sample(LinearSampler, float2(sunZenithDot01, 0.5)).rgb * 0.5;

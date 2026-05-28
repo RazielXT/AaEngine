@@ -10,6 +10,8 @@ void SkySection::draw(ApplicationCore& app)
 	bool change = ImGui::SliderFloat("Time of Day", &timeOfDay, 0.0f, 24.0f);
 	change |= ImGui::SliderFloat("Latitude", &latitude, -XM_PIDIV2, XM_PIDIV2);
 	change |= ImGui::SliderInt("Day of Year", &dayOfYear, 1, 365);
+	change |= ImGui::SliderFloat("Moon Orbit Angle", &moonOrbitAngle, 0.0f, 360.0f);
+	change |= ImGui::SliderFloat("Moon Orbit Tilt", &moonOrbitTilt, -10.0f, 10.0f);
 
 	if (change)
 	{
@@ -35,18 +37,33 @@ void SkySection::draw(ApplicationCore& app)
 		app.lights.directionalLight.direction = -sunPos;
 		app.lights.directionalLight.direction.Normalize();
 
+		// Moon direction - same astronomical formula with orbit offset
+		float moonHourAngle = hourAngle + XMConvertToRadians(moonOrbitAngle);
+		float moonDeclination = declination + XMConvertToRadians(moonOrbitTilt);
+
+		float sinMoonAlt = std::sin(latitude) * std::sin(moonDeclination) +
+			std::cos(latitude) * std::cos(moonDeclination) * std::cos(moonHourAngle);
+		float moonAltitude = std::asin(std::clamp(sinMoonAlt, -1.0f, 1.0f));
+
+		float cosMoonAz = (std::sin(moonDeclination) - std::sin(moonAltitude) * std::sin(latitude)) /
+			(std::cos(moonAltitude) * std::cos(latitude));
+		float moonAzimuth = std::acos(std::clamp(cosMoonAz, -1.0f, 1.0f));
+		if (std::sin(moonHourAngle) > 0)
+			moonAzimuth = XM_2PI - moonAzimuth;
+
+		Vector3 moonPos;
+		moonPos.x = std::cos(moonAltitude) * std::sin(moonAzimuth);
+		moonPos.y = std::sin(moonAltitude);
+		moonPos.z = std::cos(moonAltitude) * std::cos(moonAzimuth);
+
+		app.params.sky.MoonDirection = moonPos;
+
 		VoxelizeSceneTask::Get().revoxelize();
 	}
 
 	if (ImGui::ColorEdit3("Sun Color", &app.lights.directionalLight.color.x))
 	{
 		VoxelizeSceneTask::Get().revoxelize();
-	}
-
-	if (ImGui::SliderFloat("Moon phase", &moonPhase, -1, 1))
-	{
-		auto material = app.resources.materials.getMaterial("Moon");
-		material->SetParameter("MoonPhase", &moonPhase, 1);
 	}
 
 	ImGui::SliderFloat("Clouds amount", &app.params.sky.CloudsAmount, -1, 1);

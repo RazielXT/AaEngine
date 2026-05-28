@@ -90,7 +90,7 @@ float3 applyFog(float3 worldPosition, float3 baseColor)
 {
 	float3 fogAtmDir = normalize(CameraPosition - worldPosition);
 	fogAtmDir.y = saturate(fogAtmDir.y);
-	const float3 fogColor = getSkyColor(fogAtmDir, Sky, LinearWrapSampler) / 2;
+	const float3 fogColor = getSkyColor(fogAtmDir, Sky, LinearWrapSampler);
 	float camDistance = length(CameraPosition.xz - worldPosition.xz) * 8.f;
 
 	float fogDensity = 0.000000001;

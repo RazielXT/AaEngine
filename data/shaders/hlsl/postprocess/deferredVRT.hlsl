@@ -44,7 +44,7 @@ float3 CosineWeightedHemisphere(float2 xi, float3 N, float3 T, float3 B)
 
 float3 SkyColor(float3 dir)
 {
-	float3 sky = getSkyColor(dir, Sky, PointSampler) * 0.5f;
+	float3 sky = getSkyColor(dir, Sky, PointSampler);
 
 	float t = saturate(dir.y * 0.75 + 0.25);
 	float3 bottomColor = float3(0.1, 0.15, 0.2);

@@ -6,7 +6,6 @@ float4x4 ViewProjectionMatrix;
 float4x4 InvViewMatrix;
 uint TexIdDiffuse;
 uint TexIdNormal;
-float MoonPhase;
 
 cbuffer PSSMShadows : register(b1)
 {
@@ -33,31 +32,20 @@ PSInput VSMain(uint vertexIdx : SV_VertexID)
 {
     PSInput output;
 
-    // --- UV and quad coordinates ---
     float2 uv = coords[IndexBuffer[vertexIdx]];
     float2 centered = uv - 0.5f;
-    float scale = 100000.0f;
-    float3 localPos = float3(centered.x, centered.y, 0.0f) * scale;
+    float distanceScale = 100000.0f;
+    float3 localPos = float3(centered.x, centered.y, 0.0f) * distanceScale;
 
-    // --- Fixed Celestial Orientation ---
-    // 1. Define the direction to the moon
-	float3 moonDir = Sky.SunDirection; 
-    
-    // 2. Define a stable "Up" (The North Celestial Pole or just World Up)
+    float3 moonDir = length(Sky.MoonDirection) > 0.001 ? normalize(Sky.MoonDirection) : float3(0, -1, 0);
+
     float3 worldUp = float3(0.0001f, 1.0f, 0.0001f);
-
-    // 3. Calculate stable Right and Up vectors
-    // We use the cross product to find a vector perpendicular to the direction and world up
     float3 moonRight = normalize(cross(worldUp, moonDir));
     float3 moonUp    = cross(moonDir, moonRight);
 
-    // Build world position using our new stable basis
     float3 worldPos = (localPos.x * moonRight) + (localPos.y * moonUp);
+    worldPos += moonDir * distanceScale * 10;
 
-    // Push billboard far away
-    worldPos += moonDir * scale * 10;
-
-    // Output
     output.worldPosition = float4(worldPos, 1.0f);
     output.position = mul(output.worldPosition, ViewProjectionMatrix);
     output.uv = uv;
@@ -88,23 +76,40 @@ PSOutput PSMain(PSInput input)
 		// Convert UV to [-1,1] for sphere projection
 		float2 p = uv.xy * 2 - 1;
 
-		// Outside circle = transparent
 		float r2 = dot(p, p);
 		// Reconstruct sphere normal
 		float3 normal = float3(p.x, p.y, sqrt(1 - r2));
 		normal = (normal + normalMap.xyz * 0.3) / 1.3;
-		float angle = MoonPhase * 3.14;
-		float3 lightDir = float3(cos(angle), 0, sin(angle));
 
-		// Compute moon phase (lit side)
+		// Calculate moon phase from sun-moon geometry
+		float3 moonDir = normalize(Sky.MoonDirection);
+		float3 worldUp = float3(0.0001f, 1.0f, 0.0001f);
+		float3 mRight = normalize(cross(worldUp, moonDir));
+		float3 mUp = cross(moonDir, mRight);
+
+		// Sun direction toward light source, projected into billboard local space
+		// Local z = toward viewer = -moonDir
+		float3 sunToLight = -Sky.SunDirection;
+		float3 lightDir;
+		lightDir.x = dot(sunToLight, mRight);
+		lightDir.y = dot(sunToLight, mUp);
+		lightDir.z = dot(sunToLight, -moonDir);
+		lightDir = normalize(lightDir);
+
 		float phase = dot(normal, lightDir);
 		phase = saturate(phase);
-		//phase = smoothstep(0.0, 0.1, phase);
 
 		albedo.rgb *= phase;
+
+		// Extract camera world position from the 4th column of InvViewMatrix
+		float3 cameraWorldPos = InvViewMatrix[3].xyz; 
+		// Direction pointing from the camera toward this specific pixel on the moon
+		float3 pixelLookDir = normalize(input.worldPosition.xyz - cameraWorldPos);
+
+		float3 skyColor = getSkyFullColor(pixelLookDir, Sky, LinearWrapSampler);
+		albedo.rgb += skyColor;
 	}
 
-	albedo.rgb = lerp(getSkyColor(Sky.SunDirection, Sky, LinearWrapSampler) * 0.25, albedo.rgb, saturate(Sky.SunDirection.y));
 
 	PSOutput output;
 	output.albedo = float4(albedo.rgb, 1);

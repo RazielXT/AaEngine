@@ -186,7 +186,7 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 
 	float4 reflection = GetReflection(ScreenSpaceReflectionVec, ScreenSpacePos.xyz, -ReflectionVector);
 
-	reflection.rgb = lerp(getSkyColor(-cameraVector, Sky, LinearWrapSampler) * 0.5, reflection.rgb, reflection.a);
+	reflection.rgb = lerp(getSkyColor(-cameraVector, Sky, LinearWrapSampler), reflection.rgb, reflection.a);
 
 	float3 V = -cameraVector;
 	float3 R = reflect(Sky.SunDirection, normal);

@@ -20,7 +20,9 @@ struct SkyParams
 	uint TexIdViewZenith;
 	uint TexIdSunView;
 
+	float3 MoonDirection;
 	float CloudsAmount;
+
 	float CloudsDensity;
 	float CloudsSpeed;
 };

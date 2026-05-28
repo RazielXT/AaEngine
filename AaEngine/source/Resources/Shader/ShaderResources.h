@@ -146,15 +146,21 @@ struct ResourcesInfo
 struct SkyParameters
 {
 	XMFLOAT4X4 ShadowMatrix[4];
-	XMFLOAT3 SunDirection;
+
+	Vector3 SunDirection;
 	UINT TexIdShadowMap0;
+
 	float ShadowCascadeDistance[4];
-	XMFLOAT3 SunColor;
+
+	Vector3 SunColor;
 	float ShadowMapSize;
+
 	float ShadowMapSizeInv;
 	UINT TexIdSunZenith;
 	UINT TexIdViewZenith;
 	UINT TexIdSunView;
+
+	Vector3 MoonDirection;
 	float CloudsAmount{};
 	float CloudsDensity = 0.5f;
 	float CloudsSpeed = 0.003f;

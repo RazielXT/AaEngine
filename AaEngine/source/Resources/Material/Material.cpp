@@ -449,6 +449,9 @@ bool MaterialInstance::IsTransparent() const
 
 void MaterialInstance::SetTexture(ShaderTextureView& texture, UINT slot)
 {
+	if (slot >= resources->textures.size())
+		return;
+
 	auto& t = resources->textures[slot];
 	t.texture = &texture;
 
@@ -478,16 +481,16 @@ void MaterialInstance::SetUAV(ID3D12Resource* uav, UINT slot)
 	u.uav = uav;
 }
 
-void MaterialInstance::SetGpuBuffer(const std::string& name, D3D12_GPU_VIRTUAL_ADDRESS address)
+void MaterialInstance::SetGpuBuffer(const std::string& name, StructuredBufferData* data)
 {
-// 	for (auto& b : resources->buffers)
-// 	{
-// 		if (b.type == GpuBufferType::GpuMemory && b.name == name)
-// 		{
-// 			b.data.gpuMemory = address;
-// 			return;
-// 		}
-// 	}
+	for (auto& b : resources->buffers)
+	{
+		if (b.type == GpuBufferType::GpuMemory && b.name == name)
+		{
+			b.data.gpuMemory = { data };
+			return;
+		}
+	}
 }
 
 std::unique_ptr<MaterialPropertiesOverride> MaterialInstance::CreateParameterOverride(const MaterialPropertiesOverrideDescription& description) const

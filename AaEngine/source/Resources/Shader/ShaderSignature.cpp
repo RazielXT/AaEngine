@@ -505,9 +505,7 @@ void SignatureInfo::createResourcesData(ResourcesInfo& resources, GraphicsResour
 		else
 		{
 			r.type = GpuBufferType::GpuMemory;
-
-			if (auto existingBuffer = graphicsResources.shaderBuffers.GetStructuredBufferResource(b.info.Name))
-				r.data.gpuPtr = existingBuffer->GetGPUVirtualAddress();
+			r.data.gpuMemory = graphicsResources.shaderBuffers.GetStructuredBufferResource(b.info.Name);
 		}
 
 		r.rootIndex = rootIndex++;

@@ -480,14 +480,14 @@ void MaterialInstance::SetUAV(ID3D12Resource* uav, UINT slot)
 
 void MaterialInstance::SetGpuBuffer(const std::string& name, D3D12_GPU_VIRTUAL_ADDRESS address)
 {
-	for (auto& b : resources->buffers)
-	{
-		if (b.type == GpuBufferType::GpuMemory && b.name == name)
-		{
-			b.data.gpuPtr = address;
-			return;
-		}
-	}
+// 	for (auto& b : resources->buffers)
+// 	{
+// 		if (b.type == GpuBufferType::GpuMemory && b.name == name)
+// 		{
+// 			b.data.gpuMemory = address;
+// 			return;
+// 		}
+// 	}
 }
 
 std::unique_ptr<MaterialPropertiesOverride> MaterialInstance::CreateParameterOverride(const MaterialPropertiesOverrideDescription& description) const
@@ -656,13 +656,13 @@ void MaterialInstance::UpdatePerFrame(MaterialDataStorage& data, const ShaderCon
 		else if (p.type == ResourcesInfo::AutoParam::FRAME_INDEX)
 			*(UINT*)&data.rootParams[p.bufferOffset] = info.params.frameCounter;
 		else if (p.type == ResourcesInfo::AutoParam::SUN_DIRECTION)
-			*(DirectX::XMFLOAT3*)&data.rootParams[p.bufferOffset] = info.params.sun.SunDirection;
+			*(DirectX::XMFLOAT3*)&data.rootParams[p.bufferOffset] = info.params.sky.SunDirection;
 		else if (p.type == ResourcesInfo::AutoParam::SUN_COLOR)
-			*(DirectX::XMFLOAT3*)&data.rootParams[p.bufferOffset] = info.params.sun.SunColor;
+			*(DirectX::XMFLOAT3*)&data.rootParams[p.bufferOffset] = info.params.sky.SunColor;
 		else if (p.type == ResourcesInfo::AutoParam::SHADOW_MAP_SIZE)
-			data.rootParams[p.bufferOffset] = info.params.sun.ShadowMapSize;
+			data.rootParams[p.bufferOffset] = info.params.sky.ShadowMapSize;
 		else if (p.type == ResourcesInfo::AutoParam::SHADOW_MAP_SIZE_INV)
-			data.rootParams[p.bufferOffset] = info.params.sun.ShadowMapSizeInv;
+			data.rootParams[p.bufferOffset] = info.params.sky.ShadowMapSizeInv;
 		else if (p.type == ResourcesInfo::AutoParam::VIEWPORT_SIZE_INV)
 		{
 			data.rootParams[p.bufferOffset] = info.inverseViewportSize.x;
@@ -759,8 +759,8 @@ void MaterialInstance::BindConstants(ID3D12GraphicsCommandList* commandList, con
 			commandList->SetGraphicsRootShaderResourceView(b.rootIndex, constants.getGeometryRedirectBuffer());
 		else if (b.type == GpuBufferType::CBuffer)
 			commandList->SetGraphicsRootConstantBufferView(b.rootIndex, b.data.cbuffer.data[constants.params.frameIndex]->GpuAddress());
-		else if (b.type == GpuBufferType::GpuMemory && b.data.gpuPtr)
-			commandList->SetGraphicsRootShaderResourceView(b.rootIndex, b.data.gpuPtr);
+		else if (b.type == GpuBufferType::GpuMemory)
+			commandList->SetGraphicsRootShaderResourceView(b.rootIndex, b.data.gpuMemory.data->addr);
 	}
 }
 

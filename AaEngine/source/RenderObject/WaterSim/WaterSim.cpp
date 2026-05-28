@@ -69,19 +69,6 @@ void WaterSim::initializeGpuResources(RenderSystem& renderSystem, GraphicsResour
 	waterMaterial = resources.materials.getMaterial("WaterLake", batch); 
 	sceneRenderingStateBuffer = resources.shaderBuffers.CreateStructuredBuffer(sizeof(float) * 4, "SceneRenderingState");
 
-	if (auto postToneMappingFx = resources.materials.getMaterial("PostToneMappingFx", batch))
-	{
-		postToneMappingFx->SetGpuBuffer("SceneRenderingState", sceneRenderingStateBuffer->GetGPUVirtualAddress());
-	}
-	if (auto DeferredLighting = resources.materials.getMaterial("DeferredLighting", batch))
-	{
-		DeferredLighting->SetGpuBuffer("SceneRenderingState", sceneRenderingStateBuffer->GetGPUVirtualAddress());
-	}
-	if (auto ApplySceneWater = resources.materials.getMaterial("ApplySceneWater", batch))
-	{
-		ApplySceneWater->SetGpuBuffer("SceneRenderingState", sceneRenderingStateBuffer->GetGPUVirtualAddress());
-	}
-
 	auto csShader = resources.shaders.getShader("cameraWaterStateCS", ShaderType::Compute, ShaderRef{ "waterSim/cameraWaterStateCS.hlsl", "CSMain", "cs_6_6" });
 	cameraWaterStateCS.init(*renderSystem.core.device, *csShader);
 

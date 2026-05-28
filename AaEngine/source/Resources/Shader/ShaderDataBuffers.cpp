@@ -78,7 +78,7 @@ ComPtr<ID3D12Resource> ShaderDataBuffers::CreateUploadStructuredBuffer(const voi
 ComPtr<ID3D12Resource> ShaderDataBuffers::CreateUploadStructuredBuffer(const void* data, UINT dataSize, std::string name, D3D12_RESOURCE_STATES state)
 {
 	auto buffer = CreateUploadStructuredBuffer(data, dataSize, state);
-	strbuffers[name] = buffer;
+	strbuffers[name] = { buffer, buffer->GetGPUVirtualAddress() };
 
 	return buffer;
 }
@@ -110,17 +110,14 @@ Microsoft::WRL::ComPtr<ID3D12Resource> ShaderDataBuffers::CreateStructuredBuffer
 Microsoft::WRL::ComPtr<ID3D12Resource> ShaderDataBuffers::CreateStructuredBuffer(UINT dataSize, std::string name, D3D12_RESOURCE_STATES state, D3D12_HEAP_TYPE heap)
 {
 	auto buffer = CreateStructuredBuffer(dataSize, state, heap);
-	strbuffers[name] = buffer;
+	strbuffers[name] = { buffer, buffer->GetGPUVirtualAddress() };
 
 	return buffer;
 }
 
-Microsoft::WRL::ComPtr<ID3D12Resource> ShaderDataBuffers::GetStructuredBufferResource(std::string name)
+StructuredBufferView ShaderDataBuffers::GetStructuredBufferResource(std::string name)
 {
-	if (auto it = strbuffers.find(name); it != strbuffers.end())
-		return it->second;
-
-	return nullptr;
+	return { &strbuffers[name] };
 }
 
 CbufferView::CbufferView(CbufferData& buffer)

@@ -5,7 +5,7 @@
 #include "hlsl/sky/SkyColor.hlsl"
 
 #ifndef VRT_NUM_RAYS
-#define VRT_NUM_RAYS 4
+#define VRT_NUM_RAYS 2
 #endif
 
 float4x4 InvViewProjectionMatrix;
@@ -21,7 +21,7 @@ cbuffer SceneVoxelInfo : register(b1)
 
 cbuffer PSSMShadows : register(b2)
 {
-	SunParams Sun;
+	SkyParams Sky;
 }
 
 Texture2D normalMap : register(t0);
@@ -44,7 +44,7 @@ float3 CosineWeightedHemisphere(float2 xi, float3 N, float3 T, float3 B)
 
 float3 SkyColor(float3 dir)
 {
-	float3 sky = getSkyColor(dir, Sun, PointSampler) * 0.5f;
+	float3 sky = getSkyColor(dir, Sky, PointSampler) * 0.5f;
 
 	float t = saturate(dir.y * 0.75 + 0.25);
 	float3 bottomColor = float3(0.1, 0.15, 0.2);

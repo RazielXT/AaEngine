@@ -280,7 +280,7 @@ void AnisoSeparateVoxelization::bounceCascade(CommandsData& commands, AnisoSepar
 		.CameraPosition = ctx.camera->getPosition(),
 		.VoxelsOffset = cascade.settings.center - Vector3(cascade.settings.extends),
 		.VoxelsSceneSize = Vector3(cascade.settings.extends * 2),
-		.SunColor = frameParams->sun.SunColor
+		.SunColor = frameParams->sky.SunColor
 	};
 
 	ShaderTextureView faceViews[AnisoSeparateVoxelCascade::FaceCount];

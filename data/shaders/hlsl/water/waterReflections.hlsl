@@ -5,7 +5,7 @@
 #include "hlsl/common/Random.hlsl"
 #include "hlsl/common/BlueNoise.hlsl"
 #include "hlsl/sky/SkyColor.hlsl"
-#include "hlsl/sky/SunParams.hlsl"
+#include "hlsl/sky/SkyParams.hlsl"
 
 float4x4 WorldMatrix;
 float4x4 ViewProjectionMatrix;
@@ -26,7 +26,7 @@ cbuffer SceneVoxelInfo : register(b1)
 
 cbuffer PSSMShadows : register(b2)
 {
-	SunParams Sun;
+	SkyParams Sky;
 }
 
 SamplerState LinearWrapSampler : register(s0);
@@ -186,12 +186,12 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 
 	float4 reflection = GetReflection(ScreenSpaceReflectionVec, ScreenSpacePos.xyz, -ReflectionVector);
 
-	reflection.rgb = lerp(getSkyColor(-cameraVector, Sun, LinearWrapSampler) * 0.5, reflection.rgb, reflection.a);
+	reflection.rgb = lerp(getSkyColor(-cameraVector, Sky, LinearWrapSampler) * 0.5, reflection.rgb, reflection.a);
 
 	float3 V = -cameraVector;
-	float3 R = reflect(Sun.Direction, normal);
+	float3 R = reflect(Sky.SunDirection, normal);
 	float Specular = pow( saturate( dot( R, V ) ), 128 );
-	reflection.rgb += Specular * Sun.Color * 20 * (1 - reflection.a);
+	reflection.rgb += Specular * Sky.SunColor * 20 * (1 - reflection.a);
 
 	if (false && reflection.a == 0)
 	{

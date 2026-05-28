@@ -124,7 +124,7 @@ PSOutput PSMain(VSOutput input)
 	float3 ambient = ambientStrength;
 
 	// Diffuse
-	float dotLighting = saturate(dot(-Sun.Direction, worldNormal));
+	float dotLighting = saturate(dot(-Sky.SunDirection, worldNormal));
 
 	float4 shadowPos = input.WorldPos;
 	//{
@@ -134,7 +134,7 @@ PSOutput PSMain(VSOutput input)
 		// Assuming you have the surface normal and tangent space basis
 		shadowPos.xyz = shadowPos.xyz - (1 - offsetHeight) * worldNormal;
 	//}
-	float directShadow = getPssmShadow(shadowPos, camDistance, dotLighting, ShadowSampler, Sun);
+	float directShadow = getPssmShadow(shadowPos, camDistance, dotLighting, ShadowSampler, Sky);
 	float3 diffuse = saturate(dotLighting) * directShadow;
 
 	// Final color

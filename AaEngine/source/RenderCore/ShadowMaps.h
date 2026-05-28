@@ -18,7 +18,7 @@ class ShadowMaps
 {
 public:
 
-	ShadowMaps(RenderSystem& renderSystem, SceneLights::Light&, PssmParameters&);
+	ShadowMaps(RenderSystem& renderSystem, SceneLights::Light&, SkyParameters&);
 
 	void init(GraphicsResources& resources);
 
@@ -40,7 +40,7 @@ public:
 private:
 
 	RenderTargetHeap targetHeap;
-	PssmParameters& data;
+	SkyParameters& data;
 	CbufferView cbuffer;
 
 	ShadowMapCascade cascadeInfo;

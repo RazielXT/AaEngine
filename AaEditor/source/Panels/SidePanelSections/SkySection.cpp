@@ -49,7 +49,7 @@ void SkySection::draw(ApplicationCore& app)
 		material->SetParameter("MoonPhase", &moonPhase, 1);
 	}
 
-	ImGui::SliderFloat("Clouds amount", &app.params.sun.CloudsAmount, -1, 1);
-	ImGui::SliderFloat("Clouds density", &app.params.sun.CloudsDensity, 0, 1);
-	ImGui::SliderFloat("Clouds speed", &app.params.sun.CloudsSpeed, 0, 0.02f);
+	ImGui::SliderFloat("Clouds amount", &app.params.sky.CloudsAmount, -1, 1);
+	ImGui::SliderFloat("Clouds density", &app.params.sky.CloudsDensity, 0, 1);
+	ImGui::SliderFloat("Clouds speed", &app.params.sky.CloudsSpeed, 0, 0.02f);
 }

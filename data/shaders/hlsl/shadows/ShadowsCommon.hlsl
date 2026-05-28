@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hlsl/sky/SunParams.hlsl"
+#include "hlsl/sky/SkyParams.hlsl"
 
 float readShadowmap(Texture2D<float> shadowmap, SamplerState sampler, float2 shadowCoord)
 {

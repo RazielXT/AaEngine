@@ -67,7 +67,7 @@ struct ResourcesInfo
 		union
 		{
 			CbufferView cbuffer;
-			D3D12_GPU_VIRTUAL_ADDRESS gpuPtr;
+			StructuredBufferView gpuMemory;
 		}
 		data;
 	};
@@ -143,7 +143,7 @@ struct ResourcesInfo
 	std::vector<ParamInfo> params{};
 };
 
-struct PssmParameters
+struct SkyParameters
 {
 	XMFLOAT4X4 ShadowMatrix[4];
 	XMFLOAT3 SunDirection;
@@ -162,7 +162,7 @@ struct PssmParameters
 
 struct FrameParameters
 {
-	PssmParameters sun;
+	SkyParameters sky;
 
 	float time{};
 	float timeDelta{};

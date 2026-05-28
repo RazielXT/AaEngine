@@ -1,10 +1,10 @@
 #pragma once
 
-struct SunParams
+struct SkyParams
 {
 	float4x4 ShadowMatrix[4];
 
-	float3 Direction;
+	float3 SunDirection;
 	uint TexIdShadowMap0;
 
 	float ShadowCascadeDistance0;
@@ -12,7 +12,7 @@ struct SunParams
 	float ShadowCascadeDistance2;
 	float ShadowCascadeDistance3;
 
-	float3 Color;
+	float3 SunColor;
 	float ShadowMapSize;
 
 	float ShadowMapSizeInv;

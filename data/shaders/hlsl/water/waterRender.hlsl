@@ -5,7 +5,7 @@
 #include "hlsl/grid/heightmapGridReconstruction.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
 #include "hlsl/common/ShaderOutputs.hlsl"
-#include "hlsl/sky/SunParams.hlsl"
+#include "hlsl/sky/SkyParams.hlsl"
 #include "hlsl/common/NormalDecoding.hlsl"
 
 float4x4 ViewProjectionMatrix;
@@ -37,7 +37,7 @@ cbuffer SceneVoxelInfo : register(b1)
 
 cbuffer PSSMShadows : register(b2)
 {
-	SunParams Sun;
+	SkyParams Sky;
 }
 
 SamplerState LinearWrapSampler : register(s0);
@@ -128,8 +128,8 @@ PSOutput PSMain(PSInput input)
 	float4 albedo = GetTexture2D(TexIdDiffuse).Sample(LinearWrapSampler, DetailUv);
 	albedo.a = saturate(albedo.r * 0.2 + fade);
 
-	float lighting = abs(dot(-Sun.Direction, normal)) * 0.5;
-	albedo.rgb = WaterColor * pow(lighting, 1) * Sun.Color;
+	float lighting = abs(dot(-Sky.SunDirection, normal)) * 0.5;
+	albedo.rgb = WaterColor * pow(lighting, 1) * Sky.SunColor;
 
 	PSOutput output;
 	output.color = albedo;

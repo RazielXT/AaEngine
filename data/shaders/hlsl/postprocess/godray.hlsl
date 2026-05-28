@@ -1,4 +1,4 @@
-#include "hlsl/sky/SunParams.hlsl"
+#include "hlsl/sky/SkyParams.hlsl"
 
 float4x4 ViewMatrix;
 float4x4 ProjectionMatrix;
@@ -9,7 +9,7 @@ SamplerState LinearBorderSampler : register(s0);
 
 cbuffer PSSMShadows : register(b1)
 {
-	SunParams Sun;
+	SkyParams Sky;
 }
 
 struct VS_OUTPUT
@@ -25,9 +25,9 @@ float4 PSTraceGodray(VS_OUTPUT input) : SV_TARGET
 	float2 uv = input.TexCoord;
 	
 	float3 camDirection = transpose(ViewMatrix)[2].xyz;
-	float weight = dot(-camDirection, Sun.Direction);
+	float weight = dot(-camDirection, Sky.SunDirection);
 
-	float4 lightPosition = float4(CameraPosition + Sun.Direction * -1000.f, 1);
+	float4 lightPosition = float4(CameraPosition + Sky.SunDirection * -1000.f, 1);
 	lightPosition = mul(lightPosition, ViewMatrix);
 	lightPosition = mul(lightPosition, ProjectionMatrix);
 	lightPosition.xyz /= lightPosition.w;

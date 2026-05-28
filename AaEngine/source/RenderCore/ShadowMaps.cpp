@@ -10,7 +10,7 @@ namespace
 	Vector2 NearFarPlane{};
 }
 
-ShadowMaps::ShadowMaps(RenderSystem& rs, SceneLights::Light& l,	PssmParameters& d) : renderSystem(rs), sun(l), data(d)
+ShadowMaps::ShadowMaps(RenderSystem& rs, SceneLights::Light& l,	SkyParameters& d) : renderSystem(rs), sun(l), data(d)
 {
 }
 

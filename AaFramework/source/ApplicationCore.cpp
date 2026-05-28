@@ -40,7 +40,7 @@ void ApplicationCore::initialize(const TargetWindow& window, const InitParams& a
 		colorSpace = { .outputFormat = DXGI_FORMAT_R10G10B10A2_UNORM, .type = ColorSpace::HDR10 };
 	renderSystem.core.initializeSwapChain(window, colorSpace);
 
-	shadowMap = new ShadowMaps(renderSystem, lights.directionalLight, params.sun);
+	shadowMap = new ShadowMaps(renderSystem, lights.directionalLight, params.sky);
 	shadowMap->init(resources);
 
 	compositor = new FrameCompositor(appParams.compositor, { params, renderSystem, resources }, renderWorld, *shadowMap);

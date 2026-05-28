@@ -1,4 +1,4 @@
-#include "hlsl/sky/SunParams.hlsl"
+#include "hlsl/sky/SkyParams.hlsl"
 #include "hlsl/sky/SkyColor.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
 
@@ -10,7 +10,7 @@ float MoonPhase;
 
 cbuffer PSSMShadows : register(b1)
 {
-	SunParams Sun;
+	SkyParams Sky;
 }
 
 struct PSInput
@@ -41,7 +41,7 @@ PSInput VSMain(uint vertexIdx : SV_VertexID)
 
     // --- Fixed Celestial Orientation ---
     // 1. Define the direction to the moon
-    float3 moonDir = Sun.Direction; 
+	float3 moonDir = Sky.SunDirection; 
     
     // 2. Define a stable "Up" (The North Celestial Pole or just World Up)
     float3 worldUp = float3(0.0001f, 1.0f, 0.0001f);
@@ -104,7 +104,7 @@ PSOutput PSMain(PSInput input)
 		albedo.rgb *= phase;
 	}
 
-	albedo.rgb = lerp(getSkyColor(Sun.Direction, Sun, LinearWrapSampler) * 0.25, albedo.rgb, saturate(Sun.Direction.y));
+	albedo.rgb = lerp(getSkyColor(Sky.SunDirection, Sky, LinearWrapSampler) * 0.25, albedo.rgb, saturate(Sky.SunDirection.y));
 
 	PSOutput output;
 	output.albedo = float4(albedo.rgb, 1);

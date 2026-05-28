@@ -1,4 +1,4 @@
-#include "hlsl/sky/SunParams.hlsl"
+#include "hlsl/sky/SkyParams.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
 #include "hlsl/common/MotionVectors.hlsl"
 #include "hlsl/common/ShaderOutputs.hlsl"
@@ -26,7 +26,7 @@ uint EntityId;
 
 cbuffer PSSMShadows : register(b1)
 {
-	SunParams Sun;
+	SkyParams Sky;
 }
 
 StructuredBuffer<VegetationInfo> GeometryBuffer : register(t0);
@@ -127,7 +127,7 @@ GBufferOutput PSMain(PSInput input)
 	//worldNormal = -ViewCameraDirection;
 
 	float edges = GetTexture2D(TexIdEdges).Sample(colorSampler, input.uv.xy).r;
-	//worldNormal = lerp(-Sun.Direction, worldNormal, edges);
+	//worldNormal = lerp(-Sky.SunDirection, worldNormal, edges);
 
 	float3 binormal = float3(0, 1, 0);
 	float3 tangent = cross(binormal, worldNormal);

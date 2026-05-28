@@ -18,7 +18,7 @@ uint EntityId;
 
 cbuffer PSSMShadows : register(b1)
 {
-	SunParams Sun;
+	SkyParams Sky;
 }
 
 cbuffer SceneVoxelInfo : register(b2)
@@ -172,8 +172,8 @@ PSOutput PSMain(PSInput input)
 	float distanceFade = camDistance / FadeThreshold;
 	if (albedo.a < distanceFade) discard;
 
-	float shadowing = getPssmShadow(input.worldPosition, camDistance, 1, ShadowSampler, Sun);
-	float lighting = dot(-Sun.Direction,input.terrainNormal);
+	float shadowing = getPssmShadow(input.worldPosition, camDistance, 1, ShadowSampler, Sky);
+	float lighting = dot(-Sky.SunDirection,input.terrainNormal);
 
 	float3 shading = shadowing * saturate(lighting);
 

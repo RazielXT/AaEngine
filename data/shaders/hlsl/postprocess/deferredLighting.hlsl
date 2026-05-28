@@ -10,7 +10,7 @@ uint ResId;
 
 cbuffer PSSMShadows : register(b1)
 {
-	SunParams Sun;
+	SkyParams Sky;
 }
 
 Texture2D colorMap : register(t0);
@@ -38,23 +38,23 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 
 	if (all(worldNormal == float3(0,0,0))) return float4(albedo.rgb,0);
 
-	float dotLighting = saturate(dot(-Sun.Direction, worldNormal));
+	float dotLighting = saturate(dot(-Sky.SunDirection, worldNormal));
 	//dotLighting *= dotLighting;
 
 	float depth = depthMap.Load(int3(input.Position.xy, 0)).r;
 	float4 worldPosition = float4(ReconstructWorldPosition(input.TexCoord, depth, InvViewProjectionMatrix), 1);
 	float camDistance = length(CameraPosition - worldPosition.xyz) * 8.f;
 
-	float directShadow = getPssmShadow(worldPosition, camDistance / 8.f, dotLighting, ShadowSampler, Sun);
-	directShadow *= saturate(-10 * Sun.Direction.y);
+	float directShadow = getPssmShadow(worldPosition, camDistance / 8.f, dotLighting, ShadowSampler, Sky);
+	directShadow *= saturate(-10 * Sky.SunDirection.y);
 
-	float3 skyColor = getSkyColor(worldNormal, Sun, LinearSampler);
+	float3 skyColor = getSkyColor(worldNormal, Sky, LinearSampler);
 	skyColor = 0.0 * skyColor * saturate(worldNormal.y);
 
 	float ssao = ssaoMap.Sample(LinearSampler, input.TexCoord);
 
-	float4 vctLighting = vctMap.Load(int3(input.Position.xy, 0));// + worldNormal.y * Sun.Color * 0.1;// * saturate(dot(Sun.Direction, worldNormal) + 0.5);
-	float3 lighting = dotLighting * Sun.Color * directShadow + skyColor + 3.2 * vctLighting.rgb + emmisive * 10;
+	float4 vctLighting = vctMap.Load(int3(input.Position.xy, 0));// + worldNormal.y * Sky.SunColor * 0.1;// * saturate(dot(Sky.SunDirection, worldNormal) + 0.5);
+	float3 lighting = dotLighting * Sky.SunColor * directShadow + skyColor + 3.2 * vctLighting.rgb + emmisive * 10;
 
 	lighting *= lerp(ssao, 1, saturate((lighting.r + lighting.g + lighting.b) / 3));
 	//lighting *= ssao;
@@ -65,7 +65,7 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	//fogPosCheck.y = 0;
 	float3 fogAtmDir = normalize(CameraPosition - fogPosCheck);
 	fogAtmDir.y = saturate(fogAtmDir.y);
-	const float3 fogColor = getSkyColor(fogAtmDir, Sun, LinearSampler) / 2;
+	const float3 fogColor = getSkyColor(fogAtmDir, Sky, LinearSampler) / 2;
 
 	float isUnderwater = step(1.0f, SceneRenderingState[0].Underwater);
 	float fogDensity = 0.000000001;

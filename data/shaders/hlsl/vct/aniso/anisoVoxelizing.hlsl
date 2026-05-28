@@ -1,5 +1,5 @@
 #include "AnisoVoxelConeTracingCommon.hlsl"
-#include "hlsl/sky/SunParams.hlsl"
+#include "hlsl/sky/SkyParams.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
 
 #ifdef GRID
@@ -30,7 +30,7 @@ cbuffer SceneVoxelInfo : register(b1)
 
 cbuffer PSSMShadows : register(b2)
 {
-	SunParams Sun;
+	SkyParams Sky;
 }
 
 RWStructuredBuffer<VoxelSceneData> SceneVoxelData : register(u0);
@@ -190,7 +190,7 @@ float4 PSMain(PS_Input pin) : SV_TARGET
 
 	float shadow = getShadow(pin.wp);
 	if (shadow > 0)
-		shadow = -dot(Sun.Direction,worldNormal);
+		shadow = -dot(Sky.SunDirection,worldNormal);
 	
 	float3 voxelWorldPos = (pin.wp.xyz - VoxelInfo.Voxels[VoxelIdx].Offset);
 	float3 posUV = voxelWorldPos * VoxelInfo.Voxels[VoxelIdx].Density;

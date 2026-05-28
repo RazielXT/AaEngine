@@ -1,4 +1,4 @@
-#include "hlsl/sky/SunParams.hlsl"
+#include "hlsl/sky/SkyParams.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
 #include "hlsl/common/BlueNoise.hlsl"
 #include "hlsl/common/Srgb.hlsl"
@@ -9,7 +9,7 @@ uint TexIdNightSky;
 
 cbuffer PSSMShadows : register(b1)
 {
-	SunParams Sun;
+	SkyParams Sky;
 }
 
 struct VSOut
@@ -114,23 +114,23 @@ float3 StarFieldTexture(float3 dir)
 PSOutput PSMain(VSOut input)
 {
 	float3 skyDir = ComputeSkyDir(input.ndc);
-	float sunDot = dot(-skyDir, Sun.Direction);
+	float sunDot = dot(-skyDir, Sky.SunDirection);
 
-	float sunZenithDot = -Sun.Direction.y;
+	float sunZenithDot = -Sky.SunDirection.y;
 	float viewZenithDot = skyDir.y;
 	float sunViewDot01 = (sunDot + 1.0) * 0.5;
 	float sunZenithDot01 = (sunZenithDot + 1.0) * 0.5;
 
-	float3 sunZenithColor = GetTexture2D(Sun.TexIdSunZenith).Sample(LinearSampler, float2(sunZenithDot01, 0.5)).rgb * 0.5;
+	float3 sunZenithColor = GetTexture2D(Sky.TexIdSunZenith).Sample(LinearSampler, float2(sunZenithDot01, 0.5)).rgb * 0.5;
 
-	float3 viewZenithColor = GetTexture2D(Sun.TexIdViewZenith).Sample(LinearSampler, float2(sunZenithDot01, 0.5)).rgb * 0.5;
+	float3 viewZenithColor = GetTexture2D(Sky.TexIdViewZenith).Sample(LinearSampler, float2(sunZenithDot01, 0.5)).rgb * 0.5;
 	float vzMask = pow(saturate(1.0 - skyDir.y), 4);
 
-	float3 sunViewColor = GetTexture2D(Sun.TexIdSunView).Sample(LinearSampler, float2(sunZenithDot01, 0.5)).rgb;
+	float3 sunViewColor = GetTexture2D(Sky.TexIdSunView).Sample(LinearSampler, float2(sunZenithDot01, 0.5)).rgb;
 	float svMask = pow(saturate(sunDot), 4);
 
 	// Night factor: fade stars in when sun is below horizon
-	float night = saturate(Sun.Direction.y * 2.0);
+	float night = saturate(Sky.SunDirection.y * 2.0);
 	float3 stars = StarFieldTexture(skyDir) * night;
 
 	float3 skyColor = stars + SrgbToLinear(sunZenithColor + vzMask * viewZenithColor + svMask * sunViewColor);
@@ -143,7 +143,7 @@ PSOutput PSMain(VSOut input)
 	// Sun core
 	float coreSize = 0.999;
 	float core = smoothstep(coreSize, 1.0, sunDot);
-	float3 sunColor = core * 50 * Sun.Color;
+	float3 sunColor = core * 50 * Sky.SunColor;
 
 	PSOutput output;
 	output.albedo = float4(saturate(skyColor) + sunColor, 0);

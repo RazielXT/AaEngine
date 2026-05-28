@@ -1,7 +1,7 @@
 #include "ShadowsCommon.hlsl"
 #include "hlsl/common/BlueNoise.hlsl"
 
-float3 getCascadeShadow(float4 wp, uint ShadowIndex, float ShadowBias, SamplerState sampler, SunParams params)
+float3 getCascadeShadow(float4 wp, uint ShadowIndex, float ShadowBias, SamplerState sampler, SkyParams params)
 {
 	Texture2D<float> shadowmap = ResourceDescriptorHeap[params.TexIdShadowMap0 + ShadowIndex];
 	float4 sunLookPos = mul(wp, params.ShadowMatrix[ShadowIndex]);
@@ -32,7 +32,7 @@ float shadowBorderBlend(float2 uv, float edgeThreshold)
 	return alpha;
 }
 
-float getPssmShadow(float4 wp, float cameraDistance, float dotView, SamplerState sampler, SunParams params)
+float getPssmShadow(float4 wp, float cameraDistance, float dotView, SamplerState sampler, SkyParams params)
 {
 	float biasSlopeAdjust = 1;
 

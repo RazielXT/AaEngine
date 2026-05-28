@@ -89,6 +89,9 @@
     <Filter Include="Source Files\RenderObject\Grass">
       <UniqueIdentifier>{a4a60f79-6988-4444-9620-75573498a7dc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\RenderObject\SplineSweep">
+      <UniqueIdentifier>{26dd4bc2-7c8c-4d6a-9acf-3850bd636c31}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\App\TargetWindow.cpp">
@@ -393,6 +396,15 @@
     </ClCompile>
     <ClCompile Include="source\RenderObject\DrawPrimitives.cpp">
       <Filter>Source Files\RenderObject</Filter>
+    </ClCompile>
+    <ClCompile Include="source\RenderObject\SplineSweep\ShapeProfile.cpp">
+      <Filter>Source Files\RenderObject\SplineSweep</Filter>
+    </ClCompile>
+    <ClCompile Include="source\RenderObject\SplineSweep\Spline.cpp">
+      <Filter>Source Files\RenderObject\SplineSweep</Filter>
+    </ClCompile>
+    <ClCompile Include="source\RenderObject\SplineSweep\SplineSweepMesh.cpp">
+      <Filter>Source Files\RenderObject\SplineSweep</Filter>
     </ClCompile>
     <ClCompile Include="source\Utils\DxUtils.cpp">
       <Filter>Source Files\Utils</Filter>
@@ -731,6 +743,15 @@
     </ClInclude>
     <ClInclude Include="source\RenderObject\DrawPrimitives.h">
       <Filter>Source Files\RenderObject</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RenderObject\SplineSweep\ShapeProfile.h">
+      <Filter>Source Files\RenderObject\SplineSweep</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RenderObject\SplineSweep\Spline.h">
+      <Filter>Source Files\RenderObject\SplineSweep</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RenderObject\SplineSweep\SplineSweepMesh.h">
+      <Filter>Source Files\RenderObject\SplineSweep</Filter>
     </ClInclude>
     <ClInclude Include="source\Utils\DxUtils.h">
       <Filter>Source Files\Utils</Filter>

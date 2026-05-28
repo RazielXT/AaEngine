@@ -70,6 +70,9 @@
     <ClCompile Include="source\Objects\PlayerBody.cpp">
       <Filter>Source Files\Objects</Filter>
     </ClCompile>
+    <ClCompile Include="source\Objects\SplineConstruction.cpp">
+      <Filter>Source Files\Objects</Filter>
+    </ClCompile>
     <ClCompile Include="source\Objects\Vehicle\ArcadeMotorcycle.cpp">
       <Filter>Source Files\Objects\Vehicle</Filter>
     </ClCompile>
@@ -139,6 +142,9 @@
       <Filter>Source Files\Objects</Filter>
     </ClInclude>
     <ClInclude Include="source\Objects\PlayerBody.h">
+      <Filter>Source Files\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Objects\SplineConstruction.h">
       <Filter>Source Files\Objects</Filter>
     </ClInclude>
     <ClInclude Include="source\Objects\Vehicle\ArcadeMotorcycle.h">

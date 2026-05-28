@@ -10,6 +10,7 @@
 #include "FrameCompositor/Tasks/VoxelizeSceneTask.h"
 #include "RenderObject/Terrain/TerrainGridParams.h"
 #include "Physics/Render/PhysicsRenderTask.h"
+#include "Objects/SplineConstruction.h"
 #include <dxgidebug.h>
 #include <filesystem>
 #include "SceneGraph/Scene.h"
@@ -161,6 +162,7 @@ void ApplicationCore::loadScene()
 		renderWorld.vegetation.createChunks(renderWorld, renderSystem, resources, batch);
 		renderWorld.grass.createChunks(renderWorld, renderSystem, resources, batch);
 		renderWorld.water.initializeTarget(renderWorld.terrain.getHeightmap({ 0,0 }), renderWorld, { renderWorld.terrain.params.tileSize, renderWorld.terrain.params.tileSize }, renderWorld.terrain.getHeightmapPosition({ 0,0 }));
+		initializeSplineConstructionPreview(batch);
 	}
 	renderWorld.terrain.postUpdateCallback = [this](ID3D12GraphicsCommandList* commandList, ProgressiveTerrain& terrain)
 	{
@@ -204,6 +206,91 @@ void ApplicationCore::loadScene()
 	auto entity = scene.CreateEntity();
 	scene.AddComponent(entity, MeshRendererComponent{ -10 });
 	scene.DestroyEntity(entity);
+}
+
+void ApplicationCore::initializeSplineConstructionPreview(DirectX::ResourceUploadBatch& batch)
+{
+	splineConstructionPreviews.clear();
+
+	auto addPreview = [this, &batch](ShapeProfile2D profile, const std::vector<SplinePoint>& points, Vector3 color, bool physics = true)
+	{
+		auto construction = std::make_unique<SplineConstruction>();
+		construction->spline.setTessellationSegments(8);
+		construction->spline.setAdaptiveTessellation(6.0f, 24);
+		for (const SplinePoint& point : points)
+			construction->spline.addPoint(point.position, point.roll);
+
+		construction->profile = std::move(profile);
+		construction->sweepSettings.pathUvScale = 0.25f;
+		construction->sweepSettings.profileUvScale = 0.25f;
+
+		SplineConstructionCreateParams params;
+		params.materialName = "General";
+		params.createMeshPhysics = physics;
+		construction->regenerate(renderSystem, resources, renderWorld, &physicsMgr, batch, params);
+
+		color *= 0.8f;
+
+		if (construction->entity)
+			construction->entity->Material().setParam("MaterialColor", color * color);
+
+		splineConstructionPreviews.push_back(std::move(construction));
+	};
+
+	addPreview(ShapeProfile2D::createRoad(5.0f),
+	{
+		{ { -44.0f, 6.0f, -24.0f }, 0.0f },
+		{ { -28.0f, 6.5f, -12.0f }, 0.15f },
+		{ { -16.0f, 6.0f, 6.0f }, -0.2f },
+		{ { -4.0f, 7.0f, 20.0f }, 0.25f },
+	}, { 0.35f, 0.35f, 0.35f });
+
+	addPreview(ShapeProfile2D::createRectangle(4.0f, 1.0f),
+	{
+		{ { -38.0f, 11.0f, 26.0f }, 0.0f },
+		{ { -22.0f, 12.0f, 34.0f }, 0.35f },
+		{ { -6.0f, 12.0f, 30.0f }, -0.25f },
+	}, { 0.8f, 0.55f, 0.25f });
+
+	addPreview(ShapeProfile2D::createCircle(2.0f, 32),
+	{
+		{ { 4.0f, 9.0f, -26.0f }, 0.0f },
+		{ { 16.0f, 11.0f, -16.0f }, 0.4f },
+		{ { 28.0f, 9.0f, -26.0f }, -0.35f },
+	}, { 0.7f, 0.8f, 0.95f });
+
+	addPreview(ShapeProfile2D::createTube(3.0f, 2.35f, 32),
+	{
+		{ { 2.0f, 10.0f, 8.0f }, 0.0f },
+		{ { 16.0f, 13.0f, 20.0f }, 0.45f },
+		{ { 32.0f, 10.0f, 10.0f }, -0.35f },
+		{ { 44.0f, 12.0f, 26.0f }, 0.7f },
+	}, { 0.55f, 0.75f, 1.0f });
+
+	addPreview(ShapeProfile2D::createArc(3.0f, 3.14159265f, 24),
+	{
+		{ { -8.0f, 14.0f, -38.0f }, 0.0f },
+		{ { 10.0f, 17.0f, -44.0f }, 0.5f },
+		{ { 30.0f, 15.0f, -38.0f }, -0.45f },
+	}, { 0.65f, 0.9f, 0.55f });
+
+	addPreview(ShapeProfile2D::createFilledArc(3.0f, 3.14159265f, 24),
+	{
+		{ { -8.0f, 20.0f, -54.0f }, 0.0f },
+		{ { 10.0f, 22.0f, -60.0f }, -0.35f },
+		{ { 30.0f, 20.0f, -54.0f }, 0.4f },
+	}, { 0.9f, 0.85f, 0.45f });
+
+	addPreview(ShapeProfile2D::createTube(3.5f, 2.75f, 40),
+	{
+		{ { -62.0f, 14.0f, -8.0f }, 0.0f },
+		{ { -48.0f, 28.0f, 14.0f }, 1.1f },
+		{ { -34.0f, 46.0f, -4.0f }, 2.5f },
+		{ { -20.0f, 28.0f, -22.0f }, 4.2f },
+		{ { -6.0f, 12.0f, 0.0f }, 6.0f },
+		{ { 18.0f, 20.0f, 18.0f }, 6.7f },
+		{ { 44.0f, 16.0f, -4.0f }, 7.4f },
+	}, { 0.95f, 0.45f, 0.65f });
 }
 
 DebugReporter::DebugReporter()

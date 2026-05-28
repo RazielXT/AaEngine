@@ -11,6 +11,16 @@
 #include "Physics/WaterSimInteractionUpdater.h"
 #include "RenderObject/Sky/SkyRendering.h"
 
+#include <memory>
+#include <vector>
+
+class SplineConstruction;
+
+namespace DirectX
+{
+	class ResourceUploadBatch;
+}
+
 struct DebugReporter
 {
 	DebugReporter();
@@ -52,6 +62,9 @@ public:
 	PlanesModel planes;
 	SkyRendering sky;
 private:
+	void initializeSplineConstructionPreview(DirectX::ResourceUploadBatch& batch);
+
+	std::vector<std::unique_ptr<SplineConstruction>> splineConstructionPreviews;
 
 	void onViewportResize(UINT, UINT) override;
 	void onScreenResize(UINT, UINT) override;

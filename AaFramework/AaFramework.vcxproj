@@ -145,6 +145,7 @@
     <ClCompile Include="source\InputHandler.cpp" />
     <ClCompile Include="source\Managers\EntityRenderManager.cpp" />
     <ClCompile Include="source\Objects\PlayerBody.cpp" />
+    <ClCompile Include="source\Objects\SplineConstruction.cpp" />
     <ClCompile Include="source\Objects\Vehicle\ArcadeMotorcycle.cpp" />
     <ClCompile Include="source\Objects\Vehicle\JoltMotorcycle.cpp" />
     <ClCompile Include="source\Physics\PhysicsManager.cpp" />
@@ -165,6 +166,7 @@
     <ClInclude Include="source\Managers\EntityRenderManager.h" />
     <ClInclude Include="source\Objects\MovableBody.h" />
     <ClInclude Include="source\Objects\PlayerBody.h" />
+    <ClInclude Include="source\Objects\SplineConstruction.h" />
     <ClInclude Include="source\Objects\Vehicle\ArcadeMotorcycle.h" />
     <ClInclude Include="source\Objects\Vehicle\JoltMotorcycle.h" />
     <ClInclude Include="source\Physics\JoltHeader.h" />

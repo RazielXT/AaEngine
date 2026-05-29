@@ -1,4 +1,5 @@
 #include "Resources/Model/VertexBufferModel.h"
+#include "Resources/Model/VertexBufferModelGarbageCollector.h"
 #include "RenderCore/RenderSystem.h"
 #include <functional>
 #include <BufferHelpers.h>
@@ -12,9 +13,9 @@ VertexBufferModel::VertexBufferModel()
 VertexBufferModel::~VertexBufferModel()
 {
 	if (vertexBuffer && owner)
-		vertexBuffer->Release();
+		VertexBufferModelGarbageCollector::Get().enqueue(vertexBuffer);
 	if (indexBuffer && owner)
-		indexBuffer->Release();
+		VertexBufferModelGarbageCollector::Get().enqueue(indexBuffer);
 }
 
 void VertexBufferModel::addLayoutElement(unsigned short slot, UINT offset, DXGI_FORMAT format, const char* semantic, unsigned short index)

@@ -98,6 +98,7 @@
     <ClCompile Include="source\FrameCompositor\Tasks\WaterSimTask.cpp" />
     <ClCompile Include="source\RenderObject\DrawPrimitives.cpp" />
     <ClCompile Include="source\RenderObject\SplineSweep\ShapeProfile.cpp" />
+    <ClCompile Include="source\RenderObject\SplineSweep\SplineDebugVisualization.cpp" />
     <ClCompile Include="source\RenderObject\SplineSweep\Spline.cpp" />
     <ClCompile Include="source\RenderObject\SplineSweep\SplineSweepMesh.cpp" />
     <ClCompile Include="source\RenderObject\Grass\Grass.cpp" />
@@ -134,6 +135,7 @@
     <ClCompile Include="source\RenderCore\TextureUtils.cpp" />
     <ClCompile Include="source\RenderObject\Vegetation\Vegetation.cpp" />
     <ClCompile Include="source\Resources\Model\VertexBufferModel.cpp" />
+    <ClCompile Include="source\Resources\Model\VertexBufferModelGarbageCollector.cpp" />
     <ClCompile Include="source\Resources\Model\ModelResources.cpp" />
     <ClCompile Include="source\Resources\Compute\AoBlurAndUpsampleCS.cpp" />
     <ClCompile Include="source\Resources\Compute\AoRenderCS.cpp" />
@@ -204,6 +206,7 @@
     <ClInclude Include="source\FrameCompositor\Tasks\WaterSimTask.h" />
     <ClInclude Include="source\RenderObject\DrawPrimitives.h" />
     <ClInclude Include="source\RenderObject\SplineSweep\ShapeProfile.h" />
+    <ClInclude Include="source\RenderObject\SplineSweep\SplineDebugVisualization.h" />
     <ClInclude Include="source\RenderObject\SplineSweep\Spline.h" />
     <ClInclude Include="source\RenderObject\SplineSweep\SplineSweepMesh.h" />
     <ClInclude Include="source\RenderObject\Grass\Grass.h" />
@@ -259,6 +262,7 @@
     <ClInclude Include="source\RenderCore\TextureUtils.h" />
     <ClInclude Include="source\RenderObject\Vegetation\Vegetation.h" />
     <ClInclude Include="source\Resources\Model\VertexBufferModel.h" />
+    <ClInclude Include="source\Resources\Model\VertexBufferModelGarbageCollector.h" />
     <ClInclude Include="source\Resources\Model\ModelResources.h" />
     <ClInclude Include="source\Scene\RenderObject.h" />
     <ClInclude Include="source\RenderCore\RenderSystem.h" />

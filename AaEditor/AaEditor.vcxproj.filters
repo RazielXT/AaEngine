@@ -70,10 +70,16 @@
     <ClCompile Include="source\Panels\Viewport\ViewportPanel.cpp">
       <Filter>Source Files\Panels\Viewport</Filter>
     </ClCompile>
+    <ClCompile Include="source\Panels\Viewport\SplineRoadTool.cpp">
+      <Filter>Source Files\Panels\Viewport</Filter>
+    </ClCompile>
     <ClCompile Include="source\Panels\WaterPaintTool.cpp">
       <Filter>Source Files\Panels</Filter>
     </ClCompile>
     <ClCompile Include="source\Panels\SidePanelSections\SkySection.cpp">
+      <Filter>Source Files\Panels\SidePanelSections</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Panels\SidePanelSections\SplineRoadSection.cpp">
       <Filter>Source Files\Panels\SidePanelSections</Filter>
     </ClCompile>
     <ClCompile Include="source\Panels\SidePanelSections\TextureOverlaySection.cpp">
@@ -141,6 +147,9 @@
     <ClInclude Include="source\Panels\Viewport\SelectionTool.h">
       <Filter>Source Files\Panels\Viewport</Filter>
     </ClInclude>
+    <ClInclude Include="source\Panels\Viewport\SplineRoadTool.h">
+      <Filter>Source Files\Panels\Viewport</Filter>
+    </ClInclude>
     <ClInclude Include="source\Panels\Viewport\ViewportPanel.h">
       <Filter>Source Files\Panels\Viewport</Filter>
     </ClInclude>
@@ -151,6 +160,9 @@
       <Filter>Source Files\Panels</Filter>
     </ClInclude>
     <ClInclude Include="source\Panels\SidePanelSections\SkySection.h">
+      <Filter>Source Files\Panels\SidePanelSections</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Panels\SidePanelSections\SplineRoadSection.h">
       <Filter>Source Files\Panels\SidePanelSections</Filter>
     </ClInclude>
     <ClInclude Include="source\Panels\SidePanelSections\TextureOverlaySection.h">

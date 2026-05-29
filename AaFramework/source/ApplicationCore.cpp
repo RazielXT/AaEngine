@@ -230,7 +230,10 @@ void ApplicationCore::initializeSplineConstructionPreview(DirectX::ResourceUploa
 		construction->spline.setTessellationSegments(8);
 		construction->spline.setAdaptiveTessellation(6.0f, 24);
 		for (const SplinePoint& point : points)
+		{
 			construction->spline.addPoint(point.position, point.roll);
+			construction->spline.setPoint(construction->spline.getPointCount() - 1, point);
+		}
 
 		construction->profile = std::move(profile);
 		construction->sweepSettings.pathUvScale = 0.25f;

@@ -2,6 +2,7 @@
 #include "SceneTreePanel.h"
 #include "Editor/DebugState.h"
 #include "Viewport/ViewportPanel.h"
+#include "Viewport/SplineRoadTool.h"
 #include "WaterPaintTool.h"
 #include "ApplicationCore.h"
 #include "Editor/EditorSelection.h"
@@ -16,7 +17,10 @@ SidePanel::SidePanel(ApplicationCore& a, EditorSelection& sel, DebugState& st, S
 	: app(a), selection(sel), state(st), sceneTree(tree), viewportPanel(vp)
 {
 	waterPaintTool = new WaterPaintTool(a, viewportPanel);
+	splineRoadTool = std::make_unique<SplineRoadTool>(a, viewportPanel);
 }
+
+SidePanel::~SidePanel() = default;
 
 void SidePanel::draw()
 {
@@ -170,6 +174,11 @@ void SidePanel::draw()
 			const char* modeLabel = waterPaintTool->getMode() == WaterPaintTool::Mode::Add ? "Add" : "Remove";
 			ImGui::Text("  Mode: %s", modeLabel);
 		}
+	}
+
+	if (ImGui::CollapsingHeader("Spline roads", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		splineRoadSection.draw(*splineRoadTool, viewportPanel);
 	}
 
 	if (ImGui::CollapsingHeader("VCT"))

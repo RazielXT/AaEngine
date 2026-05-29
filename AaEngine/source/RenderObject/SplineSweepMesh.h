@@ -31,8 +31,10 @@ struct SplineSweepMeshSettings
 {
 	float pathUvScale = 1.0f;
 	float profileUvScale = 1.0f;
+	float minProfileForwardScale = 0.08f;
 	bool generateNormals = true;
 	bool generateTangents = true;
+	bool preventProfileFoldover = true;
 };
 
 class SplineSweepMeshGenerator
@@ -46,4 +48,6 @@ private:
 	static void appendContour(SplineSweepMesh& mesh, const std::vector<SplineSample>& samples, const ShapeProfileContour& contour, const SplineSweepMeshSettings& settings);
 	static void appendQuad(SplineSweepMesh& mesh, uint32_t v00, uint32_t v01, uint32_t v10, uint32_t v11);
 	static void addBoundsPoint(SplineSweepMesh& mesh, Vector3 position);
+	static Vector2 preventFoldover(size_t sampleIndex, const std::vector<SplineSample>& samples, Vector2 profilePosition, const SplineSweepMeshSettings& settings);
+	static float getSignedCurvature(size_t sampleIndex, const std::vector<SplineSample>& samples);
 };

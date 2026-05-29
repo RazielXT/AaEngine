@@ -112,6 +112,9 @@
     <ClCompile Include="source\Resources\Model\VertexBufferModel.cpp">
       <Filter>Source Files\Resources\Model</Filter>
     </ClCompile>
+    <ClCompile Include="source\Resources\Model\VertexBufferModelGarbageCollector.cpp">
+      <Filter>Source Files\Resources\Model</Filter>
+    </ClCompile>
     <ClCompile Include="source\Resources\Model\ModelResources.cpp">
       <Filter>Source Files\Resources\Model</Filter>
     </ClCompile>
@@ -400,6 +403,9 @@
     <ClCompile Include="source\RenderObject\SplineSweep\ShapeProfile.cpp">
       <Filter>Source Files\RenderObject\SplineSweep</Filter>
     </ClCompile>
+    <ClCompile Include="source\RenderObject\SplineSweep\SplineDebugVisualization.cpp">
+      <Filter>Source Files\RenderObject\SplineSweep</Filter>
+    </ClCompile>
     <ClCompile Include="source\RenderObject\SplineSweep\Spline.cpp">
       <Filter>Source Files\RenderObject\SplineSweep</Filter>
     </ClCompile>
@@ -436,6 +442,9 @@
       <Filter>Source Files\Resources\Material</Filter>
     </ClInclude>
     <ClInclude Include="source\Resources\Model\VertexBufferModel.h">
+      <Filter>Source Files\Resources\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Resources\Model\VertexBufferModelGarbageCollector.h">
       <Filter>Source Files\Resources\Model</Filter>
     </ClInclude>
     <ClInclude Include="source\Resources\Model\ModelResources.h">
@@ -748,6 +757,9 @@
       <Filter>Source Files\RenderObject</Filter>
     </ClInclude>
     <ClInclude Include="source\RenderObject\SplineSweep\ShapeProfile.h">
+      <Filter>Source Files\RenderObject\SplineSweep</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RenderObject\SplineSweep\SplineDebugVisualization.h">
       <Filter>Source Files\RenderObject\SplineSweep</Filter>
     </ClInclude>
     <ClInclude Include="source\RenderObject\SplineSweep\Spline.h">

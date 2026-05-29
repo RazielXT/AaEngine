@@ -2,6 +2,7 @@
 #include "directx/d3dx12.h"
 #include <wrl.h>
 #include "Resources/Material/Material.h"
+#include "Resources/Model/VertexBufferModelGarbageCollector.h"
 #include "Model.h"
 #include "Resources/Model/OgreMeshFileParser.h"
 #include "Scene/RenderWorld.h"
@@ -162,6 +163,9 @@ RenderCore::RenderCore()
 
 RenderCore::~RenderCore()
 {
+	WaitForAllFrames();
+	VertexBufferModelGarbageCollector::Get().flush();
+
 	computeFence->Release();
 	commandFence->Release();
 
@@ -431,6 +435,7 @@ HRESULT RenderCore::Present(bool vsync)
 void RenderCore::EndFrame()
 {
 	MoveToNextFrame();
+	VertexBufferModelGarbageCollector::Get().advanceFrame();
 }
 
 void RenderCore::WaitForAllFrames()

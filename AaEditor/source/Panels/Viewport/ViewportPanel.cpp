@@ -109,7 +109,17 @@ void ViewportPanel::reset()
 
 void ViewportPanel::setActiveTool(ViewportTool* tool)
 {
-	activeTool = tool ? tool : selectionTool.get();
+	ViewportTool* nextTool = tool ? tool : selectionTool.get();
+	if (activeTool == nextTool)
+		return;
+
+	if (activeTool)
+		activeTool->onDeactivated();
+
+	activeTool = nextTool;
+
+	if (activeTool)
+		activeTool->onActivated();
 }
 
 void ViewportPanel::ensureOutputDescriptor()

@@ -34,6 +34,12 @@ public:
 	// Whether to schedule entity picker on click
 	virtual bool needsScenePick() const { return true; }
 
+	// Called when the viewport switches to this tool
+	virtual void onActivated() {}
+
+	// Called when the viewport switches away from this tool
+	virtual void onDeactivated() {}
+
 	// Called on right-click cancel
 	virtual void cancel() {}
 

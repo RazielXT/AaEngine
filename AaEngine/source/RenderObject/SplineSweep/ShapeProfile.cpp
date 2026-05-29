@@ -47,9 +47,25 @@ namespace
 
 ShapeProfile2D ShapeProfile2D::createRoad(float width)
 {
+	return createRoad(width, 1);
+}
+
+ShapeProfile2D ShapeProfile2D::createRoad(float width, size_t widthSegments)
+{
 	ShapeProfile2D profile;
 	width = clampPositive(width);
-	profile.addContour({ { -width * 0.5f, 0.0f }, { width * 0.5f, 0.0f } }, false);
+	widthSegments = (std::max)(widthSegments, static_cast<size_t>(1));
+
+	std::vector<ShapeProfilePoint> points;
+	points.reserve(widthSegments + 1);
+	for (size_t i = 0; i <= widthSegments; ++i)
+	{
+		const float t = static_cast<float>(i) / static_cast<float>(widthSegments);
+		points.push_back({ { -width * 0.5f + width * t, 0.0f }, Vector2::UnitY });
+	}
+
+	calculateProfileDistances(points, false);
+	profile.addContour(std::move(points), false);
 	return profile;
 }
 

@@ -31,9 +31,12 @@ struct SplineSweepMeshSettings
 {
 	float pathUvScale = 1.0f;
 	float profileUvScale = 1.0f;
+	float minProfileForwardScale = 0.08f;
 	bool generateNormals = true;
 	bool generateTangents = true;
 	bool generateEndCaps = true;
+	bool preventProfileFoldover = true;
+	bool splitOpenProfileQuadsAtCenter = true;
 };
 
 class SplineSweepMeshGenerator
@@ -55,7 +58,10 @@ private:
 	static void appendEndCaps(SplineSweepMesh& mesh, const std::vector<SplineSample>& samples, const ShapeProfile2D& profile, const std::vector<ContourMeshRange>& ranges);
 	static void appendSingleContourCap(SplineSweepMesh& mesh, const std::vector<SplineSample>& samples, const ContourMeshRange& range, bool startCap);
 	static bool appendTubeCap(SplineSweepMesh& mesh, const std::vector<SplineSample>& samples, const ContourMeshRange& outerRange, const ContourMeshRange& innerRange, bool startCap);
+	static void appendCenteredQuad(SplineSweepMesh& mesh, uint32_t v00, uint32_t v01, uint32_t v10, uint32_t v11);
 	static void appendQuad(SplineSweepMesh& mesh, uint32_t v00, uint32_t v01, uint32_t v10, uint32_t v11);
 	static void appendTriangle(SplineSweepMesh& mesh, uint32_t v0, uint32_t v1, uint32_t v2, Vector3 desiredNormal);
 	static void addBoundsPoint(SplineSweepMesh& mesh, Vector3 position);
+	static Vector2 preventFoldover(size_t sampleIndex, const std::vector<SplineSample>& samples, Vector2 profilePosition, const SplineSweepMeshSettings& settings);
+	static float getSignedCurvature(size_t sampleIndex, const std::vector<SplineSample>& samples);
 };

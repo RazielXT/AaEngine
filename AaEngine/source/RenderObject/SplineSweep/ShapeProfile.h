@@ -22,6 +22,7 @@ class ShapeProfile2D
 {
 public:
 	static ShapeProfile2D createRoad(float width);
+	static ShapeProfile2D createRoad(float width, size_t widthSegments);
 	static ShapeProfile2D createRectangle(float width, float height);
 	static ShapeProfile2D createCircle(float radius, size_t segments);
 	static ShapeProfile2D createTube(float outerRadius, float innerRadius, size_t segments);

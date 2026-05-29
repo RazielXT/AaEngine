@@ -13,6 +13,8 @@ void ModelBatchGarbageCollector::EnqueueBatchForDeletion(ModelBatch* batchToDele
 
 void ModelBatchGarbageCollector::CollectGarbageBatches()
 {
+	++frameCounter;
+
 	while (!batchTrash.empty() && batchTrash.front().deleteOnFrame <= frameCounter)
 	{
 		delete batchTrash.front().batch;

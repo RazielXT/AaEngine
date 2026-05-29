@@ -1,6 +1,9 @@
 #include "RenderObject/SplineSweepMesh.h"
 
+#include "Resources/Model/VertexBufferModelGarbageCollector.h"
+
 #include <algorithm>
+#include <cmath>
 
 namespace
 {
@@ -58,9 +61,9 @@ void SplineSweepMeshGenerator::resetVertexBufferModel(VertexBufferModel& model)
 	if (model.owner)
 	{
 		if (model.vertexBuffer)
-			model.vertexBuffer->Release();
+			VertexBufferModelGarbageCollector::Get().enqueue(model.vertexBuffer);
 		if (model.indexBuffer)
-			model.indexBuffer->Release();
+			VertexBufferModelGarbageCollector::Get().enqueue(model.indexBuffer);
 	}
 
 	model.vertexBuffer = nullptr;
@@ -85,12 +88,14 @@ void SplineSweepMeshGenerator::appendContour(SplineSweepMesh& mesh, const std::v
 	const uint32_t pathVertexCount = static_cast<uint32_t>(samples.size());
 
 	mesh.vertices.reserve(mesh.vertices.size() + samples.size() * contour.points.size());
-	for (const SplineSample& sample : samples)
+	for (size_t sampleIndex = 0; sampleIndex < samples.size(); ++sampleIndex)
 	{
+		const SplineSample& sample = samples[sampleIndex];
 		for (const ShapeProfilePoint& point : contour.points)
 		{
+			const Vector2 profilePosition = preventFoldover(sampleIndex, samples, point.position, settings);
 			SplineSweepVertex vertex;
-			vertex.position = sample.position + sample.right * point.position.x + sample.up * point.position.y;
+			vertex.position = sample.position + sample.right * profilePosition.x + sample.up * profilePosition.y;
 			vertex.uv = { point.profileDistance * settings.profileUvScale, sample.distance * settings.pathUvScale };
 			if (settings.generateNormals)
 				vertex.normal = normalizeOrFallback(sample.right * point.normal.x + sample.up * point.normal.y, sample.up);
@@ -157,4 +162,39 @@ void SplineSweepMeshGenerator::addBoundsPoint(SplineSweepMesh& mesh, Vector3 pos
 	}
 
 	mesh.bounds.add(position);
+}
+
+Vector2 SplineSweepMeshGenerator::preventFoldover(size_t sampleIndex, const std::vector<SplineSample>& samples, Vector2 profilePosition, const SplineSweepMeshSettings& settings)
+{
+	if (!settings.preventProfileFoldover || samples.size() < 3)
+		return profilePosition;
+
+	const float signedCurvature = getSignedCurvature(sampleIndex, samples);
+	if (std::abs(signedCurvature) <= 0.000001f)
+		return profilePosition;
+
+	const float minForwardScale = std::clamp(settings.minProfileForwardScale, 0.01f, 0.95f);
+	const float forwardScale = 1.0f - signedCurvature * profilePosition.x;
+	if (forwardScale >= minForwardScale)
+		return profilePosition;
+
+	profilePosition.x = (1.0f - minForwardScale) / signedCurvature;
+	return profilePosition;
+}
+
+float SplineSweepMeshGenerator::getSignedCurvature(size_t sampleIndex, const std::vector<SplineSample>& samples)
+{
+	const size_t previousIndex = sampleIndex > 0 ? sampleIndex - 1 : sampleIndex;
+	const size_t nextIndex = sampleIndex + 1 < samples.size() ? sampleIndex + 1 : sampleIndex;
+	if (previousIndex == nextIndex)
+		return 0.0f;
+
+	float distance = samples[nextIndex].distance - samples[previousIndex].distance;
+	if (distance <= 0.000001f)
+		distance = (samples[nextIndex].position - samples[previousIndex].position).Length();
+	if (distance <= 0.000001f)
+		return 0.0f;
+
+	const Vector3 tangentChange = samples[nextIndex].tangent - samples[previousIndex].tangent;
+	return tangentChange.Dot(samples[sampleIndex].right) / distance;
 }

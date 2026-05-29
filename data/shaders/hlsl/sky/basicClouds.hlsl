@@ -8,7 +8,7 @@ uint TexIdNoisesLow;
 float3 CameraPosition;
 float Time;
 
-cbuffer PSSMShadows : register(b1)
+cbuffer SkyParamsBuffer : register(b1)
 {
 	SkyParams Sky;
 }

@@ -24,7 +24,7 @@ uint ChunkId;
 uint EntityId;
 #endif
 
-cbuffer PSSMShadows : register(b1)
+cbuffer SkyParamsBuffer : register(b1)
 {
 	SkyParams Sky;
 }

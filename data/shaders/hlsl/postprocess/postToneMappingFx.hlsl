@@ -1,4 +1,5 @@
 #include "PostProcessCommon.hlsl"
+#include "hlsl/sky/SkyParams.hlsl"
 
 float2 ViewportSizeInverse;
 float Time;
@@ -11,6 +12,11 @@ struct SceneRenderingStateParams
 	float Underwater;
 };
 StructuredBuffer<SceneRenderingStateParams> SceneRenderingState : register(t2);
+
+cbuffer SkyParamsBuffer : register(b0)
+{
+	SkyParams Sky;
+}
 
 SamplerState LinearSampler : register(s0);
 SamplerState LinearWrapSampler : register(s1);
@@ -56,7 +62,7 @@ float4 PSPostToneMappingFx(VS_OUTPUT input) : SV_TARGET
 	//underwaterUvOffset *= isUnderwater;
 
 	float4 color = colorMap.Sample(LinearSampler, input.TexCoord + underwaterUvOffset.xy);
-	color.rgb *= lerp(float3(1,1,1), float3(0.5,0.9,0.9), step(1.0f, isUnderwater));
+	color.rgb *= lerp(float3(1,1,1), float3(0.5,0.9,0.9) * (0.2 + Sky.SunColor), step(1.0f, isUnderwater));
 
 	return color;
 }

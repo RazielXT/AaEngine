@@ -7,7 +7,7 @@ float4x4 InvViewProjectionMatrix;
 float3 CameraPosition;
 uint TexIdNightSky;
 
-cbuffer PSSMShadows : register(b1)
+cbuffer SkyParamsBuffer : register(b1)
 {
 	SkyParams Sky;
 }

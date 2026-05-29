@@ -8,7 +8,7 @@ float4x4 InvViewProjectionMatrix;
 float3 CameraPosition;
 uint ResId;
 
-cbuffer PSSMShadows : register(b1)
+cbuffer SkyParamsBuffer : register(b1)
 {
 	SkyParams Sky;
 }
@@ -54,7 +54,7 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	float ssao = ssaoMap.Sample(LinearSampler, input.TexCoord);
 
 	float4 vctLighting = vctMap.Load(int3(input.Position.xy, 0));// + worldNormal.y * Sky.SunColor * 0.1;// * saturate(dot(Sky.SunDirection, worldNormal) + 0.5);
-	float3 lighting = dotLighting * Sky.SunColor * directShadow + skyColor + 3.2 * vctLighting.rgb + emmisive * 10;
+	float3 lighting = dotLighting * Sky.SunColor * directShadow + skyColor + vctLighting.rgb + emmisive * 0.10;
 
 	lighting *= lerp(ssao, 1, saturate((lighting.r + lighting.g + lighting.b) / 3));
 	//lighting *= ssao;

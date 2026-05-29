@@ -5,9 +5,16 @@ float4x4 ProjectionMatrix;
 float3 CameraPosition;
 
 Texture2D colorMap : register(t0);
+
+struct SceneRenderingStateParams
+{
+	float Underwater;
+};
+StructuredBuffer<SceneRenderingStateParams> SceneRenderingState : register(t1);
+
 SamplerState LinearBorderSampler : register(s0);
 
-cbuffer PSSMShadows : register(b1)
+cbuffer SkyParamsBuffer : register(b1)
 {
 	SkyParams Sky;
 }
@@ -47,6 +54,7 @@ float4 PSTraceGodray(VS_OUTPUT input) : SV_TARGET
 	{
 		uv -= deltaTexCoord;
 		float3 sample = colorMap.SampleLevel(LinearBorderSampler, uv, 0).rgb;
+		//sample += SceneRenderingState[0].Underwater * saturate(sample - 0.5f);
 		sample *= illuminationDecay * weight;
 		col += sample;
 		illuminationDecay *= decay;

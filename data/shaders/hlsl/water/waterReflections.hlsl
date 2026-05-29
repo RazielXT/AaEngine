@@ -24,7 +24,7 @@ cbuffer SceneVoxelInfo : register(b1)
 	SceneVoxelCbuffer VoxelInfo;
 };
 
-cbuffer PSSMShadows : register(b2)
+cbuffer SkyParamsBuffer : register(b2)
 {
 	SkyParams Sky;
 }

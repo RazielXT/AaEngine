@@ -44,7 +44,7 @@ void ShadowMaps::init(GraphicsResources& resources)
 		uploadResourcesFinished.wait();
 	}
 
-	cbuffer = resources.shaderBuffers.CreateCbufferResource(sizeof(data), "PSSMShadows");
+	cbuffer = resources.shaderBuffers.CreateCbufferResource(sizeof(data), "SkyParamsBuffer");
 
 	Camera tmp;
 	tmp.setPerspectiveCamera(60, 1, 1, 100);

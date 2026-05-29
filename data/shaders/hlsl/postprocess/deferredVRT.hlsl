@@ -19,7 +19,7 @@ cbuffer SceneVoxelInfo : register(b1)
 	AnisoSeparateSceneVoxelCbufferIndexed VoxelInfo;
 };
 
-cbuffer PSSMShadows : register(b2)
+cbuffer SkyParamsBuffer : register(b2)
 {
 	SkyParams Sky;
 }
@@ -89,7 +89,7 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 
 		if (hit.a > 0)
 		{
-			radiance += hit.rgb * 3;
+			radiance += hit.rgb;
 			occlusion += 1.0;
 		}
 		else
@@ -105,5 +105,5 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	radiance = float3(noiseWeight, 0);
 #endif
 
-	return float4(radiance, 1 - occlusion);
+	return float4(radiance * 6, 1 - occlusion);
 }

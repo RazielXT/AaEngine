@@ -7,7 +7,7 @@ float4x4 InvViewMatrix;
 uint TexIdDiffuse;
 uint TexIdNormal;
 
-cbuffer PSSMShadows : register(b1)
+cbuffer SkyParamsBuffer : register(b1)
 {
 	SkyParams Sky;
 }

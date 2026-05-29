@@ -28,6 +28,7 @@ material Voxelize
 	{
 		file white.dds
 	}
+	conservative_rasterization
 }
 
 material VoxelizeInstancing : Voxelize

@@ -133,6 +133,8 @@ void DebugOverlayTask::setIdx(UINT idx)
 	sliceIdx = (newDepth > 1)
 		? (UINT)round(t * (float)(newDepth - 1))
 		: 0;
+
+	updateQuad();
 }
 
 UINT DebugOverlayTask::currentIdx() const
@@ -151,23 +153,56 @@ bool DebugOverlayTask::isCurrentTexture3D() const
 	return info && info->dimension == D3D12_SRV_DIMENSION_TEXTURE3D;
 }
 
-bool DebugOverlayTask::isFullscreen() const
+PreviewMode DebugOverlayTask::getPreviewMode() const
 {
-	return fullscreen;
+	return previewMode;
 }
 
-void DebugOverlayTask::setFullscreen(bool f)
+void DebugOverlayTask::setPreviewMode(PreviewMode mode)
 {
-	fullscreen = f;
+	previewMode = mode;
 	updateQuad();
 }
 
 void DebugOverlayTask::updateQuad()
 {
-	if (fullscreen)
+	switch (previewMode)
+	{
+	case PreviewMode::Fullscreen:
 		quad.SetPosition(screenSize);
-	else
+		break;
+
+	case PreviewMode::Fit:
+	{
+		auto info = getCurrentDescriptor();
+		if (info && screenSize.x > 0.0f && screenSize.y > 0.0f)
+		{
+			auto desc = info->resource->GetDesc();
+
+			const float textureWidth = (float)desc.Width;
+			const float textureHeight = (float)desc.Height;
+
+			// Match source texture pixel size in screen space without stretching.
+			const float widthRatio = textureWidth / screenSize.x;
+			const float heightRatio = textureHeight / screenSize.y;
+			const float size = max(widthRatio, heightRatio);
+			const float aspect = (screenSize.x / screenSize.y) / (textureWidth / textureHeight);
+
+			quad.SetPosition({}, size, ScreenQuad::TopRight, aspect);
+		}
+		else
+		{
+			// Fallback to preview mode if no texture
+			quad.SetPosition({}, 0.5f, ScreenQuad::TopRight, screenSize.x / screenSize.y);
+		}
+		break;
+	}
+
+	case PreviewMode::Preview:
+	default:
 		quad.SetPosition({}, 0.5f, ScreenQuad::TopRight, screenSize.x / screenSize.y);
+		break;
+	}
 }
 
 UINT DebugOverlayTask::getSliceIdx() const

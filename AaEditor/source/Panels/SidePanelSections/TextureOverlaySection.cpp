@@ -23,9 +23,10 @@ void TextureOverlaySection::draw()
 		overlayTask.changeIdx(next);
 
 	{
-		bool fullscreen = overlayTask.isFullscreen();
-		if (ImGui::Checkbox("Texture preview fullscreen", &fullscreen))
-			overlayTask.setFullscreen(fullscreen);
+		const char* previewModes[] = { "Preview", "Fit", "Fullscreen" };
+		int currentMode = static_cast<int>(overlayTask.getPreviewMode());
+		if (ImGui::Combo("Preview Mode", &currentMode, previewModes, IM_ARRAYSIZE(previewModes)))
+			overlayTask.setPreviewMode(static_cast<PreviewMode>(currentMode));
 
 		if (auto info = overlayTask.getCurrentDescriptor())
 		{

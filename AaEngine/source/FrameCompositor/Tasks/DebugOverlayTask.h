@@ -23,6 +23,13 @@ struct TexturePreview3DData
 	float remapMax = 1.0f;
 };
 
+enum class PreviewMode
+{
+	Preview,	// Positioned at top-right, 50% size
+	Fit,		// Native texture size
+	Fullscreen  // Full screen
+};
+
 class DebugOverlayTask : public CompositorTask
 {
 public:
@@ -44,8 +51,8 @@ public:
 	bool isCurrentTexture3D() const;
 	std::vector<DescriptorManager::DescriptorInfo> getTextureList() const;
 
-	bool isFullscreen() const;
-	void setFullscreen(bool);
+	PreviewMode getPreviewMode() const;
+	void setPreviewMode(PreviewMode mode);
 
 	UINT getSliceIdx() const;
 	void setSliceIdx(UINT idx);
@@ -65,7 +72,7 @@ private:
 	AssignedMaterial* material3DUint{};
 
 	Vector2 screenSize{};
-	bool fullscreen = false;
+	PreviewMode previewMode = PreviewMode::Preview;
 	void updateQuad();
 	ScreenQuad quad;
 

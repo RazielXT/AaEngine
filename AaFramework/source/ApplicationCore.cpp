@@ -42,7 +42,17 @@ void ApplicationCore::initialize(const TargetWindow& window, const InitParams& a
 	renderSystem.core.initializeSwapChain(window, colorSpace);
 
 	shadowMap = new ShadowMaps(renderSystem, lights.directionalLight, params.sky);
-	shadowMap->init(resources);
+	shadowMap->init();
+
+	{
+		ResourceUploadBatch batch(renderSystem.core.device);
+		batch.Begin();
+
+		sky.initializeSkyParameters(params.sky, renderSystem.core.device, resources, batch);
+
+		auto uploadResourcesFinished = batch.End(renderSystem.core.commandQueue);
+		uploadResourcesFinished.wait();
+	}
 
 	compositor = new FrameCompositor(appParams.compositor, { params, renderSystem, resources }, renderWorld, *shadowMap);
 	compositor->setColorSpace(colorSpace);
@@ -106,6 +116,8 @@ void ApplicationCore::renderFrame(Camera& camera)
 	renderWorld.update();
 	camera.updateMatrix();
 	shadowMap->update(renderSystem.core.frameIndex, camera);
+
+	sky.updateSkyParameters(params.sky, renderSystem.core.frameIndex);
 
 	RenderContext ctx = { &camera };
 	compositor->render(ctx);

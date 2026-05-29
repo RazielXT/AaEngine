@@ -288,6 +288,7 @@
     <ClInclude Include="source\RenderCore\GpuTextureReadback.h" />
     <ClInclude Include="source\Resources\DescriptorManager.h" />
     <ClInclude Include="source\Scene\SceneLights.h" />
+    <ClInclude Include="source\Scene\FrameParameters.h" />
     <ClInclude Include="source\FrameCompositor\Tasks\SceneRenderTask.h" />
     <ClInclude Include="source\Resources\Shader\ShaderDataBuffers.h" />
     <ClInclude Include="source\Resources\Shader\ShaderSignature.h" />

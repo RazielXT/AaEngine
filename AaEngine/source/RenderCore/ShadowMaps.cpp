@@ -1,5 +1,5 @@
 #include "RenderCore/ShadowMaps.h"
-#include "Resources/GraphicsResources.h"
+#include "Resources/DescriptorManager.h"
 #include "directx/d3dx12.h"
 #include <format>
 
@@ -14,7 +14,7 @@ ShadowMaps::ShadowMaps(RenderSystem& rs, SceneLights::Light& l,	SkyParameters& d
 {
 }
 
-void ShadowMaps::init(GraphicsResources& resources)
+void ShadowMaps::init()
 {
 	const UINT count = std::size(cascades);
 	targetHeap.InitDsv(renderSystem.core.device, count + 10, L"ShadowMapsDSV");
@@ -28,23 +28,6 @@ void ShadowMaps::init(GraphicsResources& resources)
 	data.TexIdShadowMap0 = cascades[0].texture.view.srvHeapIndex;
 	data.ShadowMapSize = ShadowMapSize;
 	data.ShadowMapSizeInv = 1 / data.ShadowMapSize;
-
-	{
-		ResourceUploadBatch batch(renderSystem.core.device);
-		batch.Begin();
-
-		auto texture = resources.textures.loadFile(*renderSystem.core.device, batch, "SunZenith_Gradient.png");
-		data.TexIdSunZenith = resources.descriptors.createTextureView(*texture);
-		texture = resources.textures.loadFile(*renderSystem.core.device, batch, "ViewZenith_Gradient.png");
-		data.TexIdViewZenith = resources.descriptors.createTextureView(*texture);
-		texture = resources.textures.loadFile(*renderSystem.core.device, batch, "SunView_Gradient.png");
-		data.TexIdSunView = resources.descriptors.createTextureView(*texture);
-
-		auto uploadResourcesFinished = batch.End(renderSystem.core.commandQueue);
-		uploadResourcesFinished.wait();
-	}
-
-	cbuffer = resources.shaderBuffers.CreateCbufferResource(sizeof(data), "SkyParamsBuffer");
 
 	Camera tmp;
 	tmp.setPerspectiveCamera(60, 1, 1, 100);
@@ -75,9 +58,6 @@ void ShadowMaps::update(UINT frameIndex, Camera& mainCamera)
 	data.SunDirection = sun.direction;
 	data.SunColor = Vector3::Lerp(Vector3(1, 0.2, 0.05), sun.color, min(1, abs(sun.direction.y * 1.4f)));
 	data.SunColor = Vector3::Lerp(data.SunColor, data.SunColor * 0.2, max(0, sun.direction.y));
-
-	auto& cbufferResource = *cbuffer.data[frameIndex];
-	memcpy(cbufferResource.Memory(), &data, sizeof(data));
 }
 
 static Vector3 SnapToGrid(Vector3 position, float gridStep)

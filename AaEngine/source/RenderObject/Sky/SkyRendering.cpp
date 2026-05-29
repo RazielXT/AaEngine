@@ -2,6 +2,24 @@
 #include "Scene/RenderWorld.h"
 #include "Resources/Material/MaterialResources.h"
 
+void SkyRendering::initializeSkyParameters(SkyParameters& params, ID3D12Device* device, GraphicsResources& resources, DirectX::ResourceUploadBatch& batch)
+{
+	auto texture = resources.textures.loadFile(*device, batch, "SunZenith_Gradient.png");
+	params.TexIdSunZenith = resources.descriptors.createTextureView(*texture);
+	texture = resources.textures.loadFile(*device, batch, "ViewZenith_Gradient.png");
+	params.TexIdViewZenith = resources.descriptors.createTextureView(*texture);
+	texture = resources.textures.loadFile(*device, batch, "SunView_Gradient.png");
+	params.TexIdSunView = resources.descriptors.createTextureView(*texture);
+
+	skyParamsCbuffer = resources.shaderBuffers.CreateCbufferResource(sizeof(params), "SkyParamsBuffer");
+}
+
+void SkyRendering::updateSkyParameters(const SkyParameters& params, UINT frameIndex)
+{
+	auto& cbufferResource = *skyParamsCbuffer.data[frameIndex];
+	memcpy(cbufferResource.Memory(), &params, sizeof(params));
+}
+
 void SkyRendering::createSky(RenderWorld& renderWorld, MaterialResources& materials, DirectX::ResourceUploadBatch& batch)
 {
 	auto e = renderWorld.createEntity(EntityCreateProperties{ .order = Order::Post, .suborder = -2 });

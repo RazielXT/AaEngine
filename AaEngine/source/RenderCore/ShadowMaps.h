@@ -3,9 +3,7 @@
 #include "RenderCore/RenderSystem.h"
 #include "Scene/Camera.h"
 #include "Scene/SceneLights.h"
-#include "Resources/Shader/ShaderDataBuffers.h"
-#include "Resources/Shader/ShaderResources.h"
-#include "Resources/GraphicsResources.h"
+#include "Scene/FrameParameters.h"
 #include "RenderCore/CascadedShadowMaps.h"
 
 struct ShadowMap
@@ -20,7 +18,7 @@ public:
 
 	ShadowMaps(RenderSystem& renderSystem, SceneLights::Light&, SkyParameters&);
 
-	void init(GraphicsResources& resources);
+	void init();
 
 	struct ShadowData : public ShadowMap
 	{
@@ -41,7 +39,6 @@ private:
 
 	RenderTargetHeap targetHeap;
 	SkyParameters& data;
-	CbufferView cbuffer;
 
 	ShadowMapCascade cascadeInfo;
 

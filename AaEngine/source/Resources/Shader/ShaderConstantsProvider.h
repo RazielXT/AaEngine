@@ -4,12 +4,13 @@
 #include "Resources/Textures/TextureResources.h"
 #include "Utils/MathUtils.h"
 
+#include "Scene/FrameParameters.h"
+
 struct RenderObjectsVisibilityData;
 class RenderEntity;
 class Camera;
 class GpuTexture2D;
 class RenderTargetTexturesView;
-struct FrameParameters;
 
 class ShaderConstantsProvider
 {

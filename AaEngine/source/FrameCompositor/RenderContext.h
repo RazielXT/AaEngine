@@ -1,7 +1,7 @@
 #pragma once
 
 #include "RenderCore/RenderSystem.h"
-#include "Resources/Shader/ShaderResources.h"
+#include "Scene/FrameParameters.h"
 #include "Resources/GraphicsResources.h"
 
 class Camera;

@@ -117,6 +117,8 @@ void SelectionTool::onPick(const EntityPicker::PickInfo& pickInfo, bool ctrlActi
 		uploadResourcesFinished.wait();
 
 		assetDrop.clear();
+
+		VoxelizeSceneTask::Get().revoxelize();
 	}
 	else if (auto selectedId = pickInfo.id)
 	{

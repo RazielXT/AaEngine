@@ -5,7 +5,7 @@
 #include "hlsl/sky/SkyColor.hlsl"
 
 #ifndef VRT_NUM_RAYS
-#define VRT_NUM_RAYS 2
+#define VRT_NUM_RAYS 16
 #endif
 
 float4x4 InvViewProjectionMatrix;
@@ -85,7 +85,7 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 
 		float3 dir = CosineWeightedHemisphere(noiseWeight, worldNormal, worldTangent, worldBinormal);
 
-		float4 hit = RayTraceCascades(worldPosition, dir, 0, VoxelInfo);
+		float4 hit = RayTraceCascades(worldPosition + worldNormal, dir, 0, VoxelInfo);
 
 		if (hit.a > 0)
 		{

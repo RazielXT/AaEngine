@@ -525,12 +525,17 @@ void MaterialInstance::AppendParameterOverride(MaterialPropertiesOverride& outpu
 
 void MaterialInstance::AppendParameterOverride(MaterialPropertiesOverride& output, const std::string& name, MaterialInstance& source, float defaultValue) const
 {
-	auto& param = output.params.emplace_back();
-
 	for (auto& p : base.info.rootBuffer->info.Params)
 	{
 		if (p.Name == name)
 		{
+			for (auto& o : output.params)
+			{
+				if (o.offsetFloats == (p.StartOffset / sizeof(float)))
+					return;
+			}
+
+			auto& param = output.params.emplace_back();
 			param.offsetFloats = p.StartOffset / sizeof(float);
 			param.sizeBytes = p.Size;
 

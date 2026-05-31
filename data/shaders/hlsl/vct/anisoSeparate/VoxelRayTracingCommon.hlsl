@@ -5,10 +5,11 @@
 
 struct RayTraceResult
 {
-	float4 color;
 	float3 exitWorldPos;
 	bool hit;
+	int3 hitVoxelCoord;
 	uint steps;
+	uint hitAxis;
 };
 
 float GetRayAABBExitT(float3 rayStart, float3 rayDir, float3 boxMin, float3 boxMax)
@@ -29,7 +30,8 @@ float3 SampleAnisotropicColor(
 	float3 rayDir,
 	Texture3D<float4> facePosX, Texture3D<float4> faceNegX,
 	Texture3D<float4> facePosY, Texture3D<float4> faceNegY,
-	Texture3D<float4> facePosZ, Texture3D<float4> faceNegZ)
+	Texture3D<float4> facePosZ, Texture3D<float4> faceNegZ,
+	uint hitAxis)
 {
 	// Determine weights based on the direction vector components
 	float3 weights = abs(rayDir);
@@ -40,6 +42,16 @@ float3 SampleAnisotropicColor(
 	float3 colorX = (rayDir.x > 0.0f) ? faceNegX.Load(voxelCoord).rgb : facePosX.Load(voxelCoord).rgb;
 	float3 colorY = (rayDir.y > 0.0f) ? faceNegY.Load(voxelCoord).rgb : facePosY.Load(voxelCoord).rgb;
 	float3 colorZ = (rayDir.z > 0.0f) ? faceNegZ.Load(voxelCoord).rgb : facePosZ.Load(voxelCoord).rgb;
+
+	/*Texture3D faceMap;
+	if (hitAxis == 0)
+		faceMap = (rayDir.x > 0) ? faceNegX : facePosX;
+	else if (hitAxis == 1)
+		faceMap = (rayDir.y > 0) ? faceNegY : facePosY;
+	else
+		faceMap = (rayDir.z > 0) ? faceNegZ : facePosZ;
+
+	return faceMap.Load(voxelCoord).rgb;*/
 
 	// Perform the 3-axis directional blend
 	return (colorX * weights.x) + (colorY * weights.y) + (colorZ * weights.z);
@@ -52,15 +64,11 @@ RayTraceResult RayTraceSingle(
 	float3 rayDir,
 	uint voxelMip,
 	AnisoSeparateSceneVoxelChunkInfo voxels,
-	Texture3D<float4> facePosX, Texture3D<float4> faceNegX,
-	Texture3D<float4> facePosY, Texture3D<float4> faceNegY,
-	Texture3D<float4> facePosZ, Texture3D<float4> faceNegZ,
 	Texture3D<float> occupancyMap)
 {
 	const float3 voxelSize = float(1u << voxelMip) / voxels.Density;
 
 	RayTraceResult result;
-	result.color = float4(0, 0, 0, 0);
 	result.exitWorldPos = rayStart;
 	result.hit = false;
 	result.steps = 0;
@@ -80,9 +88,10 @@ RayTraceResult RayTraceSingle(
 	float3 tMax = (nextBoundary - rayStart) * invDir;
 	float3 tDelta = voxelSize * abs(invDir);
 	float exitT = 0;
-
+	
 	int3 hitVoxelCoord = int3(0, 0, 0);
 	float hitOccupancy = 0.0f;
+	uint hitAxis = 2;
 
 	[loop]
 	for (int i = 0; i < VRT_RAY_MAX_STEPS; i++)
@@ -94,18 +103,21 @@ RayTraceResult RayTraceSingle(
 			exitT = tMax.x;
 			voxelCoord.x += stepDir.x;
 			tMax.x += tDelta.x;
+			hitAxis = 0;
 		}
 		else if (tMax.y < tMax.z)
 		{
 			exitT = tMax.y;
 			voxelCoord.y += stepDir.y;
 			tMax.y += tDelta.y;
+			hitAxis = 1;
 		}
 		else
 		{
 			exitT = tMax.z;
 			voxelCoord.z += stepDir.z;
 			tMax.z += tDelta.z;
+			hitAxis = 2;
 		}
 
 		if (exitT >= tExitGrid)
@@ -121,22 +133,10 @@ RayTraceResult RayTraceSingle(
 		}
 	}
 
-	// Resolve lighting outside of the loop if a hit occurred
-	if (result.hit)
-	{
-		int4 loadCoord = int4(hitVoxelCoord, voxelMip);
-		float3 blendedColor = SampleAnisotropicColor(
-			loadCoord, 
-			rayDir, 
-			facePosX, faceNegX, 
-			facePosY, faceNegY, 
-			facePosZ, faceNegZ
-		);
-
-		result.color = float4(blendedColor, hitOccupancy);
-	}
-
 	result.exitWorldPos = rayStart + rayDir * exitT;
+	result.hitAxis = hitAxis;
+	result.hitVoxelCoord = hitVoxelCoord;
+
 	return result;
 }
 
@@ -150,6 +150,35 @@ float3 HeatmapColor(uint value, uint maxValue)
 	color.b = saturate(1.5 - abs(4.0 * t - 1.0));
 
 	return color;
+}
+
+uint HashUint(uint x)
+{
+	x ^= x >> 16;
+	x *= 0x7feb352d;
+	x ^= x >> 15;
+	x *= 0x846ca68b;
+	x ^= x >> 16;
+	return x;
+}
+
+float3 VoxelColor(int3 v)
+{
+	uint hx = HashUint(asuint(v.x % 32));
+	uint hy = HashUint(asuint(v.y% 32));
+	uint hz = HashUint(asuint(v.z% 32));
+
+	// Normalize to [0,1]
+	float3 c = float3(
+		(hx & 0xFFFFFFu) / 16777215.0,
+		(hy & 0xFFFFFFu) / 16777215.0,
+		(hz & 0xFFFFFFu) / 16777215.0
+	);
+
+	// Optional: boost saturation for readability
+	c = normalize(c + 0.0001) * 0.75 + 0.25;
+
+	return saturate(c);
 }
 
 float4 RayTraceCascades(float3 rayStart, float3 rayDir, uint voxelMip, AnisoSeparateSceneVoxelCbufferIndexed voxelInfo)
@@ -175,13 +204,15 @@ float4 RayTraceCascades(float3 rayStart, float3 rayDir, uint voxelMip, AnisoSepa
 			float3 voxelMax = voxelMin + voxelSize;
 			float tExitVoxel = GetRayAABBExitT(currentStart, rayDir, voxelMin, voxelMax);
 
-			currentStart = currentStart + rayDir * max(1.0f, tExitVoxel);
+			currentStart = currentStart + rayDir * max(0.3f, tExitVoxel);
 			bOffsetApplied = true;
 
 			localUV = (currentStart - cascade.Offset) / cascade.WorldSize;
 			if (any(localUV < 0.0) || any(localUV > 1.0))
 				continue;
 		}
+		else
+			currentStart = currentStart - rayDir * 0.1f;
 
 		Texture3D<float4> facePosX = GetTexture3D(GetFaceTexId(cascade, 0));
 		Texture3D<float4> faceNegX = GetTexture3D(GetFaceTexId(cascade, 1));
@@ -197,17 +228,30 @@ float4 RayTraceCascades(float3 rayStart, float3 rayDir, uint voxelMip, AnisoSepa
 			rayDir,
 			voxelMip,
 			cascade,
-			facePosX, faceNegX, facePosY, faceNegY, facePosZ, faceNegZ,
 			occupancyMap);
 
 		steps += result.steps;
 
 		if (result.hit)
+		{
 #ifdef VRT_RAY_HEATMAP
 			return float4(HeatmapColor(steps, 4 * VRT_RAY_MAX_STEPS), 1);
+#elif defined(VRT_DEBUG_CELLS)
+			return float4(VoxelColor(result.hitVoxelCoord), 1);
 #else
-			return result.color;
+			int4 loadCoord = int4(result.hitVoxelCoord, voxelMip);
+			float3 blendedColor = SampleAnisotropicColor(
+				loadCoord,
+				rayDir,
+				facePosX, faceNegX,
+				facePosY, faceNegY,
+				facePosZ, faceNegZ,
+				result.hitAxis
+			);
+
+			return float4(blendedColor, 1);
 #endif
+		}
 
 		currentStart = result.exitWorldPos;
 	}

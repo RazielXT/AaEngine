@@ -1,3 +1,5 @@
+//#define VRT_DEBUG_CELLS
+
 #include "VoxelRayTracingCommon.hlsl"
 
 float4x4 ViewProjectionMatrix;
@@ -47,8 +49,8 @@ SamplerState PointSampler : register(s0);
 
 PSOutput PSMain(PS_Input pin)
 {
-	float3 rayStart = pin.wp.xyz;
 	float3 rayDir = normalize(pin.wp.xyz - CameraPosition);
+	float3 rayStart = pin.wp.xyz - 1.5f * rayDir;
 	float4 result = RayTraceCascades(rayStart, rayDir, VoxelMip, VoxelInfo);
 
 	if (!result.w)

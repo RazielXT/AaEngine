@@ -54,7 +54,7 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	float ssao = ssaoMap.Sample(LinearSampler, input.TexCoord);
 
 	float4 giLighting = giMap.Load(int3(input.Position.xy, 0));// + worldNormal.y * Sky.SunColor * 0.1;// * saturate(dot(Sky.SunDirection, worldNormal) + 0.5);
-	float3 lighting = dotLighting * Sky.SunColor * directShadow + skyColor + giLighting.rgb + emmisive * 0.10;
+	float3 lighting = dotLighting * Sky.SunColor * directShadow + skyColor + giLighting.rgb + emmisive;
 
 	lighting *= lerp(ssao, 1, saturate((lighting.r + lighting.g + lighting.b) / 3));
 	//lighting *= ssao;

@@ -21,6 +21,7 @@ material Fireball
 
 	default_params
 	{
+		color MaterialColor #ff4f00
 		float Direction 0 1 0
 		float Emission 1
 	}

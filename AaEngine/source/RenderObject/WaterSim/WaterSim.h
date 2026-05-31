@@ -66,6 +66,7 @@ private:
 	WaterTextureToTextureCS waterToTextureCS;
 
 	WaterAdjustCS waterAdjustCS;
+	WaterSmoothCS waterSmoothCS;
 
 	const GpuTexture2D* terrainHeight{};
 	GpuTexture2D waterHeight[FrameCount];

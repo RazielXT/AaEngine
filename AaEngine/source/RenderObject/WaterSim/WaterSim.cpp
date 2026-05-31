@@ -84,6 +84,9 @@ void WaterSim::initializeGpuResources(RenderSystem& renderSystem, GraphicsResour
 	csShader = resources.shaders.getShader("waterAdjustCS", ShaderType::Compute, ShaderRef{ "waterSim/waterAdjustCS.hlsl", "CSMain", "cs_6_6" });
 	waterAdjustCS.init(*renderSystem.core.device, *csShader);
 
+	csShader = resources.shaders.getShader("waterSmoothCS", ShaderType::Compute, ShaderRef{ "waterSim/waterSmoothCS.hlsl", "CSMain", "cs_6_6" });
+	waterSmoothCS.init(*renderSystem.core.device, *csShader);
+
 	csShader = resources.shaders.getShader("waterInteractionCS", ShaderType::Compute, ShaderRef{ "waterSim/waterInteractionCS.hlsl", "CSMain", "cs_6_6" });
 	interaction.initializeGpuResources(renderSystem, *csShader);
 
@@ -246,13 +249,25 @@ void WaterSim::updateCompute(RenderSystem& renderSystem, ID3D12GraphicsCommandLi
 // 		computeList->ResourceBarrier(1, &uavb);
 // 	}
 
-	waterHeight[waterResultIdx].Transition(computeList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	// Smooth sharp water height features (volume-conserving edge-flux)
+	const UINT smoothOutputIdx = 1 - waterResultIdx;
+	{
+		waterSmoothCS.dispatch(computeList, TextureSize, 0.4f,
+			terrainHeight->view.srvHeapIndex,
+			waterHeight[waterResultIdx].view.uavHeapIndex,
+			waterHeight[smoothOutputIdx].view.uavHeapIndex);
+
+		auto uavb = CD3DX12_RESOURCE_BARRIER::UAV(waterHeight[smoothOutputIdx].texture.Get());
+		computeList->ResourceBarrier(1, &uavb);
+	}
+
+	waterHeight[smoothOutputIdx].Transition(computeList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 	waterVelocity[waterResultIdx].Transition(computeList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-	waterToTextureCS.dispatch(computeList, waterHeight[waterResultIdx].view.srvHeapIndex, terrainHeight->view.srvHeapIndex, waterVelocity[waterResultIdx].view.srvHeapIndex, TextureSize, TextureSize, waterNormalTexture.view.uavHandle, waterHeightMeshTexture.view.uavHandle, waterFlowTexture.view.uavHandle, lastCameraPos);
+	waterToTextureCS.dispatch(computeList, waterHeight[smoothOutputIdx].view.srvHeapIndex, terrainHeight->view.srvHeapIndex, waterVelocity[waterResultIdx].view.srvHeapIndex, TextureSize, TextureSize, waterNormalTexture.view.uavHandle, waterHeightMeshTexture.view.uavHandle, waterFlowTexture.view.uavHandle, lastCameraPos);
 	generateXYMips4xCS.dispatch(computeList, TextureSize, waterNormalTextureMips);
 	generateXYMips4xCS.dispatch(computeList, TextureSize, waterFlowTextureMips);
 
-	interaction.dispatchCompute(computeList, waterHeight[waterResultIdx], waterVelocity[waterResultIdx], worldCenter, worldSize);
+	interaction.dispatchCompute(computeList, waterHeight[smoothOutputIdx], waterVelocity[waterResultIdx], worldCenter, worldSize);
 
 	if (sceneRenderingStateBuffer)
 	{
@@ -263,7 +278,7 @@ void WaterSim::updateCompute(RenderSystem& renderSystem, ID3D12GraphicsCommandLi
 		computeList->ResourceBarrier(1, &toUav);
 
 		CameraWaterStateCS::DispatchParams params;
-		params.waterHeightSrvIndex = waterHeight[waterResultIdx].view.srvHeapIndex;
+		params.waterHeightSrvIndex = waterHeight[smoothOutputIdx].view.srvHeapIndex;
 		params.dt = DtPerUpdate;
 		params.worldCenter = { worldCenter.x, worldCenter.z };
 		params.worldSize = worldSize;
@@ -287,7 +302,7 @@ void WaterSim::updateCompute(RenderSystem& renderSystem, ID3D12GraphicsCommandLi
 	}
 
 	waterVelocity[waterResultIdx].Transition(computeList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-	waterHeight[waterResultIdx].Transition(computeList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	waterHeight[smoothOutputIdx].Transition(computeList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
 	waterCurrentIdx = (waterCurrentIdx + 1) % BuffersCount;
 }

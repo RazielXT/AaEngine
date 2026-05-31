@@ -102,3 +102,23 @@ void WaterAdjustCS::dispatch(ID3D12GraphicsCommandList* commandList, UINT gridSi
 
 	commandList->Dispatch(gridSize / 8, gridSize / 8, 1);
 }
+
+void WaterSmoothCS::dispatch(ID3D12GraphicsCommandList* commandList, UINT gridSize, float smoothFactor, UINT heightMapId, UINT waterMapId, UINT outWaterMapId)
+{
+	commandList->SetPipelineState(pipelineState.Get());
+	commandList->SetComputeRootSignature(signature);
+
+	struct SmoothParams
+	{
+		XMUINT2 gridSize;
+		float smoothFactor;
+		UINT heightMapId;
+		UINT waterMapId;
+		UINT outWaterMapId;
+	}
+	data = { {gridSize, gridSize}, smoothFactor, heightMapId, waterMapId, outWaterMapId };
+
+	commandList->SetComputeRoot32BitConstants(0, sizeof(data) / sizeof(float), &data, 0);
+
+	commandList->Dispatch(gridSize / 8, gridSize / 8, 1);
+}

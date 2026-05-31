@@ -47,3 +47,10 @@ public:
 
 	void dispatch(ID3D12GraphicsCommandList* commandList, UINT gridSize, XMFLOAT2 center, float radius, float heightDelta, UINT waterMap);
 };
+
+class WaterSmoothCS : public ComputeShader
+{
+public:
+
+	void dispatch(ID3D12GraphicsCommandList* commandList, UINT gridSize, float smoothFactor, UINT heightMapId, UINT waterMapId, UINT outWaterMapId);
+};

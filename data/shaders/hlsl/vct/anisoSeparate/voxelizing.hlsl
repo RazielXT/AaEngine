@@ -166,8 +166,8 @@ float4 PSMain(PS_Input pin) : SV_TARGET
 
 #ifdef GRID
 	float3 worldNormal = ReadGridNormal(ResourceDescriptorHeap[TexIdNormalmap], LinearSampler, pin.uv);
-	float3 diffuse = float3(0.6, 0.6, 0.6);
-	float3 green = float3(0.5, 0.55, 0.3);
+	float3 diffuse = float3(0.8, 0.8, 0.8);
+	float3 green = float3(0.4, 0.6, 0.3);
 	diffuse = lerp(diffuse, green, step(0.9,worldNormal.y));
 #else
 	float3x3 worldMatrix = (float3x3)WorldMatrix;
@@ -209,7 +209,7 @@ float4 PSMain(PS_Input pin) : SV_TARGET
 		uint linearIndex = uint(posUV.z) * 128 * 128 + uint(posUV.y) * 128 + uint(posUV.x);
 
 		float visibility = max(shadow, Emission);
-		InterlockedMax(SceneVoxelData[linearIndex].Diffuse, PackRGBA8(float4(diffuse, visibility)));
+		InterlockedMax(SceneVoxelData[linearIndex].Diffuse, PackRGBA8(float4(visibility, diffuse)));
 		InterlockedMax(SceneVoxelData[linearIndex].Normal, PackR11G10B11_SNORM(worldNormal.xyz));
 	}
 

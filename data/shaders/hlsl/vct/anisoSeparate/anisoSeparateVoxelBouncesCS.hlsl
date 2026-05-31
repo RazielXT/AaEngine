@@ -42,7 +42,7 @@ void main(uint3 id : SV_DispatchThreadID)
 		return;
 
 	float4 diffuse = UnpackRGBA8(VoxelData[linearIndex].Diffuse);
-	float3 baseColor = diffuse.xyz;
+	float3 baseColor = diffuse.yzw;
 	float3 worldNormal = UnpackR11G10B11_SNORM(VoxelData[linearIndex].Normal).xyz;
 	float3 voxelUV = (float3(id) + 0.5f) / 128;
 
@@ -51,8 +51,8 @@ void main(uint3 id : SV_DispatchThreadID)
 		PrevOccupancy,
 		VoxelSampler);
 
-	float3 bounceColor = baseColor * traceSample.rgb * 0.15;
-	float shadow = diffuse.w;
+	float3 bounceColor = baseColor * traceSample.rgb * 0.015;
+	float shadow = saturate(diffuse.x);
 	bounceColor += baseColor * shadow * SunColor;
 
 	float3 currentLightBounce = bounceColor;

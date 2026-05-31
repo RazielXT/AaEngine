@@ -82,6 +82,83 @@ material DeferredVRT_Accumulation
 	}
 }
 
+material DeferredVRT_AgeUpdate
+{
+	vertex_shader
+	{
+		file postprocess/postprocess.hlsl
+		entry VSQuad
+		profile vs_6_6
+	}
+
+	depth off
+
+	pixel_shader
+	{
+		file postprocess/deferredVRT_age.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
+}
+
+material DeferredVRT_FreshBlurH
+{
+	vertex_shader
+	{
+		file postprocess/postprocess.hlsl
+		entry VSQuad
+		profile vs_6_6
+	}
+
+	depth off
+
+	pixel_shader
+	{
+		file postprocess/deferredVRT_freshBlur.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
+}
+
+material DeferredVRT_FreshBlurV
+{
+	vertex_shader
+	{
+		file postprocess/postprocess.hlsl
+		entry VSQuad
+		profile vs_6_6
+	}
+
+	depth off
+
+	pixel_shader
+	{
+		file postprocess/deferredVRT_freshBlur.hlsl
+		entry PSMain
+		profile ps_6_6
+		defines BLUR_VERTICAL
+	}
+}
+
+material DeferredVRT_FreshComposite
+{
+	vertex_shader
+	{
+		file postprocess/postprocess.hlsl
+		entry VSQuad
+		profile vs_6_6
+	}
+
+	depth off
+
+	pixel_shader
+	{
+		file postprocess/deferredVRT_freshComposite.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
+}
+
 material ToneMapping
 {
 	vertex_shader

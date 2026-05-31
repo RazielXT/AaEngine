@@ -17,7 +17,7 @@ Texture2D colorMap : register(t0);
 Texture2D normalMap : register(t1);
 Texture2D<float> depthMap : register(t2);
 Texture2D<float> ssaoMap : register(t3);
-Texture2D vctMap : register(t4);
+Texture2D giMap : register(t4);
 
 struct SceneRenderingStateParams
 {
@@ -53,8 +53,8 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 
 	float ssao = ssaoMap.Sample(LinearSampler, input.TexCoord);
 
-	float4 vctLighting = vctMap.Load(int3(input.Position.xy, 0));// + worldNormal.y * Sky.SunColor * 0.1;// * saturate(dot(Sky.SunDirection, worldNormal) + 0.5);
-	float3 lighting = dotLighting * Sky.SunColor * directShadow + skyColor + vctLighting.rgb + emmisive * 0.10;
+	float4 giLighting = giMap.Load(int3(input.Position.xy, 0));// + worldNormal.y * Sky.SunColor * 0.1;// * saturate(dot(Sky.SunDirection, worldNormal) + 0.5);
+	float3 lighting = dotLighting * Sky.SunColor * directShadow + skyColor + giLighting.rgb + emmisive * 0.10;
 
 	lighting *= lerp(ssao, 1, saturate((lighting.r + lighting.g + lighting.b) / 3));
 	//lighting *= ssao;
@@ -87,5 +87,10 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	fogFactor = max(fogFactor, 1.0 - exp(-camDistance * camDistance * fogDensity));
 	finalColor.rgb = lerp(finalColor.rgb, fogColor, fogFactor);
 */
+
+#ifdef VRT_RAY_HEATMAP
+	finalColor.rgb = lerp(giLighting.rgb, finalColor.rgb, 0.01f);
+#endif
+
 	return finalColor;
 }

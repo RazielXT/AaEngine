@@ -19,6 +19,9 @@ void SplineRoadSection::draw(SplineRoadTool& tool, ViewportPanel& viewportPanel)
 	ImGui::SameLine();
 	if (ImGui::Button("Clear") && tool.hasRoad())
 		tool.clearRoad();
+	ImGui::SameLine();
+	if (ImGui::Button("Load spline"))
+		tool.loadSpline();
 
 	ImGui::BeginDisabled(!tool.hasRoad());
 	if (ImGui::Checkbox("Auto build preview", &tool.autoBuildPreview))
@@ -98,6 +101,10 @@ void SplineRoadSection::draw(SplineRoadTool& tool, ViewportPanel& viewportPanel)
 	ImGui::SameLine();
 	if (ImGui::Button("Bake"))
 		tool.bakePreview();
+	if (ImGui::Button("Save spline"))
+		tool.saveSpline();
+	if (ImGui::Button("Bake and save"))
+		tool.bakeAndSaveModel();
 
 	bool debugChanged = false;
 	debugChanged |= ImGui::Checkbox("Show path", &tool.showDebugPath);

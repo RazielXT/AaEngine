@@ -56,6 +56,9 @@ public:
 	void removeSelectedPoint();
 	void buildPreview();
 	void bakePreview();
+	void saveSpline();
+	void loadSpline();
+	void bakeAndSaveModel();
 
 	bool hasRoad() const { return construction != nullptr; }
 	bool hasPreview() const { return previewBuilt; }
@@ -100,6 +103,9 @@ private:
 	void markPreviewSettingsChanged();
 	void rebuildDebug();
 	void removePreview();
+	bool saveSplineToFile(const std::string& path) const;
+	bool loadSplineFromFile(const std::string& path);
+	bool saveCurrentMeshModel(const std::string& path) const;
 	void updateDebugSettings();
 	void applySplineSamplingSettings();
 	void ensureRoad();

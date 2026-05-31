@@ -2,6 +2,8 @@
 
 #include "ApplicationCore.h"
 #include "ViewportPanel.h"
+#include "App/Directories.h"
+#include "Resources/Model/BinaryModelSerialization.h"
 #include "Scene/Camera.h"
 #include "Scene/RenderEntity.h"
 #include "Utils/Logger.h"
@@ -9,10 +11,23 @@
 #include "ImGuizmo.h"
 #include "imgui.h"
 
+#define PUGIXML_HEADER_ONLY
+#include "pugixml.hpp"
+
 #include <ResourceUploadBatch.h>
+#include <Windows.h>
+#include <commdlg.h>
 #include <algorithm>
+#include <chrono>
 #include <cmath>
+#include <ctime>
+#include <cstring>
+#include <filesystem>
 #include <format>
+#include <iomanip>
+#include <limits>
+#include <optional>
+#include <sstream>
 
 namespace
 {
@@ -21,6 +36,138 @@ namespace
 	float degreesToRadians(float degrees)
 	{
 		return degrees * Pi / 180.0f;
+	}
+
+	float radiansToDegrees(float radians)
+	{
+		return radians * 180.0f / Pi;
+	}
+
+	const char* profileToString(SplineRoadTool::PreviewProfile profile)
+	{
+		switch (profile)
+		{
+		case SplineRoadTool::PreviewProfile::Rectangle:
+			return "Rectangle";
+		case SplineRoadTool::PreviewProfile::Circle:
+			return "Circle";
+		case SplineRoadTool::PreviewProfile::Tube:
+			return "Tube";
+		case SplineRoadTool::PreviewProfile::Arc:
+			return "Arc";
+		case SplineRoadTool::PreviewProfile::FilledArc:
+			return "FilledArc";
+		case SplineRoadTool::PreviewProfile::Road:
+		default:
+			return "Road";
+		}
+	}
+
+	SplineRoadTool::PreviewProfile profileFromString(const char* value)
+	{
+		std::string profile = value ? value : "";
+		if (profile == "Rectangle")
+			return SplineRoadTool::PreviewProfile::Rectangle;
+		if (profile == "Circle")
+			return SplineRoadTool::PreviewProfile::Circle;
+		if (profile == "Tube")
+			return SplineRoadTool::PreviewProfile::Tube;
+		if (profile == "Arc")
+			return SplineRoadTool::PreviewProfile::Arc;
+		if (profile == "FilledArc")
+			return SplineRoadTool::PreviewProfile::FilledArc;
+		return SplineRoadTool::PreviewProfile::Road;
+	}
+
+	std::filesystem::path defaultSplineExportDirectory()
+	{
+		return std::filesystem::path(DATA_DIRECTORY) / "scene" / "export" / "spline";
+	}
+
+	std::string makeTimestampSuffix()
+	{
+		const auto now = std::chrono::system_clock::now();
+		const std::time_t nowTime = std::chrono::system_clock::to_time_t(now);
+		std::tm localTime{};
+		localtime_s(&localTime, &nowTime);
+
+		std::ostringstream stream;
+		stream << std::put_time(&localTime, "%Y%m%d_%H%M%S");
+		return stream.str();
+	}
+
+	std::filesystem::path makeTimestampedExportPath(const char* prefix, const char* extension)
+	{
+		std::filesystem::path directory = defaultSplineExportDirectory();
+		std::filesystem::create_directories(directory);
+		return directory / std::format("{}_{}.{}", prefix, makeTimestampSuffix(), extension);
+	}
+
+	std::optional<std::string> showOpenFileDialog(const char* title, const char* filter, const std::filesystem::path& initialDirectory)
+	{
+		std::filesystem::create_directories(initialDirectory);
+
+		char fileName[MAX_PATH] = {};
+		OPENFILENAMEA openFileName{};
+		openFileName.lStructSize = sizeof(openFileName);
+		openFileName.lpstrTitle = title;
+		openFileName.lpstrFilter = filter;
+		openFileName.lpstrFile = fileName;
+		openFileName.nMaxFile = MAX_PATH;
+		const std::string initialDirectoryString = initialDirectory.string();
+		openFileName.lpstrInitialDir = initialDirectoryString.c_str();
+		openFileName.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+		if (!GetOpenFileNameA(&openFileName))
+			return std::nullopt;
+
+		return std::string(fileName);
+	}
+
+	std::optional<std::string> showSaveFileDialog(const char* title, const char* filter, const char* defaultExtension, const std::filesystem::path& initialPath)
+	{
+		std::filesystem::create_directories(initialPath.parent_path());
+
+		char fileName[MAX_PATH] = {};
+		strcpy_s(fileName, initialPath.string().c_str());
+
+		OPENFILENAMEA saveFileName{};
+		saveFileName.lStructSize = sizeof(saveFileName);
+		saveFileName.lpstrTitle = title;
+		saveFileName.lpstrFilter = filter;
+		saveFileName.lpstrFile = fileName;
+		saveFileName.nMaxFile = MAX_PATH;
+		saveFileName.lpstrDefExt = defaultExtension;
+		saveFileName.Flags = OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
+		if (!GetSaveFileNameA(&saveFileName))
+			return std::nullopt;
+
+		return std::string(fileName);
+	}
+
+	pugi::xml_node writeVector3(pugi::xml_node parent, const char* name, Vector3 value)
+	{
+		pugi::xml_node node = parent.append_child(name);
+		node.append_attribute("x") = value.x;
+		node.append_attribute("y") = value.y;
+		node.append_attribute("z") = value.z;
+		return node;
+	}
+
+	Vector3 readVector3(pugi::xml_node parent, const char* name, Vector3 fallback = {})
+	{
+		pugi::xml_node node = parent.child(name);
+		if (!node)
+			return fallback;
+
+		return { node.attribute("x").as_float(fallback.x), node.attribute("y").as_float(fallback.y), node.attribute("z").as_float(fallback.z) };
+	}
+
+	void addLayoutElement(ModelInfo& info, DXGI_FORMAT format, const char* semantic)
+	{
+		VertexLayoutElement element{};
+		element.format = format;
+		strcpy_s(element.semantic, semantic);
+		info.layout.push_back(element);
 	}
 }
 
@@ -250,6 +397,243 @@ void SplineRoadTool::bakePreview()
 	previewBuilt = false;
 	previewDirty = false;
 	Logger::log("Spline road preview baked into a regular render entity");
+}
+
+void SplineRoadTool::saveSpline()
+{
+	if (!construction)
+		return;
+
+	const std::filesystem::path path = makeTimestampedExportPath("spline", "spline");
+
+	// To save with a Windows dialog instead of the default timestamped path:
+	// const auto selectedPath = showSaveFileDialog("Save spline", "Spline files\0*.spline\0All files\0*.*\0", "spline", path);
+	// if (!selectedPath)
+	// 	return;
+	// saveSplineToFile(*selectedPath);
+	// return;
+
+	saveSplineToFile(path.string());
+}
+
+void SplineRoadTool::loadSpline()
+{
+	const auto selectedPath = showOpenFileDialog("Load spline", "Spline files\0*.spline\0All files\0*.*\0", defaultSplineExportDirectory());
+	if (!selectedPath)
+		return;
+
+	loadSplineFromFile(*selectedPath);
+}
+
+void SplineRoadTool::bakeAndSaveModel()
+{
+	if (!construction)
+		return;
+
+	if (!previewBuilt || previewDirty)
+		buildPreview();
+	if (!construction || construction->mesh.empty())
+		return;
+
+	const std::filesystem::path path = makeTimestampedExportPath("spline_model", "model");
+
+	// To save with a Windows dialog instead of the default timestamped path:
+	// const auto selectedPath = showSaveFileDialog("Save baked model", "Model files\0*.model\0All files\0*.*\0", "model", path);
+	// if (!selectedPath)
+	// 	return;
+	// if (saveCurrentMeshModel(*selectedPath))
+	// 	bakePreview();
+	// return;
+
+	if (saveCurrentMeshModel(path.string()))
+		bakePreview();
+}
+
+bool SplineRoadTool::saveSplineToFile(const std::string& path) const
+{
+	if (!construction)
+		return false;
+
+	std::filesystem::create_directories(std::filesystem::path(path).parent_path());
+
+	pugi::xml_document doc;
+	pugi::xml_node declaration = doc.append_child(pugi::node_declaration);
+	declaration.append_attribute("version") = "1.0";
+	declaration.append_attribute("encoding") = "utf-8";
+
+	pugi::xml_node root = doc.append_child("SplineRoad");
+	root.append_attribute("version") = 1;
+
+	pugi::xml_node editor = root.append_child("Editor");
+	editor.append_attribute("autoBuildPreview") = autoBuildPreview;
+	editor.append_attribute("previewPhysics") = previewPhysics;
+	editor.append_attribute("addPointDistance") = addPointDistance;
+
+	pugi::xml_node profile = root.append_child("Profile");
+	profile.append_attribute("type") = profileToString(previewProfile);
+	profile.append_attribute("width") = profileWidth;
+	profile.append_attribute("widthSegments") = roadWidthSegments;
+	profile.append_attribute("height") = profileHeight;
+	profile.append_attribute("radius") = profileRadius;
+	profile.append_attribute("innerRadius") = profileInnerRadius;
+	profile.append_attribute("arcAngleDegrees") = profileArcAngleDegrees;
+	profile.append_attribute("segments") = profileSegments;
+
+	pugi::xml_node sweep = root.append_child("Sweep");
+	sweep.append_attribute("pathUvScale") = construction->sweepSettings.pathUvScale;
+	sweep.append_attribute("profileUvScale") = construction->sweepSettings.profileUvScale;
+	sweep.append_attribute("preventProfileFoldover") = preventProfileFoldover;
+	sweep.append_attribute("minProfileForwardScale") = minProfileForwardScale;
+	sweep.append_attribute("splitOpenProfileQuadsAtCenter") = construction->sweepSettings.splitOpenProfileQuadsAtCenter;
+
+	pugi::xml_node sampling = root.append_child("Sampling");
+	sampling.append_attribute("tessellationSegments") = static_cast<unsigned int>(construction->spline.getTessellationSegments());
+	sampling.append_attribute("maxTessellationSegments") = maxTessellationSegments;
+	sampling.append_attribute("curvatureTessellationScale") = curvatureTessellationScale;
+	sampling.append_attribute("rollTessellationScale") = rollTessellationScale;
+
+	pugi::xml_node spline = root.append_child("Spline");
+	spline.append_attribute("closed") = construction->spline.isClosed();
+	writeVector3(spline, "ReferenceUp", construction->spline.getReferenceUp());
+	for (const SplinePoint& point : construction->spline.getPoints())
+	{
+		pugi::xml_node pointNode = spline.append_child("Point");
+		pointNode.append_attribute("roll") = point.roll;
+		pointNode.append_attribute("upStabilization") = point.upStabilization;
+		writeVector3(pointNode, "Position", point.position);
+	}
+
+	if (!doc.save_file(path.c_str(), PUGIXML_TEXT("\t")))
+	{
+		Logger::logError("Failed to save spline " + path);
+		return false;
+	}
+
+	Logger::log("Saved spline " + path);
+	return true;
+}
+
+bool SplineRoadTool::loadSplineFromFile(const std::string& path)
+{
+	pugi::xml_document doc;
+	pugi::xml_parse_result result = doc.load_file(path.c_str());
+	if (!result)
+	{
+		Logger::logError("Failed to load spline " + path);
+		return false;
+	}
+
+	pugi::xml_node root = doc.child("SplineRoad");
+	if (!root)
+	{
+		Logger::logError("Invalid spline file " + path);
+		return false;
+	}
+
+	removePreview();
+	debugVisualization.removeFromWorld(app.renderWorld);
+	construction = std::make_unique<SplineConstruction>();
+
+	pugi::xml_node editor = root.child("Editor");
+	autoBuildPreview = editor.attribute("autoBuildPreview").as_bool(autoBuildPreview);
+	previewPhysics = editor.attribute("previewPhysics").as_bool(previewPhysics);
+	addPointDistance = editor.attribute("addPointDistance").as_float(addPointDistance);
+
+	pugi::xml_node profile = root.child("Profile");
+	previewProfile = profileFromString(profile.attribute("type").as_string(profileToString(previewProfile)));
+	profileWidth = profile.attribute("width").as_float(profileWidth);
+	roadWidthSegments = profile.attribute("widthSegments").as_int(roadWidthSegments);
+	profileHeight = profile.attribute("height").as_float(profileHeight);
+	profileRadius = profile.attribute("radius").as_float(profileRadius);
+	profileInnerRadius = profile.attribute("innerRadius").as_float(profileInnerRadius);
+	profileArcAngleDegrees = profile.attribute("arcAngleDegrees").as_float(profileArcAngleDegrees);
+	profileSegments = profile.attribute("segments").as_int(profileSegments);
+
+	pugi::xml_node sweep = root.child("Sweep");
+	construction->sweepSettings.pathUvScale = sweep.attribute("pathUvScale").as_float(0.25f);
+	construction->sweepSettings.profileUvScale = sweep.attribute("profileUvScale").as_float(1.0f);
+	preventProfileFoldover = sweep.attribute("preventProfileFoldover").as_bool(preventProfileFoldover);
+	minProfileForwardScale = sweep.attribute("minProfileForwardScale").as_float(minProfileForwardScale);
+	construction->sweepSettings.preventProfileFoldover = preventProfileFoldover;
+	construction->sweepSettings.minProfileForwardScale = minProfileForwardScale;
+	construction->sweepSettings.splitOpenProfileQuadsAtCenter = sweep.attribute("splitOpenProfileQuadsAtCenter").as_bool(construction->sweepSettings.splitOpenProfileQuadsAtCenter);
+
+	pugi::xml_node sampling = root.child("Sampling");
+	construction->spline.setTessellationSegments(sampling.attribute("tessellationSegments").as_uint(static_cast<unsigned int>(construction->spline.getTessellationSegments())));
+	maxTessellationSegments = sampling.attribute("maxTessellationSegments").as_int(maxTessellationSegments);
+	curvatureTessellationScale = sampling.attribute("curvatureTessellationScale").as_float(curvatureTessellationScale);
+	rollTessellationScale = sampling.attribute("rollTessellationScale").as_float(rollTessellationScale);
+	applySplineSamplingSettings();
+
+	pugi::xml_node spline = root.child("Spline");
+	construction->spline.setClosed(spline.attribute("closed").as_bool(false));
+	construction->spline.setReferenceUp(readVector3(spline, "ReferenceUp", Vector3::UnitY));
+	for (pugi::xml_node pointNode : spline.children("Point"))
+	{
+		const Vector3 position = readVector3(pointNode, "Position");
+		const float roll = pointNode.attribute("roll").as_float(0.0f);
+		const float upStabilization = pointNode.attribute("upStabilization").as_float(1.0f);
+		construction->spline.addPoint(position, roll);
+		construction->spline.setPointUpStabilization(construction->spline.getPointCount() - 1, upStabilization);
+	}
+
+	construction->profile = createPreviewProfile();
+	selectedPointIndex = construction->spline.getPointCount() ? construction->spline.getPointCount() - 1 : Spline::InvalidPointIndex;
+	previewBuilt = false;
+	previewDirty = false;
+
+	if (autoBuildPreview)
+		buildPreview();
+	else
+		rebuildDebug();
+
+	Logger::log("Loaded spline " + path);
+	return true;
+}
+
+bool SplineRoadTool::saveCurrentMeshModel(const std::string& path) const
+{
+	if (!construction || construction->mesh.empty())
+		return false;
+
+	if (construction->mesh.vertices.size() > (std::numeric_limits<uint16_t>::max)())
+	{
+		Logger::logError("Cannot save spline model with more than 65535 vertices");
+		return false;
+	}
+
+	std::filesystem::create_directories(std::filesystem::path(path).parent_path());
+
+	ModelInfo info;
+	addLayoutElement(info, DXGI_FORMAT_R32G32B32_FLOAT, VertexElementSemantic::POSITION);
+	addLayoutElement(info, DXGI_FORMAT_R32G32_FLOAT, VertexElementSemantic::TEXCOORD);
+	addLayoutElement(info, DXGI_FORMAT_R32G32B32_FLOAT, VertexElementSemantic::NORMAL);
+	addLayoutElement(info, DXGI_FORMAT_R32G32B32_FLOAT, VertexElementSemantic::TANGENT);
+
+	info.vertexCount = static_cast<uint32_t>(construction->mesh.vertices.size());
+	const char* vertexData = reinterpret_cast<const char*>(construction->mesh.vertices.data());
+	info.vertexData.assign(vertexData, vertexData + construction->mesh.vertices.size() * sizeof(SplineSweepVertex));
+
+	info.indexCount = static_cast<uint32_t>(construction->mesh.indices.size());
+	info.indices.reserve(construction->mesh.indices.size());
+	for (uint32_t index : construction->mesh.indices)
+	{
+		if (index > (std::numeric_limits<uint16_t>::max)())
+		{
+			Logger::logError("Cannot save spline model with index larger than 65535");
+			return false;
+		}
+		info.indices.push_back(static_cast<uint16_t>(index));
+	}
+
+	if (!BinaryModelSerialization::SaveModel(path, info))
+	{
+		Logger::logError("Failed to save spline model " + path);
+		return false;
+	}
+
+	Logger::log("Saved spline model " + path);
+	return true;
 }
 
 void SplineRoadTool::setSelectedPointPosition(Vector3 position)

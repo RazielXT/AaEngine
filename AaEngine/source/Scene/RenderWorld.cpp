@@ -259,7 +259,7 @@ ObjectTransformation SceneObject::getTransformation() const
 void SceneObject::setTransformation(const ObjectTransformation& transformation)
 {
 	if (type == ObjectType::Entity)
-		entity->setTransformation(transformation, true);
+		entity->setTransformation(transformation, false);
 	if (type == ObjectType::Instanced)
 	{
 		((InstancingManager*)owner)->updateEntity(id, transformation);

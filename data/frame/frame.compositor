@@ -116,6 +116,8 @@ compositor Frame
 		in sceneVCTLow
 		in sceneVCTLowAcc
 		in motionVectors
+		in sceneTexture:Depth
+		in sceneTexture:Normal
 		out sceneVCTLowFinal
 	}
 	pass DeferredVRT_AccumulationCopy

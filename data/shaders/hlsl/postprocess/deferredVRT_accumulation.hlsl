@@ -3,66 +3,65 @@
 float2 ViewportSizeInverse;
 
 SamplerState LinearBorderSampler : register(s0);
-
-float4 Gaussian3x3(Texture2D InputTex, float2 uv, float2 t)
-{
-	float4 c00 = InputTex.Sample(LinearBorderSampler, uv + float2(-t.x, -t.y));
-	float4 c10 = InputTex.Sample(LinearBorderSampler, uv + float2( 0.0f, -t.y));
-	float4 c20 = InputTex.Sample(LinearBorderSampler, uv + float2( t.x, -t.y));
-
-	float4 c01 = InputTex.Sample(LinearBorderSampler, uv + float2(-t.x,  0.0f));
-	float4 c11 = InputTex.Sample(LinearBorderSampler, uv);
-	float4 c21 = InputTex.Sample(LinearBorderSampler, uv + float2( t.x,  0.0f));
-
-	float4 c02 = InputTex.Sample(LinearBorderSampler, uv + float2(-t.x,  t.y));
-	float4 c12 = InputTex.Sample(LinearBorderSampler, uv + float2( 0.0f,  t.y));
-	float4 c22 = InputTex.Sample(LinearBorderSampler, uv + float2( t.x,  t.y));
-
-	float4 result =
-		  (c00 + c20 + c02 + c22) * 1.0f   // corners
-		+ (c10 + c01 + c21 + c12) * 2.0f   // edges
-		+  c11 * 4.0f;                     // center
-
-	return result * (1.0f / 16.0f);
-}
-
-float4 Gaussian5x5(Texture2D InputTex, float2 uv, float2 t)
-{
-	float4 sum = 0;
-
-	const float w[5][5] = {
-		{ 1,  4,  6,  4, 1 },
-		{ 4, 16, 24, 16, 4 },
-		{ 6, 24, 36, 24, 6 },
-		{ 4, 16, 24, 16, 4 },
-		{ 1,  4,  6,  4, 1 }
-	};
-
-	for (int y = -2; y <= 2; y++)
-	{
-		for (int x = -2; x <= 2; x++)
-		{
-			float2 o = float2(x * t.x, y * t.y);
-			sum += InputTex.Sample(LinearBorderSampler, uv + o);
-		}
-	}
-
-	return sum * (1.0f / 25.0f);
-}
-
+SamplerState PointSampler : register(s1);
 
 Texture2D currentRays : register(t0);
 Texture2D accumulatedRays : register(t1);
 Texture2D<float2> motionVectors : register(t2);
+Texture2D<float> depthMap : register(t3);
+Texture2D<float4> normalMap : register(t4);
 
+static const float DepthSigma = 0.1f;
+static const float NormalPower = 8.0f;
+
+float BilateralWeight(float refDepth, float3 refNormal, float sampleDepth, float3 sampleNormal, float spatialWeight)
+{
+	float depthDiff = abs(refDepth - sampleDepth) / max(refDepth, 1e-5f);
+	float depthWeight = exp(-depthDiff / DepthSigma);
+
+	float normalWeight = pow(saturate(dot(refNormal, sampleNormal)), NormalPower);
+
+	return spatialWeight * depthWeight * normalWeight;
+}
+
+float4 BilateralGaussian3x3(Texture2D InputTex, float2 uv, float2 t, float refDepth, float3 refNormal)
+{
+	static const float spatialKernel[9] = { 1, 2, 1, 2, 4, 2, 1, 2, 1 };
+	static const float2 offsets[9] = {
+		float2(-1, -1), float2(0, -1), float2(1, -1),
+		float2(-1,  0), float2(0,  0), float2(1,  0),
+		float2(-1,  1), float2(0,  1), float2(1,  1)
+	};
+
+	float4 weightedSum = 0;
+	float totalWeight = 0;
+
+	[unroll]
+	for (int i = 0; i < 9; i++)
+	{
+		float2 sampleUV = uv + offsets[i] * t;
+		float4 color = InputTex.Sample(LinearBorderSampler, sampleUV);
+
+		float sampleDepth = depthMap.Sample(PointSampler, sampleUV).r;
+		float3 sampleNormal = normalMap.Sample(PointSampler, sampleUV).rgb;
+
+		float w = BilateralWeight(refDepth, refNormal, sampleDepth, sampleNormal, spatialKernel[i]);
+		weightedSum += color * w;
+		totalWeight += w;
+	}
+
+	return weightedSum / max(totalWeight, 1e-5f);
+}
 
 float4 PSMain(VS_OUTPUT input) : SV_TARGET
 {
 	float2 motionPixels = motionVectors.Load(int3(input.Position.xy * 2, 0));
 	float2 motionUV = motionPixels * ViewportSizeInverse * 0.5f;
 
+	float refDepth = depthMap.Sample(PointSampler, input.TexCoord).r;
+	float3 refNormal = normalMap.Sample(PointSampler, input.TexCoord).rgb;
+
 	float4 current = currentRays.Load(int3(input.Position.xy, 0));
-	//float4 current = Gaussian3x3(currentRays, input.TexCoord + motionUV, ViewportSizeInverse);
-	float4 accumulated = Gaussian3x3(accumulatedRays, input.TexCoord + motionUV, ViewportSizeInverse);
+	float4 accumulated = BilateralGaussian3x3(accumulatedRays, input.TexCoord + motionUV, ViewportSizeInverse, refDepth, refNormal);
 	return lerp(current, accumulated, 0.95f);
 }

@@ -6,6 +6,14 @@ SamplerState PointSampler : register(s0);
 
 Texture2D<float> agePrev : register(t0);
 Texture2D<float2> motionVectors : register(t1);
+Texture2D<float> depthMap : register(t2);
+Texture2D<float4> normalMap : register(t3);
+Texture2D<float> depthMapPrev : register(t4);
+Texture2D<float4> normalMapPrev : register(t5);
+
+static const float DepthSigma = 0.3f;
+static const float NormalPower = 4.0f;
+static const float HistoryAcceptance = 0.1f;
 
 float PSMain(VS_OUTPUT input) : SV_TARGET
 {
@@ -16,6 +24,19 @@ float PSMain(VS_OUTPUT input) : SV_TARGET
 
 	// Off-screen reprojection means fresh pixel
 	if (any(prevUV < 0) || any(prevUV > 1))
+		return 0;
+
+	float currentDepth = depthMap.Sample(PointSampler, input.TexCoord).r;
+	float prevDepth = depthMapPrev.Sample(PointSampler, prevUV).r;
+	float depthDiff = abs(currentDepth - prevDepth) / max(currentDepth, 1e-5f);
+	float depthWeight = exp(-depthDiff / DepthSigma);
+
+	float3 currentNormal = normalMap.Sample(PointSampler, input.TexCoord).rgb;
+	float3 prevNormal = normalMapPrev.Sample(PointSampler, prevUV).rgb;
+	float normalWeight = pow(saturate(dot(currentNormal, prevNormal)), NormalPower);
+
+	float historyWeight = depthWeight * normalWeight;
+	if (historyWeight < HistoryAcceptance)
 		return 0;
 
 	float prevAge = agePrev.Sample(PointSampler, prevUV);

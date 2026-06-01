@@ -11,9 +11,13 @@ Texture2D<float2> motionVectors : register(t2);
 Texture2D<float> depthMap : register(t3);
 Texture2D<float4> normalMap : register(t4);
 Texture2D<float> ageTex : register(t5);
+Texture2D<float> depthMapPrev : register(t6);
+Texture2D<float4> normalMapPrev : register(t7);
+Texture2D blurredCurrentRays : register(t8);
 
-static const float DepthSigma = 0.1f;
-static const float NormalPower = 8.0f;
+static const float DepthSigma = 0.3f;
+static const float NormalPower = 4.0f;
+static const float HistoryAcceptance = 0.1f;
 
 float BilateralWeight(float refDepth, float3 refNormal, float sampleDepth, float3 sampleNormal, float spatialWeight)
 {
@@ -63,14 +67,26 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	float3 refNormal = normalMap.Sample(PointSampler, input.TexCoord).rgb;
 
 	float4 current = currentRays.Load(int3(input.Position.xy, 0));
-	float4 accumulated = BilateralGaussian3x3(accumulatedRays, input.TexCoord + motionUV, ViewportSizeInverse, refDepth, refNormal);
+	float4 blurredCurrent = blurredCurrentRays.Load(int3(input.Position.xy, 0));
 
-	float accumulationFactor = 0.95f;
+	float2 reprojectedUV = input.TexCoord + motionUV;
+
+	float accumulationFactor = 0.98f;
 
 	const float MaxAge = 8.0f;
 	float age = ageTex.Load(int3(input.Position.xy, 0));
 	float freshness = saturate(age / MaxAge);
 	accumulationFactor *= freshness;
+
+	// Reject only clearly invalid history; keep full weight for valid reprojection.
+	if (any(reprojectedUV < 0) || any(reprojectedUV > 1))
+		return blurredCurrent;
+	float prevDepth = depthMapPrev.Sample(PointSampler, reprojectedUV).r;
+	float3 prevNormal = normalMapPrev.Sample(PointSampler, reprojectedUV).rgb;
+	float depthDiff = abs(refDepth - prevDepth) / max(refDepth, 1e-5f);
+	float historyValidity = exp(-depthDiff / DepthSigma) * pow(saturate(dot(refNormal, prevNormal)), NormalPower);
+	if (historyValidity < HistoryAcceptance)
+		return blurredCurrent;
 
 	return lerp(current, accumulated, accumulationFactor);
 }

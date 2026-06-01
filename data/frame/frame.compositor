@@ -17,6 +17,8 @@ compositor Frame
 	texture sceneVCTLowFinal target_size_div 2 DXGI_FORMAT_R16G16B16A16_FLOAT
 	texture sceneVCTAge target_size_div 2 DXGI_FORMAT_R16_FLOAT
 	texture sceneVCTAgePrev target_size_div 2 DXGI_FORMAT_R16_FLOAT
+	texture sceneVCTDepthPrev target_size DXGI_FORMAT_R32_FLOAT
+	texture sceneVCTNormalPrev target_size DXGI_FORMAT_R16G16B16A16_SNORM
 	texture sceneVCTFreshBlur target_size_div 2 DXGI_FORMAT_R16G16B16A16_FLOAT
 
 	texture sceneTextureTmp target_size DXGI_FORMAT_R16G16B16A16_FLOAT
@@ -118,6 +120,10 @@ compositor Frame
 		material DeferredVRT_AgeUpdate
 		in sceneVCTAgePrev
 		in motionVectors
+		in sceneTexture:Depth
+		in sceneTexture:Normal
+		in sceneVCTDepthPrev
+		in sceneVCTNormalPrev
 		out sceneVCTAge
 	}
 	pass DeferredVRT_AgeCopy
@@ -176,6 +182,9 @@ compositor Frame
 		in sceneTexture:Depth
 		in sceneTexture:Normal
 		in sceneVCTAge
+		in sceneVCTDepthPrev
+		in sceneVCTNormalPrev
+		in sceneVCTFreshBlur
 		out sceneVCTLow
 	}
 	pass DeferredVRT_AccumulationCopy
@@ -183,6 +192,18 @@ compositor Frame
 		material LoadThrough
 		in sceneVCTLow
 		out sceneVCTLowAcc
+	}
+	pass DeferredVRT_DepthHistoryCopy
+	{
+		material LoadThrough
+		in sceneTexture:Depth
+		out sceneVCTDepthPrev
+	}
+	pass DeferredVRT_NormalHistoryCopy
+	{
+		material LoadThrough
+		in sceneTexture:Normal
+		out sceneVCTNormalPrev
 	}
 	
 

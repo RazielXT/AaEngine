@@ -21,8 +21,9 @@ struct SkyParams
 	uint TexIdSunView;
 
 	float3 MoonDirection;
-	float CloudsAmount;
+	float EclipseFactor;
 
+	float CloudsAmount;
 	float CloudsDensity;
 	float CloudsSpeed;
 };

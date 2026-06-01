@@ -58,6 +58,7 @@ void ShadowMaps::update(UINT frameIndex, Camera& mainCamera)
 	data.SunDirection = sun.direction;
 	data.SunColor = Vector3::Lerp(Vector3(1, 0.2, 0.05), sun.color, min(1, abs(sun.direction.y * 1.4f)));
 	data.SunColor = Vector3::Lerp(data.SunColor, data.SunColor * 0.2, max(0, sun.direction.y));
+	data.SunColor *= data.EclipseFactor;
 }
 
 static Vector3 SnapToGrid(Vector3 position, float gridStep)

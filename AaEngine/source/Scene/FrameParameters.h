@@ -23,6 +23,8 @@ struct SkyParameters
 	UINT TexIdSunView;
 
 	Vector3 MoonDirection;
+	float EclipseFactor = 1.0f;
+
 	float CloudsAmount{};
 	float CloudsDensity = 0.5f;
 	float CloudsSpeed = 0.003f;

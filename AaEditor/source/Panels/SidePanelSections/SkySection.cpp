@@ -3,7 +3,34 @@
 #include "ApplicationCore.h"
 #include "FrameCompositor/Tasks/VoxelizeSceneTask.h"
 #include "imgui.h"
+#include "Utils/MathUtils.h"
 #include <algorithm>
+
+static float getEclipseFactor(SkyParameters& Sky)
+{
+	auto pixelLookDir = Sky.MoonDirection;
+
+	// 1. Get normalized sun direction (invert Sky.SunDirection if it points *toward* light)
+	auto sunDir = -Sky.SunDirection;
+
+	// 2. Find how closely this pixel's look direction aligns with the sun
+	float sunAlignment = pixelLookDir.Dot(sunDir);
+
+	// 3. Define the eclipse range using dot product values.
+	// Since cos(0.5 degrees) is roughly 0.99996, we use very high thresholds.
+	// Adjust these two values to make the dimming zone wider or sharper.
+	float eclipseStart = 0.9991f; // Begins dimming when very close to the sun
+	float eclipseFull = 0.99995f; // Reaches maximum dimming/totality
+
+	// smoothstep returns 0 at start, 1 at full alignment
+	float eclipseFactor = smoothstep(eclipseStart, eclipseFull, sunAlignment);
+
+	// 4. Determine how dark the moon gets at peak eclipse (e.g., 0.0 = pure black silhouette)
+	float minimumMoonBrightness = 0.05f;
+	float moonDimming = std::lerp(1.0f, minimumMoonBrightness, eclipseFactor);
+
+	return moonDimming;
+}
 
 void SkySection::draw(ApplicationCore& app)
 {
@@ -57,6 +84,7 @@ void SkySection::draw(ApplicationCore& app)
 		moonPos.z = std::cos(moonAltitude) * std::cos(moonAzimuth);
 
 		app.params.sky.MoonDirection = moonPos;
+		app.params.sky.EclipseFactor = getEclipseFactor(app.params.sky);
 
 		VoxelizeSceneTask::Get().revoxelize();
 	}

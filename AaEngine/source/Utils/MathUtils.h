@@ -88,3 +88,5 @@ constexpr T constexpr_pow(T base, int exp)
 }
 
 Quaternion getRandomQuaternion();
+
+float smoothstep(float edge0, float edge1, float x);

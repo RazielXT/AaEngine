@@ -138,10 +138,13 @@ PSOutput PSMain(VSOut input)
 	// Add noise before tone mapping
 	skyColor += (noise - 0.5) * ditherStrength;
 
+	skyColor *= Sky.EclipseFactor;
+
 	// Sun core
 	float coreSize = 0.999;
 	float core = smoothstep(coreSize, 1.0, sunDot);
-	float3 sunColor = core * 50 * Sky.SunColor;
+
+	float3 sunColor = core * 50 * Sky.SunColor + core * 100 * (1 - Sky.EclipseFactor);
 
 	PSOutput output;
 	output.albedo = float4(saturate(skyColor) + sunColor, 0);

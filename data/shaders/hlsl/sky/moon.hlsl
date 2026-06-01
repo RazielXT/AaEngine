@@ -44,7 +44,7 @@ PSInput VSMain(uint vertexIdx : SV_VertexID)
     float3 moonUp    = cross(moonDir, moonRight);
 
     float3 worldPos = (localPos.x * moonRight) + (localPos.y * moonUp);
-    worldPos += moonDir * distanceScale * 10;
+    worldPos += moonDir * distanceScale * 12.f;
 
     output.worldPosition = float4(worldPos, 1.0f);
     output.position = mul(output.worldPosition, ViewProjectionMatrix);

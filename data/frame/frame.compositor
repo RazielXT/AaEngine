@@ -113,22 +113,6 @@ compositor Frame
 		in sceneTexture:Depth
 		out sceneVCTLow
 	}
-	pass DeferredVRT_Accumulation
-	{
-		material DeferredVRT_Accumulation
-		in sceneVCTLow
-		in sceneVCTLowAcc
-		in motionVectors
-		in sceneTexture:Depth
-		in sceneTexture:Normal
-		out sceneVCTLowFinal
-	}
-	pass DeferredVRT_AccumulationCopy
-	{
-		material LoadThrough
-		in sceneVCTLowFinal
-		out sceneVCTLowAcc
-	}
 	pass DeferredVRT_AgeUpdate
 	{
 		material DeferredVRT_AgeUpdate
@@ -145,15 +129,31 @@ compositor Frame
 	pass DeferredVRT_FreshBlurH
 	{
 		material DeferredVRT_FreshBlurH
-		in sceneVCTLowFinal
+		in sceneVCTLow
 		in sceneTexture:Depth
 		in sceneTexture:Normal
-		out sceneVCTLow
+		out sceneVCTLowFinal
 	}
 	pass DeferredVRT_FreshBlurV
 	{
 		material DeferredVRT_FreshBlurV
-		in sceneVCTLow
+		in sceneVCTLowFinal
+		in sceneTexture:Depth
+		in sceneTexture:Normal
+		out sceneVCTFreshBlur
+	}
+	pass DeferredVRT_FreshBlurH
+	{
+		material DeferredVRT_FreshBlurH
+		in sceneVCTFreshBlur
+		in sceneTexture:Depth
+		in sceneTexture:Normal
+		out sceneVCTLowFinal
+	}
+	pass DeferredVRT_FreshBlurV
+	{
+		material DeferredVRT_FreshBlurV
+		in sceneVCTLowFinal
 		in sceneTexture:Depth
 		in sceneTexture:Normal
 		out sceneVCTFreshBlur
@@ -161,11 +161,30 @@ compositor Frame
 	pass DeferredVRT_FreshComposite
 	{
 		material DeferredVRT_FreshComposite
-		in sceneVCTLowFinal
+		in sceneVCTLow
 		in sceneVCTFreshBlur
+		in sceneVCTAge
+		out sceneVCTLowFinal
+	}
+
+	pass DeferredVRT_Accumulation
+	{
+		material DeferredVRT_Accumulation
+		in sceneVCTLowFinal
+		in sceneVCTLowAcc
+		in motionVectors
+		in sceneTexture:Depth
+		in sceneTexture:Normal
 		in sceneVCTAge
 		out sceneVCTLow
 	}
+	pass DeferredVRT_AccumulationCopy
+	{
+		material LoadThrough
+		in sceneVCTLow
+		out sceneVCTLowAcc
+	}
+	
 
 	pass UpsampleDeferredVRT
 	{

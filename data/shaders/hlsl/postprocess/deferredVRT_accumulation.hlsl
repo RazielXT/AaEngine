@@ -10,6 +10,7 @@ Texture2D accumulatedRays : register(t1);
 Texture2D<float2> motionVectors : register(t2);
 Texture2D<float> depthMap : register(t3);
 Texture2D<float4> normalMap : register(t4);
+Texture2D<float> ageTex : register(t5);
 
 static const float DepthSigma = 0.1f;
 static const float NormalPower = 8.0f;
@@ -63,5 +64,13 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 
 	float4 current = currentRays.Load(int3(input.Position.xy, 0));
 	float4 accumulated = BilateralGaussian3x3(accumulatedRays, input.TexCoord + motionUV, ViewportSizeInverse, refDepth, refNormal);
-	return lerp(current, accumulated, 0.95f);
+
+	float accumulationFactor = 0.95f;
+
+	const float MaxAge = 8.0f;
+	float age = ageTex.Load(int3(input.Position.xy, 0));
+	float freshness = saturate(age / MaxAge);
+	accumulationFactor *= freshness;
+
+	return lerp(current, accumulated, accumulationFactor);
 }

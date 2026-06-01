@@ -173,7 +173,7 @@ float4 PSMain(PS_Input pin) : SV_TARGET
 	float3x3 worldMatrix = (float3x3)WorldMatrix;
 	float3 worldNormal = normalize(mul(pin.normal, worldMatrix));
 
-	float3 diffuse = MaterialColor * GetTexture2D(TexIdDiffuse).Sample(sampler, pin.uv).rgb;
+	float3 diffuse = MaterialColor + 0.1 * MaterialColor * GetTexture2D(TexIdDiffuse).Sample(sampler, pin.uv).rgb;
 #endif
 
 	float shadow = getShadow(pin.wp);
@@ -208,9 +208,8 @@ float4 PSMain(PS_Input pin) : SV_TARGET
 	{
 		uint linearIndex = uint(posUV.z) * 128 * 128 + uint(posUV.y) * 128 + uint(posUV.x);
 
-		float visibility = max(shadow, Emission);
-		InterlockedMax(SceneVoxelData[linearIndex].Diffuse, PackRGBA8(float4(visibility, diffuse)));
-		InterlockedMax(SceneVoxelData[linearIndex].Normal, PackR11G10B11_SNORM(worldNormal.xyz));
+		InterlockedMax(SceneVoxelData[linearIndex].Diffuse, PackRGBA8(float4(shadow, diffuse)));
+		InterlockedMax(SceneVoxelData[linearIndex].Normal, PackRGBA8(float4(worldNormal.xyz, Emission)));
 	}
 
 	return float4(diffuse * shadow, 1);

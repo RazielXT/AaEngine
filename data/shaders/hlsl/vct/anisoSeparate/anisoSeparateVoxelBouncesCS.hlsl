@@ -43,7 +43,8 @@ void main(uint3 id : SV_DispatchThreadID)
 
 	float4 diffuse = UnpackRGBA8(VoxelData[linearIndex].Diffuse);
 	float3 baseColor = diffuse.yzw;
-	float3 worldNormal = UnpackR11G10B11_SNORM(VoxelData[linearIndex].Normal).xyz;
+	float4 data2 = UnpackRGBA8(VoxelData[linearIndex].Normal);
+	float3 worldNormal = data2.xyz;
 	float3 voxelUV = (float3(id) + 0.5f) / 128;
 
 	float4 traceSample = AnisoConeTrace(voxelUV, worldNormal, 1.05f, 1.5f,
@@ -53,7 +54,8 @@ void main(uint3 id : SV_DispatchThreadID)
 
 	float3 bounceColor = baseColor * traceSample.rgb * 0.015;
 	float shadow = saturate(diffuse.x);
-	bounceColor += baseColor * shadow * SunColor;
+	float emmisive = data2.w * 5;
+	bounceColor += baseColor * shadow * SunColor + baseColor * emmisive;
 
 	float3 currentLightBounce = bounceColor;
 

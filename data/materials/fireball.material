@@ -21,9 +21,9 @@ material Fireball
 
 	default_params
 	{
-		color MaterialColor #ff4f00
+		color MaterialColor #ff4400
 		float Direction 0 1 0
-		float Emission 1
+		float Emission 0.5
 	}
 
 	technique Depth skip

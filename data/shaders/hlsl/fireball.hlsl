@@ -7,6 +7,7 @@ float3 CameraPosition;
 float3 WorldPosition;
 uint TexIdFire;
 float3 Direction;
+float Emission;
 
 static const float UVScale = 5;
 static const float Speed = 1;
@@ -148,7 +149,7 @@ GBufferOutput PSMain(VOut IN)
 
     OUT.albedo.rgb = pow(diffuseTex.rgb * 2, 4.0f) * 2;
 	//OUT.albedo.rgb = OUT.albedo.rgb * 0.001 + normal;
-    OUT.albedo.a   = diffuseTex.r;
+    OUT.albedo.a   = diffuseTex.r * Emission;
 
     OUT.normals = float4(normal, 1);
     OUT.motionVectors = float4(0, 0, 0, 1);

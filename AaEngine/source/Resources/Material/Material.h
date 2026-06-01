@@ -50,6 +50,7 @@ public:
 
 	const char* GetTechniqueOverride(MaterialTechnique technique) const;
 
+	const MaterialDefaultParams& GetDefaultParams() const;
 	bool GetParameterDefault(const std::string& name, float* output) const;
 
 	SignatureInfo info;

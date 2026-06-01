@@ -221,7 +221,7 @@ static void ParseMaterialObject(MaterialRef& mat, shaderRefMaps& shaders, const 
 						f = pow(f, 2.233333333);//from: max(1.055 * pow(f, 0.416666667) - 0.055, 0);
 				}
 
-				mat.resources.defaultParams[param.value] = values;
+				mat.resources.defaultParams.emplace_back(param.value, values);
 			}
 		}
 		else if (member.type == "UAV")

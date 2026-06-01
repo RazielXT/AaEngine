@@ -57,53 +57,81 @@ void SidePanel::draw()
 	if (ImGui::CollapsingHeader("Material") && !selection.empty())
 	{
 		auto& selected = selection.back();
-		auto* material = selected.obj.entity->material;
+		auto* entity = selected.obj.entity;
+		auto* material = entity->material;
 
 		if (material)
 		{
+			auto showParamEdit = [entity](const ResourcesInfo::ParamInfo& param)
+				{
+					if (param.type == D3D_SVT_FLOAT)
+					{
+						UINT floatCount = param.size / sizeof(float);
+						float values[4]{};
+						entity->GetMaterialParam(param.name, values);
+
+						bool changed = false;
+						if (floatCount == 1)
+							changed = ImGui::DragFloat(param.name.c_str(), values, 0.01f);
+						else if (floatCount == 2)
+							changed = ImGui::DragFloat2(param.name.c_str(), values, 0.01f);
+						else if (floatCount == 3 && param.name.size() >= 5 && param.name.compare(param.name.size() - 5, 5, "Color") == 0)
+							changed = ImGui::ColorEdit3(param.name.c_str(), values);
+						else if (floatCount == 3)
+							changed = ImGui::DragFloat3(param.name.c_str(), values, 0.01f);
+						else if (floatCount == 4)
+							changed = ImGui::DragFloat4(param.name.c_str(), values, 0.01f);
+
+						if (changed)
+							entity->Material().setParam(param.name, values, param.size);
+					}
+					else if (param.type == D3D_SVT_UINT)
+					{
+						UINT uintCount = param.size / sizeof(UINT);
+						UINT values[4]{};
+						entity->GetMaterialParam(param.name, values);
+
+						bool changed = false;
+						if (uintCount == 1)
+							changed = ImGui::DragInt(param.name.c_str(), (int*)values);
+						else if (uintCount == 2)
+							changed = ImGui::DragInt2(param.name.c_str(), (int*)values);
+						else if (uintCount == 3)
+							changed = ImGui::DragInt3(param.name.c_str(), (int*)values);
+						else if (uintCount == 4)
+							changed = ImGui::DragInt4(param.name.c_str(), (int*)values);
+
+						if (changed)
+							entity->Material().setParam(param.name, values, param.size);
+					}
+				};
+
 			auto& params = material->GetParamsBuffer();
+
+			std::unordered_set<std::string> shownParams;
 
 			for (auto& param : params)
 			{
-				if (param.type == D3D_SVT_FLOAT)
+				shownParams.insert(param.name);
+				showParamEdit(param);
+			}
+
+// 			if (entity->materialOverride)
+// 				for (auto& edit : entity->materialOverride->params)
+// 				{
+// 					if (shownParams.find(edit.name) == shownParams.end())
+// 					{
+// 						shownParams.insert(edit.name);
+// 						showParamEdit(ResourcesInfo::ParamInfo{ edit.name, "", edit.sizeBytes});
+// 					}
+// 				}
+
+			for (auto& [name, values] : material->GetBase()->GetDefaultParams())
+			{
+				if (shownParams.find(name) == shownParams.end())
 				{
-					UINT floatCount = param.size / sizeof(float);
-					float values[4]{};
-					selected.obj.entity->GetMaterialParam(param.name, values);
-
-					bool changed = false;
-					if (floatCount == 1)
-						changed = ImGui::DragFloat(param.name.c_str(), values, 0.01f);
-					else if (floatCount == 2)
-						changed = ImGui::DragFloat2(param.name.c_str(), values, 0.01f);
-					else if (floatCount == 3 && param.name.size() >= 5 && param.name.compare(param.name.size() - 5, 5, "Color") == 0)
-						changed = ImGui::ColorEdit3(param.name.c_str(), values);
-					else if (floatCount == 3)
-						changed = ImGui::DragFloat3(param.name.c_str(), values, 0.01f);
-					else if (floatCount == 4)
-						changed = ImGui::DragFloat4(param.name.c_str(), values, 0.01f);
-
-					if (changed)
-						selected.obj.entity->Material().setParam(param.name, values, param.size);
-				}
-				else if (param.type == D3D_SVT_UINT)
-				{
-					UINT uintCount = param.size / sizeof(UINT);
-					UINT values[4]{};
-					selected.obj.entity->GetMaterialParam(param.name, values);
-
-					bool changed = false;
-					if (uintCount == 1)
-						changed = ImGui::DragInt(param.name.c_str(), (int*)values);
-					else if (uintCount == 2)
-						changed = ImGui::DragInt2(param.name.c_str(), (int*)values);
-					else if (uintCount == 3)
-						changed = ImGui::DragInt3(param.name.c_str(), (int*)values);
-					else if (uintCount == 4)
-						changed = ImGui::DragInt4(param.name.c_str(), (int*)values);
-
-					if (changed)
-						selected.obj.entity->Material().setParam(param.name, values, param.size);
+					shownParams.insert(name);
+					showParamEdit(ResourcesInfo::ParamInfo{ name, "", (UINT)(values.size() * sizeof(float)), {}, D3D_SVT_FLOAT });
 				}
 			}
 		}

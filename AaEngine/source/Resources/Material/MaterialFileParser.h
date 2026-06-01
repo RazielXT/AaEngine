@@ -41,13 +41,15 @@ struct MaterialPipelineInfo
 	D3D12_CONSERVATIVE_RASTERIZATION_MODE conservativeRasterization = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 };
 
+using MaterialDefaultParams = std::vector<std::pair<std::string, std::vector<float>>>;
+
 struct MaterialResourcesInfo
 {
 	std::vector<TextureRef> textures;
 	std::vector<SamplerRef> samplers;
 	std::vector<std::string> uavs;
 
-	std::map<std::string, std::vector<float>> defaultParams;
+	MaterialDefaultParams defaultParams;
 };
 
 enum class MaterialTechnique

@@ -258,6 +258,9 @@ void SelectionTool::draw(const ViewportToolContext& ctx)
 
 		manipulated = currentlyManipulated;
 	}
+
+	if (selection.empty())
+		gizmoActive = false;
 }
 
 void SelectionTool::reset()

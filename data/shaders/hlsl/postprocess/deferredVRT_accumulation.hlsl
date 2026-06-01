@@ -29,7 +29,10 @@ float BilateralWeight(float refDepth, float3 refNormal, float sampleDepth, float
 	return spatialWeight * depthWeight * normalWeight;
 }
 
-float4 BilateralGaussian3x3(Texture2D InputTex, float2 uv, float2 t, float refDepth, float3 refNormal)
+// Returns false (via totalWeight==0) when the reprojected history is geometrically
+// incompatible with the current pixel, so the caller can fall back to a fresh source
+// instead of producing a divide-by-epsilon black.
+float4 BilateralGaussian3x3(Texture2D InputTex, float2 uv, float2 t, float refDepth, float3 refNormal, out float totalWeight)
 {
 	static const float spatialKernel[9] = { 1, 2, 1, 2, 4, 2, 1, 2, 1 };
 	static const float2 offsets[9] = {
@@ -39,7 +42,7 @@ float4 BilateralGaussian3x3(Texture2D InputTex, float2 uv, float2 t, float refDe
 	};
 
 	float4 weightedSum = 0;
-	float totalWeight = 0;
+	totalWeight = 0;
 
 	[unroll]
 	for (int i = 0; i < 9; i++)
@@ -47,15 +50,20 @@ float4 BilateralGaussian3x3(Texture2D InputTex, float2 uv, float2 t, float refDe
 		float2 sampleUV = uv + offsets[i] * t;
 		float4 color = InputTex.Sample(LinearBorderSampler, sampleUV);
 
-		float sampleDepth = depthMap.Sample(PointSampler, sampleUV).r;
-		float3 sampleNormal = normalMap.Sample(PointSampler, sampleUV).rgb;
+		// Compare against the PREVIOUS frame at the reprojected location, which is
+		// the surface that produced the history we are about to blend in.
+		float sampleDepth = depthMapPrev.Sample(PointSampler, sampleUV).r;
+		float3 sampleNormal = normalMapPrev.Sample(PointSampler, sampleUV).rgb;
 
 		float w = BilateralWeight(refDepth, refNormal, sampleDepth, sampleNormal, spatialKernel[i]);
 		weightedSum += color * w;
 		totalWeight += w;
 	}
 
-	return weightedSum / max(totalWeight, 1e-5f);
+	if (totalWeight <= 1e-5f)
+		return 0;
+
+	return weightedSum / totalWeight;
 }
 
 float4 PSMain(VS_OUTPUT input) : SV_TARGET
@@ -70,6 +78,14 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	float4 blurredCurrent = blurredCurrentRays.Load(int3(input.Position.xy, 0));
 
 	float2 reprojectedUV = input.TexCoord + motionUV;
+	float bilateralWeight;
+	float4 accumulated = BilateralGaussian3x3(accumulatedRays, reprojectedUV, ViewportSizeInverse, refDepth, refNormal, bilateralWeight);
+
+	// If the bilateral kernel rejected every tap, the reprojected history is invalid
+	// for this pixel (typical on disocclusion edges when rotating the camera). Use
+	// the freshly blurred current ray result instead of a 0 -> black ghost.
+	if (bilateralWeight <= 1e-5f)
+		return blurredCurrent;
 
 	float accumulationFactor = 0.98f;
 

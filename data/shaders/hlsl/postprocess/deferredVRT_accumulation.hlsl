@@ -2,7 +2,7 @@
 
 float2 ViewportSizeInverse;
 
-SamplerState LinearBorderSampler : register(s0);
+SamplerState LinearSampler : register(s0);
 SamplerState PointSampler : register(s1);
 
 Texture2D currentRays : register(t0);
@@ -48,7 +48,7 @@ float4 BilateralGaussian3x3(Texture2D InputTex, float2 uv, float2 t, float refDe
 	for (int i = 0; i < 9; i++)
 	{
 		float2 sampleUV = uv + offsets[i] * t;
-		float4 color = InputTex.Sample(LinearBorderSampler, sampleUV);
+		float4 color = InputTex.Sample(LinearSampler, sampleUV);
 
 		// Compare against the PREVIOUS frame at the reprojected location, which is
 		// the surface that produced the history we are about to blend in.
@@ -89,9 +89,11 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 
 	float accumulationFactor = 0.98f;
 
-	const float MaxAge = 8.0f;
+	const float MaxAge = 4.0f;
 	float age = ageTex.Load(int3(input.Position.xy, 0));
 	float freshness = saturate(age / MaxAge);
+	freshness = 1 - pow(1-freshness, 2);
+
 	accumulationFactor *= freshness;
 
 	// Reject only clearly invalid history; keep full weight for valid reprojection.

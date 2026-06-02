@@ -10,8 +10,8 @@ Texture2D<float> depthMap : register(t1);
 Texture2D<float4> normalMap : register(t2);
 
 // Relaxed bilateral parameters compared to accumulation (DepthSigma=0.1, NormalPower=8)
-static const float DepthSigma = 0.3f;
-static const float NormalPower = 4.0f;
+static const float DepthSigma = 0.05f;
+static const float NormalPower = 2.0f;
 static const float StepScale = 1.0f;
 
 #define KERNEL_RADIUS 4

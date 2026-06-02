@@ -59,8 +59,8 @@ void main(uint3 id : SV_DispatchThreadID)
 
 	float3 currentLightBounce = bounceColor;
 
-	float3 nPos = max(0, worldNormal);
-	float3 nNeg = max(0, -worldNormal);
+	float3 nPos = max(saturate(emmisive), worldNormal);
+	float3 nNeg = max(saturate(emmisive), -worldNormal);
 
 	FacePosX[id] = currentLightBounce * nPos.x;
 	FaceNegX[id] = currentLightBounce * nNeg.x;

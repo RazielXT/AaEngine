@@ -19,7 +19,7 @@ static float getEclipseFactor(SkyParameters& Sky)
 	// 3. Define the eclipse range using dot product values.
 	// Since cos(0.5 degrees) is roughly 0.99996, we use very high thresholds.
 	// Adjust these two values to make the dimming zone wider or sharper.
-	float eclipseStart = 0.9991f; // Begins dimming when very close to the sun
+	float eclipseStart = 0.9995f; // Begins dimming when very close to the sun
 	float eclipseFull = 0.99995f; // Reaches maximum dimming/totality
 
 	// smoothstep returns 0 at start, 1 at full alignment

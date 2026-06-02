@@ -62,32 +62,6 @@ static const float AlphaThreshold = 0.8f;
 
 SamplerState LinearWrapSampler : register(s0);
 
-float getEclipseFactor(float3 pixelLookDir)
-{
-	//float3 pixelLookDir = Sky.MoonDirection;
-
-	// 1. Get normalized sun direction (invert Sky.SunDirection if it points *toward* light)
-	float3 sunDir = normalize(-Sky.SunDirection); 
-	
-	// 2. Find how closely this pixel's look direction aligns with the sun
-	float sunAlignment = dot(pixelLookDir, sunDir);
-
-	// 3. Define the eclipse range using dot product values.
-	// Since cos(0.5 degrees) is roughly 0.99996, we use very high thresholds.
-	// Adjust these two values to make the dimming zone wider or sharper.
-	float eclipseStart = 0.998f; // Begins dimming when very close to the sun
-	float eclipseFull  = 0.9995f; // Reaches maximum dimming/totality
-
-	// smoothstep returns 0 at start, 1 at full alignment
-	float eclipseFactor = smoothstep(eclipseStart, eclipseFull, sunAlignment);
-	
-	// 4. Determine how dark the moon gets at peak eclipse (e.g., 0.0 = pure black silhouette)
-	float minimumMoonBrightness = 0.05f; 
-	float moonDimming = lerp(1.0f, minimumMoonBrightness, eclipseFactor);
-
-	return moonDimming;
-}
-
 PSOutput PSMain(PSInput input)
 {
 	SamplerState materialSampler = GetDynamicMaterialSamplerLinear();
@@ -134,7 +108,6 @@ PSOutput PSMain(PSInput input)
 
 		float3 skyColor = getSkyFullColor(pixelLookDir, Sky, LinearWrapSampler);
 		albedo.rgb += skyColor;
-		albedo.rgb *= getEclipseFactor(pixelLookDir);
 	}
 
 

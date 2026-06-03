@@ -118,7 +118,7 @@ SplineSweepMeshGenerator::ContourMeshRange SplineSweepMeshGenerator::appendConto
 	}
 
 	const uint32_t profileEdgeCount = contour.closed ? profileVertexCount : profileVertexCount - 1;
-	const bool splitQuadsAtCenter = !contour.closed && settings.splitOpenProfileQuadsAtCenter;
+	const bool splitQuadsAtCenter = contour.closed ? settings.splitClosedProfileQuadsAtCenter : settings.splitOpenProfileQuadsAtCenter;
 	if (splitQuadsAtCenter)
 		mesh.vertices.reserve(mesh.vertices.size() + (pathVertexCount - 1) * profileEdgeCount);
 	mesh.indices.reserve(mesh.indices.size() + (pathVertexCount - 1) * profileEdgeCount * (splitQuadsAtCenter ? 12 : 6));

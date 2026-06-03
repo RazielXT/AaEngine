@@ -174,12 +174,15 @@ namespace
 SplineRoadTool::SplineRoadTool(ApplicationCore& a, ViewportPanel& v)
 	: app(a), viewport(v)
 {
+	viewport.registerSplineRoadTool(this);
 	updateDebugSettings();
 }
 
 SplineRoadTool::~SplineRoadTool()
 {
-	clearRoad();
+	for (auto& spline : splines)
+		removeSplineFromWorld(*spline);
+	splines.clear();
 }
 
 void SplineRoadTool::onPick(const EntityPicker::PickInfo& pickInfo, bool ctrlActive, Camera& camera)
@@ -242,14 +245,14 @@ void SplineRoadTool::draw(const ViewportToolContext& ctx)
 void SplineRoadTool::onActivated()
 {
 	editModeActive = true;
-	rebuildDebug();
+	rebuildAllDebug();
 }
 
 void SplineRoadTool::onDeactivated()
 {
 	editModeActive = false;
 	gizmoActive = false;
-	debugVisualization.removeFromWorld(app.renderWorld);
+	rebuildAllDebug();
 }
 
 void SplineRoadTool::reset()
@@ -260,8 +263,8 @@ void SplineRoadTool::reset()
 
 void SplineRoadTool::createRoad()
 {
-	clearRoad();
-	construction = std::make_unique<SplineConstruction>();
+	SplineRoadInstance& instance = createSplineInstance();
+	SplineConstruction* construction = instance.construction.get();
 	construction->spline.addPoint({ -12.0f, 1.0f, 0.0f });
 	construction->spline.addPoint({ 0.0f, 1.0f, 12.0f });
 	construction->spline.addPoint({ 12.0f, 1.0f, 0.0f });
@@ -271,22 +274,148 @@ void SplineRoadTool::createRoad()
 	construction->sweepSettings.preventProfileFoldover = preventProfileFoldover;
 	construction->sweepSettings.minProfileForwardScale = minProfileForwardScale;
 	selectedPointIndex = construction->spline.getPointCount() - 1;
-	previewDirty = false;
+	instance.previewDirty = false;
 	rebuildDebug();
 }
 
 void SplineRoadTool::clearRoad()
 {
-	removePreview();
-	debugVisualization.removeFromWorld(app.renderWorld);
-	construction.reset();
+	SplineRoadInstance* instance = activeSpline();
+	if (!instance)
+		return;
+
+	removeSplineFromWorld(*instance);
+	splines.erase(splines.begin() + activeSplineIndex);
+	if (splines.empty())
+		activeSplineIndex = Spline::InvalidPointIndex;
+	else
+		activeSplineIndex = (std::min)(activeSplineIndex, splines.size() - 1);
 	selectedPointIndex = Spline::InvalidPointIndex;
-	previewDirty = false;
+	rebuildAllDebug();
+}
+
+bool SplineRoadTool::hasPreview() const
+{
+	const SplineRoadInstance* instance = activeSpline();
+	return instance && instance->previewBuilt;
+}
+
+bool SplineRoadTool::isPreviewDirty() const
+{
+	const SplineRoadInstance* instance = activeSpline();
+	return instance && instance->previewDirty;
+}
+
+SplineConstruction* SplineRoadTool::getRoad()
+{
+	SplineRoadInstance* instance = activeSpline();
+	return instance ? instance->construction.get() : nullptr;
+}
+
+const SplineConstruction* SplineRoadTool::getRoad() const
+{
+	const SplineRoadInstance* instance = activeSpline();
+	return instance ? instance->construction.get() : nullptr;
+}
+
+uint32_t SplineRoadTool::getActiveSplineId() const
+{
+	const SplineRoadInstance* instance = activeSpline();
+	return instance ? instance->id : 0;
+}
+
+const char* SplineRoadTool::getActiveSplineName() const
+{
+	const SplineRoadInstance* instance = activeSpline();
+	return instance ? instance->name.c_str() : "None";
+}
+
+const char* SplineRoadTool::getSplineName(size_t index) const
+{
+	return index < splines.size() ? splines[index]->name.c_str() : "";
+}
+
+void SplineRoadTool::selectSplineByIndex(size_t index, bool movementMode)
+{
+	if (index >= splines.size())
+		return;
+
+	activeSplineIndex = index;
+	selectedPointIndex = Spline::InvalidPointIndex;
+	if (movementMode)
+		enterSplineTransformMode();
+	else
+		rebuildAllDebug();
+}
+
+void SplineRoadTool::enterPointEditMode()
+{
+	if (pointGizmoMode == PointGizmoMode::SplineTransform)
+		pointGizmoMode = PointGizmoMode::Move;
+	rebuildAllDebug();
+}
+
+void SplineRoadTool::enterSplineTransformMode()
+{
+	selectedPointIndex = Spline::InvalidPointIndex;
+	pointGizmoMode = PointGizmoMode::SplineTransform;
+	rebuildAllDebug();
+}
+
+void SplineRoadTool::selectPreviousPoint()
+{
+	selectPointByOffset(-1);
+}
+
+void SplineRoadTool::selectNextPoint()
+{
+	selectPointByOffset(1);
+}
+
+SplineRoadTool::SplineRoadInstance* SplineRoadTool::activeSpline()
+{
+	return activeSplineIndex < splines.size() ? splines[activeSplineIndex].get() : nullptr;
+}
+
+const SplineRoadTool::SplineRoadInstance* SplineRoadTool::activeSpline() const
+{
+	return activeSplineIndex < splines.size() ? splines[activeSplineIndex].get() : nullptr;
+}
+
+SplineRoadTool::SplineRoadInstance* SplineRoadTool::findSplineByPathEntity(RenderEntity* entity)
+{
+	for (auto& spline : splines)
+		if (spline->debugVisualization.getPathEntity() == entity)
+			return spline.get();
+
+	return nullptr;
+}
+
+SplineRoadTool::SplineRoadInstance& SplineRoadTool::createSplineInstance()
+{
+	auto instance = std::make_unique<SplineRoadInstance>();
+	instance->id = nextSplineId++;
+	instance->name = std::format("Spline {}", instance->id);
+	instance->construction = std::make_unique<SplineConstruction>();
+	splines.push_back(std::move(instance));
+	activeSplineIndex = splines.size() - 1;
+	selectedPointIndex = Spline::InvalidPointIndex;
+	return *splines.back();
+}
+
+void SplineRoadTool::removeSplineFromWorld(SplineRoadInstance& instance)
+{
+	if (instance.construction)
+		instance.construction->removeFromWorld(app.renderWorld, &app.physicsMgr);
+	instance.debugVisualization.removeFromWorld(app.renderWorld);
+	instance.previewBuilt = false;
+	instance.previewDirty = false;
 }
 
 void SplineRoadTool::addPointForward()
 {
 	ensureRoad();
+	SplineConstruction* construction = getRoad();
 	auto& spline = construction->spline;
 	const size_t pointCount = spline.getPointCount();
 
@@ -331,6 +460,11 @@ void SplineRoadTool::addPointForward()
 	}
 
 	bool extendStart = shouldExtendStart(pointCount);
+	if (replicateCurveOnAdd && addReplicatedCurvePoint(extendStart))
+	{
+		markConstructionChanged();
+		return;
+	}
 
 	Vector3 direction = getForwardAddDirection(extendStart);
 	if (extendStart)
@@ -351,6 +485,7 @@ void SplineRoadTool::addPointForward()
 
 void SplineRoadTool::removeSelectedPoint()
 {
+	SplineConstruction* construction = getRoad();
 	if (!construction || selectedPointIndex == Spline::InvalidPointIndex || selectedPointIndex >= construction->spline.getPointCount())
 		return;
 
@@ -362,6 +497,8 @@ void SplineRoadTool::removeSelectedPoint()
 
 void SplineRoadTool::buildPreview()
 {
+	SplineRoadInstance* instance = activeSpline();
+	SplineConstruction* construction = getRoad();
 	if (!construction)
 		return;
 
@@ -381,27 +518,52 @@ void SplineRoadTool::buildPreview()
 	auto uploadResourcesFinished = batch.End(app.renderSystem.core.commandQueue);
 	uploadResourcesFinished.wait();
 
-	previewBuilt = construction->entity != nullptr;
-	previewDirty = false;
+	instance->previewBuilt = construction->entity != nullptr;
+	instance->previewDirty = false;
 	rebuildDebug();
 }
 
 void SplineRoadTool::bakePreview()
 {
+	SplineRoadInstance* instance = activeSpline();
+	SplineConstruction* construction = getRoad();
 	if (!construction || !construction->entity)
 		return;
 
-	debugVisualization.removeFromWorld(app.renderWorld);
-	bakedConstructions.push_back(std::move(construction));
+	instance->debugVisualization.removeFromWorld(app.renderWorld);
+	bakedConstructions.push_back(std::move(instance->construction));
+	splines.erase(splines.begin() + activeSplineIndex);
+	if (splines.empty())
+		activeSplineIndex = Spline::InvalidPointIndex;
+	else
+		activeSplineIndex = (std::min)(activeSplineIndex, splines.size() - 1);
 	selectedPointIndex = Spline::InvalidPointIndex;
-	previewBuilt = false;
-	previewDirty = false;
+	rebuildAllDebug();
 	Logger::log("Spline road preview baked into a regular render entity");
+}
+
+void SplineRoadTool::copyActiveSpline()
+{
+	const SplineRoadInstance* source = activeSpline();
+	if (!source || !source->construction)
+		return;
+
+	SplineRoadInstance& copy = createSplineInstance();
+	copy.name = std::format("Spline {} copy", source->id);
+	copy.construction->spline = source->construction->spline;
+	copy.construction->profile = source->construction->profile;
+	copy.construction->sweepSettings = source->construction->sweepSettings;
+	copy.previewDirty = true;
+	selectedPointIndex = copy.construction->spline.getPointCount() ? copy.construction->spline.getPointCount() - 1 : Spline::InvalidPointIndex;
+	if (autoBuildPreview)
+		buildPreview();
+	else
+		rebuildAllDebug();
 }
 
 void SplineRoadTool::saveSpline()
 {
-	if (!construction)
+	if (!getRoad())
 		return;
 
 	const std::filesystem::path path = makeTimestampedExportPath("spline", "spline");
@@ -427,11 +589,13 @@ void SplineRoadTool::loadSpline()
 
 void SplineRoadTool::bakeAndSaveModel()
 {
+	SplineConstruction* construction = getRoad();
 	if (!construction)
 		return;
 
-	if (!previewBuilt || previewDirty)
+	if (!hasPreview() || isPreviewDirty())
 		buildPreview();
+	construction = getRoad();
 	if (!construction || construction->mesh.empty())
 		return;
 
@@ -451,6 +615,7 @@ void SplineRoadTool::bakeAndSaveModel()
 
 bool SplineRoadTool::saveSplineToFile(const std::string& path) const
 {
+	const SplineConstruction* construction = getRoad();
 	if (!construction)
 		return false;
 
@@ -485,6 +650,7 @@ bool SplineRoadTool::saveSplineToFile(const std::string& path) const
 	sweep.append_attribute("preventProfileFoldover") = preventProfileFoldover;
 	sweep.append_attribute("minProfileForwardScale") = minProfileForwardScale;
 	sweep.append_attribute("splitOpenProfileQuadsAtCenter") = construction->sweepSettings.splitOpenProfileQuadsAtCenter;
+	sweep.append_attribute("splitClosedProfileQuadsAtCenter") = construction->sweepSettings.splitClosedProfileQuadsAtCenter;
 
 	pugi::xml_node sampling = root.append_child("Sampling");
 	sampling.append_attribute("tessellationSegments") = static_cast<unsigned int>(construction->spline.getTessellationSegments());
@@ -530,9 +696,8 @@ bool SplineRoadTool::loadSplineFromFile(const std::string& path)
 		return false;
 	}
 
-	removePreview();
-	debugVisualization.removeFromWorld(app.renderWorld);
-	construction = std::make_unique<SplineConstruction>();
+	SplineRoadInstance& instance = createSplineInstance();
+	SplineConstruction* construction = instance.construction.get();
 
 	pugi::xml_node editor = root.child("Editor");
 	autoBuildPreview = editor.attribute("autoBuildPreview").as_bool(autoBuildPreview);
@@ -557,6 +722,7 @@ bool SplineRoadTool::loadSplineFromFile(const std::string& path)
 	construction->sweepSettings.preventProfileFoldover = preventProfileFoldover;
 	construction->sweepSettings.minProfileForwardScale = minProfileForwardScale;
 	construction->sweepSettings.splitOpenProfileQuadsAtCenter = sweep.attribute("splitOpenProfileQuadsAtCenter").as_bool(construction->sweepSettings.splitOpenProfileQuadsAtCenter);
+	construction->sweepSettings.splitClosedProfileQuadsAtCenter = sweep.attribute("splitClosedProfileQuadsAtCenter").as_bool(construction->sweepSettings.splitClosedProfileQuadsAtCenter);
 
 	pugi::xml_node sampling = root.child("Sampling");
 	construction->spline.setTessellationSegments(sampling.attribute("tessellationSegments").as_uint(static_cast<unsigned int>(construction->spline.getTessellationSegments())));
@@ -579,8 +745,8 @@ bool SplineRoadTool::loadSplineFromFile(const std::string& path)
 
 	construction->profile = createPreviewProfile();
 	selectedPointIndex = construction->spline.getPointCount() ? construction->spline.getPointCount() - 1 : Spline::InvalidPointIndex;
-	previewBuilt = false;
-	previewDirty = false;
+	instance.previewBuilt = false;
+	instance.previewDirty = false;
 
 	if (autoBuildPreview)
 		buildPreview();
@@ -593,6 +759,7 @@ bool SplineRoadTool::loadSplineFromFile(const std::string& path)
 
 bool SplineRoadTool::saveCurrentMeshModel(const std::string& path) const
 {
+	const SplineConstruction* construction = getRoad();
 	if (!construction || construction->mesh.empty())
 		return false;
 
@@ -638,6 +805,7 @@ bool SplineRoadTool::saveCurrentMeshModel(const std::string& path) const
 
 void SplineRoadTool::setSelectedPointPosition(Vector3 position)
 {
+	SplineConstruction* construction = getRoad();
 	if (!construction || selectedPointIndex == Spline::InvalidPointIndex || selectedPointIndex >= construction->spline.getPointCount())
 		return;
 
@@ -647,6 +815,7 @@ void SplineRoadTool::setSelectedPointPosition(Vector3 position)
 
 void SplineRoadTool::setSelectedPointRoll(float roll)
 {
+	SplineConstruction* construction = getRoad();
 	if (!construction || selectedPointIndex == Spline::InvalidPointIndex || selectedPointIndex >= construction->spline.getPointCount())
 		return;
 
@@ -656,6 +825,7 @@ void SplineRoadTool::setSelectedPointRoll(float roll)
 
 void SplineRoadTool::setSelectedPointUpStabilization(float upStabilization)
 {
+	SplineConstruction* construction = getRoad();
 	if (!construction || selectedPointIndex == Spline::InvalidPointIndex || selectedPointIndex >= construction->spline.getPointCount())
 		return;
 
@@ -665,7 +835,7 @@ void SplineRoadTool::setSelectedPointUpStabilization(float upStabilization)
 
 void SplineRoadTool::onAutoBuildPreviewChanged()
 {
-	if (autoBuildPreview && construction && (previewDirty || !previewBuilt))
+	if (autoBuildPreview && getRoad() && (isPreviewDirty() || !hasPreview()))
 		buildPreview();
 }
 
@@ -676,7 +846,7 @@ void SplineRoadTool::onProfileSettingsChanged()
 
 void SplineRoadTool::onSplineSamplingSettingsChanged()
 {
-	if (!construction)
+	if (!getRoad())
 		return;
 
 	applySplineSamplingSettings();
@@ -685,85 +855,126 @@ void SplineRoadTool::onSplineSamplingSettingsChanged()
 
 void SplineRoadTool::refreshDebugVisualization()
 {
-	rebuildDebug();
+	rebuildAllDebug();
 }
 
 bool SplineRoadTool::trySelectKnownSplinePart(ObjectId id, Vector3 pickedPosition)
 {
-	if (!construction)
-		return false;
-
 	auto object = app.renderWorld.getObject(id);
 	if (!object.entity)
 		return false;
 
-	size_t pointIndex = debugVisualization.getPointIndex(object.entity);
-	if (pointIndex != Spline::InvalidPointIndex)
+	SplineRoadInstance* pathInstance = findSplineByPathEntity(object.entity);
+	if (pathInstance)
 	{
-		selectedPointIndex = pointIndex;
-		if (autoBuildPreview && (previewDirty || !previewBuilt))
-			buildPreview();
-		else
-			rebuildDebug();
-		Logger::log(std::format("Selected spline point {}", pointIndex));
+		if (editModeActive)
+			return true;
+
+		for (size_t i = 0; i < splines.size(); ++i)
+		{
+			if (splines[i].get() == pathInstance)
+			{
+				activeSplineIndex = i;
+				break;
+			}
+		}
+		selectedPointIndex = Spline::InvalidPointIndex;
+		enterSplineTransformMode();
+		Logger::log(std::format("Selected {} for spline movement", pathInstance->name));
 		return true;
 	}
 
-	if (object.entity == debugVisualization.getPathEntity())
+	SplineRoadInstance* instance = activeSpline();
+	SplineConstruction* construction = getRoad();
+	if (!instance || !construction)
+		return false;
+
+	size_t pointIndex = instance->debugVisualization.getPointIndex(object.entity);
+	if (pointIndex != Spline::InvalidPointIndex)
 	{
-		selectedPointIndex = construction->spline.getClosestPointIndex(pickedPosition);
-		if (autoBuildPreview && (previewDirty || !previewBuilt))
+		selectedPointIndex = pointIndex;
+		enterPointEditMode();
+		if (autoBuildPreview && (instance->previewDirty || !instance->previewBuilt))
 			buildPreview();
-		else
-			rebuildDebug();
-		Logger::log(std::format("Selected nearest spline point {}", selectedPointIndex));
+		Logger::log(std::format("Selected spline point {}", pointIndex));
 		return true;
 	}
 
 	return false;
 }
 
+bool SplineRoadTool::selectPathForMovement(ObjectId id, Vector3 pickedPosition)
+{
+	return id && trySelectKnownSplinePart(id, pickedPosition) && pointGizmoMode == PointGizmoMode::SplineTransform;
+}
+
 void SplineRoadTool::rebuildDebug()
 {
-	if (!construction || !editModeActive)
+	SplineRoadInstance* instance = activeSpline();
+	if (!instance)
+		return;
+
+	rebuildDebug(*instance);
+}
+
+void SplineRoadTool::rebuildDebug(SplineRoadInstance& instance)
+{
+	if (!instance.construction)
 		return;
 
 	updateDebugSettings();
+	debugSettings.showPath = true;
+	debugSettings.showPoints = editModeActive && &instance == activeSpline();
+	debugSettings.showActivePointFrame = editModeActive && &instance == activeSpline() && showActiveFrame;
+	debugSettings.activePointIndex = &instance == activeSpline() ? selectedPointIndex : Spline::InvalidPointIndex;
 
 	DirectX::ResourceUploadBatch batch(app.renderSystem.core.device);
 	batch.Begin();
-	debugVisualization.rebuild(construction->spline, app.renderSystem, app.resources, app.renderWorld, batch, debugSettings);
+	instance.debugVisualization.rebuild(instance.construction->spline, app.renderSystem, app.resources, app.renderWorld, batch, debugSettings);
 	auto uploadResourcesFinished = batch.End(app.renderSystem.core.commandQueue);
 	uploadResourcesFinished.wait();
 }
 
+void SplineRoadTool::rebuildAllDebug()
+{
+	for (auto& instance : splines)
+		rebuildDebug(*instance);
+}
+
 void SplineRoadTool::removePreview()
 {
-	if (construction)
-		construction->removeFromWorld(app.renderWorld, &app.physicsMgr);
-	previewBuilt = false;
-	previewDirty = false;
+	SplineRoadInstance* instance = activeSpline();
+	if (!instance)
+		return;
+
+	if (instance->construction)
+		instance->construction->removeFromWorld(app.renderWorld, &app.physicsMgr);
+	instance->previewBuilt = false;
+	instance->previewDirty = false;
 }
 
 void SplineRoadTool::markConstructionChanged()
 {
-	if (construction && construction->entity)
-		previewDirty = true;
+	SplineRoadInstance* instance = activeSpline();
+	if (instance && instance->construction && instance->construction->entity)
+		instance->previewDirty = true;
 	else
-		previewDirty = false;
+		if (instance)
+			instance->previewDirty = false;
 
-	if (autoBuildPreview && construction)
+	if (autoBuildPreview && getRoad())
 		buildPreview();
 	else
-		rebuildDebug();
+		rebuildAllDebug();
 }
 
 void SplineRoadTool::markPreviewSettingsChanged()
 {
-	if (construction && construction->entity)
-		previewDirty = true;
+	SplineRoadInstance* instance = activeSpline();
+	if (instance && instance->construction && instance->construction->entity)
+		instance->previewDirty = true;
 
-	if (autoBuildPreview && construction)
+	if (autoBuildPreview && getRoad())
 		buildPreview();
 }
 
@@ -777,6 +988,7 @@ void SplineRoadTool::updateDebugSettings()
 
 void SplineRoadTool::applySplineSamplingSettings()
 {
+	SplineConstruction* construction = getRoad();
 	if (!construction)
 		return;
 
@@ -785,7 +997,7 @@ void SplineRoadTool::applySplineSamplingSettings()
 
 void SplineRoadTool::ensureRoad()
 {
-	if (!construction)
+	if (!getRoad())
 		createRoad();
 }
 
@@ -818,6 +1030,13 @@ ShapeProfile2D SplineRoadTool::createPreviewProfile() const
 
 void SplineRoadTool::drawSelectedPointGizmo(const ViewportToolContext& ctx)
 {
+	if (pointGizmoMode == PointGizmoMode::SplineTransform)
+	{
+		drawSplineTransformGizmo(ctx);
+		return;
+	}
+
+	SplineConstruction* construction = getRoad();
 	if (!construction || selectedPointIndex == Spline::InvalidPointIndex || selectedPointIndex >= construction->spline.getPointCount())
 	{
 		gizmoActive = false;
@@ -832,6 +1051,10 @@ void SplineRoadTool::drawSelectedPointGizmo(const ViewportToolContext& ctx)
 
 void SplineRoadTool::drawSelectedPointMoveGizmo(const ViewportToolContext& ctx)
 {
+	SplineConstruction* construction = getRoad();
+	if (!construction)
+		return;
+
 	ImGuizmo::SetOrthographic(false);
 	ImGuizmo::SetDrawlist();
 	ImGuizmo::SetRect((float)ctx.viewportBounds[0].x, (float)ctx.viewportBounds[0].y, (float)ctx.viewportBounds[1].x - ctx.viewportBounds[0].x, (float)ctx.viewportBounds[1].y - ctx.viewportBounds[0].y);
@@ -864,6 +1087,10 @@ void SplineRoadTool::drawSelectedPointMoveGizmo(const ViewportToolContext& ctx)
 
 void SplineRoadTool::drawSelectedPointRollGizmo(const ViewportToolContext& ctx)
 {
+	SplineConstruction* construction = getRoad();
+	if (!construction)
+		return;
+
 	ImGuizmo::SetOrthographic(false);
 	ImGuizmo::SetDrawlist();
 	ImGuizmo::SetRect((float)ctx.viewportBounds[0].x, (float)ctx.viewportBounds[0].y, (float)ctx.viewportBounds[1].x - ctx.viewportBounds[0].x, (float)ctx.viewportBounds[1].y - ctx.viewportBounds[0].y);
@@ -924,8 +1151,72 @@ void SplineRoadTool::drawSelectedPointRollGizmo(const ViewportToolContext& ctx)
 		setSelectedPointRoll(point.roll + rollDelta);
 }
 
+void SplineRoadTool::drawSplineTransformGizmo(const ViewportToolContext& ctx)
+{
+	SplineConstruction* construction = getRoad();
+	if (!construction || construction->spline.getPointCount() == 0)
+	{
+		gizmoActive = false;
+		return;
+	}
+
+	Vector3 center{};
+	for (const SplinePoint& point : construction->spline.getPoints())
+		center += point.position;
+	center /= static_cast<float>(construction->spline.getPointCount());
+
+	ImGuizmo::SetOrthographic(false);
+	ImGuizmo::SetDrawlist();
+	ImGuizmo::SetRect((float)ctx.viewportBounds[0].x, (float)ctx.viewportBounds[0].y, (float)ctx.viewportBounds[1].x - ctx.viewportBounds[0].x, (float)ctx.viewportBounds[1].y - ctx.viewportBounds[0].y);
+
+	XMFLOAT4X4 cameraView;
+	XMStoreFloat4x4(&cameraView, ctx.camera.getViewMatrix());
+	XMFLOAT4X4 cameraProjection;
+	XMStoreFloat4x4(&cameraProjection, ctx.camera.getProjectionMatrixNoReverse());
+
+	ObjectTransformation splineTransform;
+	splineTransform.position = center;
+
+	XMFLOAT4X4 transform;
+	XMStoreFloat4x4(&transform, splineTransform.createWorldMatrix());
+	XMFLOAT4X4 transformDelta{};
+
+	float snapValues[3] = { 0.5f, 0.5f, 0.5f };
+	const ImGuizmo::OPERATION operation = static_cast<ImGuizmo::OPERATION>(ImGuizmo::TRANSLATE | ImGuizmo::ROTATE);
+	const bool manipulated = ImGuizmo::Manipulate(&cameraView._11, &cameraProjection._11, operation, ImGuizmo::WORLD, &transform._11, &transformDelta._11, snapValues);
+	gizmoActive = ImGuizmo::IsOver() || ImGuizmo::IsUsing();
+	if (!manipulated)
+		return;
+
+	XMVECTOR scale;
+	XMVECTOR rotation;
+	XMVECTOR translation;
+	if (!XMMatrixDecompose(&scale, &rotation, &translation, XMLoadFloat4x4(&transformDelta)))
+		return;
+
+	Quaternion deltaRotation;
+	XMStoreFloat4(&deltaRotation, rotation);
+	Vector3 deltaTranslation;
+	XMStoreFloat3(&deltaTranslation, translation);
+
+	for (size_t i = 0; i < construction->spline.getPointCount(); ++i)
+	{
+		SplinePoint point = construction->spline.getPoint(i);
+		point.position = center + deltaRotation * (point.position - center) + deltaTranslation;
+		construction->spline.setPoint(i, point);
+	}
+
+	Vector3 referenceUp = deltaRotation * construction->spline.getReferenceUp();
+	construction->spline.setReferenceUp(referenceUp);
+	markConstructionChanged();
+}
+
 void SplineRoadTool::insertPointBetween(size_t previousPointIndex, size_t nextPointIndex)
 {
+	SplineConstruction* construction = getRoad();
+	if (!construction)
+		return;
+
 	auto& spline = construction->spline;
 	const auto& previousPoint = spline.getPoint(previousPointIndex);
 	const auto& nextPoint = spline.getPoint(nextPointIndex);
@@ -937,6 +1228,112 @@ void SplineRoadTool::insertPointBetween(size_t previousPointIndex, size_t nextPo
 	spline.setPoint(nextPointIndex, insertedPoint);
 	selectedPointIndex = nextPointIndex;
 	markConstructionChanged();
+}
+
+void SplineRoadTool::selectPointByOffset(int offset)
+{
+	SplineConstruction* construction = getRoad();
+	if (!construction)
+		return;
+
+	const size_t pointCount = construction->spline.getPointCount();
+	if (pointCount == 0 || selectedPointIndex == Spline::InvalidPointIndex || selectedPointIndex >= pointCount)
+		return;
+
+	const int currentIndex = static_cast<int>(selectedPointIndex);
+	const int count = static_cast<int>(pointCount);
+	selectedPointIndex = static_cast<size_t>((currentIndex + offset + count) % count);
+	enterPointEditMode();
+	Logger::log(std::format("Selected spline point {}", selectedPointIndex));
+}
+
+bool SplineRoadTool::addReplicatedCurvePoint(bool extendStart)
+{
+	SplineConstruction* construction = getRoad();
+	if (!construction)
+		return false;
+
+	auto& spline = construction->spline;
+	const size_t pointCount = spline.getPointCount();
+	if (pointCount < 3)
+		return false;
+
+	const size_t i0 = extendStart ? 2 : pointCount - 3;
+	const size_t i1 = extendStart ? 1 : pointCount - 2;
+	const size_t i2 = extendStart ? 0 : pointCount - 1;
+	const SplinePoint p0 = spline.getPoint(i0);
+	const SplinePoint p1 = spline.getPoint(i1);
+	const SplinePoint p2 = spline.getPoint(i2);
+
+	const Vector3 previousOffset = p1.position - p0.position;
+	const Vector3 currentOffset = p2.position - p1.position;
+	if (previousOffset.LengthSquared() <= 0.000001f || currentOffset.LengthSquared() <= 0.000001f)
+		return false;
+
+	Vector3 offset = currentOffset;
+	Vector3 previousHorizontal = previousOffset;
+	previousHorizontal.y = 0.0f;
+	Vector3 currentHorizontal = currentOffset;
+	currentHorizontal.y = 0.0f;
+	if (replicateCurveMode == ReplicateCurveMode::Loop)
+	{
+		Vector3 forward = previousHorizontal + currentHorizontal;
+		if (forward.LengthSquared() <= 0.000001f)
+			forward = currentHorizontal.LengthSquared() > 0.000001f ? currentHorizontal : previousHorizontal;
+
+		if (forward.LengthSquared() > 0.000001f)
+		{
+			forward.Normalize();
+			Vector3 lateral = Vector3::UnitY.Cross(forward);
+			lateral.Normalize();
+
+			Vector2 previousPlane(previousOffset.Dot(forward), previousOffset.y);
+			Vector2 currentPlane(currentOffset.Dot(forward), currentOffset.y);
+			if (previousPlane.LengthSquared() > 0.000001f && currentPlane.LengthSquared() > 0.000001f)
+			{
+				previousPlane.Normalize();
+				currentPlane.Normalize();
+				const float signedPitch = std::atan2(previousPlane.x * currentPlane.y - previousPlane.y * currentPlane.x, std::clamp(previousPlane.Dot(currentPlane), -1.0f, 1.0f));
+
+				const float cosPitch = std::cos(signedPitch);
+				const float sinPitch = std::sin(signedPitch);
+				const float currentForward = currentOffset.Dot(forward);
+				const float currentVertical = currentOffset.y;
+				const float nextForward = currentForward * cosPitch - currentVertical * sinPitch;
+				const float nextVertical = currentForward * sinPitch + currentVertical * cosPitch;
+				const float lateralDrift = currentOffset.Dot(lateral);
+				offset = forward * nextForward + Vector3::UnitY * nextVertical + lateral * lateralDrift;
+			}
+		}
+	}
+	else if (previousHorizontal.LengthSquared() > 0.000001f && currentHorizontal.LengthSquared() > 0.000001f)
+	{
+		previousHorizontal.Normalize();
+		currentHorizontal.Normalize();
+		const float signedYaw = std::atan2(previousHorizontal.Cross(currentHorizontal).Dot(Vector3::UnitY), std::clamp(previousHorizontal.Dot(currentHorizontal), -1.0f, 1.0f));
+		offset = Quaternion::CreateFromAxisAngle(Vector3::UnitY, signedYaw) * currentOffset;
+	}
+
+	SplinePoint newPoint = p2;
+	newPoint.position = p2.position + offset;
+	newPoint.roll = p2.roll + (p2.roll - p1.roll);
+	newPoint.upStabilization = std::clamp(p2.upStabilization + (p2.upStabilization - p1.upStabilization), 0.0f, 1.0f);
+
+	if (extendStart)
+	{
+		newPoint.position = p2.position + offset;
+		spline.insertPoint(0, newPoint.position, newPoint.roll);
+		spline.setPoint(0, newPoint);
+		selectedPointIndex = 0;
+	}
+	else
+	{
+		spline.addPoint(newPoint.position, newPoint.roll);
+		spline.setPoint(spline.getPointCount() - 1, newPoint);
+		selectedPointIndex = spline.getPointCount() - 1;
+	}
+
+	return true;
 }
 
 bool SplineRoadTool::shouldExtendStart(size_t pointCount) const
@@ -951,6 +1348,7 @@ bool SplineRoadTool::shouldExtendStart(size_t pointCount) const
 
 Vector3 SplineRoadTool::getForwardAddDirection(bool extendStart) const
 {
+	const SplineConstruction* construction = getRoad();
 	if (!construction || construction->spline.getPointCount() < 2)
 		return Vector3::UnitZ;
 

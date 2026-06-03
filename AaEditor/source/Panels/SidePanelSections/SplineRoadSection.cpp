@@ -7,7 +7,7 @@
 void SplineRoadSection::draw(SplineRoadTool& tool, ViewportPanel& viewportPanel)
 {
 	bool splineModeActive = viewportPanel.getActiveTool() == &tool;
-	if (ImGui::Checkbox("Spline road edit mode", &splineModeActive))
+	if (ImGui::Checkbox("Spline road tool active", &splineModeActive))
 		viewportPanel.setActiveTool(splineModeActive ? &tool : nullptr);
 
 	if (ImGui::Button("Create road"))
@@ -22,6 +22,41 @@ void SplineRoadSection::draw(SplineRoadTool& tool, ViewportPanel& viewportPanel)
 	ImGui::SameLine();
 	if (ImGui::Button("Load spline"))
 		tool.loadSpline();
+
+	if (tool.getSplineCount() > 0)
+	{
+		int activeSplineIndex = static_cast<int>(tool.getActiveSplineListIndex());
+		if (ImGui::BeginCombo("Active spline", tool.getActiveSplineName()))
+		{
+			for (size_t i = 0; i < tool.getSplineCount(); ++i)
+			{
+				const bool selected = activeSplineIndex == static_cast<int>(i);
+				if (ImGui::Selectable(tool.getSplineName(i), selected))
+					tool.selectSplineByIndex(i);
+				if (selected)
+					ImGui::SetItemDefaultFocus();
+			}
+			ImGui::EndCombo();
+		}
+		ImGui::Text("Spline id %u", tool.getActiveSplineId());
+
+		bool pointEditMode = tool.isPointEditMode();
+		if (ImGui::RadioButton("Edit points", pointEditMode))
+		{
+			viewportPanel.setActiveTool(&tool);
+			tool.enterPointEditMode();
+		}
+		ImGui::SameLine();
+		bool splineTransformMode = tool.isSplineTransformMode();
+		if (ImGui::RadioButton("Transform spline", splineTransformMode))
+		{
+			viewportPanel.setActiveTool(&tool);
+			tool.enterSplineTransformMode();
+		}
+
+		if (ImGui::Button("Copy spline"))
+			tool.copyActiveSpline();
+	}
 
 	ImGui::BeginDisabled(!tool.hasRoad());
 	if (ImGui::Checkbox("Auto build preview", &tool.autoBuildPreview))
@@ -39,10 +74,15 @@ void SplineRoadSection::draw(SplineRoadTool& tool, ViewportPanel& viewportPanel)
 	if (ImGui::Combo("Add mode", &addModeIndex, addModeNames, std::size(addModeNames)))
 		tool.addPointMode = static_cast<SplineRoadTool::AddPointMode>(addModeIndex);
 
-	const char* gizmoModeNames[] = { "Move", "Roll" };
+	const char* gizmoModeNames[] = { "Point move", "Point roll" };
 	int gizmoModeIndex = static_cast<int>(tool.pointGizmoMode);
+	if (gizmoModeIndex > 1)
+		gizmoModeIndex = 0;
 	if (ImGui::Combo("Point gizmo", &gizmoModeIndex, gizmoModeNames, std::size(gizmoModeNames)))
+	{
 		tool.pointGizmoMode = static_cast<SplineRoadTool::PointGizmoMode>(gizmoModeIndex);
+		tool.enterPointEditMode();
+	}
 
 	bool profileChanged = false;
 	const char* profileNames[] = { "Road", "Rectangle", "Circle", "Tube", "Arc", "Filled arc" };
@@ -76,6 +116,11 @@ void SplineRoadSection::draw(SplineRoadTool& tool, ViewportPanel& viewportPanel)
 		tool.onProfileSettingsChanged();
 
 	ImGui::DragFloat("Add distance", &tool.addPointDistance, 0.5f, 1.0f, 100.0f, "%.1f m");
+	ImGui::Checkbox("Replicate curve on add", &tool.replicateCurveOnAdd);
+	const char* replicateModeNames[] = { "Drift", "Loop" };
+	int replicateModeIndex = static_cast<int>(tool.replicateCurveMode);
+	if (ImGui::Combo("Replicate mode", &replicateModeIndex, replicateModeNames, std::size(replicateModeNames)))
+		tool.replicateCurveMode = static_cast<SplineRoadTool::ReplicateCurveMode>(replicateModeIndex);
 	bool foldoverChanged = false;
 	foldoverChanged |= ImGui::Checkbox("Prevent foldover", &tool.preventProfileFoldover);
 	if (tool.preventProfileFoldover)
@@ -95,6 +140,16 @@ void SplineRoadSection::draw(SplineRoadTool& tool, ViewportPanel& viewportPanel)
 	ImGui::SameLine();
 	if (ImGui::Button("Remove point"))
 		tool.removeSelectedPoint();
+
+	const bool pointSelected = tool.getSelectedPointIndex() != Spline::InvalidPointIndex;
+	ImGui::BeginDisabled(!pointSelected);
+	ImGui::SameLine();
+	if (ImGui::Button("Previous point"))
+		tool.selectPreviousPoint();
+	ImGui::SameLine();
+	if (ImGui::Button("Next point"))
+		tool.selectNextPoint();
+	ImGui::EndDisabled();
 
 	if (ImGui::Button("Build preview"))
 		tool.buildPreview();

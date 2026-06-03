@@ -37,6 +37,7 @@ struct SplineSweepMeshSettings
 	bool generateEndCaps = true;
 	bool preventProfileFoldover = true;
 	bool splitOpenProfileQuadsAtCenter = true;
+	bool splitClosedProfileQuadsAtCenter = true;
 };
 
 class SplineSweepMeshGenerator

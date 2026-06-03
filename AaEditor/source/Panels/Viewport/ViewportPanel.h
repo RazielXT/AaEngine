@@ -12,6 +12,7 @@ class EditorSelection;
 class ImguiPanelViewport;
 class ViewportTool;
 class SelectionTool;
+class SplineRoadTool;
 
 class ViewportPanel
 {
@@ -45,6 +46,7 @@ public:
 
 	void setActiveTool(ViewportTool* tool);
 	ViewportTool* getActiveTool() const { return activeTool; }
+	void registerSplineRoadTool(SplineRoadTool* tool) { splineRoadTool = tool; }
 
 	bool onClick(MouseButton);
 	void reset();
@@ -66,6 +68,7 @@ private:
 
 	ViewportTool* activeTool = nullptr;
 	std::unique_ptr<SelectionTool> selectionTool;
+ 	SplineRoadTool* splineRoadTool = nullptr;
 
 	D3D12_GPU_DESCRIPTOR_HANDLE renderOutputHandleGpu{};
 	D3D12_CPU_DESCRIPTOR_HANDLE renderOutputHandleCpu{};

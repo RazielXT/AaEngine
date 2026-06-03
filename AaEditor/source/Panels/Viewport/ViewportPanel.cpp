@@ -3,6 +3,7 @@
 #include "Editor/ImguiPanelViewport.h"
 #include "ViewportTool.h"
 #include "SelectionTool.h"
+#include "SplineRoadTool.h"
 #include "imgui.h"
 #include "Editor/EntityPicker.h"
 
@@ -167,7 +168,10 @@ void ViewportPanel::draw(Camera& camera)
 	if (EntityPicker::Get().hasPreparedPick())
 	{
 		auto pickInfo = EntityPicker::Get().getLastPick();
-		activeTool->onPick(pickInfo, ctrlActive, camera);
+		if (activeTool == selectionTool.get() && splineRoadTool && splineRoadTool->selectPathForMovement(pickInfo.id, pickInfo.position))
+			setActiveTool(splineRoadTool);
+		else
+			activeTool->onPick(pickInfo, ctrlActive, camera);
 	}
 
 	if (ImGui::BeginDragDropTarget())

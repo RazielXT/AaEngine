@@ -117,10 +117,6 @@ void SplineRoadSection::draw(SplineRoadTool& tool, ViewportPanel& viewportPanel)
 
 	ImGui::DragFloat("Add distance", &tool.addPointDistance, 0.5f, 1.0f, 100.0f, "%.1f m");
 	ImGui::Checkbox("Replicate curve on add", &tool.replicateCurveOnAdd);
-	const char* replicateModeNames[] = { "Drift", "Loop" };
-	int replicateModeIndex = static_cast<int>(tool.replicateCurveMode);
-	if (ImGui::Combo("Replicate mode", &replicateModeIndex, replicateModeNames, std::size(replicateModeNames)))
-		tool.replicateCurveMode = static_cast<SplineRoadTool::ReplicateCurveMode>(replicateModeIndex);
 	bool foldoverChanged = false;
 	foldoverChanged |= ImGui::Checkbox("Prevent foldover", &tool.preventProfileFoldover);
 	if (tool.preventProfileFoldover)

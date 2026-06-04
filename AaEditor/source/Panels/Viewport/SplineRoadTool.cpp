@@ -1265,55 +1265,24 @@ bool SplineRoadTool::addReplicatedCurvePoint(bool extendStart)
 	const SplinePoint p1 = spline.getPoint(i1);
 	const SplinePoint p2 = spline.getPoint(i2);
 
-	const Vector3 previousOffset = p1.position - p0.position;
-	const Vector3 currentOffset = p2.position - p1.position;
-	if (previousOffset.LengthSquared() <= 0.000001f || currentOffset.LengthSquared() <= 0.000001f)
+	Vector3 previous = p1.position - p0.position;
+	Vector3 current = p2.position - p1.position;
+	if (previous.LengthSquared() <= 0.000001f || current.LengthSquared() <= 0.000001f)
 		return false;
 
-	Vector3 offset = currentOffset;
-	Vector3 previousHorizontal = previousOffset;
-	previousHorizontal.y = 0.0f;
-	Vector3 currentHorizontal = currentOffset;
-	currentHorizontal.y = 0.0f;
-	if (replicateCurveMode == ReplicateCurveMode::Loop)
+	previous.Normalize();
+	current.Normalize();
+	Vector3 axis = previous.Cross(current);
+	const float axisLength = axis.Length();
+	Quaternion replicatedRotation = Quaternion::Identity;
+	if (axisLength > 0.000001f)
 	{
-		Vector3 forward = previousHorizontal + currentHorizontal;
-		if (forward.LengthSquared() <= 0.000001f)
-			forward = currentHorizontal.LengthSquared() > 0.000001f ? currentHorizontal : previousHorizontal;
-
-		if (forward.LengthSquared() > 0.000001f)
-		{
-			forward.Normalize();
-			Vector3 lateral = Vector3::UnitY.Cross(forward);
-			lateral.Normalize();
-
-			Vector2 previousPlane(previousOffset.Dot(forward), previousOffset.y);
-			Vector2 currentPlane(currentOffset.Dot(forward), currentOffset.y);
-			if (previousPlane.LengthSquared() > 0.000001f && currentPlane.LengthSquared() > 0.000001f)
-			{
-				previousPlane.Normalize();
-				currentPlane.Normalize();
-				const float signedPitch = std::atan2(previousPlane.x * currentPlane.y - previousPlane.y * currentPlane.x, std::clamp(previousPlane.Dot(currentPlane), -1.0f, 1.0f));
-
-				const float cosPitch = std::cos(signedPitch);
-				const float sinPitch = std::sin(signedPitch);
-				const float currentForward = currentOffset.Dot(forward);
-				const float currentVertical = currentOffset.y;
-				const float nextForward = currentForward * cosPitch - currentVertical * sinPitch;
-				const float nextVertical = currentForward * sinPitch + currentVertical * cosPitch;
-				const float lateralDrift = currentOffset.Dot(lateral);
-				offset = forward * nextForward + Vector3::UnitY * nextVertical + lateral * lateralDrift;
-			}
-		}
-	}
-	else if (previousHorizontal.LengthSquared() > 0.000001f && currentHorizontal.LengthSquared() > 0.000001f)
-	{
-		previousHorizontal.Normalize();
-		currentHorizontal.Normalize();
-		const float signedYaw = std::atan2(previousHorizontal.Cross(currentHorizontal).Dot(Vector3::UnitY), std::clamp(previousHorizontal.Dot(currentHorizontal), -1.0f, 1.0f));
-		offset = Quaternion::CreateFromAxisAngle(Vector3::UnitY, signedYaw) * currentOffset;
+		axis /= axisLength;
+		replicatedRotation = Quaternion::CreateFromAxisAngle(axis, std::atan2(axisLength, std::clamp(previous.Dot(current), -1.0f, 1.0f)));
 	}
 
+	Vector3 offset = p2.position - p1.position;
+	offset = replicatedRotation * offset;
 	SplinePoint newPoint = p2;
 	newPoint.position = p2.position + offset;
 	newPoint.roll = p2.roll + (p2.roll - p1.roll);
@@ -1321,7 +1290,7 @@ bool SplineRoadTool::addReplicatedCurvePoint(bool extendStart)
 
 	if (extendStart)
 	{
-		newPoint.position = p2.position + offset;
+		newPoint.position = p2.position - offset;
 		spline.insertPoint(0, newPoint.position, newPoint.roll);
 		spline.setPoint(0, newPoint);
 		selectedPointIndex = 0;

@@ -40,12 +40,6 @@ public:
 		SplineTransform,
 	};
 
-	enum class ReplicateCurveMode
-	{
-		Drift,
-		Loop,
-	};
-
 	SplineRoadTool(ApplicationCore& app, ViewportPanel& viewport);
 	~SplineRoadTool() override;
 
@@ -93,7 +87,6 @@ public:
 	AddPointMode addPointMode = AddPointMode::Auto;
 	PointGizmoMode pointGizmoMode = PointGizmoMode::Move;
 	bool replicateCurveOnAdd = false;
-	ReplicateCurveMode replicateCurveMode = ReplicateCurveMode::Drift;
 	bool autoBuildPreview = false;
 	bool previewPhysics = false;
 	PreviewProfile previewProfile = PreviewProfile::Road;

@@ -67,5 +67,6 @@ void PrepareFrameTask::prepareMotionVectors(RenderContext& ctx)
 
 	XMFLOAT4X4 reprojectionData;
 	XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&reprojectionData, XMMatrixTranspose(reprojectionMatrix));
-	provider.resources.materials.getMaterial("MotionVectors")->SetParameter("reprojectionMatrix", &reprojectionData._11, 16);
+	provider.resources.materials.getMaterial("MotionVectors")->SetParameter("ReprojectionMatrix", &reprojectionData._11, 16);
+	provider.resources.materials.getMaterial("AccumulateReflections")->SetParameter("ReprojectionMatrix", &reprojectionData._11, 16);
 }

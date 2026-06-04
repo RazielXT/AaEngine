@@ -19,6 +19,12 @@ uint TexIdWaterColor;
 uint TexIdWaterNormal;
 uint TexIdWaterDepth;
 
+struct SceneRenderingStateParams
+{
+	float Underwater;
+};
+StructuredBuffer<SceneRenderingStateParams> SceneRenderingState : register(t0);
+
 cbuffer SceneVoxelInfo : register(b1)
 {
 	SceneVoxelCbuffer VoxelInfo;
@@ -169,12 +175,14 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	float3 cameraVector = normalize(WorldPosition - CameraPosition);
 
 	float3 normal = GetTexture2D(TexIdWaterNormal).Sample(LinearWrapSampler,ScreenUV).rgb; 
-	float4 WorldNormal = float4(normal,1);
 
 	float4 ScreenSpacePos = float4(ScreenUV, worldZ, 1.f);
-	float3 ReflectionVector = reflect(cameraVector, WorldNormal.xyz);
+	float3 ReflectionVector = reflect(cameraVector, normal.xyz);
 	//ReflectionVector.xy += getJitter(ScreenUV, 0.01);
 	//ReflectionVector.xy += (BlueNoise2D(input.Position.xy * 2) * 2 - 1) * 0.1f;
+
+	if (SceneRenderingState[0].Underwater == 1.0f)
+		ReflectionVector.y *= -1;
 
 	float4 PointAlongReflectionVec = float4(ReflectionVector + WorldPosition, 1.f);
 	float4 ScreenSpaceReflectionPoint = mul(PointAlongReflectionVec, ViewProjectionMatrix);
@@ -188,12 +196,7 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 
 	reflection.rgb = lerp(getSkyColor(-cameraVector, Sky, LinearWrapSampler), reflection.rgb, reflection.a);
 
-	float3 V = -cameraVector;
-	float3 R = reflect(Sky.SunDirection, normal);
-	float Specular = pow( saturate( dot( R, V ) ), 128 );
-	reflection.rgb += Specular * Sky.SunColor * 20 * (1 - reflection.a);
-
-	if (false && reflection.a == 0)
+	/*if (false && reflection.a == 0)
 	{
 		float3 jjj = getJitter(ScreenUV, 0.5).xyx;
 		SceneVoxelChunkInfo Voxels = VoxelInfo.FarVoxels;
@@ -245,12 +248,7 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 
 		if (nearVoxel.a != 0.f)	
 			reflection = float4(nearVoxel.rgb , 1);
-	}
-
-	float fresnel = saturate((1 - abs(dot(cameraVector, normal))));
-	fresnel = pow(fresnel,2);
-
-	reflection.a = fresnel;
+	}*/
 
 	return reflection;
 }

@@ -10,6 +10,7 @@ Texture2D<float3> underwaterMap : register(t1);
 struct SceneRenderingStateParams
 {
 	float Underwater;
+	float UnderwaterDepth;
 };
 StructuredBuffer<SceneRenderingStateParams> SceneRenderingState : register(t2);
 
@@ -41,8 +42,9 @@ float borderBlend(float2 uv, float edgeThreshold)
 
 float4 PSPostToneMappingFx(VS_OUTPUT input) : SV_TARGET
 {
-	float isUnderwater = SceneRenderingState[0].Underwater;
-	float isDry = (1-isUnderwater * isUnderwater);
+	float underwaterState = SceneRenderingState[0].Underwater;
+	float isUnderwater = step(1.0f, underwaterState);
+	float isDry = (1-underwaterState * underwaterState);
 
 	float2 underwaterMapUv = input.TexCoord;
 	underwaterMapUv.y -= Time*0.5 + isDry;
@@ -59,10 +61,12 @@ float4 PSPostToneMappingFx(VS_OUTPUT input) : SV_TARGET
 	//float underwaterUvOffsetStrength = 0.05f;
 	//underwaterUvOffset = (underwaterUvOffset - 0.5f) * underwaterUvOffsetStrength;
 	underwaterUvOffset *= borderBlend(input.TexCoord, 0.05f);
-	//underwaterUvOffset *= isUnderwater;
+	//underwaterUvOffset *= underwaterState;
 
 	float4 color = colorMap.Sample(LinearSampler, input.TexCoord + underwaterUvOffset.xy);
-	color.rgb *= lerp(float3(1,1,1), float3(0.5,0.9,0.9) * (0.2 + Sky.SunColor), step(1.0f, isUnderwater));
+	color.rgb *= lerp(float3(1,1,1), float3(0.3,0.7,0.75) * (0.2 + Sky.SunColor), step(1.0f, isUnderwater));
+
+	color.rgb *= saturate(1 - isUnderwater * 0.25 - SceneRenderingState[0].UnderwaterDepth / 1000.f);
 
 	return color;
 }

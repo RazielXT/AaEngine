@@ -1,18 +1,17 @@
+#include "hlsl/postprocess/PostProcessCommon.hlsl"
+
 float4x4 ReprojectionMatrix;
 uint2 ViewportSize;
 
-Texture2D<float> DepthBuffer : register(t0);
-Texture2D<float2> MotionBuffer : register(t1);
+Texture2D currentMap : register(t0);
+Texture2D accMap : register(t1);
+Texture2D<float> waterDepthMap : register(t2);
 
-struct VS_OUTPUT
-{
-	float4 Position : SV_POSITION;
-	float2 TexCoord : TEXCOORD0;
-};
+SamplerState LinearSampler : register(s0);
 
 float4 PSMain(VS_OUTPUT input) : SV_TARGET
 {
-	float depth = DepthBuffer.Load(int3(input.Position.xy,0)).x;
+	float depth = waterDepthMap.Load(int3(input.Position.xy,0));
 
 	float4 clipPos;
 	clipPos.x = input.TexCoord.x * 2 - 1;
@@ -30,11 +29,8 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	prevUV.x = 0.5 + prevClipPos.x * 0.5;
 	prevUV.y = 0.5 - prevClipPos.y * 0.5;
 
-	float2 prevWindowPos = prevUV * ViewportSize;
+	float4 current = currentMap.Sample(LinearSampler, input.TexCoord);
+	float4 acc = accMap.Sample(LinearSampler, prevUV);
 
-	float4 output = 0;
-	output.xy = prevWindowPos.xy - input.Position.xy;
-	output.xy += MotionBuffer.Load(int3(input.Position.xy,0)).xy;
-
-	return output;
+	return lerp(current, acc, 0.5f);
 }

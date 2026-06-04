@@ -14,7 +14,8 @@ cbuffer CameraWaterStateParams : register(b0)
 struct SceneRenderingStateParams
 {
 	float Underwater;
-	float3 Padding;
+	float UnderwaterDepth;
+	float2 Padding;
 };
 
 RWStructuredBuffer<SceneRenderingStateParams> SceneRenderingState : register(u0);
@@ -28,6 +29,7 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
 	float previous = (resetState != 0) ? 0.0f : state.Underwater;
 
 	float nextState = max(0.0f, previous - dryingSpeed * DeltaTime);
+	float waterDepth = 0.0f;
 
 	float2 uv = (cameraPosition.xz - worldCenter) / worldSize;
 	bool inBounds = all(uv >= 0.0f.xx) && all(uv <= 1.0f.xx);
@@ -39,10 +41,12 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
 		if (cameraPosition.y < waterHeightWorld)
 		{
 			nextState = 1.0f;
+			waterDepth = waterHeightWorld - cameraPosition.y;
 		}
 	}
 
 	state.Underwater = saturate(nextState);
-	state.Padding = 0.0f.xxx;
+	state.UnderwaterDepth = waterDepth;
+	state.Padding = 0.0f.x;
 	SceneRenderingState[0] = state;
 }

@@ -61,16 +61,6 @@ material BloomUpscale : PostProcess
 	}
 }
 
-material CombineLighting : PostProcess
-{
-	pixel_shader
-	{
-		file postprocess/combineLighting.hlsl
-		entry PSCombineLighting
-		profile ps_6_6
-	}
-}
-
 material BlurX : PostProcess
 {
 	pixel_shader

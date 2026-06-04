@@ -23,6 +23,29 @@ material TraceReflections
 	texture TransparentDepth
 }
 
+material AccumulateReflections
+{
+	vertex_shader
+	{
+		file postprocess/postprocess.hlsl
+		entry VSQuad
+		profile vs_6_6
+	}
+
+	depth off
+
+	pixel_shader
+	{
+		file water/waterAccReflections.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
+
+	texture Current
+	texture Acc
+	texture WaterDepth
+}
+
 material ApplySceneWater
 {
 	vertex_shader

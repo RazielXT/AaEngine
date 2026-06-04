@@ -24,7 +24,7 @@ void WaterSim::initializeGpuResources(RenderSystem& renderSystem, GraphicsResour
 		{
 			float t = static_cast<float>(TextureSize - x) / (TextureSize - 1);
 			//t += static_cast<float>(TextureSize - y) / (TextureSize - 1);
-			gradient[y * TextureSize + x] = t * 20;
+			gradient[y * TextureSize + x] = 20;
 		}
 	}
 	srcWater = TextureUtils::CreateUploadTexture(renderSystem.core.device, batch, gradient.data(), TextureSize, TextureSize, DXGI_FORMAT_R32_FLOAT, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);

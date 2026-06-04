@@ -22,7 +22,8 @@ Texture2D giMap : register(t4);
 struct SceneRenderingStateParams
 {
 	float Underwater;
-	float3 Padding;
+	float UnderwaterDepth;
+	float2 Padding;
 };
 
 StructuredBuffer<SceneRenderingStateParams> SceneRenderingState : register(t5);
@@ -65,16 +66,19 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	//fogPosCheck.y = 0;
 	float3 fogAtmDir = normalize(CameraPosition - fogPosCheck);
 	fogAtmDir.y = saturate(fogAtmDir.y);
-	const float3 fogColor = getSkyColor(fogAtmDir, Sky, LinearSampler);
+	float3 fogColor = getSkyColor(fogAtmDir, Sky, LinearSampler);
 
 	float isUnderwater = step(1.0f, SceneRenderingState[0].Underwater);
+
+	fogColor = lerp(fogColor, float3(0.1,0.1,0.1), isUnderwater);
+
 	float fogDensity = 0.000000003;
-	fogDensity *= lerp(1, 3000.f, isUnderwater);
+	fogDensity *= lerp(1, 6000.f, isUnderwater);
 
 	float fogFactor = 1.0 - exp(-camDistance * camDistance * fogDensity);
 	finalColor.rgb = lerp(finalColor.rgb, fogColor, fogFactor);
 
-	finalColor.rgb *= lerp(1, 0.25, isUnderwater);
+	//finalColor.rgb *= lerp(1, 0.5, isUnderwater);// * (1.1f - saturate(SceneRenderingState[0].Underwater / 100.f));
 
 /*
 	float fogDensity = 0.000000001;

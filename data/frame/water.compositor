@@ -3,6 +3,7 @@ compositor Water
 	texture sceneTransparentTextures target_size Color:DXGI_FORMAT_R8G8B8A8_UNORM Normal:DXGI_FORMAT_R16G16_SNORM Caustics:DXGI_FORMAT_R8_UNORM Depth
 	texture sceneReflectionsTexture target_size_div 2 DXGI_FORMAT_R16G16B16A16_FLOAT
 	texture sceneReflectionsTexture2 target_size_div 2 DXGI_FORMAT_R16G16B16A16_FLOAT
+	texture sceneReflectionsAcc target_size_div 2 DXGI_FORMAT_R16G16B16A16_FLOAT
 
 	extern sceneColorTexture
 	extern depthTexture
@@ -43,14 +44,31 @@ compositor Water
 		out sceneReflectionsTexture
 	}
 
+	pass AccumulateReflections
+	{
+		material AccumulateReflections
+		in sceneReflectionsTexture
+		in sceneReflectionsAcc
+		in sceneTransparentTextures:Depth
+		out sceneReflectionsTexture2
+	}
+
+	pass AccCopy
+	{
+		material PassThrough
+		in sceneReflectionsTexture2
+		out sceneReflectionsAcc
+	}
+
 	pass ApplySceneWater
 	{
 		material ApplySceneWater
 		in sceneColorTexture
 		in sceneTransparentTextures:Color
-		in sceneReflectionsTexture
+		in sceneReflectionsAcc
 		in sceneTransparentTextures:Normal
 		in sceneTransparentTextures:Caustics
+		in depthTexture
 		out sceneFinalColorTexture
 	}
 }

@@ -83,6 +83,14 @@ float4 PSPutBlurThrough(VS_OUTPUT input) : SV_TARGET
 	return Gaussian3x3(colorMap, input.TexCoord, ViewportSizeInverse);
 }
 
+float4 PSPutAccThrough(VS_OUTPUT input) : SV_TARGET
+{
+	float4 color = colorMap.Sample(LinearSampler, input.TexCoord);
+	float4 color2 = colorMap2.Sample(LinearSampler, input.TexCoord);
+
+	return lerp(color, color2, 0.25f);
+}
+
 float4 PSBloomUpscale(VS_OUTPUT input) : SV_TARGET
 {
 	/*float offset = BlurSize;

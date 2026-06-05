@@ -292,20 +292,27 @@ compositor Frame
 	alias sceneAfterAA sceneTextureTmp2
 #endif
 
+	pass PreToneMappingFx
+	{
+		material PreToneMappingFx
+		in sceneAfterAA
+		out sceneTextureTmpOut
+	}
+
 	pass ToneMapping
 	{
 		material ToneMapping
-		in sceneAfterAA
+		in sceneTextureTmpOut
 		in Bloom.bloom
 		in Exposure.exposure
 		in Godray.godray
-		out sceneTextureTmpOut
+		out sceneTextureTmp2
 	}
 
 	pass PostToneMappingFx
 	{
 		material PostToneMappingFx
-		in sceneTextureTmpOut
+		in sceneTextureTmp2
 		out Output
 	}
 

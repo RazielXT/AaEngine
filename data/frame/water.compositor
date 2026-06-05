@@ -69,6 +69,7 @@ compositor Water
 		in sceneTransparentTextures:Normal
 		in sceneTransparentTextures:Caustics
 		in depthTexture
+		in sceneTransparentTextures:Depth
 		out sceneFinalColorTexture
 	}
 }

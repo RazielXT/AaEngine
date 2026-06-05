@@ -40,6 +40,18 @@ float borderBlend(float2 uv, float edgeThreshold)
 	return alpha;
 }
 
+float4 PSPreToneMappingFx(VS_OUTPUT input) : SV_TARGET
+{
+	float underwaterState = SceneRenderingState[0].Underwater;
+	float isUnderwater = step(1.0f, underwaterState);
+
+	float4 color = colorMap.Sample(LinearSampler, input.TexCoord);
+	color.rgb *= lerp(float3(1,1,1), float3(0.3,0.7,0.75) * (0.2 + Sky.SunColor * 0.8), isUnderwater);
+	color.rgb *= saturate(1 - isUnderwater * 0.5 - SceneRenderingState[0].UnderwaterDepth / 100.f);
+
+	return color;
+}
+
 float4 PSPostToneMappingFx(VS_OUTPUT input) : SV_TARGET
 {
 	float underwaterState = SceneRenderingState[0].Underwater;
@@ -64,9 +76,6 @@ float4 PSPostToneMappingFx(VS_OUTPUT input) : SV_TARGET
 	//underwaterUvOffset *= underwaterState;
 
 	float4 color = colorMap.Sample(LinearSampler, input.TexCoord + underwaterUvOffset.xy);
-	color.rgb *= lerp(float3(1,1,1), float3(0.3,0.7,0.75) * (0.2 + Sky.SunColor), step(1.0f, isUnderwater));
-
-	color.rgb *= saturate(1 - isUnderwater * 0.25 - SceneRenderingState[0].UnderwaterDepth / 1000.f);
 
 	return color;
 }

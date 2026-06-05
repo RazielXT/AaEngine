@@ -110,10 +110,12 @@ PSOutput PSMain(PSInput input)
 	float2 flow = GetTexture2D(TexIdFlowmap).Sample(LinearWrapSampler, input.uv).xy;
 
 	const float2 NormalUv = input.uv * 30 - Time * 0.02 + flow * 1.1;
-	const float2 NormalUv2 = input.uv * 36 + Time * 0.023 + flow;
+	const float2 NormalUv2 = input.uv.yx * 36 + Time * 0.023 + flow;
 	float2 normalTex1 = GetTexture2D(TexIdNormal).Sample(LinearWrapSampler, NormalUv).rg;
 	float2 normalTex2 = GetTexture2D(TexIdNormal).Sample(LinearWrapSampler, NormalUv2).rg;
-	float3 normalTex = DecodeNormalTexture(0.5 * (normalTex1 + normalTex2));
+
+	float2 normalAvg = lerp(normalTex1, normalTex2, 0.5);
+	float3 normalTex = DecodeNormalTexture(normalAvg);
 
 	float3 normal = ReadGridNormal(ResourceDescriptorHeap[TexIdMeshNormal], LinearSampler, input.uv);
 	//normal = lerp(normal, normalize(normalTex), 0.08);
@@ -128,8 +130,8 @@ PSOutput PSMain(PSInput input)
 	float4 albedo = GetTexture2D(TexIdDiffuse).Sample(LinearWrapSampler, DetailUv);
 	albedo.a = saturate(albedo.r * 0.2 + fade);
 
-	float lighting = abs(dot(-Sky.SunDirection, normal)) * 0.5;
-	albedo.rgb = WaterColor * pow(lighting, 1) * Sky.SunColor;
+	float lighting = abs(dot(-Sky.SunDirection, normal)) * 0.5f + 0.5f;
+	albedo.rgb = WaterColor * lighting * Sky.SunColor;
 
 	PSOutput output;
 	output.color = albedo;
@@ -137,11 +139,12 @@ PSOutput PSMain(PSInput input)
 
 	float2 projSpeed = float2(1,1);
 	float2 projOffset = Time * projSpeed * 10 / 8.f;
-	float projScale = 0.01 * 8.f;
+	float projScale = 0.05f;
 	float projection = GetTexture2D(TexIdCaustics).Sample(LinearWrapSampler, (groundPosition.xy+groundPosition.z + projOffset)*projScale).r;
 	projection *= GetTexture2D(TexIdCaustics).Sample(LinearWrapSampler, (groundPosition.xy+groundPosition.z + projOffset*-1.1)*projScale * 1.1).r;
-	output.caustics = projection * 0.3 * (input.worldPosition.y - groundPosition.y) / FadeDistance;
+	output.caustics = projection * 0.2 * (input.worldPosition.y - groundPosition.y) / 10;
 	//output.caustics = 30*abs(GetTexture(TexIdHeightmap).Sample(LinearWrapSampler, input.uv + 0.005f).r - GetTexture(TexIdHeightmap).Sample(LinearWrapSampler, input.uv).r) * fade;
+
 	return output;
 }
 

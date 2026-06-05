@@ -213,6 +213,17 @@ material UpsampleDepthAware : PostProcess
 	}
 }
 
+material PreToneMappingFx : PostProcess
+{
+	pixel_shader
+	{
+		file postprocess/postToneMappingFx.hlsl
+		entry PSPreToneMappingFx
+		profile ps_6_6
+	}
+}
+
+
 material PostToneMappingFx : PostProcess
 {
 	texture

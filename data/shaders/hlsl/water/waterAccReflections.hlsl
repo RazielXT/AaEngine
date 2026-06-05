@@ -30,7 +30,7 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	prevUV.y = 0.5 - prevClipPos.y * 0.5;
 
 	float4 current = currentMap.Sample(LinearSampler, input.TexCoord);
-	float4 acc = accMap.Sample(LinearSampler, prevUV);
+	float4 accumulated = accMap.Sample(LinearSampler, prevUV);
 
-	return lerp(current, acc, 0.5f);
+	return lerp(current, accumulated, 0.5f);
 }

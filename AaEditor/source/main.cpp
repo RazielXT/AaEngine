@@ -119,7 +119,7 @@ public:
 
 				if (editorUi.state.limitFrameRate)
 				{
-					UINT sleepTime = 10;
+					UINT sleepTime = 10 * editorUi.state.limitFrameRate * editorUi.state.limitFrameRate;
 
 					//locked
 					if (presentResult == DXGI_STATUS_OCCLUDED)

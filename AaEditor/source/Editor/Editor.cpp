@@ -15,7 +15,7 @@ Editor::Editor(ApplicationCore& a, ImguiPanelViewport& v) : app(a), renderer(a.r
 	sidePanel(a, selection, state, sceneTreePanel, viewportPanel)
 {
 #ifdef _DEBUG
-	state.limitFrameRate = true;
+	state.limitFrameRate = DebugState::LimitFrameRate::Light;
 #endif
 }
 
@@ -190,7 +190,11 @@ void Editor::prepareElements(Camera& camera)
 
 	ImGui::Text("%.1f FPS (%.2f ms)", ImGui::GetIO().Framerate, 1000.0f / ImGui::GetIO().Framerate);
 	ImGui::SameLine();
-	ImGui::Checkbox("Limit framerate", &state.limitFrameRate);
+
+	static const char* LimitNames[] = { "None", "Light", "Heavy" };
+	ImGui::PushItemWidth(150.0f);
+	ImGui::SliderInt("Limit framerate", (int*) &state.limitFrameRate, 0, 2, LimitNames[state.limitFrameRate]);
+	ImGui::PopItemWidth();
 
 	ImGui::Text("VRAM used %uMB", GetGpuMemoryUsage());
 	ImGui::Text("RAM used %uMB", GetSystemMemoryUsage());

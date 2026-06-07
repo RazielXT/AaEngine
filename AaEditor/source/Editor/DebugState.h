@@ -17,7 +17,13 @@ struct DebugState
 	int DlssMode = (int)UpscaleMode::Off;
 	int FsrMode = (int)UpscaleMode::Off;
 
-	bool limitFrameRate = false;
+	enum LimitFrameRate : int
+	{
+		None,
+		Light,
+		Heavy
+	}
+	limitFrameRate{};
 
 	bool wireframe = false;
 	bool wireframeChange = false;

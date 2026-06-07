@@ -1,15 +1,4 @@
-material PostProcess abstract
-{
-	vertex_shader
-	{
-		file postprocess/postprocess.hlsl
-		entry VSQuad
-		profile vs_6_6
-	}
-	
-	depth off
-	sampler clamp bilinear
-}
+import postprocessCommon.material
 
 material PassThrough : PostProcess
 {

@@ -1,14 +1,7 @@
-material DeferredLighting
+import postprocessCommon.material
+
+material DeferredLighting : PostProcess
 {
-	vertex_shader
-	{
-		file postprocess/postprocess.hlsl
-		entry VSQuad
-		profile vs_6_6
-	}
-
-	depth off
-
 	pixel_shader
 	{
 		file postprocess/deferredLighting.hlsl
@@ -17,17 +10,8 @@ material DeferredLighting
 	}
 }
 
-material DeferredVCT
+material DeferredVCT : PostProcess
 {
-	vertex_shader
-	{
-		file postprocess/postprocess.hlsl
-		entry VSQuad
-		profile vs_6_6
-	}
-
-	depth off
-
 	pixel_shader
 	{
 		file postprocess/deferredVCT.hlsl
@@ -36,17 +20,8 @@ material DeferredVCT
 	}
 }
 
-material DeferredVRT
+material DeferredVRT : : PostProcess
 {
-	vertex_shader
-	{
-		file postprocess/postprocess.hlsl
-		entry VSQuad
-		profile vs_6_6
-	}
-
-	depth off
-
 	pixel_shader
 	{
 		file postprocess/deferredVRT.hlsl
@@ -63,17 +38,8 @@ material DeferredVRT
 	}
 }
 
-material DeferredVRT_Accumulation
+material DeferredVRT_Accumulation : PostProcess
 {
-	vertex_shader
-	{
-		file postprocess/postprocess.hlsl
-		entry VSQuad
-		profile vs_6_6
-	}
-
-	depth off
-
 	pixel_shader
 	{
 		file postprocess/deferredVRT_accumulation.hlsl
@@ -82,17 +48,8 @@ material DeferredVRT_Accumulation
 	}
 }
 
-material DeferredVRT_AgeUpdate
+material DeferredVRT_AgeUpdate : PostProcess
 {
-	vertex_shader
-	{
-		file postprocess/postprocess.hlsl
-		entry VSQuad
-		profile vs_6_6
-	}
-
-	depth off
-
 	pixel_shader
 	{
 		file postprocess/deferredVRT_age.hlsl
@@ -101,17 +58,8 @@ material DeferredVRT_AgeUpdate
 	}
 }
 
-material DeferredVRT_FreshBlurH
+material DeferredVRT_FreshBlurH : PostProcess
 {
-	vertex_shader
-	{
-		file postprocess/postprocess.hlsl
-		entry VSQuad
-		profile vs_6_6
-	}
-
-	depth off
-
 	pixel_shader
 	{
 		file postprocess/deferredVRT_freshBlur.hlsl
@@ -120,17 +68,8 @@ material DeferredVRT_FreshBlurH
 	}
 }
 
-material DeferredVRT_FreshBlurV
+material DeferredVRT_FreshBlurV : PostProcess
 {
-	vertex_shader
-	{
-		file postprocess/postprocess.hlsl
-		entry VSQuad
-		profile vs_6_6
-	}
-
-	depth off
-
 	pixel_shader
 	{
 		file postprocess/deferredVRT_freshBlur.hlsl
@@ -140,17 +79,8 @@ material DeferredVRT_FreshBlurV
 	}
 }
 
-material DeferredVRT_FreshComposite
+material DeferredVRT_FreshComposite : PostProcess
 {
-	vertex_shader
-	{
-		file postprocess/postprocess.hlsl
-		entry VSQuad
-		profile vs_6_6
-	}
-
-	depth off
-
 	pixel_shader
 	{
 		file postprocess/deferredVRT_freshComposite.hlsl
@@ -159,17 +89,8 @@ material DeferredVRT_FreshComposite
 	}
 }
 
-material ToneMapping
+material ToneMapping : PostProcess
 {
-	vertex_shader
-	{
-		file postprocess/postprocess.hlsl
-		entry VSQuad
-		profile vs_6_6
-	}
-
-	depth off
-
 	pixel_shader
 	{
 		file postprocess/toneMapping.hlsl

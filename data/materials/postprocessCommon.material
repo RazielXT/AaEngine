@@ -1,0 +1,11 @@
+material PostProcess abstract
+{
+	vertex_shader
+	{
+		file postprocess/vsQuad.hlsl
+		entry VSQuad
+		profile vs_6_6
+	}
+	
+	depth off
+}

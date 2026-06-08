@@ -1,6 +1,6 @@
 compositor Water
 {
-	texture sceneTransparentTextures target_size Color:DXGI_FORMAT_R16G16B16A16_FLOAT Normal:DXGI_FORMAT_R16G16_SNORM Caustics:DXGI_FORMAT_R8_UNORM Depth
+	texture sceneTransparentTextures target_size Color:DXGI_FORMAT_R16G16B16A16_FLOAT Normal:DXGI_FORMAT_R16G16_SNORM Depth
 	texture sceneReflectionsTexture target_size_div 2 DXGI_FORMAT_R16G16B16A16_FLOAT
 	texture sceneReflectionsTexture2 target_size_div 2 DXGI_FORMAT_R16G16B16A16_FLOAT
 	texture sceneReflectionsAcc target_size_div 2 DXGI_FORMAT_R16G16B16A16_FLOAT
@@ -67,7 +67,6 @@ compositor Water
 		in sceneTransparentTextures:Color
 		in sceneReflectionsAcc
 		in sceneTransparentTextures:Normal
-		in sceneTransparentTextures:Caustics
 		in depthTexture
 		in sceneTransparentTextures:Depth
 		out sceneFinalColorTexture

@@ -20,7 +20,6 @@ float Time;
 float2 ViewportSizeInverse;
 uint TexIdHeightmap;
 uint TexIdFlowmap;
-uint TexIdDiffuse;
 uint TexIdNormal;
 uint TexIdSceneDepthHigh;
 uint TexIdCaustics;
@@ -87,7 +86,7 @@ struct PSOutput
 {
 	float4 color : SV_Target0;
 	float2 normal : SV_Target1;
-	float caustics : SV_Target2;
+	//float caustics : SV_Target2;
 };
 
 float3 BlendUDN(float3 n1, float3 n2)
@@ -126,10 +125,8 @@ PSOutput PSMain(PSInput input)
 	const float FadeDistance = WaterFade + 0.0001f;
 	float fade = groundDistance / FadeDistance;
 
-	const float2 DetailUv = input.uv * 20 + Time * 0.02;
-
-	float4 albedo = GetTexture2D(TexIdDiffuse).Sample(LinearWrapSampler, DetailUv);
-	albedo.a = saturate(albedo.r * 0.2 + fade);
+	float4 albedo;
+	albedo.a = saturate(normal.r * 0.2 + fade);
 
 	float lighting = abs(dot(-Sky.SunDirection, normal)) * 0.5f + 0.5f;
 	albedo.rgb = SrgbToLinear(WaterColor) * lighting * Sky.SunColor;
@@ -138,12 +135,12 @@ PSOutput PSMain(PSInput input)
 	output.color = albedo;
 	output.normal = normal.xy;
 
-	float2 projSpeed = float2(1,1);
+	/*float2 projSpeed = float2(1,1);
 	float2 projOffset = Time * projSpeed * 10 / 8.f;
 	float projScale = 0.05f;
 	float projection = GetTexture2D(TexIdCaustics).Sample(LinearWrapSampler, (groundPosition.xy+groundPosition.z + projOffset)*projScale).r;
 	projection *= GetTexture2D(TexIdCaustics).Sample(LinearWrapSampler, (groundPosition.xy+groundPosition.z + projOffset*-1.1)*projScale * 1.1).r;
-	output.caustics = projection * 0.2 * (input.worldPosition.y - groundPosition.y) / 10;
+	output.caustics = projection * 0.2 * (input.worldPosition.y - groundPosition.y) / 10;*/
 	//output.caustics = 30*abs(GetTexture(TexIdHeightmap).Sample(LinearWrapSampler, input.uv + 0.005f).r - GetTexture(TexIdHeightmap).Sample(LinearWrapSampler, input.uv).r) * fade;
 
 	return output;

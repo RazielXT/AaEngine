@@ -13,11 +13,10 @@ Texture2D sceneTexture : register(t0);
 Texture2D waterTexture : register(t1);
 Texture2D reflectionsTexture : register(t2);
 Texture2D waterNormal : register(t3);
-Texture2D causticsTexture : register(t4);
-Texture2D depthTexture : register(t5);
-Texture2D waterDepthTexture : register(t6);
+Texture2D depthTexture : register(t4);
+Texture2D waterDepthTexture : register(t5);
 
-StructuredBuffer<SceneRenderingStateParams> SceneRenderingState : register(t7);
+StructuredBuffer<SceneRenderingStateParams> SceneRenderingState : register(t6);
 
 cbuffer SkyParamsBuffer : register(b1)
 {
@@ -77,7 +76,7 @@ float4 PSWaterApply(VS_OUTPUT input) : SV_TARGET
 	fresnel = pow(fresnel,2);
 
 	float3 sceneColor = sceneTexture.SampleLevel(LinearSampler, refractionUv, 0).rgb;
-	sceneColor += (1 - isUnderwater) * causticsTexture.SampleLevel(LinearSampler, refractionUv, 0).rrr;
+	//sceneColor += (1 - isUnderwater) * causticsTexture.SampleLevel(LinearSampler, refractionUv, 0).rrr;
 
 	float reflOffset = normal.x * 0.1f;
 	float2 reflectionUv = MirrorUV(input.TexCoord + reflOffset);

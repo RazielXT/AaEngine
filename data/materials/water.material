@@ -18,10 +18,6 @@ material WaterLake
 	texture Height
 	texture Flow
 
-	texture Diffuse
-	{
-		file water.dds
-	}
 	texture Normal
 	{
 		file water_NORM.dds

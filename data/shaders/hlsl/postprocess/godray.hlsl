@@ -1,4 +1,5 @@
 #include "hlsl/sky/SkyParams.hlsl"
+#include "hlsl/common/SceneRenderingState.hlsl"
 
 float4x4 ViewMatrix;
 float4x4 ProjectionMatrix;
@@ -6,10 +7,6 @@ float3 CameraPosition;
 
 Texture2D colorMap : register(t0);
 
-struct SceneRenderingStateParams
-{
-	float Underwater;
-};
 StructuredBuffer<SceneRenderingStateParams> SceneRenderingState : register(t1);
 
 SamplerState LinearBorderSampler : register(s0);

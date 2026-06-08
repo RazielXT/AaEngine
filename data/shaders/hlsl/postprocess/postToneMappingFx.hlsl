@@ -1,5 +1,6 @@
 #include "PostProcessCommon.hlsl"
 #include "hlsl/sky/SkyParams.hlsl"
+#include "hlsl/common/SceneRenderingState.hlsl"
 
 float2 ViewportSizeInverse;
 float Time;
@@ -7,11 +8,6 @@ float Time;
 Texture2D colorMap : register(t0);
 Texture2D<float3> underwaterMap : register(t1);
 
-struct SceneRenderingStateParams
-{
-	float Underwater;
-	float UnderwaterDepth;
-};
 StructuredBuffer<SceneRenderingStateParams> SceneRenderingState : register(t2);
 
 cbuffer SkyParamsBuffer : register(b0)
@@ -46,8 +42,7 @@ float4 PSPreToneMappingFx(VS_OUTPUT input) : SV_TARGET
 	float isUnderwater = step(1.0f, underwaterState);
 
 	float4 color = colorMap.Sample(LinearSampler, input.TexCoord);
-	color.rgb *= lerp(float3(1,1,1), float3(0.3,0.7,0.75) * (0.2 + Sky.SunColor * 0.8), isUnderwater);
-	color.rgb *= saturate(1 - isUnderwater * 0.5 - SceneRenderingState[0].UnderwaterDepth / 100.f);
+	//color.rgb *= lerp(float3(1,1,1), SceneRenderingState[0].WaterColor * (0.2 + Sky.SunColor * 0.8), isUnderwater);
 
 	return color;
 }

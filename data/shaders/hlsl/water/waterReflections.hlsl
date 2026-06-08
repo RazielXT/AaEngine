@@ -4,6 +4,7 @@
 #include "hlsl/common/ResourceAccess.hlsl"
 #include "hlsl/common/Random.hlsl"
 #include "hlsl/common/BlueNoise.hlsl"
+#include "hlsl/common/SceneRenderingState.hlsl"
 #include "hlsl/sky/SkyColor.hlsl"
 #include "hlsl/sky/SkyParams.hlsl"
 
@@ -19,10 +20,6 @@ uint TexIdWaterColor;
 uint TexIdWaterNormal;
 uint TexIdWaterDepth;
 
-struct SceneRenderingStateParams
-{
-	float Underwater;
-};
 StructuredBuffer<SceneRenderingStateParams> SceneRenderingState : register(t0);
 
 cbuffer SceneVoxelInfo : register(b1)

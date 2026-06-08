@@ -17,6 +17,8 @@ void CameraWaterStateCS::dispatch(ID3D12GraphicsCommandList* commandList, const 
 		float waterHeightStart;
 		float dryingSpeed;
 		UINT resetState;
+		UINT _pad;
+		Vector3 waterColor;
 	}
 	data = {
 		params.waterHeightSrvIndex,
@@ -28,10 +30,9 @@ void CameraWaterStateCS::dispatch(ID3D12GraphicsCommandList* commandList, const 
 		params.waterHeightScale,
 		params.waterHeightStart,
 		params.dryingSpeed,
-		params.resetState
+		params.resetState,
+		{},	params.waterColor
 	};
-
-	static_assert(sizeof(CSParams) == 60, "CameraWaterStateCS constants must match HLSL cbuffer size (60 bytes)");
 
 	commandList->SetComputeRoot32BitConstants(0, sizeof(data) / sizeof(UINT), &data, 0);
 	commandList->SetComputeRootUnorderedAccessView(1, stateBuffer->GetGPUVirtualAddress());

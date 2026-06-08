@@ -1,6 +1,8 @@
 #include "hlsl/postprocess/PostProcessCommon.hlsl"
 #include "hlsl/postprocess/WorldReconstruction.hlsl"
 #include "hlsl/sky/SkyParams.hlsl"
+#include "hlsl/common/BlueNoise.hlsl"
+#include "hlsl/common/SceneRenderingState.hlsl"
 
 float4x4 InvViewProjectionMatrix;
 float3 CameraPosition;
@@ -15,10 +17,6 @@ Texture2D causticsTexture : register(t4);
 Texture2D depthTexture : register(t5);
 Texture2D waterDepthTexture : register(t6);
 
-struct SceneRenderingStateParams
-{
-	float Underwater;
-};
 StructuredBuffer<SceneRenderingStateParams> SceneRenderingState : register(t7);
 
 cbuffer SkyParamsBuffer : register(b1)
@@ -69,7 +67,7 @@ float4 PSWaterApply(VS_OUTPUT input) : SV_TARGET
 	float4 waterRefr = waterNormal.SampleLevel(LinearBorderSampler, saturate(input.TexCoord + refraction), 0);
 	refraction *= saturate(waterRefr.y * 2);
 
-	float2 refractionUv = saturate(input.TexCoord + refraction);
+	float2 refractionUv = MirrorUV(input.TexCoord + refraction);
 
 	float3 worldPosition = getSceneWorldPosition(refractionUv);
 	float camDistance = length(worldPosition - CameraPosition);
@@ -84,7 +82,7 @@ float4 PSWaterApply(VS_OUTPUT input) : SV_TARGET
 	float reflOffset = normal.x * 0.1f;
 	float2 reflectionUv = MirrorUV(input.TexCoord + reflOffset);
 
-	float reflOffsetStep = step(1.0f, waterTexture.SampleLevel(LinearSampler, reflectionUv, 0).a);
+	float reflOffsetStep = step(1.0f, waterTexture.SampleLevel(LinearSampler, reflectionUv, 0).a > 0);
 	reflectionUv = MirrorUV(input.TexCoord + reflOffset * reflOffsetStep);
 
 	float3 waterWorldPosition = getWaterWorldPosition(refractionUv);
@@ -94,18 +92,24 @@ float4 PSWaterApply(VS_OUTPUT input) : SV_TARGET
 	float waterDepth = length(waterWorldPosition - worldPosition);
 
 	float3 fogAtmDir = normalize(CameraPosition - worldPosition);
-	fogAtmDir.y = saturate(fogAtmDir.y);
-	float3 fogColor = float3(0.03,0.06,0.08) * Sky.SunColor;
-	float fogDensity = 0.003;
+	float3 fogColor = SceneRenderingState[0].WaterColor * Sky.SunColor * (1 - fogAtmDir.y * 0.8f);
+	float fogDensity = 0.003f;
 	float fogFactor = 1.0 - exp(-waterDepth * waterDepth * fogDensity);
+	fogFactor = max(fogFactor, isUnderwater * 0.15f);
 
 	float4 reflections = reflectionsTexture.SampleLevel(LinearSampler, reflectionUv, 0);
 	float4 water = waterTexture.SampleLevel(LinearSampler, refractionUv, 0);
 	water.rgb = lerp(water.rgb, reflections.rgb, saturate(fresnel - isUnderwater));
 	water.rgb += getWaterLighting(cameraVector, normal, reflections.a, isUnderwater);
 
+	float noise = BlueNoise(input.Position.xy);
+	float ditherStrength = 1 * (noise - 0.5) / 255.0;
+	fogColor.rgb += ditherStrength;
+
 	float3 finalColor = lerp(sceneColor, fogColor, saturate(fogFactor));
 	finalColor = lerp(finalColor, water.rgb, saturate(water.a - saturate(fogFactor) * isUnderwater));
+
+	finalColor.rgb *= saturate(1 - 0.5f * SceneRenderingState[0].UnderwaterDepth / 100.f);
 
 	return float4(finalColor, 1);
 }

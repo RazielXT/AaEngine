@@ -7,6 +7,7 @@
 #include "hlsl/common/ShaderOutputs.hlsl"
 #include "hlsl/sky/SkyParams.hlsl"
 #include "hlsl/common/NormalDecoding.hlsl"
+#include "hlsl/common/Srgb.hlsl"
 
 float4x4 ViewProjectionMatrix;
 float4x4 InvViewProjectionMatrix;
@@ -131,7 +132,7 @@ PSOutput PSMain(PSInput input)
 	albedo.a = saturate(albedo.r * 0.2 + fade);
 
 	float lighting = abs(dot(-Sky.SunDirection, normal)) * 0.5f + 0.5f;
-	albedo.rgb = WaterColor * lighting * Sky.SunColor;
+	albedo.rgb = SrgbToLinear(WaterColor) * lighting * Sky.SunColor;
 
 	PSOutput output;
 	output.color = albedo;

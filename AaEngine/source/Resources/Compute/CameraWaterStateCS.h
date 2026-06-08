@@ -18,6 +18,7 @@ public:
 		float waterHeightStart;
 		float dryingSpeed;
 		UINT resetState;
+		Vector3 waterColor;
 	};
 
 	void dispatch(ID3D12GraphicsCommandList* commandList, const DispatchParams& params, ID3D12Resource* stateBuffer);

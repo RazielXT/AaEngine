@@ -1,3 +1,6 @@
+#include "hlsl/common/SceneRenderingState.hlsl"
+#include "hlsl/common/Srgb.hlsl"
+
 cbuffer CameraWaterStateParams : register(b0)
 {
 	uint TexIdWaterHeight;
@@ -9,13 +12,7 @@ cbuffer CameraWaterStateParams : register(b0)
 	float waterHeightStart;
 	float dryingSpeed;
 	uint resetState;
-};
-
-struct SceneRenderingStateParams
-{
-	float Underwater;
-	float UnderwaterDepth;
-	float2 Padding;
+	float3 waterColor;
 };
 
 RWStructuredBuffer<SceneRenderingStateParams> SceneRenderingState : register(u0);
@@ -47,6 +44,7 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
 
 	state.Underwater = saturate(nextState);
 	state.UnderwaterDepth = waterDepth;
-	state.Padding = 0.0f.x;
+	state.WaterColor = lerp(state.WaterColor, SrgbToLinear(waterColor), state.Underwater);
+
 	SceneRenderingState[0] = state;
 }

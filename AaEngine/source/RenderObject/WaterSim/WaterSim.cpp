@@ -67,7 +67,7 @@ void WaterSim::initializeGpuResources(RenderSystem& renderSystem, GraphicsResour
 	resources.descriptors.createTextureView(waterHeightMeshTexture);
 
 	waterMaterial = resources.materials.getMaterial("WaterLake", batch); 
-	sceneRenderingStateBuffer = resources.shaderBuffers.CreateStructuredBuffer(sizeof(float) * 4, "SceneRenderingState");
+	sceneRenderingStateBuffer = resources.shaderBuffers.CreateStructuredBuffer(sizeof(float) * 8, "SceneRenderingState");
 
 	auto csShader = resources.shaders.getShader("cameraWaterStateCS", ShaderType::Compute, ShaderRef{ "waterSim/cameraWaterStateCS.hlsl", "CSMain", "cs_6_6" });
 	cameraWaterStateCS.init(*renderSystem.core.device, *csShader);
@@ -287,6 +287,7 @@ void WaterSim::updateCompute(RenderSystem& renderSystem, ID3D12GraphicsCommandLi
 		params.waterHeightStart = -500.0f;
 		params.dryingSpeed = 1.1f;
 		params.resetState = sceneRenderingStateNeedsReset ? 1 : 0;
+		waterGridMesh.entity->GetMaterialParam("WaterColor", &params.waterColor);
 		cameraWaterStateCS.dispatch(computeList, params, sceneRenderingStateBuffer.Get());
 
 		auto uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(sceneRenderingStateBuffer.Get());

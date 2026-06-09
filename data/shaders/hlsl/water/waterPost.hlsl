@@ -15,8 +15,9 @@ Texture2D reflectionsTexture : register(t2);
 Texture2D waterNormal : register(t3);
 Texture2D depthTexture : register(t4);
 Texture2D waterDepthTexture : register(t5);
+Texture2D godrayTexture : register(t6);
 
-StructuredBuffer<SceneRenderingStateParams> SceneRenderingState : register(t6);
+StructuredBuffer<SceneRenderingStateParams> SceneRenderingState : register(t7);
 
 cbuffer SkyParamsBuffer : register(b1)
 {
@@ -108,7 +109,9 @@ float4 PSWaterApply(VS_OUTPUT input) : SV_TARGET
 	float3 finalColor = lerp(sceneColor, fogColor, saturate(fogFactor));
 	finalColor = lerp(finalColor, water.rgb, saturate(water.a - saturate(fogFactor) * isUnderwater));
 
-	finalColor.rgb *= saturate(1 - 0.5f * SceneRenderingState[0].UnderwaterDepth / 100.f);
+	finalColor.rgb += godrayTexture.SampleLevel(LinearSampler, input.TexCoord, 0).xxx * Sky.SunColor * saturate(-Sky.SunDirection.y);
+	float depthDarkness = saturate(1 - 0.95f * saturate(SceneRenderingState[0].UnderwaterDepth / 150.f)) + ditherStrength;
+	finalColor.rgb *= depthDarkness;
 
 	return float4(finalColor, 1);
 }

@@ -192,6 +192,26 @@ material TraceGodray : PostProcess
 	}
 }
 
+material WaterGodrayPassThrough : PostProcess
+{
+	pixel_shader
+	{
+		file water/waterGodrayPassThrough.hlsl
+		entry PSMain
+		profile ps_6_6
+	}
+}
+
+material TraceWaterGodray : PostProcess
+{
+	pixel_shader
+	{
+		file water/waterGodray.hlsl
+		entry PSTraceGodray
+		profile ps_6_6
+	}
+}
+
 material UpsampleDepthAware : PostProcess
 {
 	pixel_shader

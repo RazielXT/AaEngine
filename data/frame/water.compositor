@@ -60,6 +60,41 @@ compositor Water
 		out sceneReflectionsAcc
 	}
 
+	texture godray output_size_div 4 DXGI_FORMAT_R10G10B10A2_UNORM
+	texture godray2 output_size_div 4 DXGI_FORMAT_R10G10B10A2_UNORM
+	texture tmpGodrayDownsample2 output_size_div 2 DXGI_FORMAT_R10G10B10A2_UNORM
+
+	pass WaterDownsample
+	{
+		material WaterGodrayPassThrough
+		in sceneTransparentTextures:Normal
+		out tmpGodrayDownsample2
+	}
+	pass WaterDownsample
+	{
+		material PassThrough
+		in tmpGodrayDownsample2
+		out godray2
+	}
+	pass TraceGodray
+	{
+		material TraceWaterGodray
+		in godray2
+		out godray
+	}
+	pass TraceGodray
+	{
+		material TraceWaterGodray
+		in godray
+		out godray2
+	}
+	pass TraceGodray
+	{
+		material TraceWaterGodray
+		in godray2
+		out godray
+	}
+
 	pass ApplySceneWater
 	{
 		material ApplySceneWater
@@ -69,6 +104,7 @@ compositor Water
 		in sceneTransparentTextures:Normal
 		in depthTexture
 		in sceneTransparentTextures:Depth
+		in godray
 		out sceneFinalColorTexture
 	}
 }

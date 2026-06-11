@@ -418,7 +418,13 @@
     <ClCompile Include="source\Resources\Compute\IndirectCommandsCS.cpp">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClCompile>
+    <ClCompile Include="source\Resources\Compute\DeferredVrtCS.cpp">
+      <Filter>Source Files\Resources\Compute</Filter>
+    </ClCompile>
     <ClCompile Include="source\FrameCompositor\Tasks\WaterSimTask.cpp">
+      <Filter>Source Files\FrameCompositor\Tasks</Filter>
+    </ClCompile>
+    <ClCompile Include="source\FrameCompositor\Tasks\DeferredVrtComputeTask.cpp">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClCompile>
   </ItemGroup>
@@ -516,6 +522,9 @@
     <ClInclude Include="source\FrameCompositor\RenderContext.h">
       <Filter>Source Files\FrameCompositor</Filter>
     </ClInclude>
+    <ClInclude Include="source\FrameCompositor\Tasks\DeferredVrtComputeTask.h">
+      <Filter>Source Files\FrameCompositor\Tasks</Filter>
+    </ClInclude>
     <ClInclude Include="source\Scene\RenderQueue.h">
       <Filter>Source Files\Scene</Filter>
     </ClInclude>
@@ -544,6 +553,9 @@
       <Filter>Source Files\Resources\Shader</Filter>
     </ClInclude>
     <ClInclude Include="source\Resources\Compute\GenerateMipsComputeShader.h">
+      <Filter>Source Files\Resources\Compute</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Resources\Compute\DeferredVrtCS.h">
       <Filter>Source Files\Resources\Compute</Filter>
     </ClInclude>
     <ClInclude Include="source\Resources\Compute\ComputeShader.h">

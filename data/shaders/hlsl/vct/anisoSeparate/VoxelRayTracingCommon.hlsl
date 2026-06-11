@@ -219,19 +219,7 @@ float4 RayTraceCascades(float3 rayStart, float3 rayDir, uint voxelMip, AnisoSepa
 
 		if (!bOffsetApplied)
 		{
-			const float3 voxelSize = float(1u << voxelMip) / cascade.Density;
-			float3 localPos = currentStart - cascade.Offset;
-			float3 voxelCoord = floor(localPos / voxelSize);
-			float3 voxelMin = voxelCoord * voxelSize + cascade.Offset;
-			float3 voxelMax = voxelMin + voxelSize;
-			float tExitVoxel = GetRayAABBExitT(currentStart, rayDir, voxelMin, voxelMax);
-
-			currentStart = currentStart + rayDir * max(0.3f, tExitVoxel);
-			bOffsetApplied = true;
-
-			localUV = (currentStart - cascade.Offset) / cascade.WorldSize;
-			if (any(localUV < 0.0) || any(localUV > 1.0))
-				continue;
+			currentStart = currentStart + rayDir * 0.3f;
 		}
 		else
 			currentStart = currentStart - rayDir * 0.1f;

@@ -1,0 +1,53 @@
+#pragma once
+
+#include "FrameCompositor/Tasks/CompositorTask.h"
+#include "Resources/Compute/DeferredVrtCS.h"
+#include "Resources/Shader/ShaderDataBuffers.h"
+
+class DeferredVrtComputeTask : public CompositorTask
+{
+public:
+	DeferredVrtComputeTask(RenderProvider provider, RenderWorld& renderWorld);
+
+	AsyncTasksInfo initialize(CompositorPass& pass) override;
+	void resize(CompositorPass& pass) override;
+	void run(RenderContext& ctx, CommandsData& commands, CompositorPass& pass) override;
+
+	RunType getRunType(CompositorPass&) const override { return RunType::SyncCommands; }
+
+private:
+	struct RayData
+	{
+		UINT packedData;
+		float tCurrent;
+		Vector3 rayDirection;
+	};
+
+	struct RayResult
+	{
+		Vector4 radianceOcclusion;
+	};
+
+	DeferredVrtResetQueueCS resetQueueCS;
+	DeferredVrtGenerateRaysCS generateRaysCS;
+	DeferredVrtTraceRayCS traceRayCS;
+	DeferredVrtCollectRaysCS collectRaysCS;
+
+	ComPtr<ID3D12Resource> rayQueues[2];
+	ComPtr<ID3D12Resource> queueState;
+	ComPtr<ID3D12Resource> dispatchArgs[2];
+	ComPtr<ID3D12Resource> rayResults;
+	ComPtr<ID3D12CommandSignature> dispatchCommandSignature;
+
+	CbufferView sceneVoxelInfo;
+	TextureStatePair normal;
+	TextureStatePair depth;
+	TextureStatePair output;
+	UINT maxRays = 0;
+	bool buffersNeedInitialTransition = false;
+
+	void initializeResources(CompositorPass& pass);
+	void createDispatchCommandSignature();
+	void transitionBuffer(ID3D12GraphicsCommandList* commandList, ID3D12Resource* resource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after);
+	void uavBarrier(ID3D12GraphicsCommandList* commandList, ID3D12Resource* resource);
+};

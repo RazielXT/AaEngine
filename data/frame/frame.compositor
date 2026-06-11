@@ -12,7 +12,8 @@ compositor Frame
 	texture sceneGI target_size DXGI_FORMAT_R16G16B16A16_FLOAT
 	alias sceneTextureTmp2 sceneGI
 
-	texture sceneVCTLow target_size_div 2 DXGI_FORMAT_R16G16B16A16_FLOAT
+	rwtexture sceneVCTLow target_size_div 2 DXGI_FORMAT_R16G16B16A16_FLOAT
+	texture sceneVCTLowOutput target_size_div 2 DXGI_FORMAT_R16G16B16A16_FLOAT
 	texture sceneVCTLowAcc target_size_div 2 DXGI_FORMAT_R16G16B16A16_FLOAT
 	texture sceneVCTLowFinal target_size_div 2 DXGI_FORMAT_R16G16B16A16_FLOAT
 	texture sceneVCTAge target_size_div 2 DXGI_FORMAT_R16_FLOAT
@@ -106,11 +107,10 @@ compositor Frame
 		out motionVectors
 	}
 
-	pass DeferredVRT
+	task DeferredVRT.Compute (compute)
 	{
 		after VoxelScene.Voxelize
 
-		material DeferredVRT
 		in sceneTexture:Normal
 		in sceneTexture:Depth
 		out sceneVCTLow
@@ -185,12 +185,12 @@ compositor Frame
 		in sceneVCTDepthPrev
 		in sceneVCTNormalPrev
 		in sceneVCTFreshBlur
-		out sceneVCTLow
+		out sceneVCTLowOutput
 	}
 	pass DeferredVRT_AccumulationCopy
 	{
 		material LoadThrough
-		in sceneVCTLow
+		in sceneVCTLowOutput
 		out sceneVCTLowAcc
 	}
 	pass DeferredVRT_DepthHistoryCopy
@@ -210,7 +210,7 @@ compositor Frame
 	pass UpsampleDeferredVRT
 	{
 		material UpsampleDepthAware
-		in sceneVCTLow
+		in sceneVCTLowOutput
 		in SSAO.linearDepth
 		in SSAO.linearDepthDownsample2
 		in sceneTexture:Normal

@@ -24,6 +24,21 @@ float GetRayAABBExitT(float3 rayStart, float3 rayDir, float3 boxMin, float3 boxM
 	return min(tMax.x, min(tMax.y, tMax.z));
 }
 
+bool IsOccupied(Texture3D<uint> occupancyBitmaskMap, uint3 voxelCoord)
+{
+	uint3 maskCoord = voxelCoord >> 1;
+	uint3 local = voxelCoord & 1;
+
+	uint bit =
+		local.x |
+		(local.y << 1) |
+		(local.z << 2);
+
+	uint mask = occupancyBitmaskMap[maskCoord];
+
+	return ((mask >> bit) & 1u) != 0;
+}
+
 // Computes a smooth directional blend across the 3 matching faces facing the ray origin
 float3 SampleAnisotropicColor(
 	int4 voxelCoord,
@@ -63,9 +78,11 @@ RayTraceResult RayTraceSingle(
 	float3 rayStart,
 	float3 rayDir,
 	uint voxelMip,
-	AnisoSeparateSceneVoxelChunkInfo voxels,
-	Texture3D<float> occupancyMap)
+	AnisoSeparateSceneVoxelChunkInfo voxels)
 {
+	Texture3D<float> occupancyMap = GetTexture3D1f(GetOccupancyTexId(voxels));
+	Texture3D<uint> occupancyBitmaskMap = GetTexture3D1u(GetOccupancyBitmaskTexId(voxels));
+
 	const float3 voxelSize = float(1u << voxelMip) / voxels.Density;
 
 	RayTraceResult result;
@@ -123,7 +140,12 @@ RayTraceResult RayTraceSingle(
 		if (exitT >= tExitGrid)
 			break;
 
+#ifdef VRT_BITMASK_TRACING
+		float occupancy = (float)IsOccupied(occupancyBitmaskMap, voxelCoord);
+#else
 		float occupancy = occupancyMap.Load(int4(voxelCoord, voxelMip)).r;
+#endif
+
 		if (occupancy > 0.0f)
 		{
 			hitVoxelCoord = voxelCoord;
@@ -221,14 +243,11 @@ float4 RayTraceCascades(float3 rayStart, float3 rayDir, uint voxelMip, AnisoSepa
 		Texture3D<float4> facePosZ = GetTexture3D(GetFaceTexId(cascade, 4));
 		Texture3D<float4> faceNegZ = GetTexture3D(GetFaceTexId(cascade, 5));
 
-		Texture3D<float> occupancyMap = GetTexture3D1f(GetOccupancyTexId(cascade));
-
 		RayTraceResult result = RayTraceSingle(
 			currentStart,
 			rayDir,
 			voxelMip,
-			cascade,
-			occupancyMap);
+			cascade);
 
 		steps += result.steps;
 

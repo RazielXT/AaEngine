@@ -45,7 +45,7 @@ void AnisoSeparateVoxelization::initialize(RenderSystem& renderSystem, const Fra
 	auto clearBufferShader = resources.shaders.getShader("clearBufferCS", ShaderType::Compute, ShaderRef{ "utils/clearBufferCS.hlsl", "main", "cs_6_6" });
 	clearBufferCS.init(*renderSystem.core.device, *clearBufferShader);
 
-	auto bitmaskShader = resources.shaders.getShader("opacityGridCS", ShaderType::Compute, ShaderRef{ "vct/opacityGridCS.hlsl", "CSMain", "cs_6_6" });
+	auto bitmaskShader = resources.shaders.getShader("opacityBitmaskCS", ShaderType::Compute, ShaderRef{ "vct/opacityBitmaskCS.hlsl", "CSMain", "cs_6_6" });
 	occupancyBitmaskCS.init(*renderSystem.core.device, *bitmaskShader);
 
 	sceneQueue = mgr.createQueue({ outputFormat }, MaterialTechnique::Voxelize);
@@ -361,6 +361,8 @@ void AnisoSeparateOccupancyBitmaskCS::dispatch(ID3D12GraphicsCommandList* comman
 	commandList->SetComputeRootDescriptorTable(0, sourceOccupancy.srvHandle);
 	commandList->SetComputeRootDescriptorTable(1, target.uavHandle);
 
-	const UINT groupSize = 32;
+	const UINT threadSize = 8;
+	const auto voxelSize = UINT(VoxelSize);
+	const UINT groupSize = (voxelSize / 2 + threadSize - 1) / threadSize;
 	commandList->Dispatch(groupSize, groupSize, groupSize);
 }

@@ -47,12 +47,12 @@ compositor Frame
 		sync_signal Depth
 	}
 
-	task VoxelScene.Bounces (async_compute)
+	task VoxelScene.Bounces (async_compute_queue)
 	{
 		sync_signal Voxels
 	}
 
-	task WaterSim.Compute (async_compute)
+	task WaterSim.Compute (async_compute_queue)
 	{
 		sync_signal Water
 	}
@@ -107,7 +107,7 @@ compositor Frame
 		out motionVectors
 	}
 
-	task DeferredVRT.Compute (compute)
+	task DeferredVRT.Compute (compute_shader)
 	{
 		after VoxelScene.Voxelize
 
@@ -253,13 +253,13 @@ compositor Frame
 		out sceneTextureTmp2 sceneTexture:Depth (depth_read)
 	}
 
-	task PrepareFrame.PostCompute (async_compute)
+	task PrepareFrame.PostCompute (async_compute_queue)
 	{
 		sync_wait PostCompute
 	}
 
 #if UPSCALE
-	task Upscale (compute)
+	task Upscale (compute_shader)
 	{
 		in sceneTextureTmp2
 		in motionVectors

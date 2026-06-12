@@ -10,26 +10,19 @@ WaterSimTask::~WaterSimTask()
 {
 }
 
-AsyncTasksInfo WaterSimTask::initialize(CompositorPass& pass)
-{
-	return {};
-}
-
-void WaterSimTask::run(RenderContext& ctx, CommandsData& cmd, CompositorPass& pass)
-{
-	renderWorld.water.update(provider.renderSystem, cmd.commandList, provider.params.timeDelta, provider.params.frameIndex, ctx.camera->getPosition());
-}
-
-void WaterSimTask::runCompute(RenderContext& ctx, CommandsData& cmd, CompositorPass& pass)
-{
-	renderWorld.water.updateCompute(provider.renderSystem, cmd.commandList, provider.params.timeDelta, provider.params.frameIndex);
-}
-
-CompositorTask::RunType WaterSimTask::getRunType(CompositorPass& pass) const
+void WaterSimTask::recordCommands(RenderContext& ctx, CommandsData& commands, CompositorPass& pass)
 {
 	if (pass.info.entry == "Compute")
-		return RunType::SyncComputeCommands;
+		renderWorld.water.updateCompute(provider.renderSystem, commands.commandList, provider.params.timeDelta, provider.params.frameIndex);
+	else
+		renderWorld.water.update(provider.renderSystem, commands.commandList, provider.params.timeDelta, provider.params.frameIndex, ctx.camera->getPosition());
+}
+
+CompositorTask::Execution WaterSimTask::getExecution(CompositorPass& pass) const
+{
+	if (pass.info.entry == "Compute")
+		return { RecordMode::Inline, Queue::Compute };
 
 	// PrepareFrame
-	return RunType::SyncCommands;
+	return { RecordMode::Inline, Queue::Graphics };
 }

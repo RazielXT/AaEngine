@@ -36,14 +36,14 @@ void VoxelizeSceneTask::clear(ID3D12GraphicsCommandList* list)
 	voxelization.clear(list ? list : voxelizeCommands.commandList);
 }
 
-CompositorTask::RunType VoxelizeSceneTask::getRunType(CompositorPass& pass) const
+CompositorTask::Execution VoxelizeSceneTask::getExecution(CompositorPass& pass) const
 {
 	if (pass.info.entry == "EndFrame")
-		return RunType::SyncCommands;
+		return { RecordMode::Inline, Queue::Graphics };
 	if (pass.info.entry == "Bounces")
-		return RunType::SyncComputeCommands;
+		return { RecordMode::Inline, Queue::Compute };
 
-	return RunType::Generic;
+	return { RecordMode::Threaded, Queue::Graphics };
 }
 
 void VoxelizeSceneTask::revoxelize()
@@ -51,7 +51,7 @@ void VoxelizeSceneTask::revoxelize()
 	voxelization.revoxelize();
 }
 
-AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
+AsyncTasksInfo VoxelizeSceneTask::buildAsyncTasks(CompositorPass& pass)
 {
 	if (pass.info.entry != "Voxelize")
 		return {};
@@ -84,15 +84,19 @@ AsyncTasksInfo VoxelizeSceneTask::initialize(CompositorPass& pass)
 	return tasks;
 }
 
-void VoxelizeSceneTask::run(RenderContext& renderCtx, CommandsData& syncCommands, CompositorPass& pass)
+void VoxelizeSceneTask::recordCommands(RenderContext& renderCtx, CommandsData& commands, CompositorPass& pass)
 {
 	if (pass.info.entry == "EndFrame")
 	{
-		voxelization.transitionForCompute(syncCommands.commandList);
+		voxelization.transitionForCompute(commands.commandList);
+	}
+	else if (pass.info.entry == "Bounces")
+	{
+		voxelization.runBounces(commands, renderCtx, params);
 	}
 }
 
-void VoxelizeSceneTask::run(RenderContext& renderCtx, CompositorPass& pass)
+void VoxelizeSceneTask::update(RenderContext& renderCtx, CompositorPass& pass)
 {
 	{
 		auto m = XMMatrixMultiplyTranspose(renderCtx.camera->getViewMatrix(), renderCtx.camera->getProjectionMatrixNoReverse());
@@ -104,9 +108,4 @@ void VoxelizeSceneTask::run(RenderContext& renderCtx, CompositorPass& pass)
 
 	ctx = renderCtx;
 	SetEvent(eventBegin);
-}
-
-void VoxelizeSceneTask::runCompute(RenderContext& renderCtx, CommandsData& computeCommands, CompositorPass& pass)
-{
-	voxelization.runBounces(computeCommands, renderCtx, params);
 }

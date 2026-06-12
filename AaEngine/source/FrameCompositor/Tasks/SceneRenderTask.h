@@ -16,10 +16,10 @@ public:
 	SceneRenderTask(RenderProvider provider, RenderWorld&);
 	~SceneRenderTask();
 
-	AsyncTasksInfo initialize(CompositorPass& pass) override;
+	AsyncTasksInfo buildAsyncTasks(CompositorPass& pass) override;
 
-	void run(RenderContext& ctx, CompositorPass& pass) override;
-	void run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
+	void update(RenderContext& ctx, CompositorPass& pass) override;
+	void recordCommands(RenderContext& ctx, CommandsData& commands, CompositorPass& pass) override;
 
 	bool forceTaskOrder() const override { return true; }
 
@@ -29,7 +29,7 @@ public:
 
 	void showVoxels(bool show);
 
-	RunType getRunType(CompositorPass&) const override;
+	Execution getExecution(CompositorPass&) const override;
 
 private:
 

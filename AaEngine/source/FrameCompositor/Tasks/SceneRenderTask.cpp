@@ -48,7 +48,7 @@ SceneRenderTask::~SceneRenderTask()
 	}
 }
 
-AsyncTasksInfo SceneRenderTask::initialize(CompositorPass& pass)
+AsyncTasksInfo SceneRenderTask::buildAsyncTasks(CompositorPass& pass)
 {
 	AsyncTasksInfo tasks;
 
@@ -155,7 +155,7 @@ AsyncTasksInfo SceneRenderTask::initializeEarlyZ(CompositorPass& pass)
 	return { { earlyZ.work.eventFinish, earlyZ.work.commands } };
 }
 
-void SceneRenderTask::run(RenderContext& renderCtx, CompositorPass& pass)
+void SceneRenderTask::update(RenderContext& renderCtx, CompositorPass& pass)
 {
 	if (pass.info.entry == "EarlyZ")
 	{
@@ -172,7 +172,7 @@ void SceneRenderTask::run(RenderContext& renderCtx, CompositorPass& pass)
 	}
 }
 
-void SceneRenderTask::run(RenderContext& renderCtx, CommandsData& cmd, CompositorPass& pass)
+void SceneRenderTask::recordCommands(RenderContext& renderCtx, CommandsData& cmd, CompositorPass& pass)
 {
 	if (pass.info.entry == "Editor")
 	{
@@ -365,12 +365,12 @@ void SceneRenderTask::showVoxels(bool show)
 	showVoxelsEnabled = show;
 }
 
-CompositorTask::RunType SceneRenderTask::getRunType(CompositorPass& pass) const
+CompositorTask::Execution SceneRenderTask::getExecution(CompositorPass& pass) const
 {
 	if (pass.info.entry == "Editor" || pass.info.entry == "Debug" || pass.info.entry == "Forward")
-		return RunType::SyncCommands;
+		return { RecordMode::Inline, Queue::Graphics };
 	else
-		return RunType::Generic;
+		return { RecordMode::Threaded, Queue::Graphics };
 }
 
 void SceneRenderTask::updateVoxelsDebugView(RenderEntity& debugVoxel, Camera& camera)

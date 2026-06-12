@@ -8,14 +8,9 @@ UpscaleTask::~UpscaleTask()
 {
 }
 
-AsyncTasksInfo UpscaleTask::initialize(CompositorPass& pass)
+void UpscaleTask::recordCommands(RenderContext& ctx, CommandsData& commands, CompositorPass& pass)
 {
-	return {};
-}
-
-void UpscaleTask::run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass)
-{
-	CommandsMarker marker(syncCommands.commandList, "Upscale", PixColor::Upscale);
+	CommandsMarker marker(commands.commandList, "Upscale", PixColor::Upscale);
 
 	std::vector<CD3DX12_RESOURCE_BARRIER> barriers;
 	barriers.resize(pass.inputs.size() + 1);
@@ -40,7 +35,7 @@ void UpscaleTask::run(RenderContext& ctx, CommandsData& syncCommands, Compositor
 			D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	}
 
-	syncCommands.commandList->ResourceBarrier(b, barriers.data());
+	commands.commandList->ResourceBarrier(b, barriers.data());
 
 	auto& dlss = provider.renderSystem.upscale.dlss;
 	if (dlss.enabled())
@@ -51,7 +46,7 @@ void UpscaleTask::run(RenderContext& ctx, CommandsData& syncCommands, Compositor
 		input.depthResource = pass.inputs[2].texture->texture.Get();
 		input.resolvedColorResource = pass.targets.front().texture->texture.Get();
 		input.tslf = provider.params.timeDelta;
-		dlss.upscale(syncCommands.commandList, input);
+		dlss.upscale(commands.commandList, input);
 	}
 	auto& fsr = provider.renderSystem.upscale.fsr;
 	if (fsr.enabled())
@@ -62,11 +57,11 @@ void UpscaleTask::run(RenderContext& ctx, CommandsData& syncCommands, Compositor
 		input.depthResource = pass.inputs[2].texture->texture.Get();
 		input.resolvedColorResource = pass.targets.front().texture->texture.Get();
 		input.tslf = provider.params.timeDelta;
-		fsr.upscale(syncCommands.commandList, input, *ctx.camera);
+		fsr.upscale(commands.commandList, input, *ctx.camera);
 	}
 
 	//set them back if changed
 	auto& descriptors = DescriptorManager::get();
 	ID3D12DescriptorHeap* descriptorHeaps[] = { descriptors.mainDescriptorHeap, descriptors.samplerHeap };
-	syncCommands.commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+	commands.commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 }

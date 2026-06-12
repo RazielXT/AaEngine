@@ -10,7 +10,7 @@ SsaoComputeTask::~SsaoComputeTask()
 {
 }
 
-AsyncTasksInfo SsaoComputeTask::initialize(CompositorPass& pass)
+void SsaoComputeTask::initialize(CompositorPass& pass)
 {
 	auto& device = *provider.renderSystem.core.device;
 	prepareDepthBuffersCS.init(device, "AoPrepareDepthBuffers", provider.resources.shaders);
@@ -21,11 +21,9 @@ AsyncTasksInfo SsaoComputeTask::initialize(CompositorPass& pass)
 	aoBlurAndUpsampleFinalCS.init(device, "AoBlurAndUpsampleFinalCS", provider.resources.shaders);
 
 	initializeResources(pass);
-
-	return {};
 }
 
-void SsaoComputeTask::runCompute(RenderContext& ctx, CommandsData& commands, CompositorPass& pass)
+void SsaoComputeTask::recordCommands(RenderContext& ctx, CommandsData& commands, CompositorPass& pass)
 {
 	prepareDepthBuffersCS.data.ZMagic = ctx.camera->getCameraZ();
 	TanHalfFovH = ctx.camera->getTanHalfFovH();

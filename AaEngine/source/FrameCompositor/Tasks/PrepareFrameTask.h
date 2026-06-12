@@ -9,11 +9,9 @@ public:
 	PrepareFrameTask(RenderProvider provider, RenderWorld&);
 	~PrepareFrameTask();
 
-	AsyncTasksInfo initialize(CompositorPass& pass) override;
-	void run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
-	void runCompute(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
+	void recordCommands(RenderContext& ctx, CommandsData& commands, CompositorPass& pass) override;
 
-	RunType getRunType(CompositorPass&) const override;
+	Execution getExecution(CompositorPass&) const override;
 
 private:
 

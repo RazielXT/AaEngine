@@ -336,11 +336,11 @@ void FrameCompositor::render(RenderContext& ctx)
 		else if (pass.task)
 		{
 			if (syncCommands)
-				pass.task->run(ctx, *syncCommands, pass);
+				pass.task->recordCommands(ctx, *syncCommands, pass);
 			else if (pass.computeCommands)
-				pass.task->runCompute(ctx, *pass.computeCommands, pass);
+				pass.task->recordCommands(ctx, *pass.computeCommands, pass);
 			else
-				pass.task->run(ctx, pass);
+				pass.task->update(ctx, pass);
 		}
 
 		if (pass.present)

@@ -10,9 +10,9 @@ static Compositor::UsageFlags parseFlags(const Config::Object& member)
 	{
 		if (p.starts_with('(') && p.ends_with(')'))
 		{
-			if (p == "(compute)")
+			if (p == "(compute_shader)")
 				flags |= Compositor::ComputeShader;
-			else if (p == "(async_compute)")
+			else if (p == "(async_compute_queue)")
 				flags |= Compositor::ComputeShader | Compositor::Async;
 			else if (p == "(depth_read)")
 				flags |= Compositor::DepthRead;

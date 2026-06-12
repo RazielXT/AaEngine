@@ -8,13 +8,11 @@ DownsampleDepthTask::~DownsampleDepthTask()
 {
 }
 
-AsyncTasksInfo DownsampleDepthTask::initialize(CompositorPass& pass)
+void DownsampleDepthTask::initialize(CompositorPass& pass)
 {
 	auto shader = provider.resources.shaders.getShader(pass.info.name, ShaderType::Compute, ShaderRef{ "postprocess/DepthDownsampleCS.hlsl", "main", "cs_6_6" });
 
 	cs.init(*provider.renderSystem.core.device, *shader);
-
-	return {};
 }
 
 void DownsampleDepthTask::resize(CompositorPass& pass)
@@ -27,7 +25,7 @@ void DownsampleDepthTask::resize(CompositorPass& pass)
 	inputs = pass.inputs;
 }
 
-void DownsampleDepthTask::run(RenderContext& ctx, CommandsData& commands, CompositorPass& pass)
+void DownsampleDepthTask::recordCommands(RenderContext& ctx, CommandsData& commands, CompositorPass& pass)
 {
 	CommandsMarker marker(commands.commandList, "DownsampleDepthHiZ", PixColor::Compositor2);
 

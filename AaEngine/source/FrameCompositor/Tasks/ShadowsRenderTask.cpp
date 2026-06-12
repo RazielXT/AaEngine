@@ -31,7 +31,7 @@ ShadowsRenderTask::~ShadowsRenderTask()
 	}
 }
 
-AsyncTasksInfo ShadowsRenderTask::initialize(CompositorPass&)
+AsyncTasksInfo ShadowsRenderTask::buildAsyncTasks(CompositorPass&)
 {
 	depthQueue = renderWorld.createQueue({}, MaterialTechnique::DepthShadowmap);
 
@@ -62,7 +62,7 @@ AsyncTasksInfo ShadowsRenderTask::initialize(CompositorPass&)
 	return tasks;
 }
 
-void ShadowsRenderTask::run(RenderContext& renderCtx, CompositorPass&)
+void ShadowsRenderTask::update(RenderContext& renderCtx, CompositorPass&)
 {
 	ctx = renderCtx;
 

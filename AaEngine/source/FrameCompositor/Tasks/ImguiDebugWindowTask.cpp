@@ -9,16 +9,11 @@ ImguiDebugWindowTask::~ImguiDebugWindowTask()
 {
 }
 
-AsyncTasksInfo ImguiDebugWindowTask::initialize(CompositorPass&)
+void ImguiDebugWindowTask::recordCommands(RenderContext& ctx, CommandsData& commands, CompositorPass& pass)
 {
-	return {};
-}
+	CommandsMarker marker(commands.commandList, "Imgui", PixColor::Orange);
 
-void ImguiDebugWindowTask::run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass)
-{
-	CommandsMarker marker(syncCommands.commandList, "Imgui", PixColor::Orange);
+	pass.targets.front().texture->PrepareAsRenderTarget(commands.commandList, pass.targets.front().previousState);
 
-	pass.targets.front().texture->PrepareAsRenderTarget(syncCommands.commandList, pass.targets.front().previousState);
-
-	imgui::DebugWindow::Get().draw(syncCommands.commandList, provider.resources.materials);
+	imgui::DebugWindow::Get().draw(commands.commandList, provider.resources.materials);
 }

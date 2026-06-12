@@ -10,20 +10,15 @@ PhysicsRenderTask::~PhysicsRenderTask()
 {
 }
 
-AsyncTasksInfo PhysicsRenderTask::initialize(CompositorPass& pass)
-{
-	return {};
-}
-
-void PhysicsRenderTask::run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass)
+void PhysicsRenderTask::recordCommands(RenderContext& ctx, CommandsData& commands, CompositorPass& pass)
 {
 	if (mode != Off)
 	{
 		ShaderConstantsProvider constants(provider.params, {}, *ctx.camera, *pass.mrt);
 
-		pass.mrt->PrepareAsTarget(syncCommands.commandList, pass.targets, false, TransitionFlags::DepthContinue);
+		pass.mrt->PrepareAsTarget(commands.commandList, pass.targets, false, TransitionFlags::DepthContinue);
 
-		physicsMgr.drawDebugRender(syncCommands.commandList, &constants, pass.mrt->formats, mode == Wireframe);
+		physicsMgr.drawDebugRender(commands.commandList, &constants, pass.mrt->formats, mode == Wireframe);
 	}
 }
 

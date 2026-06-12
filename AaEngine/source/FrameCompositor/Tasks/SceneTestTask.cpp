@@ -8,7 +8,7 @@ SceneTestTask::~SceneTestTask()
 {
 }
 
-AsyncTasksInfo SceneTestTask::initialize(CompositorPass& pass)
+void SceneTestTask::initialize(CompositorPass& pass)
 {
 	tmpQueue = renderWorld.createManualQueue();
 	tmpQueue.targetFormats = pass.mrt->formats;
@@ -18,11 +18,9 @@ AsyncTasksInfo SceneTestTask::initialize(CompositorPass& pass)
 	textures.SetName("testRtt");
 
 	DescriptorManager::get().createTextureView(textures);
-
-	return {};
 }
 
-void SceneTestTask::run(RenderContext& ctx, CommandsData& commands, CompositorPass&)
+void SceneTestTask::recordCommands(RenderContext& ctx, CommandsData& commands, CompositorPass&)
 {
 	static bool initialized = false;
 	if (!initialized)

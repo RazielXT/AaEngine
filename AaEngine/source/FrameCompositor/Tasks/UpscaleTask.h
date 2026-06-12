@@ -11,10 +11,9 @@ public:
 	UpscaleTask(RenderProvider provider, RenderWorld&);
 	~UpscaleTask();
 
-	AsyncTasksInfo initialize(CompositorPass& pass) override;
-	void run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
+	void recordCommands(RenderContext& ctx, CommandsData& commands, CompositorPass& pass) override;
 
-	RunType getRunType(CompositorPass&) const override { return RunType::SyncCommands; }
+	Execution getExecution(CompositorPass&) const override { return { RecordMode::Inline, Queue::Graphics }; }
 
 private:
 

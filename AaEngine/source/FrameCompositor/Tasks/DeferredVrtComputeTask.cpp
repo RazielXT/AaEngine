@@ -8,10 +8,9 @@ DeferredVrtComputeTask::DeferredVrtComputeTask(RenderProvider provider, RenderWo
 {
 }
 
-AsyncTasksInfo DeferredVrtComputeTask::initialize(CompositorPass& pass)
+void DeferredVrtComputeTask::initialize(CompositorPass& pass)
 {
 	auto& device = *provider.renderSystem.core.device;
-
 	resetQueueCS.init(device, *provider.resources.shaders.getShader("deferredVRT_resetQueueCS", ShaderType::Compute, ShaderRef{ "postprocess/deferredVRT_resetQueueCS.hlsl", "main", "cs_6_6" }));
 	generateRaysCS.init(device, *provider.resources.shaders.getShader("deferredVRT_generateRaysCS", ShaderType::Compute, ShaderRef{ "postprocess/deferredVRT_generateRaysCS.hlsl", "main", "cs_6_6" }));
 	traceRayCS.init(device, *provider.resources.shaders.getShader("deferredVRT_traceRayCS", ShaderType::Compute, ShaderRef{ "postprocess/deferredVRT_traceRayCS.hlsl", "main", "cs_6_6" }));
@@ -19,8 +18,6 @@ AsyncTasksInfo DeferredVrtComputeTask::initialize(CompositorPass& pass)
 
 	createDispatchCommandSignature();
 	initializeResources(pass);
-
-	return {};
 }
 
 void DeferredVrtComputeTask::resize(CompositorPass& pass)
@@ -91,7 +88,7 @@ void DeferredVrtComputeTask::uavBarrier(ID3D12GraphicsCommandList* commandList, 
 	commandList->ResourceBarrier(1, &barrier);
 }
 
-void DeferredVrtComputeTask::run(RenderContext& ctx, CommandsData& commands, CompositorPass& pass)
+void DeferredVrtComputeTask::recordCommands(RenderContext& ctx, CommandsData& commands, CompositorPass& pass)
 {
 	CommandsMarker marker(commands.commandList, "DeferredVRTCompute", PixColor::CompositorCompute);
 

@@ -380,7 +380,7 @@ void FrameCompositor::initializeCommands()
 		};
 	auto pushSyncCommands = [&](FrameCompositor::PassData& passData)
 		{
-			if (!syncCommands && (!passData.task || passData.task->getRunType(passData) == CompositorTask::RunType::SyncCommands))
+			if (!syncCommands && (!passData.task || passData.task->getExecution(passData).isInlineGraphics()))
 			{
 				syncCommands = generalCommandsArray.emplace_back(provider.renderSystem.core.CreateCommandList(L"Compositor", PixColor::Compositor));
 				passData.startCommands = true;
@@ -388,7 +388,7 @@ void FrameCompositor::initializeCommands()
 
 			passData.syncCommands = syncCommands;
 
-			if (!syncComputeCommands && passData.task && passData.task->getRunType(passData) == CompositorTask::RunType::SyncComputeCommands)
+			if (!syncComputeCommands && passData.task && passData.task->getExecution(passData).isInlineCompute())
 			{
 				syncComputeCommands = generalCommandsArray.emplace_back(provider.renderSystem.core.CreateCommandList(L"CompositorCompute", PixColor::Compositor, D3D12_COMMAND_LIST_TYPE_COMPUTE));
 				passData.startComputeCommands = true;
@@ -448,7 +448,7 @@ void FrameCompositor::initializeCommands()
 
 	for (auto& pass : passes)
 	{
-		auto isSync = !pass.task || (pass.task->getRunType(pass) == CompositorTask::RunType::SyncCommands || pass.task->getRunType(pass) == CompositorTask::RunType::SyncComputeCommands);
+		auto isSync = !pass.task || pass.task->getExecution(pass).isInline();
 
 		if (dependsOnPreviousPass(pass.info, asyncPasses, true))
 			buildAsyncCommands();
@@ -456,7 +456,10 @@ void FrameCompositor::initializeCommands()
 			buildSyncCommands();
 
 		if (pass.task)
- 			pushAsyncTasks(pass.info, pass.task->initialize(pass), pass.task->forceTaskOrder());
+		{
+			pass.task->initialize(pass);
+			pushAsyncTasks(pass.info, pass.task->buildAsyncTasks(pass), pass.task->forceTaskOrder());
+		}
 
 		if (isSync)
 			pushSyncCommands(pass);

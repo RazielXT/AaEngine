@@ -23,7 +23,7 @@ compositor SSAO
 
 	extern depthTexture
 
-	task SSAO (async_compute)
+	task SSAO (async_compute_queue)
 	{
 		sync_wait Depth
 		sync_signal SSAO

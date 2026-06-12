@@ -12,10 +12,10 @@ public:
 	ShadowsRenderTask(RenderProvider provider, RenderWorld&, ShadowMaps& shadows);
 	~ShadowsRenderTask();
 
-	AsyncTasksInfo initialize(CompositorPass& pass) override;
-	void run(RenderContext& ctx, CompositorPass& pass) override;
+	AsyncTasksInfo buildAsyncTasks(CompositorPass& pass) override;
+	void update(RenderContext& ctx, CompositorPass& pass) override;
 
-	RunType getRunType(CompositorPass&) const override { return RunType::Generic; }
+	Execution getExecution(CompositorPass&) const override { return { RecordMode::Threaded, Queue::Graphics }; }
 
 private:
 

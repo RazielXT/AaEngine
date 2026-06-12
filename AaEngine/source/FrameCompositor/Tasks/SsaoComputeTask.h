@@ -15,12 +15,12 @@ public:
 	SsaoComputeTask(RenderProvider provider, RenderWorld&);
 	~SsaoComputeTask();
 
-	AsyncTasksInfo initialize(CompositorPass& pass) override;
+	void initialize(CompositorPass& pass) override;
 	void resize(CompositorPass& pass) override;
 
-	void runCompute(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
+	void recordCommands(RenderContext& ctx, CommandsData& commands, CompositorPass& pass) override;
 
-	RunType getRunType(CompositorPass&) const override { return RunType::SyncComputeCommands; }
+	Execution getExecution(CompositorPass&) const override { return { RecordMode::Inline, Queue::Compute }; }
 
 private:
 

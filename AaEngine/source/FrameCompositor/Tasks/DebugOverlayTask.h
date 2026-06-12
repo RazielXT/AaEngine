@@ -37,9 +37,9 @@ public:
 	DebugOverlayTask(RenderProvider, RenderWorld&);
 	~DebugOverlayTask();
 
-	AsyncTasksInfo initialize(CompositorPass& pass) override;
+	void initialize(CompositorPass& pass) override;
 	void resize(CompositorPass& pass) override;
-	void run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
+	void recordCommands(RenderContext& ctx, CommandsData& commands, CompositorPass& pass) override;
 
 	void enable(bool enabled);
 
@@ -62,7 +62,7 @@ public:
 	Vector2 getRemapMinMax() const;
 	void setRemapMinMax(Vector2);
 
-	RunType getRunType(CompositorPass&) const override { return RunType::SyncCommands; }
+	Execution getExecution(CompositorPass&) const override { return { RecordMode::Inline, Queue::Graphics }; }
 
 private:
 

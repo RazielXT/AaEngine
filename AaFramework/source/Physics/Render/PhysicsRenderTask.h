@@ -11,13 +11,12 @@ public:
 	PhysicsRenderTask(RenderProvider, RenderWorld&, PhysicsManager&);
 	~PhysicsRenderTask();
 
-	AsyncTasksInfo initialize(CompositorPass& pass) override;
-	void run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass) override;
+	void recordCommands(RenderContext& ctx, CommandsData& commands, CompositorPass& pass) override;
 
 	enum Mode{ Off, Wireframe, Solid };
 	void setMode(Mode);
 
-	RunType getRunType(CompositorPass&) const override { return RunType::SyncCommands; }
+	Execution getExecution(CompositorPass&) const override { return { RecordMode::Inline, Queue::Graphics }; }
 
 private:
 

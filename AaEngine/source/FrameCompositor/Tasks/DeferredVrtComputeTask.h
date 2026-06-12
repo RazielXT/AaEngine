@@ -9,11 +9,11 @@ class DeferredVrtComputeTask : public CompositorTask
 public:
 	DeferredVrtComputeTask(RenderProvider provider, RenderWorld& renderWorld);
 
-	AsyncTasksInfo initialize(CompositorPass& pass) override;
+	void initialize(CompositorPass& pass) override;
 	void resize(CompositorPass& pass) override;
-	void run(RenderContext& ctx, CommandsData& commands, CompositorPass& pass) override;
+	void recordCommands(RenderContext& ctx, CommandsData& commands, CompositorPass& pass) override;
 
-	RunType getRunType(CompositorPass&) const override { return RunType::SyncCommands; }
+	Execution getExecution(CompositorPass&) const override { return { RecordMode::Inline, Queue::Graphics }; }
 
 private:
 	struct RayData

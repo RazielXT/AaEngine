@@ -36,32 +36,29 @@ DebugOverlayTask::~DebugOverlayTask()
 	instance = nullptr;
 }
 
-AsyncTasksInfo DebugOverlayTask::initialize(CompositorPass& pass)
+void DebugOverlayTask::initialize(CompositorPass& pass)
 {
 	auto format = pass.targets.front().texture->format;
 	material = provider.resources.materials.getMaterial("TexturePreview")->Assign({}, { format });
 	material3D = provider.resources.materials.getMaterial("TexturePreview3D")->Assign({}, { format });
 	materialUint = provider.resources.materials.getMaterial("TexturePreviewUint")->Assign({}, { format });
 	material3DUint = provider.resources.materials.getMaterial("TexturePreview3DUint")->Assign({}, { format });
-
-	return {};
 }
-
 void DebugOverlayTask::resize(CompositorPass& pass)
 {
 	screenSize = { (float)pass.targets.front().texture->width, (float)pass.targets.front().texture->height };
 	updateQuad();
 }
 
-void DebugOverlayTask::run(RenderContext& ctx, CommandsData& syncCommands, CompositorPass& pass)
+void DebugOverlayTask::recordCommands(RenderContext& ctx, CommandsData& commands, CompositorPass& pass)
 {
-	pass.targets.front().texture->PrepareAsRenderTarget(syncCommands.commandList, pass.targets.front().previousState);
+	pass.targets.front().texture->PrepareAsRenderTarget(commands.commandList, pass.targets.front().previousState);
 
 	auto idx = currentIdx();
 
 	if (enabled)
 	{
-		CommandsMarker marker(syncCommands.commandList, "DebugOverlay", PixColor::Debug);
+		CommandsMarker marker(commands.commandList, "DebugOverlay", PixColor::Debug);
 
 		auto info = getCurrentDescriptor();
 		bool is3D = info && info->dimension == D3D12_SRV_DIMENSION_TEXTURE3D;
@@ -75,7 +72,7 @@ void DebugOverlayTask::run(RenderContext& ctx, CommandsData& syncCommands, Compo
 			data3d.remapMin = remapEnabled ? remapMinMax.x : 0.0f;
 			data3d.remapMax = remapEnabled ? remapMinMax.y : 1.0f;
 			auto* mat = isUint ? material3DUint : material3D;
-			quad.Render(mat, *pass.targets.front().texture, provider, ctx, syncCommands.commandList, &data3d, sizeof(data3d));
+			quad.Render(mat, *pass.targets.front().texture, provider, ctx, commands.commandList, &data3d, sizeof(data3d));
 		}
 		else
 		{
@@ -84,7 +81,7 @@ void DebugOverlayTask::run(RenderContext& ctx, CommandsData& syncCommands, Compo
 			data2d.remapMin = remapEnabled ? remapMinMax.x : 0.0f;
 			data2d.remapMax = remapEnabled ? remapMinMax.y : 1.0f;
 			auto* mat = isUint ? materialUint : material;
-			quad.Render(mat, *pass.targets.front().texture, provider, ctx, syncCommands.commandList, &data2d, sizeof(data2d));
+			quad.Render(mat, *pass.targets.front().texture, provider, ctx, commands.commandList, &data2d, sizeof(data2d));
 		}
 	}
 }

@@ -10,13 +10,15 @@ PrepareFrameTask::~PrepareFrameTask()
 {
 }
 
-AsyncTasksInfo PrepareFrameTask::initialize(CompositorPass& pass)
+void PrepareFrameTask::recordCommands(RenderContext& ctx, CommandsData& cmd, CompositorPass& pass)
 {
-	return {};
-}
+	if (pass.info.entry == "PostCompute")
+	{
+		renderWorld.grass.updateCulling(cmd.commandList, *ctx.camera, renderWorld.terrain);
+		renderWorld.vegetation.updateCulling(cmd.commandList, *ctx.camera, renderWorld.terrain);
+		return;
+	}
 
-void PrepareFrameTask::run(RenderContext& ctx, CommandsData& cmd, CompositorPass& pass)
-{
 	auto& dlss = provider.renderSystem.upscale.dlss;
 	if (dlss.enabled())
 		ctx.camera->setPixelOffset(dlss.getJitter(), dlss.getRenderSize());
@@ -31,21 +33,12 @@ void PrepareFrameTask::run(RenderContext& ctx, CommandsData& cmd, CompositorPass
 	prepareMotionVectors(ctx);
 }
 
-void PrepareFrameTask::runCompute(RenderContext& ctx, CommandsData& cmd, CompositorPass& pass)
+CompositorTask::Execution PrepareFrameTask::getExecution(CompositorPass& pass) const
 {
 	if (pass.info.entry == "PostCompute")
-	{
-		renderWorld.grass.updateCulling(cmd.commandList, *ctx.camera, renderWorld.terrain);
-		renderWorld.vegetation.updateCulling(cmd.commandList, *ctx.camera, renderWorld.terrain);
-	}
-}
+		return { RecordMode::Inline, Queue::Compute };
 
-CompositorTask::RunType PrepareFrameTask::getRunType(CompositorPass& pass) const
-{
-	if (pass.info.entry == "PostCompute")
-		return RunType::SyncComputeCommands;
-
-	return RunType::SyncCommands;
+	return { RecordMode::Inline, Queue::Graphics };
 }
 
 void PrepareFrameTask::prepareMotionVectors(RenderContext& ctx)

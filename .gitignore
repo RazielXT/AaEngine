@@ -12,3 +12,4 @@ data/scene/scenes/*
 !data/scene/scenes/playground
 !data/scene/scenes/cave
 !data/scene/scenes/columnsOutside
+data/scene/export/*

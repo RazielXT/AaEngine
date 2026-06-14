@@ -73,7 +73,8 @@ float4 GetReflection(
 	//if (ScreenSpaceReflectionVec.z < 0 && !(ScreenSpaceReflectionVec.x == 0 && ScreenSpaceReflectionVec.y == 0))
 	for (int RayStepIdx = 0; RayStepIdx<NUM_RAY_MARCH_SAMPLES; RayStepIdx++)
 	{
-		float3 RaySample = (RayStepIdx * MAX_REFLECTION_RAY_MARCH_STEP) * ScreenSpaceReflectionVec + ScreenSpacePos;
+		float w = lerp(0.5f, 1.5f, RayStepIdx * MAX_REFLECTION_RAY_MARCH_STEP);
+		float3 RaySample = w * (RayStepIdx * MAX_REFLECTION_RAY_MARCH_STEP) * ScreenSpaceReflectionVec + ScreenSpacePos;
 
 		if (RaySample.x < 0 || RaySample.y < 0 || RaySample.x > 1 || RaySample.y > 1)
 			break;

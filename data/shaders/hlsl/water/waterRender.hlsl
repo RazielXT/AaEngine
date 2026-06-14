@@ -119,7 +119,6 @@ PSOutput PSMain(PSInput input)
 
 	float3 normal = ReadGridNormal(ResourceDescriptorHeap[TexIdMeshNormal], LinearSampler, input.uv);
 	//normal = lerp(normal, normalize(normalTex), 0.08);
-
 	normal = BlendUDN(normal, normalTex);
 
 	const float FadeDistance = WaterFade + 0.0001f;

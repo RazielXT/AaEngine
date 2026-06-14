@@ -1,0 +1,147 @@
+compositor VGI
+{
+	texture vgiLowOutput target_size_div 2 DXGI_FORMAT_R16G16B16A16_FLOAT
+
+#if VGI_PS
+	texture vgiLowRaw target_size_div 2 DXGI_FORMAT_R16G16B16A16_FLOAT
+#else
+	rwtexture vgiLowRaw target_size_div 2 DXGI_FORMAT_R16G16B16A16_FLOAT
+#endif
+
+	texture vgiLowAcc target_size_div 2 DXGI_FORMAT_R16G16B16A16_FLOAT
+	texture vgiLowFinal target_size_div 2 DXGI_FORMAT_R16G16B16A16_FLOAT
+	texture vgiAge target_size_div 2 DXGI_FORMAT_R16_FLOAT
+	texture vgiAgePrev target_size_div 2 DXGI_FORMAT_R16_FLOAT
+	texture vgiDepthPrev target_size DXGI_FORMAT_R32_FLOAT
+	texture vgiNormalPrev target_size DXGI_FORMAT_R16G16B16A16_SNORM
+	texture vgiFreshBlur target_size_div 2 DXGI_FORMAT_R16G16B16A16_FLOAT
+
+	extern sceneTexture:Depth
+	extern sceneTexture:Normal
+	extern motionVectors
+	extern SSAO.linearDepth
+	extern SSAO.linearDepthDownsample2
+	extern sceneGI
+
+#if VGI_PS
+	pass DeferredVRT
+	{
+		material DeferredVRT
+		after VoxelScene.Voxelize
+
+		in sceneTexture:Normal
+		in sceneTexture:Depth
+		out vgiLowRaw
+	}
+#else
+	task DeferredVRT.Compute (compute_shader)
+	{
+		after VoxelScene.Voxelize
+
+		in sceneTexture:Normal
+		in sceneTexture:Depth
+		out vgiLowRaw
+	}
+#endif
+
+	pass DeferredVRT_AgeUpdate
+	{
+		material DeferredVRT_AgeUpdate
+		in vgiAgePrev
+		in motionVectors
+		in sceneTexture:Depth
+		in sceneTexture:Normal
+		in vgiDepthPrev
+		in vgiNormalPrev
+		out vgiAge
+	}
+	pass DeferredVRT_AgeCopy
+	{
+		material LoadThrough
+		in vgiAge
+		out vgiAgePrev
+	}
+	pass DeferredVRT_FreshBlurH
+	{
+		material DeferredVRT_FreshBlurH
+		in vgiLowRaw
+		in sceneTexture:Depth
+		in sceneTexture:Normal
+		out vgiLowFinal
+	}
+	pass DeferredVRT_FreshBlurV
+	{
+		material DeferredVRT_FreshBlurV
+		in vgiLowFinal
+		in sceneTexture:Depth
+		in sceneTexture:Normal
+		out vgiFreshBlur
+	}
+	pass DeferredVRT_FreshBlurH
+	{
+		material DeferredVRT_FreshBlurH
+		in vgiFreshBlur
+		in sceneTexture:Depth
+		in sceneTexture:Normal
+		out vgiLowFinal
+	}
+	pass DeferredVRT_FreshBlurV
+	{
+		material DeferredVRT_FreshBlurV
+		in vgiLowFinal
+		in sceneTexture:Depth
+		in sceneTexture:Normal
+		out vgiFreshBlur
+	}
+	pass DeferredVRT_FreshComposite
+	{
+		material DeferredVRT_FreshComposite
+		in vgiLowRaw
+		in vgiFreshBlur
+		in vgiAge
+		out vgiLowFinal
+	}
+
+	pass DeferredVRT_Accumulation
+	{
+		material DeferredVRT_Accumulation
+		in vgiLowFinal
+		in vgiLowAcc
+		in motionVectors
+		in sceneTexture:Depth
+		in sceneTexture:Normal
+		in vgiAge
+		in vgiDepthPrev
+		in vgiNormalPrev
+		in vgiFreshBlur
+		out vgiLowOutput
+	}
+	pass DeferredVRT_AccumulationCopy
+	{
+		material LoadThrough
+		in vgiLowOutput
+		out vgiLowAcc
+	}
+	pass DeferredVRT_DepthHistoryCopy
+	{
+		material LoadThrough
+		in sceneTexture:Depth
+		out vgiDepthPrev
+	}
+	pass DeferredVRT_NormalHistoryCopy
+	{
+		material LoadThrough
+		in sceneTexture:Normal
+		out vgiNormalPrev
+	}
+
+	pass UpsampleDeferredVRT
+	{
+		material UpsampleDepthAware
+		in vgiLowOutput
+		in SSAO.linearDepth
+		in SSAO.linearDepthDownsample2
+		in sceneTexture:Normal
+		out sceneGI
+	}
+}

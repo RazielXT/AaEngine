@@ -145,7 +145,10 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 			{
 				if (member.type == "extern")
 				{
-					ctx.externTextureNameRemap.emplace(member.value, input.textures[ctx.externTextureNameRemap.size()]);
+					if (!input.textures.empty())
+						ctx.externTextureNameRemap.emplace(member.value, input.textures[ctx.externTextureNameRemap.size()]);
+					else
+						ctx.externTextureNameRemap.emplace(member.value, member.value);
 				}
 				if (member.type == "alias")
 				{

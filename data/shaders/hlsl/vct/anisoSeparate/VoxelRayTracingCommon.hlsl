@@ -220,6 +220,7 @@ float4 RayTraceCascades(float3 rayStart, float3 rayDir, uint voxelMip, AnisoSepa
 		if (!bOffsetApplied)
 		{
 			currentStart = currentStart + rayDir * 0.3f;
+			bOffsetApplied = true;
 		}
 		else
 			currentStart = currentStart - rayDir * 0.1f;

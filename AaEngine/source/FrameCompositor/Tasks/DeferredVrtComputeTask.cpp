@@ -184,7 +184,6 @@ void DeferredVrtComputeTask::recordCommands(RenderContext& ctx, CommandsData& co
 			coarseParams.Time = provider.params.time;
 			coarseParams.ViewportSize = { output.texture->width, output.texture->height };
 			coarseParams.TexIdNormal = normal.texture->view.srvHeapIndex;
-			coarseParams.TexIdDepth = depth.texture->view.srvHeapIndex;
 			coarseParams.CascadeIndex = cascade;
 			coarseParams.InputQueueIndex = inputIndex;
 			coarseParams.HitQueueIndex = fineIndex;
@@ -218,7 +217,6 @@ void DeferredVrtComputeTask::recordCommands(RenderContext& ctx, CommandsData& co
 		traceParams.Time = provider.params.time;
 		traceParams.ViewportSize = { output.texture->width, output.texture->height };
 		traceParams.TexIdNormal = normal.texture->view.srvHeapIndex;
-		traceParams.TexIdDepth = depth.texture->view.srvHeapIndex;
 		traceParams.CascadeIndex = cascade;
 		traceParams.InputQueueIndex = traceInputIndex;
 		traceParams.OutputQueueIndex = outputIndex;

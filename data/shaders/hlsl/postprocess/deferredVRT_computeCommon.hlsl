@@ -9,6 +9,7 @@
 struct DeferredVrtRayData
 {
 	uint packedData;
+	float depth;
 	float tCurrent;
 	float3 rayDirection;
 };
@@ -57,13 +58,17 @@ uint2 ResolveSourcePixel(uint2 pixel, uint2 viewportSize, uint2 sourceSize)
 	return min(uint2(uv * float2(sourceSize)), sourceSize - 1);
 }
 
-float3 ReconstructDeferredVrtWorldPosition(uint2 pixel, uint2 viewportSize, uint TexIdDepth, float4x4 invViewProjectionMatrix)
+float LoadDeferredVrtDepth(uint2 pixel, uint2 viewportSize, uint TexIdDepth)
 {
-	float2 uv = (float2(pixel) + 0.5f) / float2(viewportSize);
 	Texture2D<float> depthMap = ResourceDescriptorHeap[TexIdDepth];
 	uint width, height;
 	depthMap.GetDimensions(width, height);
-	float depth = depthMap.Load(uint3(ResolveSourcePixel(pixel, viewportSize, uint2(width, height)), 0)).r;
+	return depthMap.Load(uint3(ResolveSourcePixel(pixel, viewportSize, uint2(width, height)), 0)).r;
+}
+
+float3 ReconstructDeferredVrtWorldPosition(uint2 pixel, uint2 viewportSize, float depth, float4x4 invViewProjectionMatrix)
+{
+	float2 uv = (float2(pixel) + 0.5f) / float2(viewportSize);
 	return ReconstructWorldPosition(uv, depth, invViewProjectionMatrix);
 }
 

@@ -19,6 +19,7 @@ private:
 	struct RayData
 	{
 		UINT packedData;
+		float depth;
 		float tCurrent;
 		Vector3 rayDirection;
 	};

@@ -28,6 +28,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
 
 	uint pixelIndex = PixelIndex(pixel, ViewportSize);
 	float3 worldNormal = LoadDeferredVrtNormal(pixel, ViewportSize, TexIdNormal);
+	float depth = LoadDeferredVrtDepth(pixel, ViewportSize, TexIdDepth);
 
 	if (all(worldNormal == float3(0, 0, 0)))
 	{
@@ -49,6 +50,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
 
 	DeferredVrtRayData ray;
 	ray.packedData = PackPixel(pixel);
+	ray.depth = depth;
 	ray.tCurrent = 0.0f;
 	ray.rayDirection = rayDirection;
 	OutputRays[queueIndex] = ray;

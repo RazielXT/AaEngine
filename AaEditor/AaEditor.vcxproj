@@ -152,7 +152,7 @@
     <ClCompile Include="source\Panels\SidePanelSections\SkySection.cpp" />
     <ClCompile Include="source\Panels\SidePanelSections\SplineRoadSection.cpp" />
     <ClCompile Include="source\Panels\SidePanelSections\TextureOverlaySection.cpp" />
-    <ClCompile Include="source\Panels\SidePanelSections\VctSection.cpp" />
+    <ClCompile Include="source\Panels\SidePanelSections\VgiSection.cpp" />
     <ClCompile Include="source\Panels\TerrainShaderGraphPanel.cpp" />
     <ClCompile Include="source\Editor\EditorSelection.cpp" />
     <ClCompile Include="source\main.cpp">
@@ -178,7 +178,7 @@
     <ClInclude Include="source\Panels\SidePanelSections\SkySection.h" />
     <ClInclude Include="source\Panels\SidePanelSections\SplineRoadSection.h" />
     <ClInclude Include="source\Panels\SidePanelSections\TextureOverlaySection.h" />
-    <ClInclude Include="source\Panels\SidePanelSections\VctSection.h" />
+    <ClInclude Include="source\Panels\SidePanelSections\VgiSection.h" />
     <ClInclude Include="source\Panels\TerrainShaderGraphPanel.h" />
     <ClInclude Include="source\NodeGraph\Nodes\MathNodes.h" />
     <ClInclude Include="source\NodeGraph\Node.h" />

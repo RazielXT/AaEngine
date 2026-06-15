@@ -3,7 +3,7 @@
 #include "SidePanelSections/SkySection.h"
 #include "SidePanelSections/SplineRoadSection.h"
 #include "SidePanelSections/TextureOverlaySection.h"
-#include "SidePanelSections/VctSection.h"
+#include "SidePanelSections/VgiSection.h"
 
 #include <memory>
 
@@ -33,7 +33,7 @@ private:
 	ViewportPanel& viewportPanel;
 
 	TextureOverlaySection textureOverlaySection;
-	VctSection vctSection;
+	VgiSection vgiSection;
 	SkySection skySection;
 	SplineRoadSection splineRoadSection;
 	std::unique_ptr<SplineRoadTool> splineRoadTool;

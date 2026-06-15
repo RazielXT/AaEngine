@@ -236,7 +236,14 @@ public:
 			((PhysicsRenderTask*)app.compositor->getTask("RenderPhysics"))->setMode(PhysicsRenderTask::Mode(*editorUi.state.wireframePhysicsChange));
 			editorUi.resetViewportOutput();
 
-			editorUi.state.wireframePhysicsChange.reset();;
+			editorUi.state.wireframePhysicsChange.reset();
+		}
+		if (editorUi.state.compositorDefine)
+		{
+			app.compositor->setDefine(editorUi.state.compositorDefine->first, editorUi.state.compositorDefine->second);
+			editorUi.resetViewportOutput();
+
+			editorUi.state.compositorDefine.reset();
 		}
 	}
 

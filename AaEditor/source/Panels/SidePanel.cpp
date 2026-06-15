@@ -209,9 +209,9 @@ void SidePanel::draw()
 		splineRoadSection.draw(*splineRoadTool, viewportPanel);
 	}
 
-	if (ImGui::CollapsingHeader("VCT"))
+	if (ImGui::CollapsingHeader("VGI"))
 	{
-		vctSection.draw(app);
+		vgiSection.draw(app, state);
 	}
 
 	if (ImGui::CollapsingHeader("Physics"))

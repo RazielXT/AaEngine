@@ -85,7 +85,7 @@
     <ClCompile Include="source\Panels\SidePanelSections\TextureOverlaySection.cpp">
       <Filter>Source Files\Panels\SidePanelSections</Filter>
     </ClCompile>
-    <ClCompile Include="source\Panels\SidePanelSections\VctSection.cpp">
+    <ClCompile Include="source\Panels\SidePanelSections\VgiSection.cpp">
       <Filter>Source Files\Panels\SidePanelSections</Filter>
     </ClCompile>
   </ItemGroup>
@@ -168,7 +168,7 @@
     <ClInclude Include="source\Panels\SidePanelSections\TextureOverlaySection.h">
       <Filter>Source Files\Panels\SidePanelSections</Filter>
     </ClInclude>
-    <ClInclude Include="source\Panels\SidePanelSections\VctSection.h">
+    <ClInclude Include="source\Panels\SidePanelSections\VgiSection.h">
       <Filter>Source Files\Panels\SidePanelSections</Filter>
     </ClInclude>
   </ItemGroup>

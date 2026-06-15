@@ -1,13 +1,18 @@
-#include "VctSection.h"
+#include "VgiSection.h"
 
 #include "ApplicationCore.h"
 #include "FrameCompositor/Tasks/SceneRenderTask.h"
 #include "FrameCompositor/Tasks/VoxelizeSceneTask.h"
 #include "imgui.h"
 #include <algorithm>
+#include "Editor/DebugState.h"
 
-void VctSection::draw(ApplicationCore& app)
+void VgiSection::draw(ApplicationCore& app, DebugState& state)
 {
+	static bool useCS = true;
+	if (ImGui::Checkbox("Use CS", &useCS))
+		state.compositorDefine = { "VGI_PS", !useCS };
+
 	if (ImGui::Checkbox("Show voxels", &showVoxels))
 		SceneRenderTask::Get().showVoxels(showVoxels);
 

@@ -1,11 +1,12 @@
 #pragma once
 
 class ApplicationCore;
+struct DebugState;
 
-class VctSection
+class VgiSection
 {
 public:
-	void draw(ApplicationCore& app);
+	void draw(ApplicationCore& app, DebugState& state);
 
 private:
 	bool showVoxels = false;

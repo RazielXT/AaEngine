@@ -32,4 +32,5 @@ struct DebugState
 	InteractionMode interactionMode = InteractionMode::Editor;
 	bool interactionModeChanged = false;
 	bool showPlayerBody = false;
+	std::optional<std::pair<std::string, bool>> compositorDefine;
 };

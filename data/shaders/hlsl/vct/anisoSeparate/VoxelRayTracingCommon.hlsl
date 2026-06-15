@@ -110,8 +110,10 @@ RayTraceResult RayTraceSingle(
 	float hitOccupancy = 0.0f;
 	uint hitAxis = 2;
 
+	const int MaxSteps = int(VRT_RAY_MAX_STEPS) >> voxelMip;
+
 	[loop]
-	for (int i = 0; i < VRT_RAY_MAX_STEPS; i++)
+	for (int i = 0; i < MaxSteps; i++)
 	{
 		result.steps++;
 

@@ -13,6 +13,7 @@ void DeferredVrtComputeTask::initialize(CompositorPass& pass)
 	auto& device = *provider.renderSystem.core.device;
 	resetQueueCS.init(device, *provider.resources.shaders.getShader("deferredVRT_resetQueueCS", ShaderType::Compute, ShaderRef{ "postprocess/deferredVRT_resetQueueCS.hlsl", "main", "cs_6_6" }));
 	generateRaysCS.init(device, *provider.resources.shaders.getShader("deferredVRT_generateRaysCS", ShaderType::Compute, ShaderRef{ "postprocess/deferredVRT_generateRaysCS.hlsl", "main", "cs_6_6" }));
+	coarseTraceRayCS.init(device, *provider.resources.shaders.getShader("deferredVRT_coarseTraceRayCS", ShaderType::Compute, ShaderRef{ "postprocess/deferredVRT_coarseTraceRayCS.hlsl", "main", "cs_6_6" }));
 	traceRayCS.init(device, *provider.resources.shaders.getShader("deferredVRT_traceRayCS", ShaderType::Compute, ShaderRef{ "postprocess/deferredVRT_traceRayCS.hlsl", "main", "cs_6_6" }));
 	collectRaysCS.init(device, *provider.resources.shaders.getShader("deferredVRT_collectRaysCS", ShaderType::Compute, ShaderRef{ "postprocess/deferredVRT_collectRaysCS.hlsl", "main", "cs_6_6" }));
 
@@ -45,6 +46,8 @@ void DeferredVrtComputeTask::initializeResources(CompositorPass& pass)
 	rayQueues[0]->SetName(L"DeferredVRT RayQueue 0");
 	rayQueues[1] = provider.resources.shaderBuffers.CreateStructuredBuffer(rayQueueSize);
 	rayQueues[1]->SetName(L"DeferredVRT RayQueue 1");
+	rayQueues[2] = provider.resources.shaderBuffers.CreateStructuredBuffer(rayQueueSize);
+	rayQueues[2]->SetName(L"DeferredVRT RayQueue CoarseHit");
 
 	queueState = provider.resources.shaderBuffers.CreateStructuredBuffer(sizeof(UINT) * 4);
 	queueState->SetName(L"DeferredVRT QueueState");
@@ -55,6 +58,8 @@ void DeferredVrtComputeTask::initializeResources(CompositorPass& pass)
 	dispatchArgs[0]->SetName(L"DeferredVRT DispatchArgs 0");
 	dispatchArgs[1] = provider.resources.shaderBuffers.CreateStructuredBuffer(sizeof(D3D12_DISPATCH_ARGUMENTS));
 	dispatchArgs[1]->SetName(L"DeferredVRT DispatchArgs 1");
+	dispatchArgs[2] = provider.resources.shaderBuffers.CreateStructuredBuffer(sizeof(D3D12_DISPATCH_ARGUMENTS));
+	dispatchArgs[2]->SetName(L"DeferredVRT DispatchArgs CoarseHit");
 
 	buffersNeedInitialTransition = true;
 }
@@ -106,10 +111,12 @@ void DeferredVrtComputeTask::recordCommands(RenderContext& ctx, CommandsData& co
 	{
 		transitionBuffer(commands.commandList, rayQueues[0].Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 		transitionBuffer(commands.commandList, rayQueues[1].Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+		transitionBuffer(commands.commandList, rayQueues[2].Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 		transitionBuffer(commands.commandList, queueState.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 		transitionBuffer(commands.commandList, rayResults.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 		transitionBuffer(commands.commandList, dispatchArgs[0].Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 		transitionBuffer(commands.commandList, dispatchArgs[1].Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+		transitionBuffer(commands.commandList, dispatchArgs[2].Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 		buffersNeedInitialTransition = false;
 	}
 
@@ -136,8 +143,9 @@ void DeferredVrtComputeTask::recordCommands(RenderContext& ctx, CommandsData& co
 	uavBarrier(commands.commandList, queueState.Get());
 	uavBarrier(commands.commandList, dispatchArgs[0].Get());
 
-	D3D12_RESOURCE_STATES queueStates[2] = { D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS };
-	D3D12_RESOURCE_STATES argsStates[2] = { D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS };
+	D3D12_RESOURCE_STATES queueStates[3] = { D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS };
+	D3D12_RESOURCE_STATES argsStates[3] = { D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS };
+	UINT inputIndex = 0;
 
 	transitionBuffer(commands.commandList, rayQueues[0].Get(), queueStates[0], D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 	queueStates[0] = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
@@ -146,8 +154,8 @@ void DeferredVrtComputeTask::recordCommands(RenderContext& ctx, CommandsData& co
 
 	for (UINT cascade = 0; cascade < CascadesCount; cascade++)
 	{
-		UINT inputIndex = cascade % 2;
-		UINT outputIndex = (cascade + 1) % 2;
+		UINT outputIndex = 1 - inputIndex;
+		UINT fineIndex = 2;
 
 		transitionBuffer(commands.commandList, rayQueues[outputIndex].Get(), queueStates[outputIndex], D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 		queueStates[outputIndex] = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
@@ -158,6 +166,52 @@ void DeferredVrtComputeTask::recordCommands(RenderContext& ctx, CommandsData& co
 		uavBarrier(commands.commandList, queueState.Get());
 		uavBarrier(commands.commandList, dispatchArgs[outputIndex].Get());
 
+		UINT traceInputIndex = inputIndex;
+		if (cascade > 0)
+		{
+			transitionBuffer(commands.commandList, rayQueues[fineIndex].Get(), queueStates[fineIndex], D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+			queueStates[fineIndex] = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+			transitionBuffer(commands.commandList, dispatchArgs[fineIndex].Get(), argsStates[fineIndex], D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+			argsStates[fineIndex] = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+
+			resetQueueCS.dispatch(commands.commandList, fineIndex, queueState.Get(), dispatchArgs[fineIndex].Get());
+			uavBarrier(commands.commandList, queueState.Get());
+			uavBarrier(commands.commandList, dispatchArgs[fineIndex].Get());
+
+			DeferredVrtCoarseTraceRayCS::DispatchParams coarseParams{};
+			coarseParams.InvViewProjectionMatrix = invViewProjection;
+			coarseParams.CameraPosition = ctx.camera->getPosition();
+			coarseParams.Time = provider.params.time;
+			coarseParams.ViewportSize = { output.texture->width, output.texture->height };
+			coarseParams.TexIdNormal = normal.texture->view.srvHeapIndex;
+			coarseParams.TexIdDepth = depth.texture->view.srvHeapIndex;
+			coarseParams.CascadeIndex = cascade;
+			coarseParams.InputQueueIndex = inputIndex;
+			coarseParams.HitQueueIndex = fineIndex;
+			coarseParams.BypassQueueIndex = outputIndex;
+			coarseParams.IsLastCascade = cascade == CascadesCount - 1;
+			coarseParams.CoarseMip = 3;
+
+			coarseTraceRayCS.dispatchIndirect(commands.commandList, dispatchCommandSignature.Get(), coarseParams, sceneVoxelInfo.data[provider.params.frameIndex]->GpuAddress(), rayQueues[inputIndex].Get(), rayQueues[fineIndex].Get(), rayQueues[outputIndex].Get(), rayResults.Get(), queueState.Get(), dispatchArgs[fineIndex].Get(), dispatchArgs[outputIndex].Get(), dispatchArgs[inputIndex].Get());
+			uavBarrier(commands.commandList, rayQueues[fineIndex].Get());
+			uavBarrier(commands.commandList, rayQueues[outputIndex].Get());
+			uavBarrier(commands.commandList, rayResults.Get());
+			uavBarrier(commands.commandList, queueState.Get());
+			uavBarrier(commands.commandList, dispatchArgs[fineIndex].Get());
+			uavBarrier(commands.commandList, dispatchArgs[outputIndex].Get());
+
+			transitionBuffer(commands.commandList, dispatchArgs[inputIndex].Get(), argsStates[inputIndex], D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+			argsStates[inputIndex] = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+			transitionBuffer(commands.commandList, rayQueues[inputIndex].Get(), queueStates[inputIndex], D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+			queueStates[inputIndex] = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+
+			transitionBuffer(commands.commandList, rayQueues[fineIndex].Get(), queueStates[fineIndex], D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+			queueStates[fineIndex] = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+			transitionBuffer(commands.commandList, dispatchArgs[fineIndex].Get(), argsStates[fineIndex], D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
+			argsStates[fineIndex] = D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
+			traceInputIndex = fineIndex;
+		}
+
 		DeferredVrtTraceRayCS::DispatchParams traceParams{};
 		traceParams.InvViewProjectionMatrix = invViewProjection;
 		traceParams.CameraPosition = ctx.camera->getPosition();
@@ -166,20 +220,20 @@ void DeferredVrtComputeTask::recordCommands(RenderContext& ctx, CommandsData& co
 		traceParams.TexIdNormal = normal.texture->view.srvHeapIndex;
 		traceParams.TexIdDepth = depth.texture->view.srvHeapIndex;
 		traceParams.CascadeIndex = cascade;
-		traceParams.InputQueueIndex = inputIndex;
+		traceParams.InputQueueIndex = traceInputIndex;
 		traceParams.OutputQueueIndex = outputIndex;
 		traceParams.IsLastCascade = cascade == CascadesCount - 1;
 
-		traceRayCS.dispatchIndirect(commands.commandList, dispatchCommandSignature.Get(), traceParams, sceneVoxelInfo.data[provider.params.frameIndex]->GpuAddress(), rayQueues[inputIndex].Get(), rayQueues[outputIndex].Get(), rayResults.Get(), queueState.Get(), dispatchArgs[outputIndex].Get(), dispatchArgs[inputIndex].Get());
+		traceRayCS.dispatchIndirect(commands.commandList, dispatchCommandSignature.Get(), traceParams, sceneVoxelInfo.data[provider.params.frameIndex]->GpuAddress(), rayQueues[traceInputIndex].Get(), rayQueues[outputIndex].Get(), rayResults.Get(), queueState.Get(), dispatchArgs[outputIndex].Get(), dispatchArgs[traceInputIndex].Get());
 		uavBarrier(commands.commandList, rayQueues[outputIndex].Get());
 		uavBarrier(commands.commandList, rayResults.Get());
 		uavBarrier(commands.commandList, queueState.Get());
 		uavBarrier(commands.commandList, dispatchArgs[outputIndex].Get());
 
-		transitionBuffer(commands.commandList, dispatchArgs[inputIndex].Get(), argsStates[inputIndex], D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-		argsStates[inputIndex] = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-		transitionBuffer(commands.commandList, rayQueues[inputIndex].Get(), queueStates[inputIndex], D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-		queueStates[inputIndex] = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+		transitionBuffer(commands.commandList, dispatchArgs[traceInputIndex].Get(), argsStates[traceInputIndex], D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+		argsStates[traceInputIndex] = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+		transitionBuffer(commands.commandList, rayQueues[traceInputIndex].Get(), queueStates[traceInputIndex], D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+		queueStates[traceInputIndex] = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 
 		if (cascade + 1 < CascadesCount)
 		{
@@ -187,6 +241,7 @@ void DeferredVrtComputeTask::recordCommands(RenderContext& ctx, CommandsData& co
 			queueStates[outputIndex] = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
 			transitionBuffer(commands.commandList, dispatchArgs[outputIndex].Get(), argsStates[outputIndex], D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
 			argsStates[outputIndex] = D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
+			inputIndex = outputIndex;
 		}
 	}
 

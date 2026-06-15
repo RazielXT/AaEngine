@@ -30,12 +30,13 @@ private:
 
 	DeferredVrtResetQueueCS resetQueueCS;
 	DeferredVrtGenerateRaysCS generateRaysCS;
+	DeferredVrtCoarseTraceRayCS coarseTraceRayCS;
 	DeferredVrtTraceRayCS traceRayCS;
 	DeferredVrtCollectRaysCS collectRaysCS;
 
-	ComPtr<ID3D12Resource> rayQueues[2];
+	ComPtr<ID3D12Resource> rayQueues[3];
 	ComPtr<ID3D12Resource> queueState;
-	ComPtr<ID3D12Resource> dispatchArgs[2];
+	ComPtr<ID3D12Resource> dispatchArgs[3];
 	ComPtr<ID3D12Resource> rayResults;
 	ComPtr<ID3D12CommandSignature> dispatchCommandSignature;
 

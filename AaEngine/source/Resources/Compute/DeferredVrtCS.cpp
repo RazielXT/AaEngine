@@ -30,6 +30,24 @@ void DeferredVrtTraceRayCS::dispatchIndirect(ID3D12GraphicsCommandList* commandL
 	commandList->ExecuteIndirect(commandSignature, 1, indirectDispatchArgs, 0, nullptr, 0);
 }
 
+void DeferredVrtCoarseTraceRayCS::dispatchIndirect(ID3D12GraphicsCommandList* commandList, ID3D12CommandSignature* commandSignature, const DispatchParams& params, D3D12_GPU_VIRTUAL_ADDRESS voxelInfo, ID3D12Resource* inputRays, ID3D12Resource* hitRays, ID3D12Resource* bypassRays, ID3D12Resource* rayResults, ID3D12Resource* queueState, ID3D12Resource* hitDispatchArgs, ID3D12Resource* bypassDispatchArgs, ID3D12Resource* indirectDispatchArgs)
+{
+	commandList->SetPipelineState(pipelineState.Get());
+	commandList->SetComputeRootSignature(signature);
+
+	commandList->SetComputeRoot32BitConstants(0, sizeof(params) / sizeof(UINT), &params, 0);
+	commandList->SetComputeRootConstantBufferView(1, voxelInfo);
+	commandList->SetComputeRootShaderResourceView(2, inputRays->GetGPUVirtualAddress());
+	commandList->SetComputeRootUnorderedAccessView(3, hitRays->GetGPUVirtualAddress());
+	commandList->SetComputeRootUnorderedAccessView(4, bypassRays->GetGPUVirtualAddress());
+	commandList->SetComputeRootUnorderedAccessView(5, rayResults->GetGPUVirtualAddress());
+	commandList->SetComputeRootUnorderedAccessView(6, queueState->GetGPUVirtualAddress());
+	commandList->SetComputeRootUnorderedAccessView(7, hitDispatchArgs->GetGPUVirtualAddress());
+	commandList->SetComputeRootUnorderedAccessView(8, bypassDispatchArgs->GetGPUVirtualAddress());
+
+	commandList->ExecuteIndirect(commandSignature, 1, indirectDispatchArgs, 0, nullptr, 0);
+}
+
 void DeferredVrtCollectRaysCS::dispatch(ID3D12GraphicsCommandList* commandList, const DispatchParams& params, ID3D12Resource* rayResults)
 {
 	commandList->SetPipelineState(pipelineState.Get());

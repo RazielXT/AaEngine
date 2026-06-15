@@ -1,3 +1,4 @@
+import depth.Depth
 import ssao.SSAO
 import exposure.Exposure
 import bloom.Bloom
@@ -48,7 +49,8 @@ compositor Frame
 		sync_signal Water
 	}
 
-	ref SSAO(sceneTexture:Depth)
+	ref Depth()
+	ref SSAO()
 
 	task Shadows
 	{

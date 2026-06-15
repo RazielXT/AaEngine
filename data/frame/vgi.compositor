@@ -19,8 +19,8 @@ compositor VGI
 	extern sceneTexture:Depth
 	extern sceneTexture:Normal
 	extern motionVectors
-	extern SSAO.linearDepth
-	extern SSAO.linearDepthDownsample2
+	extern Depth.linearDepth
+	extern Depth.linearDepthDownsample2
 	extern sceneGI
 
 #if VGI_PS
@@ -139,8 +139,8 @@ compositor VGI
 	{
 		material UpsampleDepthAware
 		in vgiLowOutput
-		in SSAO.linearDepth
-		in SSAO.linearDepthDownsample2
+		in Depth.linearDepth
+		in Depth.linearDepthDownsample2
 		in sceneTexture:Normal
 		out sceneGI
 	}

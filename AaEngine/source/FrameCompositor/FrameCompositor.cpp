@@ -88,7 +88,7 @@ void FrameCompositor::reloadPasses()
 			}
 			else if (pass.info.task == "PrepareFrame")
 			{
-				pass.task = std::make_shared<PrepareFrameTask>(provider, renderWorld);
+				pass.task = std::make_shared<PrepareFrameTask>(provider, renderWorld, shadowMaps);
 			}
 			else if (pass.info.task == "Shadows")
 			{

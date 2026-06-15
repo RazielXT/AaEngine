@@ -41,12 +41,24 @@ public:
 	void dispatch(ID3D12GraphicsCommandList* commandList, const Input& input, ID3D12Resource* transformBuffer, ID3D12Resource* commands, ID3D12Resource* infoBuffer, ID3D12Resource* infoCounter);
 };
 
+// Render views grass is culled for: main camera + first two shadow cascades.
+constexpr UINT GrassViewCount = 3;
+
 struct GrassChunk
 {
+	// Candidate blades — camera independent, generated once by grassFindCS and shared by all views.
 	ComPtr<ID3D12Resource> infoBuffer;
-	ComPtr<ID3D12Resource> transformationBuffer;
 	ComPtr<ID3D12Resource> infoCounter;
-	IndirectEntityGeometry indirect;
+
+	// Per-view culled data (view 0 = main camera, 1.. = shadow cascades).
+	struct View
+	{
+		ComPtr<ID3D12Resource> transformationBuffer;
+		IndirectEntityGeometry indirect;
+	};
+	View views[GrassViewCount];
+	GeometryViewVariant geometryVariants[GrassViewCount]{};
+
 	RenderEntity* entity{};
 
 	XMINT2 worldCoord{};
@@ -68,7 +80,9 @@ public:
 	void enableUpdating(bool enabled);
 
 	void update(ID3D12GraphicsCommandList* commandList, const Camera& camera, const ProgressiveTerrain& terrain);
-	void updateCulling(ID3D12GraphicsCommandList* commandList, const Camera& camera, const ProgressiveTerrain& terrain);
+	// Culls grass for a single render view. cullCamera supplies the frustum; distanceCamera supplies
+	// the position used for distance fade (always the main camera, even for shadow cascades).
+	void updateCulling(ID3D12GraphicsCommandList* commandList, const Camera& cullCamera, const Camera& distanceCamera, const ProgressiveTerrain& terrain, UINT viewIndex);
 
 	// Each grass chunk = 1 terrain tile / ChunksPerTerrainTile, so chunk aligns to a fraction of the heightmap
 	constexpr static UINT ChunksPerTerrainTile = 32;
@@ -93,7 +107,7 @@ private:
 
 	void initChunk(GrassChunk& chunk, RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch);
 	void regenerateChunk(ID3D12GraphicsCommandList* commandList, GrassChunk& chunk, const ProgressiveTerrain& terrain);
-	void updateChunk(ID3D12GraphicsCommandList* commandList, GrassChunk& chunk, const GrassUpdateComputeShader::Input& cullingInput);
+	void updateChunk(ID3D12GraphicsCommandList* commandList, GrassChunk& chunk, UINT viewIndex, const GrassUpdateComputeShader::Input& cullingInput);
 
 	ComPtr<ID3D12CommandSignature> commandSignature;
 	ComPtr<ID3D12Resource> zeroCounterBuffer;

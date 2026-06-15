@@ -336,7 +336,11 @@ void Camera::extractFrustumPlanes(XMFLOAT4* planes) const
 	for (int i = 0; i < 6; i++)
 	{
 		XMVECTOR p = XMLoadFloat4(&planes[i]);
-		p = XMVector4Normalize(p);
+		// Normalize by the length of the plane normal (xyz) only, not the full 4D vector.
+		// 4D normalization (including w) breaks the world-space distance scale for cameras far
+		// from the origin (e.g. orthographic shadow cascades), making radius-based culling fail.
+		XMVECTOR invLen = XMVector3ReciprocalLength(p);
+		p = XMVectorMultiply(p, invLen);
 		XMStoreFloat4(&planes[i], p);
 	}
 }

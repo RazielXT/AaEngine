@@ -60,7 +60,7 @@ void RenderQueue::reset()
 	entities.clear();
 }
 
-static void RenderObject(ID3D12GraphicsCommandList* commandList, EntityGeometry& geometry, UINT frameIndex)
+static void RenderObject(ID3D12GraphicsCommandList* commandList, EntityGeometry& geometry, UINT frameIndex, UINT viewId)
 {
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY(geometry.topology));
 
@@ -75,7 +75,7 @@ static void RenderObject(ID3D12GraphicsCommandList* commandList, EntityGeometry&
 			commandList->IASetVertexBuffers(0, 1, &geometry.vertexBufferView);
 		}
 
-		((IndirectEntityGeometry*)geometry.source)->draw(commandList, frameIndex);
+		((IndirectEntityGeometry*)geometry.resolveIndirectSource(viewId))->draw(commandList, frameIndex);
 	}
 	else if (geometry.type == EntityGeometry::Type::Mesh)
 	{
@@ -133,7 +133,7 @@ void RenderQueue::renderObjects(ShaderConstantsProvider& constants, ID3D12Graphi
 		entry.material->UpdatePerObject(storage, constants);
 		entry.material->BindConstants(commandList, storage, constants);
 
-		RenderObject(commandList, entry.entity->geometry, constants.params.frameIndex);
+		RenderObject(commandList, entry.entity->geometry, constants.params.frameIndex, constants.viewId);
 
 		if (constants.uavBarrier)
 		{

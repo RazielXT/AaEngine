@@ -26,6 +26,9 @@ public:
 	RenderEntity* entity{};
 	ID3D12Resource* uavBarrier{};
 
+	// Selects which per-view GPU buffers indirect geometry uses (0 = main camera, 1.. = shadow cascades).
+	UINT viewId = 0;
+
 	XMMATRIX getWorldMatrix() const;
 	XMMATRIX getPreviousWorldMatrix() const;
 	XMMATRIX getViewProjectionMatrix() const;

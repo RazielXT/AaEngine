@@ -1,8 +1,9 @@
 #include "FrameCompositor/Tasks/PrepareFrameTask.h"
 #include "Scene/RenderWorld.h"
 #include "Scene/Camera.h"
+#include "RenderCore/ShadowMaps.h"
 
-PrepareFrameTask::PrepareFrameTask(RenderProvider provider, RenderWorld& w) : CompositorTask(provider, w)
+PrepareFrameTask::PrepareFrameTask(RenderProvider provider, RenderWorld& w, ShadowMaps& shadows) : shadowMaps(shadows), CompositorTask(provider, w)
 {
 }
 
@@ -14,7 +15,15 @@ void PrepareFrameTask::recordCommands(RenderContext& ctx, CommandsData& cmd, Com
 {
 	if (pass.info.entry == "PostCompute")
 	{
-		renderWorld.grass.updateCulling(cmd.commandList, *ctx.camera, renderWorld.terrain);
+		// View 0: main camera.
+		renderWorld.grass.updateCulling(cmd.commandList, *ctx.camera, *ctx.camera, renderWorld.terrain, 0);
+		// Views 1..: first shadow cascades. Frustum from the light cascade, distance fade from the main camera.
+		for (UINT c = 0; c + 1 < GrassViewCount; c++)
+		{
+			auto& cascade = shadowMaps.cascades[c];
+			if (cascade.update)
+				renderWorld.grass.updateCulling(cmd.commandList, cascade.camera, *ctx.camera, renderWorld.terrain, c + 1);
+		}
 		renderWorld.vegetation.updateCulling(cmd.commandList, *ctx.camera, renderWorld.terrain);
 		return;
 	}

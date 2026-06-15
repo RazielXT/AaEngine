@@ -6,6 +6,16 @@
 
 class VertexBufferModel;
 struct InstanceGroup;
+
+// Optional per-view override of the GPU buffers an entity draws with.
+// Used by GPU-culled indirect geometry (grass/vegetation) to render different
+// culled data per camera (main view, shadow cascades, ...).
+struct GeometryViewVariant
+{
+	D3D12_GPU_VIRTUAL_ADDRESS customBuffer{};
+	void* indirectSource{};
+};
+
 struct EntityGeometry
 {
 	uint16_t topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
@@ -34,6 +44,25 @@ struct EntityGeometry
 	D3D12_GPU_VIRTUAL_ADDRESS geometryRedirectBuffer{};
 
 	void* source{};
+
+	// When set, selects custom buffer / indirect source per render view (e.g. shadow cascade).
+	// View 0 is the main camera; falls back to default fields when null or out of range.
+	const GeometryViewVariant* viewVariants{};
+	UINT viewVariantCount{};
+
+	D3D12_GPU_VIRTUAL_ADDRESS resolveCustomBuffer(UINT viewId) const
+	{
+		if (viewVariants && viewId < viewVariantCount)
+			return viewVariants[viewId].customBuffer;
+		return geometryCustomBuffer;
+	}
+
+	void* resolveIndirectSource(UINT viewId) const
+	{
+		if (viewVariants && viewId < viewVariantCount)
+			return viewVariants[viewId].indirectSource;
+		return source;
+	}
 
 	void fromModel(VertexBufferModel& model);
 	void fromInstancedModel(VertexBufferModel& model, InstanceGroup& group);

@@ -12,6 +12,10 @@ ShadowsRenderTask::ShadowsRenderTask(RenderProvider p, RenderWorld& w, ShadowMap
 	cascades[1].filterFlag = RenderObjectFlag::NoCascade1;
 	cascades[2].filterFlag = RenderObjectFlag::NoCascade2;
 	cascades[3].filterFlag = RenderObjectFlag::NoCascade3;
+
+	// Grass is culled per view; cascades 0 and 1 use their own culled buffers (views 1 and 2).
+	cascades[0].viewId = 1;
+	cascades[1].viewId = 2;
 }
 
 ShadowsRenderTask::~ShadowsRenderTask()
@@ -90,6 +94,7 @@ void ShadowsRenderTask::prepareShadowCascade(ShadowWork& shadow, ShadowMaps::Sha
 	cascade.texture.PrepareAsDepthTarget(shadow.commands.commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 	ShaderConstantsProvider constants(provider.params, sceneInfo, cascade.camera, *ctx.camera, cascade.texture);
+	constants.viewId = shadow.viewId;
 	depthQueue->renderObjects(constants, shadow.commands.commandList);
 
 	cascade.texture.PrepareAsView(shadow.commands.commandList, D3D12_RESOURCE_STATE_DEPTH_WRITE);

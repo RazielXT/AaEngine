@@ -60,12 +60,20 @@ void Grass::createChunks(RenderWorld& renderWorld, RenderSystem& renderSystem, G
 			e->material = grassMaterial;
 			e->Material().setParam("ChunkId", x * GrassGridSize + y);
 			e->geometry.type = EntityGeometry::Type::Indirect;
-			e->geometry.source = &chunk.indirect;
-			e->geometry.geometryCustomBuffer = chunk.transformationBuffer->GetGPUVirtualAddress();
+			e->geometry.source = &chunk.views[0].indirect;
+			e->geometry.geometryCustomBuffer = chunk.views[0].transformationBuffer->GetGPUVirtualAddress();
 			e->geometry.vertexBufferView = grassModel->vertexBufferView;
 			e->geometry.indexBufferView = grassModel->indexBufferView;
 			e->geometry.indexCount = grassModel->indexCount;
 			e->geometry.layout = &grassModel->vertexLayout;
+
+			for (UINT v = 0; v < GrassViewCount; v++)
+			{
+				chunk.geometryVariants[v].customBuffer = chunk.views[v].transformationBuffer->GetGPUVirtualAddress();
+				chunk.geometryVariants[v].indirectSource = &chunk.views[v].indirect;
+			}
+			e->geometry.viewVariants = chunk.geometryVariants;
+			e->geometry.viewVariantCount = GrassViewCount;
 
 			e->setBoundingBox({ { chunkSize * 0.5f, terrainParams.tileHeight * 0.5f, chunkSize * 0.5f },
 							   { chunkSize * 0.5f, terrainParams.tileHeight * 0.5f, chunkSize * 0.5f } });
@@ -105,6 +113,9 @@ void Grass::initChunk(GrassChunk& chunk, RenderSystem& renderSystem, GraphicsRes
 	chunk.infoBuffer = resources.shaderBuffers.CreateStructuredBuffer(infoSize);
 	chunk.infoBuffer->SetName(L"GrassInfo");
 
+	chunk.infoCounter = resources.shaderBuffers.CreateStructuredBuffer(sizeof(UINT));
+	chunk.infoCounter->SetName(L"GrassInfoCounter");
+
 	struct RenderGrassInfo
 	{
 		Vector3 position;
@@ -113,21 +124,24 @@ void Grass::initChunk(GrassChunk& chunk, RenderSystem& renderSystem, GraphicsRes
 		float sinYaw;
 	};
 	constexpr UINT transformSize = sizeof(RenderGrassInfo) * maxPerChunk;
-	chunk.transformationBuffer = resources.shaderBuffers.CreateStructuredBuffer(transformSize);
-	chunk.transformationBuffer->SetName(L"GrassTransformation");
-
-	chunk.infoCounter = resources.shaderBuffers.CreateStructuredBuffer(sizeof(UINT));
-	chunk.infoCounter->SetName(L"GrassInfoCounter");
-
- 	chunk.indirect.commandSignature = commandSignature;
-	chunk.indirect.maxCommands = 1;
 
 	D3D12_DRAW_INDEXED_ARGUMENTS cmd{};
 	cmd.IndexCountPerInstance = grassModel->indexCount;
 
-	CreateStaticBuffer(renderSystem.core.device, batch, &cmd, TotalChunks, sizeof(D3D12_DRAW_INDEXED_ARGUMENTS),
-		D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, &chunk.indirect.commandBuffer, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-	chunk.indirect.commandBuffer->SetName(L"GrassCommandBuffer");
+	for (UINT v = 0; v < GrassViewCount; v++)
+	{
+		auto& view = chunk.views[v];
+
+		view.transformationBuffer = resources.shaderBuffers.CreateStructuredBuffer(transformSize);
+		view.transformationBuffer->SetName(L"GrassTransformation");
+
+		view.indirect.commandSignature = commandSignature;
+		view.indirect.maxCommands = 1;
+
+		CreateStaticBuffer(renderSystem.core.device, batch, &cmd, TotalChunks, sizeof(D3D12_DRAW_INDEXED_ARGUMENTS),
+			D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, &view.indirect.commandBuffer, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+		view.indirect.commandBuffer->SetName(L"GrassCommandBuffer");
+	}
 }
 
 void Grass::regenerateChunk(ID3D12GraphicsCommandList* commandList, GrassChunk& chunk, const ProgressiveTerrain& terrain)
@@ -185,23 +199,25 @@ void Grass::regenerateChunk(ID3D12GraphicsCommandList* commandList, GrassChunk& 
 	commandList->ResourceBarrier(2, toSrv);
 }
 
-void Grass::updateChunk(ID3D12GraphicsCommandList* commandList, GrassChunk& chunk, const GrassUpdateComputeShader::Input& cullingInput)
+void Grass::updateChunk(ID3D12GraphicsCommandList* commandList, GrassChunk& chunk, UINT viewIndex, const GrassUpdateComputeShader::Input& cullingInput)
 {
+	auto& view = chunk.views[viewIndex];
+
 	CD3DX12_RESOURCE_BARRIER barrier[2]{};
 
-	barrier[0] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.indirect.commandBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-	barrier[1] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.transformationBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	barrier[0] = CD3DX12_RESOURCE_BARRIER::Transition(view.indirect.commandBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	barrier[1] = CD3DX12_RESOURCE_BARRIER::Transition(view.transformationBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	commandList->ResourceBarrier(2, barrier);
 
-	indirectDrawClearCS.dispatch(commandList, 1, chunk.indirect.commandBuffer.Get());
+	indirectDrawClearCS.dispatch(commandList, 1, view.indirect.commandBuffer.Get());
 
-	CD3DX12_RESOURCE_BARRIER uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(chunk.indirect.commandBuffer.Get());
+	CD3DX12_RESOURCE_BARRIER uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(view.indirect.commandBuffer.Get());
 	commandList->ResourceBarrier(1, &uavBarrier);
 
-	grassUpdateCS.dispatch(commandList, cullingInput, chunk.transformationBuffer.Get(), chunk.indirect.commandBuffer.Get(), chunk.infoBuffer.Get(), chunk.infoCounter.Get());
+	grassUpdateCS.dispatch(commandList, cullingInput, view.transformationBuffer.Get(), view.indirect.commandBuffer.Get(), chunk.infoBuffer.Get(), chunk.infoCounter.Get());
 
-	barrier[0] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.indirect.commandBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-	barrier[1] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.transformationBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	barrier[0] = CD3DX12_RESOURCE_BARRIER::Transition(view.indirect.commandBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	barrier[1] = CD3DX12_RESOURCE_BARRIER::Transition(view.transformationBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 	commandList->ResourceBarrier(2, barrier);
 }
 
@@ -252,7 +268,7 @@ void Grass::update(ID3D12GraphicsCommandList* commandList, const Camera& camera,
 		}
 }
 
-void Grass::updateCulling(ID3D12GraphicsCommandList* commandList, const Camera& camera, const ProgressiveTerrain& terrain)
+void Grass::updateCulling(ID3D12GraphicsCommandList* commandList, const Camera& cullCamera, const Camera& distanceCamera, const ProgressiveTerrain& terrain, UINT viewIndex)
 {
 	if (!updatingEnabled)
 		return;
@@ -263,28 +279,36 @@ void Grass::updateCulling(ID3D12GraphicsCommandList* commandList, const Camera& 
 	float chunkSize = terrainParams.tileSize / ChunksPerTerrainTile;
 
 	GrassUpdateComputeShader::Input cullingInput{};
-	camera.extractFrustumPlanes(cullingInput.frustumPlanes);
-	auto camPos = camera.getPosition();
+	cullCamera.extractFrustumPlanes(cullingInput.frustumPlanes);
+	auto camPos = distanceCamera.getPosition();
 	cullingInput.cameraPosition = { camPos.x, camPos.y, camPos.z };
 	cullingInput.maxDistance = chunkSize * GrassGridSize * 0.5f;
 
-	auto frustum = camera.prepareFrustum();
+	// Shadow cascade cameras are orthographic; BoundingFrustum is only valid for perspective,
+	// so use the oriented box for the CPU coarse visibility test (matching the scene visibility path).
+	const bool ortho = cullCamera.isOrthographic();
+	auto frustum = cullCamera.prepareFrustum();
+	auto orientedBox = cullCamera.prepareOrientedBox();
 
+	// Stagger main-view chunk updates across frames; shadow views refresh fully when their cascade updates.
 	static UINT counter = 0;
 	const UINT UpdateDivision = 4;
+	const bool throttle = (viewIndex == 0);
 
 	for (UINT x = 0; x < GrassGridSize; x++)
 		for (UINT y = 0; y < GrassGridSize; y++)
 		{
 			auto& chunk = chunks[x][y];
-			if (chunk.entity->isVisible(frustum))
+			bool visible = ortho ? chunk.entity->isVisible(orientedBox) : chunk.entity->isVisible(frustum);
+			if (visible)
 			{
-				if (!counter || (x * GrassGridSize + y + counter) % UpdateDivision == 0)
-					updateChunk(commandList, chunk, cullingInput);
+				if (!throttle || !counter || (x * GrassGridSize + y + counter) % UpdateDivision == 0)
+					updateChunk(commandList, chunk, viewIndex, cullingInput);
 			}
 		}
 
-	counter++;
+	if (throttle)
+		counter++;
 }
 
 const UINT groups = 4;

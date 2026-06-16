@@ -1,6 +1,6 @@
 compositor VGI
 {
-	texture vgiLowOutput target_size_div 2 DXGI_FORMAT_R16G16B16A16_FLOAT
+	texture vgiLowOutput target_size_div 2 Raw:DXGI_FORMAT_R16G16B16A16_FLOAT Accumulation:DXGI_FORMAT_R16G16B16A16_FLOAT
 
 #if VGI_PS
 	texture vgiLowRaw target_size_div 2 DXGI_FORMAT_R16G16B16A16_FLOAT
@@ -119,7 +119,7 @@ compositor VGI
 	pass DeferredVRT_AccumulationCopy
 	{
 		material LoadThrough
-		in vgiLowOutput
+		in vgiLowOutput:Raw
 		out vgiLowAcc
 	}
 	pass DeferredVRT_DepthHistoryCopy
@@ -138,7 +138,7 @@ compositor VGI
 	pass UpsampleDeferredVRT
 	{
 		material UpsampleDepthAware
-		in vgiLowOutput
+		in vgiLowOutput:Accumulation
 		in Depth.linearDepth
 		in Depth.linearDepthDownsample2
 		in sceneTexture:Normal

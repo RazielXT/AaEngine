@@ -66,7 +66,13 @@ float4 BilateralGaussian3x3(Texture2D InputTex, float2 uv, float2 t, float refDe
 	return weightedSum / totalWeight;
 }
 
-float4 PSMain(VS_OUTPUT input) : SV_TARGET
+struct PSOutput
+{
+	float4 raw : SV_Target0;
+	float4 accumulated : SV_Target1;
+};
+
+PSOutput PSMain(VS_OUTPUT input)
 {
 	float2 motionPixels = motionVectors.Load(int3(input.Position.xy * 2, 0));
 	float2 motionUV = motionPixels * ViewportSizeInverse * 0.5f;
@@ -81,11 +87,15 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	float bilateralWeight;
 	float4 accumulated = BilateralGaussian3x3(accumulatedRays, reprojectedUV, ViewportSizeInverse, refDepth, refNormal, bilateralWeight);
 
+	PSOutput output;
+	output.raw = blurredCurrent;
+	output.accumulated = blurredCurrent;
+
 	// If the bilateral kernel rejected every tap, the reprojected history is invalid
 	// for this pixel (typical on disocclusion edges when rotating the camera). Use
 	// the freshly blurred current ray result instead of a 0 -> black ghost.
 	if (bilateralWeight <= 1e-5f)
-		return blurredCurrent;
+		return output;
 
 	float accumulationFactor = 0.98f;
 
@@ -98,13 +108,15 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 
 	// Reject only clearly invalid history; keep full weight for valid reprojection.
 	if (any(reprojectedUV < 0) || any(reprojectedUV > 1))
-		return blurredCurrent;
+		return output;
 	float prevDepth = depthMapPrev.Sample(PointSampler, reprojectedUV).r;
 	float3 prevNormal = normalMapPrev.Sample(PointSampler, reprojectedUV).rgb;
 	float depthDiff = abs(refDepth - prevDepth) / max(refDepth, 1e-5f);
 	float historyValidity = exp(-depthDiff / DepthSigma) * pow(saturate(dot(refNormal, prevNormal)), NormalPower);
 	if (historyValidity < HistoryAcceptance)
-		return blurredCurrent;
+		return output;
 
-	return lerp(current, accumulated, accumulationFactor);
+	output.raw = lerp(current, accumulated, accumulationFactor);
+	output.accumulated = accumulated;
+	return output;
 }

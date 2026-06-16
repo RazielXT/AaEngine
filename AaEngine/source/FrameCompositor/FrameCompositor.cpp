@@ -54,6 +54,8 @@ ColorSpace FrameCompositor::getColorSpace() const
 
 void FrameCompositor::reloadPasses()
 {
+	provider.renderSystem.core.WaitForAllFrames();
+
 	std::set<std::string> defines = globalDefines;
 	auto& upscale = provider.renderSystem.upscale;
 	if (upscale.dlss.enabled()) defines.insert("DLSS");
@@ -149,8 +151,14 @@ void FrameCompositor::reloadPasses()
 
 	for (auto& pass : passes)
 	{
-		if (!pass.info.material.empty() && pass.targets.size() == 1)
-			pass.material = provider.resources.materials.getMaterial(pass.info.material)->Assign({}, { pass.targets.front().texture->format });
+		if (!pass.info.material.empty() && pass.targets.size() > 0)
+		{
+			std::vector<DXGI_FORMAT> targetFormats;
+			for (auto& target : pass.targets)
+				targetFormats.push_back(target.texture->format);
+
+			pass.material = provider.resources.materials.getMaterial(pass.info.material)->Assign({}, targetFormats);
+		}
 	}
 
 	initializeCommands();
@@ -291,8 +299,13 @@ void FrameCompositor::reloadTextures()
 
 void FrameCompositor::renderQuad(PassData& pass, RenderContext& ctx, ID3D12GraphicsCommandList* commandList)
 {
-	auto& target = pass.targets.front();
-	target.texture->PrepareAsRenderTarget(commandList, target.previousState);
+	auto& mainTarget = pass.targets.front();
+
+	if (pass.mrt)
+		pass.mrt->PrepareAsTarget(commandList, pass.targets, false);
+	else
+		mainTarget.texture->PrepareAsRenderTarget(commandList, mainTarget.previousState);
+
 	GpuTextureStates::Transition(commandList, pass.inputs);
 
 	for (UINT i = 0; auto& input : pass.inputs)
@@ -300,7 +313,7 @@ void FrameCompositor::renderQuad(PassData& pass, RenderContext& ctx, ID3D12Graph
 		pass.material->SetTexture(input.texture->view, i++);
 	}
 
-	ShaderConstantsProvider constants(provider.params, {}, *ctx.camera, *target.texture);
+	ShaderConstantsProvider constants(provider.params, {}, *ctx.camera, *mainTarget.texture);
 	MaterialDataStorage storage;
 
 	auto material = pass.material;

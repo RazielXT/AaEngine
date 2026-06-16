@@ -245,6 +245,7 @@ CompositorInfo CompositorFileParser::parseFile(std::string directory, std::strin
 						if (param.type == "out")
 						{
 							pass.targets = parseCompositorTextureSlot(param, info, ctx, Compositor::PixelShader);
+							pass.mrt = pass.targets.size() > 1;
 						}
 						else if (param.type == "material")
 						{

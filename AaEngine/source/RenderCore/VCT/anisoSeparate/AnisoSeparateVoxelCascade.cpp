@@ -49,38 +49,45 @@ void AnisoSeparateVoxelCascade::prepareForVoxelization(ID3D12GraphicsCommandList
 {
 	clearBufferCS.dispatch(commandList, voxelInfoBuffer.data.Get(), DataElementSize * DataElementCount / sizeof(float));
 
-	{
-		TextureTransitions<2> tr;
-		tr.add(occupancyState, D3D12_RESOURCE_STATE_COPY_SOURCE);
-		tr.add(prevOccupancyState, D3D12_RESOURCE_STATE_COPY_DEST);
-		tr.push(commandList);
+	// Copy current to previous state ---------------------------
 
-		commandList->CopyResource(voxelPreviousOccupancyTexture.texture.Get(), voxelOccupancyTexture.texture.Get());
-
-		occupancyState.Transition(commandList, D3D12_RESOURCE_STATE_COPY_DEST);
-		commandList->CopyResource(voxelOccupancyTexture.texture.Get(), clearOccupancy.texture.Get());
-
-		tr.add(occupancyState, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-		tr.add(prevOccupancyState, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-		tr.push(commandList);
-	}
+	TextureTransitions<FaceCount * 2 + 2> tr;
+	tr.add(occupancyState, D3D12_RESOURCE_STATE_COPY_SOURCE);
+	tr.add(prevOccupancyState, D3D12_RESOURCE_STATE_COPY_DEST);
 
 	for (UINT f = 0; f < FaceCount; f++)
 	{
-		TextureTransitions<2> tr;
 		tr.add(faceStates[f], D3D12_RESOURCE_STATE_COPY_SOURCE);
 		tr.add(prevFaceStates[f], D3D12_RESOURCE_STATE_COPY_DEST);
-		tr.push(commandList);
+	}
+	tr.push(commandList);
 
+	commandList->CopyResource(voxelPreviousOccupancyTexture.texture.Get(), voxelOccupancyTexture.texture.Get());
+	for (UINT f = 0; f < FaceCount; f++)
 		commandList->CopyResource(voxelPreviousFaceTextures[f].texture.Get(), voxelFaceTextures[f].texture.Get());
 
-		faceStates[f].Transition(commandList, D3D12_RESOURCE_STATE_COPY_DEST);
+	// Clear current state ---------------------------
+
+	tr.add(occupancyState, D3D12_RESOURCE_STATE_COPY_DEST);
+	for (UINT f = 0; f < FaceCount; f++) {
+		tr.add(faceStates[f], D3D12_RESOURCE_STATE_COPY_DEST);
+	}
+	tr.push(commandList);
+
+	commandList->CopyResource(voxelOccupancyTexture.texture.Get(), clearOccupancy.texture.Get());
+	for (UINT f = 0; f < FaceCount; f++)
 		commandList->CopyResource(voxelFaceTextures[f].texture.Get(), clearColor.texture.Get());
 
+	// Transition for usage ---------------------------
+
+	tr.add(occupancyState, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	tr.add(prevOccupancyState, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+
+	for (UINT f = 0; f < FaceCount; f++) {
 		tr.add(faceStates[f], D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 		tr.add(prevFaceStates[f], D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-		tr.push(commandList);
 	}
+	tr.push(commandList);
 
 	auto uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(voxelInfoBuffer.data.Get());
 	commandList->ResourceBarrier(1, &uavBarrier);

@@ -249,6 +249,8 @@ void AnisoSeparateVoxelization::renderShadowMap(ID3D12GraphicsCommandList* comma
 
 void AnisoSeparateVoxelization::bounceCascade(CommandsData& commands, AnisoSeparateVoxelCascade& cascade, const RenderContext& ctx)
 {
+	CommandsMarker marker(commands.commandList, "AnisoSeparateVoxelBounces", PixColor::LightBlue);
+
 	for (UINT f = 0; f < AnisoSeparateVoxelCascade::FaceCount; f++)
 	{
 		cascade.voxelFaceTextures[f].Transition(commands.commandList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_SOURCE);
@@ -268,18 +270,9 @@ void AnisoSeparateVoxelization::bounceCascade(CommandsData& commands, AnisoSepar
 
 	struct
 	{
-		Vector3 CameraPosition;
-		float padding;
-		Vector3 VoxelsOffset;
-		float padding2;
-		Vector3 VoxelsSceneSize;
-		float padding3;
 		Vector3 SunColor;
 	}
 	data = {
-		.CameraPosition = ctx.camera->getPosition(),
-		.VoxelsOffset = cascade.settings.center - Vector3(cascade.settings.extends),
-		.VoxelsSceneSize = Vector3(cascade.settings.extends * 2),
 		.SunColor = frameParams->sky.SunColor
 	};
 
@@ -309,16 +302,17 @@ void AnisoSeparateVoxelization::bounceCascade(CommandsData& commands, AnisoSepar
 
 void AnisoSeparateVoxelization::runBounces(CommandsData& computeCommands, const RenderContext& ctx, const AnisoSeparateVoxelTracingParams& params)
 {
-	CommandsMarker marker(computeCommands.commandList, "AnisoSeparateVoxelBounces", PixColor::LightBlue);
-
 	updateCBuffer(ctx.camera->getPosition(), params);
 
 	static UINT idx = 0;
 
 	for (UINT i = 0; i < CascadesCount; i++)
 	{
-		if (buildCounter[i] && i == (idx % 4))
+		if (buildCounter[i] == 1 && i == (idx % 4))
+		{
 			bounceCascade(computeCommands, voxelCascades[i], ctx);
+			buildCounter[i]++;
+		}
 	}
 
 	idx++;
@@ -332,19 +326,21 @@ void AnisoSeparateBounceVoxelsCS::dispatch(ID3D12GraphicsCommandList* commandLis
 	commandList->SetComputeRoot32BitConstants(0, data.size(), data.data(), 0);
 	commandList->SetComputeRootShaderResourceView(1, dataAddr);
 
+	UINT rootIndex = 2;
+
+// 	for (UINT f = 0; f < AnisoSeparateVoxelCascade::FaceCount; f++)
+// 	{
+// 		commandList->SetComputeRootDescriptorTable(rootIndex++, prevFaceViews[f].srvHandle);
+// 	}
+//
+//	commandList->SetComputeRootDescriptorTable(rootIndex++, prevOccupancyView.srvHandle);
+
 	for (UINT f = 0; f < AnisoSeparateVoxelCascade::FaceCount; f++)
 	{
-		commandList->SetComputeRootDescriptorTable(2 + f, prevFaceViews[f].srvHandle);
+		commandList->SetComputeRootDescriptorTable(rootIndex++, faceViews[f].uavHandle);
 	}
 
-	commandList->SetComputeRootDescriptorTable(2 + AnisoSeparateVoxelCascade::FaceCount, prevOccupancyView.srvHandle);
-
-	for (UINT f = 0; f < AnisoSeparateVoxelCascade::FaceCount; f++)
-	{
-		commandList->SetComputeRootDescriptorTable(3 + AnisoSeparateVoxelCascade::FaceCount + f, faceViews[f].uavHandle);
-	}
-
-	commandList->SetComputeRootDescriptorTable(3 + AnisoSeparateVoxelCascade::FaceCount * 2, occupancyView.uavHandle);
+	commandList->SetComputeRootDescriptorTable(rootIndex++, occupancyView.uavHandle);
 
 	const UINT threadSize = 4;
 	const auto voxelSize = UINT(VoxelSize);

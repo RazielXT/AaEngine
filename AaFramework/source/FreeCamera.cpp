@@ -19,12 +19,10 @@ void FreeCamera::update(float time)
 	else if (d)
 		dir.x += 1;
 
-	dir.z += wheelDiff;
-	wheelDiff = 0;
-
-	if (dir != Vector3::Zero)
+	if (dir != Vector3::Zero || wheelDiff)
 	{
-		dir.Normalize();
+		if (dir != Vector3::Zero)
+			dir.Normalize();
 
 		float speed = 5 * time;
 		if (turbo)
@@ -33,6 +31,9 @@ void FreeCamera::update(float time)
 			speed /= 5;
 
 		dir *= speed;
+
+		dir.z += wheelDiff * 5;
+		wheelDiff = 0;
 
 		camera.setInCameraRotation(dir);
 		camera.move(dir);

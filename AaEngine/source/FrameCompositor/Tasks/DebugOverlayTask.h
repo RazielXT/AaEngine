@@ -9,7 +9,6 @@ class AssignedMaterial;
 struct TexturePreviewData
 {
 	UINT textureIndex{};
-	UINT resId{};
 	float remapMin = 0.0f;
 	float remapMax = 1.0f;
 };
@@ -18,7 +17,6 @@ struct TexturePreview3DData
 {
 	UINT textureIndex{};
 	UINT sliceIndex{};
-	UINT resId{};
 	float remapMin = 0.0f;
 	float remapMax = 1.0f;
 };

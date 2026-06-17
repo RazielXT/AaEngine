@@ -3,7 +3,6 @@ uint TextureIndex;
 #ifdef TEXTURE_3D
 uint SliceIndex;
 #endif
-uint ResId;
 float RemapMin;
 float RemapMax;
 

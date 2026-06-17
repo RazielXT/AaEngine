@@ -8,7 +8,6 @@ float3 CameraPosition;
 uint2 ViewportSize;
 uint VoxelIndex;
 uint VoxelMip;
-uint ResId;
 
 cbuffer SceneVoxelInfo : register(b1)
 {

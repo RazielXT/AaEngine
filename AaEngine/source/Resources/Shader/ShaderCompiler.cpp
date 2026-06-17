@@ -200,7 +200,7 @@ bool ShaderCompiler::reflectShaderInfo(IDxcResult* compiledShaderBuffer, ShaderD
 		}
 	}
 
-	if (description.textures.empty() && shaderDesc.TextureNormalInstructions)
+	if (description.textures.empty() && (shaderDesc.TextureNormalInstructions || shaderDesc.TextureLoadInstructions))
 	{
 		description.bindlessTextures = true;
 	}

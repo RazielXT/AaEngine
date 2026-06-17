@@ -74,10 +74,25 @@ public:
 	{
 		XMUINT2 ViewportSize;
 		UINT ResIdOutput;
+		UINT RayCount;
+		UINT IsLastRay;
 		UINT Padding0;
 	};
 
-	void dispatch(ID3D12GraphicsCommandList* commandList, const DispatchParams& params, ID3D12Resource* rayResults);
+	void dispatch(ID3D12GraphicsCommandList* commandList, const DispatchParams& params, ID3D12Resource* rayResults, ID3D12Resource* accumulatedResults);
+};
+
+class DeferredVrtResetAccumulationCS : public ComputeShader
+{
+public:
+	struct DispatchParams
+	{
+		XMUINT2 ViewportSize;
+		UINT Padding0;
+		UINT Padding1;
+	};
+
+	void dispatch(ID3D12GraphicsCommandList* commandList, const DispatchParams& params, ID3D12Resource* accumulatedResults);
 };
 
 class DeferredVrtResetQueueCS : public ComputeShader

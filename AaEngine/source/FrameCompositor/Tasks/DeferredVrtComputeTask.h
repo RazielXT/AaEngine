@@ -29,7 +29,13 @@ private:
 		Vector4 radianceOcclusion;
 	};
 
+	struct AccumulatedResult
+	{
+		Vector4 radianceOcclusion;
+	};
+
 	DeferredVrtResetQueueCS resetQueueCS;
+	DeferredVrtResetAccumulationCS resetAccumulationCS;
 	DeferredVrtGenerateRaysCS generateRaysCS;
 	DeferredVrtCoarseTraceRayCS coarseTraceRayCS;
 	DeferredVrtTraceRayCS traceRayCS;
@@ -39,6 +45,7 @@ private:
 	ComPtr<ID3D12Resource> queueState;
 	ComPtr<ID3D12Resource> dispatchArgs[3];
 	ComPtr<ID3D12Resource> rayResults;
+	ComPtr<ID3D12Resource> accumulatedResults;
 	ComPtr<ID3D12CommandSignature> dispatchCommandSignature;
 
 	CbufferView sceneVoxelInfo;

@@ -37,75 +37,87 @@ void main(uint3 DTid : SV_DispatchThreadID)
 	DeferredVrtRayData ray = InputRays[rayIndex];
 	uint2 pixel = UnpackPixel(ray.packedData);
 	uint pixelIndex = PixelIndex(pixel, ViewportSize);
+
 	float3 worldNormal = LoadDeferredVrtNormal(pixel, ViewportSize, TexIdNormal);
 	float3 baseRayStart = ReconstructDeferredVrtWorldPosition(pixel, ViewportSize, ray.depth, InvViewProjectionMatrix) + worldNormal;
+
 	float3 currentStart = baseRayStart + ray.rayDirection * ray.tCurrent;
 
 	AnisoSeparateSceneVoxelChunkInfo cascade = VoxelInfo.Voxels[CascadeIndex];
 	float3 localUV = (currentStart - cascade.Offset) / cascade.WorldSize;
 
-	if (any(localUV < 0.0f) || any(localUV > 1.0f))
+	bool bKeepTracing = true;
+	bool bOutOfBounds = any(localUV < 0.0f) || any(localUV > 1.0f);
+
+	if (bOutOfBounds)
 	{
 		if (IsLastCascade)
 		{
 			RayResults[pixelIndex].radianceOcclusion = DeferredVrtMissResult(ray.rayDirection);
+			return;
 		}
-		else
+		bKeepTracing = false; // Needs to stream to next cascade immediately
+	}
+
+	if (bKeepTracing)
+	{
+		if (CascadeIndex == 0)
+			currentStart += ray.rayDirection * 0.3f;
+
+		RayTraceResult traceResult = RayTraceSingle(currentStart, ray.rayDirection, 0, cascade);
+
+		if (traceResult.hit)
 		{
-			uint queueIndex;
-			InterlockedAdd(QueueState[OutputQueueIndex], 1, queueIndex);
-			OutputRays[queueIndex] = ray;
+			Texture3D<float4> facePosX = GetTexture3D(GetFaceTexId(cascade, 0));
+			Texture3D<float4> faceNegX = GetTexture3D(GetFaceTexId(cascade, 1));
+			Texture3D<float4> facePosY = GetTexture3D(GetFaceTexId(cascade, 2));
+			Texture3D<float4> faceNegY = GetTexture3D(GetFaceTexId(cascade, 3));
+			Texture3D<float4> facePosZ = GetTexture3D(GetFaceTexId(cascade, 4));
+			Texture3D<float4> faceNegZ = GetTexture3D(GetFaceTexId(cascade, 5));
 
-			uint groupCount = (queueIndex + DEFERRED_VRT_TRACE_THREADS) / DEFERRED_VRT_TRACE_THREADS;
-			InterlockedMax(DispatchArgs[0], groupCount);
-			DispatchArgs[1] = 1;
-			DispatchArgs[2] = 1;
+			int4 loadCoord = int4(traceResult.hitVoxelCoord, 0);
+			float3 blendedColor = SampleAnisotropicColor(
+				loadCoord, ray.rayDirection,
+				facePosX, faceNegX, facePosY, faceNegY, facePosZ, faceNegZ,
+				traceResult.hitAxis);
+
+			RayResults[pixelIndex].radianceOcclusion = DeferredVrtHitResult(blendedColor);
+			return;
 		}
-		return;
+
+		if (IsLastCascade)
+		{
+			RayResults[pixelIndex].radianceOcclusion = DeferredVrtMissResult(ray.rayDirection);
+			return;
+		}
+
+		// OPTIMIZATION: Replaced expensive length() square-root with a simple dot product
+		ray.tCurrent = dot(traceResult.exitWorldPos - baseRayStart, ray.rayDirection);
 	}
 
-	if (CascadeIndex == 0)
-		currentStart += ray.rayDirection * 0.3f;
+	// --- WAVE-COALESCED COMPACTION COMPONENT ---
+	// Everyone left in this shader needs to be pushed to the next cascade output queue
+	bool bNeedsToAppend = true; 
 
-	Texture3D<float4> facePosX = GetTexture3D(GetFaceTexId(cascade, 0));
-	Texture3D<float4> faceNegX = GetTexture3D(GetFaceTexId(cascade, 1));
-	Texture3D<float4> facePosY = GetTexture3D(GetFaceTexId(cascade, 2));
-	Texture3D<float4> faceNegY = GetTexture3D(GetFaceTexId(cascade, 3));
-	Texture3D<float4> facePosZ = GetTexture3D(GetFaceTexId(cascade, 4));
-	Texture3D<float4> faceNegZ = GetTexture3D(GetFaceTexId(cascade, 5));
+	uint waveCount   = WaveActiveCountBits(bNeedsToAppend);
+	uint waveOffset  = WavePrefixCountBits(bNeedsToAppend);
+	uint laneIdx     = WaveGetLaneIndex();
+	uint leaderLane  = WaveActiveMin(laneIdx);
 
-	RayTraceResult traceResult = RayTraceSingle(currentStart, ray.rayDirection, 0, cascade);
-
-	if (traceResult.hit)
+	uint globalBaseIndex = 0;
+	if (laneIdx == leaderLane)
 	{
-		int4 loadCoord = int4(traceResult.hitVoxelCoord, 0);
-		float3 blendedColor = SampleAnisotropicColor(
-			loadCoord,
-			ray.rayDirection,
-			facePosX, faceNegX,
-			facePosY, faceNegY,
-			facePosZ, faceNegZ,
-			traceResult.hitAxis);
+		// A single atomic instruction handles the entire wavefront
+		InterlockedAdd(QueueState[OutputQueueIndex], waveCount, globalBaseIndex);
 
-		RayResults[pixelIndex].radianceOcclusion = DeferredVrtHitResult(blendedColor);
-		return;
+		// Safely update dispatch args just once per wave
+		uint nextGroupCount = (globalBaseIndex + waveCount + DEFERRED_VRT_TRACE_THREADS - 1) / DEFERRED_VRT_TRACE_THREADS;
+		InterlockedMax(DispatchArgs[0], nextGroupCount);
 	}
 
-	if (IsLastCascade)
-	{
-		RayResults[pixelIndex].radianceOcclusion = DeferredVrtMissResult(ray.rayDirection);
-		return;
-	}
+	// Broadcast the allocated memory address to all lanes in the wave
+	globalBaseIndex = WaveReadLaneAt(globalBaseIndex, leaderLane);
 
-	float nextT = length(traceResult.exitWorldPos - baseRayStart);
-	ray.tCurrent = nextT;
-
-	uint nextQueueIndex;
-	InterlockedAdd(QueueState[OutputQueueIndex], 1, nextQueueIndex);
-	OutputRays[nextQueueIndex] = ray;
-
-	uint nextGroupCount = (nextQueueIndex + DEFERRED_VRT_TRACE_THREADS) / DEFERRED_VRT_TRACE_THREADS;
-	InterlockedMax(DispatchArgs[0], nextGroupCount);
-	DispatchArgs[1] = 1;
-	DispatchArgs[2] = 1;
+	// Tightly pack the surviving ray into the output buffer
+	OutputRays[globalBaseIndex + waveOffset] = ray;
 }

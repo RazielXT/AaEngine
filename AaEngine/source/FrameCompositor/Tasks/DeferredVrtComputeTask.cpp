@@ -200,7 +200,6 @@ void DeferredVrtComputeTask::recordCommands(RenderContext& ctx, CommandsData& co
 				coarseParams.CameraPosition = ctx.camera->getPosition();
 				coarseParams.Time = provider.params.time;
 				coarseParams.ViewportSize = { output.texture->width, output.texture->height };
-				coarseParams.TexIdNormal = normal.texture->view.srvHeapIndex;
 				coarseParams.CascadeIndex = cascade;
 				coarseParams.InputQueueIndex = inputIndex;
 				coarseParams.HitQueueIndex = fineIndex;
@@ -233,7 +232,6 @@ void DeferredVrtComputeTask::recordCommands(RenderContext& ctx, CommandsData& co
 			traceParams.CameraPosition = ctx.camera->getPosition();
 			traceParams.Time = provider.params.time;
 			traceParams.ViewportSize = { output.texture->width, output.texture->height };
-			traceParams.TexIdNormal = normal.texture->view.srvHeapIndex;
 			traceParams.CascadeIndex = cascade;
 			traceParams.InputQueueIndex = traceInputIndex;
 			traceParams.OutputQueueIndex = outputIndex;

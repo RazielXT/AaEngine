@@ -6,12 +6,12 @@ cbuffer CB0 : register(b0)
 	float3 CameraPosition;
 	float Time;
 	uint2 ViewportSize;
-	uint TexIdNormal;
 	uint CascadeIndex;
 	uint InputQueueIndex;
 	uint OutputQueueIndex;
 	uint IsLastCascade;
 	uint Padding0;
+	uint Padding1;
 };
 
 cbuffer SceneVoxelInfo : register(b1)
@@ -38,7 +38,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
 	uint2 pixel = UnpackPixel(ray.packedData);
 	uint pixelIndex = PixelIndex(pixel, ViewportSize);
 
-	float3 worldNormal = LoadDeferredVrtNormal(pixel, ViewportSize, TexIdNormal);
+	float3 worldNormal = UnpackR11G10B11_SNORM(ray.packedNormal);
 	float3 baseRayStart = ReconstructDeferredVrtWorldPosition(pixel, ViewportSize, ray.depth, InvViewProjectionMatrix) + worldNormal;
 
 	float3 currentStart = baseRayStart + ray.rayDirection * ray.tCurrent;

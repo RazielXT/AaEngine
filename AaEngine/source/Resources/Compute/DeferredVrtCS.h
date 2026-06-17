@@ -32,12 +32,12 @@ public:
 		Vector3 CameraPosition;
 		float Time;
 		XMUINT2 ViewportSize;
-		UINT TexIdNormal;
 		UINT CascadeIndex;
 		UINT InputQueueIndex;
 		UINT OutputQueueIndex;
 		UINT IsLastCascade;
 		UINT Padding0;
+		UINT Padding1;
 	};
 
 	void dispatchIndirect(ID3D12GraphicsCommandList* commandList, ID3D12CommandSignature* commandSignature, const DispatchParams& params, D3D12_GPU_VIRTUAL_ADDRESS voxelInfo, ID3D12Resource* inputRays, ID3D12Resource* outputRays, ID3D12Resource* rayResults, ID3D12Resource* queueState, ID3D12Resource* outputDispatchArgs, ID3D12Resource* indirectDispatchArgs);
@@ -52,16 +52,12 @@ public:
 		Vector3 CameraPosition;
 		float Time;
 		XMUINT2 ViewportSize;
-		UINT TexIdNormal;
 		UINT CascadeIndex;
 		UINT InputQueueIndex;
 		UINT HitQueueIndex;
 		UINT BypassQueueIndex;
 		UINT IsLastCascade;
 		UINT CoarseMip;
-		UINT Padding0;
-		UINT Padding1;
-		UINT Padding2;
 	};
 
 	void dispatchIndirect(ID3D12GraphicsCommandList* commandList, ID3D12CommandSignature* commandSignature, const DispatchParams& params, D3D12_GPU_VIRTUAL_ADDRESS voxelInfo, ID3D12Resource* inputRays, ID3D12Resource* hitRays, ID3D12Resource* bypassRays, ID3D12Resource* rayResults, ID3D12Resource* queueState, ID3D12Resource* hitDispatchArgs, ID3D12Resource* bypassDispatchArgs, ID3D12Resource* indirectDispatchArgs);

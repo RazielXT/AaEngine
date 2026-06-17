@@ -9,6 +9,7 @@
 struct DeferredVrtRayData
 {
 	uint packedData;
+	uint packedNormal;
 	float depth;
 	float tCurrent;
 	float3 rayDirection;

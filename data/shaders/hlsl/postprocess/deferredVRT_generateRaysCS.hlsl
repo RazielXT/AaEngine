@@ -50,6 +50,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
 
 	DeferredVrtRayData ray;
 	ray.packedData = PackPixel(pixel);
+	ray.packedNormal = PackR11G10B11_SNORM(worldNormal);
 	ray.depth = depth;
 	ray.tCurrent = 0.0f;
 	ray.rayDirection = rayDirection;

@@ -69,6 +69,9 @@ void SignatureInfo::add(const LoadedShader& shader, ShaderType type)
 			buffer = &cbuffers.back();
 		}
 		addVisibility(buffer->visibility, type);
+
+		if (b.Name == "SceneVoxelInfo")
+			bindlessTextures = true;
 	}
 
 	for (auto& b : shader.desc.structuredBuffers)

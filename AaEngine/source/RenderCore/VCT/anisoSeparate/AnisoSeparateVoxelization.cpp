@@ -201,7 +201,7 @@ void AnisoSeparateVoxelization::voxelizeCascade(ID3D12GraphicsCommandList* comma
 
 	sceneQueue->iterateMaterials([&](AssignedMaterial* material)
 		{
-			material->SetUAV(cascade.voxelInfoBuffer.data.Get(), 0);
+			//material->SetUAV(cascade.voxelInfoBuffer.data.Get(), 0);
 			material->SetParameter("VoxelIdx", &cascade.idx);
 			material->SetParameter("ShadowMatrix", &shadowMatrix);
 			material->SetParameter("ShadowMapIdx", &shadowMap.texture.view.srvHeapIndex);
@@ -304,18 +304,18 @@ void AnisoSeparateVoxelization::runBounces(CommandsData& computeCommands, const 
 {
 	updateCBuffer(ctx.camera->getPosition(), params);
 
-	static UINT idx = 0;
-
-	for (UINT i = 0; i < CascadesCount; i++)
-	{
-		if (buildCounter[i] == 1 && i == (idx % 4))
-		{
-			bounceCascade(computeCommands, voxelCascades[i], ctx);
-			buildCounter[i]++;
-		}
-	}
-
-	idx++;
+// 	static UINT idx = 0;
+// 
+// 	for (UINT i = 0; i < CascadesCount; i++)
+// 	{
+// 		if (buildCounter[i] == 1 && i == (idx % 4))
+// 		{
+// 			bounceCascade(computeCommands, voxelCascades[i], ctx);
+// 			buildCounter[i]++;
+// 		}
+// 	}
+// 
+// 	idx++;
 }
 
 void AnisoSeparateBounceVoxelsCS::dispatch(ID3D12GraphicsCommandList* commandList, const std::span<float>& data, const ShaderTextureView faceViews[AnisoSeparateVoxelCascade::FaceCount], const ShaderTextureView& occupancyView, const ShaderTextureView prevFaceViews[AnisoSeparateVoxelCascade::FaceCount], const ShaderTextureView& prevOccupancyView, D3D12_GPU_VIRTUAL_ADDRESS dataAddr)

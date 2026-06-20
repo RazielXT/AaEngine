@@ -75,7 +75,7 @@ public:
 		UINT Padding0;
 	};
 
-	void dispatch(ID3D12GraphicsCommandList* commandList, const DispatchParams& params, ID3D12Resource* rayResults, ID3D12Resource* accumulatedResults);
+	void dispatch(ID3D12GraphicsCommandList* commandList, const DispatchParams& params, D3D12_GPU_VIRTUAL_ADDRESS skyInfo, ID3D12Resource* rayResults, ID3D12Resource* accumulatedResults);
 };
 
 class DeferredVrtResetAccumulationCS : public ComputeShader

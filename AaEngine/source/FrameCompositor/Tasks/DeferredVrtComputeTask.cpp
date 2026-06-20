@@ -260,12 +260,14 @@ void DeferredVrtComputeTask::recordCommands(RenderContext& ctx, CommandsData& co
 
 		transitionBuffer(commands.commandList, rayResults.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
+		auto skyBuffer = provider.resources.shaderBuffers.GetCbufferResource("SkyParamsBuffer");
+
 		DeferredVrtCollectRaysCS::DispatchParams collectParams{};
 		collectParams.ViewportSize = { output.texture->width, output.texture->height };
 		collectParams.ResIdOutput = output.texture->view.uavHeapIndex;
 		collectParams.RayCount = RayCount;
 		collectParams.IsLastRay = rayIndex + 1 == RayCount;
-		collectRaysCS.dispatch(commands.commandList, collectParams, rayResults.Get(), accumulatedResults.Get());
+		collectRaysCS.dispatch(commands.commandList, collectParams, skyBuffer.data[provider.params.frameIndex]->GpuAddress(), rayResults.Get(), accumulatedResults.Get());
 		uavBarrier(commands.commandList, accumulatedResults.Get());
 
 		transitionBuffer(commands.commandList, rayResults.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);

@@ -83,10 +83,10 @@ float3 LoadDeferredVrtNormal(uint2 pixel, uint2 viewportSize, uint TexIdNormal)
 
 float4 DeferredVrtMissResult(float3 rayDirection)
 {
-	return float4(DeferredVrtSkyColor(rayDirection) * 6.0f, 1.0f);
+	return float4(rayDirection, 0.0f);
 }
 
 float4 DeferredVrtHitResult(float3 radiance)
 {
-	return float4(radiance * 6.0f, 0.0f);
+	return float4(radiance * 6.0f, 1.0f);
 }

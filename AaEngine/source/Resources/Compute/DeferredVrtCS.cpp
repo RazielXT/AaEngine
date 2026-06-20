@@ -48,14 +48,15 @@ void DeferredVrtCoarseTraceRayCS::dispatchIndirect(ID3D12GraphicsCommandList* co
 	commandList->ExecuteIndirect(commandSignature, 1, indirectDispatchArgs, 0, nullptr, 0);
 }
 
-void DeferredVrtCollectRaysCS::dispatch(ID3D12GraphicsCommandList* commandList, const DispatchParams& params, ID3D12Resource* rayResults, ID3D12Resource* accumulatedResults)
+void DeferredVrtCollectRaysCS::dispatch(ID3D12GraphicsCommandList* commandList, const DispatchParams& params, D3D12_GPU_VIRTUAL_ADDRESS skyInfo, ID3D12Resource* rayResults, ID3D12Resource* accumulatedResults)
 {
 	commandList->SetPipelineState(pipelineState.Get());
 	commandList->SetComputeRootSignature(signature);
 
 	commandList->SetComputeRoot32BitConstants(0, sizeof(params) / sizeof(UINT), &params, 0);
-	commandList->SetComputeRootShaderResourceView(1, rayResults->GetGPUVirtualAddress());
-	commandList->SetComputeRootUnorderedAccessView(2, accumulatedResults->GetGPUVirtualAddress());
+	commandList->SetComputeRootConstantBufferView(1, skyInfo);
+	commandList->SetComputeRootShaderResourceView(2, rayResults->GetGPUVirtualAddress());
+	commandList->SetComputeRootUnorderedAccessView(3, accumulatedResults->GetGPUVirtualAddress());
 
 	commandList->Dispatch((params.ViewportSize.x + 7) / 8, (params.ViewportSize.y + 7) / 8, 1);
 }

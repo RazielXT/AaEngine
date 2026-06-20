@@ -366,6 +366,9 @@ ComPtr<IDxcBlob> ShaderCompiler::compileShader(const ShaderRef& ref, ShaderDescr
 	for (auto& d : defines)
 		arguments.insert(arguments.end(), { L"-D", d.c_str() });
 
+	auto wfile = as_wstring(ref.file).substr(ref.file.find_last_of('/') + 1);
+	arguments.push_back(wfile.c_str());
+
 	DxcBuffer sourceBuffer;
 	sourceBuffer.Ptr = pSourceBlob->GetBufferPointer();
 	sourceBuffer.Size = pSourceBlob->GetBufferSize();

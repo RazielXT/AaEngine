@@ -63,6 +63,8 @@ void main(uint3 DTid : SV_DispatchThreadID)
 	{
 		if (CascadeIndex == 0)
 			currentStart += ray.rayDirection * 0.3f;
+		else
+			currentStart -= ray.rayDirection * 0.3f;
 
 		RayTraceResult traceResult = RayTraceSingle(currentStart, ray.rayDirection, 0, cascade);
 

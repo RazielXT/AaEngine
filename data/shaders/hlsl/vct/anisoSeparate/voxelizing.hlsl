@@ -33,7 +33,7 @@ cbuffer SkyParamsBuffer : register(b2)
 	SkyParams Sky;
 }
 
-RWStructuredBuffer<VoxelSceneData> SceneVoxelData : register(u0);
+//RWStructuredBuffer<VoxelSceneData> SceneVoxelData : register(u0);
 
 SamplerState LinearSampler : register(s0);
 SamplerState ShadowSampler : register(s1);
@@ -171,7 +171,7 @@ float4 PSMain(PS_Input pin) : SV_TARGET
 	diffuse = lerp(diffuse, green, step(0.9,worldNormal.y));
 #else
 	float3x3 worldMatrix = (float3x3)WorldMatrix;
-	float3 worldNormal = normalize(mul(pin.normal, worldMatrix));
+	float3 worldNormal = pin.normal;
 
 	float3 diffuse = MaterialColor + 0.1 * MaterialColor * GetTexture2D(TexIdDiffuse).Sample(sampler, pin.uv).rgb;
 #endif
@@ -183,6 +183,7 @@ float4 PSMain(PS_Input pin) : SV_TARGET
 	float3 voxelWorldPos = (pin.wp.xyz - VoxelInfo.Voxels[VoxelIdx].Offset);
 	float3 posUV = voxelWorldPos * VoxelInfo.Voxels[VoxelIdx].Density;
 
+/*
 	const float StepSize = 32.f;
 	float3 prevUv = posUV - VoxelInfo.Voxels[VoxelIdx].MoveOffset * StepSize;
 
@@ -211,6 +212,29 @@ float4 PSMain(PS_Input pin) : SV_TARGET
 		InterlockedMax(SceneVoxelData[linearIndex].Diffuse, PackRGBA8(float4(shadow, diffuse)));
 		InterlockedMax(SceneVoxelData[linearIndex].Normal, PackRGBA8(float4(worldNormal.xyz, Emission)));
 	}
+*/
 
-	return float4(diffuse * shadow, 1);
+	// Determine weights based on the direction vector components
+	float3 weights = abs(worldNormal);
+	float totalWeight = weights.x + weights.y + weights.z;
+	weights /= (totalWeight > 1e-5f) ? totalWeight : 1.0f;
+
+	// Sample the correct side for each of the 3 main axes
+	uint faceXIdx = (worldNormal.x < 0.0f) ? 1 : 0;
+	uint faceYIdx = (worldNormal.y < 0.0f) ? 3 : 2;
+	uint faceZIdx = (worldNormal.z < 0.0f) ? 5 : 4;
+
+	diffuse *= shadow;
+
+	RWTexture3D<float3> faceX = ResourceDescriptorHeap[GetFaceTexId(VoxelInfo.Voxels[VoxelIdx], faceXIdx)];
+	faceX[posUV] = diffuse * weights.x;
+	RWTexture3D<float3> faceY = ResourceDescriptorHeap[GetFaceTexId(VoxelInfo.Voxels[VoxelIdx], faceYIdx)];
+	faceY[posUV] = diffuse * weights.y;
+	RWTexture3D<float3> faceZ = ResourceDescriptorHeap[GetFaceTexId(VoxelInfo.Voxels[VoxelIdx], faceZIdx)];
+	faceZ[posUV] = diffuse * weights.z;
+
+	RWTexture3D<float> currentOccupancy = ResourceDescriptorHeap[GetOccupancyTexId(VoxelInfo.Voxels[VoxelIdx])];
+	currentOccupancy[posUV] = 1.0f;
+
+	return float4(diffuse, 1);
 }

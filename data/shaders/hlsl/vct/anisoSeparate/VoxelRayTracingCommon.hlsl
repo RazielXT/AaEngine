@@ -58,7 +58,7 @@ float3 SampleAnisotropicColor(
 	float3 colorY = (rayDir.y > 0.0f) ? faceNegY.Load(voxelCoord).rgb : facePosY.Load(voxelCoord).rgb;
 	float3 colorZ = (rayDir.z > 0.0f) ? faceNegZ.Load(voxelCoord).rgb : facePosZ.Load(voxelCoord).rgb;
 
-	/*Texture3D faceMap;
+	Texture3D faceMap;
 	if (hitAxis == 0)
 		faceMap = (rayDir.x > 0) ? faceNegX : facePosX;
 	else if (hitAxis == 1)
@@ -66,13 +66,13 @@ float3 SampleAnisotropicColor(
 	else
 		faceMap = (rayDir.z > 0) ? faceNegZ : facePosZ;
 
-	return faceMap.Load(voxelCoord).rgb;*/
+	return faceMap.Load(voxelCoord).rgb;
 
 	// Perform the 3-axis directional blend
-	return (colorX * weights.x) + (colorY * weights.y) + (colorZ * weights.z);
+	//return (colorX * weights.x) + (colorY * weights.y) + (colorZ * weights.z);
 }
 
-#define VRT_RAY_MAX_STEPS 32
+#define VRT_RAY_MAX_STEPS 64
 
 RayTraceResult RayTraceSingle(
 	float3 rayStart,

@@ -2,6 +2,7 @@
 
 float4x4 ReprojectionMatrix;
 uint2 ViewportSize;
+float DeltaTime;
 
 Texture2D currentMap : register(t0);
 Texture2D accMap : register(t1);
@@ -32,5 +33,5 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	float4 current = currentMap.Sample(LinearSampler, input.TexCoord);
 	float4 accumulated = accMap.Sample(LinearSampler, prevUV);
 
-	return lerp(current, accumulated, 0.5f);
+	return lerp(current, accumulated, saturate(0.5f - DeltaTime * 5));
 }

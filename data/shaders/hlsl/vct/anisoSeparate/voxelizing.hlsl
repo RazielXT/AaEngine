@@ -43,7 +43,7 @@ struct GS_Input
 	float3 wp : POSITION;
 	float2 uv : TEXCOORD0;
 #ifndef GRID
-	float3 normal  : NORMAL;
+	float3 normal : NORMAL;
 #endif
 };
 
@@ -171,7 +171,7 @@ float4 PSMain(PS_Input pin) : SV_TARGET
 	diffuse = lerp(diffuse, green, step(0.9,worldNormal.y));
 #else
 	float3x3 worldMatrix = (float3x3)WorldMatrix;
-	float3 worldNormal = pin.normal;
+	float3 worldNormal = normalize(pin.normal);
 
 	float3 diffuse = MaterialColor + 0.1 * MaterialColor * GetTexture2D(TexIdDiffuse).Sample(sampler, pin.uv).rgb;
 #endif
@@ -224,7 +224,7 @@ float4 PSMain(PS_Input pin) : SV_TARGET
 	uint faceYIdx = (worldNormal.y < 0.0f) ? 3 : 2;
 	uint faceZIdx = (worldNormal.z < 0.0f) ? 5 : 4;
 
-	diffuse *= shadow;
+	diffuse = diffuse * shadow * Sky.SunColor + diffuse * Emission * 5;
 
 	RWTexture3D<float3> faceX = ResourceDescriptorHeap[GetFaceTexId(VoxelInfo.Voxels[VoxelIdx], faceXIdx)];
 	faceX[posUV] = diffuse * weights.x;

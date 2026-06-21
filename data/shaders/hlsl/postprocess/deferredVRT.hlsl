@@ -108,5 +108,5 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	radiance = float3(noiseWeight, 0);
 #endif
 
-	return float4(radiance * 6, 1 - occlusion);
+	return float4(radiance * 2, 1 - occlusion);
 }

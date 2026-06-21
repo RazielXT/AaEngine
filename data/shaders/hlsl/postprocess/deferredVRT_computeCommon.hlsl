@@ -91,5 +91,5 @@ float4 DeferredVrtMissResult(float3 rayDirection)
 
 float4 DeferredVrtHitResult(float3 radiance)
 {
-	return float4(radiance * 6.0f, 1.0f);
+	return float4(radiance * 2.0f, 1.0f);
 }

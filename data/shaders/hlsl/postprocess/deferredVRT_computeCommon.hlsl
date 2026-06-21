@@ -37,12 +37,15 @@ uint PixelIndex(uint2 pixel, uint2 viewportSize)
 
 float3 CosineWeightedHemisphere(float2 xi, float3 N, float3 T, float3 B)
 {
+	xi = saturate(xi); // guard sqrt(1 - xi.y) against negative inputs
 	float phi = 2.0 * 3.14159265 * xi.x;
 	float cosTheta = sqrt(1.0 - xi.y);
 	float sinTheta = sqrt(xi.y);
 
 	float3 localDir = float3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
-	return normalize(T * localDir.x + B * localDir.y + N * localDir.z);
+	float3 dir = T * localDir.x + B * localDir.y + N * localDir.z;
+	float len = length(dir);
+	return (len > 1e-6f) ? dir / len : normalize(N);
 }
 
 float3 DeferredVrtSkyColor(float3 dir)

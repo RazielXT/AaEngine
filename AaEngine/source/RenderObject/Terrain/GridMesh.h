@@ -200,6 +200,75 @@ public:
 		}
 	}
 
+	// Representing a simple 2D bounding box
+	struct Rect2D
+	{
+		float minX, minZ;
+		float maxX, maxZ;
+	};
+
+	void BuildLODUniform(const Vector3& cameraPos, XMINT2 offset, const Rect2D& viewAABB)
+	{
+		m_renderList.clear();
+
+		const float tileSize = m_smallestTileSize;
+		const float chunkWorldSize = tileSize * TilesWidth;
+
+		// Apply the offset to the camera to keep math local to this grid instance
+		const float camX = cameraPos.x - offset.x * chunkWorldSize;
+		const float camZ = cameraPos.z - offset.y * chunkWorldSize;
+
+		const float chunkHalfWorld = chunkWorldSize * 0.5f;
+
+		// Iterate over the fixed grid of uniform-sized chunks
+		for (uint32_t bx = 0; bx < numBlocksX; ++bx)
+		{
+			for (uint32_t by = 0; by < numBlocksY; ++by)
+			{
+				// 1. Compute the structural Extents (Min/Max) of this chunk
+				const float chunkMinX = m_gridOrigin.x + (bx * chunkWorldSize);
+				const float chunkMinZ = m_gridOrigin.z + (by * chunkWorldSize);
+				const float chunkMaxX = chunkMinX + chunkWorldSize;
+				const float chunkMaxZ = chunkMinZ + chunkWorldSize;
+
+				// 2. View AABB Culling Check (Separating Axis Theorem for 2D AABBs)
+				// If the chunk is completely outside the view bounding box, skip it immediately.
+				if (chunkMaxX < viewAABB.minX || chunkMinX > viewAABB.maxX ||
+					chunkMaxZ < viewAABB.minZ || chunkMinZ > viewAABB.maxZ)
+				{
+					continue;
+				}
+
+				// 3. Calculate the world center (for distance/LOD calculation)
+				const float centerX = chunkMinX + chunkHalfWorld;
+				const float centerZ = chunkMinZ + chunkHalfWorld;
+
+				// 4. Compute squared distance from camera to chunk center
+				const float dx = camX - centerX;
+				const float dz = camZ - centerZ;
+				const float distSq = dx * dx + dz * dz;
+
+				// 5. Determine LOD level based on distance thresholds
+				uint32_t chosenLevel = lodsLevels - 1; // Default to worst LOD
+
+				for (uint32_t lvl = 0; lvl < lodsLevels - 1; ++lvl)
+				{
+					if (distSq < m_subdivideThresholdsSq[lvl])
+					{
+						chosenLevel = lvl;
+						break;
+					}
+				}
+
+				// 6. Convert block coordinates to tile coordinates for the render list
+				uint32_t tileX = bx * TilesWidth;
+				uint32_t tileY = by * TilesWidth;
+
+				m_renderList.emplace_back(tileX, tileY, chosenLevel, m_subdivideThresholds[chosenLevel]);
+			}
+		}
+	}
+
 private:
 
 	uint32_t CalculateMaxInstances(float subdivisionDetail, UINT lodsCount)

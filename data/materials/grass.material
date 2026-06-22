@@ -41,6 +41,7 @@ material grassBlade : grassBase
 	shader_defines VERTEX_WAVE
 
 	technique Depth grassBladeDepth
+	technique Voxelize skip
 }
 
 material grassBladeInstanced : grassBlade

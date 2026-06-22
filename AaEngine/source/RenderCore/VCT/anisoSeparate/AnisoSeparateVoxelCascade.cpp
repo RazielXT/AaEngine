@@ -45,91 +45,68 @@ void AnisoSeparateVoxelCascade::initialize(const std::string& n, ID3D12Device* d
 	voxelInfoBuffer.view = resources.descriptors.createBufferView(voxelInfoBuffer.data.Get(), DataElementSize, DataElementCount);
 }
 
-void AnisoSeparateVoxelCascade::prepareForVoxelization(ID3D12GraphicsCommandList* commandList, TextureStatePair faceStates[FaceCount], TextureStatePair prevFaceStates[FaceCount], TextureStatePair& occupancyState, TextureStatePair& prevOccupancyState, const GpuTexture3D& clearColor, const GpuTexture3D& clearOccupancy, ClearBufferComputeShader& clearBufferCS)
+void AnisoSeparateVoxelCascade::prepareForVoxelization(ID3D12GraphicsCommandList* commandList, TextureStatePair faceStates[FaceCount], TextureStatePair prevFaceStates[FaceCount], TextureStatePair& occupancyState, TextureStatePair& prevOccupancyState, ClearTextureComputeShader& clearTextureCS)
 {
-	clearBufferCS.dispatch(commandList, voxelInfoBuffer.data.Get(), DataElementSize * DataElementCount / sizeof(float));
-
-	// Copy current to previous state ---------------------------
-
-	TextureTransitions<FaceCount * 2 + 2> tr;
-	tr.add(occupancyState, D3D12_RESOURCE_STATE_COPY_SOURCE);
-	tr.add(prevOccupancyState, D3D12_RESOURCE_STATE_COPY_DEST);
-
-	for (UINT f = 0; f < FaceCount; f++)
-	{
-		tr.add(faceStates[f], D3D12_RESOURCE_STATE_COPY_SOURCE);
-		tr.add(prevFaceStates[f], D3D12_RESOURCE_STATE_COPY_DEST);
-	}
-	tr.push(commandList);
-
-	commandList->CopyResource(voxelPreviousOccupancyTexture.texture.Get(), voxelOccupancyTexture.texture.Get());
-	for (UINT f = 0; f < FaceCount; f++)
-		commandList->CopyResource(voxelPreviousFaceTextures[f].texture.Get(), voxelFaceTextures[f].texture.Get());
+	TextureTransitions<FaceCount + 1> tr;
 
 	// Clear current state ---------------------------
 
-	tr.add(occupancyState, D3D12_RESOURCE_STATE_COPY_DEST);
+	tr.add(occupancyState, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	for (UINT f = 0; f < FaceCount; f++) {
-		tr.add(faceStates[f], D3D12_RESOURCE_STATE_COPY_DEST);
+		tr.add(faceStates[f], D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	}
 	tr.push(commandList);
 
-	commandList->CopyResource(voxelOccupancyTexture.texture.Get(), clearOccupancy.texture.Get());
+	clearTextureCS.dispatch(commandList, voxelOccupancyTexture.view, { VoxelSize, VoxelSize, VoxelSize });
+
 	for (UINT f = 0; f < FaceCount; f++)
-		commandList->CopyResource(voxelFaceTextures[f].texture.Get(), clearColor.texture.Get());
+		clearTextureCS.dispatch(commandList, voxelFaceTextures[f].view, { VoxelSize, VoxelSize, VoxelSize });
 
 	// Transition for usage ---------------------------
 
 	tr.add(occupancyState, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-	tr.add(prevOccupancyState, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 	for (UINT f = 0; f < FaceCount; f++) {
 		tr.add(faceStates[f], D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-		tr.add(prevFaceStates[f], D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	}
 	tr.push(commandList);
 
-	auto uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(voxelInfoBuffer.data.Get());
-	commandList->ResourceBarrier(1, &uavBarrier);
+	// UAV ---------------------------
+
+	tr.addUav(voxelOccupancyTexture.texture.Get());
+
+	for (UINT f = 0; f < FaceCount; f++) {
+		tr.addUav(voxelFaceTextures[f].texture.Get());
+	}
+	tr.push(commandList);
 }
 
-void AnisoSeparateVoxelCascade::clearAll(ID3D12GraphicsCommandList* commandList, const GpuTexture3D& clearColor, const GpuTexture3D& clearOccupancy, ClearBufferComputeShader& clearBufferCS)
+void AnisoSeparateVoxelCascade::clearAll(ID3D12GraphicsCommandList* commandList, ClearTextureComputeShader& clearTextureCS)
 {
-	clearBufferCS.dispatch(commandList, voxelInfoBuffer.data.Get(), DataElementSize * DataElementCount / sizeof(float));
+	TextureTransitions<FaceCount + 1> tr;
+	tr.add(voxelOccupancyTexture, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	for (UINT f = 0; f < FaceCount; f++)
+		tr.add(voxelFaceTextures[f], D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	tr.push(commandList);
 
-	{
-		TextureTransitions<2> tr;
-		tr.add(voxelOccupancyTexture, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
-		tr.add(voxelPreviousOccupancyTexture, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
-		tr.push(commandList);
-
-		commandList->CopyResource(voxelOccupancyTexture.texture.Get(), clearOccupancy.texture.Get());
-		commandList->CopyResource(voxelPreviousOccupancyTexture.texture.Get(), clearOccupancy.texture.Get());
-
-		tr.add(voxelOccupancyTexture, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-		tr.add(voxelPreviousOccupancyTexture, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-		tr.push(commandList);
-	}
+	clearTextureCS.dispatch(commandList, voxelOccupancyTexture.view, { VoxelSize, VoxelSize, VoxelSize });
 
 	for (UINT f = 0; f < FaceCount; f++)
-	{
-		TextureTransitions<2> tr;
-		tr.add(voxelFaceTextures[f], D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
-		tr.add(voxelPreviousFaceTextures[f], D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
-		tr.push(commandList);
+		clearTextureCS.dispatch(commandList, voxelFaceTextures[f].view, { VoxelSize, VoxelSize, VoxelSize });
 
-		commandList->CopyResource(voxelFaceTextures[f].texture.Get(), clearColor.texture.Get());
-		commandList->CopyResource(voxelPreviousFaceTextures[f].texture.Get(), clearColor.texture.Get());
+	tr.add(voxelOccupancyTexture, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	for (UINT f = 0; f < FaceCount; f++)
+		tr.add(voxelFaceTextures[f], D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	tr.push(commandList);
 
-		tr.add(voxelFaceTextures[f], D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-		tr.add(voxelPreviousFaceTextures[f], D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-		tr.push(commandList);
+	// UAV ---------------------------
+
+	tr.addUav(voxelOccupancyTexture.texture.Get());
+
+	for (UINT f = 0; f < FaceCount; f++) {
+		tr.addUav(voxelFaceTextures[f].texture.Get());
 	}
-
-	{
-		auto uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(voxelInfoBuffer.data.Get());
-		commandList->ResourceBarrier(1, &uavBarrier);
-	}
+	tr.push(commandList);
 }
 
 static Vector3 SnapToGrid(Vector3 position, float gridStep)

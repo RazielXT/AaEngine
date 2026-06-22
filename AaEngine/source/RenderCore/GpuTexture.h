@@ -179,6 +179,10 @@ struct TextureTransitionsBase
 
 		state.currentState = to;
 	}
+	void addUav(ID3D12Resource* texture)
+	{
+		barriers[c++] = CD3DX12_RESOURCE_BARRIER::UAV(texture);
+	}
 	void push(ID3D12GraphicsCommandList* commandList)
 	{
 		if (c)

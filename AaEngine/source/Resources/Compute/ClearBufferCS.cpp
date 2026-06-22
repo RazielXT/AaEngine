@@ -11,3 +11,14 @@ void ClearBufferComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, 
 	const UINT clearPerThread = 4;
 	commandList->Dispatch(size / (clearPerThread * threads), 1, 1);
 }
+
+void ClearTextureComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, const ShaderTextureView& texture, DirectX::XMUINT3 size)
+{
+	commandList->SetPipelineState(pipelineState.Get());
+	commandList->SetComputeRootSignature(signature);
+
+	commandList->SetComputeRootDescriptorTable(0, texture.uavHandle);
+
+	const UINT threads = 4;
+	commandList->Dispatch(size.x / threads, size.y / threads, size.z / threads);
+}

@@ -45,6 +45,9 @@ void AnisoSeparateVoxelization::initialize(RenderSystem& renderSystem, const Fra
 	auto clearBufferShader = resources.shaders.getShader("clearBufferCS", ShaderType::Compute, ShaderRef{ "utils/clearBufferCS.hlsl", "main", "cs_6_6" });
 	clearBufferCS.init(*renderSystem.core.device, *clearBufferShader);
 
+	auto clearTextureShader = resources.shaders.getShader("clearTextureCS", ShaderType::Compute, ShaderRef{ "utils/clearTextureCS.hlsl", "main", "cs_6_6" });
+	clearTextureCS.init(*renderSystem.core.device, *clearTextureShader);
+
 	auto bitmaskShader = resources.shaders.getShader("opacityBitmaskCS", ShaderType::Compute, ShaderRef{ "vct/opacityBitmaskCS.hlsl", "CSMain", "cs_6_6" });
 	occupancyBitmaskCS.init(*renderSystem.core.device, *bitmaskShader);
 
@@ -64,7 +67,7 @@ void AnisoSeparateVoxelization::clear(ID3D12GraphicsCommandList* c)
 
 	for (auto& cascade : voxelCascades)
 	{
-		cascade.clearAll(c, clearColorTexture, clearOccupancyTexture, clearBufferCS);
+		cascade.clearAll(c, clearTextureCS);
 	}
 
 	reset = false;
@@ -179,7 +182,7 @@ void AnisoSeparateVoxelization::voxelizeCascade(ID3D12GraphicsCommandList* comma
 
 	viewportOutput.texture->PrepareAsRenderTarget(commandList, viewportOutput.previousState, true);
 
-	cascade.prepareForVoxelization(commandList, faceStates, prevFaceStates, occupancyState, prevOccupancyState, clearColorTexture, clearOccupancyTexture, clearBufferCS);
+	cascade.prepareForVoxelization(commandList, faceStates, prevFaceStates, occupancyState, prevOccupancyState, clearTextureCS);
 	auto b = CD3DX12_RESOURCE_BARRIER::Transition(cascade.voxelInfoBuffer.data.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	commandList->ResourceBarrier(1, &b);
 

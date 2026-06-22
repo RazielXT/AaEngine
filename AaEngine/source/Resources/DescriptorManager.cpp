@@ -142,6 +142,7 @@ void DescriptorManager::createTextureView(GpuTexture3D& texture, UINT mipLevels)
 	texture.view.srvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart(), index
 		, device.GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 	texture.view.srvHeapIndex = index;
+	texture.view.handle = handle;
 }
 
 void DescriptorManager::createUAVView(GpuTexture3D& texture)

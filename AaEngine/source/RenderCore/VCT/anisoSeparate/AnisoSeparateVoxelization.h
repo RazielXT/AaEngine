@@ -101,6 +101,7 @@ private:
 	AnisoSeparateOccupancyBitmaskCS occupancyBitmaskCS;
 	Generate3DMips3xCS computeMips;
 	ClearBufferComputeShader clearBufferCS;
+	ClearTextureComputeShader clearTextureCS;
 
 	GpuTexture3D clearColorTexture;
 	GpuTexture3D clearOccupancyTexture;

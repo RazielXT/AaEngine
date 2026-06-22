@@ -6,7 +6,7 @@
 #include <string>
 
 struct GraphicsResources;
-class ClearBufferComputeShader;
+class ClearTextureComputeShader;
 
 struct AnisoSeparateVoxelCascade
 {
@@ -22,9 +22,9 @@ struct AnisoSeparateVoxelCascade
 	UINT idx{};
 
 	void initialize(const std::string& name, ID3D12Device* device, GraphicsResources&);
-	void clearAll(ID3D12GraphicsCommandList* commandList, const GpuTexture3D& clearColor, const GpuTexture3D& clearOccupancy, ClearBufferComputeShader&);
+	void clearAll(ID3D12GraphicsCommandList* commandList, ClearTextureComputeShader&);
 
-	void prepareForVoxelization(ID3D12GraphicsCommandList* commandList, TextureStatePair faceStates[FaceCount], TextureStatePair prevFaceStates[FaceCount], TextureStatePair& occupancyState, TextureStatePair& prevOccupancyState, const GpuTexture3D& clearColor, const GpuTexture3D& clearOccupancy, ClearBufferComputeShader&);
+	void prepareForVoxelization(ID3D12GraphicsCommandList* commandList, TextureStatePair faceStates[FaceCount], TextureStatePair prevFaceStates[FaceCount], TextureStatePair& occupancyState, TextureStatePair& prevOccupancyState, ClearTextureComputeShader&);
 
 	struct
 	{

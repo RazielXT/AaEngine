@@ -18,11 +18,11 @@ void PrepareFrameTask::recordCommands(RenderContext& ctx, CommandsData& cmd, Com
 		// View 0: main camera.
 		renderWorld.grass.updateCulling(cmd.commandList, *ctx.camera, *ctx.camera, renderWorld.terrain, 0);
 		// Views 1..: first shadow cascades. Frustum from the light cascade, distance fade from the main camera.
-		for (UINT c = 0; c + 1 < GrassViewCount; c++)
+		for (auto v : { GeometryViewType_ShadowCascade0, GeometryViewType_ShadowCascade1 })
 		{
-			auto& cascade = shadowMaps.cascades[c];
+			auto& cascade = shadowMaps.cascades[v];
 			if (cascade.update)
-				renderWorld.grass.updateCulling(cmd.commandList, cascade.camera, *ctx.camera, renderWorld.terrain, c + 1);
+				renderWorld.grass.updateCulling(cmd.commandList, cascade.camera, *ctx.camera, renderWorld.terrain, v);
 		}
 		renderWorld.vegetation.updateCulling(cmd.commandList, *ctx.camera, renderWorld.terrain);
 		return;

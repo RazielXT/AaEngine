@@ -67,13 +67,12 @@ void Grass::createChunks(RenderWorld& renderWorld, RenderSystem& renderSystem, G
 			e->geometry.indexCount = grassModel->indexCount;
 			e->geometry.layout = &grassModel->vertexLayout;
 
-			for (UINT v = 0; v < GrassViewCount; v++)
+			for (auto v : chunk.grassGeometryViews)
 			{
 				chunk.geometryVariants[v].customBuffer = chunk.views[v].transformationBuffer->GetGPUVirtualAddress();
-				chunk.geometryVariants[v].indirectSource = &chunk.views[v].indirect;
 			}
-			e->geometry.viewVariants = chunk.geometryVariants;
-			e->geometry.viewVariantCount = GrassViewCount;
+
+			e->geometry.viewVariants = chunk.geometryVariants.data();
 
 			e->setBoundingBox({ { chunkSize * 0.5f, terrainParams.tileHeight * 0.5f, chunkSize * 0.5f },
 							   { chunkSize * 0.5f, terrainParams.tileHeight * 0.5f, chunkSize * 0.5f } });
@@ -128,7 +127,7 @@ void Grass::initChunk(GrassChunk& chunk, RenderSystem& renderSystem, GraphicsRes
 	D3D12_DRAW_INDEXED_ARGUMENTS cmd{};
 	cmd.IndexCountPerInstance = grassModel->indexCount;
 
-	for (UINT v = 0; v < GrassViewCount; v++)
+	for (auto v : chunk.grassGeometryViews)
 	{
 		auto& view = chunk.views[v];
 
@@ -292,8 +291,11 @@ void Grass::updateCulling(ID3D12GraphicsCommandList* commandList, const Camera& 
 
 	// Stagger main-view chunk updates across frames; shadow views refresh fully when their cascade updates.
 	static UINT counter = 0;
+	if (viewIndex == 0)
+		counter++;
+
 	const UINT UpdateDivision = 4;
-	const bool throttle = (viewIndex == 0);
+	const bool throttle = true; //(viewIndex == 0);
 
 	for (UINT x = 0; x < GrassGridSize; x++)
 		for (UINT y = 0; y < GrassGridSize; y++)
@@ -306,9 +308,6 @@ void Grass::updateCulling(ID3D12GraphicsCommandList* commandList, const Camera& 
 					updateChunk(commandList, chunk, viewIndex, cullingInput);
 			}
 		}
-
-	if (throttle)
-		counter++;
 }
 
 const UINT groups = 4;

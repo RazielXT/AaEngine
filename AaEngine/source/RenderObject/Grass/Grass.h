@@ -41,9 +41,6 @@ public:
 	void dispatch(ID3D12GraphicsCommandList* commandList, const Input& input, ID3D12Resource* transformBuffer, ID3D12Resource* commands, ID3D12Resource* infoBuffer, ID3D12Resource* infoCounter);
 };
 
-// Render views grass is culled for: main camera + first two shadow cascades.
-constexpr UINT GrassViewCount = 3;
-
 struct GrassChunk
 {
 	// Candidate blades — camera independent, generated once by grassFindCS and shared by all views.
@@ -51,13 +48,14 @@ struct GrassChunk
 	ComPtr<ID3D12Resource> infoCounter;
 
 	// Per-view culled data (view 0 = main camera, 1.. = shadow cascades).
-	struct View
+	struct ViewData
 	{
 		ComPtr<ID3D12Resource> transformationBuffer;
 		IndirectEntityGeometry indirect;
 	};
-	View views[GrassViewCount];
-	GeometryViewVariant geometryVariants[GrassViewCount]{};
+	ViewData views[GeometryViewType_Count];
+	GeometryViewVariants geometryVariants;
+	static constexpr GeometryViewType grassGeometryViews[3] = { GeometryViewType_Default, GeometryViewType_ShadowCascade0, GeometryViewType_ShadowCascade1 };
 
 	RenderEntity* entity{};
 

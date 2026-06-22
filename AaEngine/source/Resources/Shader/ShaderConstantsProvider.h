@@ -12,6 +12,14 @@ class Camera;
 class GpuTexture2D;
 class RenderTargetTexturesView;
 
+enum RenderViewId
+{
+	RenderViewId_Default,
+	RenderViewId_ShadowCascade0,
+	RenderViewId_ShadowCascade1,
+	RenderViewId_Count
+};
+
 class ShaderConstantsProvider
 {
 public:
@@ -26,8 +34,7 @@ public:
 	RenderEntity* entity{};
 	ID3D12Resource* uavBarrier{};
 
-	// Selects which per-view GPU buffers indirect geometry uses (0 = main camera, 1.. = shadow cascades).
-	UINT viewId = 0;
+	RenderViewId viewId{};
 
 	XMMATRIX getWorldMatrix() const;
 	XMMATRIX getPreviousWorldMatrix() const;

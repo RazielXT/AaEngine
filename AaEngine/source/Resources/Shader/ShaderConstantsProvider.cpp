@@ -86,7 +86,13 @@ DirectX::XMFLOAT3 ShaderConstantsProvider::getMainCameraDirection() const
 
 D3D12_GPU_VIRTUAL_ADDRESS ShaderConstantsProvider::getGeometryBuffer() const
 {
-	return entity->geometry.resolveCustomBuffer(viewId);
+	if (viewId && entity->geometry.viewVariants)
+	{
+		if (auto v = entity->geometry.viewVariants->at(viewId))
+			return v->geometryCustomBuffer;
+	}
+
+	return entity->geometry.geometryCustomBuffer;
 }
 
 D3D12_GPU_VIRTUAL_ADDRESS ShaderConstantsProvider::getGeometryRedirectBuffer() const

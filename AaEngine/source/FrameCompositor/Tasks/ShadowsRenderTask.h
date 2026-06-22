@@ -31,8 +31,8 @@ private:
 
 		RenderObjectsStorage* renderables;
 		uint8_t filterFlag{};
-		// Render view index for per-view GPU-culled geometry (grass). 0 = none/main, 1.. = cascade-specific.
-		UINT viewId{};
+
+		RenderViewId viewId{};
 	};
 
 	ShadowWork cascades[4];

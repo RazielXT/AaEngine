@@ -38,7 +38,7 @@ public:
 		float maxDistance;
 	};
 
-	void dispatch(ID3D12GraphicsCommandList* commandList, const Input& input, ID3D12Resource* transformBuffer, ID3D12Resource* commands, ID3D12Resource* infoBuffer, ID3D12Resource* infoCounter);
+	void dispatch(ID3D12GraphicsCommandList* commandList, const Input& input, ID3D12Resource* transformBuffer, D3D12_GPU_VIRTUAL_ADDRESS commandsAddr, ID3D12Resource* infoBuffer, ID3D12Resource* infoCounter);
 };
 
 struct GrassChunk
@@ -47,15 +47,14 @@ struct GrassChunk
 	ComPtr<ID3D12Resource> infoBuffer;
 	ComPtr<ID3D12Resource> infoCounter;
 
-	// Per-view culled data (view 0 = main camera, 1.. = shadow cascades).
+	GeometryViews<RenderViewId_ShadowCascade0, RenderViewId_ShadowCascade1> views;
+
 	struct ViewData
 	{
 		ComPtr<ID3D12Resource> transformationBuffer;
 		IndirectEntityGeometry indirect;
 	};
-	ViewData views[GeometryViewType_Count];
-	GeometryViewVariants geometryVariants;
-	static constexpr GeometryViewType grassGeometryViews[3] = { GeometryViewType_Default, GeometryViewType_ShadowCascade0, GeometryViewType_ShadowCascade1 };
+	ViewData viewData[1 + decltype(views)::count];
 
 	RenderEntity* entity{};
 
@@ -86,8 +85,29 @@ public:
 	constexpr static UINT ChunksPerTerrainTile = 32;
 	constexpr static UINT GrassGridSize = 5;
 	constexpr static UINT TotalChunks = GrassGridSize * GrassGridSize;
+	// Updating/clearing of chunks is split across frames; one division group is processed per frame.
+	constexpr static UINT UpdateDivision = 2;
 
 private:
+
+	// Command-buffer slot layout: chunks are grouped by their update-division group so that the
+	// commands processed on a given frame form a contiguous range a single clear dispatch can cover.
+	// Each render view owns a TotalChunks-sized block within the shared command buffer.
+	static constexpr UINT divisionGroupCount(UINT group)
+	{
+		return (TotalChunks - group + UpdateDivision - 1) / UpdateDivision;
+	}
+	static constexpr UINT divisionGroupBase(UINT group)
+	{
+		UINT base = 0;
+		for (UINT g = 0; g < group; g++)
+			base += divisionGroupCount(g);
+		return base;
+	}
+	static constexpr UINT commandSlot(UINT viewIndex, UINT linearIndex)
+	{
+		return viewIndex * TotalChunks + divisionGroupBase(linearIndex % UpdateDivision) + linearIndex / UpdateDivision;
+	}
 
 	// Find CS dispatch dimensions — smaller than vegetation for denser coverage per chunk
 	static constexpr UINT groups = 4;
@@ -104,10 +124,13 @@ private:
 	bool updatingEnabled = true;
 
 	void initChunk(GrassChunk& chunk, RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch);
+	void createSharedCommandBuffer(RenderSystem& renderSystem, ResourceUploadBatch& batch);
 	void regenerateChunk(ID3D12GraphicsCommandList* commandList, GrassChunk& chunk, const ProgressiveTerrain& terrain);
 	void updateChunk(ID3D12GraphicsCommandList* commandList, GrassChunk& chunk, UINT viewIndex, const GrassUpdateComputeShader::Input& cullingInput);
 
 	ComPtr<ID3D12CommandSignature> commandSignature;
+	// Single command buffer shared by all chunks and views; chunks reference their slice via offset.
+	ComPtr<ID3D12Resource> sharedCommandBuffer;
 	ComPtr<ID3D12Resource> zeroCounterBuffer;
 
 	VertexBufferModel* grassModel{};

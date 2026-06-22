@@ -7,6 +7,17 @@ bool EntityGeometry::usesInstancing() const
 	return type == Type::Instancing;
 }
 
+EntityGeometry& EntityGeometry::getGeometry(RenderViewId id)
+{
+	if (id && viewVariants)
+	{
+		if (auto v = viewVariants->at(id))
+			return *v;
+	}
+
+	return *this;
+}
+
 void EntityGeometry::fromModel(VertexBufferModel& model)
 {
 	vertexCount = model.vertexCount;

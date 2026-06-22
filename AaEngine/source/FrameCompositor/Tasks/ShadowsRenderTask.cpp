@@ -14,8 +14,8 @@ ShadowsRenderTask::ShadowsRenderTask(RenderProvider p, RenderWorld& w, ShadowMap
 	cascades[3].filterFlag = RenderObjectFlag::NoCascade3;
 
 	// Grass is culled per view; cascades 0 and 1 use their own culled buffers (views 1 and 2).
-	cascades[0].viewId = 1;
-	cascades[1].viewId = 2;
+	cascades[0].viewId = RenderViewId_ShadowCascade0;
+	cascades[1].viewId = RenderViewId_ShadowCascade1;
 }
 
 ShadowsRenderTask::~ShadowsRenderTask()

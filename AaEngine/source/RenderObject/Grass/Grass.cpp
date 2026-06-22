@@ -35,6 +35,29 @@ void Grass::initialize(RenderSystem& renderSystem, GraphicsResources& resources,
 
 	UINT zero = 0;
 	CreateStaticBuffer(renderSystem.core.device, batch, &zero, sizeof(UINT), D3D12_RESOURCE_STATE_COPY_SOURCE, &zeroCounterBuffer);
+
+	createSharedCommandBuffer(renderSystem, batch);
+}
+
+void Grass::createSharedCommandBuffer(RenderSystem& renderSystem, ResourceUploadBatch& batch)
+{
+	// One command per (view, chunk). Views own contiguous TotalChunks-sized blocks; within a block,
+	// chunks are ordered by update-division group so each frame's cleared commands are contiguous.
+	constexpr UINT totalCommands = RenderViewId_Count * TotalChunks;
+
+	std::vector<D3D12_DRAW_INDEXED_ARGUMENTS> defaultCommands(totalCommands);
+	for (auto& cmd : defaultCommands)
+	{
+		cmd.IndexCountPerInstance = grassModel->indexCount;
+		cmd.InstanceCount = 0;
+		cmd.StartIndexLocation = 0;
+		cmd.BaseVertexLocation = 0;
+		cmd.StartInstanceLocation = 0;
+	}
+
+	CreateStaticBuffer(renderSystem.core.device, batch, defaultCommands.data(), totalCommands, sizeof(D3D12_DRAW_INDEXED_ARGUMENTS),
+		D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, &sharedCommandBuffer, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+	sharedCommandBuffer->SetName(L"GrassSharedCommands");
 }
 
 void Grass::createChunks(RenderWorld& renderWorld, RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch)
@@ -60,19 +83,35 @@ void Grass::createChunks(RenderWorld& renderWorld, RenderSystem& renderSystem, G
 			e->material = grassMaterial;
 			e->Material().setParam("ChunkId", x * GrassGridSize + y);
 			e->geometry.type = EntityGeometry::Type::Indirect;
-			e->geometry.source = &chunk.views[0].indirect;
-			e->geometry.geometryCustomBuffer = chunk.views[0].transformationBuffer->GetGPUVirtualAddress();
 			e->geometry.vertexBufferView = grassModel->vertexBufferView;
 			e->geometry.indexBufferView = grassModel->indexBufferView;
 			e->geometry.indexCount = grassModel->indexCount;
 			e->geometry.layout = &grassModel->vertexLayout;
 
-			for (auto v : chunk.grassGeometryViews)
+			for (size_t i = 0; i < std::size(chunk.viewData); i++)
 			{
-				chunk.geometryVariants[v].customBuffer = chunk.views[v].transformationBuffer->GetGPUVirtualAddress();
+				auto& viewData = chunk.viewData[i];
+
+				viewData.indirect.commandSignature = commandSignature;
+				viewData.indirect.maxCommands = 1;
+				viewData.indirect.commandBuffer = sharedCommandBuffer;
+				viewData.indirect.commandBufferOffset = commandSlot(i, ax * GrassGridSize + ay) * sizeof(D3D12_DRAW_INDEXED_ARGUMENTS);
+
+				if (i == 0)
+				{
+					e->geometry.geometryCustomBuffer = viewData.transformationBuffer->GetGPUVirtualAddress();
+					e->geometry.source = &viewData.indirect;
+				}
+				else
+				{
+					auto& g = chunk.views.viewGeometries[i - 1];
+					g = e->geometry;
+					g.geometryCustomBuffer = viewData.transformationBuffer->GetGPUVirtualAddress();
+					g.source = &viewData.indirect;
+				}
 			}
 
-			e->geometry.viewVariants = chunk.geometryVariants.data();
+			e->geometry.viewVariants = &chunk.views.variants;
 
 			e->setBoundingBox({ { chunkSize * 0.5f, terrainParams.tileHeight * 0.5f, chunkSize * 0.5f },
 							   { chunkSize * 0.5f, terrainParams.tileHeight * 0.5f, chunkSize * 0.5f } });
@@ -124,22 +163,10 @@ void Grass::initChunk(GrassChunk& chunk, RenderSystem& renderSystem, GraphicsRes
 	};
 	constexpr UINT transformSize = sizeof(RenderGrassInfo) * maxPerChunk;
 
-	D3D12_DRAW_INDEXED_ARGUMENTS cmd{};
-	cmd.IndexCountPerInstance = grassModel->indexCount;
-
-	for (auto v : chunk.grassGeometryViews)
+	for (auto& d : chunk.viewData)
 	{
-		auto& view = chunk.views[v];
-
-		view.transformationBuffer = resources.shaderBuffers.CreateStructuredBuffer(transformSize);
-		view.transformationBuffer->SetName(L"GrassTransformation");
-
-		view.indirect.commandSignature = commandSignature;
-		view.indirect.maxCommands = 1;
-
-		CreateStaticBuffer(renderSystem.core.device, batch, &cmd, TotalChunks, sizeof(D3D12_DRAW_INDEXED_ARGUMENTS),
-			D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, &view.indirect.commandBuffer, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-		view.indirect.commandBuffer->SetName(L"GrassCommandBuffer");
+		d.transformationBuffer = resources.shaderBuffers.CreateStructuredBuffer(transformSize);
+		d.transformationBuffer->SetName(L"GrassTransformation");
 	}
 }
 
@@ -200,24 +227,18 @@ void Grass::regenerateChunk(ID3D12GraphicsCommandList* commandList, GrassChunk& 
 
 void Grass::updateChunk(ID3D12GraphicsCommandList* commandList, GrassChunk& chunk, UINT viewIndex, const GrassUpdateComputeShader::Input& cullingInput)
 {
-	auto& view = chunk.views[viewIndex];
+	auto& view = chunk.viewData[viewIndex];
 
-	CD3DX12_RESOURCE_BARRIER barrier[2]{};
+	// The shared command buffer is already in UAV state and was cleared in updateCulling; only the
+	// per-view transformation buffer needs transitioning here.
+	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(view.transformationBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	commandList->ResourceBarrier(1, &barrier);
 
-	barrier[0] = CD3DX12_RESOURCE_BARRIER::Transition(view.indirect.commandBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-	barrier[1] = CD3DX12_RESOURCE_BARRIER::Transition(view.transformationBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-	commandList->ResourceBarrier(2, barrier);
+	D3D12_GPU_VIRTUAL_ADDRESS commandsAddr = sharedCommandBuffer->GetGPUVirtualAddress() + view.indirect.commandBufferOffset;
+	grassUpdateCS.dispatch(commandList, cullingInput, view.transformationBuffer.Get(), commandsAddr, chunk.infoBuffer.Get(), chunk.infoCounter.Get());
 
-	indirectDrawClearCS.dispatch(commandList, 1, view.indirect.commandBuffer.Get());
-
-	CD3DX12_RESOURCE_BARRIER uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(view.indirect.commandBuffer.Get());
-	commandList->ResourceBarrier(1, &uavBarrier);
-
-	grassUpdateCS.dispatch(commandList, cullingInput, view.transformationBuffer.Get(), view.indirect.commandBuffer.Get(), chunk.infoBuffer.Get(), chunk.infoCounter.Get());
-
-	barrier[0] = CD3DX12_RESOURCE_BARRIER::Transition(view.indirect.commandBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-	barrier[1] = CD3DX12_RESOURCE_BARRIER::Transition(view.transformationBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-	commandList->ResourceBarrier(2, barrier);
+	barrier = CD3DX12_RESOURCE_BARRIER::Transition(view.transformationBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	commandList->ResourceBarrier(1, &barrier);
 }
 
 void Grass::update(ID3D12GraphicsCommandList* commandList, const Camera& camera, const ProgressiveTerrain& terrain)
@@ -294,20 +315,37 @@ void Grass::updateCulling(ID3D12GraphicsCommandList* commandList, const Camera& 
 	if (viewIndex == 0)
 		counter++;
 
-	const UINT UpdateDivision = 4;
-	const bool throttle = true; //(viewIndex == 0);
+	const UINT activeGroup = (UpdateDivision - (counter % UpdateDivision)) % UpdateDivision;
+
+	// Clear this view's slice of the shared command buffer in one dispatch. Because chunks are laid out
+	// grouped by division, the commands touched this frame form a single contiguous range.
+	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(sharedCommandBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	commandList->ResourceBarrier(1, &barrier);
+
+	D3D12_GPU_VIRTUAL_ADDRESS bufferBase = sharedCommandBuffer->GetGPUVirtualAddress();
+	{
+		UINT clearSlot = viewIndex * TotalChunks + divisionGroupBase(activeGroup);
+		D3D12_GPU_VIRTUAL_ADDRESS clearAddr = bufferBase + (UINT64)clearSlot * sizeof(D3D12_DRAW_INDEXED_ARGUMENTS);
+		indirectDrawClearCS.dispatch(commandList, divisionGroupCount(activeGroup), clearAddr);
+	}
+
+	CD3DX12_RESOURCE_BARRIER uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(sharedCommandBuffer.Get());
+	commandList->ResourceBarrier(1, &uavBarrier);
 
 	for (UINT x = 0; x < GrassGridSize; x++)
 		for (UINT y = 0; y < GrassGridSize; y++)
 		{
+			if ((x * GrassGridSize + y) % UpdateDivision != activeGroup)
+				continue;
+
 			auto& chunk = chunks[x][y];
 			bool visible = ortho ? chunk.entity->isVisible(orientedBox) : chunk.entity->isVisible(frustum);
 			if (visible)
-			{
-				if (!throttle || !counter || (x * GrassGridSize + y + counter) % UpdateDivision == 0)
-					updateChunk(commandList, chunk, viewIndex, cullingInput);
-			}
+				updateChunk(commandList, chunk, viewIndex, cullingInput);
 		}
+
+	barrier = CD3DX12_RESOURCE_BARRIER::Transition(sharedCommandBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	commandList->ResourceBarrier(1, &barrier);
 }
 
 const UINT groups = 4;
@@ -324,7 +362,7 @@ void GrassFindComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, co
 	commandList->Dispatch(groups, groups, 1);
 }
 
-void GrassUpdateComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, const Input& input, ID3D12Resource* transformBuffer, ID3D12Resource* commands, ID3D12Resource* infoBuffer, ID3D12Resource* infoCounter)
+void GrassUpdateComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, const Input& input, ID3D12Resource* transformBuffer, D3D12_GPU_VIRTUAL_ADDRESS commandsAddr, ID3D12Resource* infoBuffer, ID3D12Resource* infoCounter)
 {
 	commandList->SetPipelineState(pipelineState.Get());
 	commandList->SetComputeRootSignature(signature);
@@ -333,7 +371,7 @@ void GrassUpdateComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, 
 	commandList->SetComputeRootShaderResourceView(1, infoBuffer->GetGPUVirtualAddress());
 	commandList->SetComputeRootShaderResourceView(2, infoCounter->GetGPUVirtualAddress());
 	commandList->SetComputeRootUnorderedAccessView(3, transformBuffer->GetGPUVirtualAddress());
-	commandList->SetComputeRootUnorderedAccessView(4, commands->GetGPUVirtualAddress());
+	commandList->SetComputeRootUnorderedAccessView(4, commandsAddr);
 
 	commandList->Dispatch(groups * groups, 64, 1);
 }

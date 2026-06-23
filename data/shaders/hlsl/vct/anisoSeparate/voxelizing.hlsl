@@ -4,6 +4,7 @@
 
 #ifdef GRID
 #define GRID_PADDING
+#define GRID_NO_MORPHING
 #include "hlsl/grid/heightmapGridReconstruction.hlsl"
 #endif
 
@@ -14,6 +15,7 @@ uint TexIdHeightmap;
 uint TexIdNormalmap;
 float3 CameraPosition;
 float2 GridHeightWidth;
+uint GridTilesWidth;
 #else
 float4x4 WorldMatrix;
 float3 MaterialColor;
@@ -67,7 +69,7 @@ GS_Input VSMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
 	p.worldPos = WorldPosition;
 	p.heightScale = GridHeightWidth.x;
 	p.gridSize = GridHeightWidth.y;
-	p.tilesWidth = 512;
+	p.tilesWidth = GridTilesWidth;
 	p.tileResolution = 33;
 
 	GridVertexInfo info = ReadGridVertexInfo(InstancingBuffer[instanceID], vertexID, ResourceDescriptorHeap[TexIdHeightmap], LinearSampler, p);

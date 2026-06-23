@@ -15,12 +15,12 @@ public:
 	EntityMaterialInterface(MaterialPropertiesOverrideDescription&, RenderEntity& entity);
 
 	template<typename T>
-	void setParam(const std::string& name, const T& value)
+	void setParam(const std::string& name, const T& value, RenderViewId viewId = {})
 	{
-		setParam(name, &value, sizeof(T));
+		setParam(name, &value, sizeof(T), viewId);
 	}
 
-	void setParam(const std::string& name, const void* data, UINT sizeBytes);
+	void setParam(const std::string& name, const void* data, UINT sizeBytes, RenderViewId viewId = {});
 
 private:
 	MaterialPropertiesOverrideDescription& storage;

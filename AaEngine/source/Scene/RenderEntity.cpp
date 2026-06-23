@@ -48,11 +48,11 @@ EntityMaterialInterface::EntityMaterialInterface(MaterialPropertiesOverrideDescr
 {
 }
 
-void EntityMaterialInterface::setParam(const std::string& name, const void* data, UINT sizeBytes)
+void EntityMaterialInterface::setParam(const std::string& name, const void* data, UINT sizeBytes, RenderViewId viewId)
 {
 	for (auto& p : storage.params)
 	{
-		if (p.name == name)
+		if (p.name == name && p.viewId == viewId)
 		{
 			memcpy(p.value, data, sizeBytes);
 			MaterialEvents::Get().notifyEntityParamChanged(entity);
@@ -60,7 +60,7 @@ void EntityMaterialInterface::setParam(const std::string& name, const void* data
 		}
 	}
 
-	auto& param = storage.params.emplace_back(name, sizeBytes);
+	auto& param = storage.params.emplace_back(name, sizeBytes, viewId);
 	memcpy(param.value, data, sizeBytes);
 
 	MaterialEvents::Get().notifyEntityParamChanged(entity);

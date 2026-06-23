@@ -506,14 +506,14 @@ std::unique_ptr<MaterialPropertiesOverride> MaterialInstance::CreateParameterOve
 	{
 		for (auto& d : description.params)
 		{
-			AppendParameterOverride(*output, d.name, d.value, d.sizeBytes);
+			AppendParameterOverride(*output, d.name, d.value, d.sizeBytes, d.viewId);
 		}
 	}
 
 	return output->params.empty() ? nullptr : std::move(output);
 }
 
-void MaterialInstance::AppendParameterOverride(MaterialPropertiesOverride& output, const std::string& name, const void* value, size_t sizeBytes) const
+void MaterialInstance::AppendParameterOverride(MaterialPropertiesOverride& output, const std::string& name, const void* value, size_t sizeBytes, RenderViewId viewId) const
 {
 	for (const auto& p : base.info.rootBuffer->info.Params)
 	{
@@ -522,13 +522,14 @@ void MaterialInstance::AppendParameterOverride(MaterialPropertiesOverride& outpu
 			auto& param = output.params.emplace_back();
 			param.offsetFloats = p.StartOffset / sizeof(float);
 			param.sizeBytes = sizeBytes;
+			param.viewId = viewId;
 			memcpy(output.params.back().value, value, param.sizeBytes);
 			break;
 		}
 	}
 }
 
-void MaterialInstance::AppendParameterOverride(MaterialPropertiesOverride& output, const std::string& name, MaterialInstance& source, float defaultValue) const
+void MaterialInstance::AppendParameterOverride(MaterialPropertiesOverride& output, const std::string& name, MaterialInstance& source, float defaultValue, RenderViewId viewId) const
 {
 	for (auto& p : base.info.rootBuffer->info.Params)
 	{
@@ -543,6 +544,7 @@ void MaterialInstance::AppendParameterOverride(MaterialPropertiesOverride& outpu
 			auto& param = output.params.emplace_back();
 			param.offsetFloats = p.StartOffset / sizeof(float);
 			param.sizeBytes = p.Size;
+			param.viewId = viewId;
 
 			if (!source.GetParameter(name, param.value))
 			{
@@ -555,10 +557,13 @@ void MaterialInstance::AppendParameterOverride(MaterialPropertiesOverride& outpu
 	}
 }
 
-void MaterialInstance::ApplyParametersOverride(const MaterialPropertiesOverride& data, MaterialDataStorage& output) const
+void MaterialInstance::ApplyParametersOverride(const MaterialPropertiesOverride& data, MaterialDataStorage& output, RenderViewId viewId) const
 {
 	for (auto& p : data.params)
 	{
+		if (p.viewId && p.viewId != viewId)
+			continue;
+
 		memcpy(output.rootParams.data() + p.offsetFloats, p.value, p.sizeBytes);
 	}
 }

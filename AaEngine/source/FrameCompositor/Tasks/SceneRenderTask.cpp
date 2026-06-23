@@ -107,7 +107,7 @@ AsyncTasksInfo SceneRenderTask::buildAsyncTasks(CompositorPass& pass)
 		forward.queue = renderWorld.createQueue({ pass.mrt->formats.front() }, MaterialTechnique::Default, Order::Post);
 		forward.wireframeQueue = renderWorld.createQueue({ pass.mrt->formats.front() }, MaterialTechnique::Wireframe, Order::Post);
 
-		transparent.queue = renderWorld.createQueue(pass.mrt->formats, MaterialTechnique::Default, Order::Transparent);
+		transparent.queue = renderWorld.createQueue({ pass.mrt->formats[0], pass.mrt->formats[1] }, MaterialTechnique::Default, Order::Transparent);
 		transparent.wireframeQueue = renderWorld.createQueue({ pass.mrt->formats.front() }, MaterialTechnique::Wireframe, Order::Transparent);
 
 		opaque.work.eventBegin = CreateEvent(NULL, FALSE, FALSE, NULL);

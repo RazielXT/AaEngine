@@ -3,6 +3,7 @@
 #include "Resources/GraphicsResources.h"
 #include "Scene/RenderWorld.h"
 #include <format>
+#include "RenderCore/VCT/anisoSeparate/AnisoSeparateVoxelization.h"
 
 const UINT TextureSize = 1024;
 const UINT TerrainModelSize = 33;
@@ -20,7 +21,9 @@ void ProgressiveTerrain::initialize(RenderSystem& renderSystem, GraphicsResource
 	params.tileHeight = 1000.f;
 	params.tileCenterOffset = { params.tileSize * -0.5f, params.tileHeight * -0.5f, params.tileSize * -0.5f };
 
-	terrainGridTiles.Initialize({ params.tileSize, params.tileSize }, params.tileCenterOffset, 10);
+	terrainGridTiles.Initialize({ params.tileSize, params.tileSize }, params.tileCenterOffset, 9);
+	terrainVoxelizeGridTiles.Initialize({ params.tileSize, params.tileSize }, params.tileCenterOffset, 7);
+	terrainVoxelizeGridTilesFar.Initialize({ params.tileSize, params.tileSize }, params.tileCenterOffset, 5);
 
 	terrainModel.CreateIndexBufferGrid(renderSystem.core.device, &batch, TerrainModelSize);
 	terrainModel.bbox.Extents = { params.tileSize * 0.5f, params.tileHeight * 0.5f, params.tileSize * 0.5f };
@@ -44,16 +47,31 @@ void ProgressiveTerrain::initialize(RenderSystem& renderSystem, GraphicsResource
 			resources.descriptors.createTextureView(terrainNormal);
 			terrainNormalMips = resources.descriptors.createUAVMips(terrainNormal);
 
-			auto e = renderWorld.createEntity();
-			terrainGridMesh[x][y].create(terrainGridTiles.MaxInstances);
-			terrainGridMesh[x][y].entity = e;
-			e->geometry.fromInstancedModel(terrainModel, 0, terrainGridMesh[x][y].gpuBuffer.data[0].GpuAddress());
+			auto& chunk = terrainGrid[x][y];
+			chunk.mesh.create(terrainGridTiles.MaxInstances);
+
+			for (auto& vm : chunk.voxelizeMesh)
+				vm.create(terrainVoxelizeGridTiles.MaxInstances);
+
+			auto e = chunk.entity = renderWorld.createEntity();
+			e->geometry.fromInstancedModel(terrainModel, 0, chunk.mesh.gpuBuffer.data[0].GpuAddress());
 			e->setBoundingBox(terrainModel.bbox);
 			e->material = resources.materials.getMaterial("MountainTerrainGrid", batch);
 			e->Material().setParam("TexIdHeightmap", terrainHeight.view.srvHeapIndex);
 			e->Material().setParam("TexIdNormalmap", terrainNormal.view.srvHeapIndex);
 			e->Material().setParam("GridHeightWidth", Vector2(params.tileHeight, params.tileSize));
 			e->Material().setParam("GridIndex", x + y * GridsSize);
+			e->Material().setParam("GridTilesWidth", terrainGridTiles.TilesWidth);
+			e->Material().setParam("GridTilesWidth", terrainVoxelizeGridTiles.TilesWidth, RenderViewId_Voxelize0);
+			e->Material().setParam("GridTilesWidth", terrainVoxelizeGridTiles.TilesWidth, RenderViewId_Voxelize1);
+			e->Material().setParam("GridTilesWidth", terrainVoxelizeGridTilesFar.TilesWidth, RenderViewId_Voxelize2);
+			e->Material().setParam("GridTilesWidth", terrainVoxelizeGridTilesFar.TilesWidth, RenderViewId_Voxelize3);
+			e->Material().setParam("GridTilesWidth", terrainVoxelizeGridTilesFar.TilesWidth, RenderViewId_VoxelizeShadowMap);
+
+			e->geometry.viewVariants = &chunk.geometryViews.variants;
+
+			for (auto& g : chunk.geometryViews.viewGeometries)
+				g = e->geometry;
 
 			// Toroidal-consistent world coord: slot x maps to world x for x<=2, x-5 for x>2
 			// This ensures wrapIndex(worldCoord, GridsSize) == slot index
@@ -124,7 +142,7 @@ void ProgressiveTerrain::update(ID3D12GraphicsCommandList* commandList, const Ca
 					chunkWorldCoord[ax][ay] = desired;
 					chunkDirty[ax][ay] = true;
 
-				terrainGridMesh[ax][ay].entity->setPosition(params.chunkWorldMin(desired, params.tileSize));
+					terrainGrid[ax][ay].entity->setPosition(params.chunkWorldMin(desired, params.tileSize));
 				}
 			}
 	}
@@ -147,8 +165,28 @@ void ProgressiveTerrain::update(ID3D12GraphicsCommandList* commandList, const Ca
 		for (int x = 0; x < (int)GridsSize; x++)
 			for (int y = 0; y < (int)GridsSize; y++)
 			{
+				auto& grid = terrainGrid[x][y];
+
 				terrainGridTiles.BuildLOD(camera.getPosition(), chunkWorldCoord[x][y]);
-				terrainGridMesh[x][y].update((UINT)terrainGridTiles.m_renderList.size(), terrainGridTiles.m_renderList.data(), (UINT)terrainGridTiles.m_renderList.size() * sizeof(TileData), frameIdx);
+				grid.mesh.update(grid.entity->geometry, (UINT)terrainGridTiles.m_renderList.size(), terrainGridTiles.m_renderList.data(), (UINT)terrainGridTiles.m_renderList.size() * sizeof(TileData), frameIdx);
+			
+				for (UINT i = 0; i < AnisoSeparateVoxelization::CascadesCount; i++)
+				{
+					auto cascadeExtends = AnisoSeparateVoxelization::CascadeExtends[i];
+					Vector2 voxelizeExtends = Vector2(cascadeExtends, cascadeExtends) * 1.5f;
+					Vector2 p = { camera.getPosition().x, camera.getPosition().z };
+
+					auto& tiles = i < 2 ? terrainVoxelizeGridTiles : terrainVoxelizeGridTilesFar;
+					tiles.BuildAabbLOD(camera.getPosition(), chunkWorldCoord[x][y], p - voxelizeExtends, p + voxelizeExtends);
+					//tiles.BuildLOD(camera.getPosition(), chunkWorldCoord[x][y]);
+
+					auto& g = grid.geometryViews.viewGeometries[i];
+					grid.voxelizeMesh[i].update(g, (UINT)tiles.m_renderList.size(), tiles.m_renderList.data(), (UINT)tiles.m_renderList.size() * sizeof(TileData), frameIdx);
+				}
+
+				// shadowmap uses last cascade tiles
+				auto& g = grid.geometryViews.viewGeometries[4];
+				grid.voxelizeMesh[3].update(g, (UINT)terrainVoxelizeGridTilesFar.m_renderList.size(), terrainVoxelizeGridTilesFar.m_renderList.data(), (UINT)terrainVoxelizeGridTilesFar.m_renderList.size() * sizeof(TileData), frameIdx);
 			}
 	}
 

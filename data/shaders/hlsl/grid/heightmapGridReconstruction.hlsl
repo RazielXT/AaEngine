@@ -67,6 +67,17 @@ GridVertexInfo ReadGridVertexInfo(GridTileData tile, uint vertexID, Texture2D<fl
 	// Level 0 spans TilesWidth units
 	uint unitsSpanned = TilesWidth >> tile.lod; 
 
+	// 1. Calculate grid position
+	// position = (TileCoord * SmallestSize) + (LocalPlanePos * UnitsSpanned * SmallestSize)
+	float4 gridPosition = float4(0,0,0,1);
+	gridPosition.x += (float)tile.x * SmallestLodTileSize;
+	gridPosition.z += (float)tile.y * SmallestLodTileSize;
+	// Scale the unit mesh to match the LOD size
+	gridPosition.x += localPos.x * (float)unitsSpanned * SmallestLodTileSize;
+	gridPosition.z += localPos.y * (float)unitsSpanned * SmallestLodTileSize;
+
+#ifndef GRID_NO_MORPHING
+	// 2. Calculate Morph Factor (k)
 	// Morph range derived from CPU subdivision geometry:
 	// CPU threshold = tileSize * 3 (multiplier 1.5), so tileSize = range/3
 	// Tile half-diagonal = range*sqrt(2)/6 = 0.236*range
@@ -81,16 +92,6 @@ GridVertexInfo ReadGridVertexInfo(GridTileData tile, uint vertexID, Texture2D<fl
 	const float morphStart = tile.range * 1.25f;
 	const float morphInvWidth = 4.0f / tile.range;
 
-	// 1. Calculate grid position
-	// position = (TileCoord * SmallestSize) + (LocalPlanePos * UnitsSpanned * SmallestSize)
-	float4 gridPosition = float4(0,0,0,1);
-	gridPosition.x += (float)tile.x * SmallestLodTileSize;
-	gridPosition.z += (float)tile.y * SmallestLodTileSize;
-	// Scale the unit mesh to match the LOD size
-	gridPosition.x += localPos.x * (float)unitsSpanned * SmallestLodTileSize;
-	gridPosition.z += localPos.y * (float)unitsSpanned * SmallestLodTileSize;
-
-	// 2. Calculate Morph Factor (k)
 	float d = distance(float3(gridPosition.x, 0, gridPosition.z), float3(CameraPosition.x - WorldPosition.x, 0, CameraPosition.z - WorldPosition.z));
 	// k = 0 (no morph), k = 1 (fully collapsed to next LOD)
 	float k = saturate((d - morphStart) * morphInvWidth);
@@ -110,6 +111,7 @@ GridVertexInfo ReadGridVertexInfo(GridTileData tile, uint vertexID, Texture2D<fl
 	// Adjust the grid position: if k=1 and we are an odd vertex, 
 	// we move to sit exactly on top of our even neighbor.
 	gridPosition.xz -= offset * (2.0f / (float)TileWidthQuads);
+#endif
 
 	float2 uv = gridPosition.xz / (TilesWidth * SmallestLodTileSize);
 	float2 heightmapUv = RemapGridTextureUV(uv);

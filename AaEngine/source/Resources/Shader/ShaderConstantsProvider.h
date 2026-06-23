@@ -17,6 +17,11 @@ enum RenderViewId
 	RenderViewId_Default,
 	RenderViewId_ShadowCascade0,
 	RenderViewId_ShadowCascade1,
+	RenderViewId_Voxelize0,
+	RenderViewId_Voxelize1,
+	RenderViewId_Voxelize2,
+	RenderViewId_Voxelize3,
+	RenderViewId_VoxelizeShadowMap,
 	RenderViewId_Count
 };
 

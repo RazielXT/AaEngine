@@ -96,6 +96,7 @@ struct MaterialPropertiesOverrideDescription
 	{
 		std::string name;
 		UINT sizeBytes;
+		RenderViewId viewId;
 		float value[4];
 	};
 	std::vector<Input> params;
@@ -107,6 +108,7 @@ struct MaterialPropertiesOverride
 	{
 		UINT offsetFloats;
 		UINT sizeBytes;
+		RenderViewId viewId;
 		float value[4];
 	};
 	std::vector<Input> params;
@@ -132,16 +134,16 @@ public:
 	void SetUAV(ID3D12Resource* uav, UINT slot);
 
 	std::unique_ptr<MaterialPropertiesOverride> CreateParameterOverride(const MaterialPropertiesOverrideDescription& description) const;
-	void AppendParameterOverride(MaterialPropertiesOverride & override, const std::string& name, const void* value, size_t sizeBytes) const;
-	void AppendParameterOverride(MaterialPropertiesOverride & override, const std::string& name, MaterialInstance& source, float defaultValue) const;
+	void AppendParameterOverride(MaterialPropertiesOverride & override, const std::string& name, const void* value, size_t sizeBytes, RenderViewId viewId = {}) const;
+	void AppendParameterOverride(MaterialPropertiesOverride & override, const std::string& name, MaterialInstance& source, float defaultValue, RenderViewId viewId = {}) const;
 
 	template<typename T>
-	void AppendParameterOverride(MaterialPropertiesOverride & override, const std::string& name, const T& value) const
+	void AppendParameterOverride(MaterialPropertiesOverride & override, const std::string& name, const T& value, RenderViewId viewId = {}) const
 	{
-		AppendParameterOverride(override, name , &value, sizeof(T));
+		AppendParameterOverride(override, name , &value, sizeof(T), viewId);
 	}
 
-	void ApplyParametersOverride(const MaterialPropertiesOverride& data, MaterialDataStorage& output) const;
+	void ApplyParametersOverride(const MaterialPropertiesOverride& data, MaterialDataStorage& output, RenderViewId viewId) const;
 
 	void SetParameter(const std::string& name, const void* value, size_t count);
 	void SetParameter(const std::string& name, float* buffer, const void* value, size_t count) const;

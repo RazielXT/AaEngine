@@ -4,8 +4,8 @@
 
 struct TerrainGridParams
 {
-	float tileSize = 8000.f;
-	float tileHeight = 8000.f;
+	float tileSize{};
+	float tileHeight{};
 	Vector3 tileCenterOffset;
 
 	constexpr static UINT GridsSize = 5;

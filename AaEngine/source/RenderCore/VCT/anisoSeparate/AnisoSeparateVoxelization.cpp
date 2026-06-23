@@ -21,12 +21,11 @@ void AnisoSeparateVoxelization::initialize(RenderSystem& renderSystem, const Fra
 	shadowRenderables = mgr.getRenderables(Order::Normal);
 	shadowQueue = mgr.createQueue({}, MaterialTechnique::DepthShadowmap);
 
-	constexpr float CascadeDistances[CascadesCount] = { 25, 50, 100, 200 };
 	for (UINT i = 0; i < CascadesCount; i++)
 	{
 		auto& voxels = voxelCascades[i];
 		voxels.initialize("AnisoSeparateVoxelCascade" + std::to_string(i), renderSystem.core.device, resources);
-		voxels.settings.extends = CascadeDistances[i];
+		voxels.settings.extends = CascadeExtends[i];
 		voxels.idx = i;
 	}
 
@@ -198,6 +197,7 @@ void AnisoSeparateVoxelization::voxelizeCascade(ID3D12GraphicsCommandList* comma
 	auto& renderables = *renderWorld->getRenderables(Order::Normal);
 
 	ShaderConstantsProvider constants(*frameParams, sceneInfo, camera, *viewportOutput.texture);
+	constants.viewId = RenderViewId(RenderViewId_Voxelize0 + cascade.idx);
 	constants.uavBarrier = cascade.voxelInfoBuffer.data.Get();
 
 	auto shadowMatrix = XMMatrixTranspose(shadowMap.camera.getViewProjectionMatrix());
@@ -247,6 +247,7 @@ void AnisoSeparateVoxelization::renderShadowMap(ID3D12GraphicsCommandList* comma
 	shadowMap.texture.PrepareAsDepthTarget(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 	ShaderConstantsProvider constants(*frameParams, shadowRenderablesData, shadowMap.camera, *ctx.camera, shadowMap.texture);
+	constants.viewId = RenderViewId_VoxelizeShadowMap;
 	shadowQueue->renderObjects(constants, commandList);
 
 	shadowMap.texture.PrepareAsView(commandList, D3D12_RESOURCE_STATE_DEPTH_WRITE);

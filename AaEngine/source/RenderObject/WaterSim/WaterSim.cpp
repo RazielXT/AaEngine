@@ -108,7 +108,7 @@ void WaterSim::initializeTarget(const GpuTexture2D& texture, RenderWorld& render
 
 	auto e = renderWorld.createEntity(EntityCreateProperties{ .order = Order::Transparent });
 	waterGridMesh.create(waterGridTiles.MaxInstances);
-	waterGridMesh.entity = e;
+	entity = e;
 
 	e->geometry.fromInstancedModel(waterModel, 0, waterGridMesh.gpuBuffer.data[0].GpuAddress());
 	e->setBoundingBox(BoundingBox({ worldSize.x * 0.5f, size.x * 0.5f, worldSize.y * 0.5f }, { worldSize.x * 0.5f, size.x * 0.5f, worldSize.y * 0.5f }));
@@ -117,6 +117,7 @@ void WaterSim::initializeTarget(const GpuTexture2D& texture, RenderWorld& render
 	e->Material().setParam("TexIdFlowmap", waterFlowTexture.view.srvHeapIndex);
 	e->Material().setParam("TexIdMeshNormal", waterNormalTexture.view.srvHeapIndex);
 	e->Material().setParam("GridHeightWidth", Vector2(size.x, worldSize.x));
+	e->Material().setParam("GridTilesWidth", waterGridTiles.TilesWidth);
 	e->setPosition(worldCenter);
 }
 
@@ -138,7 +139,7 @@ void WaterSim::update(RenderSystem& renderSystem, ID3D12GraphicsCommandList* com
 	if (updateLod)
 	{
 		waterGridTiles.BuildLOD(cameraPos, {});
-		waterGridMesh.update((UINT)waterGridTiles.m_renderList.size(), waterGridTiles.m_renderList.data(), (UINT)waterGridTiles.m_renderList.size() * sizeof(TileData), frameIdx);
+		waterGridMesh.update(entity->geometry, (UINT)waterGridTiles.m_renderList.size(), waterGridTiles.m_renderList.data(), (UINT)waterGridTiles.m_renderList.size() * sizeof(TileData), frameIdx);
 	}
 
 	lastCameraPos = cameraPos;
@@ -287,7 +288,7 @@ void WaterSim::updateCompute(RenderSystem& renderSystem, ID3D12GraphicsCommandLi
 		params.waterHeightStart = -500.0f;
 		params.dryingSpeed = 1.1f;
 		params.resetState = sceneRenderingStateNeedsReset ? 1 : 0;
-		waterGridMesh.entity->GetMaterialParam("WaterColor", &params.waterColor);
+		entity->GetMaterialParam("WaterColor", &params.waterColor);
 		cameraWaterStateCS.dispatch(computeList, params, sceneRenderingStateBuffer.Get());
 
 		auto uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(sceneRenderingStateBuffer.Get());

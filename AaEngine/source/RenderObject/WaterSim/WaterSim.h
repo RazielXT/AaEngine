@@ -97,6 +97,7 @@ private:
 	std::mutex adjustmentsMutex;
 	std::vector<WaterAdjustment> pendingAdjustments;
 
+	RenderEntity* entity{};
 	GridInstanceMesh waterGridMesh;
 	GridLODSystem waterGridTiles;
 

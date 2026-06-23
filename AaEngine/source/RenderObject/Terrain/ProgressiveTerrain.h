@@ -45,7 +45,18 @@ public:
 protected:
 
 	GridLODSystem terrainGridTiles;
-	GridInstanceMesh terrainGridMesh[GridsSize][GridsSize];
+	GridLODSystem terrainVoxelizeGridTiles;
+	GridLODSystem terrainVoxelizeGridTilesFar;
+
+	struct TerrainGridChunk
+	{
+		GridInstanceMesh mesh;
+		GridInstanceMesh voxelizeMesh[4];
+
+		GeometryViews<RenderViewId_Voxelize0, RenderViewId_Voxelize1, RenderViewId_Voxelize2, RenderViewId_Voxelize3, RenderViewId_VoxelizeShadowMap> geometryViews;
+		RenderEntity* entity{};
+	}
+	terrainGrid[GridsSize][GridsSize];
 
 	GpuTexture2D terrainGridHeight[GridsSize][GridsSize];
 	GpuTexture2D terrainGridNormal[GridsSize][GridsSize];

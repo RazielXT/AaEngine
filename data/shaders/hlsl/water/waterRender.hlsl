@@ -25,6 +25,7 @@ uint TexIdSceneDepthHigh;
 uint TexIdCaustics;
 uint TexIdMeshNormal;
 float2 GridHeightWidth;
+uint GridTilesWidth;
 
 #ifdef ENTITY_ID
 uint EntityId;
@@ -61,7 +62,7 @@ PSInput VSMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
 	p.worldPos = WorldPosition;
 	p.heightScale = GridHeightWidth.x / 50;
 	p.gridSize = GridHeightWidth.y;
-	p.tilesWidth = 512;
+	p.tilesWidth = GridTilesWidth;
 	p.tileResolution = 33;
 
 	GridVertexInfo info = ReadGridVertexInfo(InstancingBuffer[instanceID], vertexID, ResourceDescriptorHeap[TexIdHeightmap], LinearSampler, p);

@@ -27,6 +27,7 @@ uint TexIdNormal;
 uint TexIdGrassNormal;
 uint TexIdSpread;
 float2 GridHeightWidth;
+uint GridTilesWidth;
 
 #ifdef ENTITY_ID
 uint EntityId;
@@ -57,7 +58,7 @@ PSInput VSMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
 	p.worldPos = WorldPosition;
 	p.heightScale = GridHeightWidth.x;
 	p.gridSize = GridHeightWidth.y;
-	p.tilesWidth = 512;
+	p.tilesWidth = GridTilesWidth;
 	p.tileResolution = 33;
 
 	GridVertexInfo info = ReadGridVertexInfo(InstancingBuffer[instanceID], vertexID, ResourceDescriptorHeap[TexIdHeightmap], LinearWrapSampler, p);

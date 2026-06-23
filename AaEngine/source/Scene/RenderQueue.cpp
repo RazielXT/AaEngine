@@ -128,7 +128,7 @@ void RenderQueue::renderObjects(ShaderConstantsProvider& constants, ID3D12Graphi
 		}
 
 		if (entry.materialOverride)
-			entry.material->ApplyParametersOverride(*entry.materialOverride, storage);
+			entry.material->ApplyParametersOverride(*entry.materialOverride, storage, constants.viewId);
 
 		entry.material->UpdatePerObject(storage, constants);
 		entry.material->BindConstants(commandList, storage, constants);

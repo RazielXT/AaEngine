@@ -5,6 +5,8 @@
 #include "Resources/Shader/ShaderDataBuffers.h"
 #include "Scene/RenderEntity.h"
 #include "Scene/Camera.h"
+#include <unordered_map>
+#include "Scene/EntityGeometry.h"
 
 // Data sent to the StructuredBuffer
 struct TileData
@@ -120,6 +122,88 @@ public:
 			else
 			{
 				m_renderList.emplace_back(n.x, n.y,	n.level, m_subdivideThresholds[n.level]);
+			}
+		}
+	}
+
+	void BuildAabbLOD(const Vector3& cameraPos, XMINT2 offset, Vector2 cullMin, Vector2 cullMax)
+	{
+		m_renderList.clear();
+
+		const float tileSize = m_smallestTileSize;
+		const float worldSize = tileSize * TilesWidth;
+
+		// Shift offsets to absolute world coordinates for node bounding boxes
+		const float worldOffsetX = offset.x * worldSize;
+		const float worldOffsetZ = offset.y * worldSize;
+
+		const float camX = cameraPos.x - worldOffsetX;
+		const float camZ = cameraPos.z - worldOffsetZ;
+
+		struct Node
+		{
+			uint32_t x;
+			uint32_t y;
+			uint32_t size;
+			uint32_t level;
+		};
+		std::vector<Node> stack;
+		stack.reserve(1024);
+
+		// Start at root blocks
+		for (uint32_t bx = 0; bx < numBlocksX; ++bx)
+		{
+			for (uint32_t by = 0; by < numBlocksY; ++by)
+			{
+				stack.push_back({ bx * TilesWidth, by * TilesWidth, TilesWidth, 0 });
+			}
+		}
+
+		while (!stack.empty())
+		{
+			Node n = stack.back();
+			stack.pop_back();
+
+			// --- Compute Node World AABB ---
+			const float nodeMinX = m_gridOrigin.x + (n.x * tileSize) + worldOffsetX;
+			const float nodeMinZ = m_gridOrigin.z + (n.y * tileSize) + worldOffsetZ;
+			const float nodeMaxX = nodeMinX + (n.size * tileSize);
+			const float nodeMaxZ = nodeMinZ + (n.size * tileSize);
+
+			// --- 2D AABB Overlap Test ---
+			// If the node is completely outside the culling bounds, drop it.
+			if (nodeMaxX < cullMin.x || nodeMinX > cullMax.x ||
+				nodeMaxZ < cullMin.y || nodeMinZ > cullMax.y)
+			{
+				continue;
+			}
+
+			// --- Compute center (relative to shifted camera space) ---
+			const float halfSize = n.size * 0.5f;
+			const float worldHalf = halfSize * tileSize;
+
+			const float centerX = m_gridOrigin.x + (n.x * tileSize) + worldHalf;
+			const float centerZ = m_gridOrigin.z + (n.y * tileSize) + worldHalf;
+
+			// --- Distance (2D) ---
+			const float dx = camX - centerX;
+			const float dz = camZ - centerZ;
+			const float distSq = dx * dx + dz * dz;
+
+			// --- Subdivide? ---
+			if (n.level < lodsLevels - 1 && distSq < m_subdivideThresholdsSq[n.level])
+			{
+				const uint32_t childSize = n.size >> 1;
+				const uint32_t next = n.level + 1;
+
+				stack.push_back({ n.x + childSize, n.y + childSize, childSize, next });
+				stack.push_back({ n.x,             n.y + childSize, childSize, next });
+				stack.push_back({ n.x + childSize, n.y,             childSize, next });
+				stack.push_back({ n.x,             n.y,             childSize, next });
+			}
+			else
+			{
+				m_renderList.emplace_back(n.x, n.y, n.level, m_subdivideThresholds[n.level]);
 			}
 		}
 	}
@@ -317,9 +401,8 @@ struct GridInstanceMesh
 		gpuBuffer = ShaderDataBuffers::get().CreateCbufferResource(maxInstances * sizeof(TileData));
 	}
 
-	void update(UINT count, void* data, UINT dataSize, UINT frameIdx)
+	void update(EntityGeometry& g, UINT count, void* data, UINT dataSize, UINT frameIdx)
 	{
-		auto& g = entity->geometry;
 		g.instanceCount = count;
 
 		auto& buf = gpuBuffer.data[frameIdx];
@@ -329,7 +412,4 @@ struct GridInstanceMesh
 	}
 
 	CbufferData gpuBuffer;
-
-	RenderEntity* entity{};
-	BoundingBox modelBbox;
 };

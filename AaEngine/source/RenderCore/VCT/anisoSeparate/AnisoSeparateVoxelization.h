@@ -48,6 +48,7 @@ class AnisoSeparateVoxelization
 public:
 
 	static constexpr UINT CascadesCount = 4;
+	static constexpr float CascadeExtends[CascadesCount] = { 25, 50, 100, 200 };
 
 	void initialize(RenderSystem& renderSystem, const FrameParameters& params, GraphicsResources& resources, ShadowMaps& shadowMaps, RenderWorld& renderWorld, DXGI_FORMAT outputFormat);
 	void shutdown();

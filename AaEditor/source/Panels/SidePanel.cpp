@@ -26,7 +26,7 @@ void SidePanel::draw()
 {
 	ImGui::Begin("SidePanel");
 
-	if (ImGui::CollapsingHeader("Rendering"))
+	if (ImGui::CollapsingHeader("Rendering"), ImGuiTreeNodeFlags_DefaultOpen)
 	{
 		if (ImGui::Button("Reload shaders"))
 			state.reloadShaders = true;
@@ -204,7 +204,7 @@ void SidePanel::draw()
 		}
 	}
 
-	if (ImGui::CollapsingHeader("Spline roads", ImGuiTreeNodeFlags_DefaultOpen))
+	if (ImGui::CollapsingHeader("Spline roads"))
 	{
 		splineRoadSection.draw(*splineRoadTool, viewportPanel);
 	}
@@ -245,7 +245,7 @@ void SidePanel::draw()
 		skySection.draw(app);
 	}
 
-	if (ImGui::CollapsingHeader("Interaction", ImGuiTreeNodeFlags_DefaultOpen))
+	if (ImGui::CollapsingHeader("Interaction"))
 	{
 		const char* modes[] = { "Editor", "Motorbike", "Walking (1st Person)", "Walking (3rd Person)" };
 		int currentMode = (int)state.interactionMode;

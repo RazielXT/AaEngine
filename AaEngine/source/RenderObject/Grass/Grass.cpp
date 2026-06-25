@@ -116,7 +116,7 @@ void Grass::createChunks(RenderWorld& renderWorld, RenderSystem& renderSystem, G
 			e->setBoundingBox({ { chunkSize * 0.5f, terrainParams.tileHeight * 0.5f, chunkSize * 0.5f },
 							   { chunkSize * 0.5f, terrainParams.tileHeight * 0.5f, chunkSize * 0.5f } });
 
-			e->setFlag(RenderObjectFlag::OnlyFirstCascade);
+			e->setFlag(RenderObjectFlag::Value(RenderObjectFlag::OnlyFirstCascade | RenderObjectFlag::NoVoxelization));
 
 			chunk.worldCoord = desired;
 			chunk.dirty = true;

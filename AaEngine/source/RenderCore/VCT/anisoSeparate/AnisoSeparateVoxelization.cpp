@@ -240,7 +240,9 @@ void AnisoSeparateVoxelization::renderShadowMap(ID3D12GraphicsCommandList* comma
 
 	CommandsMarker marker(commandList, "AnisoSeparateVoxelShadowMap", PixColor::DarkTurquoise);
 
-	shadowRenderables->updateVisibility(shadowMap.camera, shadowRenderablesData);
+	static std::vector<UINT> filtered;
+	shadowRenderables->createFilteredIds(RenderObjectFlag::NoVoxelization, filtered);
+	shadowRenderables->updateVisibility(shadowMap.camera, filtered, shadowRenderablesData);
 
 	shadowMap.texture.PrepareAsDepthTarget(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 

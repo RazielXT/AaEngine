@@ -34,6 +34,7 @@ namespace RenderObjectFlag
 		NoCascade2 = 1 << 2,
 		NoCascade3 = 1 << 3,
 		OnlyFirstCascade = NoCascade2 | NoCascade3,
+		NoVoxelization = 1 << 4,
 	};
 }
 

@@ -36,8 +36,14 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 #endif
 
 	float2 step = dir * ViewportSizeInverse * StepScale;
-	float refDepth = depthMap.Sample(PointSampler, input.TexCoord).r;
-	float3 refNormal = normalMap.Sample(PointSampler, input.TexCoord).rgb;
+
+	// The GI color is half-res (texel p == top-left full-res texel 2*p, matching the trace and
+	// linearDepthDownsample2). The full-res depth/normal guide must sample that same texel 2*p,
+	// not the half-res pixel center (which point-samples full-res texel 2*p+1).
+	float2 depthUvOffset = -0.25f * ViewportSizeInverse;
+
+	float refDepth = depthMap.Sample(PointSampler, input.TexCoord + depthUvOffset).r;
+	float3 refNormal = normalMap.Sample(PointSampler, input.TexCoord + depthUvOffset).rgb;
 
 	float4 weightedSum = 0;
 	float totalWeight = 0;
@@ -48,8 +54,8 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 		float2 sampleUV = input.TexCoord + step * i;
 		float4 color = colorTex.Sample(LinearBorderSampler, sampleUV);
 
-		float sampleDepth = depthMap.Sample(PointSampler, sampleUV).r;
-		float3 sampleNormal = normalMap.Sample(PointSampler, sampleUV).rgb;
+		float sampleDepth = depthMap.Sample(PointSampler, sampleUV + depthUvOffset).r;
+		float3 sampleNormal = normalMap.Sample(PointSampler, sampleUV + depthUvOffset).rgb;
 
 		float w = BilateralWeight(refDepth, refNormal, sampleDepth, sampleNormal, spatialKernel[i + KERNEL_RADIUS]);
 		weightedSum += color * w;

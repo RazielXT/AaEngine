@@ -58,11 +58,16 @@ float4 PS_UpsampleDepthAware(VS_OUTPUT input) : SV_Target
 	float2 base = floor(lowPixel - 0.5) + 0.5; // snap to texel center
 	float2 lowInvSize = 2 * ViewportSizeInverse;
 
+	// Shift taps by half a full-res texel so the full-res normal taps (HighNormal) land on the
+	// TOP-LEFT full-res texel (2*n) of each half-res block, matching linearDepthDownsample2 (DS2x)
+	// and the VGI ray-start sampling. Half-res color/depth taps still resolve to texel n.
+	float2 texelAlign = -0.5 * ViewportSizeInverse;
+
 	// Convert back to UVs
-	float2 uvTL = base * lowInvSize;
-	float2 uvTR = (base + float2(1,0)) * lowInvSize;
-	float2 uvBL = (base + float2(0,1)) * lowInvSize;
-	float2 uvBR = (base + float2(1,1)) * lowInvSize;
+	float2 uvTL = base * lowInvSize + texelAlign;
+	float2 uvTR = (base + float2(1,0)) * lowInvSize + texelAlign;
+	float2 uvBL = (base + float2(0,1)) * lowInvSize + texelAlign;
+	float2 uvBR = (base + float2(1,1)) * lowInvSize + texelAlign;
 	float2 uv = input.TexCoord.xy;
 
 	// Sample colors

@@ -56,15 +56,21 @@ float3 SkyColor(float3 dir)
 
 float4 PSMain(VS_OUTPUT input) : SV_TARGET
 {
-	float3 worldNormal = normalMap.Sample(PointSampler, input.TexCoord).rgb;
+	// Align ray-start sampling with the half-res linear depth (linearDepthDownsample2 / DS2x),
+	// which stores the TOP-LEFT full-res texel (2*p) of each 2x2 block. The interpolated TexCoord
+	// lands on the half-res pixel center, i.e. full-res texel (2*p+1). Shift by half a full-res
+	// texel toward the top-left so depth/normal/world line up with the depth used during upsampling.
+	float2 sampleUv = input.TexCoord - 0.25f / float2(ViewportSize);
+
+	float3 worldNormal = normalMap.Sample(PointSampler, sampleUv).rgb;
 	float3 up = abs(worldNormal.y) < 0.999 ? float3(0,1,0) : float3(1,0,0);
 	float3 worldTangent = normalize(cross(up, worldNormal));
 	float3 worldBinormal = cross(worldNormal, worldTangent);
 
 	if (all(worldNormal == float3(0,0,0))) return float4(0,0,0,1);
 
-	float depth = depthMap.Sample(PointSampler, input.TexCoord).r;
-	float3 worldPosition = ReconstructWorldPosition(input.TexCoord, depth, InvViewProjectionMatrix);
+	float depth = depthMap.Sample(PointSampler, sampleUv).r;
+	float3 worldPosition = ReconstructWorldPosition(sampleUv, depth, InvViewProjectionMatrix);
 
 	float3 radiance = 0;
 	float occlusion = 0;

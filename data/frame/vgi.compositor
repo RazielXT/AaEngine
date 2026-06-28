@@ -16,12 +16,21 @@ compositor VGI
 	texture vgiNormalPrev target_size DXGI_FORMAT_R16G16B16A16_SNORM
 	texture vgiFreshBlur target_size_div 2 DXGI_FORMAT_R16G16B16A16_FLOAT
 
+	texture vgiLinearDepthDownsample2 target_size_div 2 DXGI_FORMAT_R32_FLOAT
+
 	extern sceneTexture:Depth
 	extern sceneTexture:Normal
 	extern motionVectors
 	extern Depth.linearDepth
-	extern Depth.linearDepthDownsample2
 	extern sceneGI
+
+	pass InitVgiDepth
+	{
+		material LoadThrough
+
+		in Depth.linearDepth
+		out vgiLinearDepthDownsample2
+	}
 
 #if VGI_PS
 	pass DeferredVRT
@@ -140,7 +149,7 @@ compositor VGI
 		material UpsampleDepthAware
 		in vgiLowOutput:Accumulation
 		in Depth.linearDepth
-		in Depth.linearDepthDownsample2
+		in vgiLinearDepthDownsample2
 		in sceneTexture:Normal
 		out sceneGI
 	}

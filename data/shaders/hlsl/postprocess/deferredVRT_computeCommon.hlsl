@@ -58,7 +58,9 @@ float3 DeferredVrtSkyColor(float3 dir)
 
 uint2 ResolveSourcePixel(uint2 pixel, uint2 viewportSize, uint2 sourceSize)
 {
-	float2 uv = (float2(pixel) + 0.5f) / float2(viewportSize);
+	// Align with the half-res linear depth (linearDepthDownsample2 / DS2x): use the TOP-LEFT
+	// full-res texel (2*p) of each 2x2 block instead of the half-res pixel center (2*p+1).
+	float2 uv = float2(pixel) / float2(viewportSize);
 	return min(uint2(uv * float2(sourceSize)), sourceSize - 1);
 }
 
@@ -72,7 +74,9 @@ float LoadDeferredVrtDepth(uint2 pixel, uint2 viewportSize, uint TexIdDepth)
 
 float3 ReconstructDeferredVrtWorldPosition(uint2 pixel, uint2 viewportSize, float depth, float4x4 invViewProjectionMatrix)
 {
-	float2 uv = (float2(pixel) + 0.5f) / float2(viewportSize);
+	// Reconstruct from the TOP-LEFT full-res texel center (2*p+0.5) so the ray origin matches the
+	// depth sampled in ResolveSourcePixel and the half-res linear depth used during upsampling.
+	float2 uv = (float2(pixel) + 0.25f) / float2(viewportSize);
 	return ReconstructWorldPosition(uv, depth, invViewProjectionMatrix);
 }
 

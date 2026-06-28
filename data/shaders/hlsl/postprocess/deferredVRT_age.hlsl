@@ -26,13 +26,18 @@ float PSMain(VS_OUTPUT input) : SV_TARGET
 	if (any(prevUV < 0) || any(prevUV > 1))
 		return 0;
 
-	float currentDepth = depthMap.Sample(PointSampler, input.TexCoord).r;
-	float prevDepth = depthMapPrev.Sample(PointSampler, prevUV).r;
+	// The GI is half-res (texel p == top-left full-res texel 2*p, matching the trace and
+	// linearDepthDownsample2). Sample the full-res depth/normal guide at that same texel 2*p
+	// instead of the half-res pixel center (which point-samples full-res texel 2*p+1).
+	float2 depthUvOffset = -0.25f * ViewportSizeInverse;
+
+	float currentDepth = depthMap.Sample(PointSampler, input.TexCoord + depthUvOffset).r;
+	float prevDepth = depthMapPrev.Sample(PointSampler, prevUV + depthUvOffset).r;
 	float depthDiff = abs(currentDepth - prevDepth) / max(currentDepth, 1e-5f);
 	float depthWeight = exp(-depthDiff / DepthSigma);
 
-	float3 currentNormal = normalMap.Sample(PointSampler, input.TexCoord).rgb;
-	float3 prevNormal = normalMapPrev.Sample(PointSampler, prevUV).rgb;
+	float3 currentNormal = normalMap.Sample(PointSampler, input.TexCoord + depthUvOffset).rgb;
+	float3 prevNormal = normalMapPrev.Sample(PointSampler, prevUV + depthUvOffset).rgb;
 	float normalWeight = pow(saturate(dot(currentNormal, prevNormal)), NormalPower);
 
 	float historyWeight = depthWeight * normalWeight;

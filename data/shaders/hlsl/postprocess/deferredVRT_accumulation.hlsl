@@ -19,6 +19,11 @@ static const float DepthSigma = 0.3f;
 static const float NormalPower = 4.0f;
 static const float HistoryAcceptance = 0.1f;
 
+// The GI color is half-res (texel p == top-left full-res texel 2*p, matching the trace and
+// linearDepthDownsample2). Full-res depth/normal guides must sample that same texel 2*p, not the
+// half-res pixel center (which point-samples full-res texel 2*p+1).
+static const float2 DepthUvOffsetScale = -0.25f;
+
 float BilateralWeight(float refDepth, float3 refNormal, float sampleDepth, float3 sampleNormal, float spatialWeight)
 {
 	float depthDiff = abs(refDepth - sampleDepth) / max(refDepth, 1e-5f);
@@ -52,8 +57,9 @@ float4 BilateralGaussian3x3(Texture2D InputTex, float2 uv, float2 t, float refDe
 
 		// Compare against the PREVIOUS frame at the reprojected location, which is
 		// the surface that produced the history we are about to blend in.
-		float sampleDepth = depthMapPrev.Sample(PointSampler, sampleUV).r;
-		float3 sampleNormal = normalMapPrev.Sample(PointSampler, sampleUV).rgb;
+		float2 guideUV = sampleUV + DepthUvOffsetScale * ViewportSizeInverse;
+		float sampleDepth = depthMapPrev.Sample(PointSampler, guideUV).r;
+		float3 sampleNormal = normalMapPrev.Sample(PointSampler, guideUV).rgb;
 
 		float w = BilateralWeight(refDepth, refNormal, sampleDepth, sampleNormal, spatialKernel[i]);
 		weightedSum += color * w;
@@ -77,8 +83,9 @@ PSOutput PSMain(VS_OUTPUT input)
 	float2 motionPixels = motionVectors.Load(int3(input.Position.xy * 2, 0));
 	float2 motionUV = motionPixels * ViewportSizeInverse * 0.5f;
 
-	float refDepth = depthMap.Sample(PointSampler, input.TexCoord).r;
-	float3 refNormal = normalMap.Sample(PointSampler, input.TexCoord).rgb;
+	float2 guideUV = input.TexCoord + DepthUvOffsetScale * ViewportSizeInverse;
+	float refDepth = depthMap.Sample(PointSampler, guideUV).r;
+	float3 refNormal = normalMap.Sample(PointSampler, guideUV).rgb;
 
 	float4 current = currentRays.Load(int3(input.Position.xy, 0));
 	float4 blurredCurrent = blurredCurrentRays.Load(int3(input.Position.xy, 0));
@@ -109,8 +116,9 @@ PSOutput PSMain(VS_OUTPUT input)
 	// Reject only clearly invalid history; keep full weight for valid reprojection.
 	if (any(reprojectedUV < 0) || any(reprojectedUV > 1))
 		return output;
-	float prevDepth = depthMapPrev.Sample(PointSampler, reprojectedUV).r;
-	float3 prevNormal = normalMapPrev.Sample(PointSampler, reprojectedUV).rgb;
+	float2 reprojGuideUV = reprojectedUV + DepthUvOffsetScale * ViewportSizeInverse;
+	float prevDepth = depthMapPrev.Sample(PointSampler, reprojGuideUV).r;
+	float3 prevNormal = normalMapPrev.Sample(PointSampler, reprojGuideUV).rgb;
 	float depthDiff = abs(refDepth - prevDepth) / max(refDepth, 1e-5f);
 	float historyValidity = exp(-depthDiff / DepthSigma) * pow(saturate(dot(refNormal, prevNormal)), NormalPower);
 	if (historyValidity < HistoryAcceptance)

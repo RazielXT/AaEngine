@@ -92,7 +92,18 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 		noiseWeight = float2(xi, xi2);
 	#endif
 
-		float3 dir = CosineWeightedHemisphere(noiseWeight, worldNormal, worldTangent, worldBinormal);
+		// Instead of entirely random values, offset each ray into its own quadrant
+		// Assuming r goes from 0 to 3
+		float2 quadrantOffset = float2(float(r % 2) * 0.5f, float(r / 2) * 0.5f);
+
+		// Remap your blue noise weight (0.0 to 1.0) into a tight 0.0 to 0.5 range, 
+		// then slide it into its assigned quadrant
+		float2 stratifiedXi = quadrantOffset + (noiseWeight * 0.5f);
+
+		// Feed this perfectly distributed coordinate into your hemisphere function
+		float3 dir = CosineWeightedHemisphere(stratifiedXi, worldNormal, worldTangent, worldBinormal);
+
+		//float3 dir = CosineWeightedHemisphere(noiseWeight, worldNormal, worldTangent, worldBinormal);
 
 		float4 hit = RayTraceCascades(worldPosition + worldNormal, dir, 0, VoxelInfo);
 

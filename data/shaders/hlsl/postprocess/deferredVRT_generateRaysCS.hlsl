@@ -43,7 +43,18 @@ void main(uint3 DTid : SV_DispatchThreadID)
 	float2 uv = (float2(pixel) + 0.5f) / float2(ViewportSize);
 	float2 xi = Random2DFrom2D(uv + Time % 10 + float2(RayIndex * 0.239, RayIndex * 0.137));
 	float2 xi2 = Random2DFrom2D(uv - Time % 3 + float2(RayIndex * 0.119, RayIndex * 0.437));
-	float3 rayDirection = CosineWeightedHemisphere(float2(xi.x, xi2.y), worldNormal, worldTangent, worldBinormal);
+	float2 noiseWeight = float2(xi.x, xi2.y);
+
+	// Instead of entirely random values, offset each ray into its own quadrant
+	// Assuming RayIndex goes from 0 to 3
+	float2 quadrantOffset = float2(float(RayIndex % 2) * 0.5f, float(RayIndex / 2) * 0.5f);
+
+	// Remap your blue noise weight (0.0 to 1.0) into a tight 0.0 to 0.5 range, 
+	// then slide it into its assigned quadrant
+	float2 stratifiedXi = quadrantOffset + (noiseWeight * 0.5f);
+
+	// Feed this perfectly distributed coordinate into your hemisphere function
+	float3 rayDirection = CosineWeightedHemisphere(stratifiedXi, worldNormal, worldTangent, worldBinormal);
 
 	uint queueIndex;
 	InterlockedAdd(QueueState[OutputQueueIndex], 1, queueIndex);

@@ -28,6 +28,12 @@ void PrepareFrameTask::recordCommands(RenderContext& ctx, CommandsData& cmd, Com
 		return;
 	}
 
+	if (pass.info.entry == "Finish")
+	{
+		renderWorld.terrain.updateFinish();
+		return;
+	}
+
 	auto& dlss = provider.renderSystem.upscale.dlss;
 	if (dlss.enabled())
 		ctx.camera->setPixelOffset(dlss.getJitter(), dlss.getRenderSize());
@@ -35,7 +41,7 @@ void PrepareFrameTask::recordCommands(RenderContext& ctx, CommandsData& cmd, Com
 	if (fsr.enabled())
 		ctx.camera->setPixelOffset(fsr.getJitter(), fsr.getRenderSize());
 
-	renderWorld.terrain.update(cmd.commandList, *ctx.camera, provider.params.frameIndex);
+	renderWorld.terrain.update(cmd.commandList, *ctx.camera, shadowMaps, provider.params.frameIndex);
 	renderWorld.vegetation.update(cmd.commandList, ctx.camera->getPosition(), renderWorld.terrain);
 	renderWorld.grass.update(cmd.commandList, *ctx.camera, renderWorld.terrain);
 

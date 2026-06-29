@@ -30,6 +30,7 @@ namespace RenderObjectFlag
 	enum Value : RenderObjectFlags
 	{
 		NoShadow = 1,
+		NoCascade0 = NoShadow,
 		NoCascade1 = 1 << 1,
 		NoCascade2 = 1 << 2,
 		NoCascade3 = 1 << 3,

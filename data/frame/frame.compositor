@@ -29,6 +29,7 @@ compositor Frame
 
 	task PrepareFrame
 	task WaterSim.PrepareFrame
+	task PrepareFrame.Finish
 
 	task SceneRender.EarlyZ
 	{

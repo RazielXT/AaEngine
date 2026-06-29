@@ -13,16 +13,19 @@ class RenderWorld;
 class RenderEntity;
 class RenderSystem;
 struct GraphicsResources;
+class ShadowMaps;
 
 class ProgressiveTerrain
 {
 public:
 
 	ProgressiveTerrain();
+	~ProgressiveTerrain();
 
 	void initialize(RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch, RenderWorld& renderWorld);
 
-	void update(ID3D12GraphicsCommandList* commandList, const Camera& cam, UINT frameIdx);
+	void update(ID3D12GraphicsCommandList* commandList, const Camera& cam, const ShadowMaps& shadows, UINT frameIdx);
+	void updateFinish();
 
 	bool updateLod = true;
 
@@ -45,15 +48,16 @@ public:
 protected:
 
 	GridLODSystem terrainGridTiles;
-	GridLODSystem terrainVoxelizeGridTiles;
-	GridLODSystem terrainVoxelizeGridTilesFar;
+	GridLODSystem shadowTerrainGridTiles[4];
+	GridLODSystem terrainVoxelizeGridTiles[4];
 
 	struct TerrainGridChunk
 	{
 		GridInstanceMesh mesh;
+		GridInstanceMesh shadowMesh[4];
 		GridInstanceMesh voxelizeMesh[4];
 
-		GeometryViews<RenderViewId_Voxelize0, RenderViewId_Voxelize1, RenderViewId_Voxelize2, RenderViewId_Voxelize3, RenderViewId_VoxelizeShadowMap> geometryViews;
+		GeometryViews<RenderViewId_ShadowCascade0, RenderViewId_ShadowCascade1, RenderViewId_ShadowCascade2, RenderViewId_ShadowCascade3, RenderViewId_Voxelize0, RenderViewId_Voxelize1, RenderViewId_Voxelize2, RenderViewId_Voxelize3, RenderViewId_VoxelizeShadowMap> geometryViews;
 		RenderEntity* entity{};
 	}
 	terrainGrid[GridsSize][GridsSize];
@@ -75,4 +79,25 @@ protected:
 	GenerateXYMips4xCS generateNormalMipsCS;
 
 	void regenerateChunk(ID3D12GraphicsCommandList* commandList, int x, int y);
+
+	void dispatchChunkUpdates(const Camera& camera, const ShadowMaps& shadows, UINT frameIdx);
+	void runChunkUpdateThread(UINT threadIndex);
+	void waitForChunkUpdates();
+
+	struct AsyncWork
+	{
+		HANDLE eventBegin{};
+		HANDLE eventFinish{};
+		std::thread worker;
+	};
+	std::array<AsyncWork, 1 + 4 + 4> chunkUpdateThreads;
+
+	struct 
+	{
+		const Camera* camera{};
+		const ShadowMaps* shadows{};
+		UINT frameIdx{};
+		bool running = true;
+	}
+	updateCtx;
 };

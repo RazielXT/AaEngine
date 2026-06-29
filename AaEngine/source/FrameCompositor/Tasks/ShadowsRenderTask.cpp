@@ -4,18 +4,13 @@
 
 ShadowsRenderTask::ShadowsRenderTask(RenderProvider p, RenderWorld& w, ShadowMaps& shadows) : shadowMaps(shadows), CompositorTask(p, w)
 {
-	for (auto& shadow : cascades)
+	for (UINT i = 0; auto& cascade : cascades)
 	{
-		shadow.renderables = renderWorld.getRenderables(Order::Normal);
+		cascade.renderables = renderWorld.getRenderables(Order::Normal);
+		cascade.filterFlag = RenderObjectFlag::NoCascade0 << i;
+		cascade.viewId = RenderViewId(RenderViewId_ShadowCascade0 + i);
+		i++;
 	}
-
-	cascades[1].filterFlag = RenderObjectFlag::NoCascade1;
-	cascades[2].filterFlag = RenderObjectFlag::NoCascade2;
-	cascades[3].filterFlag = RenderObjectFlag::NoCascade3;
-
-	// Grass is culled per view; cascades 0 and 1 use their own culled buffers (views 1 and 2).
-	cascades[0].viewId = RenderViewId_ShadowCascade0;
-	cascades[1].viewId = RenderViewId_ShadowCascade1;
 }
 
 ShadowsRenderTask::~ShadowsRenderTask()

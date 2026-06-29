@@ -208,11 +208,9 @@ public:
 		}
 	}
 
-	void BuildLOD(const Camera& camera, XMINT2 offset)
+	template<typename T>
+	void BuildLOD(const Vector3& cameraPos, const T& culling, XMINT2 offset)
 	{
-		const Vector3 cameraPos = camera.getPosition();
-		const BoundingFrustum frustum = camera.prepareFrustum();
-
 		m_renderList.clear();
 
 		const float tileSize = m_smallestTileSize;
@@ -259,6 +257,15 @@ public:
 			const float dz = camZ - centerZ;
 			const float distSq = dx * dx + dz * dz;
 
+			BoundingBox bbox;
+			bbox.Center = Vector3(centerX + chunkOffset.x, 0, centerZ + chunkOffset.y);
+			//bbox.Extents = Vector3(halfSize, 4000, halfSize);
+			bbox.Extents = Vector3(worldHalf, 4000, worldHalf);
+
+			// -------- CULL --------
+			if (!culling.Intersects(bbox))
+				continue;
+
 			// --- Subdivide? ---
 			if (n.level < lodsLevels - 1 && distSq < m_subdivideThresholdsSq[n.level])
 			{
@@ -272,14 +279,7 @@ public:
 			}
 			else
 			{
-				BoundingBox bbox;
-				bbox.Center = Vector3(centerX + chunkOffset.x, 0, centerZ + chunkOffset.y);
-				bbox.Extents = Vector3(halfSize, 4000, halfSize);
-				bbox.Extents = Vector3(worldHalf, 4000, worldHalf);
-
-				// -------- FRUSTUM CULL --------
-				if (frustum.Intersects(bbox))
-					m_renderList.emplace_back(n.x, n.y, n.level, m_subdivideThresholds[n.level]);
+				m_renderList.emplace_back(n.x, n.y, n.level, m_subdivideThresholds[n.level]);
 			}
 		}
 	}

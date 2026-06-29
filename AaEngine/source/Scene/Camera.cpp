@@ -309,7 +309,7 @@ DirectX::BoundingFrustum Camera::prepareFrustum() const
 DirectX::BoundingOrientedBox Camera::prepareOrientedBox() const
 {
 	DirectX::BoundingOrientedBox orientedBox;
-	//orientedBox.Extents = { params.width / 2.0f, params.height / 2.0f, (params.farZ - params.nearZ) / 2.0f };
+
 	orientedBox.Transform(orientedBox, DirectX::XMMatrixInverse(nullptr, view_projection_m));
 
 	return orientedBox;

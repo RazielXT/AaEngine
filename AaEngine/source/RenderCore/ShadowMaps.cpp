@@ -42,17 +42,14 @@ void ShadowMaps::update(UINT frameIndex, Camera& mainCamera)
 	cascades[0].camera.lookTo(lightEye, lightTarget);
 	cascadeInfo.update(cascades[0].camera, mainCamera, LightRange, NearFarPlane, ShadowMapSize);
 
-	for (int i = 0; auto& proj : cascadeInfo.matShadowProj)
-	{
-		auto& cascade = cascades[i++];
-		cascade.camera.lookTo(lightEye, lightTarget);
-		cascade.camera.setOrthographicProjection(proj);
-		cascade.update = true;
-	}
-
 	for (size_t i = 0; i < _countof(cascades); i++)
 	{
-		XMStoreFloat4x4(&data.ShadowMatrix[i], XMMatrixTranspose(cascades[i].camera.getViewProjectionMatrix()));
+		auto& cascade = cascades[i];
+		cascade.camera.lookTo(lightEye, lightTarget);
+		cascade.camera.setOrthographicProjection(cascadeInfo.matShadowProj[i]);
+		cascade.update = true;
+
+		XMStoreFloat4x4(&data.ShadowMatrix[i], XMMatrixTranspose(cascade.camera.getViewProjectionMatrix()));
 	}
 
 	data.SunDirection = sun.direction;

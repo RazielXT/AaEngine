@@ -62,7 +62,7 @@ void RenderQueue::reset()
 
 static void RenderObject(ID3D12GraphicsCommandList* commandList, EntityGeometry& geometry, UINT frameIndex)
 {
-	if (!geometry.instanceCount)
+	if (!geometry.instanceCount && geometry.type != EntityGeometry::Type::Indirect)
 		return;
 
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY(geometry.topology));

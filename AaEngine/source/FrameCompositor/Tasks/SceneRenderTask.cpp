@@ -4,10 +4,11 @@
 #include "Resources/Material/MaterialResources.h"
 #include "Resources/Model/ModelResources.h"
 #include "RenderObject/DrawPrimitives.h"
+#include "RenderCore/ShadowMaps.h"
 
 SceneRenderTask* instance = nullptr;
 
-SceneRenderTask::SceneRenderTask(RenderProvider p, RenderWorld& w) : CompositorTask(p, w), picker(p.renderSystem)
+SceneRenderTask::SceneRenderTask(RenderProvider p, RenderWorld& w, ShadowMaps& s) : CompositorTask(p, w), picker(p.renderSystem), shadowMaps(s)
 {
 	opaque.renderables = renderWorld.getRenderables(Order::Normal);
 	forward.renderables = renderWorld.getRenderables(Order::Post);
@@ -231,9 +232,20 @@ void SceneRenderTask::renderWireframe(CompositorPass& pass)
 	}
 }
 
+const Camera& SceneRenderTask::getViewCamera() const
+{
+	if (viewOverride != RenderViewId_Default)
+	{
+		if (viewOverride >= RenderViewId_ShadowCascade0 && viewOverride <= RenderViewId_ShadowCascade3)
+			return shadowMaps.cascades[viewOverride - RenderViewId_ShadowCascade0].camera;
+	}
+
+	return *ctx.camera;
+}
+
 void SceneRenderTask::renderScene(CompositorPass& pass)
 {
-	opaque.renderables->updateVisibility(*ctx.camera, opaque.visibility);
+	opaque.renderables->updateVisibility(getViewCamera(), opaque.visibility);
 
 	if (earlyZ.work.eventBegin)
 		SetEvent(earlyZ.work.eventBegin);
@@ -243,6 +255,7 @@ void SceneRenderTask::renderScene(CompositorPass& pass)
 	pass.mrt->PrepareAsTarget(opaque.work.commands.commandList, pass.targets, true, TransitionFlags::UseDepth);
 
 	ShaderConstantsProvider constants(provider.params, opaque.visibility, *ctx.camera, *pass.mrt);
+	constants.viewId = viewOverride;
 
 	opaque.queue->renderObjects(constants, opaque.work.commands.commandList);
 }
@@ -268,6 +281,8 @@ void SceneRenderTask::renderEarlyZ(CompositorPass& pass)
 	depth.texture->PrepareAsDepthTarget(earlyZ.work.commands.commandList, depth.previousState);
 
 	ShaderConstantsProvider constants(provider.params, opaque.visibility, *ctx.camera, *depth.texture);
+	constants.viewId = viewOverride;
+
 	earlyZ.queue->renderObjects(constants, earlyZ.work.commands.commandList);
 
 	depth.texture->Transition(earlyZ.work.commands.commandList, depth.state, depth.nextState);
@@ -371,6 +386,11 @@ CompositorTask::Execution SceneRenderTask::getExecution(CompositorPass& pass) co
 		return { RecordMode::Inline, Queue::Graphics };
 	else
 		return { RecordMode::Threaded, Queue::Graphics };
+}
+
+void SceneRenderTask::setViewOverride(RenderViewId view)
+{
+	viewOverride = view;
 }
 
 void SceneRenderTask::updateVoxelsDebugView(RenderEntity& debugVoxel, Camera& camera)

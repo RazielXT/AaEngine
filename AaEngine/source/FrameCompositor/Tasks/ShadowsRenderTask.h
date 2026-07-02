@@ -17,6 +17,8 @@ public:
 
 	Execution getExecution(CompositorPass&) const override { return { RecordMode::Threaded, Queue::Graphics }; }
 
+	const ShadowMaps& getShadowMaps() const { return shadowMaps; }
+
 private:
 
 	struct ShadowWork

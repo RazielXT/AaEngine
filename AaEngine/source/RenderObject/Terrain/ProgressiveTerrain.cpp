@@ -251,11 +251,9 @@ void ProgressiveTerrain::runChunkUpdateThread(UINT threadIndex)
 				UINT i = threadIndex - 1;
 				auto& tiles = shadowTerrainGridTiles[i];
 
-// 				if (i != 3 || x != 0 || y != 0)
-// 					continue;
-// 				Logger::log(std::format("Shadow items {}", tiles.m_renderList.size()));
+				const UINT tileLod[] = { 9, 9, 7, 6 };
+				tiles.BuildLOD(camera.getPosition(), shadowBbox, chunkWorldCoord[x][y], tileLod[i]);
 
-				tiles.BuildLOD(camera.getPosition(), shadowBbox, chunkWorldCoord[x][y]);
 				auto& g = grid.geometryViews.viewGeometries[threadIndex - 1];
 				grid.shadowMesh[i].update(g, (UINT)tiles.m_renderList.size(), tiles.m_renderList.data(), (UINT)tiles.m_renderList.size() * sizeof(TileData), updateCtx.frameIdx);
 			}

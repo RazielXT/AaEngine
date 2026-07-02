@@ -10,6 +10,7 @@
 #include "RenderCore/UpscaleTypes.h"
 #include "Physics/Render/PhysicsRenderTask.h"
 #include "Resources/Shader/ShaderResources.h"
+#include "FrameCompositor/Tasks/SceneRenderTask.h"
 
 static WaterPaintTool* waterPaintTool;
 
@@ -201,6 +202,26 @@ void SidePanel::draw()
 		{
 			const char* modeLabel = waterPaintTool->getMode() == WaterPaintTool::Mode::Add ? "Add" : "Remove";
 			ImGui::Text("  Mode: %s", modeLabel);
+		}
+
+		const char* viewId[] = {
+			"Default",
+			"ShadowCascade0",
+			"ShadowCascade1",
+			"ShadowCascade2",
+			"ShadowCascade3",
+		};
+		const RenderViewId viewIdValues[] = {
+			RenderViewId_Default,
+			RenderViewId_ShadowCascade0,
+			RenderViewId_ShadowCascade1,
+			RenderViewId_ShadowCascade2,
+			RenderViewId_ShadowCascade3,
+		};
+		static int viewIdIdx = 0;
+		if (ImGui::Combo("Draw view", &viewIdIdx, viewId, std::size(viewId)))
+		{
+			((SceneRenderTask*)app.compositor->getTask("SceneRender"))->setViewOverride(viewIdValues[viewIdIdx]);
 		}
 	}
 

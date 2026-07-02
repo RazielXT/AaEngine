@@ -209,8 +209,10 @@ public:
 	}
 
 	template<typename T>
-	void BuildLOD(const Vector3& cameraPos, const T& culling, XMINT2 offset)
+	void BuildLOD(const Vector3& cameraPos, const T& culling, XMINT2 offset, UINT lodsLevelsMax = 0)
 	{
+		lodsLevelsMax = lodsLevelsMax ? min(lodsLevelsMax, lodsLevels) : lodsLevels;
+
 		m_renderList.clear();
 
 		const float tileSize = m_smallestTileSize;
@@ -267,7 +269,7 @@ public:
 				continue;
 
 			// --- Subdivide? ---
-			if (n.level < lodsLevels - 1 && distSq < m_subdivideThresholdsSq[n.level])
+			if (n.level < lodsLevelsMax - 1 && distSq < m_subdivideThresholdsSq[n.level])
 			{
 				const uint32_t childSize = n.size >> 1;
 				const uint32_t next = n.level + 1;

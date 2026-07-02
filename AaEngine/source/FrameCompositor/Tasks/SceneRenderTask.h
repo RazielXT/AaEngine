@@ -6,6 +6,7 @@
 #include "Scene/RenderObject.h"
 #include <thread>
 #include "Editor/EntityPicker.h"
+#include "RenderCore/ShadowMaps.h"
 
 struct RenderQueue;
 
@@ -13,7 +14,7 @@ class SceneRenderTask : public CompositorTask
 {
 public:
 
-	SceneRenderTask(RenderProvider provider, RenderWorld&);
+	SceneRenderTask(RenderProvider provider, RenderWorld&, ShadowMaps&);
 	~SceneRenderTask();
 
 	AsyncTasksInfo buildAsyncTasks(CompositorPass& pass) override;
@@ -30,6 +31,8 @@ public:
 	void showVoxels(bool show);
 
 	Execution getExecution(CompositorPass&) const override;
+
+	void setViewOverride(RenderViewId view);
 
 private:
 
@@ -95,4 +98,8 @@ private:
 
 	bool showVoxelsEnabled = false;
 	void updateVoxelsDebugView(RenderEntity& debugVoxel, Camera& camera);
+
+	const Camera& getViewCamera() const;
+	RenderViewId viewOverride{ RenderViewId_Default };
+	ShadowMaps& shadowMaps;
 };

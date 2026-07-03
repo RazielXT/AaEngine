@@ -9,6 +9,7 @@ float2 TerrainOffset;
 float2 ChunkWorldSize;
 float2 SubUvOffset;
 float2 SubUvScale;
+uint TileId;
 
 RWStructuredBuffer<GrassInfo> infoBuffer : register(u0);
 RWByteAddressBuffer counterBuffer : register(u1);
@@ -46,6 +47,7 @@ uint getGrassInfo(out GrassInfo info, float2 coords)
 	//info.rotationScale = PackR16G16_FLOAT(float2(rotation, scale));
 	info.rotation = rotation;
 	info.scale = scale;
+	info.tileId = TileId;
 
 	return normal.y > 0.75f ? 1 : 0;
 }

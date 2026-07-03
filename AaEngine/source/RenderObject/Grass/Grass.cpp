@@ -13,6 +13,9 @@ void Grass::initialize(RenderSystem& renderSystem, GraphicsResources& resources,
 	auto csShader = resources.shaders.getShader("grassFindCS", ShaderType::Compute, ShaderRef{ "terrain/grass/grassFindCS.hlsl", "main", "cs_6_6" });
 	grassFindCS.init(*renderSystem.core.device, *csShader);
 
+	csShader = resources.shaders.getShader("grassCompactCS", ShaderType::Compute, ShaderRef{ "terrain/grass/grassCompactCS.hlsl", "main", "cs_6_6" });
+	grassCompactCS.init(*renderSystem.core.device, *csShader);
+
 	csShader = resources.shaders.getShader("grassUpdateCS", ShaderType::Compute, ShaderRef{ "terrain/grass/grassUpdateCS.hlsl", "main", "cs_6_6", { {"FRUSTUM_CULLING", "1"}, {"DISTANCE_CULLING", "0"} } });
 	grassUpdateCS.init(*renderSystem.core.device, *csShader);
 
@@ -36,16 +39,55 @@ void Grass::initialize(RenderSystem& renderSystem, GraphicsResources& resources,
 	UINT zero = 0;
 	CreateStaticBuffer(renderSystem.core.device, batch, &zero, sizeof(UINT), D3D12_RESOURCE_STATE_COPY_SOURCE, &zeroCounterBuffer);
 
+	createSharedBuffers(renderSystem, resources, batch);
 	createSharedCommandBuffer(renderSystem, batch);
+}
+
+void Grass::createSharedBuffers(RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch)
+{
+	struct GrassInfo
+	{
+		Vector3 position;
+		float rotation;
+		float scale;
+		UINT tileId;
+	};
+	constexpr UINT infoSize = sizeof(GrassInfo) * MaxTotalInstances;
+
+	// Ping-pong candidate buffers rest as SRV; the counters start zeroed so the first compaction sees
+	// an empty source before every tile appends its freshly generated blades.
+	UINT zero = 0;
+	for (int i = 0; i < 2; i++)
+	{
+		infoBuffer[i] = resources.shaderBuffers.CreateStructuredBuffer(infoSize, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+		infoBuffer[i]->SetName(L"GrassInfo");
+
+		CreateStaticBuffer(renderSystem.core.device, batch, &zero, sizeof(UINT), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+			&infoCounter[i], D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+		infoCounter[i]->SetName(L"GrassInfoCounter");
+	}
+
+	struct RenderGrassInfo
+	{
+		Vector3 position;
+		float scale;
+		float cosYaw;
+		float sinYaw;
+	};
+	constexpr UINT transformSize = sizeof(RenderGrassInfo) * MaxTotalInstances;
+
+	for (auto& t : transformationBuffer)
+	{
+		t = resources.shaderBuffers.CreateStructuredBuffer(transformSize, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+		t->SetName(L"GrassTransformation");
+	}
 }
 
 void Grass::createSharedCommandBuffer(RenderSystem& renderSystem, ResourceUploadBatch& batch)
 {
-	// One command per (view, chunk). Views own contiguous TotalChunks-sized blocks; within a block,
-	// chunks are ordered by update-division group so each frame's cleared commands are contiguous.
-	constexpr UINT totalCommands = RenderViewId_Count * TotalChunks;
-
-	std::vector<D3D12_DRAW_INDEXED_ARGUMENTS> defaultCommands(totalCommands);
+	// One command per view; all tiles are batched into a single indirect draw per view. The clear
+	// pass only rewrites InstanceCount each frame, so IndexCountPerInstance is seeded here.
+	std::vector<D3D12_DRAW_INDEXED_ARGUMENTS> defaultCommands(ViewCount);
 	for (auto& cmd : defaultCommands)
 	{
 		cmd.IndexCountPerInstance = grassModel->indexCount;
@@ -55,10 +97,12 @@ void Grass::createSharedCommandBuffer(RenderSystem& renderSystem, ResourceUpload
 		cmd.StartInstanceLocation = 0;
 	}
 
-	CreateStaticBuffer(renderSystem.core.device, batch, defaultCommands.data(), totalCommands, sizeof(D3D12_DRAW_INDEXED_ARGUMENTS),
+	CreateStaticBuffer(renderSystem.core.device, batch, defaultCommands.data(), ViewCount, sizeof(D3D12_DRAW_INDEXED_ARGUMENTS),
 		D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, &sharedCommandBuffer, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 	sharedCommandBuffer->SetName(L"GrassSharedCommands");
 }
+
+
 
 void Grass::createChunks(RenderWorld& renderWorld, RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch)
 {
@@ -68,6 +112,8 @@ void Grass::createChunks(RenderWorld& renderWorld, RenderSystem& renderSystem, G
 
 	gridCenterChunk = terrainParams.gridCenterAt(Vector3::Zero, chunkSize, GrassGridSize);
 
+	// Assign each tile its current world position and mark it for generation. Tiles keep a fixed id
+	// (their grid slot) that tags their blades in the shared buffer so compaction can drop them.
 	for (int x = 0; x < (int)GrassGridSize; x++)
 		for (int y = 0; y < (int)GrassGridSize; y++)
 		{
@@ -75,54 +121,54 @@ void Grass::createChunks(RenderWorld& renderWorld, RenderSystem& renderSystem, G
 			int ax = TerrainGridParams::wrapIndex(desired.x, GrassGridSize);
 			int ay = TerrainGridParams::wrapIndex(desired.y, GrassGridSize);
 
-			auto& chunk = chunks[ax][ay];
-			initChunk(chunk, renderSystem, resources, batch);
-
-			auto e = renderWorld.createEntity();
-			chunk.entity = e;
-			e->material = grassMaterial;
-			e->Material().setParam("ChunkId", x * GrassGridSize + y);
-			e->geometry.type = EntityGeometry::Type::Indirect;
-			e->geometry.vertexBufferView = grassModel->vertexBufferView;
-			e->geometry.indexBufferView = grassModel->indexBufferView;
-			e->geometry.indexCount = grassModel->indexCount;
-			e->geometry.layout = &grassModel->vertexLayout;
-
-			for (size_t i = 0; i < std::size(chunk.viewData); i++)
-			{
-				auto& viewData = chunk.viewData[i];
-
-				viewData.indirect.commandSignature = commandSignature;
-				viewData.indirect.maxCommands = 1;
-				viewData.indirect.commandBuffer = sharedCommandBuffer;
-				viewData.indirect.commandBufferOffset = commandSlot(i, ax * GrassGridSize + ay) * sizeof(D3D12_DRAW_INDEXED_ARGUMENTS);
-
-				if (i == 0)
-				{
-					e->geometry.geometryCustomBuffer = viewData.transformationBuffer->GetGPUVirtualAddress();
-					e->geometry.source = &viewData.indirect;
-				}
-				else
-				{
-					auto& g = chunk.views.viewGeometries[i - 1];
-					g = e->geometry;
-					g.geometryCustomBuffer = viewData.transformationBuffer->GetGPUVirtualAddress();
-					g.source = &viewData.indirect;
-				}
-			}
-
-			e->geometry.viewVariants = &chunk.views.variants;
-
-			e->setBoundingBox({ { chunkSize * 0.5f, terrainParams.tileHeight * 0.5f, chunkSize * 0.5f },
-							   { chunkSize * 0.5f, terrainParams.tileHeight * 0.5f, chunkSize * 0.5f } });
-
-			e->setFlag(RenderObjectFlag::Value(RenderObjectFlag::OnlyFirstCascade | RenderObjectFlag::NoVoxelization));
-
-			chunk.worldCoord = desired;
-			chunk.dirty = true;
-
-			e->setPosition(terrainParams.chunkWorldMin(desired, chunkSize));
+			auto& tile = tiles[ax][ay];
+			tile.worldCoord = desired;
+			tile.dirty = true;
 		}
+
+	// Single entity batches every tile into one indirect draw per view.
+	auto e = renderWorld.createEntity();
+	entity = e;
+	e->material = grassMaterial;
+	e->geometry.type = EntityGeometry::Type::Indirect;
+	e->geometry.vertexBufferView = grassModel->vertexBufferView;
+	e->geometry.indexBufferView = grassModel->indexBufferView;
+	e->geometry.indexCount = grassModel->indexCount;
+	e->geometry.layout = &grassModel->vertexLayout;
+
+	for (UINT i = 0; i < ViewCount; i++)
+	{
+		indirect[i].commandSignature = commandSignature;
+		indirect[i].maxCommands = 1;
+		indirect[i].commandBuffer = sharedCommandBuffer;
+		indirect[i].commandBufferOffset = i * sizeof(D3D12_DRAW_INDEXED_ARGUMENTS);
+
+		if (i == 0)
+		{
+			e->geometry.geometryCustomBuffer = transformationBuffer[i]->GetGPUVirtualAddress();
+			e->geometry.source = &indirect[i];
+		}
+		else
+		{
+			auto& g = views.viewGeometries[i - 1];
+			g = e->geometry;
+			g.geometryCustomBuffer = transformationBuffer[i]->GetGPUVirtualAddress();
+			g.source = &indirect[i];
+		}
+	}
+
+	e->geometry.viewVariants = &views.variants;
+
+	// Bounding box spans the whole grass grid so CPU frustum culling keeps the entity drawing for the
+	// main view and shadow cascades; per-instance visibility is handled on the GPU.
+	float gridHalf = chunkSize * GrassGridSize * 0.5f;
+	e->setBoundingBox({ { gridHalf, terrainParams.tileHeight * 0.5f, gridHalf },
+					   { gridHalf, terrainParams.tileHeight * 0.5f, gridHalf } });
+
+	e->setFlag(RenderObjectFlag::Value(RenderObjectFlag::OnlyFirstCascade | RenderObjectFlag::NoVoxelization));
+
+	XMINT2 minCoord = { gridCenterChunk.x - half, gridCenterChunk.y - half };
+	e->setPosition(terrainParams.chunkWorldMin(minCoord, chunkSize));
 }
 
 void Grass::clear()
@@ -130,8 +176,11 @@ void Grass::clear()
 	for (int x = 0; x < GrassGridSize; x++)
 		for (int y = 0; y < GrassGridSize; y++)
 		{
-			chunks[x][y] = {};
+			tiles[x][y] = {};
 		}
+
+	currentInfo = 0;
+	entity = nullptr;
 }
 
 void Grass::enableUpdating(bool enabled)
@@ -139,51 +188,20 @@ void Grass::enableUpdating(bool enabled)
 	updatingEnabled = enabled;
 }
 
-void Grass::initChunk(GrassChunk& chunk, RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch)
-{
-	struct GrassInfo
-	{
-		Vector3 position;
-		float rotation;
-		float scale;
-	};
-	constexpr UINT infoSize = sizeof(GrassInfo) * maxPerChunk;
-	chunk.infoBuffer = resources.shaderBuffers.CreateStructuredBuffer(infoSize);
-	chunk.infoBuffer->SetName(L"GrassInfo");
-
-	chunk.infoCounter = resources.shaderBuffers.CreateStructuredBuffer(sizeof(UINT));
-	chunk.infoCounter->SetName(L"GrassInfoCounter");
-
-	struct RenderGrassInfo
-	{
-		Vector3 position;
-		float scale;
-		float cosYaw;
-		float sinYaw;
-	};
-	constexpr UINT transformSize = sizeof(RenderGrassInfo) * maxPerChunk;
-
-	for (auto& d : chunk.viewData)
-	{
-		d.transformationBuffer = resources.shaderBuffers.CreateStructuredBuffer(transformSize);
-		d.transformationBuffer->SetName(L"GrassTransformation");
-	}
-}
-
-void Grass::regenerateChunk(ID3D12GraphicsCommandList* commandList, GrassChunk& chunk, const ProgressiveTerrain& terrain)
+GrassFindComputeShader::Input Grass::buildFindInput(const GrassTile& tile, UINT tileId, const ProgressiveTerrain& terrain) const
 {
 	auto& terrainParams = terrain.params;
 	float chunkSize = terrainParams.tileSize / ChunksPerTerrainTile;
 
 	XMINT2 terrainChunk = {
-		(int)std::floor((float)chunk.worldCoord.x / ChunksPerTerrainTile),
-		(int)std::floor((float)chunk.worldCoord.y / ChunksPerTerrainTile)
+		(int)std::floor((float)tile.worldCoord.x / ChunksPerTerrainTile),
+		(int)std::floor((float)tile.worldCoord.y / ChunksPerTerrainTile)
 	};
 
 	UINT heightmapSrv = terrain.getHeightmapSrvIndex(terrainChunk);
 
-	int subX = ((chunk.worldCoord.x % (int)ChunksPerTerrainTile) + (int)ChunksPerTerrainTile) % (int)ChunksPerTerrainTile;
-	int subY = ((chunk.worldCoord.y % (int)ChunksPerTerrainTile) + (int)ChunksPerTerrainTile) % (int)ChunksPerTerrainTile;
+	int subX = ((tile.worldCoord.x % (int)ChunksPerTerrainTile) + (int)ChunksPerTerrainTile) % (int)ChunksPerTerrainTile;
+	int subY = ((tile.worldCoord.y % (int)ChunksPerTerrainTile) + (int)ChunksPerTerrainTile) % (int)ChunksPerTerrainTile;
 
 	float uvScale = 1.0f / ChunksPerTerrainTile;
 
@@ -191,54 +209,63 @@ void Grass::regenerateChunk(ID3D12GraphicsCommandList* commandList, GrassChunk& 
 	input.terrainTexture = heightmapSrv;
 	input.terrainHeight = terrainParams.tileHeight;
 
-	auto worldMin = terrainParams.chunkWorldMin(chunk.worldCoord, chunkSize);
+	auto worldMin = terrainParams.chunkWorldMin(tile.worldCoord, chunkSize);
 	input.terrainOffset = { worldMin.x + chunkSize * 0.5f, worldMin.z + chunkSize * 0.5f };
 	input.chunkWorldSize = { chunkSize, chunkSize };
 	input.subUvOffset = { subX * uvScale, subY * uvScale };
 	input.subUvScale = { uvScale, uvScale };
+	input.tileId = tileId;
 
-	if (!chunk.firstRun)
-	{
-		CD3DX12_RESOURCE_BARRIER toUav[2]{};
-		toUav[0] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.infoBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-		toUav[1] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.infoCounter.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-		commandList->ResourceBarrier(2, toUav);
-	}
-	chunk.firstRun = false;
-
-	CD3DX12_RESOURCE_BARRIER toCopyDest = CD3DX12_RESOURCE_BARRIER::Transition(chunk.infoCounter.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_DEST);
-	commandList->ResourceBarrier(1, &toCopyDest);
-	commandList->CopyBufferRegion(chunk.infoCounter.Get(), 0, zeroCounterBuffer.Get(), 0, sizeof(UINT));
-	CD3DX12_RESOURCE_BARRIER toUavAgain = CD3DX12_RESOURCE_BARRIER::Transition(chunk.infoCounter.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-	commandList->ResourceBarrier(1, &toUavAgain);
-
-	grassFindCS.dispatch(commandList, input, chunk.infoBuffer.Get(), chunk.infoCounter.Get());
-
-	CD3DX12_RESOURCE_BARRIER uavBarriers[2]{};
-	uavBarriers[0] = CD3DX12_RESOURCE_BARRIER::UAV(chunk.infoBuffer.Get());
-	uavBarriers[1] = CD3DX12_RESOURCE_BARRIER::UAV(chunk.infoCounter.Get());
-	commandList->ResourceBarrier(2, uavBarriers);
-
-	CD3DX12_RESOURCE_BARRIER toSrv[2]{};
-	toSrv[0] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.infoBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-	toSrv[1] = CD3DX12_RESOURCE_BARRIER::Transition(chunk.infoCounter.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-	commandList->ResourceBarrier(2, toSrv);
+	return input;
 }
 
-void Grass::updateChunk(ID3D12GraphicsCommandList* commandList, GrassChunk& chunk, UINT viewIndex, const GrassUpdateComputeShader::Input& cullingInput)
+void Grass::regenerateTiles(ID3D12GraphicsCommandList* commandList, UINT dirtyMask, const ProgressiveTerrain& terrain)
 {
-	auto& view = chunk.viewData[viewIndex];
+	UINT src = currentInfo;
+	UINT dst = currentInfo ^ 1;
 
-	// The shared command buffer is already in UAV state and was cleared in updateCulling; only the
-	// per-view transformation buffer needs transitioning here.
-	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(view.transformationBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-	commandList->ResourceBarrier(1, &barrier);
+	// --- Compaction: stream src -> dst, dropping the dirty tiles that are about to be regenerated. ---
+	// dst rests as SRV; move its info buffer to UAV and zero its counter before writing.
+	CD3DX12_RESOURCE_BARRIER toWrite[2]{};
+	toWrite[0] = CD3DX12_RESOURCE_BARRIER::Transition(infoBuffer[dst].Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	toWrite[1] = CD3DX12_RESOURCE_BARRIER::Transition(infoCounter[dst].Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
+	commandList->ResourceBarrier(2, toWrite);
 
-	D3D12_GPU_VIRTUAL_ADDRESS commandsAddr = sharedCommandBuffer->GetGPUVirtualAddress() + view.indirect.commandBufferOffset;
-	grassUpdateCS.dispatch(commandList, cullingInput, view.transformationBuffer.Get(), commandsAddr, chunk.infoBuffer.Get(), chunk.infoCounter.Get());
+	commandList->CopyBufferRegion(infoCounter[dst].Get(), 0, zeroCounterBuffer.Get(), 0, sizeof(UINT));
 
-	barrier = CD3DX12_RESOURCE_BARRIER::Transition(view.transformationBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-	commandList->ResourceBarrier(1, &barrier);
+	CD3DX12_RESOURCE_BARRIER counterToUav = CD3DX12_RESOURCE_BARRIER::Transition(infoCounter[dst].Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	commandList->ResourceBarrier(1, &counterToUav);
+
+	grassCompactCS.dispatch(commandList, { dirtyMask }, infoBuffer[src].Get(), infoCounter[src].Get(), infoBuffer[dst].Get(), infoCounter[dst].Get(), DispatchGroupsX);
+
+	CD3DX12_RESOURCE_BARRIER compactUav[2]{};
+	compactUav[0] = CD3DX12_RESOURCE_BARRIER::UAV(infoBuffer[dst].Get());
+	compactUav[1] = CD3DX12_RESOURCE_BARRIER::UAV(infoCounter[dst].Get());
+	commandList->ResourceBarrier(2, compactUav);
+
+	// dst is now the live buffer holding the surviving instances; append the regenerated tiles to it.
+	currentInfo = dst;
+
+	for (UINT x = 0; x < GrassGridSize; x++)
+		for (UINT y = 0; y < GrassGridSize; y++)
+		{
+			UINT tileId = x * GrassGridSize + y;
+			if (!(dirtyMask & (1u << tileId)))
+				continue;
+
+			auto input = buildFindInput(tiles[x][y], tileId, terrain);
+			grassFindCS.dispatch(commandList, input, infoBuffer[dst].Get(), infoCounter[dst].Get());
+		}
+
+	CD3DX12_RESOURCE_BARRIER appendUav[2]{};
+	appendUav[0] = CD3DX12_RESOURCE_BARRIER::UAV(infoBuffer[dst].Get());
+	appendUav[1] = CD3DX12_RESOURCE_BARRIER::UAV(infoCounter[dst].Get());
+	commandList->ResourceBarrier(2, appendUav);
+
+	CD3DX12_RESOURCE_BARRIER toSrv[2]{};
+	toSrv[0] = CD3DX12_RESOURCE_BARRIER::Transition(infoBuffer[dst].Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	toSrv[1] = CD3DX12_RESOURCE_BARRIER::Transition(infoCounter[dst].Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	commandList->ResourceBarrier(2, toSrv);
 }
 
 void Grass::update(ID3D12GraphicsCommandList* commandList, const Camera& camera, const ProgressiveTerrain& terrain)
@@ -265,27 +292,34 @@ void Grass::update(ID3D12GraphicsCommandList* commandList, const Camera& camera,
 				int ax = TerrainGridParams::wrapIndex(desired.x, GrassGridSize);
 				int ay = TerrainGridParams::wrapIndex(desired.y, GrassGridSize);
 
-				auto& chunk = chunks[ax][ay];
-				if (chunk.worldCoord.x != desired.x || chunk.worldCoord.y != desired.y)
+				auto& tile = tiles[ax][ay];
+				if (tile.worldCoord.x != desired.x || tile.worldCoord.y != desired.y)
 				{
-					chunk.worldCoord = desired;
-					chunk.dirty = true;
-
-					chunk.entity->setPosition(terrainParams.chunkWorldMin(desired, chunkSize));
+					tile.worldCoord = desired;
+					tile.dirty = true;
 				}
 			}
+
+		// Keep the single entity centered on the grid so its bounding box tracks the camera.
+		XMINT2 minCoord = { gridCenterChunk.x - half, gridCenterChunk.y - half };
+		entity->setPosition(terrainParams.chunkWorldMin(minCoord, chunkSize));
 	}
 
+	// Collect all tiles that moved this frame into a single dirty mask; one compaction pass drops
+	// their stale blades and the find pass re-appends fresh ones, all against the shared buffer.
+	UINT dirtyMask = 0;
 	for (UINT x = 0; x < GrassGridSize; x++)
 		for (UINT y = 0; y < GrassGridSize; y++)
 		{
-			auto& chunk = chunks[x][y];
-			if (chunk.dirty)
+			if (tiles[x][y].dirty)
 			{
-				regenerateChunk(commandList, chunk, terrain);
-				chunk.dirty = false;
+				dirtyMask |= (1u << (x * GrassGridSize + y));
+				tiles[x][y].dirty = false;
 			}
 		}
+
+	if (dirtyMask)
+		regenerateTiles(commandList, dirtyMask, terrain);
 }
 
 void Grass::updateCulling(ID3D12GraphicsCommandList* commandList, const Camera& cullCamera, const Camera& distanceCamera, const ProgressiveTerrain& terrain, UINT viewIndex)
@@ -304,30 +338,30 @@ void Grass::updateCulling(ID3D12GraphicsCommandList* commandList, const Camera& 
 	cullingInput.cameraPosition = { camPos.x, camPos.y, camPos.z };
 	cullingInput.maxDistance = chunkSize * GrassGridSize * 0.5f;
 
-	// Clear this view's slice of the shared command buffer in one dispatch. Because chunks are laid out
-	// grouped by division, the commands touched this frame form a single contiguous range.
-	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(sharedCommandBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-	commandList->ResourceBarrier(1, &barrier);
+	UINT cur = currentInfo;
+	D3D12_GPU_VIRTUAL_ADDRESS commandsAddr = sharedCommandBuffer->GetGPUVirtualAddress() + (UINT64)viewIndex * sizeof(D3D12_DRAW_INDEXED_ARGUMENTS);
 
-	D3D12_GPU_VIRTUAL_ADDRESS bufferBase = sharedCommandBuffer->GetGPUVirtualAddress();
-	{
-		UINT clearSlot = viewIndex * TotalChunks;
-		D3D12_GPU_VIRTUAL_ADDRESS clearAddr = bufferBase + (UINT64)clearSlot * sizeof(D3D12_DRAW_INDEXED_ARGUMENTS);
-		indirectDrawClearCS.dispatch(commandList, TotalChunks, clearAddr);
-	}
+	// Clear this view's single draw command (only InstanceCount is reset; it doubles as the append
+	// counter the culling shader increments).
+	CD3DX12_RESOURCE_BARRIER cmdToUav = CD3DX12_RESOURCE_BARRIER::Transition(sharedCommandBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	commandList->ResourceBarrier(1, &cmdToUav);
 
-	CD3DX12_RESOURCE_BARRIER uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(sharedCommandBuffer.Get());
-	commandList->ResourceBarrier(1, &uavBarrier);
+	indirectDrawClearCS.dispatch(commandList, 1, commandsAddr);
 
-	for (UINT x = 0; x < GrassGridSize; x++)
-		for (UINT y = 0; y < GrassGridSize; y++)
-		{
-			auto& chunk = chunks[x][y];
- 			updateChunk(commandList, chunk, viewIndex, cullingInput);
-		}
+	CD3DX12_RESOURCE_BARRIER cmdUav = CD3DX12_RESOURCE_BARRIER::UAV(sharedCommandBuffer.Get());
+	commandList->ResourceBarrier(1, &cmdUav);
 
-	barrier = CD3DX12_RESOURCE_BARRIER::Transition(sharedCommandBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-	commandList->ResourceBarrier(1, &barrier);
+	// One dispatch culls the whole candidate buffer into this view's transformation buffer.
+	CD3DX12_RESOURCE_BARRIER transformToUav = CD3DX12_RESOURCE_BARRIER::Transition(transformationBuffer[viewIndex].Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	commandList->ResourceBarrier(1, &transformToUav);
+
+	grassUpdateCS.dispatch(commandList, cullingInput, transformationBuffer[viewIndex].Get(), commandsAddr, infoBuffer[cur].Get(), infoCounter[cur].Get(), DispatchGroupsX);
+
+	CD3DX12_RESOURCE_BARRIER transformToSrv = CD3DX12_RESOURCE_BARRIER::Transition(transformationBuffer[viewIndex].Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	commandList->ResourceBarrier(1, &transformToSrv);
+
+	CD3DX12_RESOURCE_BARRIER cmdToSrv = CD3DX12_RESOURCE_BARRIER::Transition(sharedCommandBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	commandList->ResourceBarrier(1, &cmdToSrv);
 }
 
 const UINT groups = 4;
@@ -337,14 +371,28 @@ void GrassFindComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, co
 	commandList->SetPipelineState(pipelineState.Get());
 	commandList->SetComputeRootSignature(signature);
 
-	commandList->SetComputeRoot32BitConstants(0, sizeof(input) / sizeof(float), &input, 0);
+	commandList->SetComputeRoot32BitConstants(0, sizeof(input) / sizeof(UINT), &input, 0);
 	commandList->SetComputeRootUnorderedAccessView(1, infoBuffer->GetGPUVirtualAddress());
 	commandList->SetComputeRootUnorderedAccessView(2, counter->GetGPUVirtualAddress());
 
 	commandList->Dispatch(groups, groups, 1);
 }
 
-void GrassUpdateComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, const Input& input, ID3D12Resource* transformBuffer, D3D12_GPU_VIRTUAL_ADDRESS commandsAddr, ID3D12Resource* infoBuffer, ID3D12Resource* infoCounter)
+void GrassCompactComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, const Input& input, ID3D12Resource* srcInfoBuffer, ID3D12Resource* srcCounter, ID3D12Resource* dstInfoBuffer, ID3D12Resource* dstCounter, UINT dispatchGroupsX)
+{
+	commandList->SetPipelineState(pipelineState.Get());
+	commandList->SetComputeRootSignature(signature);
+
+	commandList->SetComputeRoot32BitConstants(0, sizeof(input) / sizeof(UINT), &input, 0);
+	commandList->SetComputeRootShaderResourceView(1, srcInfoBuffer->GetGPUVirtualAddress());
+	commandList->SetComputeRootShaderResourceView(2, srcCounter->GetGPUVirtualAddress());
+	commandList->SetComputeRootUnorderedAccessView(3, dstInfoBuffer->GetGPUVirtualAddress());
+	commandList->SetComputeRootUnorderedAccessView(4, dstCounter->GetGPUVirtualAddress());
+
+	commandList->Dispatch(dispatchGroupsX, 64, 1);
+}
+
+void GrassUpdateComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, const Input& input, ID3D12Resource* transformBuffer, D3D12_GPU_VIRTUAL_ADDRESS commandsAddr, ID3D12Resource* infoBuffer, ID3D12Resource* infoCounter, UINT dispatchGroupsX)
 {
 	commandList->SetPipelineState(pipelineState.Get());
 	commandList->SetComputeRootSignature(signature);
@@ -355,5 +403,5 @@ void GrassUpdateComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, 
 	commandList->SetComputeRootUnorderedAccessView(3, transformBuffer->GetGPUVirtualAddress());
 	commandList->SetComputeRootUnorderedAccessView(4, commandsAddr);
 
-	commandList->Dispatch(groups * groups, 64, 1);
+	commandList->Dispatch(dispatchGroupsX, 64, 1);
 }

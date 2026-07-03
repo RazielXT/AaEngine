@@ -3,6 +3,7 @@ struct GrassInfo
 	float3 position;
 	float rotation;
 	float scale;
+	uint tileId;
 };
 
 struct RenderGrassInfo

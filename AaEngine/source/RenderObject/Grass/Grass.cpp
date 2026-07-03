@@ -304,19 +304,6 @@ void Grass::updateCulling(ID3D12GraphicsCommandList* commandList, const Camera& 
 	cullingInput.cameraPosition = { camPos.x, camPos.y, camPos.z };
 	cullingInput.maxDistance = chunkSize * GrassGridSize * 0.5f;
 
-	// Shadow cascade cameras are orthographic; BoundingFrustum is only valid for perspective,
-	// so use the oriented box for the CPU coarse visibility test (matching the scene visibility path).
-	const bool ortho = cullCamera.isOrthographic();
-	auto frustum = cullCamera.prepareFrustum();
-	auto orientedBox = cullCamera.prepareOrientedBox();
-
-	// Stagger main-view chunk updates across frames; shadow views refresh fully when their cascade updates.
-	static UINT counter = 0;
-	if (viewIndex == 0)
-		counter++;
-
-	const UINT activeGroup = (UpdateDivision - (counter % UpdateDivision)) % UpdateDivision;
-
 	// Clear this view's slice of the shared command buffer in one dispatch. Because chunks are laid out
 	// grouped by division, the commands touched this frame form a single contiguous range.
 	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(sharedCommandBuffer.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
@@ -324,9 +311,9 @@ void Grass::updateCulling(ID3D12GraphicsCommandList* commandList, const Camera& 
 
 	D3D12_GPU_VIRTUAL_ADDRESS bufferBase = sharedCommandBuffer->GetGPUVirtualAddress();
 	{
-		UINT clearSlot = viewIndex * TotalChunks + divisionGroupBase(activeGroup);
+		UINT clearSlot = viewIndex * TotalChunks;
 		D3D12_GPU_VIRTUAL_ADDRESS clearAddr = bufferBase + (UINT64)clearSlot * sizeof(D3D12_DRAW_INDEXED_ARGUMENTS);
-		indirectDrawClearCS.dispatch(commandList, divisionGroupCount(activeGroup), clearAddr);
+		indirectDrawClearCS.dispatch(commandList, TotalChunks, clearAddr);
 	}
 
 	CD3DX12_RESOURCE_BARRIER uavBarrier = CD3DX12_RESOURCE_BARRIER::UAV(sharedCommandBuffer.Get());
@@ -335,13 +322,8 @@ void Grass::updateCulling(ID3D12GraphicsCommandList* commandList, const Camera& 
 	for (UINT x = 0; x < GrassGridSize; x++)
 		for (UINT y = 0; y < GrassGridSize; y++)
 		{
-			if ((x * GrassGridSize + y) % UpdateDivision != activeGroup)
-				continue;
-
 			auto& chunk = chunks[x][y];
-			bool visible = ortho ? chunk.entity->isVisible(orientedBox) : chunk.entity->isVisible(frustum);
-			if (visible)
-				updateChunk(commandList, chunk, viewIndex, cullingInput);
+ 			updateChunk(commandList, chunk, viewIndex, cullingInput);
 		}
 
 	barrier = CD3DX12_RESOURCE_BARRIER::Transition(sharedCommandBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);

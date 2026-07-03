@@ -85,28 +85,15 @@ public:
 	constexpr static UINT ChunksPerTerrainTile = 32;
 	constexpr static UINT GrassGridSize = 5;
 	constexpr static UINT TotalChunks = GrassGridSize * GrassGridSize;
-	// Updating/clearing of chunks is split across frames; one division group is processed per frame.
-	constexpr static UINT UpdateDivision = 2;
 
 private:
 
 	// Command-buffer slot layout: chunks are grouped by their update-division group so that the
 	// commands processed on a given frame form a contiguous range a single clear dispatch can cover.
 	// Each render view owns a TotalChunks-sized block within the shared command buffer.
-	static constexpr UINT divisionGroupCount(UINT group)
-	{
-		return (TotalChunks - group + UpdateDivision - 1) / UpdateDivision;
-	}
-	static constexpr UINT divisionGroupBase(UINT group)
-	{
-		UINT base = 0;
-		for (UINT g = 0; g < group; g++)
-			base += divisionGroupCount(g);
-		return base;
-	}
 	static constexpr UINT commandSlot(UINT viewIndex, UINT linearIndex)
 	{
-		return viewIndex * TotalChunks + divisionGroupBase(linearIndex % UpdateDivision) + linearIndex / UpdateDivision;
+		return viewIndex * TotalChunks + linearIndex;
 	}
 
 	// Find CS dispatch dimensions — smaller than vegetation for denser coverage per chunk

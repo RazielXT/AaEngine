@@ -66,6 +66,9 @@ protected:
 	GpuTexture2D terrainGridNormal[GridsSize][GridsSize];
 	std::vector<ShaderTextureViewUAV> terrainGridNormalMips[GridsSize][GridsSize];
 
+	GpuTexture2D terrainHeightMinMax[GridsSize][GridsSize];
+	GpuTexture2D terrainHeightMinMaxLow[GridsSize][GridsSize];
+
 	XMINT2 gridCenterChunk = { 0, 0 };
 	XMINT2 chunkWorldCoord[GridsSize][GridsSize]{};
 	bool chunkDirty[GridsSize][GridsSize]{};
@@ -75,6 +78,8 @@ protected:
 	FileTexture* terrainTexture;
 
 	TerrainHeightmapCS generateHeightmapCS;
+	HeightmapMinMaxCS heightmapMinMaxCS;
+	HeightmapMinMaxCS heightmapMinMaxCS2;
 	GenerateHeightmapNormalsCS heightmapToNormalCS;
 	GenerateXYMips4xCS generateNormalMipsCS;
 

@@ -14,3 +14,10 @@ public:
 	};
 	void dispatch(ID3D12GraphicsCommandList* commandList, UINT w, UINT h, D3D12_GPU_DESCRIPTOR_HANDLE output, Input);
 };
+
+class HeightmapMinMaxCS : public ComputeShader
+{
+public:
+
+	void dispatch(ID3D12GraphicsCommandList* commandList, UINT w, UINT h, D3D12_GPU_DESCRIPTOR_HANDLE heightmap, D3D12_GPU_DESCRIPTOR_HANDLE output);
+};

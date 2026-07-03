@@ -16,12 +16,13 @@ uint TexIdNormal;
 uint TexIdEdges;
 float3 ViewCameraDirection;
 
-#ifdef CHUNK_DEBUG_COLOR
-uint ChunkId;
+#ifdef ENTITY_ID
+#undef CHUNK_DEBUG_COLOR
+uint EntityId;
 #endif
 
-#ifdef ENTITY_ID
-uint EntityId;
+#ifdef CHUNK_DEBUG_COLOR
+float TileSize;
 #endif
 
 cbuffer SkyParamsBuffer : register(b1)
@@ -38,6 +39,9 @@ struct PSInput
 	float2 uv : TEXCOORD0;
 	float random : TEXCOORD1;
 	float4 worldPosition : TEXCOORD2;
+#ifdef CHUNK_DEBUG_COLOR
+	uint chunkId : TEXCOORD3;
+#endif
 };
 
 static const float2 coords[4] = {
@@ -75,6 +79,10 @@ PSInput VSMain(uint vertexIdx : SV_VertexId, uint instanceId : SV_InstanceID)
 	output.position = mul(output.worldPosition, ViewProjectionMatrix);
 	output.uv = uv;
 	output.random = v.random;
+
+#ifdef CHUNK_DEBUG_COLOR
+	output.chunkId = ChunkIdPosition2D(v.position.xyz, TileSize);
+#endif
 
 	return output;
 }
@@ -164,7 +172,7 @@ GBufferOutput PSMain(PSInput input)
 	worldNormal = mul(normalTex.xyz, tbn);
 
 #ifdef CHUNK_DEBUG_COLOR
-	albedo.rgb = lerp(albedo.rgb, GetDebugColor(ChunkId), 0.7);
+	albedo.rgb = lerp(albedo.rgb, GetDebugColor(input.chunkId), 0.7);
 #endif
 
 	GBufferOutput output;

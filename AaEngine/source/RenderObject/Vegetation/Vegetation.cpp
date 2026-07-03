@@ -122,6 +122,8 @@ void Vegetation::createChunks(RenderWorld& renderWorld, RenderSystem& renderSyst
 	e->geometry.geometryCustomBuffer = infoBuffer->GetGPUVirtualAddress();
 	e->geometry.geometryRedirectBuffer = redirectBuffer[0]->GetGPUVirtualAddress();
 
+	e->Material().setParam("TileSize", chunkSize);
+
 	e->geometry.indexCount = 6;
 	e->geometry.indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
 	e->geometry.indexBufferView.SizeInBytes = e->geometry.indexCount * sizeof(uint16_t);

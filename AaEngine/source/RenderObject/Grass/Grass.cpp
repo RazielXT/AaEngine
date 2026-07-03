@@ -136,6 +136,8 @@ void Grass::createChunks(RenderWorld& renderWorld, RenderSystem& renderSystem, G
 	e->geometry.indexCount = grassModel->indexCount;
 	e->geometry.layout = &grassModel->vertexLayout;
 
+	e->Material().setParam("TileSize", chunkSize);
+
 	for (UINT i = 0; i < ViewCount; i++)
 	{
 		indirect[i].commandSignature = commandSignature;

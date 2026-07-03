@@ -28,3 +28,15 @@ float3 GetDebugColor(uint index)
 {
 	return DebugColors[index % DEBUG_COLOR_COUNT];
 }
+
+uint ChunkIdPosition2DHash(int2 cell)
+{
+	return
+		(uint)(cell.x * 73856093) ^
+		(uint)(cell.y * 83492791);
+}
+uint ChunkIdPosition2D(float3 position, float cellSize)
+{
+	int2 cell = int2(floor(position.xz / cellSize));
+	return ChunkIdPosition2DHash(cell);
+}

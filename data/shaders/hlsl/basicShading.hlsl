@@ -23,13 +23,13 @@ float DeltaTime;
 #endif
 
 #ifdef ENTITY_ID
+#undef CHUNK_DEBUG_COLOR
 uint EntityId;
 #endif
 
 #ifdef CHUNK_DEBUG_COLOR
-uint ChunkId;
+float TileSize;
 #endif
-
 
 #ifdef INSTANCED
 StructuredBuffer<float4x4> InstancingBuffer : register(t0);
@@ -67,6 +67,9 @@ struct PSInput
 	float3 worldPosition : TEXCOORD1;
 	float4 previousPosition : TEXCOORD2;
 	float4 currentPosition : TEXCOORD3;
+#ifdef CHUNK_DEBUG_COLOR
+	uint chunkId : TEXCOORD4;
+#endif
 };
 
 SamplerState LinearWrapSampler : register(s0);
@@ -186,6 +189,14 @@ PSInput VSMain(VSInput input)
 	result.uv = input.uv;
 #endif
 
+#ifdef CHUNK_DEBUG_COLOR
+	#ifdef GRASS_INSTANCED
+	result.chunkId = ChunkIdPosition2D(grass.position.xyz, TileSize);
+	#else
+	result.chunkId = 0;
+	#endif
+#endif
+
 	return result;
 }
 
@@ -212,7 +223,7 @@ GBufferOutput PSMain(PSInput input)
 #endif
 
 #ifdef CHUNK_DEBUG_COLOR
-	albedo = lerp(albedo, GetDebugColor(ChunkId), 0.7);
+	albedo = lerp(albedo, GetDebugColor(input.chunkId), 0.7);
 #endif
 
 #if defined(WIND_DEBUG_COLOR) && defined(VERTEX_WAVE)

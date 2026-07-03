@@ -128,7 +128,11 @@ GridVertexInfo ReadGridVertexInfo(GridTileData tile, uint vertexID, Texture2D<fl
 	gridPosition.xyz += WorldPosition;
 
 #ifdef GRID_LOD_DEBUG
+	#ifdef GRID_NO_MORPHING
+	float morphMask = 0;
+	#else
 	float morphMask = (k > 0 && k < 1) ? 1 : 0;
+	#endif
 	GridVertexInfo info = { gridPosition, uv, morphMask };
 #else
 	GridVertexInfo info = { gridPosition, uv };

@@ -33,7 +33,7 @@ void WaterSimInteraction::initializeGpuResources(RenderSystem& renderSystem, con
 		defaultHeap.Type = D3D12_HEAP_TYPE_DEFAULT;
 		bufDesc.Width = outputBufferSize;
 		bufDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-		device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &bufDesc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(&outputBuffer[i]));
+		device->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &bufDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&outputBuffer[i]));
 		outputBuffer[i]->SetName(L"WaterInteractionOutput");
 
 		D3D12_HEAP_PROPERTIES readbackHeap = {};

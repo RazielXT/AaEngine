@@ -1,7 +1,6 @@
 #include "vegetationCommon.hlsl"
 
 float4 FrustumPlanes[6];
-float3 ChunkWorldMin;
 float ChunkSize;
 
 StructuredBuffer<SubgroupMeta> subgroupMetaBuffer : register(t0);
@@ -27,7 +26,7 @@ bool isSubgroupVisible(float3 center, float3 extents)
 [numthreads(64, 1, 1)]
 void main(uint3 groupID : SV_GroupID, uint groupIndex : SV_GroupIndex)
 {
-	uint subgroupIdx = groupID.y * SubgroupsPerDim + groupID.x;
+	uint subgroupIdx = groupID.x;
 
 	SubgroupMeta meta = subgroupMetaBuffer[subgroupIdx];
 	uint count = min((uint)max(meta.counter, 0), MaxItemsPerSubgroup);
@@ -39,12 +38,11 @@ void main(uint3 groupID : SV_GroupID, uint groupIndex : SV_GroupIndex)
 
 		if (count > 0)
 		{
-			uint2 subgroupXY = uint2(subgroupIdx % SubgroupsPerDim, subgroupIdx / SubgroupsPerDim);
 			float subgroupSize = ChunkSize / SubgroupsPerDim;
 
-			float minX = ChunkWorldMin.x + subgroupXY.x * subgroupSize;
+			float minX = meta.worldMinX;
 			float maxX = minX + subgroupSize;
-			float minZ = ChunkWorldMin.z + subgroupXY.y * subgroupSize;
+			float minZ = meta.worldMinZ;
 			float maxZ = minZ + subgroupSize;
 
 			float minY = float(meta.minY) / 100.0;

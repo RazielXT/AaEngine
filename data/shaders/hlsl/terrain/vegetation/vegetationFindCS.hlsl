@@ -9,6 +9,7 @@ float2 ChunkWorldSize;
 float2 SubUvOffset;
 float2 SubUvScale;
 uint TexIdNoise;
+uint SubgroupBase;
 
 RWStructuredBuffer<VegetationInfo> infoBuffer : register(u0);
 RWStructuredBuffer<SubgroupMeta> subgroupMetaBuffer : register(u1);
@@ -68,7 +69,13 @@ void main(uint3 dispatchThreadID : SV_DispatchThreadID)
 
 	// Each subgroup covers 32 positions per dim, each thread covers 8 items, so 4 threads per subgroup dim
 	uint2 subgroupIdx = dispatchThreadID.xy / 4;
-	uint subgroupLinear = subgroupIdx.y * SubgroupsPerDim + subgroupIdx.x;
+	uint subgroupLinear = SubgroupBase + subgroupIdx.y * SubgroupsPerDim + subgroupIdx.x;
+
+	// Store this subgroup's world-space min (X,Z) so culling can build its bbox without a per-chunk buffer.
+	float subgroupSize = ChunkWorldSize.x / SubgroupsPerDim;
+	float2 chunkWorldMin = TerrainOffset - ChunkWorldSize * 0.5;
+	subgroupMetaBuffer[subgroupLinear].worldMinX = chunkWorldMin.x + subgroupIdx.x * subgroupSize;
+	subgroupMetaBuffer[subgroupLinear].worldMinZ = chunkWorldMin.y + subgroupIdx.y * subgroupSize;
 
 	for (uint x = 0; x < ItemsPerThread; x++)
 		for (uint y = 0; y < ItemsPerThread; y++)

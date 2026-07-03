@@ -12,6 +12,10 @@ struct SubgroupMeta
 	int minY;
 	int maxY;
 	int _pad;
+	float worldMinX;
+	float worldMinZ;
+	float _pad1;
+	float _pad2;
 };
 
 static const uint SubgroupsPerDim = 8;

@@ -23,6 +23,7 @@ public:
 		Vector2 subUvOffset;
 		Vector2 subUvScale;
 		UINT noiseTexture;
+		UINT subgroupBase;
 	};
 
 	void dispatch(ID3D12GraphicsCommandList* commandList, const Input& input, ID3D12Resource* infoBuffer, ID3D12Resource* subgroupMeta);
@@ -35,21 +36,14 @@ public:
 	struct Input
 	{
 		XMFLOAT4 frustumPlanes[6];
-		XMFLOAT3 chunkWorldMin;
 		float chunkSize;
 	};
 
-	void dispatch(ID3D12GraphicsCommandList* commandList, const Input& input, ID3D12Resource* subgroupMeta, D3D12_GPU_VIRTUAL_ADDRESS commandsAddr, ID3D12Resource* redirectBuffer);
+	void dispatch(ID3D12GraphicsCommandList* commandList, const Input& input, ID3D12Resource* subgroupMeta, D3D12_GPU_VIRTUAL_ADDRESS commandsAddr, ID3D12Resource* redirectBuffer, UINT subgroupCount);
 };
 
-struct VegetationChunk
+struct VegetationTile
 {
-	ComPtr<ID3D12Resource> infoBuffer;
-	ComPtr<ID3D12Resource> subgroupMetaBuffer;
-	ComPtr<ID3D12Resource> redirectBuffer;
-	IndirectEntityGeometry impostors;
-	RenderEntity* entity{};
-
 	XMINT2 worldCoord{};
 	bool dirty = true;
 };
@@ -68,7 +62,7 @@ public:
 	void createChunks(RenderWorld& renderWorld, RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch);
 
 	void update(ID3D12GraphicsCommandList* commandList, const Vector3& cameraPos, const ProgressiveTerrain& terrain);
-	void updateCulling(ID3D12GraphicsCommandList* commandList, const Camera& camera, const ProgressiveTerrain& terrain);
+	void updateCulling(ID3D12GraphicsCommandList* commandList, const Camera& camera, const ProgressiveTerrain& terrain, UINT viewIndex = 0);
 
 	constexpr static UINT ChunksPerTerrainTile = 2;
 	constexpr static UINT VegGridSize = ChunksPerTerrainTile * 2;
@@ -78,9 +72,16 @@ public:
 	constexpr static UINT TotalChunks = VegGridSize * VegGridSize;
 	constexpr static UINT MaxItemsPerSubgroup = 1024;
 
+	// All chunks share one info/metadata buffer; each chunk owns a contiguous block of SubgroupCount subgroups.
+	constexpr static UINT TotalSubgroups = TotalChunks * SubgroupCount;
+	constexpr static UINT MaxTotalItems = TotalSubgroups * MaxItemsPerSubgroup;
+
+	// Only the main view is culled today, but the buffers are per-view to allow shadow views later (like grass).
+	constexpr static UINT ViewCount = 1;
+
 private:
 
-	VegetationChunk chunks[VegGridSize][VegGridSize];
+	VegetationTile tiles[VegGridSize][VegGridSize];
 	XMINT2 gridCenterChunk = { 0, 0 };
 
 	VegetationFindComputeShader vegetationFindCS;
@@ -90,14 +91,19 @@ private:
 
 	void initializeImpostors(RenderSystem& renderSystem, ResourceUploadBatch& batch);
 	void createBillboardIndexBuffer(RenderSystem& renderSystem, ResourceUploadBatch& batch);
-	void initChunk(VegetationChunk& chunk, RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch, MaterialInstance* material);
-	void regenerateChunk(ID3D12GraphicsCommandList* commandList, VegetationChunk& chunk, const ProgressiveTerrain& terrain);
-	void updateChunk(ID3D12GraphicsCommandList* commandList, VegetationChunk& chunk, const VegetationUpdateComputeShader::Input& cullingInput);
+	void createSharedBuffers(GraphicsResources& resources);
+	void regenerateDirtyTiles(ID3D12GraphicsCommandList* commandList, const ProgressiveTerrain& terrain);
 
 	ComPtr<ID3D12CommandSignature> commandSignature;
 	ComPtr<ID3D12Resource> sharedCommandBuffer;
 	ComPtr<ID3D12Resource> defaultMetaBuffer;
 	ComPtr<ID3D12Resource> indexBuffer;
+
+	ComPtr<ID3D12Resource> infoBuffer;
+	ComPtr<ID3D12Resource> subgroupMetaBuffer;
+	ComPtr<ID3D12Resource> redirectBuffer[ViewCount];
+	IndirectEntityGeometry indirect[ViewCount];
+	RenderEntity* entity{};
 
 	MaterialInstance* vegMaterial{};
 	FileTexture* noiseTexture{};

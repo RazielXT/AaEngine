@@ -17,11 +17,11 @@ struct TileData
 	float radius;
 };
 
+using GridLodTiles = std::vector<TileData>;
+
 class GridLODSystem
 {
 public:
-
-	std::vector<TileData> m_renderList;
 
 	UINT TilesWidth;
 	UINT MaxInstances;
@@ -62,9 +62,9 @@ public:
 		MaxInstances = CalculateMaxInstances(SubdivisionDetail, lodsCount);
 	}
 
-	void BuildLOD(const Vector3& cameraPos, XMINT2 offset)
+	void BuildLOD(GridLodTiles& renderList, const Vector3& cameraPos, XMINT2 offset)
 	{
-		m_renderList.clear();
+		renderList.clear();
 
 		const float tileSize = m_smallestTileSize;
 		const float worldSize = tileSize * TilesWidth;
@@ -121,14 +121,15 @@ public:
 			}
 			else
 			{
-				m_renderList.emplace_back(n.x, n.y,	n.level, m_subdivideThresholds[n.level]);
+				renderList.emplace_back(n.x, n.y,	n.level, m_subdivideThresholds[n.level]);
 			}
 		}
 	}
 
-	void BuildAabbLOD(const Vector3& cameraPos, XMINT2 offset, Vector2 cullMin, Vector2 cullMax)
+	void BuildAabbLOD(GridLodTiles& renderList, const Vector3& cameraPos, XMINT2 offset, Vector2 cullMin, Vector2 cullMax, UINT lodsLevelsMax = 0)
 	{
-		m_renderList.clear();
+		lodsLevelsMax = lodsLevelsMax ? min(lodsLevelsMax, lodsLevels) : lodsLevels;
+		renderList.clear();
 
 		const float tileSize = m_smallestTileSize;
 		const float worldSize = tileSize * TilesWidth;
@@ -191,7 +192,7 @@ public:
 			const float distSq = dx * dx + dz * dz;
 
 			// --- Subdivide? ---
-			if (n.level < lodsLevels - 1 && distSq < m_subdivideThresholdsSq[n.level])
+			if (n.level < lodsLevelsMax - 1 && distSq < m_subdivideThresholdsSq[n.level])
 			{
 				const uint32_t childSize = n.size >> 1;
 				const uint32_t next = n.level + 1;
@@ -203,17 +204,17 @@ public:
 			}
 			else
 			{
-				m_renderList.emplace_back(n.x, n.y, n.level, m_subdivideThresholds[n.level]);
+				renderList.emplace_back(n.x, n.y, n.level, m_subdivideThresholds[n.level]);
 			}
 		}
 	}
 
 	template<typename T>
-	void BuildLOD(const Vector3& cameraPos, const T& culling, XMINT2 offset, UINT lodsLevelsMax = 0)
+	void BuildLOD(GridLodTiles& renderList, const Vector3& cameraPos, const T& culling, XMINT2 offset, UINT lodsLevelsMax = 0)
 	{
 		lodsLevelsMax = lodsLevelsMax ? min(lodsLevelsMax, lodsLevels) : lodsLevels;
 
-		m_renderList.clear();
+		renderList.clear();
 
 		const float tileSize = m_smallestTileSize;
 		const float worldSize = tileSize * TilesWidth;
@@ -281,7 +282,7 @@ public:
 			}
 			else
 			{
-				m_renderList.emplace_back(n.x, n.y, n.level, m_subdivideThresholds[n.level]);
+				renderList.emplace_back(n.x, n.y, n.level, m_subdivideThresholds[n.level]);
 			}
 		}
 	}
@@ -293,9 +294,9 @@ public:
 		float maxX, maxZ;
 	};
 
-	void BuildLODUniform(const Vector3& cameraPos, XMINT2 offset, const Rect2D& viewAABB)
+	void BuildLODUniform(GridLodTiles& renderList, const Vector3& cameraPos, XMINT2 offset, const Rect2D& viewAABB)
 	{
-		m_renderList.clear();
+		renderList.clear();
 
 		const float tileSize = m_smallestTileSize;
 		const float chunkWorldSize = tileSize * TilesWidth;
@@ -350,7 +351,7 @@ public:
 				uint32_t tileX = bx * TilesWidth;
 				uint32_t tileY = by * TilesWidth;
 
-				m_renderList.emplace_back(tileX, tileY, chosenLevel, m_subdivideThresholds[chosenLevel]);
+				renderList.emplace_back(tileX, tileY, chosenLevel, m_subdivideThresholds[chosenLevel]);
 			}
 		}
 	}

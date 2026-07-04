@@ -35,15 +35,7 @@ void ProgressiveTerrain::initialize(RenderSystem& renderSystem, GraphicsResource
 	params.tileHeight = 1000.f;
 	params.tileCenterOffset = { params.tileSize * -0.5f, params.tileHeight * -0.5f, params.tileSize * -0.5f };
 
-	terrainGridTiles.Initialize({ params.tileSize, params.tileSize }, params.tileCenterOffset, 9);
-
-	for (auto& s : shadowTerrainGridTiles)
-		s.Initialize({ params.tileSize, params.tileSize }, params.tileCenterOffset, 9);
-
-	terrainVoxelizeGridTiles[0].Initialize({ params.tileSize, params.tileSize }, params.tileCenterOffset, 7);
-	terrainVoxelizeGridTiles[1].Initialize({ params.tileSize, params.tileSize }, params.tileCenterOffset, 7);
-	terrainVoxelizeGridTiles[2].Initialize({ params.tileSize, params.tileSize }, params.tileCenterOffset, 5);
-	terrainVoxelizeGridTiles[3].Initialize({ params.tileSize, params.tileSize }, params.tileCenterOffset, 5);
+	terrainLod.Initialize({ params.tileSize, params.tileSize }, params.tileCenterOffset, 9);
 
 	terrainModel.CreateIndexBufferGrid(renderSystem.core.device, &batch, TerrainModelSize);
 	terrainModel.bbox.Extents = { params.tileSize * 0.5f, params.tileHeight * 0.5f, params.tileSize * 0.5f };
@@ -80,13 +72,13 @@ void ProgressiveTerrain::initialize(RenderSystem& renderSystem, GraphicsResource
 			resources.descriptors.createTextureView(heightMinMaxLow);
 
 			auto& chunk = terrainGrid[x][y];
-			chunk.mesh.create(terrainGridTiles.MaxInstances);
+			chunk.mesh.create(terrainLod.MaxInstances);
 
 			for (auto& m : chunk.shadowMesh)
-				m.create(terrainGridTiles.MaxInstances);
+				m.create(terrainLod.MaxInstances);
 
 			for (auto& vm : chunk.voxelizeMesh)
-				vm.create(terrainVoxelizeGridTiles[0].MaxInstances);
+				vm.create(terrainLod.MaxInstances);
 
 			auto e = chunk.entity = renderWorld.createEntity();
 			e->geometry.fromInstancedModel(terrainModel, 0, chunk.mesh.gpuBuffer.data[0].GpuAddress());
@@ -96,12 +88,7 @@ void ProgressiveTerrain::initialize(RenderSystem& renderSystem, GraphicsResource
 			e->Material().setParam("TexIdNormalmap", terrainNormal.view.srvHeapIndex);
 			e->Material().setParam("GridHeightWidth", Vector2(params.tileHeight, params.tileSize));
 			e->Material().setParam("GridIndex", x + y * GridsSize);
-			e->Material().setParam("GridTilesWidth", terrainGridTiles.TilesWidth);
-			e->Material().setParam("GridTilesWidth", terrainVoxelizeGridTiles[0].TilesWidth, RenderViewId_Voxelize0);
-			e->Material().setParam("GridTilesWidth", terrainVoxelizeGridTiles[1].TilesWidth, RenderViewId_Voxelize1);
-			e->Material().setParam("GridTilesWidth", terrainVoxelizeGridTiles[2].TilesWidth, RenderViewId_Voxelize2);
-			e->Material().setParam("GridTilesWidth", terrainVoxelizeGridTiles[3].TilesWidth, RenderViewId_Voxelize3);
-			e->Material().setParam("GridTilesWidth", terrainVoxelizeGridTiles[3].TilesWidth, RenderViewId_VoxelizeShadowMap);
+			e->Material().setParam("GridTilesWidth", terrainLod.TilesWidth);
 
 			e->geometry.viewVariants = &chunk.geometryViews.variants;
 
@@ -255,6 +242,7 @@ void ProgressiveTerrain::runChunkUpdateThread(UINT threadIndex)
 		return;
 
 	const auto& camera = *updateCtx.camera;
+	auto& lodTiles = terrainLodTiles[threadIndex];
 
 	BoundingOrientedBox shadowBbox;
 	if (threadIndex >= 1 && threadIndex <= 4) //shadow camera 1-4
@@ -271,19 +259,18 @@ void ProgressiveTerrain::runChunkUpdateThread(UINT threadIndex)
 
 			if (threadIndex == 0) // main camera
 			{
-				terrainGridTiles.BuildLOD(camera.getPosition(), camera.prepareFrustum(), chunkWorldCoord[x][y]);
-				grid.mesh.update(grid.entity->geometry, (UINT)terrainGridTiles.m_renderList.size(), terrainGridTiles.m_renderList.data(), (UINT)terrainGridTiles.m_renderList.size() * sizeof(TileData), updateCtx.frameIdx);
+				terrainLod.BuildLOD(lodTiles, camera.getPosition(), camera.prepareFrustum(), chunkWorldCoord[x][y]);
+				grid.mesh.update(grid.entity->geometry, (UINT)lodTiles.size(), lodTiles.data(), (UINT)lodTiles.size() * sizeof(TileData), updateCtx.frameIdx);
 			}
 			else if (threadIndex >= 1 && threadIndex <= 4) //shadow camera 1-4
 			{
 				UINT i = threadIndex - 1;
-				auto& tiles = shadowTerrainGridTiles[i];
 
 				const UINT tileLod[] = { 9, 9, 7, 5 };
-				tiles.BuildLOD(camera.getPosition(), shadowBbox, chunkWorldCoord[x][y], tileLod[i]);
+				terrainLod.BuildLOD(lodTiles, camera.getPosition(), shadowBbox, chunkWorldCoord[x][y], tileLod[i]);
 
 				auto& g = grid.geometryViews.viewGeometries[threadIndex - 1];
-				grid.shadowMesh[i].update(g, (UINT)tiles.m_renderList.size(), tiles.m_renderList.data(), (UINT)tiles.m_renderList.size() * sizeof(TileData), updateCtx.frameIdx);
+				grid.shadowMesh[i].update(g, (UINT)lodTiles.size(), lodTiles.data(), (UINT)lodTiles.size() * sizeof(TileData), updateCtx.frameIdx);
 			}
 			else //voxelize camera 1-4
 			{
@@ -293,17 +280,16 @@ void ProgressiveTerrain::runChunkUpdateThread(UINT threadIndex)
 				Vector2 voxelizeExtends = Vector2(cascadeExtends, cascadeExtends) * 1.5f;
 				Vector2 p = { camera.getPosition().x, camera.getPosition().z };
 
-				auto& tiles = terrainVoxelizeGridTiles[i];
-				tiles.BuildAabbLOD(camera.getPosition(), chunkWorldCoord[x][y], p - voxelizeExtends, p + voxelizeExtends);
-				//tiles.BuildLOD(camera.getPosition(), chunkWorldCoord[x][y]);
+				const UINT tileLod[] = { 7, 7, 5, 5 };
+				terrainLod.BuildAabbLOD(lodTiles, camera.getPosition(), chunkWorldCoord[x][y], p - voxelizeExtends, p + voxelizeExtends, tileLod[i]);
 
 				auto& g = grid.geometryViews.viewGeometries[threadIndex - 1];
-				grid.voxelizeMesh[i].update(g, (UINT)tiles.m_renderList.size(), tiles.m_renderList.data(), (UINT)tiles.m_renderList.size() * sizeof(TileData), updateCtx.frameIdx);
+				grid.voxelizeMesh[i].update(g, (UINT)lodTiles.size(), lodTiles.data(), (UINT)lodTiles.size() * sizeof(TileData), updateCtx.frameIdx);
 
 				if (i == 3) // shadowmap uses last cascade tiles
 				{
 					auto& g = grid.geometryViews.viewGeometries[threadIndex];
-					grid.voxelizeMesh[3].update(g, (UINT)tiles.m_renderList.size(), tiles.m_renderList.data(), (UINT)tiles.m_renderList.size() * sizeof(TileData), updateCtx.frameIdx);
+					grid.voxelizeMesh[3].update(g, (UINT)lodTiles.size(), lodTiles.data(), (UINT)lodTiles.size() * sizeof(TileData), updateCtx.frameIdx);
 				}
 			}
 		}

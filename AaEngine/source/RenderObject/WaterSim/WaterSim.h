@@ -100,6 +100,7 @@ private:
 	RenderEntity* entity{};
 	GridInstanceMesh waterGridMesh;
 	GridLODSystem waterGridTiles;
+	GridLodTiles lodTiles;
 
 	WaterSimInteraction interaction;
 

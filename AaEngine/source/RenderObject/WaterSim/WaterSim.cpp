@@ -138,8 +138,8 @@ void WaterSim::update(RenderSystem& renderSystem, ID3D12GraphicsCommandList* com
 
 	if (updateLod)
 	{
-		waterGridTiles.BuildLOD(cameraPos, {});
-		waterGridMesh.update(entity->geometry, (UINT)waterGridTiles.m_renderList.size(), waterGridTiles.m_renderList.data(), (UINT)waterGridTiles.m_renderList.size() * sizeof(TileData), frameIdx);
+		waterGridTiles.BuildLOD(lodTiles, cameraPos, {});
+		waterGridMesh.update(entity->geometry, (UINT)lodTiles.size(), lodTiles.data(), (UINT)lodTiles.size() * sizeof(TileData), frameIdx);
 	}
 
 	lastCameraPos = cameraPos;

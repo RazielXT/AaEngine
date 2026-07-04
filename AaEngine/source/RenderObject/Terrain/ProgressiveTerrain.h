@@ -47,9 +47,8 @@ public:
 
 protected:
 
-	GridLODSystem terrainGridTiles;
-	GridLODSystem shadowTerrainGridTiles[4];
-	GridLODSystem terrainVoxelizeGridTiles[4];
+	GridLODSystem terrainLod;
+	GridLodTiles terrainLodTiles[9];
 
 	struct TerrainGridChunk
 	{

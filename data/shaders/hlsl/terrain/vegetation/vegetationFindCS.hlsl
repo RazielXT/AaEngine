@@ -1,5 +1,6 @@
 #include "hlsl/common/ResourceAccess.hlsl"
 #include "hlsl/common/Random.hlsl"
+#include "hlsl/grid/heightmapGridSampling.hlsl"
 #include "vegetationCommon.hlsl"
 
 uint TexIdTerrainDepth;
@@ -14,15 +15,6 @@ uint SubgroupBase;
 RWStructuredBuffer<VegetationInfo> infoBuffer : register(u0);
 RWStructuredBuffer<SubgroupMeta> subgroupMetaBuffer : register(u1);
 SamplerState LinearWrapSampler : register(s0);
-
-float2 RemapGridTextureUV(float2 gridUV)
-{
-	// We want to skip 32 pixels on the left, and use the next 960 pixels
-	float margin = 32.0f / 1024.0f; // 0.03125
-	float content = 960.0f / 1024.0f; // 0.9375
-
-	return margin + (gridUV * content);
-}
 
 uint getVegetationInfo(out VegetationInfo info, float2 coords)
 {

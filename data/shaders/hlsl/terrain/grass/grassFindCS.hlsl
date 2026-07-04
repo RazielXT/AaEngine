@@ -1,6 +1,7 @@
 #include "hlsl/common/ResourceAccess.hlsl"
 #include "hlsl/common/Random.hlsl"
 #include "hlsl/common/DataPacking.hlsl"
+#include "hlsl/grid/heightmapGridSampling.hlsl"
 #include "grassCommon.hlsl"
 
 uint TexIdTerrainDepth;
@@ -14,13 +15,6 @@ uint TileId;
 RWStructuredBuffer<GrassInfo> infoBuffer : register(u0);
 RWByteAddressBuffer counterBuffer : register(u1);
 SamplerState LinearWrapSampler : register(s0);
-
-float2 RemapGridTextureUV(float2 gridUV)
-{
-	float margin = 32.0f / 1024.0f;
-	float content = 960.0f / 1024.0f;
-	return margin + (gridUV * content);
-}
 
 uint getGrassInfo(out GrassInfo info, float2 coords)
 {

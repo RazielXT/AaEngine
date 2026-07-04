@@ -1,3 +1,5 @@
+#include "hlsl/grid/heightmapGridSampling.hlsl"
+
 Texture2D<float> InputTexture : register(t0);
 RWTexture2D<float2> OutputTexture : register(u0);
 
@@ -11,15 +13,6 @@ float2 InvSrcDimensions;
 // - On AMD (64-lane waves): 1 wave.
 // Allocating 2 slots safely covers both.
 groupshared float2 s_WaveMinMax[2];
-
-float2 RemapGridTextureUV(float2 gridUV)
-{
-	// We want to skip 32 pixels on the left, and use the next 960 pixels
-	float margin = 32.0f / 1024.0f; // 0.03125
-	float content = 960.0f / 1024.0f; // 0.9375
-
-	return margin + (gridUV * content);
-}
 
 [numthreads(8, 8, 1)]
 void CSMain(

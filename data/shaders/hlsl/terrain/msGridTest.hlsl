@@ -1,4 +1,4 @@
-#include "hlsl/grid/heightmapGridReconstruction.hlsl"
+#include "hlsl/grid/heightmapGridSampling.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
 #include "hlsl/common/ShaderOutputs.hlsl"
 

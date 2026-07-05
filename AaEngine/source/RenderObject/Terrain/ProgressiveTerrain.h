@@ -8,6 +8,7 @@
 #include "Resources/Compute/TextureToMeshCS.h"
 #include "Resources/Compute/GenerateMipsComputeShader.h"
 #include <functional>
+#include "RenderCore/GpuTextureReadback.h"
 
 class RenderWorld;
 class RenderEntity;
@@ -65,8 +66,15 @@ protected:
 	GpuTexture2D terrainGridNormal[GridsSize][GridsSize];
 	std::vector<ShaderTextureViewUAV> terrainGridNormalMips[GridsSize][GridsSize];
 
-	GpuTexture2D terrainHeightMinMax[GridsSize][GridsSize];
-	GpuTexture2D terrainHeightMinMaxLow[GridsSize][GridsSize];
+	struct MinMax
+	{
+		GpuTexture2D terrainHeightMinMax;
+		GpuTexture2D terrainHeightMinMaxLow;
+		GpuTextureReadback readback;
+		bool scheduledReadback{};
+		HeightmapMinMax minmaxData;
+	}
+	minmax [GridsSize][GridsSize];
 
 	XMINT2 gridCenterChunk = { 0, 0 };
 	XMINT2 chunkWorldCoord[GridsSize][GridsSize]{};

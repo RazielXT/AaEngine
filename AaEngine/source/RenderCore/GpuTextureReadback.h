@@ -28,5 +28,6 @@ private:
 	UINT width{};
 	UINT height{};
 	UINT rowPitch{};
+	UINT64 totalBytes{};
 	DXGI_FORMAT format{};
 };

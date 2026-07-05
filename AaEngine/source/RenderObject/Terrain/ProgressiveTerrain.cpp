@@ -59,17 +59,22 @@ void ProgressiveTerrain::initialize(RenderSystem& renderSystem, GraphicsResource
 			resources.descriptors.createTextureView(terrainNormal);
 			terrainNormalMips = resources.descriptors.createUAVMips(terrainNormal);
 
-			auto& heightMinMax = terrainHeightMinMax[x][y];
-			heightMinMax.InitUAV(renderSystem.core.device, TextureSize / 8, TextureSize / 8, DXGI_FORMAT_R16G16_FLOAT, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-			heightMinMax.SetName("TerrainHeightMinMax");
-			resources.descriptors.createUAVView(heightMinMax);
-			resources.descriptors.createTextureView(heightMinMax);
+			auto& heightMinMax = minmax[x][y];
 
-			auto& heightMinMaxLow = terrainHeightMinMaxLow[x][y];
-			heightMinMaxLow.InitUAV(renderSystem.core.device, TextureSize / 64, TextureSize / 64, DXGI_FORMAT_R32G32_FLOAT, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+			auto& heightMinMaxHi = heightMinMax.terrainHeightMinMax;
+			heightMinMaxHi.InitUAV(renderSystem.core.device, TextureSize / 8, TextureSize / 8, DXGI_FORMAT_R16G16_FLOAT, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+			heightMinMaxHi.SetName("TerrainHeightMinMaxHi");
+			resources.descriptors.createUAVView(heightMinMaxHi);
+			resources.descriptors.createTextureView(heightMinMaxHi);
+
+			auto& heightMinMaxLow = heightMinMax.terrainHeightMinMaxLow;
+			heightMinMaxLow.InitUAV(renderSystem.core.device, TextureSize / 64, TextureSize / 64, DXGI_FORMAT_R32G32_FLOAT, D3D12_RESOURCE_STATE_COPY_SOURCE);
 			heightMinMaxLow.SetName("TerrainHeightMinMaxLow");
 			resources.descriptors.createUAVView(heightMinMaxLow);
 			resources.descriptors.createTextureView(heightMinMaxLow);
+
+			heightMinMax.readback.init(renderSystem.core.device, heightMinMaxLow.width, heightMinMaxLow.height, heightMinMaxLow.format);
+			heightMinMax.minmaxData.init(TextureSize / 64, params.tileHeight * 0.5f);
 
 			auto& chunk = terrainGrid[x][y];
 			chunk.mesh.create(terrainLod.MaxInstances);
@@ -139,13 +144,15 @@ void ProgressiveTerrain::regenerateChunk(ID3D12GraphicsCommandList* commandList,
 	auto& terrainHeight = terrainGridHeight[x][y];
 	auto& terrainNormal = terrainGridNormal[x][y];
 	auto& terrainNormalMips = terrainGridNormalMips[x][y];
-	auto& heightmapMinMax = terrainHeightMinMax[x][y];
-	auto& heightmapMinMaxLow = terrainHeightMinMaxLow[x][y];
+
+	auto& heightmapMinMax = minmax[x][y];
+	auto& heightmapMinMaxHi = heightmapMinMax.terrainHeightMinMax;
+	auto& heightmapMinMaxLow = heightmapMinMax.terrainHeightMinMaxLow;
 
 	TextureTransitions<4> tr;
 	tr.add(terrainTexture->texture.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 	tr.add(&terrainNormal, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-	tr.add(&heightmapMinMax, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	tr.add(&heightmapMinMaxHi, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	tr.add(&terrainHeight, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	tr.push(commandList);
 
@@ -155,12 +162,12 @@ void ProgressiveTerrain::regenerateChunk(ID3D12GraphicsCommandList* commandList,
 	tr.add(terrainHeight.texture.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 	tr.push(commandList);
 
-	heightmapMinMaxCS.dispatch(commandList, TextureSize, TextureSize, terrainHeight.view.srvHandle, heightmapMinMax.view.uavHandle);
-	tr.addUav(heightmapMinMax.texture.Get());
-	tr.add(heightmapMinMax.texture.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-	tr.add(&heightmapMinMaxLow, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	heightmapMinMaxCS.dispatch(commandList, TextureSize, TextureSize, terrainHeight.view.srvHandle, heightmapMinMaxHi.view.uavHandle);
+	tr.addUav(heightmapMinMaxHi.texture.Get());
+	tr.add(heightmapMinMaxHi.texture.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	tr.add(&heightmapMinMaxLow, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	tr.push(commandList);
-	heightmapMinMaxCS2.dispatch(commandList, TextureSize / 8, TextureSize / 8, heightmapMinMax.view.srvHandle, heightmapMinMaxLow.view.uavHandle);
+	heightmapMinMaxCS2.dispatch(commandList, TextureSize / 8, TextureSize / 8, heightmapMinMaxHi.view.srvHandle, heightmapMinMaxLow.view.uavHandle);
 
 	heightmapToNormalCS.dispatch(commandList, terrainHeight.view.srvHeapIndex, terrainNormal.view.uavHeapIndex, TextureSize, TextureSize, 50, 102.4f);
 
@@ -171,8 +178,11 @@ void ProgressiveTerrain::regenerateChunk(ID3D12GraphicsCommandList* commandList,
 
 	tr.add(terrainTexture->texture.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	tr.add(&terrainNormal, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-	tr.add(&heightmapMinMaxLow, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	tr.add(&heightmapMinMaxLow, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
 	tr.push(commandList);
+
+	heightmapMinMax.readback.copyFrom(commandList, heightmapMinMaxLow.texture.Get());
+	heightmapMinMax.scheduledReadback = true;
 }
 
 void ProgressiveTerrain::update(ID3D12GraphicsCommandList* commandList, const Camera& camera, const ShadowMaps& shadows, UINT frameIdx)
@@ -205,6 +215,15 @@ void ProgressiveTerrain::update(ID3D12GraphicsCommandList* commandList, const Ca
 	for (int x = 0; x < (int)GridsSize; x++)
 		for (int y = 0; y < (int)GridsSize; y++)
 		{
+			if (auto& mm = minmax[x][y]; mm.scheduledReadback)
+			{
+				if (auto data = mm.readback.map())
+				{
+					mm.minmaxData.load(data, mm.readback.getRowPitch());
+					mm.readback.unmap();
+				}
+				mm.scheduledReadback = false;
+			}
 			if (chunkDirty[x][y])
 			{
 				regenerateChunk(commandList, x, y);
@@ -259,7 +278,7 @@ void ProgressiveTerrain::runChunkUpdateThread(UINT threadIndex)
 
 			if (threadIndex == 0) // main camera
 			{
-				terrainLod.BuildLOD(lodTiles, camera.getPosition(), camera.prepareFrustum(), chunkWorldCoord[x][y]);
+				terrainLod.BuildLOD(lodTiles, camera.getPosition(), camera.prepareFrustum(), minmax[x][y].minmaxData, chunkWorldCoord[x][y]);
 				grid.mesh.update(grid.entity->geometry, (UINT)lodTiles.size(), lodTiles.data(), (UINT)lodTiles.size() * sizeof(TileData), updateCtx.frameIdx);
 			}
 			else if (threadIndex >= 1 && threadIndex <= 4) //shadow camera 1-4
@@ -267,7 +286,7 @@ void ProgressiveTerrain::runChunkUpdateThread(UINT threadIndex)
 				UINT i = threadIndex - 1;
 
 				const UINT tileLod[] = { 9, 9, 7, 5 };
-				terrainLod.BuildLOD(lodTiles, camera.getPosition(), shadowBbox, chunkWorldCoord[x][y], tileLod[i]);
+				terrainLod.BuildLOD(lodTiles, camera.getPosition(), shadowBbox, minmax[x][y].minmaxData, chunkWorldCoord[x][y], tileLod[i]);
 
 				auto& g = grid.geometryViews.viewGeometries[threadIndex - 1];
 				grid.shadowMesh[i].update(g, (UINT)lodTiles.size(), lodTiles.data(), (UINT)lodTiles.size() * sizeof(TileData), updateCtx.frameIdx);

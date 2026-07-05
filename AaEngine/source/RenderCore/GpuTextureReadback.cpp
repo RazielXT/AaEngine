@@ -18,7 +18,6 @@ void GpuTextureReadback::init(ID3D12Device* device, UINT w, UINT h, DXGI_FORMAT 
 	texDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 
 	D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint{};
-	UINT64 totalBytes{};
 	device->GetCopyableFootprints(&texDesc, 0, 1, 0, &footprint, nullptr, nullptr, &totalBytes);
 	rowPitch = footprint.Footprint.RowPitch;
 
@@ -71,7 +70,7 @@ void GpuTextureReadback::copyFrom(ID3D12GraphicsCommandList* commandList, ID3D12
 const void* GpuTextureReadback::map()
 {
 	void* data = nullptr;
-	D3D12_RANGE readRange = { 0, (SIZE_T)(rowPitch * height) };
+	D3D12_RANGE readRange = { 0, (SIZE_T)(totalBytes) };
 	readbackBuffer->Map(0, &readRange, &data);
 	return data;
 }

@@ -6,6 +6,16 @@ struct GridTileData
 	uint y;
 	uint lod;
 	float range;
+
+	uint GridTilesWidth;
+	float GridHeight;
+	float GridWidth;
+	uint GridIndex;
+
+	int ChunkX;        // Chunk coord relative to the entity origin
+	int ChunkY;
+	uint HeightmapId;  // Bindless SRV index of this chunk's heightmap
+	uint NormalmapId;  // Bindless SRV index of this chunk's normalmap
 };
 
 struct GridRuntimeParams
@@ -13,9 +23,6 @@ struct GridRuntimeParams
 	float3 cameraPos;
 	float3 worldPos;
 
-	float heightScale;
-	float gridSize;
-	uint tilesWidth;
 	uint tileResolution;
 };
 
@@ -32,10 +39,15 @@ GridVertexInfo ReadGridVertexInfo(GridTileData tile, uint vertexID, Texture2D<fl
 {
 	const float3 WorldPosition = params.worldPos;
 	const float3 CameraPosition = params.cameraPos;
-	const float HeightScale = params.heightScale;
-	const float GridSize = params.gridSize;
-	const uint TilesWidth = params.tilesWidth;
+	const float HeightScale = tile.GridHeight;
+	const float GridSize = tile.GridWidth;
+	const uint TilesWidth = tile.GridTilesWidth;
 	const uint TileResolution = params.tileResolution;
+
+	// Per-tile chunk offset lets a single entity cover many chunks: shift the tile into its
+	// chunk's world position. ChunkX/ChunkY are chunk coords relative to the entity origin,
+	// each chunk spanning GridSize world units.
+	const float3 ChunkWorldPosition = WorldPosition + float3(tile.ChunkX * GridSize, 0, tile.ChunkY * GridSize);
 
 	const uint TileWidthQuads = TileResolution - 1;
 	const float SmallestLodTileSize = GridSize / TilesWidth;
@@ -75,7 +87,7 @@ GridVertexInfo ReadGridVertexInfo(GridTileData tile, uint vertexID, Texture2D<fl
 	const float morphStart = tile.range * 1.25f;
 	const float morphInvWidth = 4.0f / tile.range;
 
-	float d = distance(float3(gridPosition.x, 0, gridPosition.z), float3(CameraPosition.x - WorldPosition.x, 0, CameraPosition.z - WorldPosition.z));
+	float d = distance(float3(gridPosition.x, 0, gridPosition.z), float3(CameraPosition.x - ChunkWorldPosition.x, 0, CameraPosition.z - ChunkWorldPosition.z));
 	// k = 0 (no morph), k = 1 (fully collapsed to next LOD)
 	float k = saturate((d - morphStart) * morphInvWidth);
 
@@ -108,7 +120,7 @@ GridVertexInfo ReadGridVertexInfo(GridTileData tile, uint vertexID, Texture2D<fl
 #endif
 
 	gridPosition.y *= HeightScale;
-	gridPosition.xyz += WorldPosition;
+	gridPosition.xyz += ChunkWorldPosition;
 
 #ifdef GRID_LOD_DEBUG
 	#ifdef GRID_NO_MORPHING

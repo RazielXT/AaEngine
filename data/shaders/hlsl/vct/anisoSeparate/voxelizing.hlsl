@@ -14,8 +14,6 @@ float3 WorldPosition;
 uint TexIdHeightmap;
 uint TexIdNormalmap;
 float3 CameraPosition;
-float2 GridHeightWidth;
-uint GridTilesWidth;
 #else
 float4x4 WorldMatrix;
 float3 MaterialColor;
@@ -44,7 +42,9 @@ struct GS_Input
 {
 	float3 wp : POSITION;
 	float2 uv : TEXCOORD0;
-#ifndef GRID
+#ifdef GRID
+	uint normalmapId : TEXCOORD2;
+#else
 	float3 normal : NORMAL;
 #endif
 };
@@ -54,7 +54,9 @@ struct PS_Input
 	float4 pos : SV_POSITION;
 	float4 wp : TEXCOORD1;
 	float2 uv : TEXCOORD0;
-#ifndef GRID
+#ifdef GRID
+	nointerpolation uint normalmapId : TEXCOORD2;
+#else
 	float3 normal : NORMAL;
 #endif
 };
@@ -64,19 +66,19 @@ StructuredBuffer<GridTileData> InstancingBuffer : register(t0);
 
 GS_Input VSMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
 {
+	GridTileData tile = InstancingBuffer[instanceID];
+
 	GridRuntimeParams p;
 	p.cameraPos = CameraPosition;
 	p.worldPos = WorldPosition;
-	p.heightScale = GridHeightWidth.x;
-	p.gridSize = GridHeightWidth.y;
-	p.tilesWidth = GridTilesWidth;
 	p.tileResolution = 33;
 
-	GridVertexInfo info = ReadGridVertexInfo(InstancingBuffer[instanceID], vertexID, ResourceDescriptorHeap[TexIdHeightmap], LinearSampler, p);
+	GridVertexInfo info = ReadGridVertexInfo(tile, vertexID, ResourceDescriptorHeap[tile.HeightmapId], LinearSampler, p);
 
 	GS_Input result;
 	result.wp = info.position.xyz;
 	result.uv = info.uv;
+	result.normalmapId = tile.NormalmapId;
 	return result;
 }
 #else
@@ -137,6 +139,9 @@ void GSMain(triangle GS_Input input[3], inout TriangleStream<PS_Input> triStream
 		o.pos = float4(clipPos.xy * 2.0f - 1.0f, clipPos.z, 1.0f);
 		o.wp = float4(wp, 1.0f);
 		o.uv = input[i].uv;
+	#ifdef GRID
+		o.normalmapId = input[i].normalmapId;
+	#endif
 	#ifndef GRID
 		o.normal = input[i].normal;
 	#endif
@@ -167,7 +172,7 @@ float4 PSMain(PS_Input pin) : SV_TARGET
 	SamplerState sampler = GetDynamicMaterialSamplerLinear();
 
 #ifdef GRID
-	float3 worldNormal = ReadGridNormal(ResourceDescriptorHeap[TexIdNormalmap], LinearSampler, pin.uv);
+	float3 worldNormal = ReadGridNormal(ResourceDescriptorHeap[pin.normalmapId], LinearSampler, pin.uv);
 	float3 diffuse = float3(0.8, 0.8, 0.8);
 	float3 green = float3(0.4, 0.6, 0.3);
 	diffuse = lerp(diffuse, green, step(0.9,worldNormal.y));

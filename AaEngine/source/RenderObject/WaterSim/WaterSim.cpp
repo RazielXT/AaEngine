@@ -116,8 +116,6 @@ void WaterSim::initializeTarget(const GpuTexture2D& texture, RenderWorld& render
 	e->Material().setParam("TexIdHeightmap", waterHeightMeshTexture.view.srvHeapIndex);
 	e->Material().setParam("TexIdFlowmap", waterFlowTexture.view.srvHeapIndex);
 	e->Material().setParam("TexIdMeshNormal", waterNormalTexture.view.srvHeapIndex);
-	e->Material().setParam("GridHeightWidth", Vector2(size.x, worldSize.x));
-	e->Material().setParam("GridTilesWidth", waterGridTiles.TilesWidth);
 	e->setPosition(worldCenter);
 }
 
@@ -138,7 +136,8 @@ void WaterSim::update(RenderSystem& renderSystem, ID3D12GraphicsCommandList* com
 
 	if (updateLod)
 	{
-		waterGridTiles.BuildLOD(lodTiles, cameraPos, {});
+		lodTiles.clear();
+		waterGridTiles.BuildLOD(lodTiles, cameraPos, {}, { worldSize.x / (50 * TextureSize / (TextureSize - 64.f)), worldSize.x });
 		waterGridMesh.update(entity->geometry, (UINT)lodTiles.size(), lodTiles.data(), (UINT)lodTiles.size() * sizeof(TileData), frameIdx);
 	}
 

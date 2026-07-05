@@ -51,16 +51,14 @@ protected:
 	GridLODSystem terrainLod;
 	GridLodTiles terrainLodTiles[9];
 
-	struct TerrainGridChunk
-	{
-		GridInstanceMesh mesh;
-		GridInstanceMesh shadowMesh[4];
-		GridInstanceMesh voxelizeMesh[4];
+	// Single entity covering the whole 5x5 grid. Each render view (main + 4 shadow cascades +
+	// 4 voxelize) gets one combined instancing buffer holding tiles from all chunks.
+	GridInstanceMesh mesh;
+	GridInstanceMesh shadowMesh[4];
+	GridInstanceMesh voxelizeMesh[4];
 
-		GeometryViews<RenderViewId_ShadowCascade0, RenderViewId_ShadowCascade1, RenderViewId_ShadowCascade2, RenderViewId_ShadowCascade3, RenderViewId_Voxelize0, RenderViewId_Voxelize1, RenderViewId_Voxelize2, RenderViewId_Voxelize3, RenderViewId_VoxelizeShadowMap> geometryViews;
-		RenderEntity* entity{};
-	}
-	terrainGrid[GridsSize][GridsSize];
+	GeometryViews<RenderViewId_ShadowCascade0, RenderViewId_ShadowCascade1, RenderViewId_ShadowCascade2, RenderViewId_ShadowCascade3, RenderViewId_Voxelize0, RenderViewId_Voxelize1, RenderViewId_Voxelize2, RenderViewId_Voxelize3, RenderViewId_VoxelizeShadowMap> geometryViews;
+	RenderEntity* entity{};
 
 	GpuTexture2D terrainGridHeight[GridsSize][GridsSize];
 	GpuTexture2D terrainGridNormal[GridsSize][GridsSize];

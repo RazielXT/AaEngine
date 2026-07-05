@@ -63,6 +63,16 @@ struct TileData
 	uint32_t y;   // Grid coordinate (0-15)
 	uint32_t lod; // Current LOD level (0-4)
 	float radius;
+
+	uint32_t GridTilesWidth;
+	float GridHeight;
+	float GridWidth;
+	uint32_t GridIndex;
+
+	int32_t ChunkX;      // Chunk coord relative to grid center (in [-2,2] for a 5x5 grid)
+	int32_t ChunkY;
+	uint32_t HeightmapId; // Bindless SRV index of this chunk's heightmap
+	uint32_t NormalmapId; // Bindless SRV index of this chunk's normalmap
 };
 
 using GridLodTiles = std::vector<TileData>;
@@ -110,10 +120,19 @@ public:
 		MaxInstances = CalculateMaxInstances(SubdivisionDetail, lodsCount);
 	}
 
-	void BuildLOD(GridLodTiles& renderList, const Vector3& cameraPos, XMINT2 offset)
+	struct BuildCtx
 	{
-		renderList.clear();
+		float GridHeight;
+		float GridWidth;
+		uint32_t GridIndex;
+		int32_t ChunkX;       // Chunk coord relative to grid center
+		int32_t ChunkY;
+		uint32_t HeightmapId; // Bindless SRV index of this chunk's heightmap
+		uint32_t NormalmapId; // Bindless SRV index of this chunk's normalmap
+	};
 
+	void BuildLOD(GridLodTiles& renderList, const Vector3& cameraPos, XMINT2 offset, BuildCtx ctx)
+	{
 		const float tileSize = m_smallestTileSize;
 		const float worldSize = tileSize * TilesWidth;
 
@@ -169,15 +188,14 @@ public:
 			}
 			else
 			{
-				renderList.emplace_back(n.x, n.y,	n.level, m_subdivideThresholds[n.level]);
+				renderList.emplace_back(n.x, n.y,	n.level, m_subdivideThresholds[n.level], TilesWidth, ctx.GridHeight, ctx.GridWidth, ctx.GridIndex, ctx.ChunkX, ctx.ChunkY, ctx.HeightmapId, ctx.NormalmapId);
 			}
 		}
 	}
 
-	void BuildAabbLOD(GridLodTiles& renderList, const Vector3& cameraPos, XMINT2 offset, Vector2 cullMin, Vector2 cullMax, UINT lodsLevelsMax = 0)
+	void BuildAabbLOD(GridLodTiles& renderList, const Vector3& cameraPos, XMINT2 offset, Vector2 cullMin, Vector2 cullMax, BuildCtx ctx, UINT lodsLevelsMax = 0)
 	{
 		lodsLevelsMax = lodsLevelsMax ? min(lodsLevelsMax, lodsLevels) : lodsLevels;
-		renderList.clear();
 
 		const float tileSize = m_smallestTileSize;
 		const float worldSize = tileSize * TilesWidth;
@@ -252,17 +270,15 @@ public:
 			}
 			else
 			{
-				renderList.emplace_back(n.x, n.y, n.level, m_subdivideThresholds[n.level]);
+				renderList.emplace_back(n.x, n.y, n.level, m_subdivideThresholds[n.level], TilesWidth, ctx.GridHeight, ctx.GridWidth, ctx.GridIndex, ctx.ChunkX, ctx.ChunkY, ctx.HeightmapId, ctx.NormalmapId);
 			}
 		}
 	}
 
 	template<typename T>
-	void BuildLOD(GridLodTiles& renderList, const Vector3& cameraPos, const T& culling, const HeightmapMinMax& minMaxGrid, XMINT2 offset, UINT lodsLevelsMax = 0)
+	void BuildLOD(GridLodTiles& renderList, const Vector3& cameraPos, const T& culling, const HeightmapMinMax& minMaxGrid, XMINT2 offset, BuildCtx ctx, UINT lodsLevelsMax = 0)
 	{
 		lodsLevelsMax = lodsLevelsMax ? min(lodsLevelsMax, lodsLevels) : lodsLevels;
-
-		renderList.clear();
 
 		const float tileSize = m_smallestTileSize;
 		const float worldSize = tileSize * TilesWidth;
@@ -343,7 +359,7 @@ public:
 			}
 			else
 			{
-				renderList.emplace_back(n.x, n.y, n.level, m_subdivideThresholds[n.level]);
+				renderList.emplace_back(n.x, n.y, n.level, m_subdivideThresholds[n.level], TilesWidth, ctx.GridHeight, ctx.GridWidth, ctx.GridIndex, ctx.ChunkX, ctx.ChunkY, ctx.HeightmapId, ctx.NormalmapId);
 			}
 		}
 	}
@@ -355,10 +371,8 @@ public:
 		float maxX, maxZ;
 	};
 
-	void BuildLODUniform(GridLodTiles& renderList, const Vector3& cameraPos, XMINT2 offset, const Rect2D& viewAABB)
+	void BuildLODUniform(GridLodTiles& renderList, const Vector3& cameraPos, XMINT2 offset, const Rect2D& viewAABB, BuildCtx ctx)
 	{
-		renderList.clear();
-
 		const float tileSize = m_smallestTileSize;
 		const float chunkWorldSize = tileSize * TilesWidth;
 
@@ -412,7 +426,7 @@ public:
 				uint32_t tileX = bx * TilesWidth;
 				uint32_t tileY = by * TilesWidth;
 
-				renderList.emplace_back(tileX, tileY, chosenLevel, m_subdivideThresholds[chosenLevel]);
+				renderList.emplace_back(tileX, tileY, chosenLevel, m_subdivideThresholds[chosenLevel], TilesWidth, ctx.GridHeight, ctx.GridWidth, ctx.GridIndex, ctx.ChunkX, ctx.ChunkY, ctx.HeightmapId, ctx.NormalmapId);
 			}
 		}
 	}

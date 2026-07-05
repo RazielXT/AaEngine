@@ -26,15 +26,9 @@ uint TexIdGrass;
 uint TexIdNormal;
 uint TexIdGrassNormal;
 uint TexIdSpread;
-float2 GridHeightWidth;
-uint GridTilesWidth;
 
 #ifdef ENTITY_ID
 uint EntityId;
-#endif
-
-#ifdef GRID_INDEX_DEBUG
-uint GridIndex;
 #endif
 
 StructuredBuffer<GridTileData> InstancingBuffer : register(t0);
@@ -46,6 +40,7 @@ struct PSInput
 	float4 position : SV_POSITION;
 	float4 worldPosition : TEXCOORD0;
 	float2 uv : TEXCOORD1;
+	nointerpolation uint normalmapId : TEXCOORD2;
 #ifdef GRID_DEBUG_COLOR
 	float3 debugColor : TEXCOORD10;
 #endif
@@ -53,15 +48,14 @@ struct PSInput
 
 PSInput VSMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
 {
+	GridTileData tile = InstancingBuffer[instanceID];
+
 	GridRuntimeParams p;
 	p.cameraPos = CameraPosition;
 	p.worldPos = WorldPosition;
-	p.heightScale = GridHeightWidth.x;
-	p.gridSize = GridHeightWidth.y;
-	p.tilesWidth = GridTilesWidth;
 	p.tileResolution = 33;
 
-	GridVertexInfo info = ReadGridVertexInfo(InstancingBuffer[instanceID], vertexID, ResourceDescriptorHeap[TexIdHeightmap], LinearWrapSampler, p);
+	GridVertexInfo info = ReadGridVertexInfo(tile, vertexID, ResourceDescriptorHeap[tile.HeightmapId], LinearWrapSampler, p);
 
 	float heightTexture = GetTexture2D(TexIdGrass).SampleLevel(LinearWrapSampler, info.uv * 50 * 10 / 8.f, 0).w;
 	//info.position.y -= heightTexture * 0.25 - 0.2;
@@ -70,12 +64,13 @@ PSInput VSMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
 	result.worldPosition = info.position;
 	result.position = mul(result.worldPosition, ViewProjectionMatrix);
 	result.uv = info.uv;
+	result.normalmapId = tile.NormalmapId;
 
 #ifdef GRID_DEBUG_COLOR
 	#ifdef GRID_LOD_DEBUG
-		result.debugColor = (1 - 0.4 * info.morphMask) * GetDebugColor(9 - InstancingBuffer[instanceID].lod);
+		result.debugColor = (1 - 0.4 * info.morphMask) * GetDebugColor(9 - tile.lod);
 	#elif defined(GRID_INDEX_DEBUG)
-		result.debugColor = GetDebugColor(GridIndex);
+		result.debugColor = GetDebugColor(tile.GridIndex);
 	#endif
 #endif
 	return result;
@@ -125,7 +120,7 @@ GBufferOutput PSMain(PSInput input)
 	float3 cameraView = CameraPosition - input.worldPosition.xyz;
 	float camDistance = length(cameraView) * 8.f;
 
-	GridTBN tbn = ReadGridTBN(ResourceDescriptorHeap[TexIdNormalmap], sampler, input.uv);
+	GridTBN tbn = ReadGridTBN(ResourceDescriptorHeap[input.normalmapId], sampler, input.uv);
 
 	float2 texCoords = input.uv * 50;
 
@@ -151,7 +146,7 @@ GBufferOutput PSMain(PSInput input)
 	float3 mud = (rockTexture.rgb + grassTexture.ggg) * 0.5 * float3(0.4, 0.2, 0.1) * 0.8; // Color for brown
 	float3 grass = grassTexture.rgb * float3(0.5, 0.8, 0.55) * 0.45;
 
-	float heightWeight = saturate((input.worldPosition.y - WorldPosition.y) / GridHeightWidth.x);
+	float heightWeight = saturate((input.worldPosition.y - WorldPosition.y) / 1000.f);
 	heightWeight = 1 - smoothstep(0.1,0.6,heightWeight);
 	float normalWeight = smoothstep(0.3,1,tbn.N.y*tbn.N.y);//saturate(normal.y - 0.5) * 2;
 
@@ -201,7 +196,7 @@ EntityIdOutput PSMainEntityId(PSInput input)
 	EntityIdOutput output;
 	output.id = uint4(EntityId, 0, 0, 0);
 	output.position = input.worldPosition;
-	output.normal = float4(ReadGridNormal(ResourceDescriptorHeap[TexIdNormalmap], LinearWrapSampler, input.uv), 0);
+	output.normal = float4(ReadGridNormal(ResourceDescriptorHeap[input.normalmapId], LinearWrapSampler, input.uv), 0);
 	return output;
 }
 

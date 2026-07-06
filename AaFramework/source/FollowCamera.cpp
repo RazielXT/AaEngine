@@ -44,7 +44,7 @@ void FollowCamera::update(float time)
 
 	float speed = velocity.Length();
 
-	float offsetByVelocity = max(0.8f, min(1.2f, speed * 0.04f));
+	float offsetByVelocity = std::max(0.8f, std::min(1.2f, speed * 0.04f));
 	auto desiredOffset = offset * offsetByVelocity * 0.5f;
 
 	// Blend look direction between objectForward and velocity direction based on speed
@@ -55,7 +55,7 @@ void FollowCamera::update(float time)
 		Vector3 velocityDirection = velocity;
 		velocityDirection.Normalize();
 
-		float t = min((speed - minSpeedForVelocityBlend) / (fullVelocityBlendSpeed - minSpeedForVelocityBlend), 1.0f);
+		float t = std::min((speed - minSpeedForVelocityBlend) / (fullVelocityBlendSpeed - minSpeedForVelocityBlend), 1.0f);
 		desiredLookDirection = Vector3::Lerp(objectForward, velocityDirection, t);
 		desiredLookDirection.Normalize();
 	}

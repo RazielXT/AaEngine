@@ -2,6 +2,7 @@
 #include "Resources/DescriptorManager.h"
 #include "directx/d3dx12.h"
 #include <format>
+#include <algorithm>
 
 namespace
 {
@@ -53,8 +54,8 @@ void ShadowMaps::update(UINT frameIndex, Camera& mainCamera)
 	}
 
 	data.SunDirection = sun.direction;
-	data.SunColor = Vector3::Lerp(Vector3(1, 0.2, 0.05), sun.color, min(1, abs(sun.direction.y * 1.4f)));
-	data.SunColor = Vector3::Lerp(data.SunColor, data.SunColor * 0.2, max(0, sun.direction.y));
+	data.SunColor = Vector3::Lerp(Vector3(1, 0.2, 0.05), sun.color, std::min(1.f, abs(sun.direction.y * 1.4f)));
+	data.SunColor = Vector3::Lerp(data.SunColor, data.SunColor * 0.2, std::max(0.f, sun.direction.y));
 	data.SunColor *= data.EclipseFactor;
 }
 

@@ -182,7 +182,7 @@ void DebugOverlayTask::updateQuad()
 			// Match source texture pixel size in screen space without stretching.
 			const float widthRatio = textureWidth / screenSize.x;
 			const float heightRatio = textureHeight / screenSize.y;
-			const float size = max(widthRatio, heightRatio);
+			const float size = std::max(widthRatio, heightRatio);
 			const float aspect = (screenSize.x / screenSize.y) / (textureWidth / textureHeight);
 
 			quad.SetPosition({}, size, ScreenQuad::TopRight, aspect);

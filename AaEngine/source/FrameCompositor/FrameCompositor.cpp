@@ -208,8 +208,8 @@ void FrameCompositor::reloadTextures()
 				w = std::ceil(w / sqr);
 				h = std::ceil(h / sqr);
 			}
-			w = max(w, 1);
-			h = max(h, 1);
+			w = std::max(w, 1u);
+			h = std::max(h, 1u);
 
 			{
 				auto lastState = initialTextureStates[name];

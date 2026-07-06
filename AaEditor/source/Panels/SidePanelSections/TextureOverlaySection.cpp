@@ -105,7 +105,7 @@ void TextureOverlaySection::draw()
 	if (selectedListIdx == -1 && !filteredTextureIndices.empty())
 		selectedListIdx = 0;
 
-	const int visibleItems = min((int)(filteredTextureIndices.empty() ? 1 : filteredTextureIndices.size()), 10);
+	const int visibleItems = std::min((int)(filteredTextureIndices.empty() ? 1 : filteredTextureIndices.size()), 10);
 	if (ImGui::BeginListBox("Textures", ImVec2(-FLT_MIN, ImGui::GetTextLineHeightWithSpacing() * visibleItems)))
 	{
 		bool refocus = false;

@@ -261,7 +261,7 @@ ShaderViewUAV DescriptorManager::createBufferView(ID3D12Resource* resource, UINT
 
 UINT DescriptorManager::nextDescriptor(UINT offset, D3D12_SRV_DIMENSION d) const
 {
-	offset = min(offset, descriptorsInfo.size());
+	offset = std::min(offset, (UINT)descriptorsInfo.size());
 
 	for (auto pos = offset + 1; descriptorsInfo.size() > pos; pos++)
 		if (descriptorsInfo[pos].dimension == d)
@@ -272,7 +272,7 @@ UINT DescriptorManager::nextDescriptor(UINT offset, D3D12_SRV_DIMENSION d) const
 
 UINT DescriptorManager::previousDescriptor(UINT offset, D3D12_SRV_DIMENSION d) const
 {
-	offset = min(offset, descriptorsInfo.size());
+	offset = std::min(offset, (UINT)descriptorsInfo.size());
 
 	for (auto pos = offset; pos > 0; pos--)
 		if (descriptorsInfo[pos - 1].dimension == d)
@@ -291,7 +291,7 @@ static bool matchesDimension(D3D12_SRV_DIMENSION d, std::initializer_list<D3D12_
 
 UINT DescriptorManager::nextDescriptor(UINT offset, std::initializer_list<D3D12_SRV_DIMENSION> dims) const
 {
-	offset = min(offset, descriptorsInfo.size());
+	offset = std::min(offset, (UINT)descriptorsInfo.size());
 
 	for (auto pos = offset + 1; descriptorsInfo.size() > pos; pos++)
 		if (matchesDimension(descriptorsInfo[pos].dimension, dims))
@@ -302,7 +302,7 @@ UINT DescriptorManager::nextDescriptor(UINT offset, std::initializer_list<D3D12_
 
 UINT DescriptorManager::previousDescriptor(UINT offset, std::initializer_list<D3D12_SRV_DIMENSION> dims) const
 {
-	offset = min(offset, descriptorsInfo.size());
+	offset = std::min(offset, (UINT)descriptorsInfo.size());
 
 	for (auto pos = offset; pos > 0; pos--)
 		if (matchesDimension(descriptorsInfo[pos - 1].dimension, dims))
@@ -382,7 +382,7 @@ void DescriptorManager::removeDescriptorIndex(UINT index)
 		return;
 
 	descriptorsInfo[index] = {};
-	firstFreeDescriptor = min(firstFreeDescriptor, index);
+	firstFreeDescriptor = std::min(firstFreeDescriptor, index);
 
 	while (index + 1 == currentDescriptorCount && descriptorsInfo[index].dimension == D3D12_SRV_DIMENSION_UNKNOWN)
 	{

@@ -39,7 +39,7 @@
       <AdditionalIncludeDirectories>..\dependencies\imgui;..\dependencies\DirectXTK12\Inc;..\dependencies\DirectX-Headers\include;..\dependencies\pugixml\src;..\dependencies\DLSS\include;..\dependencies;source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
-      <PreprocessorDefinitions>NDEBUG</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;NOMINMAX</PreprocessorDefinitions>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -62,7 +62,7 @@
     <ClCompile>
       <AdditionalIncludeDirectories>..\dependencies\imgui;..\dependencies\DirectXTK12\Inc;..\dependencies\DirectX-Headers\include;..\dependencies\tinyxml2;..\dependencies\pugixml\src;..\dependencies\DLSS\include;..\dependencies;source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <StringPooling>true</StringPooling>
@@ -213,6 +213,7 @@
     <ClInclude Include="source\RenderObject\SplineSweep\Spline.h" />
     <ClInclude Include="source\RenderObject\SplineSweep\SplineSweepMesh.h" />
     <ClInclude Include="source\RenderObject\Grass\Grass.h" />
+    <ClInclude Include="source\RenderObject\Terrain\HeightmapMinMax.h" />
     <ClInclude Include="source\Resources\Compute\IndirectCommandsCS.h" />
     <ClInclude Include="source\Resources\Compute\DeferredVrtCS.h" />
     <ClInclude Include="source\Scene\Camera.h" />

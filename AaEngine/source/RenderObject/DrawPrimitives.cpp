@@ -13,9 +13,9 @@ void BoundingBoxDraw::renderAxisAligned(ID3D12GraphicsCommandList* commandList, 
 {
 	{
 		auto bbox = entity->getWorldBoundingBox();
-		bbox.Extents.x = max(bbox.Extents.x, 1);
-		bbox.Extents.y = max(bbox.Extents.y, 1);
-		bbox.Extents.z = max(bbox.Extents.z, 1);
+		bbox.Extents.x = std::max(bbox.Extents.x, 1.f);
+		bbox.Extents.y = std::max(bbox.Extents.y, 1.f);
+		bbox.Extents.z = std::max(bbox.Extents.z, 1.f);
 
 		Vector3 centerPosition = bbox.Center;
 
@@ -64,9 +64,9 @@ void BoundingBoxDraw::renderObjectAligned(ID3D12GraphicsCommandList* commandList
 		constexpr float boundsOffsetAdd = 0.1f; //10%
 
 		auto minScale = bbox.Extents.x;
-		minScale = min(bbox.Extents.y, minScale);
-		minScale = min(bbox.Extents.z, minScale);
-		minScale = min(minScale, 1);
+		minScale = std::min(bbox.Extents.y, minScale);
+		minScale = std::min(bbox.Extents.z, minScale);
+		minScale = std::min(minScale, 1.f);
 		scale += Vector3(minScale) * boundsOffsetAdd * 2;
 
 		Vector3 boxPosition = entity->getPosition();

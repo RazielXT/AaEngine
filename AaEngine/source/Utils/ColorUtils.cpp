@@ -7,7 +7,7 @@ float toSrgb(float v)
 
 float fromSrgb(float v)
 {
-	return max(1.055 * pow(v, 0.416666667) - 0.055, 0);
+	return std::max(1.055f * powf(v, 0.416666667) - 0.055f, 0.f);
 }
 
 Vector3 toSrgb(Vector3 v)

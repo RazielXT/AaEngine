@@ -1,6 +1,6 @@
 #include "WaterSimInteractionUpdater.h"
 #include "PhysicsManager.h"
-#include "Scene/RenderObject.h"
+#include "Scene/RenderEntity.h"
 
 using namespace JPH;
 

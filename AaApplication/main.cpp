@@ -12,8 +12,6 @@ public:
 	ApplicationObject(TargetWindow& window) : app(window), debugWindow(app.renderSystem)
 	{
 		app.initialize(window);
-
-		freeCamera.bind(window);
 		camera.setPosition(XMFLOAT3(0, 0, -14.f));
 
 		debugWindow.state.DlssMode = (int)app.renderSystem.upscale.dlss.selectedMode();

@@ -41,7 +41,7 @@ void Generate3DMips3xCS::dispatch(ID3D12GraphicsCommandList* commandList, GpuTex
 		constants.InvOutTexelSize = DirectX::XMFLOAT3(1 / float(outSize), 1 / float(outSize), 1 / float(outSize));
 		commandList->SetComputeRoot32BitConstants(0, sizeof(constants) / sizeof(float), &constants,	0);
 
-		const UINT groups = max(outSize / 4, 1u);
+		const UINT groups = std::max(outSize / 4, 1u);
 		commandList->Dispatch(groups, groups, groups);
 
 		auto uavb = CD3DX12_RESOURCE_BARRIER::UAV(resource);
@@ -76,6 +76,6 @@ void GenerateXYMips4xCS::dispatch(ID3D12GraphicsCommandList* commandList, UINT t
 	commandList->SetComputeRoot32BitConstants(0, sizeof(constants) / sizeof(float), &constants, 0);
 
 	const UINT threads = 8;
-	const UINT groups = max(textureSize / (threads * 2), 1u);
+	const UINT groups = std::max(textureSize / (threads * 2), 1u);
 	commandList->Dispatch(groups, groups, 1);
 }

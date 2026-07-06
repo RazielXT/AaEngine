@@ -9,6 +9,7 @@
 #include "Resources/Compute/GenerateMipsComputeShader.h"
 #include <functional>
 #include "RenderCore/GpuTextureReadback.h"
+#include "Resources/Model/VertexBufferModel.h"
 
 class RenderWorld;
 class RenderEntity;

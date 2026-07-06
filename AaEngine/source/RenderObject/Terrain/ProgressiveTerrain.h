@@ -72,6 +72,10 @@ protected:
 		GpuTextureReadback readback;
 		bool scheduledReadback{};
 		HeightmapMinMax minmaxData;
+
+#ifdef TERRAIN_MINMAX_DEBUG
+		RenderEntity* debugEntities[16 * 16][2];
+#endif
 	}
 	minmax [GridsSize][GridsSize];
 

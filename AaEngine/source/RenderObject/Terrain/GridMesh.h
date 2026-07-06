@@ -281,7 +281,7 @@ public:
 			UINT minMaxMip = 0;
 			if (n.size > minMaxCellSize)
 			{
-				minMaxMip = sqrtf((float)n.size / (float)minMaxCellSize);
+				minMaxMip = (UINT)(log2f((float)n.size / (float)minMaxCellSize) + 0.5f); // mip = log2(node/cell); sqrtf was wrong for size 128 -> mip 2 instead of 3
 				minMaxCellSize = n.size;
 			}
 			{

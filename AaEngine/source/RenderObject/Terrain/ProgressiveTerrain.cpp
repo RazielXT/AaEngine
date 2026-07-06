@@ -9,6 +9,8 @@
 const UINT TextureSize = 1024;
 const UINT TerrainModelSize = 33;
 
+const UINT MinMaxResolution = TextureSize / 64;
+
 ProgressiveTerrain::ProgressiveTerrain()
 {
 }
@@ -76,6 +78,28 @@ void ProgressiveTerrain::initialize(RenderSystem& renderSystem, GraphicsResource
 			heightMinMax.readback.init(renderSystem.core.device, heightMinMaxLow.width, heightMinMaxLow.height, heightMinMaxLow.format);
 			heightMinMax.minmaxData.init(TextureSize / 64, params.tileHeight * 0.5f);
 
+#ifdef TERRAIN_MINMAX_DEBUG
+			auto model = resources.models.getCoreModel("centeredBox.mesh");
+			auto materialMin = resources.materials.getMaterial("Red");
+			auto materialMax = resources.materials.getMaterial("Blue");
+
+			for (auto& e : heightMinMax.debugEntities)
+			{
+				float scale = params.tileSize / MinMaxResolution;
+
+				e[0] = renderWorld.createEntity();
+				e[0]->geometry.fromModel(*model);
+				e[0]->setBoundingBox(model->bbox);
+				e[0]->material = materialMin;
+				e[0]->setScale(Vector3(scale, 1, scale));
+
+				e[1] = renderWorld.createEntity();
+				e[1]->geometry.fromModel(*model);
+				e[1]->setBoundingBox(model->bbox);
+				e[1]->material = materialMax;
+				e[1]->setScale(Vector3(scale, 1, scale));
+			}
+#endif
 			// Toroidal-consistent world coord: slot x maps to world x for x<=2, x-5 for x>2
 			// This ensures wrapIndex(worldCoord, GridsSize) == slot index
 			int wx = x > (int)GridsSize / 2 ? x - (int)GridsSize : x;
@@ -224,6 +248,29 @@ void ProgressiveTerrain::update(ID3D12GraphicsCommandList* commandList, const Ca
 					mm.readback.unmap();
 				}
 				mm.scheduledReadback = false;
+
+#ifdef TERRAIN_MINMAX_DEBUG
+				for (UINT i = 0; auto& e : mm.debugEntities)
+				{
+					UINT gridX = i % MinMaxResolution;
+					UINT gridY = i / MinMaxResolution;
+					auto mimMaxValues = mm.minmaxData.get(0, gridX, gridY);
+					i++;
+
+					// The data in slot (x,y) belongs to chunk chunkWorldCoord[x][y]. The grid is
+					// stored toroidally, so the slot index does NOT map linearly to a world coord
+					// (gridCenterChunk + (x-2,y-2) is only correct when gridCenterChunk % GridsSize == 2).
+					XMINT2 coords = chunkWorldCoord[x][y];
+					float offsetStep = params.tileSize / MinMaxResolution;
+
+					//box is centered so half offset to move entity to its map area
+					auto pos = params.chunkWorldMin(coords, params.tileSize) + Vector3(gridX * offsetStep + offsetStep * 0.5f, 0 , gridY * offsetStep + offsetStep * 0.5f);
+					pos.y = mimMaxValues.x;
+					e[0]->setPosition(pos);
+					pos.y = mimMaxValues.y;
+					e[1]->setPosition(pos);
+				}
+#endif
 			}
 			if (chunkDirty[x][y])
 			{

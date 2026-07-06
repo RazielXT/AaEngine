@@ -789,6 +789,9 @@
     <ClInclude Include="source\FrameCompositor\Tasks\WaterSimTask.h">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClInclude>
+    <ClInclude Include="source\RenderObject\Terrain\HeightmapMinMax.h">
+      <Filter>Source Files\RenderObject\Terrain</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

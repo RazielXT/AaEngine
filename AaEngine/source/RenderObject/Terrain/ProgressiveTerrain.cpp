@@ -186,6 +186,9 @@ void ProgressiveTerrain::regenerateChunk(ID3D12GraphicsCommandList* commandList,
 
 void ProgressiveTerrain::update(ID3D12GraphicsCommandList* commandList, const Camera& camera, const ShadowMaps& shadows, UINT frameIdx)
 {
+	if (!updateLod)
+		return;
+
 	XMINT2 cameraChunk = params.gridCenterAt(camera.getPosition(), params.tileSize, GridsSize);
 
 	if (cameraChunk.x != gridCenterChunk.x || cameraChunk.y != gridCenterChunk.y)
@@ -238,6 +241,9 @@ void ProgressiveTerrain::update(ID3D12GraphicsCommandList* commandList, const Ca
 
 void ProgressiveTerrain::updateFinish()
 {
+	if (!updateLod)
+		return;
+
 	waitForChunkUpdates();
 }
 
@@ -255,8 +261,6 @@ void ProgressiveTerrain::dispatchChunkUpdates(const Camera& camera, const Shadow
 
 void ProgressiveTerrain::runChunkUpdateThread(UINT threadIndex)
 {
-	if (!updateLod)
-		return;
 
 	const auto& camera = *updateCtx.camera;
 	auto& lodTiles = terrainLodTiles[threadIndex];

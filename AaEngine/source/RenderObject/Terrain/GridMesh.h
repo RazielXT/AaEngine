@@ -1,60 +1,8 @@
 #pragma once
 
-#include "Utils/MathUtils.h"
-#include <vector>
 #include "Resources/Shader/ShaderDataBuffers.h"
-#include "Scene/RenderEntity.h"
-#include "Scene/Camera.h"
-#include <unordered_map>
 #include "Scene/EntityGeometry.h"
-
-class HeightmapMinMax
-{
-public:
-
-	HeightmapMinMax() = default;
-
-	void init(UINT size, float e)
-	{
-		extends = e;
-		gridWidth = size;
-		data.resize(size * size, { -extends, extends });
-	}
-
-	// source points at a GPU texture readback whose rows are padded to rowPitchBytes
-	// (D3D12 aligns readback row pitch to 256 bytes), so we must step per-row.
-	void load(const void* source, UINT rowPitchBytes)
-	{
-		auto* dst = data.data();
-		for (UINT y = 0; y < gridWidth; ++y)
-		{
-			auto* row = reinterpret_cast<const Vector2*>(
-				static_cast<const uint8_t*>(source) + y * rowPitchBytes);
-			for (UINT x = 0; x < gridWidth; ++x)
-				*dst++ = fromNormalized(row[x]);
-		}
-	}
-
-	void reset()
-	{
-		for (auto& d : data)
-			d = { -extends, extends };
-	}
-
-	Vector2 get(UINT w, UINT h) const
-	{
-		return data[w + h * gridWidth];
-	}
-
-	Vector2 fromNormalized(Vector2 h) const
-	{
-		return (h - Vector2(0.5f)) * 2 * extends;
-	}
-
-	std::vector<Vector2> data;
-	float extends = 500.f;
-	UINT gridWidth = 0;
-};
+#include "HeightmapMinMax.h"
 
 // Data sent to the StructuredBuffer
 struct TileData
@@ -96,7 +44,7 @@ public:
 
 		// 1. Determine which side is the "base" (TilesWidth units)
 		// We use the smaller side to ensure the TilesWidth x TilesWidth root fits or spans the width
-		float shorterSide = min(gridWorldSize.x, gridWorldSize.y);
+		float shorterSide = std::min(gridWorldSize.x, gridWorldSize.y);
 		m_smallestTileSize = shorterSide / TilesWidth;
 
 		// 2. Determine how many TilesWidth-unit blocks we need for each axis
@@ -195,7 +143,7 @@ public:
 
 	void BuildAabbLOD(GridLodTiles& renderList, const Vector3& cameraPos, XMINT2 offset, Vector2 cullMin, Vector2 cullMax, BuildCtx ctx, UINT lodsLevelsMax = 0)
 	{
-		lodsLevelsMax = lodsLevelsMax ? min(lodsLevelsMax, lodsLevels) : lodsLevels;
+		lodsLevelsMax = lodsLevelsMax ? std::min(lodsLevelsMax, lodsLevels) : lodsLevels;
 
 		const float tileSize = m_smallestTileSize;
 		const float worldSize = tileSize * TilesWidth;
@@ -278,7 +226,7 @@ public:
 	template<typename T>
 	void BuildLOD(GridLodTiles& renderList, const Vector3& cameraPos, const T& culling, const HeightmapMinMax& minMaxGrid, XMINT2 offset, BuildCtx ctx, UINT lodsLevelsMax = 0)
 	{
-		lodsLevelsMax = lodsLevelsMax ? min(lodsLevelsMax, lodsLevels) : lodsLevels;
+		lodsLevelsMax = lodsLevelsMax ? std::min(lodsLevelsMax, lodsLevels) : lodsLevels;
 
 		const float tileSize = m_smallestTileSize;
 		const float worldSize = tileSize * TilesWidth;
@@ -329,13 +277,18 @@ public:
 			// Each min/max grid cell spans (TilesWidth / gridWidth) smallest tiles - a constant,
 			// independent of the node's LOD level. Once a node fits inside a single cell we can
 			// use the tighter readback bounds; larger nodes keep the conservative full extends.
-			const UINT minMaxCellSize = TilesWidth / minMaxGrid.gridWidth;
-			if (n.size <= minMaxCellSize)
+			UINT minMaxCellSize = TilesWidth / minMaxGrid.gridWidth;
+			UINT minMaxMip = 0;
+			if (n.size > minMaxCellSize)
 			{
-				UINT minGridX = min(n.x / minMaxCellSize, minMaxGrid.gridWidth - 1);
-				UINT minGridY = min(n.y / minMaxCellSize, minMaxGrid.gridWidth - 1);
+				minMaxMip = sqrtf((float)n.size / (float)minMaxCellSize);
+				minMaxCellSize = n.size;
+			}
+			{
+				UINT minGridX = std::min(n.x / minMaxCellSize, minMaxGrid.gridWidth - 1);
+				UINT minGridY = std::min(n.y / minMaxCellSize, minMaxGrid.gridWidth - 1);
 
-				minmax = minMaxGrid.get(minGridX, minGridY);
+				minmax = minMaxGrid.get(minMaxMip, minGridX, minGridY);
 			}
 
 			BoundingBox bbox;

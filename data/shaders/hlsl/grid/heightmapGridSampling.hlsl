@@ -6,14 +6,14 @@
 
 float2 RemapGridTextureUV(float2 gridUV)
 {
-#ifdef GRID_PADDING
+#ifdef GRID_NO_PADDING
+	return gridUV;
+#else
 	// We want to skip 32 pixels on the left, and use the next 960 pixels
 	float margin = 32.0f / 1024.0f; // 0.03125
 	float content = 960.0f / 1024.0f; // 0.9375
 
 	return margin + (gridUV * content);
-#else
-	return gridUV;
 #endif
 }
 

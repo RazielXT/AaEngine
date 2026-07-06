@@ -132,9 +132,9 @@ void ProgressiveTerrain::initialize(RenderSystem& renderSystem, GraphicsResource
 	csShader = resources.shaders.getShader("generateHeightmapCS", ShaderType::Compute, ShaderRef{ "terrain/terrainGridHeightmapCS.hlsl", "CSMain", "cs_6_6" });
 	generateHeightmapCS.init(*renderSystem.core.device, *csShader);
 
-	csShader = resources.shaders.getShader("heightmapMinMaxCS", ShaderType::Compute, ShaderRef{ "terrain/terrainHeightmapMinMaxCS.hlsl", "CSMain", "cs_6_6", {{ "GRID_PADDING", "1" }} });
+	csShader = resources.shaders.getShader("heightmapMinMaxCS", ShaderType::Compute, ShaderRef{ "terrain/terrainHeightmapMinMaxCS.hlsl", "CSMain", "cs_6_6" });
 	heightmapMinMaxCS.init(*renderSystem.core.device, *csShader);
-	csShader = resources.shaders.getShader("heightmapMinMaxCS2", ShaderType::Compute, ShaderRef{ "terrain/terrainHeightmapMinMaxCS.hlsl", "CSMain", "cs_6_6" });
+	csShader = resources.shaders.getShader("heightmapMinMaxCS2", ShaderType::Compute, ShaderRef{ "terrain/terrainHeightmapMinMaxCS.hlsl", "CSMain", "cs_6_6", {{ "GRID_NO_PADDING", "1" }} });
 	heightmapMinMaxCS2.init(*renderSystem.core.device, *csShader);
 }
 

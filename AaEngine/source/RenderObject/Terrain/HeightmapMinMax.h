@@ -96,10 +96,9 @@ public:
 					UINT sy = y * 2;
 
 					const Vector2& a = src[sx + sy * srcW];
-					const Vector2& b = src[std::min(sx + 1, srcW - 1) + sy * srcW];
-					const Vector2& c = src[sx + std::min(sy + 1, srcW - 1) * srcW];
-					const Vector2& d = src[std::min(sx + 1, srcW - 1) +
-						std::min(sy + 1, srcW - 1) * srcW];
+					const Vector2& b = src[sx + 1 + sy * srcW];
+					const Vector2& c = src[sx + (sy + 1) * srcW];
+					const Vector2& d = src[sx + 1 + (sy + 1) * srcW];
 
 					dst[x + y * dstW] =
 					{

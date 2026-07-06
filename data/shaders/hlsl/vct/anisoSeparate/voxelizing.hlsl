@@ -3,7 +3,6 @@
 #include "hlsl/common/ResourceAccess.hlsl"
 
 #ifdef GRID
-#define GRID_PADDING
 #define GRID_NO_MORPHING
 #include "hlsl/grid/heightmapGridReconstruction.hlsl"
 #endif

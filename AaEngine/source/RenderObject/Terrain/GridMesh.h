@@ -276,7 +276,7 @@ public:
 
 			// Each min/max grid cell spans (TilesWidth / gridWidth) smallest tiles - a constant,
 			// independent of the node's LOD level. Once a node fits inside a single cell we can
-			// use the tighter readback bounds; larger nodes keep the conservative full extends.
+			// use the tighter readback bounds;
 			UINT minMaxCellSize = TilesWidth / minMaxGrid.gridWidth;
 			UINT minMaxMip = 0;
 			if (n.size > minMaxCellSize)
@@ -285,8 +285,8 @@ public:
 				minMaxCellSize = n.size;
 			}
 			{
-				UINT minGridX = std::min(n.x / minMaxCellSize, minMaxGrid.gridWidth - 1);
-				UINT minGridY = std::min(n.y / minMaxCellSize, minMaxGrid.gridWidth - 1);
+				UINT minGridX = n.x / minMaxCellSize;
+				UINT minGridY = n.y / minMaxCellSize;
 
 				minmax = minMaxGrid.get(minMaxMip, minGridX, minGridY);
 			}

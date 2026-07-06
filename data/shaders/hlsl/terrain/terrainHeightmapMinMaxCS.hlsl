@@ -24,9 +24,8 @@ void CSMain(
 	uint2 pixelCoord = groupID.xy * 8 + groupThreadID.xy;
 	// UV = (PixelCoord + 0.5) * (1.0 / Dimensions)
 	float2 uv = (float2(pixelCoord) + 0.5f) * InvSrcDimensions;
-#ifdef GRID_PADDING
 	uv = RemapGridTextureUV(uv);
-#endif
+
 	float texel = InputTexture.SampleLevel(PointSampler, uv, 0).r;
 
 	// 2. Wave Intrinsics reduction (No shared memory, purely register-based)

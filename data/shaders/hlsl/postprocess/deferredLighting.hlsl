@@ -17,7 +17,9 @@ Texture2D colorMap : register(t0);
 Texture2D normalMap : register(t1);
 Texture2D<float> depthMap : register(t2);
 Texture2D<float> ssaoMap : register(t3);
+#ifndef NO_GI
 Texture2D giMap : register(t4);
+#endif
 
 SamplerState ShadowSampler : register(s0);
 SamplerState LinearSampler : register(s1);
@@ -40,13 +42,18 @@ float4 PSMain(VS_OUTPUT input) : SV_TARGET
 	float directShadow = getPssmShadow(worldPosition, camDistance / 8.f, dotLighting, ShadowSampler, Sky);
 	directShadow *= saturate(-10 * Sky.SunDirection.y);
 
-	float3 skyColor = getSkyColor(worldNormal, Sky, LinearSampler);
-	skyColor = 0.0 * skyColor * saturate(worldNormal.y);
-
 	float ssao = ssaoMap.Sample(LinearSampler, input.TexCoord);
 
-	float4 giLighting = giMap.Load(int3(input.Position.xy, 0));// + worldNormal.y * Sky.SunColor * 0.1;// * saturate(dot(Sky.SunDirection, worldNormal) + 0.5);
-	float3 lighting = dotLighting * Sky.SunColor * directShadow + skyColor + giLighting.rgb + emmisive * 10;
+#ifndef NO_GI
+	float3 giLighting = giMap.Load(int3(input.Position.xy, 0)).rgb;// + worldNormal.y * Sky.SunColor * 0.1;// * saturate(dot(Sky.SunDirection, worldNormal) + 0.5);
+#else
+	float3 skyColor = getSkyColor(worldNormal, Sky, LinearSampler);
+	//skyColor = skyColor * saturate(worldNormal.y);
+
+	float3 giLighting = 0.1 * abs(dot(-Sky.SunDirection, worldNormal)) + skyColor * 0.2;
+#endif
+
+	float3 lighting = dotLighting * Sky.SunColor * directShadow + giLighting + emmisive * 10;
 
 	lighting *= lerp(ssao, 1, saturate((lighting.r + lighting.g + lighting.b) / 3));
 	//lighting *= ssao;

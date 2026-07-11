@@ -36,6 +36,10 @@ void SidePanel::draw()
 
 		ImGui::Combo("DLSS", &state.DlssMode, UpscaleModeNames, std::size(UpscaleModeNames));
 		ImGui::Combo("FSR", &state.FsrMode, UpscaleModeNames, std::size(UpscaleModeNames));
+
+		static bool lowGraphics = false;
+		if (ImGui::Checkbox("Low graphics", &lowGraphics))
+			state.compositorDefine = { "LOW_GRAPHICS", lowGraphics };
 	}
 
 	if (ImGui::CollapsingHeader("Scene"))

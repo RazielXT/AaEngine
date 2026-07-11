@@ -10,10 +10,7 @@ compositor Frame
 {
 	texture sceneTexture target_size Albedo:DXGI_FORMAT_R8G8B8A8_UNORM Normal:DXGI_FORMAT_R16G16B16A16_SNORM MotionVectors:DXGI_FORMAT_R16G16_FLOAT Depth
 
-
-	texture sceneGI target_size DXGI_FORMAT_R16G16B16A16_FLOAT
-	alias sceneTextureTmp2 sceneGI
-
+	texture sceneTextureTmp2 target_size DXGI_FORMAT_R16G16B16A16_FLOAT
 	texture sceneTextureTmp target_size DXGI_FORMAT_R16G16B16A16_FLOAT
 
 	texture depthDownsample2 target_size_div 2 DXGI_FORMAT_R32_FLOAT
@@ -102,6 +99,7 @@ compositor Frame
 		out motionVectors
 	}
 
+#ifndef LOW_GRAPHICS
 	ref VGI()
 
 	pass DeferredLighting
@@ -111,9 +109,20 @@ compositor Frame
 		in sceneTexture:Normal
 		in sceneTexture:Depth
 		in SSAO.aoSmooth
-		in sceneGI
+		in VGI.sceneGI
 		out sceneTextureTmp
 	}
+#else
+	pass DeferredLightingLow
+	{
+		material DeferredLightingLow
+		in sceneTexture:Albedo
+		in sceneTexture:Normal
+		in sceneTexture:Depth
+		in SSAO.aoSmooth
+		out sceneTextureTmp
+	}
+#endif
 
 	task SceneRender.Forward
 	{

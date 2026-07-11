@@ -10,6 +10,11 @@ material DeferredLighting : PostProcess
 	}
 }
 
+material DeferredLightingLow : DeferredLighting
+{
+	shader_defines NO_GI
+}
+
 material DeferredVCT : PostProcess
 {
 	pixel_shader

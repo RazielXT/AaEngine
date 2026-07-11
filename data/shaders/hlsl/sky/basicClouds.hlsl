@@ -30,6 +30,23 @@ float GetHeight(float2 uv)
 	return (noiseHeight + noiseHeight2 + Sky.CloudsAmount) / 2;
 }
 
+float borderBlend(float2 uv, float edgeThreshold)
+{
+	// Calculate the distance from the UV coordinates to the nearest edge
+	float left = uv.x;
+	float right = 1.0 - uv.x;
+	float top = uv.y;
+	float bottom = 1.0 - uv.y;
+
+	// Determine the minimum distance to an edge
+	float minDist = min(min(left, right), min(top, bottom));
+
+	// Perform linear interpolation (lerp) based on the dist / edgeThresholdance to the edge
+	float alpha = saturate(minDist / edgeThreshold);
+
+	return alpha;
+}
+
 PSInput VSMain(uint vertexID : SV_VertexID)
 {
 	const float gridWidth = 256;
@@ -51,9 +68,11 @@ PSInput VSMain(uint vertexID : SV_VertexID)
 	float4 worldPosition = float4(posXZ.x * halfSize, height, posXZ.y * halfSize, 1);
 
 	float noiseHeight = GetHeight(uv);
+	noiseHeight *= borderBlend(uv, 0.05f);
 
 	worldPosition.y += noiseHeight * 5 - 5;
 	worldPosition.xyz *= scale;
+	worldPosition.xz += CameraPosition.xz;
 
 	PSInput result;
 	result.uv = uv;
@@ -69,41 +88,30 @@ struct PSOutput
 	float4 albedo : SV_Target0;
 };
 
-float borderBlend(float2 uv, float edgeThreshold)
-{
-	// Calculate the distance from the UV coordinates to the nearest edge
-	float left = uv.x;
-	float right = 1.0 - uv.x;
-	float top = uv.y;
-	float bottom = 1.0 - uv.y;
-
-	// Determine the minimum distance to an edge
-	float minDist = min(min(left, right), min(top, bottom));
-
-	// Perform linear interpolation (lerp) based on the dist / edgeThresholdance to the edge
-	float alpha = saturate(minDist / edgeThreshold);
-
-	return alpha;
-}
-
 float3 applyFog(float3 worldPosition, float3 baseColor)
 {
+	/*float3 fogAtmDir = normalize(CameraPosition - fogPosCheck);
+	fogAtmDir.y = saturate(fogAtmDir.y);
+	float3 fogColor = getSkyColor(fogAtmDir, Sky, LinearSampler);
+
+	float fogDensity = 0.000000003;
+	float fogFactor = 1.0 - exp(-camDistance * camDistance * fogDensity);
+	finalColor.rgb = lerp(finalColor.rgb, fogColor, fogFactor);*/
+	
+	
 	float3 fogAtmDir = normalize(CameraPosition - worldPosition);
 	fogAtmDir.y = saturate(fogAtmDir.y);
 	const float3 fogColor = getSkyColor(fogAtmDir, Sky, LinearWrapSampler);
-	float camDistance = length(CameraPosition.xz - worldPosition.xz) * 8.f;
+	float camDistance = length(CameraPosition.xz - worldPosition.xz) * 4;
 
-	float fogDensity = 0.000000001;
+	float fogDensity = 0.000000003;
 	float fogFactor = 1.0 - exp(-camDistance * camDistance * fogDensity);
-	return lerp(baseColor.rgb, fogColor, fogFactor * fogFactor);
+	return lerp(baseColor.rgb, fogColor, fogFactor);
 }
 
 PSOutput PSMain(PSInput input)
 {
 	SamplerState sampler = GetDynamicMaterialSamplerLinear();
-
-	float2 borders = input.uv;
-	float fade = borderBlend(borders, 0.2f);
 
 	float weight = GetTexture2D(TexIdNoises).Sample(sampler, (input.uv + Time * Sky.CloudsSpeed)).x + Sky.CloudsAmount * 0.5;
 	float weight2 = GetTexture2D(TexIdNoises).Sample(sampler, (input.uv + Time * Sky.CloudsSpeed * 2.1) / 2).z + Sky.CloudsAmount * 0.5;
@@ -111,7 +119,7 @@ PSOutput PSMain(PSInput input)
 
 	float weightDetail = GetTexture2D(TexIdNoises).Sample(sampler, (input.uv + Time * Sky.CloudsSpeed * 0.81) * 10).z;
 	weightDetail *= GetTexture2D(TexIdNoises).Sample(sampler, (input.uv + float2(0, 0.5) + Time * Sky.CloudsSpeed * 1.1331) * 9).z;
-	weight = smoothstep(0.4, 1, (weight - weightDetail * 0.3) * fade);
+	weight = smoothstep(0.4, 1, (weight - weightDetail * 0.3));
 
 	float eps = 0.01f;
 	float h  = GetHeight(input.uv) + weightDetail * 0.05;
@@ -153,11 +161,11 @@ PSOutput PSMain(PSInput input)
 		float3 sunLighting = Sky.SunColor * saturate(edgesLighting + lighting);
 		cloudsColor += cloudAlbedo * sunLighting;
 	}
-	cloudsColor = applyFog(input.worldPosition, cloudsColor);
+	cloudsColor = applyFog(input.worldPosition, cloudsColor * sunAmbientTerm);
 
 	float alphaTex = weight;
 
-	float3 finalColor = cloudsColor * sunAmbientTerm;
+	float3 finalColor = cloudsColor;
 	//finalColor = Sky.SunColor * lerp((abs(Sky.SunDirection.y) * fullLighting * 0.5 + 0.2) * cloudAlbedo, cloudAlbedo, saturate(edgesLighting + lighting));
 	//finalColor = fullLighting.xxx;
 

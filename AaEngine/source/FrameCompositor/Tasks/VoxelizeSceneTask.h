@@ -1,7 +1,7 @@
 #pragma once
 
 #include "FrameCompositor/Tasks/CompositorTask.h"
-#include "RenderCore/VCT/anisoSeparate/AnisoSeparateVoxelization.h"
+#include "RenderCore/Voxels/anisoSeparate/AnisoSeparateVoxelization.h"
 #include <thread>
 
 struct RenderQueue;

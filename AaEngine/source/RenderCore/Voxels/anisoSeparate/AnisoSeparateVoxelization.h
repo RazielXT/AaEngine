@@ -1,6 +1,6 @@
 #pragma once
 
-#include "RenderCore/VCT/isoSeparate/IsoSeparateVoxelCascade.h"
+#include "RenderCore/Voxels/anisoSeparate/AnisoSeparateVoxelCascade.h"
 #include "RenderCore/ShadowMaps.h"
 #include "Resources/Compute/GenerateMipsComputeShader.h"
 #include "Resources/Compute/ClearBufferCS.h"
@@ -17,7 +17,7 @@ struct FrameParameters;
 struct GraphicsResources;
 class RenderSystem;
 
-struct IsoSeparateVoxelTracingParams
+struct AnisoSeparateVoxelTracingParams
 {
 	float voxelSteppingBounces = 0.075f;
 	float voxelSteppingDiffuse = 0.0f;
@@ -25,29 +25,30 @@ struct IsoSeparateVoxelTracingParams
 	Vector2 sideConeRatioDistance = { 2.2f, 5.f };
 };
 
-class IsoSeparateBounceVoxelsCS : public ComputeShader
+class AnisoSeparateBounceVoxelsCS : public ComputeShader
 {
 public:
 
-	void dispatch(ID3D12GraphicsCommandList* commandList, const std::span<float>& data, const ShaderTextureView& targetColor, const ShaderTextureView& targetOccupancy, const ShaderTextureView& sourceColor, const ShaderTextureView& sourceOccupancy, D3D12_GPU_VIRTUAL_ADDRESS);
+	void dispatch(ID3D12GraphicsCommandList* commandList, const std::span<float>& data, const ShaderTextureView faceViews[AnisoSeparateVoxelCascade::FaceCount], const ShaderTextureView& occupancyView, const ShaderTextureView prevFaceViews[AnisoSeparateVoxelCascade::FaceCount], const ShaderTextureView& prevOccupancyView, D3D12_GPU_VIRTUAL_ADDRESS);
 };
 
-class IsoSeparateOpacityGridCS : public ComputeShader
+class AnisoSeparateOccupancyBitmaskCS : public ComputeShader
 {
 public:
-	IsoSeparateOpacityGridCS()
+	AnisoSeparateOccupancyBitmaskCS()
 	{
 		volatileTextures = true;
 	}
 
-	void dispatch(ID3D12GraphicsCommandList* commandList, const ShaderTextureView& sourceOccupancy, const ShaderTextureView& targetOpacityGrid);
+	void dispatch(ID3D12GraphicsCommandList* commandList, const ShaderTextureView& sourceOccupancy, const ShaderTextureView& targetBitmask);
 };
 
-class IsoSeparateVoxelization
+class AnisoSeparateVoxelization
 {
 public:
 
 	static constexpr UINT CascadesCount = 4;
+	static constexpr float CascadeExtends[CascadesCount] = { 25, 50, 100, 200 };
 
 	void initialize(RenderSystem& renderSystem, const FrameParameters& params, GraphicsResources& resources, ShadowMaps& shadowMaps, RenderWorld& renderWorld, DXGI_FORMAT outputFormat);
 	void shutdown();
@@ -56,10 +57,10 @@ public:
 	void revoxelize();
 
 	void voxelizeCascades(CommandsData& commands, GpuTextureStates& viewportOutput, const RenderContext& ctx);
-	void runBounces(CommandsData& computeCommands, const RenderContext& ctx, const IsoSeparateVoxelTracingParams& params);
+	void runBounces(CommandsData& computeCommands, const RenderContext& ctx, const AnisoSeparateVoxelTracingParams& params);
 	void transitionForCompute(ID3D12GraphicsCommandList* commandList);
 
-	IsoSeparateVoxelCascade voxelCascades[CascadesCount];
+	AnisoSeparateVoxelCascade voxelCascades[CascadesCount];
 
 private:
 
@@ -69,11 +70,12 @@ private:
 		float voxelDensity;
 		Vector3 moveOffset;
 		float voxelSceneSize;
-		UINT texId;
-		UINT texIdPrev;
+		UINT texIdFaces[AnisoSeparateVoxelCascade::FaceCount];
+		UINT texIdPrevFaces[AnisoSeparateVoxelCascade::FaceCount];
 		UINT texIdOccupancy;
 		UINT texIdPrevOccupancy;
 		UINT resIdDataBuffer;
+		UINT texIdOccupancyBitmask;
 	};
 
 	XM_ALIGNED_STRUCT(16) SceneVoxelCbuffer
@@ -86,20 +88,21 @@ private:
 	cbufferData;
 
 	CbufferView cbuffer;
-	void updateCBufferCascade(SceneVoxelChunkInfo& info, Vector3 diff, IsoSeparateVoxelCascade& cascade);
-	void updateCBuffer(const Vector3& cameraPosition, const IsoSeparateVoxelTracingParams& params);
+	void updateCBufferCascade(SceneVoxelChunkInfo& info, Vector3 diff, AnisoSeparateVoxelCascade& cascade);
+	void updateCBuffer(const Vector3& cameraPosition, const AnisoSeparateVoxelTracingParams& params);
 
-	void voxelizeCascade(ID3D12GraphicsCommandList* commandList, TextureStatePair& voxelScene, TextureStatePair& prevVoxelScene, TextureStatePair& voxelOccupancy, TextureStatePair& prevVoxelOccupancy, GpuTextureStates& viewportOutput, IsoSeparateVoxelCascade& cascade, const RenderContext& ctx);
-	void bounceCascade(CommandsData& commands, IsoSeparateVoxelCascade& cascade, const RenderContext& ctx);
+	void voxelizeCascade(ID3D12GraphicsCommandList* commandList, TextureStatePair faceStates[AnisoSeparateVoxelCascade::FaceCount], TextureStatePair prevFaceStates[AnisoSeparateVoxelCascade::FaceCount], TextureStatePair& occupancyState, TextureStatePair& prevOccupancyState, GpuTextureStates& viewportOutput, AnisoSeparateVoxelCascade& cascade, const RenderContext& ctx);
+	void bounceCascade(CommandsData& commands, AnisoSeparateVoxelCascade& cascade, const RenderContext& ctx);
 	void renderShadowMap(ID3D12GraphicsCommandList* commandList, float extends, const RenderContext& ctx);
 
 	UINT buildCounter[CascadesCount]{};
 	bool reset = false;
 
-	IsoSeparateBounceVoxelsCS bouncesCS;
-	IsoSeparateOpacityGridCS opacityGridCS;
+	AnisoSeparateBounceVoxelsCS bouncesCS;
+	AnisoSeparateOccupancyBitmaskCS occupancyBitmaskCS;
 	Generate3DMips3xCS computeMips;
 	ClearBufferComputeShader clearBufferCS;
+	ClearTextureComputeShader clearTextureCS;
 
 	GpuTexture3D clearColorTexture;
 	GpuTexture3D clearOccupancyTexture;

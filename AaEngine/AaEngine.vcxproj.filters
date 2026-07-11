@@ -68,21 +68,6 @@
     <Filter Include="Source Files\RenderObject\Sky">
       <UniqueIdentifier>{c3d4e5f6-a7b8-9012-cdef-234567890123}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\RenderCore\VCT">
-      <UniqueIdentifier>{a1b2c3d4-e5f6-7890-abcd-ef1234567890}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\RenderCore\VCT\iso">
-      <UniqueIdentifier>{b2c3d4e5-f6a7-8901-bcde-f12345678901}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\RenderCore\VCT\isoSeparate">
-      <UniqueIdentifier>{d20f4b6e-2de7-4d46-9f5a-b76a14cf0b64}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\RenderCore\VCT\aniso">
-      <UniqueIdentifier>{d4e5f6a7-b8c9-0123-defg-456789012345}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\RenderCore\VCT\anisoSeparate">
-      <UniqueIdentifier>{7f76a408-1c31-41ac-8472-499ca34a7205}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Scene\Collection">
       <UniqueIdentifier>{561cc36b-4d25-4b90-98e5-a7051944f4df}</UniqueIdentifier>
     </Filter>
@@ -91,6 +76,12 @@
     </Filter>
     <Filter Include="Source Files\RenderObject\SplineSweep">
       <UniqueIdentifier>{26dd4bc2-7c8c-4d6a-9acf-3850bd636c31}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\RenderCore\Voxels">
+      <UniqueIdentifier>{a1b2c3d4-e5f6-7890-abcd-ef1234567890}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\RenderCore\Voxels\anisoSeparate">
+      <UniqueIdentifier>{7f76a408-1c31-41ac-8472-499ca34a7205}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -219,30 +210,6 @@
     </ClCompile>
     <ClCompile Include="source\FrameCompositor\Tasks\VoxelizeSceneTask.cpp">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
-    </ClCompile>
-    <ClCompile Include="source\RenderCore\VCT\iso\IsoVoxelCascade.cpp">
-      <Filter>Source Files\RenderCore\VCT\iso</Filter>
-    </ClCompile>
-    <ClCompile Include="source\RenderCore\VCT\iso\IsoVoxelization.cpp">
-      <Filter>Source Files\RenderCore\VCT\iso</Filter>
-    </ClCompile>
-    <ClCompile Include="source\RenderCore\VCT\isoSeparate\IsoSeparateVoxelCascade.cpp">
-      <Filter>Source Files\RenderCore\VCT\isoSeparate</Filter>
-    </ClCompile>
-    <ClCompile Include="source\RenderCore\VCT\isoSeparate\IsoSeparateVoxelization.cpp">
-      <Filter>Source Files\RenderCore\VCT\isoSeparate</Filter>
-    </ClCompile>
-    <ClCompile Include="source\RenderCore\VCT\aniso\AnisoVoxelCascade.cpp">
-      <Filter>Source Files\RenderCore\VCT\aniso</Filter>
-    </ClCompile>
-    <ClCompile Include="source\RenderCore\VCT\aniso\AnisoVoxelization.cpp">
-      <Filter>Source Files\RenderCore\VCT\aniso</Filter>
-    </ClCompile>
-    <ClCompile Include="source\RenderCore\VCT\anisoSeparate\AnisoSeparateVoxelCascade.cpp">
-      <Filter>Source Files\RenderCore\VCT\anisoSeparate</Filter>
-    </ClCompile>
-    <ClCompile Include="source\RenderCore\VCT\anisoSeparate\AnisoSeparateVoxelization.cpp">
-      <Filter>Source Files\RenderCore\VCT\anisoSeparate</Filter>
     </ClCompile>
     <ClCompile Include="source\FrameCompositor\Tasks\SceneTestTask.cpp">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
@@ -427,6 +394,12 @@
     <ClCompile Include="source\FrameCompositor\Tasks\DeferredVrtComputeTask.cpp">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
     </ClCompile>
+    <ClCompile Include="source\RenderCore\Voxels\anisoSeparate\AnisoSeparateVoxelCascade.cpp">
+      <Filter>Source Files\RenderCore\Voxels\anisoSeparate</Filter>
+    </ClCompile>
+    <ClCompile Include="source\RenderCore\Voxels\anisoSeparate\AnisoSeparateVoxelization.cpp">
+      <Filter>Source Files\RenderCore\Voxels\anisoSeparate</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\App\TargetWindow.h">
@@ -575,30 +548,6 @@
     </ClInclude>
     <ClInclude Include="source\FrameCompositor\Tasks\VoxelizeSceneTask.h">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
-    </ClInclude>
-    <ClInclude Include="source\RenderCore\VCT\iso\IsoVoxelCascade.h">
-      <Filter>Source Files\RenderCore\VCT\iso</Filter>
-    </ClInclude>
-    <ClInclude Include="source\RenderCore\VCT\iso\IsoVoxelization.h">
-      <Filter>Source Files\RenderCore\VCT\iso</Filter>
-    </ClInclude>
-    <ClInclude Include="source\RenderCore\VCT\isoSeparate\IsoSeparateVoxelCascade.h">
-      <Filter>Source Files\RenderCore\VCT\isoSeparate</Filter>
-    </ClInclude>
-    <ClInclude Include="source\RenderCore\VCT\isoSeparate\IsoSeparateVoxelization.h">
-      <Filter>Source Files\RenderCore\VCT\isoSeparate</Filter>
-    </ClInclude>
-    <ClInclude Include="source\RenderCore\VCT\aniso\AnisoVoxelCascade.h">
-      <Filter>Source Files\RenderCore\VCT\aniso</Filter>
-    </ClInclude>
-    <ClInclude Include="source\RenderCore\VCT\aniso\AnisoVoxelization.h">
-      <Filter>Source Files\RenderCore\VCT\aniso</Filter>
-    </ClInclude>
-    <ClInclude Include="source\RenderCore\VCT\anisoSeparate\AnisoSeparateVoxelCascade.h">
-      <Filter>Source Files\RenderCore\VCT\anisoSeparate</Filter>
-    </ClInclude>
-    <ClInclude Include="source\RenderCore\VCT\anisoSeparate\AnisoSeparateVoxelization.h">
-      <Filter>Source Files\RenderCore\VCT\anisoSeparate</Filter>
     </ClInclude>
     <ClInclude Include="source\FrameCompositor\Tasks\SceneTestTask.h">
       <Filter>Source Files\FrameCompositor\Tasks</Filter>
@@ -791,6 +740,12 @@
     </ClInclude>
     <ClInclude Include="source\RenderObject\Terrain\HeightmapMinMax.h">
       <Filter>Source Files\RenderObject\Terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RenderCore\Voxels\anisoSeparate\AnisoSeparateVoxelCascade.h">
+      <Filter>Source Files\RenderCore\Voxels\anisoSeparate</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RenderCore\Voxels\anisoSeparate\AnisoSeparateVoxelization.h">
+      <Filter>Source Files\RenderCore\Voxels\anisoSeparate</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

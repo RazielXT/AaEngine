@@ -1,6 +1,6 @@
 #define GRID_NO_PADDING
 
-#include "hlsl/vct/iso/VoxelConeTracingCommon.hlsl"
+//#include "hlsl/voxels/anisoSeparate/VoxelConeTracingCommon.hlsl"
 #include "hlsl/postprocess/WorldReconstruction.hlsl"
 #include "hlsl/grid/heightmapGridReconstruction.hlsl"
 #include "hlsl/common/ResourceAccess.hlsl"
@@ -29,15 +29,16 @@ uint TexIdMeshNormal;
 uint EntityId;
 #endif
 
-cbuffer SceneVoxelInfo : register(b1)
-{
-	SceneVoxelCbuffer VoxelInfo;
-};
-
-cbuffer SkyParamsBuffer : register(b2)
+cbuffer SkyParamsBuffer : register(b1)
 {
 	SkyParams Sky;
 }
+/*
+cbuffer SceneVoxelInfo : register(b2)
+{
+	SceneVoxelCbuffer VoxelInfo;
+};
+*/
 
 SamplerState LinearWrapSampler : register(s0);
 SamplerState DepthSampler : register(s1);

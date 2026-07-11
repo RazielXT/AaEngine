@@ -1,4 +1,4 @@
-#include "RenderCore/VCT/anisoSeparate/AnisoSeparateVoxelCascade.h"
+#include "RenderCore/Voxels/anisoSeparate/AnisoSeparateVoxelCascade.h"
 #include "Resources/GraphicsResources.h"
 #include "Resources/Compute/ClearBufferCS.h"
 #include "Utils/StringUtils.h"

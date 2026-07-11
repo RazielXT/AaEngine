@@ -3,7 +3,7 @@
 #include "Resources/GraphicsResources.h"
 #include "Scene/RenderWorld.h"
 #include <format>
-#include "RenderCore/VCT/anisoSeparate/AnisoSeparateVoxelization.h"
+#include "RenderCore/Voxels/anisoSeparate/AnisoSeparateVoxelization.h"
 #include "Utils/Logger.h"
 
 const UINT TextureSize = 1024;

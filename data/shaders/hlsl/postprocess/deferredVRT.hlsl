@@ -1,6 +1,6 @@
 #include "PostProcessCommon.hlsl"
 #include "WorldReconstruction.hlsl"
-#include "hlsl/vct/anisoSeparate/VoxelRayTracingCommon.hlsl"
+#include "hlsl/voxels/anisoSeparate/VoxelRayTracingCommon.hlsl"
 #include "hlsl/common/Random.hlsl"
 #include "hlsl/sky/SkyColor.hlsl"
 

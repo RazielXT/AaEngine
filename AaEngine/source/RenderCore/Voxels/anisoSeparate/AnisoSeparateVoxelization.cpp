@@ -1,4 +1,4 @@
-#include "RenderCore/VCT/anisoSeparate/AnisoSeparateVoxelization.h"
+#include "RenderCore/Voxels/anisoSeparate/AnisoSeparateVoxelization.h"
 #include "Scene/RenderWorld.h"
 #include "Scene/RenderQueue.h"
 #include "Resources/Material/MaterialResources.h"
@@ -38,7 +38,7 @@ void AnisoSeparateVoxelization::initialize(RenderSystem& renderSystem, const Fra
 
 	computeMips.init(*renderSystem.core.device, "generate3DMipmaps3x", resources.shaders);
 
-	auto bouncesShader = resources.shaders.getShader("anisoSeparateVoxelBouncesCS", ShaderType::Compute, ShaderRef{"vct/anisoSeparate/anisoSeparateVoxelBouncesCS.hlsl", "main", "cs_6_6"});
+	auto bouncesShader = resources.shaders.getShader("anisoSeparateVoxelBouncesCS", ShaderType::Compute, ShaderRef{"voxels/anisoSeparate/anisoSeparateVoxelBouncesCS.hlsl", "main", "cs_6_6"});
 	bouncesCS.init(*renderSystem.core.device, *bouncesShader);
 
 	auto clearBufferShader = resources.shaders.getShader("clearBufferCS", ShaderType::Compute, ShaderRef{ "utils/clearBufferCS.hlsl", "main", "cs_6_6" });
@@ -47,7 +47,7 @@ void AnisoSeparateVoxelization::initialize(RenderSystem& renderSystem, const Fra
 	auto clearTextureShader = resources.shaders.getShader("clearTextureCS", ShaderType::Compute, ShaderRef{ "utils/clearTextureCS.hlsl", "main", "cs_6_6" });
 	clearTextureCS.init(*renderSystem.core.device, *clearTextureShader);
 
-	auto bitmaskShader = resources.shaders.getShader("opacityBitmaskCS", ShaderType::Compute, ShaderRef{ "vct/opacityBitmaskCS.hlsl", "CSMain", "cs_6_6" });
+	auto bitmaskShader = resources.shaders.getShader("opacityBitmaskCS", ShaderType::Compute, ShaderRef{ "voxels/opacityBitmaskCS.hlsl", "CSMain", "cs_6_6" });
 	occupancyBitmaskCS.init(*renderSystem.core.device, *bitmaskShader);
 
 	sceneQueue = mgr.createQueue({ outputFormat }, MaterialTechnique::Voxelize);

@@ -15,16 +15,6 @@ material DeferredLightingLow : DeferredLighting
 	shader_defines NO_GI
 }
 
-material DeferredVCT : PostProcess
-{
-	pixel_shader
-	{
-		file postprocess/deferredVCT.hlsl
-		entry PSMain
-		profile ps_6_6
-	}
-}
-
 material DeferredVRT : : PostProcess
 {
 	pixel_shader

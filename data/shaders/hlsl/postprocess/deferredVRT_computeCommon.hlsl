@@ -1,7 +1,7 @@
 #pragma once
 
 #include "WorldReconstruction.hlsl"
-#include "hlsl/vct/anisoSeparate/VoxelRayTracingCommon.hlsl"
+#include "hlsl/voxels/anisoSeparate/VoxelRayTracingCommon.hlsl"
 #include "hlsl/common/Random.hlsl"
 
 #define DEFERRED_VRT_TRACE_THREADS 64

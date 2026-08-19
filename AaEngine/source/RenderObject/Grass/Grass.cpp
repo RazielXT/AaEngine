@@ -59,7 +59,7 @@ void Grass::createSharedBuffers(RenderSystem& renderSystem, GraphicsResources& r
 	UINT zero = 0;
 	for (int i = 0; i < 2; i++)
 	{
-		infoBuffer[i] = resources.shaderBuffers.CreateStructuredBuffer(infoSize, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+		infoBuffer[i] = resources.shaderBuffers.CreateStructuredBuffer(infoSize);
 		infoBuffer[i]->SetName(L"GrassInfo");
 
 		CreateStaticBuffer(renderSystem.core.device, batch, &zero, sizeof(UINT), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
@@ -78,7 +78,7 @@ void Grass::createSharedBuffers(RenderSystem& renderSystem, GraphicsResources& r
 
 	for (auto& t : transformationBuffer)
 	{
-		t = resources.shaderBuffers.CreateStructuredBuffer(transformSize, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+		t = resources.shaderBuffers.CreateStructuredBuffer(transformSize);
 		t->SetName(L"GrassTransformation");
 	}
 }
@@ -101,8 +101,6 @@ void Grass::createSharedCommandBuffer(RenderSystem& renderSystem, ResourceUpload
 		D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, &sharedCommandBuffer, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 	sharedCommandBuffer->SetName(L"GrassSharedCommands");
 }
-
-
 
 void Grass::createChunks(RenderWorld& renderWorld, RenderSystem& renderSystem, GraphicsResources& resources, ResourceUploadBatch& batch)
 {

@@ -117,7 +117,7 @@ void AnisoSeparateVoxelization::updateCBufferCascade(SceneVoxelChunkInfo& info, 
 	info.texIdOccupancyBitmask = cascade.voxelOccupancyBitmaskTexture.view.srvHeapIndex;
 }
 
-void AnisoSeparateVoxelization::updateCBuffer(const Vector3& cameraPosition, const AnisoSeparateVoxelTracingParams& params)
+void AnisoSeparateVoxelization::updateCBuffer(const Vector3& cameraPosition)
 {
 	for (UINT i = 0; i < CascadesCount; i++)
 	{
@@ -128,9 +128,6 @@ void AnisoSeparateVoxelization::updateCBuffer(const Vector3& cameraPosition, con
 
 		updateCBufferCascade(cbufferData.cascadeInfo[i], movement, voxel);
 	}
-
-	cbufferData.middleConeRatioDistance = params.middleConeRatioDistance;
-	cbufferData.sideConeRatioDistance = params.sideConeRatioDistance;
 
 	auto& cbufferResource = *cbuffer.data[frameParams->frameIndex];
 	memcpy(cbufferResource.Memory(), &cbufferData, sizeof(cbufferData));
@@ -306,9 +303,9 @@ void AnisoSeparateVoxelization::bounceCascade(CommandsData& commands, AnisoSepar
 	cascade.voxelOccupancyBitmaskTexture.Transition(commands.commandList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 }
 
-void AnisoSeparateVoxelization::runBounces(CommandsData& computeCommands, const RenderContext& ctx, const AnisoSeparateVoxelTracingParams& params)
+void AnisoSeparateVoxelization::runBounces(CommandsData& computeCommands, const RenderContext& ctx)
 {
-	updateCBuffer(ctx.camera->getPosition(), params);
+	updateCBuffer(ctx.camera->getPosition());
 
 // 	static UINT idx = 0;
 // 

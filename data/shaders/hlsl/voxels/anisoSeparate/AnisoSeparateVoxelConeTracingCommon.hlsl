@@ -14,9 +14,6 @@ struct AnisoSeparateSceneVoxelChunkInfo
 
 struct AnisoSeparateSceneVoxelCbufferIndexed
 {
-	float2 MiddleConeRatio;
-	float2 SideConeRatio;
-
 	AnisoSeparateSceneVoxelChunkInfo Voxels[4];
 };
 

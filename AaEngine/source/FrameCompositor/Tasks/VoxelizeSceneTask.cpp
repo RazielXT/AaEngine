@@ -92,7 +92,7 @@ void VoxelizeSceneTask::recordCommands(RenderContext& renderCtx, CommandsData& c
 	}
 	else if (pass.info.entry == "Bounces")
 	{
-		voxelization.runBounces(commands, renderCtx, params);
+		voxelization.runBounces(commands, renderCtx);
 	}
 }
 

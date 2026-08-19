@@ -5,8 +5,8 @@
 #include "Resources/Compute/GenerateMipsComputeShader.h"
 #include "Resources/Compute/ClearBufferCS.h"
 #include "Resources/Compute/ComputeShader.h"
-#include "Scene/RenderObject.h"
 #include "Resources/Shader/ShaderDataBuffers.h"
+#include "Scene/RenderObject.h"
 #include <span>
 
 struct RenderQueue;
@@ -16,14 +16,6 @@ struct CommandsData;
 struct FrameParameters;
 struct GraphicsResources;
 class RenderSystem;
-
-struct AnisoSeparateVoxelTracingParams
-{
-	float voxelSteppingBounces = 0.075f;
-	float voxelSteppingDiffuse = 0.0f;
-	Vector2 middleConeRatioDistance = { 1.05f, 1.5f };
-	Vector2 sideConeRatioDistance = { 2.2f, 5.f };
-};
 
 class AnisoSeparateBounceVoxelsCS : public ComputeShader
 {
@@ -57,7 +49,7 @@ public:
 	void revoxelize();
 
 	void voxelizeCascades(CommandsData& commands, GpuTextureStates& viewportOutput, const RenderContext& ctx);
-	void runBounces(CommandsData& computeCommands, const RenderContext& ctx, const AnisoSeparateVoxelTracingParams& params);
+	void runBounces(CommandsData& computeCommands, const RenderContext& ctx);
 	void transitionForCompute(ID3D12GraphicsCommandList* commandList);
 
 	AnisoSeparateVoxelCascade voxelCascades[CascadesCount];
@@ -80,16 +72,13 @@ private:
 
 	XM_ALIGNED_STRUCT(16) SceneVoxelCbuffer
 	{
-		Vector2 middleConeRatioDistance = { 1, 0.9f };
-		Vector2 sideConeRatioDistance = { 2, 0.8f };
-
 		SceneVoxelChunkInfo cascadeInfo[CascadesCount];
 	}
 	cbufferData;
 
 	CbufferView cbuffer;
 	void updateCBufferCascade(SceneVoxelChunkInfo& info, Vector3 diff, AnisoSeparateVoxelCascade& cascade);
-	void updateCBuffer(const Vector3& cameraPosition, const AnisoSeparateVoxelTracingParams& params);
+	void updateCBuffer(const Vector3& cameraPosition);
 
 	void voxelizeCascade(ID3D12GraphicsCommandList* commandList, TextureStatePair faceStates[AnisoSeparateVoxelCascade::FaceCount], TextureStatePair prevFaceStates[AnisoSeparateVoxelCascade::FaceCount], TextureStatePair& occupancyState, TextureStatePair& prevOccupancyState, GpuTextureStates& viewportOutput, AnisoSeparateVoxelCascade& cascade, const RenderContext& ctx);
 	void bounceCascade(CommandsData& commands, AnisoSeparateVoxelCascade& cascade, const RenderContext& ctx);

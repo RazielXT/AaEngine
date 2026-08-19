@@ -32,10 +32,4 @@ void VgiSection::draw(ApplicationCore& app, DebugState& state)
 
 	if (ImGui::Button("Regenerate voxels"))
 		VoxelizeSceneTask::Get().revoxelize();
-
-	auto& params = VoxelizeSceneTask::Get().params;
-	ImGui::SliderFloat("middleConeRatio", &params.middleConeRatioDistance.x, 0.0f, 5.f);
-	ImGui::SliderFloat("middleConeDistance", &params.middleConeRatioDistance.y, 0.0f, 5.f);
-	ImGui::SliderFloat("sideConeRatio", &params.sideConeRatioDistance.x, 0.0f, 5.f);
-	ImGui::SliderFloat("sideConeDistance", &params.sideConeRatioDistance.y, 0.0f, 5.f);
 }

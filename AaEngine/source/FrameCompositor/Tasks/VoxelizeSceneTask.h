@@ -24,8 +24,6 @@ public:
 	void revoxelize();
 	void clear(ID3D12GraphicsCommandList* list = nullptr);
 
-	AnisoSeparateVoxelTracingParams params;
-
 	Execution getExecution(CompositorPass&) const override;
 
 private:

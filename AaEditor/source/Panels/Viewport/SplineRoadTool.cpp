@@ -78,16 +78,19 @@ void SplineRoadTool::draw(const ViewportToolContext& ctx)
 	const SplineConstruction* road = getRoad();
 	const size_t pointCount = road ? road->spline.getPointCount() : 0;
 	const bool pointSelected = selectedPointIndex != Spline::InvalidPointIndex && selectedPointIndex < pointCount;
+	const bool placingRoad = viewport.isPlacingFor(this);
 
 	ImGui::SameLine();
 	ImGui::BeginGroup();
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8, 8));
 
+	ImGui::PushStyleColor(ImGuiCol_Button, placingRoad ? activeBg : inactiveBg);
 	if (ImGui::Button(ICON_FA_BEZIER_CURVE "##spline_create", ImVec2(40, 40)))
 		createRoad();
-	setToolbarTooltip("Create spline road");
+	setToolbarTooltip(placingRoad ? "Cancel spline road placement" : "Place new spline road");
+	ImGui::PopStyleColor();
 
-	if (roadAvailable)
+	if (roadAvailable && !placingRoad)
 	{
 		ImGui::Dummy(ImVec2(0.0f, 4.0f));
 
@@ -144,7 +147,7 @@ void SplineRoadTool::draw(const ViewportToolContext& ctx)
 	ImGui::PopStyleVar();
 
 	const bool previewCurrent = hasPreview() && !isPreviewDirty();
-	if (roadAvailable && (!autoBuildPreview || !previewCurrent))
+	if (roadAvailable && !placingRoad && (!autoBuildPreview || !previewCurrent))
 	{
 		ImGui::Dummy(ImVec2(0.0f, 4.0f));
 		const bool previewStale = hasPreview() && isPreviewDirty();
@@ -160,7 +163,8 @@ void SplineRoadTool::draw(const ViewportToolContext& ctx)
 	ImGui::EndGroup();
 	overlayActive = ImGui::IsItemHovered();
 
-	gizmoController.draw(*this, ctx);
+	if (!viewport.isPlacingFor(this))
+		gizmoController.draw(*this, ctx);
 }
 
 void SplineRoadTool::onActivated()
@@ -184,19 +188,70 @@ void SplineRoadTool::reset()
 
 void SplineRoadTool::createRoad()
 {
+	if (viewport.isPlacingFor(this))
+	{
+		viewport.cancelPlacement();
+		return;
+	}
+
+	viewport.setActiveTool(this);
+	ViewportPlacementRequest request;
+	request.owner = this;
+	request.hint = "Place spline road";
+	request.place = [this](const EntityPicker::PickInfo& pickInfo, Camera& camera)
+	{
+		placeRoad(pickInfo, camera);
+	};
+	viewport.beginPlacement(std::move(request));
+}
+
+void SplineRoadTool::placeRoad(const EntityPicker::PickInfo& pickInfo, Camera& camera)
+{
+	Vector3 position;
+	Vector3 direction = camera.getCameraDirection();
+	Vector3 referenceUp = Vector3::UnitY;
+
+	if (pickInfo.id)
+	{
+		position = pickInfo.position;
+		referenceUp = pickInfo.normal;
+		if (referenceUp.LengthSquared() < 0.000001f)
+			referenceUp = Vector3::UnitY;
+		else
+			referenceUp.Normalize();
+
+		direction -= referenceUp * direction.Dot(referenceUp);
+	}
+	else
+	{
+		position = camera.getPosition() + direction * 50.0f;
+	}
+
+	if (direction.LengthSquared() < 0.000001f)
+	{
+		direction = Vector3::UnitZ - referenceUp * Vector3::UnitZ.Dot(referenceUp);
+		if (direction.LengthSquared() < 0.000001f)
+			direction = Vector3::UnitX;
+	}
+	direction.Normalize();
+
 	SplineRoadInstance& instance = createSplineInstance();
 	SplineConstruction* construction = instance.construction.get();
-	construction->spline.addPoint({ -12.0f, 1.0f, 0.0f });
-	construction->spline.addPoint({ 0.0f, 1.0f, 12.0f });
-	construction->spline.addPoint({ 12.0f, 1.0f, 0.0f });
+	construction->spline.setReferenceUp(referenceUp);
+	construction->spline.addPoint(position);
+	construction->spline.addPoint(position + direction * addPointDistance);
 	applySplineSamplingSettings();
 	construction->profile = createPreviewProfile();
 	construction->sweepSettings.pathUvScale = 0.25f;
 	construction->sweepSettings.preventProfileFoldover = preventProfileFoldover;
 	construction->sweepSettings.minProfileForwardScale = minProfileForwardScale;
 	selectedPointIndex = construction->spline.getPointCount() - 1;
+	pointGizmoMode = PointGizmoMode::Move;
 	instance.previewDirty = false;
-	rebuildDebug();
+	if (autoBuildPreview)
+		buildPreview();
+	else
+		rebuildDebug();
 }
 
 void SplineRoadTool::clearRoad()
@@ -599,12 +654,6 @@ void SplineRoadTool::applySplineSamplingSettings()
 		return;
 
 	construction->spline.setAdaptiveTessellation(curvatureTessellationScale, static_cast<size_t>((std::max)(maxTessellationSegments, 1)), rollTessellationScale);
-}
-
-void SplineRoadTool::ensureRoad()
-{
-	if (!getRoad())
-		createRoad();
 }
 
 ShapeProfile2D SplineRoadTool::createPreviewProfile() const

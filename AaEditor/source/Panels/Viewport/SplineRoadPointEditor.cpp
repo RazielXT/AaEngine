@@ -9,8 +9,10 @@
 
 void SplineRoadPointEditor::addPoint(SplineRoadTool& tool) const
 {
-	tool.ensureRoad();
 	SplineConstruction* construction = tool.getRoad();
+	if (!construction)
+		return;
+
 	auto& spline = construction->spline;
 	const size_t pointCount = spline.getPointCount();
 

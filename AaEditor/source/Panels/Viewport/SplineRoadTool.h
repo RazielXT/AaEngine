@@ -136,6 +136,7 @@ private:
 	const SplineRoadInstance* activeSpline() const;
 	SplineRoadInstance* findSplineByPathEntity(RenderEntity* entity);
 	SplineRoadInstance& createSplineInstance();
+	void placeRoad(const EntityPicker::PickInfo& pickInfo, Camera& camera);
 	void removeSplineFromWorld(SplineRoadInstance& instance);
 	bool trySelectKnownSplinePart(ObjectId id, Vector3 pickedPosition);
 	void markConstructionChanged();
@@ -146,7 +147,6 @@ private:
 	void removePreview();
 	void updateDebugSettings();
 	void applySplineSamplingSettings();
-	void ensureRoad();
 	ShapeProfile2D createPreviewProfile() const;
 	ApplicationCore& app;
 	ViewportPanel& viewport;

@@ -24,8 +24,6 @@ public:
 	// Drawn always by ViewportPanel regardless of active tool
 	bool drawModeIcon(bool primary);
 
-	void setAssetDrop(const std::string& asset) { assetDrop = asset; }
-
 private:
 
 	ApplicationCore& app;
@@ -35,5 +33,4 @@ private:
 	bool gizmoReset = false;
 	bool gizmoResetCache = false;
 	bool overlayActive = false;
-	std::string assetDrop;
 };

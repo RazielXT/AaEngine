@@ -1,10 +1,13 @@
 #pragma once
 
 #include "ApplicationCore.h"
+#include "ViewportPlacement.h"
 #include "imgui.h"
 #include <map>
 #include <string>
 #include <memory>
+#include <optional>
+#include <unordered_set>
 #include "SelectionTool.h"
 #include "InputHandler.h"
 
@@ -47,6 +50,10 @@ public:
 	void setActiveTool(ViewportTool* tool);
 	ViewportTool* getActiveTool() const { return activeTool; }
 	void registerSplineRoadTool(SplineRoadTool* tool) { splineRoadTool = tool; }
+	void beginPlacement(ViewportPlacementRequest request);
+	void placeAtCursor(ViewportPlacementRequest request);
+	void cancelPlacement();
+	bool isPlacingFor(const ViewportTool* owner) const;
 
 	bool onClick(MouseButton);
 	void reset();
@@ -60,6 +67,8 @@ private:
 	RenderCore& renderer;
 
 	void ensureOutputDescriptor();
+	void schedulePlacementPick();
+	void drawPlacementHint() const;
 
 	XMUINT2 viewportBounds[2];
 	XMUINT2 viewportPanelSize{};
@@ -69,6 +78,9 @@ private:
 	ViewportTool* activeTool = nullptr;
 	std::unique_ptr<SelectionTool> selectionTool;
  	SplineRoadTool* splineRoadTool = nullptr;
+	std::optional<ViewportPlacementRequest> placement;
+	uint64_t placementPickRequestId = 0;
+	std::unordered_set<uint64_t> placementPickRequestIds;
 
 	D3D12_GPU_DESCRIPTOR_HANDLE renderOutputHandleGpu{};
 	D3D12_CPU_DESCRIPTOR_HANDLE renderOutputHandleCpu{};

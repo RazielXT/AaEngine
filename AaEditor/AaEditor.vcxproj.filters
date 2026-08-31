@@ -67,6 +67,9 @@
     <ClCompile Include="source\Panels\Viewport\SelectionTool.cpp">
       <Filter>Source Files\Panels\Viewport</Filter>
     </ClCompile>
+	<ClCompile Include="source\Panels\Viewport\AssetPlacementOperation.cpp">
+	  <Filter>Source Files\Panels\Viewport</Filter>
+	</ClCompile>
   <ClCompile Include="source\Panels\Viewport\SplineRoadGizmoController.cpp">
     <Filter>Source Files\Panels\Viewport</Filter>
   </ClCompile>
@@ -156,6 +159,9 @@
     <ClInclude Include="source\Panels\Viewport\SelectionTool.h">
       <Filter>Source Files\Panels\Viewport</Filter>
     </ClInclude>
+	<ClInclude Include="source\Panels\Viewport\AssetPlacementOperation.h">
+	  <Filter>Source Files\Panels\Viewport</Filter>
+	</ClInclude>
   <ClInclude Include="source\Panels\Viewport\SplineRoadGizmoController.h">
     <Filter>Source Files\Panels\Viewport</Filter>
   </ClInclude>
@@ -171,6 +177,9 @@
     <ClInclude Include="source\Panels\Viewport\ViewportPanel.h">
       <Filter>Source Files\Panels\Viewport</Filter>
     </ClInclude>
+	<ClInclude Include="source\Panels\Viewport\ViewportPlacement.h">
+	  <Filter>Source Files\Panels\Viewport</Filter>
+	</ClInclude>
     <ClInclude Include="source\Panels\Viewport\ViewportTool.h">
       <Filter>Source Files\Panels\Viewport</Filter>
     </ClInclude>

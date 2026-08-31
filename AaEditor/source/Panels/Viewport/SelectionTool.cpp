@@ -3,10 +3,6 @@
 #include "ApplicationCore.h"
 #include "Scene/Camera.h"
 #include "ImGuizmo.h"
-#include "Scene/Collection/SceneCollection.h"
-#include "Resources/Model/GltfLoader.h"
-#include "RenderObject/Prefab/PrefabLoader.h"
-#include "SceneParser.h"
 #include "FrameCompositor/Tasks/VoxelizeSceneTask.h"
 #include "Utils/Logger.h"
 #include "../data/editor/fonts/IconsFontAwesome7.h"
@@ -81,46 +77,7 @@ SelectionTool::SelectionTool(ApplicationCore& a, EditorSelection& sel)
 
 void SelectionTool::onPick(const EntityPicker::PickInfo& pickInfo, bool ctrlActive, Camera& camera)
 {
-	if (!assetDrop.empty())
-	{
-		ObjectTransformation tr;
-
-		if (pickInfo.id)
-		{
-			tr.position = pickInfo.position;
-			tr.position.y += 2;
-		}
-		else
-		{
-			tr.position = camera.getPosition() + camera.getCameraDirection() * 50;
-		}
-
-		ResourceUploadBatch batch(app.renderSystem.core.device);
-		batch.Begin();
-
-		if (assetDrop.ends_with(".gltf"))
-		{
-			SceneCollection::LoadCtx loadCtx = { batch, app.renderWorld, app.renderSystem, app.resources, tr };
-			auto scene = GltfLoader::load(assetDrop, loadCtx);
-			SceneCollection::loadResource(scene, loadCtx);
-		}
-		else if (assetDrop.ends_with(".scene"))
-		{
-			SceneParser::load(assetDrop, { batch, app.renderWorld, app.renderSystem, app.resources, app.physicsMgr, tr });
-		}
-		else if (assetDrop.ends_with(".prefab"))
-		{
-			PrefabLoader::load(assetDrop, { batch, app.renderWorld, app.renderSystem, app.resources, tr });
-		}
-
-		auto uploadResourcesFinished = batch.End(app.renderSystem.core.commandQueue);
-		uploadResourcesFinished.wait();
-
-		assetDrop.clear();
-
-		VoxelizeSceneTask::Get().revoxelize();
-	}
-	else if (auto selectedId = pickInfo.id)
+	if (auto selectedId = pickInfo.id)
 	{
 		auto obj = app.renderWorld.getObject(selectedId);
 		Logger::log(std::format("Picked '{}' at ({:.2f}, {:.2f}, {:.2f})", obj.getName(), pickInfo.position.x, pickInfo.position.y, pickInfo.position.z));
@@ -265,5 +222,4 @@ void SelectionTool::draw(const ViewportToolContext& ctx)
 
 void SelectionTool::reset()
 {
-	assetDrop.clear();
 }

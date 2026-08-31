@@ -26,14 +26,23 @@ void SplineRoadSection::draw(SplineRoadTool& tool, ViewportPanel& viewportPanel)
 		}
 	}
 
-	if (ImGui::Button(ICON_FA_PLUS " New"))
+	const bool placingRoad = viewportPanel.isPlacingFor(&tool);
+	const char* newRoadLabel = placingRoad ? "Cancel placement" : ICON_FA_PLUS " New";
+	if (ImGui::Button(newRoadLabel))
 	{
 		tool.createRoad();
-		viewportPanel.setActiveTool(&tool);
 	}
 	ImGui::SameLine();
+	ImGui::BeginDisabled(placingRoad);
 	if (ImGui::Button(ICON_FA_FOLDER_OPEN " Load"))
 		tool.loadSpline();
+	ImGui::EndDisabled();
+
+	if (placingRoad)
+	{
+		ImGui::TextDisabled("Click in the viewport to place the road. Right-click to cancel.");
+		return;
+	}
 
 	if (!tool.hasRoad())
 	{
@@ -212,7 +221,7 @@ void SplineRoadSection::draw(SplineRoadTool& tool, ViewportPanel& viewportPanel)
 	ImGui::TextDisabled("Status: %s", previewStatus);
 	if (ImGui::Checkbox("Auto rebuild", &tool.autoBuildPreview))
 		tool.onAutoBuildPreviewChanged();
-	const bool physicsChanged = ImGui::Checkbox("Physics", &tool.previewPhysics);
+	const bool physicsChanged = ImGui::Checkbox("Physics##spline_preview", &tool.previewPhysics);
 	if (physicsChanged && tool.hasPreview())
 		tool.buildPreview();
 

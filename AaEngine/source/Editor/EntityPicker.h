@@ -27,14 +27,16 @@ public:
 	{
 		XMUINT2 position;
 		bool onlyTransparent = false;
+		uint64_t requestId = 0;
 	};
-	void scheduleNextPick(PickOptions);
+	uint64_t scheduleNextPick(PickOptions);
 
 	struct PickInfo
 	{
 		ObjectId id;
 		Vector3 position;
 		Vector3 normal;
+		uint64_t requestId = 0;
 	};
 	bool hasPreparedPick() const;
 	PickInfo getLastPick();
@@ -63,6 +65,8 @@ private:
 	std::optional<PickOptions> scheduled;
 	bool nextPickScheduled[FrameCount]{};
 	bool nextPickAvailable[FrameCount]{};
+	uint64_t nextPickRequestId[FrameCount]{};
+	uint64_t nextRequestId = 1;
 
 	RenderSystem& renderSystem;
 };

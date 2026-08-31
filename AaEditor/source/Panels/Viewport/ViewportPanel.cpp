@@ -2,6 +2,7 @@
 #include "Editor/EditorSelection.h"
 #include "Editor/ImguiPanelViewport.h"
 #include "ViewportTool.h"
+#include "AssetPlacementOperation.h"
 #include "SelectionTool.h"
 #include "SplineRoadTool.h"
 #include "imgui.h"
@@ -67,6 +68,64 @@ void ViewportPanel::scheduleViewportPick(bool transparent)
 	}
 }
 
+void ViewportPanel::beginPlacement(ViewportPlacementRequest request)
+{
+	cancelPlacement();
+	placement = std::move(request);
+	placementPickRequestId = 0;
+}
+
+void ViewportPanel::placeAtCursor(ViewportPlacementRequest request)
+{
+	beginPlacement(std::move(request));
+	schedulePlacementPick();
+}
+
+void ViewportPanel::cancelPlacement()
+{
+	if (placement && placement->cancel)
+		placement->cancel();
+	placement.reset();
+	placementPickRequestId = 0;
+}
+
+bool ViewportPanel::isPlacingFor(const ViewportTool* owner) const
+{
+	return placement && placement->owner == owner;
+}
+
+void ViewportPanel::schedulePlacementPick()
+{
+	if (!placement || placementPickRequestId)
+		return;
+
+	auto [mouseX, mouseY] = ImGui::GetMousePos();
+	mouseX -= viewportBounds[0].x;
+	mouseY -= viewportBounds[0].y;
+	const XMUINT2 viewportSize = { viewportBounds[1].x - viewportBounds[0].x, viewportBounds[1].y - viewportBounds[0].y };
+	if (mouseX < 0 || mouseY < 0 || mouseX >= viewportSize.x || mouseY >= viewportSize.y)
+		return;
+
+	placementPickRequestId = EntityPicker::Get().scheduleNextPick({ { static_cast<UINT>(mouseX), static_cast<UINT>(mouseY) }, false });
+	placementPickRequestIds.insert(placementPickRequestId);
+}
+
+void ViewportPanel::drawPlacementHint() const
+{
+	if (!placement || !hovered)
+		return;
+
+	const ImVec2 mousePosition = ImGui::GetMousePos();
+	const ImVec2 textSize = ImGui::CalcTextSize(placement->hint.c_str());
+	const ImVec2 padding(8.0f, 5.0f);
+	const ImVec2 minimum(mousePosition.x + 18.0f, mousePosition.y + 18.0f);
+	const ImVec2 maximum(minimum.x + textSize.x + padding.x * 2.0f, minimum.y + textSize.y + padding.y * 2.0f);
+	ImDrawList* drawList = ImGui::GetForegroundDrawList();
+	drawList->AddRectFilled(minimum, maximum, ImGui::GetColorU32(ImGuiCol_PopupBg), 3.0f);
+	drawList->AddRect(minimum, maximum, ImGui::GetColorU32(ImGuiCol_Border), 3.0f);
+	drawList->AddText(ImVec2(minimum.x + padding.x, minimum.y + padding.y), ImGui::GetColorU32(ImGuiCol_Text), placement->hint.c_str());
+}
+
 void ViewportPanel::resetOutputDescriptor()
 {
 	if (renderOutputHandleGpu.ptr)
@@ -82,11 +141,23 @@ bool ViewportPanel::onClick(MouseButton button)
 {
 	if (button == MouseButton::Right)
 	{
+		if (placement)
+		{
+			cancelPlacement();
+			return true;
+		}
+
 		if (activeTool && activeTool->isInteracting())
 		{
 			activeTool->cancel();
 			return true;
 		}
+	}
+
+	if (button == MouseButton::Left && placement)
+	{
+		schedulePlacementPick();
+		return true;
 	}
 
 	if (activeTool && (activeTool->isInteracting() || activeTool->isOverlayActive()))
@@ -104,6 +175,7 @@ bool ViewportPanel::onClick(MouseButton button)
 
 void ViewportPanel::reset()
 {
+	cancelPlacement();
 	if (activeTool)
 		activeTool->reset();
 }
@@ -111,6 +183,8 @@ void ViewportPanel::reset()
 void ViewportPanel::setActiveTool(ViewportTool* tool)
 {
 	ViewportTool* nextTool = tool ? tool : selectionTool.get();
+	if (placement && placement->owner != nextTool)
+		cancelPlacement();
 	if (activeTool == nextTool)
 		return;
 
@@ -168,7 +242,22 @@ void ViewportPanel::draw(Camera& camera)
 	if (EntityPicker::Get().hasPreparedPick())
 	{
 		auto pickInfo = EntityPicker::Get().getLastPick();
-		if (activeTool == selectionTool.get() && splineRoadTool && splineRoadTool->selectPathForMovement(pickInfo.id, pickInfo.position))
+		if (placementPickRequestIds.erase(pickInfo.requestId))
+		{
+			if (placement && pickInfo.requestId == placementPickRequestId)
+			{
+				auto completedPlacement = std::move(*placement);
+				placement.reset();
+				placementPickRequestId = 0;
+				if (completedPlacement.place)
+					completedPlacement.place(pickInfo, camera);
+			}
+		}
+		else if (placement)
+		{
+			// Ignore an ordinary pick that was already in flight when placement started.
+		}
+		else if (activeTool == selectionTool.get() && splineRoadTool && splineRoadTool->selectPathForMovement(pickInfo.id, pickInfo.position))
 			setActiveTool(splineRoadTool);
 		else
 			activeTool->onPick(pickInfo, ctrlActive, camera);
@@ -178,13 +267,15 @@ void ViewportPanel::draw(Camera& camera)
 	{
 		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_MODEL"))
 		{
-			selectionTool->setAssetDrop((const char*)payload->Data);
+			std::string assetPath(static_cast<const char*>(payload->Data));
 			setActiveTool(selectionTool.get());
-			scheduleViewportPick();
+			placeAtCursor(createAssetPlacementRequest(app, std::move(assetPath)));
 		}
 
 		ImGui::EndDragDropTarget();
 	}
+
+	drawPlacementHint();
 
 	// on top of viewport - always draw selection tool mode icon
 	ImGui::SetCursorPosY(ImGui::GetCursorStartPos().y + 5);

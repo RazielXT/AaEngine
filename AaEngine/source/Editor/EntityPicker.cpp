@@ -118,6 +118,7 @@ void EntityPicker::scheduleReadback(ID3D12GraphicsCommandList* commandList)
 	commandList->ResourceBarrier(_countof(barriers), barriers);
 
 	nextPickScheduled[renderSystem.core.frameIndex] = true;
+	nextPickRequestId[renderSystem.core.frameIndex] = scheduled->requestId;
 }
 
 void EntityPicker::readPickResult()
@@ -127,6 +128,7 @@ void EntityPicker::readPickResult()
 
 	nextPickScheduled[renderSystem.core.frameIndex] = false;
 	nextPickAvailable[renderSystem.core.frameIndex] = true;
+	lastPick.requestId = nextPickRequestId[renderSystem.core.frameIndex];
 
 	auto& readBuffers = readbackBuffer[renderSystem.core.frameIndex];
 	{
@@ -172,9 +174,11 @@ bool EntityPicker::lastPickWasTransparent() const
 	return lastPick.id.getObjectType() == ObjectType::Entity && lastPick.id.getOrder() == Order::Transparent;
 }
 
-void EntityPicker::scheduleNextPick(PickOptions pick)
+uint64_t EntityPicker::scheduleNextPick(PickOptions pick)
 {
+	pick.requestId = nextRequestId++;
 	scheduled = pick;
+	return pick.requestId;
 }
 
 bool EntityPicker::hasPreparedPick() const

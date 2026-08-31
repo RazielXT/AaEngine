@@ -67,6 +67,15 @@
     <ClCompile Include="source\Panels\Viewport\SelectionTool.cpp">
       <Filter>Source Files\Panels\Viewport</Filter>
     </ClCompile>
+  <ClCompile Include="source\Panels\Viewport\SplineRoadGizmoController.cpp">
+    <Filter>Source Files\Panels\Viewport</Filter>
+  </ClCompile>
+  <ClCompile Include="source\Panels\Viewport\SplineRoadPointEditor.cpp">
+    <Filter>Source Files\Panels\Viewport</Filter>
+  </ClCompile>
+	<ClCompile Include="source\Panels\Viewport\SplineRoadPersistence.cpp">
+	  <Filter>Source Files\Panels\Viewport</Filter>
+	</ClCompile>
     <ClCompile Include="source\Panels\Viewport\ViewportPanel.cpp">
       <Filter>Source Files\Panels\Viewport</Filter>
     </ClCompile>
@@ -147,6 +156,15 @@
     <ClInclude Include="source\Panels\Viewport\SelectionTool.h">
       <Filter>Source Files\Panels\Viewport</Filter>
     </ClInclude>
+  <ClInclude Include="source\Panels\Viewport\SplineRoadGizmoController.h">
+    <Filter>Source Files\Panels\Viewport</Filter>
+  </ClInclude>
+  <ClInclude Include="source\Panels\Viewport\SplineRoadPointEditor.h">
+    <Filter>Source Files\Panels\Viewport</Filter>
+  </ClInclude>
+	<ClInclude Include="source\Panels\Viewport\SplineRoadPersistence.h">
+	  <Filter>Source Files\Panels\Viewport</Filter>
+	</ClInclude>
     <ClInclude Include="source\Panels\Viewport\SplineRoadTool.h">
       <Filter>Source Files\Panels\Viewport</Filter>
     </ClInclude>

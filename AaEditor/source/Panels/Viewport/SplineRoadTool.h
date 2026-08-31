@@ -1,6 +1,9 @@
 #pragma once
 
 #include "ViewportTool.h"
+#include "SplineRoadGizmoController.h"
+#include "SplineRoadPointEditor.h"
+#include "SplineRoadPersistence.h"
 #include "Objects/SplineConstruction.h"
 #include "RenderObject/SplineSweep/SplineDebugVisualization.h"
 
@@ -13,6 +16,10 @@ class ViewportPanel;
 
 class SplineRoadTool : public ViewportTool
 {
+	friend class SplineRoadGizmoController;
+	friend class SplineRoadPointEditor;
+	friend class SplineRoadPersistence;
+
 public:
 	enum class PreviewProfile
 	{
@@ -137,25 +144,15 @@ private:
 	void rebuildDebug(SplineRoadInstance& instance);
 	void rebuildAllDebug();
 	void removePreview();
-	bool saveSplineToFile(const std::string& path) const;
-	bool loadSplineFromFile(const std::string& path);
-	bool saveCurrentMeshModel(const std::string& path) const;
 	void updateDebugSettings();
 	void applySplineSamplingSettings();
 	void ensureRoad();
 	ShapeProfile2D createPreviewProfile() const;
-	void drawSelectedPointGizmo(const ViewportToolContext& ctx);
-	void drawSelectedPointMoveGizmo(const ViewportToolContext& ctx);
-	void drawSelectedPointRollGizmo(const ViewportToolContext& ctx);
-	void drawSplineTransformGizmo(const ViewportToolContext& ctx);
-	void insertPointBetween(size_t previousPointIndex, size_t nextPointIndex);
-	void selectPointByOffset(int offset);
-	bool addReplicatedCurvePoint(bool extendStart);
-	bool shouldExtendStart(size_t pointCount) const;
-	Vector3 getForwardAddDirection(bool extendStart) const;
-
 	ApplicationCore& app;
 	ViewportPanel& viewport;
+	SplineRoadGizmoController gizmoController;
+	SplineRoadPointEditor pointEditor;
+	SplineRoadPersistence persistence;
 
 	std::vector<std::unique_ptr<SplineRoadInstance>> splines;
 	std::vector<std::unique_ptr<SplineConstruction>> bakedConstructions;

@@ -2,32 +2,16 @@
 
 #include "ApplicationCore.h"
 #include "ViewportPanel.h"
-#include "App/Directories.h"
-#include "Resources/Model/BinaryModelSerialization.h"
 #include "Scene/Camera.h"
 #include "Scene/RenderEntity.h"
 #include "Utils/Logger.h"
 #include "../data/editor/fonts/IconsFontAwesome7.h"
-#include "ImGuizmo.h"
 #include "imgui.h"
 
-#define PUGIXML_HEADER_ONLY
-#include "pugixml.hpp"
-
 #include <ResourceUploadBatch.h>
-#include <Windows.h>
-#include <commdlg.h>
 #include <algorithm>
-#include <chrono>
 #include <cmath>
-#include <ctime>
-#include <cstring>
-#include <filesystem>
 #include <format>
-#include <iomanip>
-#include <limits>
-#include <optional>
-#include <sstream>
 
 namespace
 {
@@ -38,136 +22,28 @@ namespace
 		return degrees * Pi / 180.0f;
 	}
 
-	float radiansToDegrees(float radians)
+	void setToolbarTooltip(const char* text)
 	{
-		return radians * 180.0f / Pi;
+		if (ImGui::IsItemHovered(ImGuiHoveredFlags_ForTooltip | ImGuiHoveredFlags_AllowWhenDisabled))
+			ImGui::SetTooltip("%s", text);
 	}
 
-	const char* profileToString(SplineRoadTool::PreviewProfile profile)
+	const char* addPointModeName(SplineRoadTool::AddPointMode mode)
 	{
-		switch (profile)
+		switch (mode)
 		{
-		case SplineRoadTool::PreviewProfile::Rectangle:
-			return "Rectangle";
-		case SplineRoadTool::PreviewProfile::Circle:
-			return "Circle";
-		case SplineRoadTool::PreviewProfile::Tube:
-			return "Tube";
-		case SplineRoadTool::PreviewProfile::Arc:
-			return "Arc";
-		case SplineRoadTool::PreviewProfile::FilledArc:
-			return "FilledArc";
-		case SplineRoadTool::PreviewProfile::Road:
+		case SplineRoadTool::AddPointMode::InsertAfter:
+			return "Insert after";
+		case SplineRoadTool::AddPointMode::InsertBefore:
+			return "Insert before";
+		case SplineRoadTool::AddPointMode::ExtendStart:
+			return "Extend start";
+		case SplineRoadTool::AddPointMode::ExtendEnd:
+			return "Extend end";
+		case SplineRoadTool::AddPointMode::Auto:
 		default:
-			return "Road";
+			return "Auto";
 		}
-	}
-
-	SplineRoadTool::PreviewProfile profileFromString(const char* value)
-	{
-		std::string profile = value ? value : "";
-		if (profile == "Rectangle")
-			return SplineRoadTool::PreviewProfile::Rectangle;
-		if (profile == "Circle")
-			return SplineRoadTool::PreviewProfile::Circle;
-		if (profile == "Tube")
-			return SplineRoadTool::PreviewProfile::Tube;
-		if (profile == "Arc")
-			return SplineRoadTool::PreviewProfile::Arc;
-		if (profile == "FilledArc")
-			return SplineRoadTool::PreviewProfile::FilledArc;
-		return SplineRoadTool::PreviewProfile::Road;
-	}
-
-	std::filesystem::path defaultSplineExportDirectory()
-	{
-		return std::filesystem::path(DATA_DIRECTORY) / "scene" / "export" / "spline";
-	}
-
-	std::string makeTimestampSuffix()
-	{
-		const auto now = std::chrono::system_clock::now();
-		const std::time_t nowTime = std::chrono::system_clock::to_time_t(now);
-		std::tm localTime{};
-		localtime_s(&localTime, &nowTime);
-
-		std::ostringstream stream;
-		stream << std::put_time(&localTime, "%Y%m%d_%H%M%S");
-		return stream.str();
-	}
-
-	std::filesystem::path makeTimestampedExportPath(const char* prefix, const char* extension)
-	{
-		std::filesystem::path directory = defaultSplineExportDirectory();
-		std::filesystem::create_directories(directory);
-		return directory / std::format("{}_{}.{}", prefix, makeTimestampSuffix(), extension);
-	}
-
-	std::optional<std::string> showOpenFileDialog(const char* title, const char* filter, const std::filesystem::path& initialDirectory)
-	{
-		std::filesystem::create_directories(initialDirectory);
-
-		char fileName[MAX_PATH] = {};
-		OPENFILENAMEA openFileName{};
-		openFileName.lStructSize = sizeof(openFileName);
-		openFileName.lpstrTitle = title;
-		openFileName.lpstrFilter = filter;
-		openFileName.lpstrFile = fileName;
-		openFileName.nMaxFile = MAX_PATH;
-		const std::string initialDirectoryString = initialDirectory.string();
-		openFileName.lpstrInitialDir = initialDirectoryString.c_str();
-		openFileName.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
-		if (!GetOpenFileNameA(&openFileName))
-			return std::nullopt;
-
-		return std::string(fileName);
-	}
-
-	std::optional<std::string> showSaveFileDialog(const char* title, const char* filter, const char* defaultExtension, const std::filesystem::path& initialPath)
-	{
-		std::filesystem::create_directories(initialPath.parent_path());
-
-		char fileName[MAX_PATH] = {};
-		strcpy_s(fileName, initialPath.string().c_str());
-
-		OPENFILENAMEA saveFileName{};
-		saveFileName.lStructSize = sizeof(saveFileName);
-		saveFileName.lpstrTitle = title;
-		saveFileName.lpstrFilter = filter;
-		saveFileName.lpstrFile = fileName;
-		saveFileName.nMaxFile = MAX_PATH;
-		saveFileName.lpstrDefExt = defaultExtension;
-		saveFileName.Flags = OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
-		if (!GetSaveFileNameA(&saveFileName))
-			return std::nullopt;
-
-		return std::string(fileName);
-	}
-
-	pugi::xml_node writeVector3(pugi::xml_node parent, const char* name, Vector3 value)
-	{
-		pugi::xml_node node = parent.append_child(name);
-		node.append_attribute("x") = value.x;
-		node.append_attribute("y") = value.y;
-		node.append_attribute("z") = value.z;
-		return node;
-	}
-
-	Vector3 readVector3(pugi::xml_node parent, const char* name, Vector3 fallback = {})
-	{
-		pugi::xml_node node = parent.child(name);
-		if (!node)
-			return fallback;
-
-		return { node.attribute("x").as_float(fallback.x), node.attribute("y").as_float(fallback.y), node.attribute("z").as_float(fallback.z) };
-	}
-
-	void addLayoutElement(ModelInfo& info, DXGI_FORMAT format, const char* semantic)
-	{
-		VertexLayoutElement element{};
-		element.format = format;
-		strcpy_s(element.semantic, semantic);
-		info.layout.push_back(element);
 	}
 }
 
@@ -196,50 +72,95 @@ void SplineRoadTool::onPick(const EntityPicker::PickInfo& pickInfo, bool ctrlAct
 
 void SplineRoadTool::draw(const ViewportToolContext& ctx)
 {
-	auto activeBg = ImGui::GetStyle().Colors[ImGuiCol_ButtonActive];
-	auto inactiveBg = ImGui::GetStyle().Colors[ImGuiCol_FrameBg];
+	const ImVec4 activeBg = ImGui::GetStyle().Colors[ImGuiCol_ButtonActive];
+	const ImVec4 inactiveBg = ImGui::GetStyle().Colors[ImGuiCol_FrameBg];
+	const bool roadAvailable = hasRoad();
+	const SplineConstruction* road = getRoad();
+	const size_t pointCount = road ? road->spline.getPointCount() : 0;
+	const bool pointSelected = selectedPointIndex != Spline::InvalidPointIndex && selectedPointIndex < pointCount;
 
 	ImGui::SameLine();
 	ImGui::BeginGroup();
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8, 8));
 
-	if (ImGui::Button(ICON_FA_ROUTE " ##spline_create", ImVec2(40, 40)))
+	if (ImGui::Button(ICON_FA_BEZIER_CURVE "##spline_create", ImVec2(40, 40)))
 		createRoad();
+	setToolbarTooltip("Create spline road");
 
-	ImGui::PushStyleColor(ImGuiCol_Button, hasRoad() ? inactiveBg : ImVec4(inactiveBg.x, inactiveBg.y, inactiveBg.z, 0.45f));
-	if (ImGui::Button(ICON_FA_CIRCLE_PLUS " ##spline_add_point", ImVec2(40, 40)) && hasRoad())
-		addPointForward();
-	ImGui::PopStyleColor();
+	if (roadAvailable)
+	{
+		ImGui::Dummy(ImVec2(0.0f, 4.0f));
 
-	ImGui::PushStyleColor(ImGuiCol_Button, selectedPointIndex != Spline::InvalidPointIndex ? inactiveBg : ImVec4(inactiveBg.x, inactiveBg.y, inactiveBg.z, 0.45f));
-	if (ImGui::Button(ICON_FA_CIRCLE_MINUS " ##spline_remove_point", ImVec2(40, 40)) && selectedPointIndex != Spline::InvalidPointIndex)
-		removeSelectedPoint();
-	ImGui::PopStyleColor();
+		ImGui::PushStyleColor(ImGuiCol_Button, pointGizmoMode == PointGizmoMode::Move ? activeBg : inactiveBg);
+		if (ImGui::Button(ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT "##spline_move_point", ImVec2(40, 40)))
+		{
+			pointGizmoMode = PointGizmoMode::Move;
+			enterPointEditMode();
+		}
+		setToolbarTooltip(pointSelected ? "Move selected point" : "Enter point move mode");
+		ImGui::PopStyleColor();
 
-	ImGui::PushStyleColor(ImGuiCol_Button, hasPreview() ? activeBg : inactiveBg);
-	if (ImGui::Button(ICON_FA_HAMMER " ##spline_build_preview", ImVec2(40, 40)) && hasRoad())
-		buildPreview();
-	ImGui::PopStyleColor();
+		ImGui::PushStyleColor(ImGuiCol_Button, pointGizmoMode == PointGizmoMode::Roll ? activeBg : inactiveBg);
+		if (ImGui::Button(ICON_FA_ROTATE "##spline_roll_point", ImVec2(40, 40)))
+		{
+			pointGizmoMode = PointGizmoMode::Roll;
+			enterPointEditMode();
+		}
+		setToolbarTooltip(pointSelected ? "Roll selected point" : "Enter point roll mode");
+		ImGui::PopStyleColor();
 
-	ImGui::PushStyleColor(ImGuiCol_Button, pointGizmoMode == PointGizmoMode::Move ? activeBg : inactiveBg);
-	if (ImGui::Button(ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT " ##spline_move_point", ImVec2(40, 40)))
-		pointGizmoMode = PointGizmoMode::Move;
-	ImGui::PopStyleColor();
+		ImGui::PushStyleColor(ImGuiCol_Button, pointGizmoMode == PointGizmoMode::SplineTransform ? activeBg : inactiveBg);
+		if (ImGui::Button(ICON_FA_OBJECT_GROUP "##spline_transform", ImVec2(40, 40)))
+			enterSplineTransformMode();
+		setToolbarTooltip("Transform entire spline");
+		ImGui::PopStyleColor();
 
-	ImGui::PushStyleColor(ImGuiCol_Button, pointGizmoMode == PointGizmoMode::Roll ? activeBg : inactiveBg);
-	if (ImGui::Button(ICON_FA_ARROWS_ROTATE " ##spline_roll_point", ImVec2(40, 40)))
-		pointGizmoMode = PointGizmoMode::Roll;
-	ImGui::PopStyleColor();
+		if (isPointEditMode())
+		{
+			ImGui::Dummy(ImVec2(0.0f, 4.0f));
+
+			if (ImGui::Button(ICON_FA_CIRCLE_PLUS "##spline_add_point", ImVec2(40, 40)))
+				addPointForward();
+			const std::string addTooltip = std::format("Add point ({})", addPointModeName(addPointMode));
+			setToolbarTooltip(addTooltip.c_str());
+
+			ImGui::BeginDisabled(!pointSelected);
+			if (ImGui::Button(ICON_FA_CIRCLE_MINUS "##spline_remove_point", ImVec2(40, 40)))
+				removeSelectedPoint();
+			setToolbarTooltip("Remove selected point");
+			ImGui::EndDisabled();
+
+			const bool autoInserts = addPointMode == AddPointMode::Auto && pointSelected && selectedPointIndex > 0 && selectedPointIndex + 1 < pointCount;
+			const bool usesPointSpacing = addPointMode != AddPointMode::InsertAfter && addPointMode != AddPointMode::InsertBefore && !autoInserts;
+			if (usesPointSpacing)
+			{
+				ImGui::SetNextItemWidth(90);
+				ImGui::DragFloat(ICON_FA_RULER "##SplinePointDistance", &addPointDistance, 0.5f, 1.0f, 100.0f, "%.1f m");
+				setToolbarTooltip("Point spacing used when extending the spline");
+			}
+		}
+	}
 
 	ImGui::PopStyleVar();
 
-	ImGui::SetNextItemWidth(90);
-	ImGui::DragFloat("##SplinePointDistance", &addPointDistance, 0.5f, 1.0f, 100.0f, "%.1f m");
+	const bool previewCurrent = hasPreview() && !isPreviewDirty();
+	if (roadAvailable && (!autoBuildPreview || !previewCurrent))
+	{
+		ImGui::Dummy(ImVec2(0.0f, 4.0f));
+		const bool previewStale = hasPreview() && isPreviewDirty();
+		if (previewStale)
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.65f, 0.38f, 0.10f, 1.0f));
+		if (ImGui::Button(ICON_FA_HAMMER "##spline_build_preview", ImVec2(40, 40)))
+			buildPreview();
+		setToolbarTooltip(previewStale ? "Rebuild outdated preview" : hasPreview() ? "Rebuild preview" : "Build preview");
+		if (previewStale)
+			ImGui::PopStyleColor();
+	}
 
 	ImGui::EndGroup();
 	overlayActive = ImGui::IsItemHovered();
 
-	drawSelectedPointGizmo(ctx);
+	gizmoController.draw(*this, ctx);
 }
 
 void SplineRoadTool::onActivated()
@@ -364,12 +285,12 @@ void SplineRoadTool::enterSplineTransformMode()
 
 void SplineRoadTool::selectPreviousPoint()
 {
-	selectPointByOffset(-1);
+	pointEditor.selectPointByOffset(*this, -1);
 }
 
 void SplineRoadTool::selectNextPoint()
 {
-	selectPointByOffset(1);
+	pointEditor.selectPointByOffset(*this, 1);
 }
 
 SplineRoadTool::SplineRoadInstance* SplineRoadTool::activeSpline()
@@ -414,85 +335,12 @@ void SplineRoadTool::removeSplineFromWorld(SplineRoadInstance& instance)
 
 void SplineRoadTool::addPointForward()
 {
-	ensureRoad();
-	SplineConstruction* construction = getRoad();
-	auto& spline = construction->spline;
-	const size_t pointCount = spline.getPointCount();
-
-	if (pointCount == 0)
-	{
-		spline.addPoint({});
-		selectedPointIndex = 0;
-		markConstructionChanged();
-		return;
-	}
-
-	switch (addPointMode)
-	{
-	case AddPointMode::InsertAfter:
-		if (selectedPointIndex != Spline::InvalidPointIndex && selectedPointIndex + 1 < pointCount)
-		{
-			insertPointBetween(selectedPointIndex, selectedPointIndex + 1);
-			return;
-		}
-		break;
-	case AddPointMode::InsertBefore:
-		if (selectedPointIndex != Spline::InvalidPointIndex && selectedPointIndex > 0 && selectedPointIndex < pointCount)
-		{
-			insertPointBetween(selectedPointIndex - 1, selectedPointIndex);
-			return;
-		}
-		break;
-	case AddPointMode::ExtendStart:
-		selectedPointIndex = 0;
-		break;
-	case AddPointMode::ExtendEnd:
-		selectedPointIndex = pointCount - 1;
-		break;
-	case AddPointMode::Auto:
-	default:
-		if (selectedPointIndex > 0 && selectedPointIndex != Spline::InvalidPointIndex && selectedPointIndex + 1 < pointCount)
-		{
-			insertPointBetween(selectedPointIndex, selectedPointIndex + 1);
-			return;
-		}
-		break;
-	}
-
-	bool extendStart = shouldExtendStart(pointCount);
-	if (replicateCurveOnAdd && addReplicatedCurvePoint(extendStart))
-	{
-		markConstructionChanged();
-		return;
-	}
-
-	Vector3 direction = getForwardAddDirection(extendStart);
-	if (extendStart)
-	{
-		Vector3 position = spline.getPoint(0).position + direction * addPointDistance;
-		spline.insertPoint(0, position);
-		selectedPointIndex = 0;
-	}
-	else
-	{
-		Vector3 position = spline.getPoint(pointCount - 1).position + direction * addPointDistance;
-		spline.addPoint(position);
-		selectedPointIndex = spline.getPointCount() - 1;
-	}
-
-	markConstructionChanged();
+	pointEditor.addPoint(*this);
 }
 
 void SplineRoadTool::removeSelectedPoint()
 {
-	SplineConstruction* construction = getRoad();
-	if (!construction || selectedPointIndex == Spline::InvalidPointIndex || selectedPointIndex >= construction->spline.getPointCount())
-		return;
-
-	construction->spline.removePoint(selectedPointIndex);
-	const size_t pointCount = construction->spline.getPointCount();
-	selectedPointIndex = pointCount ? (std::min)(selectedPointIndex, pointCount - 1) : Spline::InvalidPointIndex;
-	markConstructionChanged();
+	pointEditor.removeSelectedPoint(*this);
 }
 
 void SplineRoadTool::buildPreview()
@@ -563,274 +411,32 @@ void SplineRoadTool::copyActiveSpline()
 
 void SplineRoadTool::saveSpline()
 {
-	if (!getRoad())
-		return;
-
-	const std::filesystem::path path = makeTimestampedExportPath("spline", "spline");
-
-	// To save with a Windows dialog instead of the default timestamped path:
-	// const auto selectedPath = showSaveFileDialog("Save spline", "Spline files\0*.spline\0All files\0*.*\0", "spline", path);
-	// if (!selectedPath)
-	// 	return;
-	// saveSplineToFile(*selectedPath);
-	// return;
-
-	saveSplineToFile(path.string());
+	persistence.saveSpline(*this);
 }
 
 void SplineRoadTool::loadSpline()
 {
-	const auto selectedPath = showOpenFileDialog("Load spline", "Spline files\0*.spline\0All files\0*.*\0", defaultSplineExportDirectory());
-	if (!selectedPath)
-		return;
-
-	loadSplineFromFile(*selectedPath);
+	persistence.loadSpline(*this);
 }
 
 void SplineRoadTool::bakeAndSaveModel()
 {
-	SplineConstruction* construction = getRoad();
-	if (!construction)
-		return;
-
-	if (!hasPreview() || isPreviewDirty())
-		buildPreview();
-	construction = getRoad();
-	if (!construction || construction->mesh.empty())
-		return;
-
-	const std::filesystem::path path = makeTimestampedExportPath("spline_model", "model");
-
-	// To save with a Windows dialog instead of the default timestamped path:
-	// const auto selectedPath = showSaveFileDialog("Save baked model", "Model files\0*.model\0All files\0*.*\0", "model", path);
-	// if (!selectedPath)
-	// 	return;
-	// if (saveCurrentMeshModel(*selectedPath))
-	// 	bakePreview();
-	// return;
-
-	if (saveCurrentMeshModel(path.string()))
-		bakePreview();
-}
-
-bool SplineRoadTool::saveSplineToFile(const std::string& path) const
-{
-	const SplineConstruction* construction = getRoad();
-	if (!construction)
-		return false;
-
-	std::filesystem::create_directories(std::filesystem::path(path).parent_path());
-
-	pugi::xml_document doc;
-	pugi::xml_node declaration = doc.append_child(pugi::node_declaration);
-	declaration.append_attribute("version") = "1.0";
-	declaration.append_attribute("encoding") = "utf-8";
-
-	pugi::xml_node root = doc.append_child("SplineRoad");
-	root.append_attribute("version") = 1;
-
-	pugi::xml_node editor = root.append_child("Editor");
-	editor.append_attribute("autoBuildPreview") = autoBuildPreview;
-	editor.append_attribute("previewPhysics") = previewPhysics;
-	editor.append_attribute("addPointDistance") = addPointDistance;
-
-	pugi::xml_node profile = root.append_child("Profile");
-	profile.append_attribute("type") = profileToString(previewProfile);
-	profile.append_attribute("width") = profileWidth;
-	profile.append_attribute("widthSegments") = roadWidthSegments;
-	profile.append_attribute("height") = profileHeight;
-	profile.append_attribute("radius") = profileRadius;
-	profile.append_attribute("innerRadius") = profileInnerRadius;
-	profile.append_attribute("arcAngleDegrees") = profileArcAngleDegrees;
-	profile.append_attribute("segments") = profileSegments;
-
-	pugi::xml_node sweep = root.append_child("Sweep");
-	sweep.append_attribute("pathUvScale") = construction->sweepSettings.pathUvScale;
-	sweep.append_attribute("profileUvScale") = construction->sweepSettings.profileUvScale;
-	sweep.append_attribute("preventProfileFoldover") = preventProfileFoldover;
-	sweep.append_attribute("minProfileForwardScale") = minProfileForwardScale;
-	sweep.append_attribute("splitOpenProfileQuadsAtCenter") = construction->sweepSettings.splitOpenProfileQuadsAtCenter;
-	sweep.append_attribute("splitClosedProfileQuadsAtCenter") = construction->sweepSettings.splitClosedProfileQuadsAtCenter;
-
-	pugi::xml_node sampling = root.append_child("Sampling");
-	sampling.append_attribute("tessellationSegments") = static_cast<unsigned int>(construction->spline.getTessellationSegments());
-	sampling.append_attribute("maxTessellationSegments") = maxTessellationSegments;
-	sampling.append_attribute("curvatureTessellationScale") = curvatureTessellationScale;
-	sampling.append_attribute("rollTessellationScale") = rollTessellationScale;
-
-	pugi::xml_node spline = root.append_child("Spline");
-	spline.append_attribute("closed") = construction->spline.isClosed();
-	writeVector3(spline, "ReferenceUp", construction->spline.getReferenceUp());
-	for (const SplinePoint& point : construction->spline.getPoints())
-	{
-		pugi::xml_node pointNode = spline.append_child("Point");
-		pointNode.append_attribute("roll") = point.roll;
-		pointNode.append_attribute("upStabilization") = point.upStabilization;
-		writeVector3(pointNode, "Position", point.position);
-	}
-
-	if (!doc.save_file(path.c_str(), PUGIXML_TEXT("\t")))
-	{
-		Logger::logError("Failed to save spline " + path);
-		return false;
-	}
-
-	Logger::log("Saved spline " + path);
-	return true;
-}
-
-bool SplineRoadTool::loadSplineFromFile(const std::string& path)
-{
-	pugi::xml_document doc;
-	pugi::xml_parse_result result = doc.load_file(path.c_str());
-	if (!result)
-	{
-		Logger::logError("Failed to load spline " + path);
-		return false;
-	}
-
-	pugi::xml_node root = doc.child("SplineRoad");
-	if (!root)
-	{
-		Logger::logError("Invalid spline file " + path);
-		return false;
-	}
-
-	SplineRoadInstance& instance = createSplineInstance();
-	SplineConstruction* construction = instance.construction.get();
-
-	pugi::xml_node editor = root.child("Editor");
-	autoBuildPreview = editor.attribute("autoBuildPreview").as_bool(autoBuildPreview);
-	previewPhysics = editor.attribute("previewPhysics").as_bool(previewPhysics);
-	addPointDistance = editor.attribute("addPointDistance").as_float(addPointDistance);
-
-	pugi::xml_node profile = root.child("Profile");
-	previewProfile = profileFromString(profile.attribute("type").as_string(profileToString(previewProfile)));
-	profileWidth = profile.attribute("width").as_float(profileWidth);
-	roadWidthSegments = profile.attribute("widthSegments").as_int(roadWidthSegments);
-	profileHeight = profile.attribute("height").as_float(profileHeight);
-	profileRadius = profile.attribute("radius").as_float(profileRadius);
-	profileInnerRadius = profile.attribute("innerRadius").as_float(profileInnerRadius);
-	profileArcAngleDegrees = profile.attribute("arcAngleDegrees").as_float(profileArcAngleDegrees);
-	profileSegments = profile.attribute("segments").as_int(profileSegments);
-
-	pugi::xml_node sweep = root.child("Sweep");
-	construction->sweepSettings.pathUvScale = sweep.attribute("pathUvScale").as_float(0.25f);
-	construction->sweepSettings.profileUvScale = sweep.attribute("profileUvScale").as_float(1.0f);
-	preventProfileFoldover = sweep.attribute("preventProfileFoldover").as_bool(preventProfileFoldover);
-	minProfileForwardScale = sweep.attribute("minProfileForwardScale").as_float(minProfileForwardScale);
-	construction->sweepSettings.preventProfileFoldover = preventProfileFoldover;
-	construction->sweepSettings.minProfileForwardScale = minProfileForwardScale;
-	construction->sweepSettings.splitOpenProfileQuadsAtCenter = sweep.attribute("splitOpenProfileQuadsAtCenter").as_bool(construction->sweepSettings.splitOpenProfileQuadsAtCenter);
-	construction->sweepSettings.splitClosedProfileQuadsAtCenter = sweep.attribute("splitClosedProfileQuadsAtCenter").as_bool(construction->sweepSettings.splitClosedProfileQuadsAtCenter);
-
-	pugi::xml_node sampling = root.child("Sampling");
-	construction->spline.setTessellationSegments(sampling.attribute("tessellationSegments").as_uint(static_cast<unsigned int>(construction->spline.getTessellationSegments())));
-	maxTessellationSegments = sampling.attribute("maxTessellationSegments").as_int(maxTessellationSegments);
-	curvatureTessellationScale = sampling.attribute("curvatureTessellationScale").as_float(curvatureTessellationScale);
-	rollTessellationScale = sampling.attribute("rollTessellationScale").as_float(rollTessellationScale);
-	applySplineSamplingSettings();
-
-	pugi::xml_node spline = root.child("Spline");
-	construction->spline.setClosed(spline.attribute("closed").as_bool(false));
-	construction->spline.setReferenceUp(readVector3(spline, "ReferenceUp", Vector3::UnitY));
-	for (pugi::xml_node pointNode : spline.children("Point"))
-	{
-		const Vector3 position = readVector3(pointNode, "Position");
-		const float roll = pointNode.attribute("roll").as_float(0.0f);
-		const float upStabilization = pointNode.attribute("upStabilization").as_float(1.0f);
-		construction->spline.addPoint(position, roll);
-		construction->spline.setPointUpStabilization(construction->spline.getPointCount() - 1, upStabilization);
-	}
-
-	construction->profile = createPreviewProfile();
-	selectedPointIndex = construction->spline.getPointCount() ? construction->spline.getPointCount() - 1 : Spline::InvalidPointIndex;
-	instance.previewBuilt = false;
-	instance.previewDirty = false;
-
-	if (autoBuildPreview)
-		buildPreview();
-	else
-		rebuildDebug();
-
-	Logger::log("Loaded spline " + path);
-	return true;
-}
-
-bool SplineRoadTool::saveCurrentMeshModel(const std::string& path) const
-{
-	const SplineConstruction* construction = getRoad();
-	if (!construction || construction->mesh.empty())
-		return false;
-
-	if (construction->mesh.vertices.size() > (std::numeric_limits<uint16_t>::max)())
-	{
-		Logger::logError("Cannot save spline model with more than 65535 vertices");
-		return false;
-	}
-
-	std::filesystem::create_directories(std::filesystem::path(path).parent_path());
-
-	ModelInfo info;
-	addLayoutElement(info, DXGI_FORMAT_R32G32B32_FLOAT, VertexElementSemantic::POSITION);
-	addLayoutElement(info, DXGI_FORMAT_R32G32_FLOAT, VertexElementSemantic::TEXCOORD);
-	addLayoutElement(info, DXGI_FORMAT_R32G32B32_FLOAT, VertexElementSemantic::NORMAL);
-	addLayoutElement(info, DXGI_FORMAT_R32G32B32_FLOAT, VertexElementSemantic::TANGENT);
-
-	info.vertexCount = static_cast<uint32_t>(construction->mesh.vertices.size());
-	const char* vertexData = reinterpret_cast<const char*>(construction->mesh.vertices.data());
-	info.vertexData.assign(vertexData, vertexData + construction->mesh.vertices.size() * sizeof(SplineSweepVertex));
-
-	info.indexCount = static_cast<uint32_t>(construction->mesh.indices.size());
-	info.indices.reserve(construction->mesh.indices.size());
-	for (uint32_t index : construction->mesh.indices)
-	{
-		if (index > (std::numeric_limits<uint16_t>::max)())
-		{
-			Logger::logError("Cannot save spline model with index larger than 65535");
-			return false;
-		}
-		info.indices.push_back(static_cast<uint16_t>(index));
-	}
-
-	if (!BinaryModelSerialization::SaveModel(path, info))
-	{
-		Logger::logError("Failed to save spline model " + path);
-		return false;
-	}
-
-	Logger::log("Saved spline model " + path);
-	return true;
+	persistence.bakeAndSaveModel(*this);
 }
 
 void SplineRoadTool::setSelectedPointPosition(Vector3 position)
 {
-	SplineConstruction* construction = getRoad();
-	if (!construction || selectedPointIndex == Spline::InvalidPointIndex || selectedPointIndex >= construction->spline.getPointCount())
-		return;
-
-	construction->spline.setPoint(selectedPointIndex, position);
-	markConstructionChanged();
+	pointEditor.setSelectedPointPosition(*this, position);
 }
 
 void SplineRoadTool::setSelectedPointRoll(float roll)
 {
-	SplineConstruction* construction = getRoad();
-	if (!construction || selectedPointIndex == Spline::InvalidPointIndex || selectedPointIndex >= construction->spline.getPointCount())
-		return;
-
-	construction->spline.setPointRoll(selectedPointIndex, roll);
-	markConstructionChanged();
+	pointEditor.setSelectedPointRoll(*this, roll);
 }
 
 void SplineRoadTool::setSelectedPointUpStabilization(float upStabilization)
 {
-	SplineConstruction* construction = getRoad();
-	if (!construction || selectedPointIndex == Spline::InvalidPointIndex || selectedPointIndex >= construction->spline.getPointCount())
-		return;
-
-	construction->spline.setPointUpStabilization(selectedPointIndex, upStabilization);
-	markConstructionChanged();
+	pointEditor.setSelectedPointUpStabilization(*this, upStabilization);
 }
 
 void SplineRoadTool::onAutoBuildPreviewChanged()
@@ -1026,311 +632,4 @@ ShapeProfile2D SplineRoadTool::createPreviewProfile() const
 	default:
 		return ShapeProfile2D::createRoad(width, static_cast<size_t>((std::max)(roadWidthSegments, 1)));
 	}
-}
-
-void SplineRoadTool::drawSelectedPointGizmo(const ViewportToolContext& ctx)
-{
-	if (pointGizmoMode == PointGizmoMode::SplineTransform)
-	{
-		drawSplineTransformGizmo(ctx);
-		return;
-	}
-
-	SplineConstruction* construction = getRoad();
-	if (!construction || selectedPointIndex == Spline::InvalidPointIndex || selectedPointIndex >= construction->spline.getPointCount())
-	{
-		gizmoActive = false;
-		return;
-	}
-
-	if (pointGizmoMode == PointGizmoMode::Roll)
-		drawSelectedPointRollGizmo(ctx);
-	else
-		drawSelectedPointMoveGizmo(ctx);
-}
-
-void SplineRoadTool::drawSelectedPointMoveGizmo(const ViewportToolContext& ctx)
-{
-	SplineConstruction* construction = getRoad();
-	if (!construction)
-		return;
-
-	ImGuizmo::SetOrthographic(false);
-	ImGuizmo::SetDrawlist();
-	ImGuizmo::SetRect((float)ctx.viewportBounds[0].x, (float)ctx.viewportBounds[0].y, (float)ctx.viewportBounds[1].x - ctx.viewportBounds[0].x, (float)ctx.viewportBounds[1].y - ctx.viewportBounds[0].y);
-
-	XMFLOAT4X4 cameraView;
-	XMStoreFloat4x4(&cameraView, ctx.camera.getViewMatrix());
-	XMFLOAT4X4 cameraProjection;
-	XMStoreFloat4x4(&cameraProjection, ctx.camera.getProjectionMatrixNoReverse());
-
-	ObjectTransformation pointTransform;
-	pointTransform.position = construction->spline.getPoint(selectedPointIndex).position;
-
-	XMFLOAT4X4 transform;
-	XMStoreFloat4x4(&transform, pointTransform.createWorldMatrix());
-
-	float snapValues[3] = { 0.5f, 0.5f, 0.5f };
-	const bool manipulated = ImGuizmo::Manipulate(&cameraView._11, &cameraProjection._11, ImGuizmo::TRANSLATE, ImGuizmo::WORLD, &transform._11, nullptr, snapValues);
-	gizmoActive = ImGuizmo::IsOver() || ImGuizmo::IsUsing();
-
-	if (!manipulated)
-		return;
-
-	ObjectTransformation updatedTransform;
-	updatedTransform.fromWorldMatrix(XMLoadFloat4x4(&transform));
-
-	const Vector3 oldPosition = construction->spline.getPoint(selectedPointIndex).position;
-	if ((updatedTransform.position - oldPosition).LengthSquared() > 0.000001f)
-		setSelectedPointPosition(updatedTransform.position);
-}
-
-void SplineRoadTool::drawSelectedPointRollGizmo(const ViewportToolContext& ctx)
-{
-	SplineConstruction* construction = getRoad();
-	if (!construction)
-		return;
-
-	ImGuizmo::SetOrthographic(false);
-	ImGuizmo::SetDrawlist();
-	ImGuizmo::SetRect((float)ctx.viewportBounds[0].x, (float)ctx.viewportBounds[0].y, (float)ctx.viewportBounds[1].x - ctx.viewportBounds[0].x, (float)ctx.viewportBounds[1].y - ctx.viewportBounds[0].y);
-
-	XMFLOAT4X4 cameraView;
-	XMStoreFloat4x4(&cameraView, ctx.camera.getViewMatrix());
-	XMFLOAT4X4 cameraProjection;
-	XMStoreFloat4x4(&cameraProjection, ctx.camera.getProjectionMatrixNoReverse());
-
-	const SplinePoint point = construction->spline.getPoint(selectedPointIndex);
-	SplineSample sample = construction->spline.evaluate(construction->spline.getSegmentCount() > 0 ? static_cast<float>(selectedPointIndex) / static_cast<float>(construction->spline.getSegmentCount()) : 0.0f);
-	float closestDistanceSquared = (sample.position - point.position).LengthSquared();
-	for (const SplineSample& candidate : construction->spline.getSamples())
-	{
-		const float distanceSquared = (candidate.position - point.position).LengthSquared();
-		if (distanceSquared < closestDistanceSquared)
-		{
-			closestDistanceSquared = distanceSquared;
-			sample = candidate;
-		}
-	}
-	ObjectTransformation pointTransform;
-	pointTransform.position = point.position;
-	pointTransform.orientation = Quaternion::CreateFromRotationMatrix(Matrix::CreateWorld(Vector3::Zero, sample.tangent, sample.up));
-
-	XMFLOAT4X4 transform;
-	XMStoreFloat4x4(&transform, pointTransform.createWorldMatrix());
-	XMFLOAT4X4 transformDelta{};
-
-	const bool manipulated = ImGuizmo::Manipulate(&cameraView._11, &cameraProjection._11, ImGuizmo::ROTATE_Z, ImGuizmo::LOCAL, &transform._11, &transformDelta._11, nullptr);
-	gizmoActive = ImGuizmo::IsOver() || ImGuizmo::IsUsing();
-
-	if (!manipulated)
-		return;
-
-	XMVECTOR scale;
-	XMVECTOR rotation;
-	XMVECTOR translation;
-	if (!XMMatrixDecompose(&scale, &rotation, &translation, XMLoadFloat4x4(&transformDelta)))
-		return;
-
-	Quaternion deltaRotation;
-	XMStoreFloat4(&deltaRotation, rotation);
-	Vector3 axis(deltaRotation.x, deltaRotation.y, deltaRotation.z);
-	const float axisLength = axis.Length();
-	if (axisLength <= 0.000001f)
-		return;
-
-	axis /= axisLength;
-	float deltaAngle = 2.0f * std::atan2(axisLength, deltaRotation.w);
-	if (deltaAngle > Pi)
-		deltaAngle -= Pi * 2.0f;
-	if (deltaAngle < -Pi)
-		deltaAngle += Pi * 2.0f;
-
-	const float rollDelta = deltaAngle * axis.Dot(sample.tangent);
-	if (std::abs(rollDelta) > 0.00001f)
-		setSelectedPointRoll(point.roll + rollDelta);
-}
-
-void SplineRoadTool::drawSplineTransformGizmo(const ViewportToolContext& ctx)
-{
-	SplineConstruction* construction = getRoad();
-	if (!construction || construction->spline.getPointCount() == 0)
-	{
-		gizmoActive = false;
-		return;
-	}
-
-	Vector3 center{};
-	for (const SplinePoint& point : construction->spline.getPoints())
-		center += point.position;
-	center /= static_cast<float>(construction->spline.getPointCount());
-
-	ImGuizmo::SetOrthographic(false);
-	ImGuizmo::SetDrawlist();
-	ImGuizmo::SetRect((float)ctx.viewportBounds[0].x, (float)ctx.viewportBounds[0].y, (float)ctx.viewportBounds[1].x - ctx.viewportBounds[0].x, (float)ctx.viewportBounds[1].y - ctx.viewportBounds[0].y);
-
-	XMFLOAT4X4 cameraView;
-	XMStoreFloat4x4(&cameraView, ctx.camera.getViewMatrix());
-	XMFLOAT4X4 cameraProjection;
-	XMStoreFloat4x4(&cameraProjection, ctx.camera.getProjectionMatrixNoReverse());
-
-	ObjectTransformation splineTransform;
-	splineTransform.position = center;
-
-	XMFLOAT4X4 transform;
-	XMStoreFloat4x4(&transform, splineTransform.createWorldMatrix());
-	XMFLOAT4X4 transformDelta{};
-
-	float snapValues[3] = { 0.5f, 0.5f, 0.5f };
-	const ImGuizmo::OPERATION operation = static_cast<ImGuizmo::OPERATION>(ImGuizmo::TRANSLATE | ImGuizmo::ROTATE);
-	const bool manipulated = ImGuizmo::Manipulate(&cameraView._11, &cameraProjection._11, operation, ImGuizmo::WORLD, &transform._11, &transformDelta._11, snapValues);
-	gizmoActive = ImGuizmo::IsOver() || ImGuizmo::IsUsing();
-	if (!manipulated)
-		return;
-
-	XMVECTOR scale;
-	XMVECTOR rotation;
-	XMVECTOR translation;
-	if (!XMMatrixDecompose(&scale, &rotation, &translation, XMLoadFloat4x4(&transformDelta)))
-		return;
-
-	Quaternion deltaRotation;
-	XMStoreFloat4(&deltaRotation, rotation);
-	Vector3 deltaTranslation;
-	XMStoreFloat3(&deltaTranslation, translation);
-
-	for (size_t i = 0; i < construction->spline.getPointCount(); ++i)
-	{
-		SplinePoint point = construction->spline.getPoint(i);
-		point.position = center + deltaRotation * (point.position - center) + deltaTranslation;
-		construction->spline.setPoint(i, point);
-	}
-
-	Vector3 referenceUp = deltaRotation * construction->spline.getReferenceUp();
-	construction->spline.setReferenceUp(referenceUp);
-	markConstructionChanged();
-}
-
-void SplineRoadTool::insertPointBetween(size_t previousPointIndex, size_t nextPointIndex)
-{
-	SplineConstruction* construction = getRoad();
-	if (!construction)
-		return;
-
-	auto& spline = construction->spline;
-	const auto& previousPoint = spline.getPoint(previousPointIndex);
-	const auto& nextPoint = spline.getPoint(nextPointIndex);
-	SplinePoint insertedPoint;
-	insertedPoint.position = (previousPoint.position + nextPoint.position) * 0.5f;
-	insertedPoint.roll = (previousPoint.roll + nextPoint.roll) * 0.5f;
-	insertedPoint.upStabilization = (previousPoint.upStabilization + nextPoint.upStabilization) * 0.5f;
-	spline.insertPoint(nextPointIndex, insertedPoint.position, insertedPoint.roll);
-	spline.setPoint(nextPointIndex, insertedPoint);
-	selectedPointIndex = nextPointIndex;
-	markConstructionChanged();
-}
-
-void SplineRoadTool::selectPointByOffset(int offset)
-{
-	SplineConstruction* construction = getRoad();
-	if (!construction)
-		return;
-
-	const size_t pointCount = construction->spline.getPointCount();
-	if (pointCount == 0 || selectedPointIndex == Spline::InvalidPointIndex || selectedPointIndex >= pointCount)
-		return;
-
-	const int currentIndex = static_cast<int>(selectedPointIndex);
-	const int count = static_cast<int>(pointCount);
-	selectedPointIndex = static_cast<size_t>((currentIndex + offset + count) % count);
-	enterPointEditMode();
-	Logger::log(std::format("Selected spline point {}", selectedPointIndex));
-}
-
-bool SplineRoadTool::addReplicatedCurvePoint(bool extendStart)
-{
-	SplineConstruction* construction = getRoad();
-	if (!construction)
-		return false;
-
-	auto& spline = construction->spline;
-	const size_t pointCount = spline.getPointCount();
-	if (pointCount < 3)
-		return false;
-
-	const size_t i0 = extendStart ? 2 : pointCount - 3;
-	const size_t i1 = extendStart ? 1 : pointCount - 2;
-	const size_t i2 = extendStart ? 0 : pointCount - 1;
-	const SplinePoint p0 = spline.getPoint(i0);
-	const SplinePoint p1 = spline.getPoint(i1);
-	const SplinePoint p2 = spline.getPoint(i2);
-
-	Vector3 previous = p1.position - p0.position;
-	Vector3 current = p2.position - p1.position;
-	if (previous.LengthSquared() <= 0.000001f || current.LengthSquared() <= 0.000001f)
-		return false;
-
-	previous.Normalize();
-	current.Normalize();
-	Vector3 axis = previous.Cross(current);
-	const float axisLength = axis.Length();
-	Quaternion replicatedRotation = Quaternion::Identity;
-	if (axisLength > 0.000001f)
-	{
-		axis /= axisLength;
-		replicatedRotation = Quaternion::CreateFromAxisAngle(axis, std::atan2(axisLength, std::clamp(previous.Dot(current), -1.0f, 1.0f)));
-	}
-
-	Vector3 offset = p2.position - p1.position;
-	offset = replicatedRotation * offset;
-	SplinePoint newPoint = p2;
-	newPoint.position = p2.position + offset;
-	newPoint.roll = p2.roll + (p2.roll - p1.roll);
-	newPoint.upStabilization = std::clamp(p2.upStabilization + (p2.upStabilization - p1.upStabilization), 0.0f, 1.0f);
-
-	if (extendStart)
-	{
-		newPoint.position = p2.position - offset;
-		spline.insertPoint(0, newPoint.position, newPoint.roll);
-		spline.setPoint(0, newPoint);
-		selectedPointIndex = 0;
-	}
-	else
-	{
-		spline.addPoint(newPoint.position, newPoint.roll);
-		spline.setPoint(spline.getPointCount() - 1, newPoint);
-		selectedPointIndex = spline.getPointCount() - 1;
-	}
-
-	return true;
-}
-
-bool SplineRoadTool::shouldExtendStart(size_t pointCount) const
-{
-	if (addPointMode == AddPointMode::ExtendStart)
-		return true;
-	if (addPointMode == AddPointMode::ExtendEnd)
-		return false;
-
-	return selectedPointIndex == 0 && pointCount > 1;
-}
-
-Vector3 SplineRoadTool::getForwardAddDirection(bool extendStart) const
-{
-	const SplineConstruction* construction = getRoad();
-	if (!construction || construction->spline.getPointCount() < 2)
-		return Vector3::UnitZ;
-
-	const auto& spline = construction->spline;
-	Vector3 direction;
-	if (extendStart)
-		direction = spline.getPoint(0).position - spline.getPoint(1).position;
-	else
-		direction = spline.getPoint(spline.getPointCount() - 1).position - spline.getPoint(spline.getPointCount() - 2).position;
-
-	if (direction.LengthSquared() < 0.0001f)
-		return Vector3::UnitZ;
-
-	direction.Normalize();
-	return direction;
 }

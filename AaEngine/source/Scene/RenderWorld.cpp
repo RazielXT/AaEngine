@@ -33,6 +33,7 @@ void RenderWorld::initialize(RenderSystem& renderSystem)
 	ResourceUploadBatch batch(renderSystem.core.device);
 	batch.Begin();
 
+	instancing.initialize(renderSystem, resources);
 	vegetation.initialize(renderSystem, resources, batch);
 	grass.initialize(renderSystem, resources, batch);
 
@@ -97,7 +98,7 @@ RenderEntity* RenderWorld::getEntity(ObjectId globalId) const
 	{
 		auto group = instancing.getGroup(globalId.getGroupId());
 
-		return group->entity;
+		return group ? group->getEntity(globalId.getLocalIdx()) : nullptr;
 	}
 
 	return nullptr;
@@ -122,9 +123,11 @@ SceneObject RenderWorld::getObject(ObjectId globalId)
 	else if (type == ObjectType::Instanced)
 	{
 		auto group = instancing.getGroup(globalId.getGroupId());
+		if (!group || globalId.getLocalIdx() >= group->entities.size())
+			return {};
 		auto& item = group->entities[globalId.getLocalIdx()];
 
-		return { globalId, type, group->entity, &instancing, &item };
+		return { globalId, type, group->getEntity(globalId.getLocalIdx()), &instancing, &item };
 	}
 
 	return {};

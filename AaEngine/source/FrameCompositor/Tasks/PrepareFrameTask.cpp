@@ -42,6 +42,7 @@ void PrepareFrameTask::recordCommands(RenderContext& ctx, CommandsData& cmd, Com
 		ctx.camera->setPixelOffset(fsr.getJitter(), fsr.getRenderSize());
 
 	renderWorld.terrain.update(cmd.commandList, *ctx.camera, shadowMaps, provider.params.frameIndex);
+	renderWorld.instancing.updateHeightmap(cmd.commandList, ctx.camera->getPosition(), renderWorld.terrain);
 	renderWorld.vegetation.update(cmd.commandList, ctx.camera->getPosition(), renderWorld.terrain);
 	renderWorld.grass.update(cmd.commandList, *ctx.camera, renderWorld.terrain);
 

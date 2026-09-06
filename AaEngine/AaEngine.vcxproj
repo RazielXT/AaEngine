@@ -162,6 +162,7 @@
     <ClCompile Include="source\FrameCompositor\Tasks\DebugOverlayTask.cpp" />
     <ClCompile Include="source\Scene\EntityGeometry.cpp" />
     <ClCompile Include="source\Scene\EntityInstancing.cpp" />
+    <ClCompile Include="source\Scene\InstancePlacement.cpp" />
     <ClCompile Include="source\FrameCompositor\FrameCompositor.cpp" />
     <ClCompile Include="source\FrameCompositor\CompositorFileParser.cpp" />
     <ClCompile Include="source\Utils\ConfigParser.cpp" />
@@ -277,6 +278,7 @@
     <ClInclude Include="source\Resources\Model\BinaryModelSerialization.h" />
     <ClInclude Include="source\Resources\Compute\ComputeShader.h" />
     <ClInclude Include="source\Scene\EntityInstancing.h" />
+    <ClInclude Include="source\Scene\InstancePlacement.h" />
     <ClInclude Include="source\Resources\Model\ModelParseOptions.h" />
     <ClInclude Include="source\FrameCompositor\RenderContext.h" />
     <ClInclude Include="source\FrameCompositor\FrameCompositor.h" />

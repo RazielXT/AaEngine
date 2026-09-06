@@ -372,13 +372,13 @@ public:
 
 	bool mousePressed(MouseButton button) override
 	{
-		if (!isPlayMode())
-			editorUi.onClick(button);
-
 		bool handled = false;
-		if (activeCameraHandler)
+		if (!isPlayMode())
+			handled = editorUi.onClick(button);
+
+		if (activeCameraHandler && !handled)
 			handled = activeCameraHandler->mousePressed(button) || handled;
-		if (activePlayInputListener)
+		if (activePlayInputListener && !handled)
 			handled = activePlayInputListener->mousePressed(button) || handled;
 
 		return handled;

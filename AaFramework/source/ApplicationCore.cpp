@@ -13,7 +13,7 @@
 #include "Objects/SplineConstruction.h"
 #include <dxgidebug.h>
 #include <filesystem>
-#include "SceneGraph/Scene.h"
+#include "ECS/Scene.h"
 
 ApplicationCore::ApplicationCore(TargetViewport& viewport) : renderSystem(viewport), resources(renderSystem), renderWorld(resources)
 {
@@ -171,6 +171,30 @@ void ApplicationCore::loadScene()
  		marker.move("loadSceneTerrain", commands.color);
 		renderWorld.water.initializeGpuResources(renderSystem, resources, batch);
 		renderWorld.terrain.initialize(renderSystem, resources, batch, renderWorld);
+
+		auto sphereModel = resources.models.getCoreModel("sphere.mesh");
+		auto sphereMaterial = resources.materials.getMaterial("ConcreteSphereInstanced", batch);
+		HeightmapInstanceGroupDescription sphereGroup;
+		sphereGroup.material = sphereMaterial;
+		sphereGroup.model = sphereModel;
+		sphereGroup.sectorCount = { 8, 8 };
+		sphereGroup.sectorWorldSize = renderWorld.terrain.params.tileSize / 4;
+		sphereGroup.maxInstancesPerSector = 256;
+		sphereGroup.instanceBounds = sphereModel->bbox;
+
+		SlopePlacementParams spherePlacement;
+		spherePlacement.samplesPerAxis = 16;
+		spherePlacement.density = 0.08f;
+		spherePlacement.minNormalY = 0.85f;
+		spherePlacement.minScale = 2.0f;
+		spherePlacement.maxScale = 4.0f;
+		spherePlacement.heightOffset = sphereModel->bbox.Extents.y * spherePlacement.maxScale;
+		sphereGroup.instanceBounds.Extents.x *= spherePlacement.maxScale;
+		sphereGroup.instanceBounds.Extents.y *= spherePlacement.maxScale;
+		sphereGroup.instanceBounds.Extents.z *= spherePlacement.maxScale;
+		sphereGroup.placement = CreateSlopePlacementShader(spherePlacement);
+		renderWorld.instancing.buildHeightmap(renderWorld, sphereGroup);
+
 		renderWorld.vegetation.createChunks(renderWorld, renderSystem, resources, batch);
 		renderWorld.grass.createChunks(renderWorld, renderSystem, resources, batch);
 		renderWorld.water.initializeTarget(renderWorld.terrain.getHeightmap({ 0,0 }), renderWorld, { renderWorld.terrain.params.tileSize, renderWorld.terrain.params.tileSize }, renderWorld.terrain.getHeightmapPosition({ 0,0 }));
@@ -197,22 +221,22 @@ void ApplicationCore::loadScene()
 	{
 	public:
 
-		RenderSystem(Scene& scene)
+		RenderSystem(ECS::Scene& scene)
 		{
 			scene.Events<MeshRendererComponent>().onAdded = 
-				[&](Entity e, MeshRendererComponent& c)
+				[&](ECS::Entity e, MeshRendererComponent& c)
 				{
 					c.idx++;
 				};
 			scene.Events<MeshRendererComponent>().onRemoved =
-				[&](Entity e, MeshRendererComponent& c)
+				[&](ECS::Entity e, MeshRendererComponent& c)
 				{
 					c.idx--;
 				};
 		}
 	};
 
-	Scene scene;
+	ECS::Scene scene;
 	RenderSystem rs(scene);
 
 	auto entity = scene.CreateEntity();

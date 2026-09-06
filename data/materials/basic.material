@@ -131,3 +131,24 @@ material terrainGrassInstanced : terrainGrass
 		defines INSTANCED
 	}
 }
+
+material ConcreteSphereInstanced : Color
+{
+	vertex_shader
+	{
+		file basicShading.hlsl
+		entry VSMain
+		profile vs_6_6
+		defines INSTANCED
+	}
+
+	texture Diffuse
+	{
+		file concrete.dds
+	}
+
+	default_params
+	{
+		color MaterialColor 0.75 0.78 0.8
+	}
+}

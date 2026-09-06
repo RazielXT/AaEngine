@@ -27,7 +27,11 @@ void SplineConstruction::regenerate(RenderSystem& renderSystem, GraphicsResource
 	}
 
 	if (params.createMeshPhysics && physicsManager)
-		physicsBody = physicsManager->createMeshBody(model.positions, model.indices, params.transformation);
+	{
+		BodyParams bodyParams;
+		bodyParams.friction = params.physicsFriction;
+		physicsBody = physicsManager->createMeshBody(model.positions, model.indices, params.transformation, bodyParams);
+	}
 }
 
 void SplineConstruction::removeFromWorld(RenderWorld& renderWorld, PhysicsManager* physicsManager)

@@ -41,7 +41,7 @@ public:
 
 	JPH::BodyID createConvexBody(const std::vector<Vector3>& points, const ObjectTransformation& transformation, const BodyParams& params = {});
 
-	JPH::BodyID createMeshBody(const std::vector<Vector3>& points, const std::vector<uint32_t>& indices, const ObjectTransformation& transformation);
+	JPH::BodyID createMeshBody(const std::vector<Vector3>& points, const std::vector<uint32_t>& indices, const ObjectTransformation& transformation, const BodyParams& params = {});
 
 	JPH::BodyID createHeightField(const float* heights, uint32_t resolution, Vector3 offset, Vector3 scale);
 

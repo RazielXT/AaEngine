@@ -111,6 +111,7 @@ void ArcadeMotorcycle::updatePhysics(float delta)
 	applySteering(delta);
 
 	applyTraction(delta);
+	applyGroundAdhesion(delta);
 
 	applyDrag(delta);
 
@@ -154,17 +155,30 @@ void ArcadeMotorcycle::updateGrounding(float delta)
 		delta);
 
 	frame.grounded =
-		suspension[0].grounded ||
+		suspension[0].grounded &&
 		suspension[1].grounded;
 }
 
 void ArcadeMotorcycle::applyStabilization(float delta)
 {
+	if (!frame.grounded)
+		return;
+
 	float steerInput =
 		right - left;
 
 	float speed =
 		abs(frame.linearVelocity.Dot(frame.forward));
+
+	float gripFactor =
+		Clamp(
+			(speed - minimumGripSpeed) /
+			(fullGripSpeed - minimumGripSpeed),
+			0.0f,
+			1.0f);
+
+	if (gripFactor <= 0.0f)
+		return;
 
 	float speedFactor =
 		Clamp(speed / 20.0f, 0.0f, 1.0f);
@@ -180,19 +194,25 @@ void ArcadeMotorcycle::applyStabilization(float delta)
 			targetLean);
 
 	Vec3 targetUp =
-		leanRot.RotateAxisY();
+		leanRot * getGroundNormal();
 
 	Vec3 axis =
 		frame.up.Cross(targetUp);
 
 	Vec3 pitchRollAV =
 		frame.angularVelocity -
-		frame.up *
-		frame.angularVelocity.Dot(frame.up);
+		targetUp *
+		frame.angularVelocity.Dot(targetUp);
+
+	float highSpeedCorrection =
+		std::lerp(1.0f, 0.45f, speedFactor);
+
+	float highSpeedDamping =
+		std::lerp(1.0f, 0.25f, speedFactor);
 
 	Vec3 torque =
-		axis * uprightStrength
-		- pitchRollAV * uprightDamping;
+		axis * uprightStrength * highSpeedCorrection * gripFactor
+		- pitchRollAV * uprightDamping * highSpeedDamping * gripFactor;
 
 	motorcycleBody->AddTorque(torque);
 }
@@ -215,10 +235,11 @@ void ArcadeMotorcycle::clampVelocities()
 		motorcycleBody->GetLinearVelocity();
 
 	float speed = lv.Length();
+	float speedLimit = turbo ? turboMaxSpeed : maxSpeed;
 
-	if (speed > maxSpeed)
+	if (speed > speedLimit)
 	{
-		lv = lv.Normalized() * maxSpeed;
+		lv = lv.Normalized() * speedLimit;
 
 		motorcycleBody->SetLinearVelocity(lv);
 	}
@@ -231,13 +252,17 @@ void ArcadeMotorcycle::applyDrive(float delta)
 
 	float forwardSpeed =
 		frame.linearVelocity.Dot(frame.forward);
+	float speedLimit = turbo ? turboMaxSpeed : maxSpeed;
 
 	float speedFactor =
 		1.0f -
-		Clamp(forwardSpeed / maxSpeed, 0.0f, 1.0f);
+		Clamp(forwardSpeed / speedLimit, 0.0f, 1.0f);
 
 	float driveForce =
 		engineForce * speedFactor;
+
+	if (turbo && mForward > 0.0f)
+		driveForce *= turboForceMultiplier;
 
 	RVec3 rearPos =
 		frame.position +
@@ -410,6 +435,12 @@ void ArcadeMotorcycle::applyTraction(float delta)
 			1.0f,
 			speedFactor);
 
+	tractionScale *=
+		Clamp(
+			getGroundFriction() / 0.5f,
+			0.5f,
+			2.0f);
+
 
 	Vec3 velocity =
 		motorcycleBody->GetLinearVelocity();
@@ -423,8 +454,18 @@ void ArcadeMotorcycle::applyTraction(float delta)
 	float forwardSpeed =
 		velocity.Dot(frame.forward);
 
+	Vec3 groundForward =
+		frame.forward -
+		groundNormal * frame.forward.Dot(groundNormal);
+
+	groundForward =
+		groundForward.NormalizedOr(frame.forward);
+
+	forwardSpeed =
+		velocity.Dot(groundForward);
+
 	Vec3 desiredVelocity =
-		frame.forward * forwardSpeed;
+		groundForward * forwardSpeed;
 
 	Vec3 velocityError =
 		desiredVelocity - velocity;
@@ -433,6 +474,25 @@ void ArcadeMotorcycle::applyTraction(float delta)
 		velocityError *
 		tractionStrength *
 		tractionScale *
+		motorcycleMass);
+}
+
+void ArcadeMotorcycle::applyGroundAdhesion(float delta)
+{
+	if (!frame.grounded)
+		return;
+
+	float speed =
+		abs(frame.linearVelocity.Dot(frame.forward));
+
+	float adhesionAcceleration =
+		min(
+			speed * speed * groundAdhesion,
+			maxGroundAdhesionAcceleration);
+
+	motorcycleBody->AddForce(
+		-getGroundNormal() *
+		adhesionAcceleration *
 		motorcycleMass);
 }
 
@@ -551,6 +611,7 @@ void ArcadeMotorcycle::updateSuspensionProbe(int index, const Vec3& localPos, fl
 				if (lock.Succeeded())
 				{
 					const Body& body = lock.GetBody();
+					suspension[index].surfaceFriction = body.GetFriction();
 
 					RVec3 hitPos =
 						ray.GetPointOnRay(hit.mFraction);
@@ -584,6 +645,23 @@ Vec3 ArcadeMotorcycle::getGroundNormal() const
 		return Vec3::sAxisY();
 
 	return normal.Normalized();
+}
+
+float ArcadeMotorcycle::getGroundFriction() const
+{
+	float friction = 0.0f;
+	int count = 0;
+
+	for (int i = 0; i < 2; ++i)
+	{
+		if (suspension[i].grounded)
+		{
+			friction += suspension[i].surfaceFriction;
+			count++;
+		}
+	}
+
+	return count > 0 ? friction / count : 0.5f;
 }
 
 std::vector<float> bikeDistances;
@@ -620,7 +698,7 @@ void ArcadeMotorcycle::updateGraphics(float dt)
 	bikeDistances.push_back(cachedVelocity.Length());
 
 	// Apply smoothing to cached camera position
-	// tau = smoothing time constant in seconds (0.05–0.15 is typical)
+	// tau = smoothing time constant in seconds (0.05ï¿½0.15 is typical)
 	float tau = 0.08f;
 	float smooth = 1.0f - expf(-dt / tau);
 // 	const float smooth = 0.3f;
@@ -773,6 +851,9 @@ bool ArcadeMotorcycle::keyPressed(int key)
 	case 'D':
 		right = 1.0f;
 		break;
+	case VK_SHIFT:
+		turbo = true;
+		break;
 	default:
 		return false;
 	}
@@ -798,6 +879,9 @@ bool ArcadeMotorcycle::keyReleased(int key)
 		break;
 	case 'D':
 		right = 0.0f;
+		break;
+	case VK_SHIFT:
+		turbo = false;
 		break;
 	default:
 		return false;

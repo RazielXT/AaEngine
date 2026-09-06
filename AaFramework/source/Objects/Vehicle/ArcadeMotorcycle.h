@@ -66,6 +66,7 @@ private:
 		JPH::RVec3 contactPoint;
 
 		JPH::Vec3 contactNormal;
+		float surfaceFriction = 0.5f;
 
 		float compression = 0.0f;
 
@@ -86,6 +87,7 @@ private:
 		float delta);
 
 	JPH::Vec3 getGroundNormal() const;
+	float getGroundFriction() const;
 
 	const float motorcycleMass = 250.0f;
 	const float wheelRadius = 0.35f;
@@ -96,8 +98,10 @@ private:
 
 	float engineForce = 2500.0f;
 	float brakeForce = 2000.0f;
+	float turboForceMultiplier = 2.0f;
 
 	float maxSpeed = 25.0f;
+	float turboMaxSpeed = 40.0f;
 	float forwardDrag = 4.0f;
 	float lateralDrag = 1.0f;
 	float coastDrag = 7.0f;
@@ -108,6 +112,8 @@ private:
 	float uprightStrength = 220.0f;
 	float uprightDamping = 35.0f;
 	float angularClamp = 8.0f;
+	float minimumGripSpeed = 2.0f;
+	float fullGripSpeed = 7.0f;
 
 	float steerTorque = 420.0f;
 	float steerDamping = 25.0f;
@@ -116,6 +122,8 @@ private:
 
 	float tractionStrength = 3.0f;
 	float tractionMinSpeed = 2.0f;
+	float groundAdhesion = 0.08f;
+	float maxGroundAdhesionAcceleration = 35.0f;
 
 	float maxLeanAngle = 38.0f;
 	float leanStrength = 7.0f;
@@ -148,6 +156,7 @@ private:
 	void applySteering(float delta);
 	void applyDrag(float delta);
 	void applyTraction(float delta);
+	void applyGroundAdhesion(float delta);
 	void clampVelocities();
 
 	// Player input
@@ -157,6 +166,7 @@ private:
 	float						mPreviousForward = 1.0f;					///< Keeps track of last motorcycle direction so we know when to brake and when to accelerate
 	float						mRight = 0.0f;								///< Keeps track of the current steering angle
 	float						mBrake = 0.0f;
+	bool						turbo = false;
 
 	Vector3 cachedPosition;
 	Vector3 cachedDirection = Vector3(0,0,1);

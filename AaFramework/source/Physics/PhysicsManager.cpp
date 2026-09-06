@@ -224,7 +224,7 @@ static void createTriangles(const std::vector<Vector3>& points, TriangleList& tr
 	materials.push_back(new PhysicsMaterialSimple("Material " + ConvertToString(material_index), JPH::Color::sGetDistinctColor(material_index)));
 }
 
-JPH::BodyID PhysicsManager::createMeshBody(const std::vector<Vector3>& points, const std::vector<uint32_t>& indices, const ObjectTransformation& t)
+JPH::BodyID PhysicsManager::createMeshBody(const std::vector<Vector3>& points, const std::vector<uint32_t>& indices, const ObjectTransformation& t, const BodyParams& params)
 {
 	TriangleList triangles;
 	PhysicsMaterialList materials;
@@ -239,7 +239,6 @@ JPH::BodyID PhysicsManager::createMeshBody(const std::vector<Vector3>& points, c
 	if (t.scale != Vector3::One)
 		shape = new ScaledShape(shape, toVec3(t.scale));
 
-	BodyParams params{};
 	BodyCreationSettings creation_settings(shape, toVec3(t.position), toQuat(t.orientation), EMotionType::Static, Layers::NON_MOVING);
 	applyBodyParams(creation_settings, params);
 

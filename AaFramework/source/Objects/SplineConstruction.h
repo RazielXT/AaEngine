@@ -28,6 +28,7 @@ struct SplineConstructionCreateParams
 	ObjectTransformation transformation{};
 	bool createRenderEntity = true;
 	bool createMeshPhysics = true;
+	float physicsFriction = 1.0f;
 };
 
 class SplineConstruction

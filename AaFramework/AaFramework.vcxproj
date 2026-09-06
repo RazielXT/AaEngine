@@ -103,6 +103,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\CameraHandler.h" />
+    <ClInclude Include="source\ECS\ComponentStorage.h" />
+    <ClInclude Include="source\ECS\Scene.h" />
     <ClInclude Include="source\FirstPersonCamera.h" />
     <ClInclude Include="source\FollowCamera.h" />
     <ClInclude Include="source\FreeCamera.h" />
@@ -123,9 +125,6 @@
     <ClInclude Include="source\Physics\Render\PhysicsRenderTask.h" />
     <ClInclude Include="source\Physics\TerrainPhysics.h" />
     <ClInclude Include="source\Physics\WaterSimInteractionUpdater.h" />
-    <ClInclude Include="source\SceneGraph\ComponentStorage.h" />
-    <ClInclude Include="source\SceneGraph\Scene.h" />
-    <ClInclude Include="source\SceneGraph\SceneTree.h" />
     <ClInclude Include="source\SceneParser.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

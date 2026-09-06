@@ -3,19 +3,19 @@
 #include "Scene/RenderWorld.h"
 #include "Resources/Model/ModelResources.h"
 
-EntityRenderManager::EntityRenderManager(Scene& s) : scene(s)
+EntityRenderManager::EntityRenderManager(ECS::Scene& s) : scene(s)
 {
 	scene.Events<EntityRenderInfoComponent>().onAdded =
-		[&](Entity e, EntityRenderInfoComponent& c)
+		[&](ECS::Entity e, EntityRenderInfoComponent& c)
 		{
 		};
 	scene.Events<EntityRenderInfoComponent>().onRemoved =
-		[&](Entity e, EntityRenderInfoComponent& c)
+		[&](ECS::Entity e, EntityRenderInfoComponent& c)
 		{
 		};
 }
 
-void EntityRenderManager::create(Entity, const SceneCollection::Entity& desc, SceneCollection::LoadCtx ctx)
+void EntityRenderManager::create(ECS::Entity, const SceneCollection::Entity& desc, SceneCollection::LoadCtx ctx)
 {
 // 	auto material = ctx.resources.materials.getMaterial(desc.materialName, ctx.batch);
 // 	auto model = ctx.resources.models.getModel(desc.mesh.name, ctx.batch, { data.path });

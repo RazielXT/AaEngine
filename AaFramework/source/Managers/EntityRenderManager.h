@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Scene/RenderEntity.h"
-#include "../SceneGraph/ComponentStorage.h"
-#include "../SceneGraph/Scene.h"
+#include "../ECS/ComponentStorage.h"
+#include "../ECS/Scene.h"
 #include "Scene/Collection/SceneCollection.h"
 
 struct EntityRenderInfoComponent
@@ -14,11 +14,11 @@ class EntityRenderManager
 {
 public:
 
-	EntityRenderManager(Scene& scene);
+	EntityRenderManager(ECS::Scene& scene);
 
-	void create(Entity, const SceneCollection::Entity& desc, SceneCollection::LoadCtx ctx);
+	void create(ECS::Entity, const SceneCollection::Entity& desc, SceneCollection::LoadCtx ctx);
 
 private:
 
-	Scene& scene;
+	ECS::Scene& scene;
 };

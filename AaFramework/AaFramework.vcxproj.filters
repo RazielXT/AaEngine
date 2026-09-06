@@ -5,9 +5,6 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Source Files\Scene">
-      <UniqueIdentifier>{aba07fc9-201e-4f7e-afec-9390a3f19904}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Managers">
       <UniqueIdentifier>{6164f8d9-d0d8-43e0-a2cc-669e3695b333}</UniqueIdentifier>
     </Filter>
@@ -22,6 +19,9 @@
     </Filter>
     <Filter Include="Source Files\Objects\Vehicle">
       <UniqueIdentifier>{9ba0430e-2b90-4ec0-858d-6cc1c5882b65}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ECS">
+      <UniqueIdentifier>{aba07fc9-201e-4f7e-afec-9390a3f19904}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -102,15 +102,6 @@
     <ClInclude Include="source\SceneParser.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="source\SceneGraph\ComponentStorage.h">
-      <Filter>Source Files\Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="source\SceneGraph\Scene.h">
-      <Filter>Source Files\Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="source\SceneGraph\SceneTree.h">
-      <Filter>Source Files\Scene</Filter>
-    </ClInclude>
     <ClInclude Include="source\Managers\EntityRenderManager.h">
       <Filter>Source Files\Managers</Filter>
     </ClInclude>
@@ -155,6 +146,12 @@
     </ClInclude>
     <ClInclude Include="source\Physics\Render\ModelBatch.h">
       <Filter>Source Files\Physics\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ECS\ComponentStorage.h">
+      <Filter>Source Files\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ECS\Scene.h">
+      <Filter>Source Files\ECS</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
